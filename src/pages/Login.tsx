@@ -30,6 +30,7 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState("");
   const [quoteIdx, setQuoteIdx] = useState(0);
   const { signIn } = useAuth();
   const navigate = useNavigate();
