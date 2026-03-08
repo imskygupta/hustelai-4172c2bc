@@ -355,6 +355,38 @@ export type Database = {
           },
         ]
       }
+      hustle_votes: {
+        Row: {
+          created_at: string
+          hustle_id: string
+          id: string
+          user_id: string
+          vote_type: string
+        }
+        Insert: {
+          created_at?: string
+          hustle_id: string
+          id?: string
+          user_id: string
+          vote_type: string
+        }
+        Update: {
+          created_at?: string
+          hustle_id?: string
+          id?: string
+          user_id?: string
+          vote_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hustle_votes_hustle_id_fkey"
+            columns: ["hustle_id"]
+            isOneToOne: false
+            referencedRelation: "side_hustles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       marketplace_items: {
         Row: {
           category: string | null
@@ -608,10 +640,12 @@ export type Database = {
           category: string
           created_at: string
           description: string
+          dislikes: number
           earnings: string
           effort: number
           id: string
           is_trending: boolean | null
+          likes: number
           startup_cost: string | null
           tags: string[] | null
           time_commitment: string | null
@@ -622,10 +656,12 @@ export type Database = {
           category: string
           created_at?: string
           description: string
+          dislikes?: number
           earnings: string
           effort?: number
           id?: string
           is_trending?: boolean | null
+          likes?: number
           startup_cost?: string | null
           tags?: string[] | null
           time_commitment?: string | null
@@ -636,10 +672,12 @@ export type Database = {
           category?: string
           created_at?: string
           description?: string
+          dislikes?: number
           earnings?: string
           effort?: number
           id?: string
           is_trending?: boolean | null
+          likes?: number
           startup_cost?: string | null
           tags?: string[] | null
           time_commitment?: string | null

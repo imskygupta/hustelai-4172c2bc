@@ -4,11 +4,11 @@ import { useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { SearchBar } from "@/components/SearchBar";
 import { FreelanceCard } from "@/components/FreelanceCard";
-import { type FreelanceResult } from "@/lib/ai-search";
+import { type FreelanceResult, mapDbResult } from "@/lib/ai-search";
 import { Navbar } from "@/components/Navbar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Filter, X, Zap, Sparkles } from "lucide-react";
+import { Filter, X, Zap, Sparkles, ChefHat } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -29,22 +29,24 @@ const popularTemplates = [
   "Top micro-task and survey sites that actually pay",
 ];
 
-function effortToLabel(effort: number): string {
-  if (effort <= 1) return "Beginner";
-  if (effort <= 3) return "Intermediate";
-  return "Advanced";
-}
-
 export default function Explore() {
   const [searchParams] = useSearchParams();
   const { user, profile } = useAuth();
   const { toast } = useToast();
   const [results, setResults] = useState<FreelanceResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isAiCooking, setIsAiCooking] = useState(false);
   const [activeCategory, setActiveCategory] = useState("All");
   const [activeDifficulty, setActiveDifficulty] = useState("All");
   const [activeType, setActiveType] = useState("All");
   const [lastQuery, setLastQuery] = useState("");
+  const [trendingCards, setTrendingCards] = useState<FreelanceResult[]>([]);
+
+  // Load top liked cards for display
+  useEffect(() => {
+    supabase.from("side_hustles").select("*").order("likes", { ascending: false }).limit(6)
+      .then(({ data }) => { if (data) setTrendingCards(data.map(mapDbResult)); });
+  }, []);
 
   const handleSearch = async (query: string) => {
     setIsLoading(true);
@@ -60,25 +62,94 @@ export default function Explore() {
     }
 
     try {
-      if (user && profile) {
-        // Signed-in flow: search DB first, generate missing via AI
-        const tier = profile.subscription_tier;
-        const maxSearches = tier === "free" ? 3 : tier === "pro" ? 15 : 999;
-        if (profile.search_count >= maxSearches) {
-          toast({ title: "Search limit reached", description: `You've used all ${maxSearches} searches. Upgrade to continue.`, variant: "destructive" });
-          setIsLoading(false);
-          return;
+      // Step 1: Always search DB first
+      const dbResults = await dbSearch(query);
+
+      // Step 2: Check if DB results actually match the query keywords
+      const keywords = query.toLowerCase().split(/\s+/).filter(w => w.length > 2);
+      const matchingResults = dbResults.filter(r => {
+        const text = `${r.title} ${r.description} ${r.tags.join(" ")}`.toLowerCase();
+        // A result "matches" if at least half the keywords appear
+        const matchCount = keywords.filter(kw => text.includes(kw)).length;
+        return matchCount >= Math.max(1, Math.ceil(keywords.length / 2));
+      });
+
+      if (matchingResults.length >= 5) {
+        // DB has enough good matches, sort by likes
+        matchingResults.sort((a, b) => (b.likes || 0) - (a.likes || 0));
+        const finalResults = matchingResults.slice(0, 5);
+        setResults(finalResults);
+        sessionStorage.setItem(cacheKey, JSON.stringify(finalResults));
+        setIsLoading(false);
+        return;
+      }
+
+      // Step 3: Not enough matches - need AI generation (only for signed-in users)
+      if (!user || !profile) {
+        // Guest: show whatever DB has
+        setResults(matchingResults.length > 0 ? matchingResults : dbResults.slice(0, 5));
+        setIsLoading(false);
+        return;
+      }
+
+      // Check search limits
+      const tier = profile.subscription_tier;
+      const maxSearches = tier === "free" ? 3 : tier === "pro" ? 15 : 999;
+      if (profile.search_count >= maxSearches) {
+        toast({ title: "Search limit reached", description: `Upgrade to continue.`, variant: "destructive" });
+        setResults(matchingResults);
+        setIsLoading(false);
+        return;
+      }
+
+      // Show DB results first, then cook AI results
+      setResults(matchingResults);
+      setIsLoading(false);
+      setIsAiCooking(true);
+
+      const needed = Math.min(3, 5 - matchingResults.length);
+      try {
+        const { data, error } = await supabase.functions.invoke("ai-search", {
+          body: { query, limit: needed },
+        });
+        if (error) throw error;
+        const aiResults: FreelanceResult[] = (data?.results || []).slice(0, needed);
+
+        // Save AI results to DB
+        const savedResults: FreelanceResult[] = [];
+        for (const r of aiResults) {
+          const insertData = {
+            title: r.title,
+            category: r.category,
+            description: r.description,
+            startup_cost: r.investment || "$0",
+            earnings: r.earning_potential || "Varies",
+            effort: r.difficulty === "Beginner" ? 1 : r.difficulty === "Intermediate" ? 3 : 5,
+            type: r.type || "Online",
+            tags: [...(r.tags || []), "new", "ai-generated"],
+            is_trending: true,
+            time_commitment: r.time_commitment || null,
+            likes: 0,
+            dislikes: 0,
+          };
+          const { data: inserted } = await supabase.from("side_hustles").insert(insertData as any).select("*").single();
+          if (inserted) {
+            savedResults.push(mapDbResult(inserted));
+          } else {
+            savedResults.push(r);
+          }
         }
 
-        const data = await smartSearch(query);
-        setResults(data);
-        sessionStorage.setItem(cacheKey, JSON.stringify(data));
-      } else {
-        // Not signed in: DB-only search
-        const data = await dbSearch(query);
-        setResults(data);
-        sessionStorage.setItem(cacheKey, JSON.stringify(data));
+        const combined = [...matchingResults, ...savedResults].slice(0, 5);
+        setResults(combined);
+        sessionStorage.setItem(cacheKey, JSON.stringify(combined));
+      } catch {
+        // AI failed, keep DB results
+      } finally {
+        setIsAiCooking(false);
       }
+
+      return;
     } catch (err: any) {
       toast({ title: "Search failed", description: err.message, variant: "destructive" });
     } finally {
@@ -86,7 +157,6 @@ export default function Explore() {
     }
   };
 
-  // DB-only search for non-signed-in users
   const dbSearch = async (query: string): Promise<FreelanceResult[]> => {
     const keywords = query.toLowerCase().split(/\s+/).filter(w => w.length > 2);
     let request = supabase.from("side_hustles").select("*");
@@ -99,50 +169,8 @@ export default function Explore() {
       ]);
       request = request.or(orFilters.join(","));
     }
-    const { data } = await request.limit(5);
+    const { data } = await request.order("likes", { ascending: false }).limit(20);
     return (data || []).map(mapDbResult);
-  };
-
-  // Smart search: DB first, then AI to fill up to 5
-  const smartSearch = async (query: string): Promise<FreelanceResult[]> => {
-    // 1. Search DB
-    const dbResults = await dbSearch(query);
-
-    // 2. If we have 5+, return top 5
-    if (dbResults.length >= 5) return dbResults.slice(0, 5);
-
-    // 3. Generate remaining via AI
-    const needed = 5 - dbResults.length;
-    try {
-      const { data, error } = await supabase.functions.invoke("ai-search", {
-        body: { query, limit: needed },
-      });
-      if (error) throw error;
-      const aiResults: FreelanceResult[] = (data?.results || []).slice(0, needed);
-
-      // Save first result (the one user is most likely to click) to DB for future searches
-      for (const r of aiResults) {
-        const insertData = {
-          title: r.title,
-          category: r.category,
-          description: r.description,
-          startup_cost: r.investment || "$0",
-          earnings: r.earning_potential || "Varies",
-          effort: r.difficulty === "Beginner" ? 1 : r.difficulty === "Intermediate" ? 3 : 5,
-          type: r.type || "Online",
-          tags: r.tags || [],
-          is_trending: false,
-          time_commitment: r.time_commitment || null,
-        };
-        const { data: inserted } = await supabase.from("side_hustles").insert(insertData).select("id").single();
-        if (inserted) r.id = inserted.id;
-      }
-
-      return [...dbResults, ...aiResults].slice(0, 5);
-    } catch {
-      // If AI fails, return DB results only
-      return dbResults;
-    }
   };
 
   useEffect(() => {
@@ -176,8 +204,28 @@ export default function Explore() {
             <SearchBar onSearch={handleSearch} isLoading={isLoading} />
           </div>
 
+          {/* AI Cooking Animation */}
+          {isAiCooking && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="flex flex-col items-center gap-3 py-6"
+            >
+              <motion.div
+                animate={{ rotate: [0, 15, -15, 0], scale: [1, 1.1, 1] }}
+                transition={{ duration: 1.5, repeat: Infinity }}
+              >
+                <ChefHat className="w-10 h-10 text-primary" />
+              </motion.div>
+              <p className="text-sm font-medium text-primary animate-pulse">
+                ✨ Your secret recipe is cooking...
+              </p>
+              <p className="text-xs text-muted-foreground">Generating personalized ideas with AI</p>
+            </motion.div>
+          )}
+
           {/* Popular Templates - show when no results yet */}
-          {!isLoading && results.length === 0 && (
+          {!isLoading && results.length === 0 && !isAiCooking && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -213,6 +261,21 @@ export default function Explore() {
                   ))}
                 </div>
               </div>
+
+              {/* Trending / Most Liked Section */}
+              {trendingCards.length > 0 && (
+                <div className="space-y-4 pt-4">
+                  <div className="flex items-center gap-2 justify-center">
+                    <Zap className="w-4 h-4 text-primary" />
+                    <span className="text-sm font-medium text-primary">Most Popular Hustles</span>
+                  </div>
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {trendingCards.map((r, i) => (
+                      <FreelanceCard key={r.id} result={r} index={i} />
+                    ))}
+                  </div>
+                </div>
+              )}
             </motion.div>
           )}
 
@@ -283,7 +346,7 @@ export default function Explore() {
           {/* Results */}
           {isLoading && (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {Array.from({ length: 5 }).map((_, i) => (
+              {Array.from({ length: 3 }).map((_, i) => (
                 <div key={i} className="glass rounded-xl p-6 space-y-4 animate-pulse">
                   <div className="h-4 bg-muted rounded w-1/3" />
                   <div className="h-6 bg-muted rounded w-2/3" />
@@ -328,20 +391,4 @@ export default function Explore() {
       </div>
     </div>
   );
-}
-
-function mapDbResult(item: any): FreelanceResult {
-  return {
-    id: item.id,
-    title: item.title,
-    category: item.category,
-    description: item.description,
-    investment: item.startup_cost || "$0",
-    difficulty: item.effort <= 1 ? "Beginner" : item.effort <= 3 ? "Intermediate" : "Advanced",
-    earning_potential: item.earnings,
-    tags: item.tags || [],
-    type: item.type,
-    time_commitment: item.time_commitment,
-    is_trending: item.is_trending,
-  };
 }
