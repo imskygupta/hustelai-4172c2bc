@@ -11,7 +11,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   MessageSquare, Send, ArrowLeft, ThumbsUp, ThumbsDown,
   Plus, Filter, Clock, Flame, CheckCircle, AlertCircle,
-  ChevronDown, ChevronUp, User
+  ChevronDown, ChevronUp, User, Lock
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -45,6 +45,20 @@ interface ForumVote {
 
 type SortType = "hot" | "new" | "top";
 
+// mod_amit bot replies
+const BOT_REPLIES = [
+  "that's a solid point tbh 👍",
+  "agree, been thinking the same",
+  "nice question! curious about this too",
+  "yeah I tried this, works well",
+  "interesting take, thanks for sharing",
+  "💯 underrated hustle for sure",
+  "this helped me when I started out",
+  "good luck with this! keep us posted",
+  "seconding this, great advice",
+  "been doing this for 3 months, can confirm it works",
+];
+
 export default function Community() {
   const { user, profile, loading } = useAuth();
   const navigate = useNavigate();
@@ -62,10 +76,18 @@ export default function Community() {
   const [expandedPosts, setExpandedPosts] = useState<Set<string>>(new Set());
   const [newCategoryName, setNewCategoryName] = useState("");
   const [showNewCategory, setShowNewCategory] = useState(false);
+  const [botTimers, setBotTimers] = useState<Record<string, number>>({});
+
+  const isFreeUser = !profile || profile.subscription_tier === "free";
+  const isGeneralCategory = (name: string) => name.toLowerCase().includes("general");
 
   useEffect(() => {
     loadCategories();
     if (user) loadUserVotes();
+    return () => {
+      // Clear bot timers on unmount
+      Object.values(botTimers).forEach(t => clearTimeout(t));
+    };
   }, [user]);
 
   const loadCategories = async () => {
@@ -80,7 +102,6 @@ export default function Community() {
   };
 
   const loadPosts = async (categoryName: string) => {
-    // Load top-level posts (parent_id is null) for this category across all groups
     const { data } = await supabase
       .from("forum_posts")
       .select("*")
@@ -100,6 +121,14 @@ export default function Community() {
   };
 
   const openCategory = (cat: ForumCategory) => {
+    if (isFreeUser && !isGeneralCategory(cat.name)) {
+      toast({
+        title: "🔒 Premium Only",
+        description: "This community group is available for Pro, Elite, and Infinity members.",
+        variant: "destructive",
+      });
+      return;
+    }
     setSelectedCategory(cat);
     loadPosts(cat.name);
   };
@@ -115,11 +144,46 @@ export default function Community() {
     setExpandedPosts(newSet);
   };
 
-  // We need a group_id for forum_posts. Use a default or first community_group.
+  // Schedule mod_amit bot reply after 2 minutes if no one replies
+  const scheduleBotReply = (postId: string) => {
+    const timer = window.setTimeout(async () => {
+      // Check if there are any replies yet
+      const { data: existingReplies } = await supabase
+        .from("forum_posts")
+        .select("id")
+        .eq("parent_id", postId)
+        .limit(1);
+      
+      if (!existingReplies || existingReplies.length === 0) {
+        // Bot replies
+        const { data: groups } = await supabase.from("community_groups").select("id").limit(1);
+        const groupId = groups?.[0]?.id;
+        if (!groupId || !selectedCategory) return;
+
+        const botReply = BOT_REPLIES[Math.floor(Math.random() * BOT_REPLIES.length)];
+        
+        await supabase.from("forum_posts").insert({
+          group_id: groupId,
+          user_id: user?.id || "00000000-0000-0000-0000-000000000000",
+          user_name: "mod_amit",
+          content: botReply,
+          category: selectedCategory.name,
+          parent_id: postId,
+          post_type: "answer",
+          is_approved: true,
+        });
+
+        // Reload replies for that post
+        loadReplies(postId);
+      }
+    }, 120000); // 2 minutes
+
+    setBotTimers(prev => ({ ...prev, [postId]: timer }));
+  };
+
   const submitPost = async () => {
     if (!newContent.trim() || !selectedCategory || !user) return;
 
-    // Get or create a default group for forum posts
     let { data: groups } = await supabase.from("community_groups").select("id").limit(1);
     let groupId = groups?.[0]?.id;
     if (!groupId) {
@@ -127,10 +191,9 @@ export default function Community() {
       return;
     }
 
-    // Check if user is verified for auto-approval
     const isVerified = (profile as any)?.is_verified === true;
 
-    const { error } = await supabase.from("forum_posts").insert({
+    const { data: newPost, error } = await supabase.from("forum_posts").insert({
       group_id: groupId,
       user_id: user.id,
       user_name: profile?.display_name || "Anonymous",
@@ -139,7 +202,7 @@ export default function Community() {
       category: selectedCategory.name,
       post_type: "question",
       is_approved: isVerified,
-    });
+    }).select().single();
 
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -149,6 +212,9 @@ export default function Community() {
       setNewContent("");
       setShowNewPost(false);
       loadPosts(selectedCategory.name);
+      
+      // Schedule bot reply for new post
+      if (newPost) scheduleBotReply(newPost.id);
     }
   };
 
@@ -179,6 +245,12 @@ export default function Community() {
       setReplyContent(prev => ({ ...prev, [parentId]: "" }));
       setShowReplyFor(null);
       loadReplies(parentId);
+      
+      // Cancel bot timer since someone replied
+      if (botTimers[parentId]) {
+        clearTimeout(botTimers[parentId]);
+        setBotTimers(prev => { const n = { ...prev }; delete n[parentId]; return n; });
+      }
     }
   };
 
@@ -187,14 +259,12 @@ export default function Community() {
 
     const existing = userVotes.find(v => v.post_id === postId);
     if (existing) {
-      if (existing.vote_type === type) return; // Already voted same
-      // Change vote
+      if (existing.vote_type === type) return;
       await supabase.from("forum_votes").update({ vote_type: type }).eq("post_id", postId).eq("user_id", user.id);
     } else {
       await supabase.from("forum_votes").insert({ post_id: postId, user_id: user.id, vote_type: type });
     }
 
-    // Update counts on the post
     const post = [...posts, ...Object.values(replies).flat()].find(p => p.id === postId);
     if (post) {
       const newUp = type === "up" ? post.upvotes + 1 : (existing?.vote_type === "up" ? post.upvotes - 1 : post.upvotes);
@@ -225,7 +295,6 @@ export default function Community() {
   const sortedPosts = [...posts].sort((a, b) => {
     if (sortBy === "new") return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
     if (sortBy === "top") return (b.upvotes - b.downvotes) - (a.upvotes - a.downvotes);
-    // hot: combination of votes and recency
     const scoreA = (a.upvotes - a.downvotes) + (new Date(a.created_at).getTime() / 1e10);
     const scoreB = (b.upvotes - b.downvotes) + (new Date(b.created_at).getTime() / 1e10);
     return scoreB - scoreA;
@@ -233,7 +302,14 @@ export default function Community() {
 
   const getUsernameDisplay = (post: ForumPost) => {
     const shortId = post.user_id.slice(0, 6);
-    return `${post.user_name || "Anonymous"} • u/${shortId}`;
+    const name = post.user_name || "Anonymous";
+    const isBot = name === "mod_amit";
+    return (
+      <span className={isBot ? "text-accent font-semibold" : ""}>
+        {name} {isBot && <Badge variant="outline" className="text-[8px] text-accent border-accent/30 ml-1">MOD</Badge>}
+        <span className="text-muted-foreground font-normal"> • u/{shortId}</span>
+      </span>
+    );
   };
 
   if (loading) {
@@ -254,10 +330,16 @@ export default function Community() {
                   <span className="text-gradient">Community</span> Forums
                 </h1>
                 <p className="text-muted-foreground">Ask questions, share insights, and learn from fellow hustlers</p>
+                {isFreeUser && (
+                  <p className="text-xs text-muted-foreground">
+                    <Lock className="w-3 h-3 inline mr-1" />
+                    Free users can access General Discussion only. <button onClick={() => navigate("/payment")} className="text-primary hover:underline">Upgrade</button> to unlock all groups.
+                  </p>
+                )}
               </div>
 
               <div className="flex justify-end">
-                {user && (
+                {user && !isFreeUser && (
                   <Button
                     variant="outline"
                     size="sm"
@@ -275,40 +357,52 @@ export default function Community() {
                   <Input placeholder="Category name..." value={newCategoryName}
                     onChange={e => setNewCategoryName(e.target.value)}
                     className="focus:shadow-glow focus:border-primary transition-all" />
-                  <Button onClick={createCategory} className="bg-gradient-primary text-primary-foreground shrink-0
-                    hover:scale-[1.02] active:scale-[0.98] transition-transform">
+                  <Button onClick={createCategory} className="bg-gradient-primary text-primary-foreground shrink-0">
                     Create
                   </Button>
                 </motion.div>
               )}
 
               <div className="grid md:grid-cols-2 gap-4">
-                {categories.map((cat, i) => (
-                  <motion.div
-                    key={cat.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.06 }}
-                    onClick={() => openCategory(cat)}
-                    className="glass rounded-xl p-6 space-y-3 cursor-pointer hover:border-primary/30 hover:shadow-glow
-                      transition-all duration-500 group active:scale-[0.98]"
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="text-3xl group-hover:scale-110 transition-transform">{cat.icon}</span>
-                      <div>
-                        <h3 className="font-display font-bold text-lg group-hover:text-gradient transition-all">{cat.name}</h3>
-                        {cat.description && <p className="text-sm text-muted-foreground">{cat.description}</p>}
+                {categories.map((cat, i) => {
+                  const locked = isFreeUser && !isGeneralCategory(cat.name);
+                  return (
+                    <motion.div
+                      key={cat.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.06 }}
+                      onClick={() => openCategory(cat)}
+                      className={`glass rounded-xl p-6 space-y-3 cursor-pointer transition-all duration-500 group active:scale-[0.98] relative ${
+                        locked
+                          ? "opacity-60 hover:border-accent/30"
+                          : "hover:border-primary/30 hover:shadow-glow"
+                      }`}
+                    >
+                      {locked && (
+                        <div className="absolute top-3 right-3">
+                          <Lock className="w-4 h-4 text-accent" />
+                        </div>
+                      )}
+                      <div className="flex items-center gap-3">
+                        <span className="text-3xl group-hover:scale-110 transition-transform">{cat.icon}</span>
+                        <div>
+                          <h3 className="font-display font-bold text-lg group-hover:text-gradient transition-all">
+                            {cat.name}
+                          </h3>
+                          {cat.description && <p className="text-sm text-muted-foreground">{cat.description}</p>}
+                          {locked && <p className="text-[10px] text-accent">Pro+ members only</p>}
+                        </div>
                       </div>
-                    </div>
-                  </motion.div>
-                ))}
+                    </motion.div>
+                  );
+                })}
               </div>
 
               {!user && (
                 <div className="text-center glass rounded-xl p-8 space-y-3">
                   <p className="text-muted-foreground">Sign up to post questions and join discussions</p>
-                  <Button className="bg-gradient-primary text-primary-foreground hover:scale-[1.02] active:scale-[0.98] transition-transform"
-                    onClick={() => navigate("/signup")}>
+                  <Button className="bg-gradient-primary text-primary-foreground" onClick={() => navigate("/signup")}>
                     Join the Community
                   </Button>
                 </div>
@@ -443,7 +537,7 @@ export default function Community() {
                           <div className="flex-1 py-4 pr-4 space-y-2">
                             <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
                               <User className="w-3 h-3" />
-                              <span>{getUsernameDisplay(post)}</span>
+                              {getUsernameDisplay(post)}
                               <span>•</span>
                               <span>{new Date(post.created_at).toLocaleDateString()}</span>
                               {!post.is_approved && post.user_id === user?.id && (
@@ -500,7 +594,7 @@ export default function Community() {
                                     className="text-sm focus:shadow-glow focus:border-primary transition-all"
                                   />
                                   <Button size="sm" onClick={() => submitReply(post.id)}
-                                    className="bg-gradient-primary text-primary-foreground shrink-0 hover:scale-[1.02] active:scale-[0.98] transition-transform">
+                                    className="bg-gradient-primary text-primary-foreground shrink-0">
                                     <Send className="w-4 h-4" />
                                   </Button>
                                 </motion.div>
@@ -522,8 +616,9 @@ export default function Community() {
                                   {replies[post.id].map(reply => {
                                     const replyVote = userVotes.find(v => v.post_id === reply.id);
                                     const replyScore = reply.upvotes - reply.downvotes;
+                                    const isBot = reply.user_name === "mod_amit";
                                     return (
-                                      <div key={reply.id} className="flex gap-2 py-2">
+                                      <div key={reply.id} className={`flex gap-2 py-2 ${isBot ? "bg-accent/5 rounded-lg px-2" : ""}`}>
                                         <div className="flex flex-col items-center gap-0.5">
                                           <button onClick={() => vote(reply.id, "up")}
                                             className={`text-xs transition-all hover:scale-110 ${replyVote?.vote_type === "up" ? "text-primary" : "text-muted-foreground hover:text-primary"}`}>
