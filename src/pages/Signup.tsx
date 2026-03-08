@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,6 +32,8 @@ export default function Signup() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [quoteIdx, setQuoteIdx] = useState(0);
+  const [searchParams] = useSearchParams();
+  const referralCode = searchParams.get("ref") || "";
   const { signUp } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -64,7 +66,7 @@ export default function Signup() {
       return;
     }
     setLoading(true);
-    const { error } = await signUp(email, password, displayName);
+    const { error } = await signUp(email, password, displayName, referralCode);
     setLoading(false);
     if (error) {
       toast({ title: "Signup failed", description: error.message, variant: "destructive" });
@@ -109,6 +111,11 @@ export default function Signup() {
               <span className="font-display font-bold text-2xl group-hover:text-gradient transition-all">HustleAI</span>
             </Link>
             <p className="text-muted-foreground">Create your account and start hustling.</p>
+            {referralCode && (
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium">
+                🎁 Referred by a friend — you both earn rewards!
+              </div>
+            )}
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">

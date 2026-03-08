@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      affiliate_earnings: {
+        Row: {
+          affiliate_id: string
+          amount: number
+          created_at: string
+          description: string | null
+          id: string
+          source_user_id: string | null
+          type: string
+        }
+        Insert: {
+          affiliate_id: string
+          amount?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          source_user_id?: string | null
+          type?: string
+        }
+        Update: {
+          affiliate_id?: string
+          amount?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          source_user_id?: string | null
+          type?: string
+        }
+        Relationships: []
+      }
       blog_posts: {
         Row: {
           author_name: string | null
@@ -540,6 +570,8 @@ export type Database = {
       profiles: {
         Row: {
           address: string | null
+          affiliate_commission: number | null
+          affiliate_earnings: number
           bio: string | null
           created_at: string
           display_name: string | null
@@ -547,6 +579,9 @@ export type Database = {
           id: string
           is_verified: boolean
           phone: string | null
+          referral_code: string | null
+          referral_credits: number
+          referred_by: string | null
           resume_url: string | null
           search_count: number
           subscription_tier: Database["public"]["Enums"]["subscription_tier"]
@@ -557,6 +592,8 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          affiliate_commission?: number | null
+          affiliate_earnings?: number
           bio?: string | null
           created_at?: string
           display_name?: string | null
@@ -564,6 +601,9 @@ export type Database = {
           id?: string
           is_verified?: boolean
           phone?: string | null
+          referral_code?: string | null
+          referral_credits?: number
+          referred_by?: string | null
           resume_url?: string | null
           search_count?: number
           subscription_tier?: Database["public"]["Enums"]["subscription_tier"]
@@ -574,6 +614,8 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          affiliate_commission?: number | null
+          affiliate_earnings?: number
           bio?: string | null
           created_at?: string
           display_name?: string | null
@@ -581,6 +623,9 @@ export type Database = {
           id?: string
           is_verified?: boolean
           phone?: string | null
+          referral_code?: string | null
+          referral_credits?: number
+          referred_by?: string | null
           resume_url?: string | null
           search_count?: number
           subscription_tier?: Database["public"]["Enums"]["subscription_tier"]
@@ -588,6 +633,45 @@ export type Database = {
           user_id?: string
           username?: string | null
           xp_points?: number
+        }
+        Relationships: []
+      }
+      referrals: {
+        Row: {
+          commission_percent: number | null
+          converted_at: string | null
+          created_at: string
+          id: string
+          referral_code: string
+          referred_user_id: string | null
+          referrer_id: string
+          reward_amount: number
+          reward_type: string
+          status: string
+        }
+        Insert: {
+          commission_percent?: number | null
+          converted_at?: string | null
+          created_at?: string
+          id?: string
+          referral_code: string
+          referred_user_id?: string | null
+          referrer_id: string
+          reward_amount?: number
+          reward_type?: string
+          status?: string
+        }
+        Update: {
+          commission_percent?: number | null
+          converted_at?: string | null
+          created_at?: string
+          id?: string
+          referral_code?: string
+          referred_user_id?: string | null
+          referrer_id?: string
+          reward_amount?: number
+          reward_type?: string
+          status?: string
         }
         Relationships: []
       }

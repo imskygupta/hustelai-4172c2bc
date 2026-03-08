@@ -1,9 +1,10 @@
 import { useAuth } from "@/hooks/useAuth";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Navbar } from "@/components/Navbar";
 import { Chatbot } from "@/components/Chatbot";
 import { NotificationPopup } from "@/components/NotificationPopup";
+import { AffiliateTab } from "@/components/AffiliateTab";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
@@ -12,7 +13,7 @@ import {
   Search, Crown, Rocket, Sparkles, Star, Users, Video, Wrench,
   BookOpen, TrendingUp, MessageCircle, Gift, Lock,
   Newspaper, ArrowUpRight, ArrowDownRight, ExternalLink, User, FileText,
-  UserCheck, Clock, Calendar
+  UserCheck, Clock, Calendar, Share2, Store
 } from "lucide-react";
 
 interface FeedData {
@@ -56,10 +57,14 @@ const eliteTools = [
 export default function Dashboard() {
   const { user, profile, loading } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [feed, setFeed] = useState<FeedData | null>(null);
   const [feedLoading, setFeedLoading] = useState(true);
   const [webinars, setWebinars] = useState<Webinar[]>([]);
   const [expertAssignments, setExpertAssignments] = useState<ExpertAssignment[]>([]);
+  const [activeTab, setActiveTab] = useState<"dashboard" | "affiliate">(
+    searchParams.get("tab") === "affiliate" ? "affiliate" : "dashboard"
+  );
 
   useEffect(() => {
     if (!loading && !user) navigate("/login");
@@ -200,6 +205,27 @@ export default function Dashboard() {
             </div>
           </motion.div>
 
+          {/* Tab Switcher */}
+          <div className="flex gap-2 border-b border-border/50 pb-2">
+            <Button variant={activeTab === "dashboard" ? "default" : "ghost"} size="sm"
+              onClick={() => setActiveTab("dashboard")}>
+              <Search className="w-4 h-4 mr-1" /> Dashboard
+            </Button>
+            <Button variant={activeTab === "affiliate" ? "default" : "ghost"} size="sm"
+              onClick={() => setActiveTab("affiliate")}>
+              <Share2 className="w-4 h-4 mr-1" /> Affiliate
+            </Button>
+            {(tier === "elite" || tier === "infinity") && (
+              <Button variant="ghost" size="sm" onClick={() => navigate("/marketplace")}>
+                <Store className="w-4 h-4 mr-1" /> Marketplace
+              </Button>
+            )}
+          </div>
+
+          {activeTab === "affiliate" ? (
+            <AffiliateTab />
+          ) : (
+          <>
           {/* News Headlines */}
           {feed?.headlines && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass rounded-xl overflow-hidden">
@@ -467,6 +493,8 @@ export default function Dashboard() {
               </div>
             </div>
           </motion.div>
+          </>
+          )}
         </div>
       </div>
 

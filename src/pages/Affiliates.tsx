@@ -1,26 +1,54 @@
+import { useAuth } from "@/hooks/useAuth";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { PageTransition } from "@/components/PageTransition";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { DollarSign, Users, Share2, TrendingUp, Gift, ArrowRight, CheckCircle, Zap } from "lucide-react";
+import { DollarSign, Users, Share2, TrendingUp, Gift, ArrowRight, CheckCircle, Zap, Search, Store, Crown, Star } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const tiers = [
-  { name: "Starter", commission: "15%", color: "text-primary", desc: "0-10 referrals/month", perks: ["Unique referral link", "Real-time dashboard", "Monthly payouts"] },
-  { name: "Pro Affiliate", commission: "25%", color: "text-accent", desc: "11-50 referrals/month", perks: ["Everything in Starter", "Custom landing pages", "Priority support", "Bonus rewards"] },
-  { name: "Elite Partner", commission: "35%", color: "text-destructive", desc: "50+ referrals/month", perks: ["Everything in Pro", "Co-branded assets", "Dedicated manager", "Early feature access", "Revenue share"] },
+  {
+    name: "Free",
+    commission: "1 Credit",
+    color: "text-muted-foreground",
+    desc: "Per successful signup",
+    perks: ["Unique referral link", "Earn 1 search credit per referral signup", "Real-time referral tracking", "Dashboard analytics"],
+  },
+  {
+    name: "Pro",
+    commission: "5%",
+    color: "text-primary",
+    desc: "On referred subscriptions",
+    perks: ["Everything in Free", "5% commission on subscriptions", "Priority support", "Monthly payouts via UPI/bank"],
+  },
+  {
+    name: "Elite",
+    commission: "6%",
+    color: "text-accent",
+    desc: "On referred subscriptions",
+    perks: ["Everything in Pro", "6% commission rate", "Marketplace access — sell 1 course, 1 tool", "Custom landing pages", "Bonus rewards"],
+  },
+  {
+    name: "Infinity",
+    commission: "10%",
+    color: "text-yellow-500",
+    desc: "On referred subscriptions",
+    popular: true,
+    perks: ["Everything in Elite", "10% commission rate", "Marketplace — sell 5 courses, 5 tools, 5 items", "Set custom affiliate % for your products", "Co-branded assets", "Dedicated manager", "Revenue share program"],
+  },
 ];
 
 const steps = [
-  { icon: Users, title: "Sign Up", desc: "Create your free affiliate account in seconds." },
-  { icon: Share2, title: "Share", desc: "Get your unique link and share with your audience." },
-  { icon: TrendingUp, title: "Track", desc: "Monitor clicks, conversions, and earnings in real-time." },
-  { icon: DollarSign, title: "Earn", desc: "Get paid every month via UPI, bank transfer, or PayPal." },
+  { icon: Users, title: "Sign Up", desc: "Create your account — affiliate is automatic." },
+  { icon: Share2, title: "Share", desc: "Get your unique link from the dashboard." },
+  { icon: TrendingUp, title: "Track", desc: "Monitor clicks, conversions & earnings in real-time." },
+  { icon: DollarSign, title: "Earn", desc: "Free users get search credits. Premium users earn commissions." },
 ];
 
 export default function Affiliates() {
+  const { user } = useAuth();
   const navigate = useNavigate();
 
   return (
@@ -47,13 +75,13 @@ export default function Affiliates() {
             </ScrollReveal>
             <ScrollReveal delay={0.2}>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                Join the HustleAI Affiliate Program and earn up to 35% commission on every referral. Turn your network into income.
+                Every HustleAI user is an affiliate. Free users earn search credits, premium users earn up to 10% commission on every referral.
               </p>
             </ScrollReveal>
             <ScrollReveal delay={0.3}>
               <Button size="lg" className="bg-gradient-primary text-primary-foreground text-lg px-8 h-14"
-                onClick={() => navigate("/signup")}>
-                Become an Affiliate <ArrowRight className="w-5 h-5 ml-2" />
+                onClick={() => navigate(user ? "/dashboard?tab=affiliate" : "/signup")}>
+                {user ? "Go to Affiliate Dashboard" : "Start Earning"} <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
             </ScrollReveal>
           </div>
@@ -68,7 +96,6 @@ export default function Affiliates() {
               </h2>
             </ScrollReveal>
             <div className="grid md:grid-cols-4 gap-6 relative">
-              {/* Connecting line */}
               <div className="hidden md:block absolute top-10 left-[12%] right-[12%] h-px bg-gradient-to-r from-primary/30 via-accent/30 to-primary/30" />
               {steps.map((step, i) => (
                 <ScrollReveal key={step.title} delay={i * 0.1}>
@@ -88,28 +115,31 @@ export default function Affiliates() {
           </div>
         </section>
 
-        {/* Commission Tiers */}
+        {/* Reward Tiers */}
         <section className="py-20 px-4">
-          <div className="container mx-auto max-w-5xl">
+          <div className="container mx-auto max-w-6xl">
             <ScrollReveal>
-              <h2 className="text-3xl md:text-4xl font-display font-bold text-center mb-12">
-                Commission <span className="text-gradient-accent">Tiers</span>
+              <h2 className="text-3xl md:text-4xl font-display font-bold text-center mb-4">
+                Reward <span className="text-gradient-accent">Tiers</span>
               </h2>
+              <p className="text-center text-muted-foreground mb-12 max-w-xl mx-auto">
+                Your affiliate rewards scale with your subscription tier.
+              </p>
             </ScrollReveal>
-            <div className="grid md:grid-cols-3 gap-6">
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
               {tiers.map((tier, i) => (
                 <ScrollReveal key={tier.name} delay={i * 0.1}>
-                  <div className={`glass rounded-2xl p-8 hover:shadow-glow hover:border-primary/30 transition-all duration-500 h-full ${i === 2 ? "border-accent/30 relative" : ""}`}>
-                    {i === 2 && (
-                      <Badge className="absolute -top-3 right-4 bg-accent text-accent-foreground">Most Popular</Badge>
+                  <div className={`glass rounded-2xl p-6 hover:shadow-glow hover:border-primary/30 transition-all duration-500 h-full relative ${tier.popular ? "border-yellow-500/30" : ""}`}>
+                    {tier.popular && (
+                      <Badge className="absolute -top-3 right-4 bg-yellow-500 text-black">Best Value</Badge>
                     )}
-                    <div className={`text-4xl font-display font-bold ${tier.color} mb-1`}>{tier.commission}</div>
+                    <div className={`text-3xl font-display font-bold ${tier.color} mb-1`}>{tier.commission}</div>
                     <h3 className="font-display font-semibold text-lg">{tier.name}</h3>
-                    <p className="text-xs text-muted-foreground mb-6">{tier.desc}</p>
-                    <ul className="space-y-2.5">
+                    <p className="text-xs text-muted-foreground mb-5">{tier.desc}</p>
+                    <ul className="space-y-2">
                       {tier.perks.map(perk => (
-                        <li key={perk} className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <CheckCircle className="w-4 h-4 text-primary shrink-0" /> {perk}
+                        <li key={perk} className="flex items-start gap-2 text-xs text-muted-foreground">
+                          <CheckCircle className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" /> {perk}
                         </li>
                       ))}
                     </ul>
@@ -117,6 +147,24 @@ export default function Affiliates() {
                 </ScrollReveal>
               ))}
             </div>
+          </div>
+        </section>
+
+        {/* Marketplace Promo */}
+        <section className="py-20 px-4 border-t border-border/50">
+          <div className="container mx-auto max-w-4xl">
+            <ScrollReveal direction="scale">
+              <div className="glass rounded-2xl p-10 text-center space-y-5 border-accent/20">
+                <Store className="w-12 h-12 text-accent mx-auto" />
+                <h2 className="text-3xl font-display font-bold">Sell on the Marketplace</h2>
+                <p className="text-muted-foreground max-w-lg mx-auto">
+                  Elite & Infinity members can sell courses, tools, and templates. Set your own prices and even your own affiliate commission rates (Infinity only).
+                </p>
+                <Button size="lg" className="bg-gradient-primary text-primary-foreground" onClick={() => navigate("/marketplace")}>
+                  <Store className="w-5 h-5 mr-2" /> Browse Marketplace
+                </Button>
+              </div>
+            </ScrollReveal>
           </div>
         </section>
 
@@ -128,8 +176,8 @@ export default function Affiliates() {
                 <Zap className="w-12 h-12 text-accent mx-auto" />
                 <h2 className="text-3xl font-display font-bold">Start Earning Today</h2>
                 <p className="text-muted-foreground">Questions? Reach out at <a href="mailto:contact@skycart.xyz" className="text-primary hover:underline">contact@skycart.xyz</a></p>
-                <Button size="lg" className="bg-gradient-primary text-primary-foreground" onClick={() => navigate("/signup")}>
-                  Join the Program <ArrowRight className="w-5 h-5 ml-2" />
+                <Button size="lg" className="bg-gradient-primary text-primary-foreground" onClick={() => navigate(user ? "/dashboard?tab=affiliate" : "/signup")}>
+                  {user ? "Open Affiliate Dashboard" : "Join the Program"} <ArrowRight className="w-5 h-5 ml-2" />
                 </Button>
               </div>
             </ScrollReveal>
