@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useAuth } from "@/hooks/useAuth";
 import { useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { SearchBar } from "@/components/SearchBar";
