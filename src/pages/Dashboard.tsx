@@ -205,6 +205,27 @@ export default function Dashboard() {
             </div>
           </motion.div>
 
+          {/* Tab Switcher */}
+          <div className="flex gap-2 border-b border-border/50 pb-2">
+            <Button variant={activeTab === "dashboard" ? "default" : "ghost"} size="sm"
+              onClick={() => setActiveTab("dashboard")}>
+              <Search className="w-4 h-4 mr-1" /> Dashboard
+            </Button>
+            <Button variant={activeTab === "affiliate" ? "default" : "ghost"} size="sm"
+              onClick={() => setActiveTab("affiliate")}>
+              <Share2 className="w-4 h-4 mr-1" /> Affiliate
+            </Button>
+            {(tier === "elite" || tier === "infinity") && (
+              <Button variant="ghost" size="sm" onClick={() => navigate("/marketplace")}>
+                <Store className="w-4 h-4 mr-1" /> Marketplace
+              </Button>
+            )}
+          </div>
+
+          {activeTab === "affiliate" ? (
+            <AffiliateTab />
+          ) : (
+          <>
           {/* News Headlines */}
           {feed?.headlines && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass rounded-xl overflow-hidden">
