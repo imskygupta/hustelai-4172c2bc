@@ -284,7 +284,7 @@ export default function Profile() {
                 </div>
                 <div className="space-y-2 text-sm text-muted-foreground">
                   <p><strong className="text-foreground">Account Type:</strong> {profile?.subscription_tier?.toUpperCase()}</p>
-                  <p><strong className="text-foreground">Member Since:</strong> {new Date(profile?.created_at || "").toLocaleDateString()}</p>
+                  <p><strong className="text-foreground">Member Since:</strong> {user?.created_at ? new Date(user.created_at).toLocaleDateString() : "N/A"}</p>
                   <p><strong className="text-foreground">XP Points:</strong> {profile?.xp_points}</p>
                   <p><strong className="text-foreground">Search Credits:</strong> {(profile as any)?.referral_credits || 0}</p>
                 </div>
