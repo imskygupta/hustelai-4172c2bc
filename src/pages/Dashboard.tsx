@@ -378,17 +378,18 @@ export default function Dashboard() {
             </motion.div>
           )}
 
-          {/* Discover Cards */}
-          {feed?.discover && (
+          {/* Discover Cards - from DB trending_links */}
+          {(trendingLinks.length > 0 || feed?.discover) && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.25 }} className="space-y-4">
               <div className="flex items-center gap-3">
                 <ExternalLink className="w-5 h-5 text-primary" />
                 <h2 className="text-xl font-display font-bold">Discover What's Trending</h2>
               </div>
               <div className={`grid md:grid-cols-2 lg:grid-cols-3 gap-4 ${isFree ? "blur-sm pointer-events-none" : ""}`}>
-                {feed.discover.map((item, i) => (
+                {(trendingLinks.length > 0 ? trendingLinks : (feed?.discover || [])).map((item, i) => (
                   <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 + i * 0.08 }}
-                    className="glass rounded-xl p-5 space-y-3 hover:border-primary/30 hover:shadow-glow transition-all duration-300 cursor-pointer group">
+                    onClick={() => { if ('link' in item && item.link) window.open(item.link, "_blank"); }}
+                    className={`glass rounded-xl p-5 space-y-3 hover:border-primary/30 hover:shadow-glow transition-all duration-300 group ${('link' in item && item.link) ? "cursor-pointer" : ""}`}>
                     <div className="flex items-center justify-between">
                       <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-semibold">{item.category}</span>
                       <ArrowUpRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />

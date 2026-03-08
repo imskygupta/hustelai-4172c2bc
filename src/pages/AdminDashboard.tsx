@@ -454,7 +454,7 @@ export default function AdminDashboard() {
             {sidebarCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
           </button>
         </div>
-        <nav className="p-2 space-y-1">
+        <nav className="p-2 space-y-1 overflow-y-auto" style={{ maxHeight: "calc(100vh - 56px - 100px)" }}>
           {sidebarItems.map((item) => (
             <button
               key={item.id}
