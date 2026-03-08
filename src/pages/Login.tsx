@@ -8,6 +8,7 @@ import { Zap, LogIn, Eye, EyeOff, ArrowRight, Shield, TrendingUp } from "lucide-
 import { useToast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import { ParticleBackground } from "@/components/ParticleBackground";
+import { ReCaptcha } from "@/components/ReCaptcha";
 import gsap from "gsap";
 
 const quotes = [
@@ -29,6 +30,7 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState("");
   const [quoteIdx, setQuoteIdx] = useState(0);
   const { signIn } = useAuth();
   const navigate = useNavigate();
@@ -57,6 +59,10 @@ export default function Login() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!captchaToken) {
+      toast({ title: "Please complete the captcha", variant: "destructive" });
+      return;
+    }
     setLoading(true);
     const { error } = await signIn(email, password);
     setLoading(false);
@@ -133,8 +139,11 @@ export default function Login() {
                 </button>
               </div>
             </div>
+            <div className="gsap-stagger flex justify-center">
+              <ReCaptcha onVerify={setCaptchaToken} />
+            </div>
             <div className="gsap-stagger">
-              <Button type="submit" disabled={loading}
+              <Button type="submit" disabled={loading || !captchaToken}
                 className="w-full h-12 bg-gradient-primary text-primary-foreground font-semibold text-base btn-press hover:shadow-glow transition-shadow duration-300">
                 {loading ? (
                   <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1 }} className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full" />
@@ -154,12 +163,17 @@ export default function Login() {
             ))}
           </div>
 
-          <p className="text-center text-sm text-muted-foreground gsap-stagger">
-            Don't have an account?{" "}
-            <Link to="/signup" className="text-primary hover:underline hover:text-primary/80 transition-colors font-medium">
-              Sign up <ArrowRight className="w-3 h-3 inline" />
+          <div className="text-center space-y-2 gsap-stagger">
+            <Link to="/forgot-password" className="text-xs text-muted-foreground hover:text-primary transition-colors">
+              Forgot password?
             </Link>
-          </p>
+            <p className="text-sm text-muted-foreground">
+              Don't have an account?{" "}
+              <Link to="/signup" className="text-primary hover:underline hover:text-primary/80 transition-colors font-medium">
+                Sign up <ArrowRight className="w-3 h-3 inline" />
+              </Link>
+            </p>
+          </div>
         </div>
       </motion.div>
     </div>

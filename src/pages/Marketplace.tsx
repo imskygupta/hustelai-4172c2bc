@@ -11,9 +11,10 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Store, Search, Lock, GraduationCap, Package, Star,
-  IndianRupee, ShoppingCart, Eye, TrendingUp, Filter, Crown
+  IndianRupee, ShoppingCart, Eye, TrendingUp, Filter, Crown,
+  Shield, CheckCircle, Zap, ArrowRight, CreditCard, Users, Award
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 interface MarketItem {
   id: string;
@@ -42,6 +43,15 @@ interface Course {
 
 const categories = ["All", "Template", "Tool", "E-book", "Plugin", "Design", "Course"];
 
+const features = [
+  { icon: Shield, title: "Verified Listings", desc: "Every tool and course is reviewed for quality before publishing." },
+  { icon: CreditCard, title: "Seamless Payments", desc: "Integrated payment collection in INR. Instant checkout, no hassle." },
+  { icon: Award, title: "Escrow Protection", desc: "Your money is safe. Funds release only after delivery confirmation." },
+  { icon: CheckCircle, title: "Verified Links", desc: "All download links and resources are scanned and verified." },
+  { icon: Users, title: "Creator Community", desc: "Join elite sellers who build and sell digital products." },
+  { icon: TrendingUp, title: "Revenue Analytics", desc: "Track sales, earnings, and performance in your dashboard." },
+];
+
 export default function Marketplace() {
   const { user, profile } = useAuth();
   const navigate = useNavigate();
@@ -54,7 +64,6 @@ export default function Marketplace() {
 
   const tier = profile?.subscription_tier || "free";
   const isFree = tier === "free";
-  const isPro = tier === "pro" || tier === "elite" || tier === "infinity";
 
   useEffect(() => {
     loadData();
@@ -83,7 +92,6 @@ export default function Marketplace() {
         return matchSearch && matchCat;
       });
 
-  // Free users see max 2 items, rest locked
   const visibleLimit = isFree ? 2 : filtered.length;
 
   return (
@@ -92,12 +100,12 @@ export default function Marketplace() {
         <Navbar />
 
         {/* Hero */}
-        <section className="pt-32 pb-12 px-4 relative overflow-hidden">
+        <section className="pt-32 pb-16 px-4 relative overflow-hidden">
           <div className="absolute inset-0 pointer-events-none">
             <div className="absolute top-20 right-20 w-72 h-72 bg-accent/8 rounded-full blur-3xl" />
             <div className="absolute bottom-10 left-10 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
           </div>
-          <div className="container mx-auto max-w-5xl text-center relative z-10 space-y-4">
+          <div className="container mx-auto max-w-5xl text-center relative z-10 space-y-6">
             <ScrollReveal>
               <Badge variant="outline" className="border-primary/30 text-primary px-4 py-1.5">
                 <Store className="w-3.5 h-3.5 mr-1.5" /> HustleAI Marketplace
@@ -109,16 +117,55 @@ export default function Marketplace() {
               </h1>
             </ScrollReveal>
             <ScrollReveal delay={0.2}>
-              <p className="text-muted-foreground max-w-2xl mx-auto">
-                Discover premium tools, templates, and courses created by elite hustlers. {isFree && "Upgrade to unlock full access."}
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                Discover premium digital products created by verified hustlers. Seamless payments, escrow protection, and verified resources.
               </p>
+            </ScrollReveal>
+            <ScrollReveal delay={0.3}>
+              <div className="flex flex-wrap justify-center gap-3">
+                <Button size="lg" className="bg-gradient-primary text-primary-foreground"
+                  onClick={() => document.getElementById("marketplace-grid")?.scrollIntoView({ behavior: "smooth" })}>
+                  <Store className="w-5 h-5 mr-2" /> Browse Now
+                </Button>
+                {!user && (
+                  <Button size="lg" variant="outline" onClick={() => navigate("/signup")}>
+                    <Crown className="w-5 h-5 mr-2" /> Join Premium Guild
+                  </Button>
+                )}
+              </div>
             </ScrollReveal>
           </div>
         </section>
 
-        {/* Filters */}
-        <section className="px-4 pb-8">
-          <div className="container mx-auto max-w-5xl space-y-4">
+        {/* Features Grid */}
+        <section className="py-16 px-4 border-t border-border/50">
+          <div className="container mx-auto max-w-6xl">
+            <ScrollReveal>
+              <h2 className="text-3xl font-display font-bold text-center mb-4">
+                Why Our <span className="text-gradient">Marketplace</span>?
+              </h2>
+              <p className="text-center text-muted-foreground mb-12 max-w-xl mx-auto">
+                Built for hustlers, by hustlers. Every feature designed for trust and growth.
+              </p>
+            </ScrollReveal>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {features.map((f, i) => (
+                <ScrollReveal key={f.title} delay={i * 0.08}>
+                  <div className="glass rounded-xl p-6 space-y-3 hover:border-primary/30 hover:shadow-glow transition-all duration-500 h-full">
+                    <f.icon className="w-8 h-8 text-primary" />
+                    <h3 className="font-display font-semibold">{f.title}</h3>
+                    <p className="text-sm text-muted-foreground">{f.desc}</p>
+                  </div>
+                </ScrollReveal>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Marketplace Grid */}
+        <section id="marketplace-grid" className="py-12 px-4">
+          <div className="container mx-auto max-w-5xl space-y-6">
+            {/* Filters */}
             <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
               <div className="flex gap-2">
                 <Button variant={activeTab === "tools" ? "default" : "outline"} size="sm" onClick={() => setActiveTab("tools")}>
@@ -142,12 +189,8 @@ export default function Marketplace() {
                 </Button>
               ))}
             </div>
-          </div>
-        </section>
 
-        {/* Grid */}
-        <section className="px-4 pb-20">
-          <div className="container mx-auto max-w-5xl">
+            {/* Items */}
             {loading ? (
               <div className="text-center py-16 text-muted-foreground">Loading marketplace...</div>
             ) : filtered.length === 0 ? (
@@ -191,7 +234,7 @@ export default function Marketplace() {
                             </div>
                           </div>
                           {!isLocked && (
-                            <Button size="sm" className="w-full bg-gradient-primary text-primary-foreground" disabled={isLocked}>
+                            <Button size="sm" className="w-full bg-gradient-primary text-primary-foreground">
                               {it.price > 0 ? "Buy Now" : "Get Free"}
                             </Button>
                           )}
@@ -211,11 +254,47 @@ export default function Marketplace() {
                 )}
               </>
             )}
+          </div>
+        </section>
 
-            {/* Sell CTA for eligible users */}
-            {user && (tier === "elite" || tier === "infinity") && (
+        {/* CTA: Join Premium Guild */}
+        <section className="py-20 px-4 border-t border-border/50">
+          <div className="container mx-auto max-w-4xl">
+            <ScrollReveal direction="scale">
+              <div className="glass rounded-2xl p-10 text-center space-y-6 border-accent/20 relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 pointer-events-none" />
+                <div className="relative z-10 space-y-5">
+                  <Crown className="w-14 h-14 text-primary mx-auto" />
+                  <h2 className="text-3xl md:text-4xl font-display font-bold">
+                    Join the <span className="text-gradient">Premium Guild</span>
+                  </h2>
+                  <p className="text-muted-foreground max-w-lg mx-auto">
+                    Unlock full marketplace access, sell your own products, earn affiliate commissions, 
+                    and get escrow-protected transactions. Elite creators build here.
+                  </p>
+                  <div className="flex flex-wrap justify-center gap-4 text-sm text-muted-foreground">
+                    {["Sell courses & tools", "Escrow payments", "Verified badges", "Revenue analytics"].map(f => (
+                      <span key={f} className="flex items-center gap-1.5">
+                        <CheckCircle className="w-3.5 h-3.5 text-primary" /> {f}
+                      </span>
+                    ))}
+                  </div>
+                  <Button size="lg" className="bg-gradient-primary text-primary-foreground text-lg px-10 h-14"
+                    onClick={() => navigate(user ? "/payment" : "/signup")}>
+                    <Zap className="w-5 h-5 mr-2" /> {user ? "Upgrade Now" : "Get Started"} <ArrowRight className="w-5 h-5 ml-2" />
+                  </Button>
+                </div>
+              </div>
+            </ScrollReveal>
+          </div>
+        </section>
+
+        {/* Sell CTA for eligible users */}
+        {user && (tier === "elite" || tier === "infinity") && (
+          <section className="pb-20 px-4">
+            <div className="container mx-auto max-w-5xl">
               <ScrollReveal>
-                <div className="mt-12 glass rounded-2xl p-8 text-center space-y-4 border-accent/20">
+                <div className="glass rounded-2xl p-8 text-center space-y-4 border-accent/20">
                   <Star className="w-10 h-10 text-yellow-500 mx-auto" />
                   <h2 className="text-2xl font-display font-bold">Start Selling on Marketplace</h2>
                   <p className="text-muted-foreground text-sm">
@@ -226,9 +305,9 @@ export default function Marketplace() {
                   </Button>
                 </div>
               </ScrollReveal>
-            )}
-          </div>
-        </section>
+            </div>
+          </section>
+        )}
 
         <Footer />
       </div>

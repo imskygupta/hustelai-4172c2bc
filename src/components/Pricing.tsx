@@ -12,7 +12,7 @@ const plans = [
     icon: Sparkles,
     gradient: false,
     features: [
-      "3-4 AI-powered searches/day",
+      "3 AI-powered searches/day",
       "Basic personalization",
       "Explore all categories",
       "Community access (limited)",
@@ -31,7 +31,7 @@ const plans = [
     gradient: true,
     popular: true,
     features: [
-      "Unlimited AI searches",
+      "5 AI searches/day",
       "Promoted profile visibility",
       "Personalized monitoring",
       "Custom idea recommendations",
@@ -52,7 +52,7 @@ const plans = [
     icon: Crown,
     gradient: false,
     features: [
-      "Everything in Pro",
+      "10 AI searches/day — everything in Pro",
       "Live webinars & guidance",
       "AI Chatbot (Personal Mentor)",
       "Advanced elite communities",
@@ -74,7 +74,7 @@ const plans = [
     gradient: false,
     infinity: true,
     features: [
-      "Everything in Elite",
+      "20 AI searches/day — everything in Elite",
       "Create & sell courses (up to 5)",
       "Sell tools & templates (up to 5)",
       "5 additional marketplace items",

@@ -94,7 +94,7 @@ export default function Explore() {
 
       // Check search limits
       const tier = profile.subscription_tier;
-      const maxSearches = tier === "free" ? 3 : tier === "pro" ? 15 : 999;
+      const maxSearches = tier === "free" ? 3 : tier === "pro" ? 5 : tier === "elite" ? 10 : 20;
       if (profile.search_count >= maxSearches) {
         toast({ title: "Search limit reached", description: `Upgrade to continue.`, variant: "destructive" });
         setResults(matchingResults);

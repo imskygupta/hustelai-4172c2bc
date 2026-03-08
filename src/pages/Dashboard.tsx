@@ -5,6 +5,7 @@ import { Navbar } from "@/components/Navbar";
 import { Chatbot } from "@/components/Chatbot";
 import { NotificationPopup } from "@/components/NotificationPopup";
 import { AffiliateTab } from "@/components/AffiliateTab";
+import { EmailVerificationBanner } from "@/components/EmailVerificationBanner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
@@ -136,6 +137,12 @@ export default function Dashboard() {
   const isElite = tier === "elite" || isInfinity;
   const isPro = tier === "pro" || isElite;
   const isFree = tier === "free";
+  const emailVerified = user.email_confirmed_at != null;
+
+  // Search credit limits per tier
+  const searchLimits: Record<string, number> = { free: 3, pro: 5, elite: 10, infinity: 20 };
+  const maxSearches = searchLimits[tier] || 3;
+  const searchesLeft = Math.max(0, maxSearches - profile.search_count);
 
   // Filter webinars by tier access
   const accessibleWebinars = webinars.filter(w => {
@@ -184,6 +191,9 @@ export default function Dashboard() {
 
       <div className="pt-28 pb-12 px-4">
         <div className="container mx-auto max-w-6xl space-y-8">
+          {/* Email Verification Banner */}
+          {!emailVerified && <EmailVerificationBanner email={user.email || ""} />}
+
           {/* Welcome */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
             className="glass rounded-2xl p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
@@ -196,7 +206,7 @@ export default function Dashboard() {
                 {isInfinity ? "♾️ Unlimited access. Create, sell, and dominate." :
                  isElite ? "Full access to AI Mentor, tools & webinars." :
                  isPro ? "Upgrade to Elite for AI Mentor & exclusive tools." :
-                 `${4 - profile.search_count}/4 free searches today. Upgrade for unlimited.`}
+                 `${searchesLeft}/${maxSearches} searches left today. Upgrade for more.`}
               </p>
             </div>
             <div className="flex gap-2 shrink-0">
@@ -251,7 +261,7 @@ export default function Dashboard() {
           {/* Quick Actions */}
           <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
             {[
-              { icon: Search, label: "AI Search", desc: isPro ? "Unlimited" : `${4 - profile.search_count} left`, action: () => navigate("/explore"), locked: false },
+              { icon: Search, label: "AI Search", desc: `${searchesLeft}/${maxSearches} left`, action: () => navigate("/explore"), locked: false },
               { icon: Users, label: "Community", desc: isPro ? "Forums Open" : "Limited", action: () => navigate("/community"), locked: false },
               { icon: User, label: "My Profile", desc: "Edit & resume", action: () => navigate("/profile"), locked: false },
               { icon: Video, label: "Live Webinars", desc: `${accessibleWebinars.length} available`, action: () => document.getElementById("webinars-section")?.scrollIntoView({ behavior: "smooth" }), locked: !isPro },
