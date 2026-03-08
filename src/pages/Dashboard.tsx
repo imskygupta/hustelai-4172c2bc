@@ -20,7 +20,16 @@ import {
 interface FeedData {
   headlines: { text: string; source: string }[];
   stocks: { symbol: string; price: string; change: string; up: boolean }[];
-  discover: { title: string; description: string; category: string }[];
+  discover: { title: string; description: string; category: string; link?: string | null }[];
+}
+
+interface TrendingLink {
+  id: string;
+  title: string;
+  description: string | null;
+  category: string | null;
+  link: string | null;
+  sort_order: number;
 }
 
 interface Webinar {
