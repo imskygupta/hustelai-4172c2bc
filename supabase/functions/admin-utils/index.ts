@@ -10,14 +10,30 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { action, user_id, email, password } = await req.json();
+    const { action, user_id, email, password, bootstrap_key } = await req.json();
     
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    // Verify caller is admin
+    // Bootstrap action - uses service role key directly for initial setup
+    if (action === "bootstrap_password" && bootstrap_key === Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")) {
+      let targetId = user_id;
+      if (!targetId && email) {
+        const { data: { users } } = await supabaseAdmin.auth.admin.listUsers();
+        const found = users?.find(u => u.email === email);
+        if (!found) throw new Error("User not found");
+        targetId = found.id;
+      }
+      
+      const { error } = await supabaseAdmin.auth.admin.updateUserById(targetId, { password });
+      if (error) throw error;
+      
+      return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    // Verify caller is admin for all other actions
     const authHeader = req.headers.get("Authorization")!;
     const token = authHeader.replace("Bearer ", "");
     const { data: { user: caller } } = await supabaseAdmin.auth.getUser(token);
@@ -27,7 +43,6 @@ serve(async (req) => {
     if (!isAdmin) throw new Error("Not admin");
 
     if (action === "set_password") {
-      // Find user by email or use user_id
       let targetId = user_id;
       if (!targetId && email) {
         const { data: { users } } = await supabaseAdmin.auth.admin.listUsers();
