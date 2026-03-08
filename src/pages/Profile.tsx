@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
 import { User, Upload, FileText, Lock, MapPin, Phone, Mail, Crown } from "lucide-react";
+import { VerificationSection } from "@/components/VerificationSection";
 
 export default function Profile() {
   const { user, profile, loading, refreshProfile } = useAuth();
