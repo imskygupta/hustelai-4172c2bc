@@ -59,6 +59,10 @@ export default function Login() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!captchaToken) {
+      toast({ title: "Please complete the captcha", variant: "destructive" });
+      return;
+    }
     setLoading(true);
     const { error } = await signIn(email, password);
     setLoading(false);
