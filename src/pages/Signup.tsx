@@ -147,8 +147,11 @@ export default function Signup() {
                 </button>
               </div>
             </div>
+            <div className="gsap-stagger flex justify-center">
+              <ReCaptcha onVerify={setCaptchaToken} />
+            </div>
             <div className="gsap-stagger">
-              <Button type="submit" disabled={loading}
+              <Button type="submit" disabled={loading || !captchaToken}
                 className="w-full h-12 bg-gradient-primary text-primary-foreground font-semibold text-base btn-press hover:shadow-glow transition-shadow">
                 {loading ? (
                   <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1 }} className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full" />
