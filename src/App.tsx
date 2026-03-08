@@ -15,6 +15,7 @@ import Blog from "./pages/Blog";
 import Reviews from "./pages/Reviews";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
+import AdminBlock from "./pages/AdminBlock";
 import Community from "./pages/Community";
 import Profile from "./pages/Profile";
 import Payment from "./pages/Payment";
