@@ -38,6 +38,9 @@ export function Navbar() {
         <div className="hidden md:flex items-center gap-3">
           {user ? (
             <>
+              <Button variant="ghost" size="sm" onClick={() => navigate("/saved-hustles")}>
+                My Hustles
+              </Button>
               <Button variant="ghost" size="sm" onClick={() => navigate("/profile")}>
                 <User className="w-4 h-4 mr-1" /> Profile
               </Button>
