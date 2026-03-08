@@ -200,7 +200,7 @@ export default function AdminDashboard() {
 
   const loadAllData = async () => {
     setLoadingData(true);
-    const [usersRes, notifsRes, webRes, expertRes, blogRes, nlRes, contactRes, chatRes] = await Promise.all([
+    const [usersRes, notifsRes, webRes, expertRes, blogRes, nlRes, contactRes, chatRes, verifRes, payRes, forumRes] = await Promise.all([
       supabase.from("profiles").select("*").order("created_at", { ascending: false }),
       supabase.from("notifications").select("*").order("created_at", { ascending: false }),
       supabase.from("webinars").select("*").order("created_at", { ascending: false }),
@@ -209,6 +209,9 @@ export default function AdminDashboard() {
       supabase.from("newsletter_subscribers").select("id", { count: "exact", head: true }),
       supabase.from("contact_submissions").select("id", { count: "exact", head: true }),
       supabase.from("chat_messages").select("*").order("created_at", { ascending: false }).limit(500),
+      supabase.from("user_verifications").select("*").order("created_at", { ascending: false }),
+      supabase.from("payments").select("*").order("created_at", { ascending: false }),
+      supabase.from("forum_posts").select("*").order("created_at", { ascending: false }).limit(100),
     ]);
     if (usersRes.data) setUsers(usersRes.data as UserProfile[]);
     if (notifsRes.data) setNotifications(notifsRes.data as Notification[]);
