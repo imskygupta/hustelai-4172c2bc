@@ -240,6 +240,9 @@ export default function AdminDashboard() {
     if (payRes.data) setPayments(payRes.data);
     if (forumRes.data) setForumPosts(forumRes.data);
     if (rolesRes.data) setUserRoles(rolesRes.data);
+    if (groupsRes.data) setCommunityGroups(groupsRes.data);
+    if (trendRes.data) setTrendingLinks(trendRes.data);
+    if (rolesRes.data) setUserRoles(rolesRes.data);
     // Build chat users list
     if (chatRes.data) {
       const userMap = new Map<string, ChatUser>();
