@@ -1,9 +1,10 @@
 import { useAuth } from "@/hooks/useAuth";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Navbar } from "@/components/Navbar";
 import { Chatbot } from "@/components/Chatbot";
 import { NotificationPopup } from "@/components/NotificationPopup";
+import { AffiliateTab } from "@/components/AffiliateTab";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
@@ -12,7 +13,7 @@ import {
   Search, Crown, Rocket, Sparkles, Star, Users, Video, Wrench,
   BookOpen, TrendingUp, MessageCircle, Gift, Lock,
   Newspaper, ArrowUpRight, ArrowDownRight, ExternalLink, User, FileText,
-  UserCheck, Clock, Calendar
+  UserCheck, Clock, Calendar, Share2, Store
 } from "lucide-react";
 
 interface FeedData {
