@@ -83,6 +83,33 @@ export type Database = {
         }
         Relationships: []
       }
+      category_requests: {
+        Row: {
+          category_name: string
+          created_at: string
+          id: string
+          reviewed_by: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          category_name: string
+          created_at?: string
+          id?: string
+          reviewed_by?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          category_name?: string
+          created_at?: string
+          id?: string
+          reviewed_by?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       chat_messages: {
         Row: {
           admin_id: string | null
@@ -120,6 +147,8 @@ export type Database = {
           description: string | null
           icon: string | null
           id: string
+          is_default: boolean | null
+          is_readonly: boolean | null
           min_tier: Database["public"]["Enums"]["subscription_tier"]
           name: string
         }
@@ -129,6 +158,8 @@ export type Database = {
           description?: string | null
           icon?: string | null
           id?: string
+          is_default?: boolean | null
+          is_readonly?: boolean | null
           min_tier?: Database["public"]["Enums"]["subscription_tier"]
           name: string
         }
@@ -138,8 +169,72 @@ export type Database = {
           description?: string | null
           icon?: string | null
           id?: string
+          is_default?: boolean | null
+          is_readonly?: boolean | null
           min_tier?: Database["public"]["Enums"]["subscription_tier"]
           name?: string
+        }
+        Relationships: []
+      }
+      community_memberships: {
+        Row: {
+          channel_id: string
+          id: string
+          joined_at: string
+          user_id: string
+        }
+        Insert: {
+          channel_id: string
+          id?: string
+          joined_at?: string
+          user_id: string
+        }
+        Update: {
+          channel_id?: string
+          id?: string
+          joined_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_memberships_channel_id_fkey"
+            columns: ["channel_id"]
+            isOneToOne: false
+            referencedRelation: "community_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_onboarding: {
+        Row: {
+          completed_at: string
+          custom_category_requests: string[] | null
+          experience_level: string | null
+          goals: string[] | null
+          id: string
+          interests: string[] | null
+          preferred_categories: string[] | null
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string
+          custom_category_requests?: string[] | null
+          experience_level?: string | null
+          goals?: string[] | null
+          id?: string
+          interests?: string[] | null
+          preferred_categories?: string[] | null
+          user_id: string
+        }
+        Update: {
+          completed_at?: string
+          custom_category_requests?: string[] | null
+          experience_level?: string | null
+          goals?: string[] | null
+          id?: string
+          interests?: string[] | null
+          preferred_categories?: string[] | null
+          user_id?: string
         }
         Relationships: []
       }
