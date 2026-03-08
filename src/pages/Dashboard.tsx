@@ -261,7 +261,7 @@ export default function Dashboard() {
           {/* Quick Actions */}
           <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
             {[
-              { icon: Search, label: "AI Search", desc: isPro ? "Unlimited" : `${4 - profile.search_count} left`, action: () => navigate("/explore"), locked: false },
+              { icon: Search, label: "AI Search", desc: `${searchesLeft}/${maxSearches} left`, action: () => navigate("/explore"), locked: false },
               { icon: Users, label: "Community", desc: isPro ? "Forums Open" : "Limited", action: () => navigate("/community"), locked: false },
               { icon: User, label: "My Profile", desc: "Edit & resume", action: () => navigate("/profile"), locked: false },
               { icon: Video, label: "Live Webinars", desc: `${accessibleWebinars.length} available`, action: () => document.getElementById("webinars-section")?.scrollIntoView({ behavior: "smooth" }), locked: !isPro },
