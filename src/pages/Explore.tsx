@@ -9,7 +9,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Filter, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useToast } from "@/hooks/use-toast";
 
 const categories = ["All", "Tech", "Creative", "Writing", "Marketing", "Teaching", "Services", "E-commerce", "Finance"];
 const investments = ["All", "$0 - Free", "$1-50", "$50-200", "$200-500", "$500+"];
