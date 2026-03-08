@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.cashfree-payment]
 verify_jwt = false
+
+[functions.hustle-roadmap]
+verify_jwt = false

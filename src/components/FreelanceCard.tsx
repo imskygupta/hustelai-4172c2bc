@@ -31,7 +31,8 @@ export function FreelanceCard({ result, index }: { result: FreelanceResult; inde
   const [isSaved, setIsSaved] = useState(false);
 
   const handleClick = () => {
-    if (!user) navigate("/signup");
+    if (!user) { navigate("/signup"); return; }
+    navigate(`/hustle/${result.id}`);
   };
 
   const handleSave = async (e: React.MouseEvent) => {
