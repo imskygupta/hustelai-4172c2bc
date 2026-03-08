@@ -14,3 +14,9 @@ verify_jwt = false
 
 [functions.hustle-roadmap]
 verify_jwt = false
+
+[functions.send-email]
+verify_jwt = false
+
+[functions.admin-utils]
+verify_jwt = false

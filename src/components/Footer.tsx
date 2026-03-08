@@ -62,8 +62,8 @@ export function Footer() {
               AI-powered freelance discovery platform. Find, start, and grow your next income stream.
             </p>
             <div className="space-y-2 text-sm text-muted-foreground">
-              <a href="mailto:contact@skycart.xyz" className="flex items-center gap-2 hover:text-primary transition-colors">
-                <Mail className="w-4 h-4" /> contact@skycart.xyz
+          <a href="mailto:contact@hustelai.eu.cc" className="flex items-center gap-2 hover:text-primary transition-colors">
+                <Mail className="w-4 h-4" /> contact@hustelai.eu.cc
               </a>
               <div className="flex items-center gap-2">
                 <MapPin className="w-4 h-4" /> India 🇮🇳
@@ -114,11 +114,15 @@ export function Footer() {
         </div>
 
         <div className="border-t border-border/50 pt-6 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
-          <p>© 2026 HustleAI by SkyCart. All rights reserved.</p>
+          <p>© 2026 HustleAI. All rights reserved.</p>
           <div className="flex items-center gap-4">
-            <a href="mailto:contact@skycart.xyz" className="hover:text-primary transition-colors">Support</a>
+            <Link to="/privacy-policy" className="hover:text-primary transition-colors">Privacy Policy</Link>
             <span>·</span>
-            <span>AI-powered freelance discovery</span>
+            <Link to="/terms-conditions" className="hover:text-primary transition-colors">Terms & Conditions</Link>
+            <span>·</span>
+            <Link to="/refund-policy" className="hover:text-primary transition-colors">Refund Policy</Link>
+            <span>·</span>
+            <a href="mailto:support@hustelai.eu.cc" className="hover:text-primary transition-colors">Support</a>
           </div>
         </div>
       </div>
