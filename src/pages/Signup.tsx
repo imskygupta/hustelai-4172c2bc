@@ -32,6 +32,7 @@ export default function Signup() {
   const [displayName, setDisplayName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState("");
   const [quoteIdx, setQuoteIdx] = useState(0);
   const [searchParams] = useSearchParams();
   const referralCode = searchParams.get("ref") || "";
