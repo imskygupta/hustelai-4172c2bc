@@ -28,6 +28,7 @@ import Relax from "./pages/Relax";
 import HustleDetail from "./pages/HustleDetail";
 import InfinityZone from "./pages/InfinityZone";
 import Marketplace from "./pages/Marketplace";
+import MarketplaceItem from "./pages/MarketplaceItem";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
