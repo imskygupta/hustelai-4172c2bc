@@ -13,7 +13,7 @@ import {
   MessageSquare, Send, ArrowLeft, ThumbsUp, ThumbsDown,
   Plus, Filter, Clock, Flame, CheckCircle, AlertCircle,
   ChevronDown, ChevronUp, User, Lock, Hash, Volume2, VolumeX,
-  Users, Crown, Shield, BookOpen
+  Users, Crown, Shield, BookOpen, Bell, X
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -77,6 +77,8 @@ const TIER_LABELS: Record<string, string> = {
   infinity: "Infinity",
 };
 
+const WELCOME_CHANNEL_ID = "c4541d1b-8b58-46b1-90b5-58c6e36251ef";
+
 export default function Community() {
   const { user, profile, loading } = useAuth();
   const navigate = useNavigate();
@@ -95,6 +97,9 @@ export default function Community() {
   const [botTimers, setBotTimers] = useState<Record<string, number>>({});
   const [hasOnboarded, setHasOnboarded] = useState<boolean | null>(null);
   const [userMemberships, setUserMemberships] = useState<string[]>([]);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [welcomeNotifCount, setWelcomeNotifCount] = useState(0);
+  const [dismissedNotifs, setDismissedNotifs] = useState<Set<string>>(new Set());
 
   const tier = profile?.subscription_tier || "free";
   const maxChannels = TIER_CHANNEL_LIMITS[tier] || 0;
@@ -105,6 +110,8 @@ export default function Community() {
       checkOnboarding();
       loadMemberships();
       loadUserVotes();
+      checkAdminRole();
+      loadDismissedNotifs();
     } else {
       setHasOnboarded(false);
     }
@@ -113,6 +120,24 @@ export default function Community() {
       Object.values(botTimers).forEach(t => clearTimeout(t));
     };
   }, [user]);
+
+  const checkAdminRole = async () => {
+    if (!user) return;
+    const { data } = await supabase.rpc("has_role", { _user_id: user.id, _role: "admin" as any });
+    setIsAdmin(!!data);
+  };
+
+  const loadDismissedNotifs = () => {
+    const stored = JSON.parse(localStorage.getItem("dismissed_welcome_notifs") || "[]");
+    setDismissedNotifs(new Set(stored));
+  };
+
+  const dismissWelcomeNotif = (postId: string) => {
+    const newDismissed = new Set(dismissedNotifs).add(postId);
+    setDismissedNotifs(newDismissed);
+    localStorage.setItem("dismissed_welcome_notifs", JSON.stringify([...newDismissed]));
+    setWelcomeNotifCount(prev => Math.max(0, prev - 1));
+  };
 
   const checkOnboarding = async () => {
     if (!user) return;
@@ -138,7 +163,22 @@ export default function Community() {
       .from("community_groups")
       .select("*")
       .order("created_at");
-    if (data) setGroups(data as CommunityGroup[]);
+    if (data) {
+      setGroups(data as CommunityGroup[]);
+      // Count unread welcome notifications
+      loadWelcomeNotifCount();
+    }
+  };
+
+  const loadWelcomeNotifCount = async () => {
+    const { count } = await supabase
+      .from("forum_posts")
+      .select("id", { count: "exact", head: true })
+      .eq("group_id", WELCOME_CHANNEL_ID)
+      .is("parent_id", null);
+    const stored = JSON.parse(localStorage.getItem("dismissed_welcome_notifs") || "[]");
+    const dismissedCount = stored.length;
+    setWelcomeNotifCount(Math.max(0, (count || 0) - dismissedCount));
   };
 
   const loadUserVotes = async () => {
@@ -169,7 +209,6 @@ export default function Community() {
   const handleOnboardingComplete = async (data: any) => {
     if (!user) return;
 
-    // Save onboarding
     await supabase.from("community_onboarding").insert({
       user_id: user.id,
       interests: data.interests,
@@ -179,7 +218,6 @@ export default function Community() {
       custom_category_requests: data.customCategories,
     });
 
-    // Auto-join default channels
     const defaultGroups = groups.filter(g => g.is_default);
     for (const g of defaultGroups) {
       await supabase.from("community_memberships").insert({
@@ -188,7 +226,6 @@ export default function Community() {
       }).select();
     }
 
-    // Join selected channels
     for (const catName of data.preferredCategories) {
       const group = groups.find(g => g.name === catName);
       if (group) {
@@ -199,7 +236,6 @@ export default function Community() {
       }
     }
 
-    // Submit custom category requests
     for (const cat of data.customCategories) {
       await supabase.from("category_requests").insert({
         user_id: user.id,
@@ -218,8 +254,7 @@ export default function Community() {
       return;
     }
 
-    // Check access
-    if (!group.is_default && !userMemberships.includes(group.id)) {
+    if (!group.is_default && !userMemberships.includes(group.id) && !isAdmin) {
       toast({
         title: "🔒 Not a member",
         description: "You haven't joined this channel. Complete onboarding or upgrade your plan.",
@@ -270,6 +305,12 @@ export default function Community() {
     setBotTimers(prev => ({ ...prev, [postId]: timer }));
   };
 
+  // Admin can post in readonly channels
+  const canPostInChannel = (group: CommunityGroup) => {
+    if (isAdmin) return true;
+    return !group.is_readonly;
+  };
+
   const submitPost = async () => {
     if (!newContent.trim() || !selectedGroup || !user) return;
 
@@ -277,23 +318,23 @@ export default function Community() {
     const { data: newPost, error } = await supabase.from("forum_posts").insert({
       group_id: selectedGroup.id,
       user_id: user.id,
-      user_name: profile?.display_name || "Anonymous",
+      user_name: isAdmin ? "HustleAI Team" : (profile?.display_name || "Anonymous"),
       content: newContent,
       title: newTitle || null,
       category: selectedGroup.name,
-      post_type: "question",
-      is_approved: isVerified,
+      post_type: isAdmin && selectedGroup.is_readonly ? "announcement" : "question",
+      is_approved: isVerified || isAdmin,
     }).select().single();
 
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "Posted!", description: isVerified ? "Your post is live!" : "Pending admin approval." });
+      toast({ title: "Posted!", description: isVerified || isAdmin ? "Your post is live!" : "Pending admin approval." });
       setNewTitle("");
       setNewContent("");
       setShowNewPost(false);
       loadPosts(selectedGroup.id, selectedGroup.name);
-      if (newPost) scheduleBotReply(newPost.id);
+      if (newPost && !isAdmin) scheduleBotReply(newPost.id);
     }
   };
 
@@ -303,12 +344,12 @@ export default function Community() {
     const { error } = await supabase.from("forum_posts").insert({
       group_id: selectedGroup.id,
       user_id: user.id,
-      user_name: profile?.display_name || "Anonymous",
+      user_name: isAdmin ? "HustleAI Team" : (profile?.display_name || "Anonymous"),
       content: replyContent[parentId],
       category: selectedGroup.name,
       parent_id: parentId,
       post_type: "answer",
-      is_approved: isVerified,
+      is_approved: isVerified || isAdmin,
     });
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -366,11 +407,9 @@ export default function Community() {
     );
   };
 
-  // Separate groups into categories
   const defaultGroups = groups.filter(g => g.is_default);
   const optionalGroups = groups.filter(g => !g.is_default);
   const joinedOptional = optionalGroups.filter(g => userMemberships.includes(g.id));
-  const availableForOnboarding = optionalGroups;
 
   if (loading || hasOnboarded === null) {
     return <div className="min-h-screen bg-background flex items-center justify-center">
@@ -378,7 +417,6 @@ export default function Community() {
     </div>;
   }
 
-  // Show onboarding for logged-in users who haven't completed it
   if (user && !hasOnboarded) {
     return (
       <div className="min-h-screen bg-background">
@@ -394,7 +432,7 @@ export default function Community() {
               </motion.div>
             </div>
             <CommunityOnboarding
-              availableCategories={availableForOnboarding.map(g => ({ id: g.id, name: g.name, icon: g.icon }))}
+              availableCategories={optionalGroups.map(g => ({ id: g.id, name: g.name, icon: g.icon }))}
               maxChannels={maxChannels}
               tierName={TIER_LABELS[tier]}
               canRequestCategories={canRequestCategories}
@@ -433,17 +471,28 @@ export default function Community() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: i * 0.06 }}
                       onClick={() => openGroup(group)}
-                      className="glass rounded-xl p-5 cursor-pointer transition-all duration-300 group hover:border-primary/30 hover:shadow-glow active:scale-[0.98]"
+                      className="glass rounded-xl p-5 cursor-pointer transition-all duration-300 group hover:border-primary/30 hover:shadow-glow active:scale-[0.98] relative"
                     >
+                      {/* Notification count badge for Welcome channel */}
+                      {group.id === WELCOME_CHANNEL_ID && welcomeNotifCount > 0 && (
+                        <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold flex items-center justify-center animate-pulse">
+                          {welcomeNotifCount}
+                        </div>
+                      )}
                       <div className="flex items-center gap-3 mb-2">
                         <span className="text-2xl group-hover:scale-110 transition-transform">{group.icon}</span>
                         <div className="flex-1 min-w-0">
                           <h3 className="font-display font-bold text-sm group-hover:text-gradient transition-all truncate">
                             {group.name}
                           </h3>
-                          {group.is_readonly && (
+                          {group.is_readonly && !isAdmin && (
                             <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
                               <VolumeX className="w-3 h-3" /> Read-only
+                            </div>
+                          )}
+                          {group.is_readonly && isAdmin && (
+                            <div className="flex items-center gap-1 text-[10px] text-primary">
+                              <Shield className="w-3 h-3" /> Admin can post
                             </div>
                           )}
                         </div>
@@ -497,25 +546,30 @@ export default function Community() {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: i * 0.06 }}
-                        className="glass rounded-xl p-5 opacity-50 relative"
+                        onClick={isAdmin ? () => openGroup(group) : undefined}
+                        className={`glass rounded-xl p-5 relative ${isAdmin ? "cursor-pointer hover:border-primary/30" : "opacity-50"}`}
                       >
-                        <div className="absolute top-3 right-3">
-                          <Lock className="w-4 h-4 text-accent" />
-                        </div>
+                        {!isAdmin && (
+                          <div className="absolute top-3 right-3">
+                            <Lock className="w-4 h-4 text-accent" />
+                          </div>
+                        )}
                         <div className="flex items-center gap-3">
                           <span className="text-2xl">{group.icon}</span>
                           <div>
                             <h3 className="font-display font-bold text-sm">{group.name}</h3>
                             {group.description && <p className="text-xs text-muted-foreground">{group.description}</p>}
-                            <p className="text-[10px] text-accent mt-1">
-                              {tier === "free" ? "Upgrade to Pro+ to join" : "Channel limit reached"}
-                            </p>
+                            {!isAdmin && (
+                              <p className="text-[10px] text-accent mt-1">
+                                {tier === "free" ? "Upgrade to Pro+ to join" : "Channel limit reached"}
+                              </p>
+                            )}
                           </div>
                         </div>
                       </motion.div>
                     ))}
                   </div>
-                  {tier === "free" && (
+                  {tier === "free" && !isAdmin && (
                     <div className="text-center">
                       <Button onClick={() => navigate("/payment")} variant="outline" size="sm" className="text-primary border-primary/30">
                         <Crown className="w-4 h-4 mr-1" /> Upgrade to unlock channels
@@ -549,8 +603,11 @@ export default function Community() {
                     <div>
                       <h2 className="font-display font-bold text-xl flex items-center gap-2">
                         {selectedGroup.name}
-                        {selectedGroup.is_readonly && (
+                        {selectedGroup.is_readonly && !isAdmin && (
                           <Badge variant="outline" className="text-[10px]"><VolumeX className="w-3 h-3 mr-1" /> Read-only</Badge>
+                        )}
+                        {selectedGroup.is_readonly && isAdmin && (
+                          <Badge variant="outline" className="text-[10px] text-primary border-primary/30"><Shield className="w-3 h-3 mr-1" /> Admin Access</Badge>
                         )}
                       </h2>
                       {selectedGroup.description && (
@@ -558,17 +615,17 @@ export default function Community() {
                       )}
                     </div>
                   </div>
-                  {user && !selectedGroup.is_readonly && (
+                  {user && canPostInChannel(selectedGroup) && (
                     <Button onClick={() => setShowNewPost(!showNewPost)}
                       className="bg-gradient-primary text-primary-foreground hover:scale-[1.02] active:scale-[0.98] transition-transform">
-                      <Plus className="w-4 h-4 mr-1" /> Ask Question
+                      <Plus className="w-4 h-4 mr-1" /> {isAdmin ? "Post Announcement" : "Ask Question"}
                     </Button>
                   )}
                 </div>
 
                 {/* New post form */}
                 <AnimatePresence>
-                  {showNewPost && !selectedGroup.is_readonly && (
+                  {showNewPost && canPostInChannel(selectedGroup) && (
                     <motion.div
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: "auto" }}
@@ -576,13 +633,13 @@ export default function Community() {
                       className="space-y-3 mb-6 p-4 rounded-xl bg-secondary/30 border border-border/50"
                     >
                       <Input
-                        placeholder="Question title..."
+                        placeholder={isAdmin ? "Announcement title..." : "Question title..."}
                         value={newTitle}
                         onChange={e => setNewTitle(e.target.value)}
                         className="focus:shadow-glow focus:border-primary transition-all font-semibold"
                       />
                       <Textarea
-                        placeholder="Describe your question in detail..."
+                        placeholder={isAdmin ? "Write your announcement..." : "Describe your question in detail..."}
                         value={newContent}
                         onChange={e => setNewContent(e.target.value)}
                         rows={4}
@@ -590,11 +647,15 @@ export default function Community() {
                       />
                       <div className="flex items-center justify-between">
                         <p className="text-[10px] text-muted-foreground flex items-center gap-1">
-                          <AlertCircle className="w-3 h-3" /> {profile?.is_verified ? "✅ Verified — auto-approved" : "Posts require admin approval"}
+                          {isAdmin ? (
+                            <><Shield className="w-3 h-3 text-primary" /> Admin — auto-approved</>
+                          ) : (
+                            <><AlertCircle className="w-3 h-3" /> {profile?.is_verified ? "✅ Verified — auto-approved" : "Posts require admin approval"}</>
+                          )}
                         </p>
                         <Button onClick={submitPost} size="sm"
                           className="bg-gradient-primary text-primary-foreground hover:scale-[1.02] active:scale-[0.98] transition-transform">
-                          <Send className="w-4 h-4 mr-1" /> Post
+                          <Send className="w-4 h-4 mr-1" /> {isAdmin ? "Post" : "Post"}
                         </Button>
                       </div>
                     </motion.div>
@@ -624,168 +685,211 @@ export default function Community() {
                   </div>
                 )}
 
-                {/* Posts */}
-                <div className="space-y-3">
-                  {sortedPosts.length === 0 && (
-                    <p className="text-center text-muted-foreground py-8 text-sm">
-                      {selectedGroup.is_readonly ? "Official announcements will appear here." : "No posts yet. Be the first to ask a question!"}
-                    </p>
-                  )}
-                  {sortedPosts.map(post => {
-                    const userVote = userVotes.find(v => v.post_id === post.id);
-                    const score = post.upvotes - post.downvotes;
-                    const isExpanded = expandedPosts.has(post.id);
-                    const isAnnouncement = post.post_type === "announcement";
-
-                    return (
-                      <motion.div
-                        key={post.id}
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        className={`rounded-xl border transition-all duration-300 group ${
-                          isAnnouncement
-                            ? "border-primary/30 bg-primary/5"
-                            : "border-border/50 bg-secondary/20 hover:border-primary/20"
-                        }`}
-                      >
-                        <div className="flex">
-                          {/* Vote column - hidden for readonly */}
-                          {!selectedGroup.is_readonly && (
-                            <div className="flex flex-col items-center py-4 px-3 gap-1">
-                              <button onClick={() => vote(post.id, "up")}
-                                className={`p-1 rounded transition-all hover:scale-110 ${
-                                  userVote?.vote_type === "up" ? "text-primary" : "text-muted-foreground hover:text-primary"
-                                }`}>
-                                <ChevronUp className="w-5 h-5" />
-                              </button>
-                              <span className={`text-sm font-bold ${score > 0 ? "text-primary" : score < 0 ? "text-destructive" : "text-muted-foreground"}`}>
-                                {score}
-                              </span>
-                              <button onClick={() => vote(post.id, "down")}
-                                className={`p-1 rounded transition-all hover:scale-110 ${
-                                  userVote?.vote_type === "down" ? "text-destructive" : "text-muted-foreground hover:text-destructive"
-                                }`}>
-                                <ChevronDown className="w-5 h-5" />
-                              </button>
-                            </div>
+                {/* Welcome channel - dismissable notifications */}
+                {selectedGroup.id === WELCOME_CHANNEL_ID && (
+                  <div className="space-y-3">
+                    {sortedPosts.length === 0 && (
+                      <p className="text-center text-muted-foreground py-8 text-sm">
+                        No announcements yet. Stay tuned! 📢
+                      </p>
+                    )}
+                    {sortedPosts.map((post, idx) => {
+                      const isDismissed = dismissedNotifs.has(post.id);
+                      if (isDismissed) return null;
+                      return (
+                        <motion.div
+                          key={post.id}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          className="rounded-xl border border-primary/30 bg-primary/5 p-4 relative"
+                        >
+                          <button
+                            onClick={() => dismissWelcomeNotif(post.id)}
+                            className="absolute top-2 right-2 text-muted-foreground hover:text-foreground"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                          <div className="flex items-center gap-2 text-[10px] text-muted-foreground mb-2">
+                            <Bell className="w-3 h-3 text-primary" />
+                            <span className="text-primary font-semibold">#{idx + 1}</span>
+                            <span>•</span>
+                            {getUsernameDisplay(post)}
+                            <span>•</span>
+                            <span>{new Date(post.created_at).toLocaleDateString()}</span>
+                          </div>
+                          {post.title && (
+                            <h3 className="font-display font-semibold text-sm mb-1">{post.title}</h3>
                           )}
+                          <p className="text-sm text-muted-foreground whitespace-pre-line">{post.content}</p>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                )}
 
-                          <div className="flex-1 py-4 pr-4 space-y-2">
-                            <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-                              <User className="w-3 h-3" />
-                              {getUsernameDisplay(post)}
-                              <span>•</span>
-                              <span>{new Date(post.created_at).toLocaleDateString()}</span>
-                              {isAnnouncement && (
-                                <Badge className="text-[9px] bg-primary/20 text-primary border-0">📌 Pinned</Badge>
-                              )}
-                              {!post.is_approved && post.user_id === user?.id && (
-                                <Badge variant="outline" className="text-[9px] text-yellow-500 border-yellow-500/30">
-                                  <AlertCircle className="w-2.5 h-2.5 mr-0.5" /> Pending
-                                </Badge>
-                              )}
-                            </div>
+                {/* Regular posts for non-welcome channels */}
+                {selectedGroup.id !== WELCOME_CHANNEL_ID && (
+                  <div className="space-y-3">
+                    {sortedPosts.length === 0 && (
+                      <p className="text-center text-muted-foreground py-8 text-sm">
+                        {selectedGroup.is_readonly ? "Official announcements will appear here." : "No posts yet. Be the first to ask a question!"}
+                      </p>
+                    )}
+                    {sortedPosts.map(post => {
+                      const userVote = userVotes.find(v => v.post_id === post.id);
+                      const score = post.upvotes - post.downvotes;
+                      const isExpanded = expandedPosts.has(post.id);
+                      const isAnnouncement = post.post_type === "announcement";
 
-                            {post.title && (
-                              <h3 className="font-display font-semibold text-sm group-hover:text-primary transition-colors">
-                                {post.title}
-                              </h3>
-                            )}
-                            <p className="text-sm text-muted-foreground whitespace-pre-line">{post.content}</p>
-
+                      return (
+                        <motion.div
+                          key={post.id}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          className={`rounded-xl border transition-all duration-300 group ${
+                            isAnnouncement
+                              ? "border-primary/30 bg-primary/5"
+                              : "border-border/50 bg-secondary/20 hover:border-primary/20"
+                          }`}
+                        >
+                          <div className="flex">
                             {!selectedGroup.is_readonly && (
-                              <div className="flex items-center gap-3 pt-1">
-                                <button
-                                  onClick={() => toggleExpand(post.id)}
-                                  className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-1"
-                                >
-                                  <MessageSquare className="w-3.5 h-3.5" />
-                                  {replies[post.id]?.length || 0} answers
+                              <div className="flex flex-col items-center py-4 px-3 gap-1">
+                                <button onClick={() => vote(post.id, "up")}
+                                  className={`p-1 rounded transition-all hover:scale-110 ${
+                                    userVote?.vote_type === "up" ? "text-primary" : "text-muted-foreground hover:text-primary"
+                                  }`}>
+                                  <ChevronUp className="w-5 h-5" />
                                 </button>
-                                {user && (
-                                  <button
-                                    onClick={() => setShowReplyFor(showReplyFor === post.id ? null : post.id)}
-                                    className="text-xs text-muted-foreground hover:text-primary transition-colors"
-                                  >
-                                    Reply
-                                  </button>
-                                )}
+                                <span className={`text-sm font-bold ${score > 0 ? "text-primary" : score < 0 ? "text-destructive" : "text-muted-foreground"}`}>
+                                  {score}
+                                </span>
+                                <button onClick={() => vote(post.id, "down")}
+                                  className={`p-1 rounded transition-all hover:scale-110 ${
+                                    userVote?.vote_type === "down" ? "text-destructive" : "text-muted-foreground hover:text-destructive"
+                                  }`}>
+                                  <ChevronDown className="w-5 h-5" />
+                                </button>
                               </div>
                             )}
 
-                            {/* Reply input */}
-                            <AnimatePresence>
-                              {showReplyFor === post.id && !selectedGroup.is_readonly && (
-                                <motion.div
-                                  initial={{ opacity: 0, height: 0 }}
-                                  animate={{ opacity: 1, height: "auto" }}
-                                  exit={{ opacity: 0, height: 0 }}
-                                  className="flex gap-2 pt-2"
-                                >
-                                  <Input
-                                    placeholder="Write your answer..."
-                                    value={replyContent[post.id] || ""}
-                                    onChange={e => setReplyContent(prev => ({ ...prev, [post.id]: e.target.value }))}
-                                    onKeyDown={e => e.key === "Enter" && submitReply(post.id)}
-                                    className="text-sm focus:shadow-glow focus:border-primary transition-all"
-                                  />
-                                  <Button size="sm" onClick={() => submitReply(post.id)}
-                                    className="bg-gradient-primary text-primary-foreground shrink-0">
-                                    <Send className="w-4 h-4" />
-                                  </Button>
-                                </motion.div>
-                              )}
-                            </AnimatePresence>
+                            <div className="flex-1 py-4 pr-4 space-y-2">
+                              <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                                <User className="w-3 h-3" />
+                                {getUsernameDisplay(post)}
+                                <span>•</span>
+                                <span>{new Date(post.created_at).toLocaleDateString()}</span>
+                                {isAnnouncement && (
+                                  <Badge className="text-[9px] bg-primary/20 text-primary border-0">📌 Pinned</Badge>
+                                )}
+                                {!post.is_approved && post.user_id === user?.id && (
+                                  <Badge variant="outline" className="text-[9px] text-yellow-500 border-yellow-500/30">
+                                    <AlertCircle className="w-2.5 h-2.5 mr-0.5" /> Pending
+                                  </Badge>
+                                )}
+                              </div>
 
-                            {/* Replies thread */}
-                            <AnimatePresence>
-                              {isExpanded && replies[post.id] && (
-                                <motion.div
-                                  initial={{ opacity: 0, height: 0 }}
-                                  animate={{ opacity: 1, height: "auto" }}
-                                  exit={{ opacity: 0, height: 0 }}
-                                  className="space-y-2 pl-4 border-l-2 border-primary/20 mt-2"
-                                >
-                                  {replies[post.id].length === 0 && (
-                                    <p className="text-xs text-muted-foreground py-2">No answers yet</p>
-                                  )}
-                                  {replies[post.id].map(reply => {
-                                    const replyVote = userVotes.find(v => v.post_id === reply.id);
-                                    const replyScore = reply.upvotes - reply.downvotes;
-                                    const isBot = reply.user_name === "mod_amit";
-                                    return (
-                                      <div key={reply.id} className={`flex gap-2 py-2 ${isBot ? "bg-accent/5 rounded-lg px-2" : ""}`}>
-                                        <div className="flex flex-col items-center gap-0.5">
-                                          <button onClick={() => vote(reply.id, "up")}
-                                            className={`text-xs transition-all hover:scale-110 ${replyVote?.vote_type === "up" ? "text-primary" : "text-muted-foreground hover:text-primary"}`}>
-                                            <ChevronUp className="w-4 h-4" />
-                                          </button>
-                                          <span className={`text-[10px] font-bold ${replyScore > 0 ? "text-primary" : "text-muted-foreground"}`}>{replyScore}</span>
-                                          <button onClick={() => vote(reply.id, "down")}
-                                            className={`text-xs transition-all hover:scale-110 ${replyVote?.vote_type === "down" ? "text-destructive" : "text-muted-foreground hover:text-destructive"}`}>
-                                            <ChevronDown className="w-4 h-4" />
-                                          </button>
-                                        </div>
-                                        <div className="flex-1">
-                                          <div className="text-[10px] text-muted-foreground flex items-center gap-1">
-                                            <User className="w-2.5 h-2.5" /> {getUsernameDisplay(reply)}
-                                            <span>•</span>
-                                            <span>{new Date(reply.created_at).toLocaleDateString()}</span>
-                                          </div>
-                                          <p className="text-sm mt-0.5">{reply.content}</p>
-                                        </div>
-                                      </div>
-                                    );
-                                  })}
-                                </motion.div>
+                              {post.title && (
+                                <h3 className="font-display font-semibold text-sm group-hover:text-primary transition-colors">
+                                  {post.title}
+                                </h3>
                               )}
-                            </AnimatePresence>
+                              <p className="text-sm text-muted-foreground whitespace-pre-line">{post.content}</p>
+
+                              {(!selectedGroup.is_readonly || isAdmin) && (
+                                <div className="flex items-center gap-3 pt-1">
+                                  <button
+                                    onClick={() => toggleExpand(post.id)}
+                                    className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-1"
+                                  >
+                                    <MessageSquare className="w-3.5 h-3.5" />
+                                    {replies[post.id]?.length || 0} answers
+                                  </button>
+                                  {user && canPostInChannel(selectedGroup) && (
+                                    <button
+                                      onClick={() => setShowReplyFor(showReplyFor === post.id ? null : post.id)}
+                                      className="text-xs text-muted-foreground hover:text-primary transition-colors"
+                                    >
+                                      Reply
+                                    </button>
+                                  )}
+                                </div>
+                              )}
+
+                              {/* Reply input */}
+                              <AnimatePresence>
+                                {showReplyFor === post.id && canPostInChannel(selectedGroup) && (
+                                  <motion.div
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: "auto" }}
+                                    exit={{ opacity: 0, height: 0 }}
+                                    className="flex gap-2 pt-2"
+                                  >
+                                    <Input
+                                      placeholder="Write your answer..."
+                                      value={replyContent[post.id] || ""}
+                                      onChange={e => setReplyContent(prev => ({ ...prev, [post.id]: e.target.value }))}
+                                      onKeyDown={e => e.key === "Enter" && submitReply(post.id)}
+                                      className="text-sm focus:shadow-glow focus:border-primary transition-all"
+                                    />
+                                    <Button size="sm" onClick={() => submitReply(post.id)}
+                                      className="bg-gradient-primary text-primary-foreground shrink-0">
+                                      <Send className="w-4 h-4" />
+                                    </Button>
+                                  </motion.div>
+                                )}
+                              </AnimatePresence>
+
+                              {/* Replies thread */}
+                              <AnimatePresence>
+                                {isExpanded && replies[post.id] && (
+                                  <motion.div
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: "auto" }}
+                                    exit={{ opacity: 0, height: 0 }}
+                                    className="space-y-2 pl-4 border-l-2 border-primary/20 mt-2"
+                                  >
+                                    {replies[post.id].length === 0 && (
+                                      <p className="text-xs text-muted-foreground py-2">No answers yet</p>
+                                    )}
+                                    {replies[post.id].map(reply => {
+                                      const replyVote = userVotes.find(v => v.post_id === reply.id);
+                                      const replyScore = reply.upvotes - reply.downvotes;
+                                      const isBot = reply.user_name === "mod_amit";
+                                      return (
+                                        <div key={reply.id} className={`flex gap-2 py-2 ${isBot ? "bg-accent/5 rounded-lg px-2" : ""}`}>
+                                          <div className="flex flex-col items-center gap-0.5">
+                                            <button onClick={() => vote(reply.id, "up")}
+                                              className={`text-xs transition-all hover:scale-110 ${replyVote?.vote_type === "up" ? "text-primary" : "text-muted-foreground hover:text-primary"}`}>
+                                              <ChevronUp className="w-4 h-4" />
+                                            </button>
+                                            <span className={`text-[10px] font-bold ${replyScore > 0 ? "text-primary" : "text-muted-foreground"}`}>{replyScore}</span>
+                                            <button onClick={() => vote(reply.id, "down")}
+                                              className={`text-xs transition-all hover:scale-110 ${replyVote?.vote_type === "down" ? "text-destructive" : "text-muted-foreground hover:text-destructive"}`}>
+                                              <ChevronDown className="w-4 h-4" />
+                                            </button>
+                                          </div>
+                                          <div className="flex-1">
+                                            <div className="text-[10px] text-muted-foreground flex items-center gap-1">
+                                              <User className="w-2.5 h-2.5" /> {getUsernameDisplay(reply)}
+                                              <span>•</span>
+                                              <span>{new Date(reply.created_at).toLocaleDateString()}</span>
+                                            </div>
+                                            <p className="text-sm mt-0.5">{reply.content}</p>
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
+                                  </motion.div>
+                                )}
+                              </AnimatePresence>
+                            </div>
                           </div>
-                        </div>
-                      </motion.div>
-                    );
-                  })}
-                </div>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
           )}
