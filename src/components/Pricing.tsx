@@ -74,7 +74,7 @@ const plans = [
     gradient: false,
     infinity: true,
     features: [
-      "Everything in Elite",
+      "20 AI searches/day — everything in Elite",
       "Create & sell courses (up to 5)",
       "Sell tools & templates (up to 5)",
       "5 additional marketplace items",
