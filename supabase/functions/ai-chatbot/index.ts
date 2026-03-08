@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -10,7 +11,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { messages } = await req.json();
+    const { messages, user_id } = await req.json();
     if (!messages || !Array.isArray(messages)) {
       return new Response(JSON.stringify({ error: "Messages array required" }), {
         status: 400,
@@ -20,6 +21,42 @@ serve(async (req) => {
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
+
+    // Fetch user profile for personalization
+    let profileContext = "";
+    if (user_id) {
+      try {
+        const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+        const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+        const supabase = createClient(supabaseUrl, supabaseKey);
+
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("display_name, email, bio, subscription_tier, search_count, phone, address")
+          .eq("user_id", user_id)
+          .single();
+
+        if (profile) {
+          profileContext = `\n\nUser Profile:
+- Name: ${profile.display_name || "Unknown"}
+- Email: ${profile.email || "N/A"}
+- Tier: ${profile.subscription_tier}
+- Bio: ${profile.bio || "Not set"}
+- Searches: ${profile.search_count}
+- Location: ${profile.address || "Not set"}`;
+        }
+
+        // Save user messages to chat_messages for admin visibility
+        const lastUserMsg = messages[messages.length - 1];
+        if (lastUserMsg?.role === "user") {
+          await supabase.from("chat_messages").insert({
+            user_id, role: "user", content: lastUserMsg.content,
+          });
+        }
+      } catch (e) {
+        console.error("Profile fetch error:", e);
+      }
+    }
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -32,20 +69,39 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: `You are an expert freelancing mentor and business advisor for HustleAI's Elite users. You provide:
-- Personalized freelancing advice based on the user's skills and goals
+            content: `You are HustleBot 🤖 — the personal AI mentor for HustleAI platform. You're friendly, encouraging, and practical.
+
+ALWAYS greet the user by their name with a warm emoji. Be conversational and supportive.
+${profileContext}
+
+You provide:
+- Personalized freelancing advice based on user's skills and goals
 - Actionable strategies for finding clients and growing income
-- Pricing guidance and negotiation tips
+- Pricing guidance and negotiation tips in INR (₹)
 - Portfolio and personal branding advice
-- Tools and workflow optimization suggestions
+- Tools and workflow optimization
+- Resume tips if the user has uploaded one
 - Motivation and mindset coaching
 
-Be conversational, encouraging, and practical. Use emojis sparingly. Format responses with markdown for clarity. Keep responses concise but valuable.`,
+Format responses with markdown. Keep responses concise but valuable. Use emojis sparingly but warmly.`,
           },
           ...messages,
         ],
       }),
     });
+
+    if (response.status === 429) {
+      return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again in a moment." }), {
+        status: 429,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (response.status === 402) {
+      return new Response(JSON.stringify({ error: "AI credits exhausted. Please contact admin." }), {
+        status: 402,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     if (!response.ok) {
       const text = await response.text();
@@ -55,6 +111,20 @@ Be conversational, encouraging, and practical. Use emojis sparingly. Format resp
 
     const data = await response.json();
     const reply = data.choices?.[0]?.message?.content || "I couldn't generate a response. Please try again!";
+
+    // Save assistant reply to chat_messages
+    if (user_id) {
+      try {
+        const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+        const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+        const supabase = createClient(supabaseUrl, supabaseKey);
+        await supabase.from("chat_messages").insert({
+          user_id, role: "assistant", content: reply,
+        });
+      } catch (e) {
+        console.error("Save reply error:", e);
+      }
+    }
 
     return new Response(JSON.stringify({ reply }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

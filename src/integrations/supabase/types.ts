@@ -14,6 +14,75 @@ export type Database = {
   }
   public: {
     Tables: {
+      blog_posts: {
+        Row: {
+          author_name: string | null
+          category: string | null
+          content: string
+          created_at: string
+          created_by: string | null
+          excerpt: string | null
+          id: string
+          is_published: boolean
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author_name?: string | null
+          category?: string | null
+          content: string
+          created_at?: string
+          created_by?: string | null
+          excerpt?: string | null
+          id?: string
+          is_published?: boolean
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          author_name?: string | null
+          category?: string | null
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          excerpt?: string | null
+          id?: string
+          is_published?: boolean
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      chat_messages: {
+        Row: {
+          admin_id: string | null
+          content: string
+          created_at: string
+          id: string
+          is_admin_reply: boolean
+          role: string
+          user_id: string
+        }
+        Insert: {
+          admin_id?: string | null
+          content: string
+          created_at?: string
+          id?: string
+          is_admin_reply?: boolean
+          role?: string
+          user_id: string
+        }
+        Update: {
+          admin_id?: string | null
+          content?: string
+          created_at?: string
+          id?: string
+          is_admin_reply?: boolean
+          role?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       community_groups: {
         Row: {
           created_at: string
@@ -41,6 +110,78 @@ export type Database = {
           id?: string
           min_tier?: Database["public"]["Enums"]["subscription_tier"]
           name?: string
+        }
+        Relationships: []
+      }
+      contact_submissions: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          message: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          message: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          message?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      expert_assignments: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          expert_email: string | null
+          expert_name: string
+          id: string
+          meeting_link: string | null
+          notes: string | null
+          scheduled_at: string | null
+          status: string
+          target_tier: string
+          topic: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          expert_email?: string | null
+          expert_name: string
+          id?: string
+          meeting_link?: string | null
+          notes?: string | null
+          scheduled_at?: string | null
+          status?: string
+          target_tier?: string
+          topic: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          expert_email?: string | null
+          expert_name?: string
+          id?: string
+          meeting_link?: string | null
+          notes?: string | null
+          scheduled_at?: string | null
+          status?: string
+          target_tier?: string
+          topic?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -196,6 +337,48 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      webinars: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          link: string | null
+          meeting_id: string | null
+          meeting_pass: string | null
+          scheduled_at: string | null
+          status: string
+          target_tier: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          link?: string | null
+          meeting_id?: string | null
+          meeting_pass?: string | null
+          scheduled_at?: string | null
+          status?: string
+          target_tier?: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          link?: string | null
+          meeting_id?: string | null
+          meeting_pass?: string | null
+          scheduled_at?: string | null
+          status?: string
+          target_tier?: string
+          title?: string
         }
         Relationships: []
       }
