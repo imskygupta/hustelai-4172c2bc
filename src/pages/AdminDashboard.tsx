@@ -229,6 +229,7 @@ export default function AdminDashboard() {
     if (verifRes.data) setVerifications(verifRes.data);
     if (payRes.data) setPayments(payRes.data);
     if (forumRes.data) setForumPosts(forumRes.data);
+    if (rolesRes.data) setUserRoles(rolesRes.data);
     // Build chat users list
     if (chatRes.data) {
       const userMap = new Map<string, ChatUser>();
