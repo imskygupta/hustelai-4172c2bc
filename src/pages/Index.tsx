@@ -1,8 +1,16 @@
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { SearchBar } from "@/components/SearchBar";
-import { ArrowRight, Zap, Brain, Target, TrendingUp, Shield, Globe } from "lucide-react";
+import { Navbar } from "@/components/Navbar";
+import { Pricing } from "@/components/Pricing";
+import { Testimonials } from "@/components/Testimonials";
+import { ArrowRight, Zap, Brain, Target, TrendingUp, Shield, Globe, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useEffect, useRef } from "react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+gsap.registerPlugin(ScrollTrigger);
 
 const features = [
   { icon: Brain, title: "AI-Powered Search", desc: "Get personalized freelancing ideas tailored to your skills, budget, and goals." },
@@ -16,12 +24,40 @@ const features = [
 const stats = [
   { value: "500+", label: "Freelancing Categories" },
   { value: "AI", label: "Powered Suggestions" },
-  { value: "0", label: "Investment Required" },
+  { value: "$0", label: "To Get Started" },
   { value: "24/7", label: "Live Search" },
 ];
 
 export default function Index() {
   const navigate = useNavigate();
+  const heroRef = useRef<HTMLDivElement>(null);
+  const dollarRefs = useRef<HTMLDivElement[]>([]);
+
+  useEffect(() => {
+    // GSAP floating dollar animations
+    dollarRefs.current.forEach((el, i) => {
+      if (!el) return;
+      gsap.to(el, {
+        y: -30 + Math.random() * 60,
+        x: -15 + Math.random() * 30,
+        rotation: -10 + Math.random() * 20,
+        duration: 3 + Math.random() * 2,
+        repeat: -1,
+        yoyo: true,
+        ease: "sine.inOut",
+        delay: i * 0.3,
+      });
+    });
+
+    // Hero text entrance
+    if (heroRef.current) {
+      gsap.fromTo(
+        heroRef.current.querySelectorAll(".gsap-fade"),
+        { opacity: 0, y: 40 },
+        { opacity: 1, y: 0, duration: 0.8, stagger: 0.15, ease: "power3.out" }
+      );
+    }
+  }, []);
 
   const handleSearch = (query: string) => {
     navigate(`/explore?q=${encodeURIComponent(query)}`);
@@ -29,53 +65,47 @@ export default function Index() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Nav */}
-      <nav className="fixed top-0 w-full z-50 glass border-b border-border/50">
-        <div className="container mx-auto flex items-center justify-between h-16 px-4">
-          <div className="flex items-center gap-2">
-            <Zap className="w-6 h-6 text-primary" />
-            <span className="font-display font-bold text-xl">HustleAI</span>
-          </div>
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" onClick={() => navigate("/explore")}>Explore</Button>
-            <Button className="bg-gradient-primary text-primary-foreground" onClick={() => navigate("/explore")}>
-              Get Started <ArrowRight className="w-4 h-4 ml-1" />
-            </Button>
-          </div>
-        </div>
-      </nav>
+      <Navbar />
 
       {/* Hero */}
-      <section className="pt-32 pb-20 px-4">
-        <div className="container mx-auto max-w-4xl text-center space-y-8">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="space-y-4"
-          >
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/30 bg-primary/5 text-primary text-sm mb-4">
+      <section className="pt-32 pb-20 px-4 relative overflow-hidden">
+        {/* Floating dollar symbols */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          {[...Array(12)].map((_, i) => (
+            <div
+              key={i}
+              ref={(el) => { if (el) dollarRefs.current[i] = el; }}
+              className="absolute text-primary/[0.07] font-display font-bold select-none"
+              style={{
+                left: `${5 + i * 8}%`,
+                top: `${10 + (i % 4) * 22}%`,
+                fontSize: `${30 + i * 8}px`,
+              }}
+            >
+              {i % 3 === 0 ? "$" : i % 3 === 1 ? "₹" : "€"}
+            </div>
+          ))}
+        </div>
+
+        <div ref={heroRef} className="container mx-auto max-w-4xl text-center space-y-8 relative z-10">
+          <div className="space-y-4">
+            <div className="gsap-fade inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/30 bg-primary/5 text-primary text-sm mb-4">
               <Sparkle /> AI-Powered Freelance Discovery
             </div>
-            <h1 className="text-5xl md:text-7xl font-display font-bold leading-tight">
+            <h1 className="gsap-fade text-5xl md:text-7xl font-display font-bold leading-tight">
               Find Your Next{" "}
               <span className="text-gradient">Side Hustle</span>
               <br />
               in Seconds
             </h1>
-            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
+            <p className="gsap-fade text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
               Stop scrolling job boards. Tell us your skills, budget, and goals — our AI finds the perfect freelancing opportunities for you in real time.
             </p>
-          </motion.div>
+          </div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, duration: 0.5 }}
-            className="max-w-3xl mx-auto"
-          >
+          <div className="gsap-fade max-w-3xl mx-auto">
             <SearchBar onSearch={handleSearch} size="lg" />
-          </motion.div>
+          </div>
         </div>
       </section>
 
@@ -136,6 +166,12 @@ export default function Index() {
         </div>
       </section>
 
+      {/* Pricing */}
+      <Pricing />
+
+      {/* Testimonials */}
+      <Testimonials />
+
       {/* CTA */}
       <section className="py-24 px-4">
         <div className="container mx-auto max-w-3xl">
@@ -154,7 +190,7 @@ export default function Index() {
             <Button
               size="lg"
               className="bg-gradient-primary text-primary-foreground text-lg px-8 h-14"
-              onClick={() => navigate("/explore")}
+              onClick={() => navigate("/signup")}
             >
               Start Exploring <ArrowRight className="w-5 h-5 ml-2" />
             </Button>
@@ -164,10 +200,16 @@ export default function Index() {
 
       {/* Footer */}
       <footer className="border-t border-border/50 py-8 px-4">
-        <div className="container mx-auto flex items-center justify-between text-sm text-muted-foreground">
+        <div className="container mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
           <div className="flex items-center gap-2">
             <Zap className="w-4 h-4 text-primary" />
             <span className="font-display font-semibold">HustleAI</span>
+          </div>
+          <div className="flex items-center gap-6">
+            <a href="/about" className="hover:text-primary transition-colors">About</a>
+            <a href="/blog" className="hover:text-primary transition-colors">Blog</a>
+            <a href="/reviews" className="hover:text-primary transition-colors">Reviews</a>
+            <a href="/contact" className="hover:text-primary transition-colors">Contact</a>
           </div>
           <p>© 2026 HustleAI. AI-powered freelance discovery.</p>
         </div>
