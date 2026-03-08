@@ -4,6 +4,7 @@ import { SearchBar } from "@/components/SearchBar";
 import { Navbar } from "@/components/Navbar";
 import { Pricing } from "@/components/Pricing";
 import { Testimonials } from "@/components/Testimonials";
+import { Footer } from "@/components/Footer";
 import { ArrowRight, Zap, Brain, Target, TrendingUp, Shield, Globe, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect, useRef } from "react";
