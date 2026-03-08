@@ -159,6 +159,8 @@ export default function Community() {
     let groupId = groups?.[0]?.id;
     if (!groupId) return;
 
+    const isVerified = (profile as any)?.is_verified === true;
+
     const { error } = await supabase.from("forum_posts").insert({
       group_id: groupId,
       user_id: user.id,
@@ -167,7 +169,7 @@ export default function Community() {
       category: selectedCategory.name,
       parent_id: parentId,
       post_type: "answer",
-      is_approved: false,
+      is_approved: isVerified,
     });
 
     if (error) {
