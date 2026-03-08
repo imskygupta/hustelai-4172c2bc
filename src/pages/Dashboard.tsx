@@ -3,14 +3,15 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Navbar } from "@/components/Navbar";
 import { Chatbot } from "@/components/Chatbot";
+import { NotificationPopup } from "@/components/NotificationPopup";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  Search, Crown, Rocket, Sparkles, Users, Video, Wrench,
+  Search, Crown, Rocket, Sparkles, Star, Users, Video, Wrench,
   BookOpen, TrendingUp, MessageCircle, Gift, Lock,
-  Newspaper, ArrowUpRight, ArrowDownRight, ExternalLink
+  Newspaper, ArrowUpRight, ArrowDownRight, ExternalLink, User, FileText, MessageSquare
 } from "lucide-react";
 
 interface FeedData {
@@ -39,9 +40,7 @@ export default function Dashboard() {
   }, [loading, user]);
 
   useEffect(() => {
-    if (user) {
-      loadFeed();
-    }
+    if (user) loadFeed();
   }, [user]);
 
   const loadFeed = async () => {
@@ -49,35 +48,28 @@ export default function Dashboard() {
       const { data, error } = await supabase.functions.invoke("dashboard-feed");
       if (error) throw error;
       setFeed(data);
-    } catch (e) {
-      console.error("Feed load failed:", e);
-      // Fallback data
+    } catch {
       setFeed({
         headlines: [
           { text: "AI Freelancing Market Grows 340% in 2026", source: "TechCrunch" },
           { text: "Remote Work Now Default for 67% of Tech Companies", source: "Forbes" },
-          { text: "India's Gig Economy Surpasses $200B Valuation", source: "Economic Times" },
+          { text: "India's Gig Economy Surpasses ₹16L Cr Valuation", source: "Economic Times" },
           { text: "New Study: Freelancers Earn 40% More Than Full-Time Peers", source: "Bloomberg" },
           { text: "Top Skills in Demand: AI Prompt Engineering, No-Code, Video", source: "LinkedIn" },
-          { text: "Government Launches Freelancer Health Insurance Scheme", source: "Mint" },
-          { text: "Upwork Reports Record Q1 2026 Revenue", source: "Reuters" },
-          { text: "Web3 Freelancing Platforms See 5x User Growth", source: "CoinDesk" },
         ],
         stocks: [
           { symbol: "NIFTY", price: "24,580", change: "+1.2%", up: true },
           { symbol: "SENSEX", price: "81,234", change: "+0.8%", up: true },
-          { symbol: "BTC", price: "$97,450", change: "+3.4%", up: true },
-          { symbol: "ETH", price: "$4,120", change: "-1.1%", up: false },
-          { symbol: "AAPL", price: "$198.50", change: "+0.5%", up: true },
-          { symbol: "MSFT", price: "$445.20", change: "+1.8%", up: true },
+          { symbol: "BTC", price: "₹81,00,000", change: "+3.4%", up: true },
+          { symbol: "ETH", price: "₹3,42,000", change: "-1.1%", up: false },
         ],
         discover: [
-          { title: "AI Video Editing is Booming", description: "Companies pay $50-200/video for AI-enhanced edits. Learn the tools in 2 weeks.", category: "Trending" },
-          { title: "Notion Templates Market", description: "Sell productivity templates on Gumroad. Top sellers make $5K+/month.", category: "Side Hustle" },
-          { title: "LinkedIn Ghostwriting", description: "CEOs pay $500-2K/month for someone to write their LinkedIn posts.", category: "Writing" },
-          { title: "Micro-SaaS Opportunities", description: "Build tiny software tools with no-code. Monthly recurring revenue potential.", category: "Tech" },
-          { title: "UGC Content Creation", description: "Brands pay $150-500 per short video. No followers needed.", category: "Creative" },
-          { title: "AI Chatbot Development", description: "Businesses need custom chatbots. Charge $1K-5K per project.", category: "Tech" },
+          { title: "AI Video Editing is Booming", description: "Companies pay ₹4K-16K/video for AI-enhanced edits.", category: "Trending" },
+          { title: "Notion Templates Market", description: "Sell productivity templates. Top sellers make ₹4L+/month.", category: "Side Hustle" },
+          { title: "LinkedIn Ghostwriting", description: "CEOs pay ₹40K-1.6L/month for LinkedIn content.", category: "Writing" },
+          { title: "Micro-SaaS Opportunities", description: "Build tiny software tools with no-code. MRR potential.", category: "Tech" },
+          { title: "UGC Content Creation", description: "Brands pay ₹12K-40K per short video. No followers needed.", category: "Creative" },
+          { title: "AI Chatbot Development", description: "Businesses need custom chatbots. Charge ₹80K-4L per project.", category: "Tech" },
         ],
       });
     } finally {
@@ -96,20 +88,21 @@ export default function Dashboard() {
   if (!user || !profile) return null;
 
   const tier = profile.subscription_tier;
-  const isElite = tier === "elite";
+  const isInfinity = tier === "infinity";
+  const isElite = tier === "elite" || isInfinity;
   const isPro = tier === "pro" || isElite;
+  const isFree = tier === "free";
 
   const TierBadge = () => (
     <Badge
       className={`${
-        isElite
-          ? "bg-gradient-accent text-accent-foreground"
-          : isPro
-          ? "bg-gradient-primary text-primary-foreground"
-          : "bg-secondary text-secondary-foreground"
+        isInfinity ? "bg-yellow-500 text-black" :
+        isElite ? "bg-gradient-accent text-accent-foreground" :
+        isPro ? "bg-gradient-primary text-primary-foreground" :
+        "bg-secondary text-secondary-foreground"
       }`}
     >
-      {isElite ? <Crown className="w-3 h-3 mr-1" /> : isPro ? <Rocket className="w-3 h-3 mr-1" /> : <Sparkles className="w-3 h-3 mr-1" />}
+      {isInfinity ? <Star className="w-3 h-3 mr-1" /> : isElite ? <Crown className="w-3 h-3 mr-1" /> : isPro ? <Rocket className="w-3 h-3 mr-1" /> : <Sparkles className="w-3 h-3 mr-1" />}
       {tier.charAt(0).toUpperCase() + tier.slice(1)}
     </Badge>
   );
@@ -117,8 +110,9 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
+      <NotificationPopup />
 
-      {/* Stock Ticker Bar */}
+      {/* Stock Ticker */}
       {feed?.stocks && (
         <div className="fixed top-16 w-full z-40 bg-card/90 backdrop-blur-sm border-b border-border/50 overflow-hidden h-8">
           <motion.div
@@ -140,54 +134,48 @@ export default function Dashboard() {
         </div>
       )}
 
-      <div className="pt-28 pb-12 px-4">
+      <div className={`pt-28 pb-12 px-4 ${isFree ? "relative" : ""}`}>
+        {/* Free tier blur overlay for locked sections */}
         <div className="container mx-auto max-w-6xl space-y-8">
           {/* Welcome */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
             className="glass rounded-2xl p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-4"
           >
             <div className="space-y-2">
               <div className="flex items-center gap-3">
-                <h1 className="text-2xl font-display font-bold">
-                  Welcome, {profile.display_name || "Hustler"}!
-                </h1>
+                <h1 className="text-2xl font-display font-bold">Welcome, {profile.display_name || "Hustler"}!</h1>
                 <TierBadge />
               </div>
               <p className="text-muted-foreground text-sm">
-                {isElite
-                  ? "You have full access to all Elite features including AI Mentor, tools & webinars."
-                  : isPro
-                  ? "Upgrade to Elite for AI Mentor, webinars & exclusive tools."
+                {isInfinity ? "♾️ You have unlimited access to everything. Create, sell, and dominate."
+                  : isElite ? "You have full access to all Elite features including AI Mentor, tools & webinars."
+                  : isPro ? "Upgrade to Elite for AI Mentor, webinars & exclusive tools."
                   : `You've used ${profile.search_count}/4 free searches today. Upgrade for unlimited.`}
               </p>
             </div>
-            {!isElite && (
-              <Button className="bg-gradient-primary text-primary-foreground shrink-0" onClick={() => navigate("/#pricing")}>
-                Upgrade Plan
+            <div className="flex gap-2 shrink-0">
+              <Button variant="outline" size="sm" onClick={() => navigate("/profile")}>
+                <User className="w-4 h-4 mr-1" /> Profile
               </Button>
-            )}
+              {!isInfinity && (
+                <Button className="bg-gradient-primary text-primary-foreground" size="sm" onClick={() => navigate("/#pricing")}>
+                  Upgrade
+                </Button>
+              )}
+            </div>
           </motion.div>
 
-          {/* News Headline Marquee */}
+          {/* News Headlines */}
           {feed?.headlines && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="glass rounded-xl overflow-hidden"
-            >
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass rounded-xl overflow-hidden">
               <div className="flex items-center gap-2 px-4 py-2 border-b border-border/50">
                 <Newspaper className="w-4 h-4 text-primary" />
                 <span className="font-display font-semibold text-sm">Breaking News</span>
-                <span className="ml-auto text-[10px] text-muted-foreground animate-pulse-glow">● LIVE</span>
+                <span className="ml-auto text-[10px] text-destructive animate-pulse">● LIVE</span>
               </div>
               <div className="overflow-hidden h-10">
-                <motion.div
-                  className="flex items-center gap-12 h-full whitespace-nowrap px-4"
-                  animate={{ x: [0, -2000] }}
-                  transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
-                >
+                <motion.div className="flex items-center gap-12 h-full whitespace-nowrap px-4"
+                  animate={{ x: [0, -2000] }} transition={{ duration: 30, repeat: Infinity, ease: "linear" }}>
                   {[...feed.headlines, ...feed.headlines].map((h, i) => (
                     <span key={i} className="text-sm flex items-center gap-2">
                       <span className="text-foreground">{h.text}</span>
@@ -200,85 +188,69 @@ export default function Dashboard() {
           )}
 
           {/* Quick Actions */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
             {[
               { icon: Search, label: "AI Search", desc: isPro ? "Unlimited" : `${4 - profile.search_count} left`, action: () => navigate("/explore"), locked: false },
-              { icon: Users, label: "Community", desc: isElite ? "Elite Groups" : isPro ? "Pro Groups" : "Basic Access", action: () => {}, locked: false },
+              { icon: Users, label: "Community", desc: isPro ? "Forums Open" : "Limited", action: () => navigate("/community"), locked: false },
+              { icon: User, label: "My Profile", desc: "Edit & resume", action: () => navigate("/profile"), locked: false },
               { icon: Video, label: "Live Webinars", desc: "Expert guidance", action: () => {}, locked: !isElite },
               { icon: MessageCircle, label: "AI Mentor", desc: "Personal chatbot", action: () => {}, locked: !isElite },
             ].map((item, i) => (
-              <motion.div
-                key={item.label}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.1 }}
+              <motion.div key={item.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }}
                 onClick={item.locked ? undefined : item.action}
-                className={`glass rounded-xl p-5 space-y-2 transition-all duration-300 ${
-                  item.locked ? "opacity-50" : "cursor-pointer hover:shadow-glow hover:border-primary/30"
+                className={`glass rounded-xl p-4 space-y-2 transition-all duration-300 ${
+                  item.locked ? "opacity-40 blur-[0.5px]" : "cursor-pointer hover:shadow-glow hover:border-primary/30"
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <item.icon className="w-8 h-8 text-primary" />
+                  <item.icon className="w-7 h-7 text-primary" />
                   {item.locked && <Lock className="w-4 h-4 text-muted-foreground" />}
                 </div>
-                <h3 className="font-display font-semibold">{item.label}</h3>
-                <p className="text-xs text-muted-foreground">{item.desc}</p>
+                <h3 className="font-display font-semibold text-sm">{item.label}</h3>
+                <p className="text-[11px] text-muted-foreground">{item.desc}</p>
               </motion.div>
             ))}
           </div>
 
           {/* Discover Cards */}
           {feed?.discover && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.2 }}
-              className="space-y-4"
-            >
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }} className="space-y-4">
               <div className="flex items-center gap-3">
                 <ExternalLink className="w-5 h-5 text-primary" />
                 <h2 className="text-xl font-display font-bold">Discover What's Trending</h2>
               </div>
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className={`grid md:grid-cols-2 lg:grid-cols-3 gap-4 ${isFree ? "blur-sm pointer-events-none" : ""}`}>
                 {feed.discover.map((item, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3 + i * 0.08 }}
+                  <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 + i * 0.08 }}
                     className="glass rounded-xl p-5 space-y-3 hover:border-primary/30 hover:shadow-glow transition-all duration-300 cursor-pointer group"
                   >
                     <div className="flex items-center justify-between">
-                      <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-semibold">
-                        {item.category}
-                      </span>
+                      <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-semibold">{item.category}</span>
                       <ArrowUpRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
                     </div>
-                    <h3 className="font-display font-semibold text-sm group-hover:text-gradient transition-colors">
-                      {item.title}
-                    </h3>
+                    <h3 className="font-display font-semibold text-sm">{item.title}</h3>
                     <p className="text-xs text-muted-foreground leading-relaxed">{item.description}</p>
                   </motion.div>
                 ))}
               </div>
+              {isFree && (
+                <div className="text-center -mt-20 relative z-10">
+                  <Button className="bg-gradient-primary text-primary-foreground" onClick={() => navigate("/#pricing")}>
+                    <Lock className="w-4 h-4 mr-1" /> Upgrade to Unlock
+                  </Button>
+                </div>
+              )}
             </motion.div>
           )}
 
           {/* Blog Section */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
-            className="space-y-4"
-          >
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }} className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <BookOpen className="w-5 h-5 text-accent" />
                 <h2 className="text-xl font-display font-bold">Latest from Blog</h2>
               </div>
-              <Button variant="ghost" size="sm" className="text-primary" onClick={() => navigate("/blog")}>
-                View All →
-              </Button>
+              <Button variant="ghost" size="sm" className="text-primary" onClick={() => navigate("/blog")}>View All →</Button>
             </div>
             <div className="grid md:grid-cols-3 gap-4">
               {[
@@ -286,11 +258,7 @@ export default function Dashboard() {
                 { title: "How to Price Your Freelance Services", cat: "Strategy", time: "7 min" },
                 { title: "AI Tools Every Freelancer Needs", cat: "Tools", time: "6 min" },
               ].map((post, i) => (
-                <div
-                  key={i}
-                  className="glass rounded-xl p-4 space-y-2 hover:border-primary/30 transition-all cursor-pointer"
-                  onClick={() => navigate("/blog")}
-                >
+                <div key={i} className="glass rounded-xl p-4 space-y-2 hover:border-primary/30 transition-all cursor-pointer" onClick={() => navigate("/blog")}>
                   <span className="text-[10px] text-primary">{post.cat} · {post.time} read</span>
                   <h4 className="font-display font-semibold text-sm">{post.title}</h4>
                 </div>
@@ -298,82 +266,85 @@ export default function Dashboard() {
             </div>
           </motion.div>
 
-          {/* Elite Tools & Software */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-            className="space-y-4"
-          >
+          {/* Elite Tools */}
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }} className="space-y-4">
             <div className="flex items-center gap-3">
               <Wrench className="w-5 h-5 text-primary" />
               <h2 className="text-xl font-display font-bold">Free Tools & Software</h2>
               {!isElite && <Badge variant="outline" className="text-xs">Elite Only</Badge>}
             </div>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className={`grid md:grid-cols-2 lg:grid-cols-3 gap-4 ${!isElite ? "blur-sm" : ""}`}>
               {eliteTools.map((tool) => (
-                <div
-                  key={tool.name}
-                  className={`glass rounded-xl p-4 flex items-center gap-4 transition-all ${
-                    isElite ? "hover:border-primary/30" : "opacity-40"
-                  }`}
-                >
+                <div key={tool.name} className={`glass rounded-xl p-4 flex items-center gap-4 transition-all ${isElite ? "hover:border-primary/30" : ""}`}>
                   <span className="text-3xl">{tool.icon}</span>
                   <div>
                     <p className="font-display font-semibold text-sm">{tool.name}</p>
                     <p className="text-xs text-muted-foreground">{tool.desc}</p>
                   </div>
-                  {!isElite && <Lock className="w-4 h-4 text-muted-foreground ml-auto" />}
                 </div>
               ))}
             </div>
+            {!isElite && (
+              <div className="text-center -mt-16 relative z-10">
+                <Button className="bg-gradient-primary text-primary-foreground" onClick={() => navigate("/#pricing")}>
+                  <Lock className="w-4 h-4 mr-1" /> Upgrade to Elite
+                </Button>
+              </div>
+            )}
           </motion.div>
 
-          {/* Hacks & Methods (Elite) */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.6 }}
-            className="space-y-4"
-          >
+          {/* Hacks & Methods */}
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }} className="space-y-4">
             <div className="flex items-center gap-3">
               <Gift className="w-5 h-5 text-accent" />
               <h2 className="text-xl font-display font-bold">Hacks & Methods Library</h2>
               {!isElite && <Badge variant="outline" className="text-xs">Elite Only</Badge>}
             </div>
-            <div className={`glass rounded-xl p-6 ${!isElite ? "opacity-40" : ""}`}>
-              {isElite ? (
-                <div className="grid md:grid-cols-2 gap-4">
-                  {[
-                    "Cold Email Templates That Convert",
-                    "LinkedIn Growth Hacking Playbook",
-                    "Upwork Profile Optimization Guide",
-                    "Pricing Strategy Calculator",
-                    "Client Retention Blueprint",
-                    "Portfolio Website Checklist",
-                  ].map((hack) => (
-                    <div key={hack} className="flex items-center gap-2 text-sm">
-                      <BookOpen className="w-4 h-4 text-primary shrink-0" />
-                      <span className="text-muted-foreground">{hack}</span>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-4">
-                  <Lock className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-                  <p className="text-sm text-muted-foreground">Upgrade to Elite to unlock exclusive hacks & methods</p>
-                </div>
-              )}
+            <div className={`glass rounded-xl p-6 ${!isElite ? "blur-sm" : ""}`}>
+              <div className="grid md:grid-cols-2 gap-4">
+                {[
+                  "Cold Email Templates That Convert",
+                  "LinkedIn Growth Hacking Playbook",
+                  "Upwork Profile Optimization Guide",
+                  "Pricing Strategy Calculator",
+                  "Client Retention Blueprint",
+                  "Portfolio Website Checklist",
+                ].map((hack) => (
+                  <div key={hack} className="flex items-center gap-2 text-sm">
+                    <BookOpen className="w-4 h-4 text-primary shrink-0" />
+                    <span className="text-muted-foreground">{hack}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </motion.div>
 
+          {/* Infinity Section */}
+          {isInfinity && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.7 }} className="space-y-4">
+              <div className="flex items-center gap-3">
+                <Star className="w-5 h-5 text-yellow-500" />
+                <h2 className="text-xl font-display font-bold">Infinity Zone</h2>
+                <Badge className="bg-yellow-500 text-black text-xs">♾️</Badge>
+              </div>
+              <div className="grid md:grid-cols-3 gap-4">
+                {[
+                  { icon: "🎓", title: "Create Courses", desc: "Build and sell courses to the community" },
+                  { icon: "🏪", title: "Sell Tools", desc: "List your tools & templates in the marketplace" },
+                  { icon: "👥", title: "Build Communities", desc: "Create and manage your own groups" },
+                ].map((item) => (
+                  <div key={item.title} className="glass rounded-xl p-5 space-y-2 border-yellow-500/20 hover:border-yellow-500/40 transition-all cursor-pointer">
+                    <span className="text-3xl">{item.icon}</span>
+                    <h3 className="font-display font-semibold">{item.title}</h3>
+                    <p className="text-xs text-muted-foreground">{item.desc}</p>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          )}
+
           {/* Trending */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.7 }}
-            className="space-y-4"
-          >
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.8 }} className="space-y-4">
             <div className="flex items-center gap-3">
               <TrendingUp className="w-5 h-5 text-primary" />
               <h2 className="text-xl font-display font-bold">Trending This Week</h2>
@@ -381,13 +352,13 @@ export default function Dashboard() {
             <div className="glass rounded-xl p-6">
               <div className="grid md:grid-cols-2 gap-4">
                 {[
-                  "AI Prompt Engineering — $2K-8K/mo",
-                  "Short-Form Video Editing — $1K-5K/mo",
-                  "Notion Template Sales — $500-3K/mo",
-                  "Technical Writing — $3K-10K/mo",
+                  "AI Prompt Engineering — ₹1.6L-6.5L/mo",
+                  "Short-Form Video Editing — ₹80K-4L/mo",
+                  "Notion Template Sales — ₹40K-2.4L/mo",
+                  "Technical Writing — ₹2.4L-8L/mo",
                 ].map((trend) => (
                   <div key={trend} className="flex items-center gap-2 text-sm">
-                    <span className="w-2 h-2 rounded-full bg-primary" />
+                    <ArrowUpRight className="w-4 h-4 text-primary shrink-0" />
                     <span className="text-muted-foreground">{trend}</span>
                   </div>
                 ))}
@@ -397,7 +368,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Chatbot only for Elite */}
       {isElite && <Chatbot />}
     </div>
   );
