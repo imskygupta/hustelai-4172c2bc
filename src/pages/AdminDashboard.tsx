@@ -240,7 +240,8 @@ export default function AdminDashboard() {
     if (webRes.data) setWebinars(webRes.data as Webinar[]);
     if (expertRes.data) setExpertAssignments(expertRes.data as ExpertAssignment[]);
     if (blogRes.data) setBlogPosts(blogRes.data as BlogPost[]);
-    setNewsletterCount(nlRes.count || 0);
+    setNewsletterCount(nlRes.count || nlRes.data?.length || 0);
+    if (nlRes.data) setSubscribers(nlRes.data);
     setContactCount(contactRes.count || 0);
     if (verifRes.data) setVerifications(verifRes.data);
     if (payRes.data) setPayments(payRes.data);
