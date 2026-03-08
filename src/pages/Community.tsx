@@ -364,7 +364,7 @@ export default function Community() {
                       />
                       <div className="flex items-center justify-between">
                         <p className="text-[10px] text-muted-foreground flex items-center gap-1">
-                          <AlertCircle className="w-3 h-3" /> Posts require admin approval before appearing publicly
+                          <AlertCircle className="w-3 h-3" /> {(profile as any)?.is_verified ? "✅ Verified — auto-approved" : "Posts require admin approval before appearing publicly"}
                         </p>
                         <Button onClick={submitPost} size="sm"
                           className="bg-gradient-primary text-primary-foreground hover:scale-[1.02] active:scale-[0.98] transition-transform">
