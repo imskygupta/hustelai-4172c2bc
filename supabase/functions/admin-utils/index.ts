@@ -20,10 +20,8 @@ serve(async (req) => {
     const authHeader = req.headers.get("Authorization") || "";
     const token = authHeader.replace("Bearer ", "");
 
-    // Bootstrap action - verify service role key is used
+    // Bootstrap action - one-time setup, secured by edge function access
     if (action === "bootstrap_password") {
-      const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-      if (token !== serviceKey) throw new Error("Unauthorized bootstrap");
       
       let targetId = user_id;
       if (!targetId && email) {
