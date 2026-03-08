@@ -52,7 +52,7 @@ const plans = [
     icon: Crown,
     gradient: false,
     features: [
-      "Everything in Pro",
+      "10 AI searches/day — everything in Pro",
       "Live webinars & guidance",
       "AI Chatbot (Personal Mentor)",
       "Advanced elite communities",
