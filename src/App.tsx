@@ -17,6 +17,9 @@ import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
 import Community from "./pages/Community";
 import Profile from "./pages/Profile";
+import Payment from "./pages/Payment";
+import Leaderboard from "./pages/Leaderboard";
+import SavedHustles from "./pages/SavedHustles";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
