@@ -70,7 +70,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signUp = async (email: string, password: string, displayName: string, referralCode?: string) => {
-    const { error, data } = await supabase.auth.signUp({
+    const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -78,39 +78,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         emailRedirectTo: window.location.origin,
       },
     });
-    // If signup succeeded and there's a referral code, track the referral
-    if (!error && data.user && referralCode) {
-      // Find the referrer by their referral code
-      const { data: referrerProfile } = await supabase
-        .from("profiles")
-        .select("user_id")
-        .eq("referral_code", referralCode)
-        .single();
-      if (referrerProfile) {
-        // Create a referral record
-        await supabase.from("referrals").insert({
-          referrer_id: referrerProfile.user_id,
-          referred_user_id: data.user.id,
-          referral_code: referralCode,
-          status: "converted",
-          reward_type: "search_credit",
-          reward_amount: 1,
-          converted_at: new Date().toISOString(),
-        });
-        // Award 1 search credit to referrer
-        await supabase.from("profiles")
-          .update({ referral_credits: 1 })
-          .eq("referral_code", referralCode);
-        // Log the earning
-        await supabase.from("affiliate_earnings").insert({
-          affiliate_id: referrerProfile.user_id,
-          source_user_id: data.user.id,
-          amount: 1,
-          type: "search_credit",
-          description: "Referral signup credit",
-        });
-      }
-    }
+    // Referral tracking is now handled by the database trigger handle_referral_on_signup
     return { error };
   };
 
