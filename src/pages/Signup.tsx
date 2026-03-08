@@ -111,6 +111,11 @@ export default function Signup() {
               <span className="font-display font-bold text-2xl group-hover:text-gradient transition-all">HustleAI</span>
             </Link>
             <p className="text-muted-foreground">Create your account and start hustling.</p>
+            {referralCode && (
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium">
+                🎁 Referred by a friend — you both earn rewards!
+              </div>
+            )}
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
