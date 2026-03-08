@@ -7,6 +7,15 @@ import { Label } from "@/components/ui/label";
 import { Zap, UserPlus, Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
+import { ParticleBackground } from "@/components/ParticleBackground";
+
+const quotes = [
+  "The journey of a thousand miles begins with a single step. 🏃",
+  "Your only limit is your mind. Break through. 💥",
+  "Turn your skills into income. Start hustling. 🔥",
+  "Great things never come from comfort zones. 🌟",
+  "Be the CEO of your own life. Start today. 👑",
+];
 
 export default function Signup() {
   const [email, setEmail] = useState("");
@@ -17,6 +26,7 @@ export default function Signup() {
   const { signUp } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const quote = quotes[Math.floor(Math.random() * quotes.length)];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,17 +46,31 @@ export default function Signup() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center px-4">
+    <div className="min-h-screen bg-background flex items-center justify-center px-4 relative overflow-hidden">
+      <ParticleBackground />
+
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: -30 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md"
+        transition={{ delay: 0.5, duration: 0.8 }}
+        className="absolute top-8 left-0 right-0 text-center z-10"
       >
-        <div className="glass rounded-2xl p-8 space-y-6 border-primary/20">
+        <p className="text-sm md:text-base text-primary/80 font-display italic max-w-lg mx-auto px-4">
+          "{quote}"
+        </p>
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5 }}
+        className="w-full max-w-md relative z-10"
+      >
+        <div className="glass rounded-2xl p-8 space-y-6 border-primary/20 hover:border-primary/40 transition-colors duration-500 hover:shadow-glow">
           <div className="text-center space-y-2">
-            <Link to="/" className="inline-flex items-center gap-2">
-              <Zap className="w-8 h-8 text-primary" />
-              <span className="font-display font-bold text-2xl">HustleAI</span>
+            <Link to="/" className="inline-flex items-center gap-2 group">
+              <Zap className="w-8 h-8 text-primary group-hover:scale-110 transition-transform" />
+              <span className="font-display font-bold text-2xl group-hover:text-gradient transition-all">HustleAI</span>
             </Link>
             <p className="text-muted-foreground">Create your account and start hustling.</p>
           </div>
@@ -58,8 +82,9 @@ export default function Signup() {
                 id="name"
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
-                placeholder="Akash Kumar"
+                placeholder="Your name"
                 required
+                className="transition-all duration-300 focus:shadow-glow focus:border-primary"
               />
             </div>
             <div className="space-y-2">
@@ -71,6 +96,7 @@ export default function Signup() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
                 required
+                className="transition-all duration-300 focus:shadow-glow focus:border-primary"
               />
             </div>
             <div className="space-y-2">
@@ -84,24 +110,29 @@ export default function Signup() {
                   placeholder="••••••••"
                   required
                   minLength={6}
+                  className="transition-all duration-300 focus:shadow-glow focus:border-primary"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors"
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
             </div>
-            <Button type="submit" className="w-full bg-gradient-primary text-primary-foreground" disabled={loading}>
+            <Button
+              type="submit"
+              className="w-full bg-gradient-primary text-primary-foreground hover:scale-[1.02] active:scale-[0.98] transition-transform"
+              disabled={loading}
+            >
               {loading ? "Creating account..." : <><UserPlus className="w-4 h-4 mr-2" /> Create Account</>}
             </Button>
           </form>
 
           <p className="text-center text-sm text-muted-foreground">
             Already have an account?{" "}
-            <Link to="/login" className="text-primary hover:underline">Sign in</Link>
+            <Link to="/login" className="text-primary hover:underline hover:text-primary/80 transition-colors">Sign in</Link>
           </p>
         </div>
       </motion.div>
