@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useAuth } from "@/hooks/useAuth";
 import { useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { SearchBar } from "@/components/SearchBar";
@@ -16,6 +17,7 @@ const types = ["All", "Online", "In-Person", "Hybrid"];
 
 export default function Explore() {
   const [searchParams] = useSearchParams();
+  const { user, profile } = useAuth();
   const { toast } = useToast();
   const [results, setResults] = useState<FreelanceResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -30,6 +32,15 @@ export default function Explore() {
     try {
       const data = await searchFreelanceIdeas(query);
       setResults(data);
+      
+      // Track search count for logged-in users
+      if (user && profile) {
+        const tier = profile.subscription_tier;
+        const maxSearches = tier === "free" ? 3 : tier === "pro" ? 15 : 999;
+        if (profile.search_count >= maxSearches) {
+          toast({ title: "Search limit reached", description: `You've used all ${maxSearches} searches. Upgrade to continue.`, variant: "destructive" });
+        }
+      }
     } catch (err: any) {
       toast({ title: "Search failed", description: err.message, variant: "destructive" });
     } finally {
