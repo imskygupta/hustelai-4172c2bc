@@ -27,6 +27,7 @@ import Company from "./pages/Company";
 import Relax from "./pages/Relax";
 import HustleDetail from "./pages/HustleDetail";
 import InfinityZone from "./pages/InfinityZone";
+import Marketplace from "./pages/Marketplace";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
