@@ -144,7 +144,7 @@ export default function Community() {
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "Posted!", description: "Your post is pending admin approval." });
+      toast({ title: "Posted!", description: isVerified ? "Your post is live!" : "Your post is pending admin approval." });
       setNewTitle("");
       setNewContent("");
       setShowNewPost(false);
