@@ -191,6 +191,9 @@ export default function Dashboard() {
 
       <div className="pt-28 pb-12 px-4">
         <div className="container mx-auto max-w-6xl space-y-8">
+          {/* Email Verification Banner */}
+          {!emailVerified && <EmailVerificationBanner email={user.email || ""} />}
+
           {/* Welcome */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
             className="glass rounded-2xl p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
@@ -203,7 +206,7 @@ export default function Dashboard() {
                 {isInfinity ? "♾️ Unlimited access. Create, sell, and dominate." :
                  isElite ? "Full access to AI Mentor, tools & webinars." :
                  isPro ? "Upgrade to Elite for AI Mentor & exclusive tools." :
-                 `${4 - profile.search_count}/4 free searches today. Upgrade for unlimited.`}
+                 `${searchesLeft}/${maxSearches} searches left today. Upgrade for more.`}
               </p>
             </div>
             <div className="flex gap-2 shrink-0">
