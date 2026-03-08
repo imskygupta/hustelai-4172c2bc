@@ -12,7 +12,7 @@ const plans = [
     icon: Sparkles,
     gradient: false,
     features: [
-      "3-4 AI-powered searches/day",
+      "3 AI-powered searches/day",
       "Basic personalization",
       "Explore all categories",
       "Community access (limited)",
