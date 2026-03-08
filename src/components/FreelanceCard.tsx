@@ -131,6 +131,15 @@ export function FreelanceCard({ result, index }: { result: FreelanceResult; inde
             ))}
           </div>
 
+          {/* Save button */}
+          {user && (
+            <Button variant="ghost" size="sm" onClick={handleSave}
+              className={`w-full justify-center text-xs transition-all ${isSaved ? "text-primary" : "text-muted-foreground hover:text-primary"}`}>
+              {isSaved ? <BookmarkCheck className="w-4 h-4 mr-1" /> : <Bookmark className="w-4 h-4 mr-1" />}
+              {isSaved ? "Saved" : "Save Hustle"}
+            </Button>
+          )}
+
           {/* CTA for non-logged in */}
           {!user && (
             <motion.div

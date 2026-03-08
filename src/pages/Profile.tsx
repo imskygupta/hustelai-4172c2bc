@@ -208,6 +208,9 @@ export default function Profile() {
               )}
             </div>
           </motion.div>
+
+          {/* Verification Section */}
+          <VerificationSection />
         </div>
       </div>
     </div>
