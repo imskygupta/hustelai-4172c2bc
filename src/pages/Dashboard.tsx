@@ -86,6 +86,7 @@ export default function Dashboard() {
       loadFeed();
       loadWebinars();
       loadExpertAssignments();
+      loadTrendingLinks();
     }
   }, [user]);
 
