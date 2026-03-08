@@ -8,7 +8,6 @@ import { Zap, UserPlus, Eye, EyeOff, ArrowRight, CheckCircle } from "lucide-reac
 import { useToast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import { ParticleBackground } from "@/components/ParticleBackground";
-import { ReCaptcha } from "@/components/ReCaptcha";
 import gsap from "gsap";
 
 const quotes = [
@@ -32,7 +31,6 @@ export default function Signup() {
   const [displayName, setDisplayName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [captchaToken, setCaptchaToken] = useState("");
   const [quoteIdx, setQuoteIdx] = useState(0);
   const [searchParams] = useSearchParams();
   const referralCode = searchParams.get("ref") || "";
@@ -63,10 +61,6 @@ export default function Signup() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!captchaToken) {
-      toast({ title: "Please complete the captcha", variant: "destructive" });
-      return;
-    }
     if (password.length < 6) {
       toast({ title: "Password too short", description: "Minimum 6 characters", variant: "destructive" });
       return;
@@ -147,11 +141,8 @@ export default function Signup() {
                 </button>
               </div>
             </div>
-            <div className="gsap-stagger flex justify-center">
-              <ReCaptcha onVerify={setCaptchaToken} />
-            </div>
             <div className="gsap-stagger">
-              <Button type="submit" disabled={loading || !captchaToken}
+              <Button type="submit" disabled={loading}
                 className="w-full h-12 bg-gradient-primary text-primary-foreground font-semibold text-base btn-press hover:shadow-glow transition-shadow">
                 {loading ? (
                   <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1 }} className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full" />
@@ -162,7 +153,6 @@ export default function Signup() {
             </div>
           </form>
 
-          {/* Benefits list */}
           <div className="grid grid-cols-2 gap-2 gsap-stagger">
             {benefits.map(b => (
               <div key={b} className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
