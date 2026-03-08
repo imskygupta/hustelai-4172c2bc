@@ -7,6 +7,7 @@ import { useState } from "react";
 const navLinks = [
   { label: "Explore", href: "/explore" },
   { label: "Community", href: "/community" },
+  { label: "Leaderboard", href: "/leaderboard" },
   { label: "Blog", href: "/blog" },
   { label: "About", href: "/about" },
   { label: "Reviews", href: "/reviews" },
@@ -37,6 +38,9 @@ export function Navbar() {
         <div className="hidden md:flex items-center gap-3">
           {user ? (
             <>
+              <Button variant="ghost" size="sm" onClick={() => navigate("/saved-hustles")}>
+                My Hustles
+              </Button>
               <Button variant="ghost" size="sm" onClick={() => navigate("/profile")}>
                 <User className="w-4 h-4 mr-1" /> Profile
               </Button>
@@ -70,6 +74,7 @@ export function Navbar() {
           <div className="border-t border-border/50 pt-2 space-y-2">
             {user ? (
               <>
+                <Button variant="ghost" className="w-full justify-start" onClick={() => { navigate("/saved-hustles"); setMobileOpen(false); }}>My Hustles</Button>
                 <Button variant="ghost" className="w-full justify-start" onClick={() => { navigate("/profile"); setMobileOpen(false); }}>Profile</Button>
                 <Button variant="ghost" className="w-full justify-start" onClick={() => { navigate("/dashboard"); setMobileOpen(false); }}>Dashboard</Button>
                 <Button variant="outline" className="w-full" onClick={() => { signOut(); navigate("/"); setMobileOpen(false); }}>

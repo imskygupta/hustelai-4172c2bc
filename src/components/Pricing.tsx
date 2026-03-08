@@ -183,7 +183,7 @@ export function Pricing() {
                   plan.popular ? "bg-gradient-primary text-primary-foreground" : ""
                 }`}
                 variant={plan.popular || plan.infinity ? "default" : "outline"}
-                onClick={() => navigate("/signup")}
+                onClick={() => navigate(plan.name === "Free" ? "/signup" : "/payment")}
               >
                 {plan.cta}
               </Button>

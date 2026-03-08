@@ -361,6 +361,51 @@ export type Database = {
         }
         Relationships: []
       }
+      payments: {
+        Row: {
+          amount: number
+          cf_order_id: string | null
+          cf_payment_id: string | null
+          created_at: string
+          currency: string
+          id: string
+          order_id: string
+          payment_session_id: string | null
+          plan: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          cf_order_id?: string | null
+          cf_payment_id?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          order_id: string
+          payment_session_id?: string | null
+          plan: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          cf_order_id?: string | null
+          cf_payment_id?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          order_id?: string
+          payment_session_id?: string | null
+          plan?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           address: string | null
@@ -369,6 +414,7 @@ export type Database = {
           display_name: string | null
           email: string | null
           id: string
+          is_verified: boolean
           phone: string | null
           resume_url: string | null
           search_count: number
@@ -376,6 +422,7 @@ export type Database = {
           updated_at: string
           user_id: string
           username: string | null
+          xp_points: number
         }
         Insert: {
           address?: string | null
@@ -384,6 +431,7 @@ export type Database = {
           display_name?: string | null
           email?: string | null
           id?: string
+          is_verified?: boolean
           phone?: string | null
           resume_url?: string | null
           search_count?: number
@@ -391,6 +439,7 @@ export type Database = {
           updated_at?: string
           user_id: string
           username?: string | null
+          xp_points?: number
         }
         Update: {
           address?: string | null
@@ -399,6 +448,7 @@ export type Database = {
           display_name?: string | null
           email?: string | null
           id?: string
+          is_verified?: boolean
           phone?: string | null
           resume_url?: string | null
           search_count?: number
@@ -406,8 +456,53 @@ export type Database = {
           updated_at?: string
           user_id?: string
           username?: string | null
+          xp_points?: number
         }
         Relationships: []
+      }
+      saved_hustles: {
+        Row: {
+          created_at: string
+          hustle_id: string
+          id: string
+          income_logged: number | null
+          notes: string | null
+          started_at: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          hustle_id: string
+          id?: string
+          income_logged?: number | null
+          notes?: string | null
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          hustle_id?: string
+          id?: string
+          income_logged?: number | null
+          notes?: string | null
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saved_hustles_hustle_id_fkey"
+            columns: ["hustle_id"]
+            isOneToOne: false
+            referencedRelation: "side_hustles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       side_hustles: {
         Row: {
@@ -454,6 +549,27 @@ export type Database = {
         }
         Relationships: []
       }
+      user_achievements: {
+        Row: {
+          achievement_key: string
+          id: string
+          unlocked_at: string
+          user_id: string
+        }
+        Insert: {
+          achievement_key: string
+          id?: string
+          unlocked_at?: string
+          user_id: string
+        }
+        Update: {
+          achievement_key?: string
+          id?: string
+          unlocked_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -471,6 +587,42 @@ export type Database = {
           created_at?: string
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_verifications: {
+        Row: {
+          created_at: string
+          id: string
+          id_card_url: string
+          photo_url: string
+          rejection_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          id_card_url: string
+          photo_url: string
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          id_card_url?: string
+          photo_url?: string
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
           user_id?: string
         }
         Relationships: []

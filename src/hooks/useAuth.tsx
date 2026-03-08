@@ -9,6 +9,8 @@ interface Profile {
   email: string | null;
   subscription_tier: "free" | "pro" | "elite" | "infinity";
   search_count: number;
+  is_verified: boolean;
+  xp_points: number;
 }
 
 interface AuthContextType {

@@ -127,6 +127,9 @@ export default function Community() {
       return;
     }
 
+    // Check if user is verified for auto-approval
+    const isVerified = (profile as any)?.is_verified === true;
+
     const { error } = await supabase.from("forum_posts").insert({
       group_id: groupId,
       user_id: user.id,
@@ -135,13 +138,13 @@ export default function Community() {
       title: newTitle || null,
       category: selectedCategory.name,
       post_type: "question",
-      is_approved: false,
+      is_approved: isVerified,
     });
 
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "Posted!", description: "Your post is pending admin approval." });
+      toast({ title: "Posted!", description: isVerified ? "Your post is live!" : "Your post is pending admin approval." });
       setNewTitle("");
       setNewContent("");
       setShowNewPost(false);
@@ -156,6 +159,8 @@ export default function Community() {
     let groupId = groups?.[0]?.id;
     if (!groupId) return;
 
+    const isVerified = (profile as any)?.is_verified === true;
+
     const { error } = await supabase.from("forum_posts").insert({
       group_id: groupId,
       user_id: user.id,
@@ -164,13 +169,13 @@ export default function Community() {
       category: selectedCategory.name,
       parent_id: parentId,
       post_type: "answer",
-      is_approved: false,
+      is_approved: isVerified,
     });
 
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "Reply submitted!", description: "Pending admin approval." });
+      toast({ title: "Reply submitted!", description: isVerified ? "Your reply is live!" : "Pending admin approval." });
       setReplyContent(prev => ({ ...prev, [parentId]: "" }));
       setShowReplyFor(null);
       loadReplies(parentId);
@@ -359,7 +364,7 @@ export default function Community() {
                       />
                       <div className="flex items-center justify-between">
                         <p className="text-[10px] text-muted-foreground flex items-center gap-1">
-                          <AlertCircle className="w-3 h-3" /> Posts require admin approval before appearing publicly
+                          <AlertCircle className="w-3 h-3" /> {(profile as any)?.is_verified ? "✅ Verified — auto-approved" : "Posts require admin approval before appearing publicly"}
                         </p>
                         <Button onClick={submitPost} size="sm"
                           className="bg-gradient-primary text-primary-foreground hover:scale-[1.02] active:scale-[0.98] transition-transform">
