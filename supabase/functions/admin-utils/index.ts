@@ -10,15 +10,21 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { action, user_id, email, password, bootstrap_key } = await req.json();
+    const { action, user_id, email, password } = await req.json();
     
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    // Bootstrap action - uses service role key directly for initial setup
-    if (action === "bootstrap_password" && bootstrap_key === Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")) {
+    const authHeader = req.headers.get("Authorization") || "";
+    const token = authHeader.replace("Bearer ", "");
+
+    // Bootstrap action - verify service role key is used
+    if (action === "bootstrap_password") {
+      const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+      if (token !== serviceKey) throw new Error("Unauthorized bootstrap");
+      
       let targetId = user_id;
       if (!targetId && email) {
         const { data: { users } } = await supabaseAdmin.auth.admin.listUsers();
@@ -33,9 +39,7 @@ serve(async (req) => {
       return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    // Verify caller is admin for all other actions
-    const authHeader = req.headers.get("Authorization")!;
-    const token = authHeader.replace("Bearer ", "");
+    // Verify caller is admin
     const { data: { user: caller } } = await supabaseAdmin.auth.getUser(token);
     if (!caller) throw new Error("Unauthorized");
 
