@@ -3,8 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DollarSign, TrendingUp, Zap, Clock, Flame, ChevronRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { DollarSign, TrendingUp, Zap, Clock, Flame, ChevronRight, Bookmark, BookmarkCheck } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 import type { FreelanceResult } from "@/lib/ai-search";
 
 const difficultyColors: Record<string, string> = {
@@ -25,10 +28,28 @@ export function FreelanceCard({ result, index }: { result: FreelanceResult; inde
   const { user } = useAuth();
   const navigate = useNavigate();
   const [isHovered, setIsHovered] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
 
   const handleClick = () => {
-    if (!user) {
-      navigate("/signup");
+    if (!user) navigate("/signup");
+  };
+
+  const handleSave = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!user) { navigate("/signup"); return; }
+    
+    const { error } = await supabase.from("saved_hustles").upsert({
+      user_id: user.id,
+      hustle_id: result.id,
+      status: "saved",
+    } as any, { onConflict: "user_id,hustle_id" });
+
+    if (!error) {
+      setIsSaved(true);
+      toast({ title: "💾 Saved!", description: "Track it in My Hustles" });
+      // Award XP
+      const { data: profile } = await supabase.from("profiles").select("xp_points").eq("user_id", user.id).single();
+      await supabase.from("profiles").update({ xp_points: ((profile as any)?.xp_points || 0) + 5 } as any).eq("user_id", user.id);
     }
   };
 
