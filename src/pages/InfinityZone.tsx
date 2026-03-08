@@ -48,7 +48,8 @@ interface MarketplaceItem {
 export default function InfinityZone() {
   const { user, profile, loading } = useAuth();
   const navigate = useNavigate();
-  const [tab, setTab] = useState<Tab>("courses");
+  const [searchParams] = useSearchParams();
+  const [tab, setTab] = useState<Tab>((searchParams.get("tab") as Tab) || "courses");
   const [courses, setCourses] = useState<Course[]>([]);
   const [myCourses, setMyCourses] = useState<Course[]>([]);
   const [items, setItems] = useState<MarketplaceItem[]>([]);
