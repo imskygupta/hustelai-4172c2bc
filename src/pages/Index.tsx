@@ -4,6 +4,7 @@ import { SearchBar } from "@/components/SearchBar";
 import { Navbar } from "@/components/Navbar";
 import { Pricing } from "@/components/Pricing";
 import { Testimonials } from "@/components/Testimonials";
+import { Footer } from "@/components/Footer";
 import { ArrowRight, Zap, Brain, Target, TrendingUp, Shield, Globe, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect, useRef } from "react";
@@ -198,22 +199,7 @@ export default function Index() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-border/50 py-8 px-4">
-        <div className="container mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
-          <div className="flex items-center gap-2">
-            <Zap className="w-4 h-4 text-primary" />
-            <span className="font-display font-semibold">HustleAI</span>
-          </div>
-          <div className="flex items-center gap-6">
-            <a href="/about" className="hover:text-primary transition-colors">About</a>
-            <a href="/blog" className="hover:text-primary transition-colors">Blog</a>
-            <a href="/reviews" className="hover:text-primary transition-colors">Reviews</a>
-            <a href="/contact" className="hover:text-primary transition-colors">Contact</a>
-          </div>
-          <p>© 2026 HustleAI. AI-powered freelance discovery.</p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }
