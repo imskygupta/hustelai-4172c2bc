@@ -163,12 +163,17 @@ export default function Login() {
             ))}
           </div>
 
-          <p className="text-center text-sm text-muted-foreground gsap-stagger">
-            Don't have an account?{" "}
-            <Link to="/signup" className="text-primary hover:underline hover:text-primary/80 transition-colors font-medium">
-              Sign up <ArrowRight className="w-3 h-3 inline" />
+          <div className="text-center space-y-2 gsap-stagger">
+            <Link to="/forgot-password" className="text-xs text-muted-foreground hover:text-primary transition-colors">
+              Forgot password?
             </Link>
-          </p>
+            <p className="text-sm text-muted-foreground">
+              Don't have an account?{" "}
+              <Link to="/signup" className="text-primary hover:underline hover:text-primary/80 transition-colors font-medium">
+                Sign up <ArrowRight className="w-3 h-3 inline" />
+              </Link>
+            </p>
+          </div>
         </div>
       </motion.div>
     </div>
