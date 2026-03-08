@@ -140,6 +140,9 @@ export default function AdminDashboard() {
   const [chatMessages, setChatMessages] = useState<any[]>([]);
   const [adminReply, setAdminReply] = useState("");
   const [loadingData, setLoadingData] = useState(true);
+  const [verifications, setVerifications] = useState<any[]>([]);
+  const [payments, setPayments] = useState<any[]>([]);
+  const [forumPosts, setForumPosts] = useState<any[]>([]);
 
   // Forms
   const [notifTitle, setNotifTitle] = useState("");
