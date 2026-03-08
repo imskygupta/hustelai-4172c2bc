@@ -418,6 +418,7 @@ export default function AdminDashboard() {
     { key: "LOVABLE_API_KEY", value: "Configured (Backend)", status: "active" },
   ];
 
+  const apiKeysInfo = [
     { name: "Lovable AI Gateway (Gemini)", status: "active", note: "Primary — google/gemini-2.5-flash" },
     { name: "Lovable AI Gateway (GPT-5)", status: "available", note: "Backup — openai/gpt-5-mini" },
     { name: "Custom OpenAI Key", status: "not_set", note: "Add via backend secrets" },
