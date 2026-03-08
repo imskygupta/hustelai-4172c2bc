@@ -57,10 +57,14 @@ const eliteTools = [
 export default function Dashboard() {
   const { user, profile, loading } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [feed, setFeed] = useState<FeedData | null>(null);
   const [feedLoading, setFeedLoading] = useState(true);
   const [webinars, setWebinars] = useState<Webinar[]>([]);
   const [expertAssignments, setExpertAssignments] = useState<ExpertAssignment[]>([]);
+  const [activeTab, setActiveTab] = useState<"dashboard" | "affiliate">(
+    searchParams.get("tab") === "affiliate" ? "affiliate" : "dashboard"
+  );
 
   useEffect(() => {
     if (!loading && !user) navigate("/login");
