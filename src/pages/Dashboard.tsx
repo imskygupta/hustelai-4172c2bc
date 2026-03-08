@@ -5,6 +5,7 @@ import { Navbar } from "@/components/Navbar";
 import { Chatbot } from "@/components/Chatbot";
 import { NotificationPopup } from "@/components/NotificationPopup";
 import { AffiliateTab } from "@/components/AffiliateTab";
+import { EmailVerificationBanner } from "@/components/EmailVerificationBanner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
