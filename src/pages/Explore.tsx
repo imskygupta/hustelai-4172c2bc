@@ -17,6 +17,7 @@ const types = ["All", "Online", "In-Person", "Hybrid"];
 
 export default function Explore() {
   const [searchParams] = useSearchParams();
+  const { user, profile } = useAuth();
   const { toast } = useToast();
   const [results, setResults] = useState<FreelanceResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
