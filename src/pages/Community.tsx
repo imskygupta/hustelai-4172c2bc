@@ -127,6 +127,9 @@ export default function Community() {
       return;
     }
 
+    // Check if user is verified for auto-approval
+    const isVerified = (profile as any)?.is_verified === true;
+
     const { error } = await supabase.from("forum_posts").insert({
       group_id: groupId,
       user_id: user.id,
@@ -135,7 +138,7 @@ export default function Community() {
       title: newTitle || null,
       category: selectedCategory.name,
       post_type: "question",
-      is_approved: false,
+      is_approved: isVerified,
     });
 
     if (error) {
