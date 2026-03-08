@@ -74,6 +74,7 @@ export function Navbar() {
           <div className="border-t border-border/50 pt-2 space-y-2">
             {user ? (
               <>
+                <Button variant="ghost" className="w-full justify-start" onClick={() => { navigate("/saved-hustles"); setMobileOpen(false); }}>My Hustles</Button>
                 <Button variant="ghost" className="w-full justify-start" onClick={() => { navigate("/profile"); setMobileOpen(false); }}>Profile</Button>
                 <Button variant="ghost" className="w-full justify-start" onClick={() => { navigate("/dashboard"); setMobileOpen(false); }}>Dashboard</Button>
                 <Button variant="outline" className="w-full" onClick={() => { signOut(); navigate("/"); setMobileOpen(false); }}>
