@@ -8,18 +8,23 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
+import { CommunityOnboarding } from "@/components/CommunityOnboarding";
 import {
   MessageSquare, Send, ArrowLeft, ThumbsUp, ThumbsDown,
   Plus, Filter, Clock, Flame, CheckCircle, AlertCircle,
-  ChevronDown, ChevronUp, User, Lock
+  ChevronDown, ChevronUp, User, Lock, Hash, Volume2, VolumeX,
+  Users, Crown, Shield, BookOpen
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 
-interface ForumCategory {
+interface CommunityGroup {
   id: string;
   name: string;
   icon: string;
   description: string | null;
+  min_tier: string;
+  is_default: boolean;
+  is_readonly: boolean;
 }
 
 interface ForumPost {
@@ -45,7 +50,6 @@ interface ForumVote {
 
 type SortType = "hot" | "new" | "top";
 
-// mod_amit bot replies
 const BOT_REPLIES = [
   "that's a solid point tbh 👍",
   "agree, been thinking the same",
@@ -59,11 +63,25 @@ const BOT_REPLIES = [
   "been doing this for 3 months, can confirm it works",
 ];
 
+const TIER_CHANNEL_LIMITS: Record<string, number> = {
+  free: 0,
+  pro: 1,
+  elite: 2,
+  infinity: 5,
+};
+
+const TIER_LABELS: Record<string, string> = {
+  free: "Free",
+  pro: "Pro",
+  elite: "Elite",
+  infinity: "Infinity",
+};
+
 export default function Community() {
   const { user, profile, loading } = useAuth();
   const navigate = useNavigate();
-  const [categories, setCategories] = useState<ForumCategory[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<ForumCategory | null>(null);
+  const [groups, setGroups] = useState<CommunityGroup[]>([]);
+  const [selectedGroup, setSelectedGroup] = useState<CommunityGroup | null>(null);
   const [posts, setPosts] = useState<ForumPost[]>([]);
   const [replies, setReplies] = useState<Record<string, ForumPost[]>>({});
   const [userVotes, setUserVotes] = useState<ForumVote[]>([]);
@@ -74,25 +92,53 @@ export default function Community() {
   const [sortBy, setSortBy] = useState<SortType>("hot");
   const [showNewPost, setShowNewPost] = useState(false);
   const [expandedPosts, setExpandedPosts] = useState<Set<string>>(new Set());
-  const [newCategoryName, setNewCategoryName] = useState("");
-  const [showNewCategory, setShowNewCategory] = useState(false);
   const [botTimers, setBotTimers] = useState<Record<string, number>>({});
+  const [hasOnboarded, setHasOnboarded] = useState<boolean | null>(null);
+  const [userMemberships, setUserMemberships] = useState<string[]>([]);
 
-  const isFreeUser = !profile || profile.subscription_tier === "free";
-  const isGeneralCategory = (name: string) => name.toLowerCase().includes("general");
+  const tier = profile?.subscription_tier || "free";
+  const maxChannels = TIER_CHANNEL_LIMITS[tier] || 0;
+  const canRequestCategories = tier === "elite" || tier === "infinity";
 
   useEffect(() => {
-    loadCategories();
-    if (user) loadUserVotes();
+    if (user) {
+      checkOnboarding();
+      loadMemberships();
+      loadUserVotes();
+    } else {
+      setHasOnboarded(false);
+    }
+    loadGroups();
     return () => {
-      // Clear bot timers on unmount
       Object.values(botTimers).forEach(t => clearTimeout(t));
     };
   }, [user]);
 
-  const loadCategories = async () => {
-    const { data } = await supabase.from("forum_categories").select("*").order("created_at");
-    if (data) setCategories(data as ForumCategory[]);
+  const checkOnboarding = async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("community_onboarding")
+      .select("id")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    setHasOnboarded(!!data);
+  };
+
+  const loadMemberships = async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("community_memberships")
+      .select("channel_id")
+      .eq("user_id", user.id);
+    if (data) setUserMemberships(data.map(m => m.channel_id));
+  };
+
+  const loadGroups = async () => {
+    const { data } = await supabase
+      .from("community_groups")
+      .select("*")
+      .order("created_at");
+    if (data) setGroups(data as CommunityGroup[]);
   };
 
   const loadUserVotes = async () => {
@@ -101,11 +147,11 @@ export default function Community() {
     if (data) setUserVotes(data);
   };
 
-  const loadPosts = async (categoryName: string) => {
+  const loadPosts = async (groupId: string, groupName: string) => {
     const { data } = await supabase
       .from("forum_posts")
       .select("*")
-      .eq("category", categoryName)
+      .eq("group_id", groupId)
       .is("parent_id", null)
       .order("created_at", { ascending: false });
     if (data) setPosts(data as ForumPost[]);
@@ -120,17 +166,70 @@ export default function Community() {
     if (data) setReplies(prev => ({ ...prev, [postId]: data as ForumPost[] }));
   };
 
-  const openCategory = (cat: ForumCategory) => {
-    if (isFreeUser && !isGeneralCategory(cat.name)) {
+  const handleOnboardingComplete = async (data: any) => {
+    if (!user) return;
+
+    // Save onboarding
+    await supabase.from("community_onboarding").insert({
+      user_id: user.id,
+      interests: data.interests,
+      experience_level: data.experienceLevel,
+      goals: data.goals,
+      preferred_categories: data.preferredCategories,
+      custom_category_requests: data.customCategories,
+    });
+
+    // Auto-join default channels
+    const defaultGroups = groups.filter(g => g.is_default);
+    for (const g of defaultGroups) {
+      await supabase.from("community_memberships").insert({
+        user_id: user.id,
+        channel_id: g.id,
+      }).select();
+    }
+
+    // Join selected channels
+    for (const catName of data.preferredCategories) {
+      const group = groups.find(g => g.name === catName);
+      if (group) {
+        await supabase.from("community_memberships").insert({
+          user_id: user.id,
+          channel_id: group.id,
+        }).select();
+      }
+    }
+
+    // Submit custom category requests
+    for (const cat of data.customCategories) {
+      await supabase.from("category_requests").insert({
+        user_id: user.id,
+        category_name: cat,
+      });
+    }
+
+    setHasOnboarded(true);
+    loadMemberships();
+    toast({ title: "Welcome to the community! 🎉", description: "You've been added to your channels." });
+  };
+
+  const openGroup = (group: CommunityGroup) => {
+    if (!user) {
+      navigate("/signup");
+      return;
+    }
+
+    // Check access
+    if (!group.is_default && !userMemberships.includes(group.id)) {
       toast({
-        title: "🔒 Premium Only",
-        description: "This community group is available for Pro, Elite, and Infinity members.",
+        title: "🔒 Not a member",
+        description: "You haven't joined this channel. Complete onboarding or upgrade your plan.",
         variant: "destructive",
       });
       return;
     }
-    setSelectedCategory(cat);
-    loadPosts(cat.name);
+
+    setSelectedGroup(group);
+    loadPosts(group.id, group.name);
   };
 
   const toggleExpand = (postId: string) => {
@@ -144,62 +243,44 @@ export default function Community() {
     setExpandedPosts(newSet);
   };
 
-  // Schedule mod_amit bot reply after 2 minutes if no one replies
   const scheduleBotReply = (postId: string) => {
     const timer = window.setTimeout(async () => {
-      // Check if there are any replies yet
       const { data: existingReplies } = await supabase
         .from("forum_posts")
         .select("id")
         .eq("parent_id", postId)
         .limit(1);
-      
-      if (!existingReplies || existingReplies.length === 0) {
-        // Bot replies
-        const { data: groups } = await supabase.from("community_groups").select("id").limit(1);
-        const groupId = groups?.[0]?.id;
-        if (!groupId || !selectedCategory) return;
 
+      if (!existingReplies || existingReplies.length === 0) {
+        if (!selectedGroup) return;
         const botReply = BOT_REPLIES[Math.floor(Math.random() * BOT_REPLIES.length)];
-        
         await supabase.from("forum_posts").insert({
-          group_id: groupId,
-          user_id: user?.id || "00000000-0000-0000-0000-000000000000",
+          group_id: selectedGroup.id,
+          user_id: user?.id || "",
           user_name: "mod_amit",
           content: botReply,
-          category: selectedCategory.name,
+          category: selectedGroup.name,
           parent_id: postId,
           post_type: "answer",
           is_approved: true,
         });
-
-        // Reload replies for that post
         loadReplies(postId);
       }
-    }, 120000); // 2 minutes
-
+    }, 120000);
     setBotTimers(prev => ({ ...prev, [postId]: timer }));
   };
 
   const submitPost = async () => {
-    if (!newContent.trim() || !selectedCategory || !user) return;
+    if (!newContent.trim() || !selectedGroup || !user) return;
 
-    let { data: groups } = await supabase.from("community_groups").select("id").limit(1);
-    let groupId = groups?.[0]?.id;
-    if (!groupId) {
-      toast({ title: "Error", description: "No community group exists", variant: "destructive" });
-      return;
-    }
-
-    const isVerified = (profile as any)?.is_verified === true;
-
+    const isVerified = profile?.is_verified === true;
     const { data: newPost, error } = await supabase.from("forum_posts").insert({
-      group_id: groupId,
+      group_id: selectedGroup.id,
       user_id: user.id,
       user_name: profile?.display_name || "Anonymous",
       content: newContent,
       title: newTitle || null,
-      category: selectedCategory.name,
+      category: selectedGroup.name,
       post_type: "question",
       is_approved: isVerified,
     }).select().single();
@@ -207,46 +288,35 @@ export default function Community() {
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "Posted!", description: isVerified ? "Your post is live!" : "Your post is pending admin approval." });
+      toast({ title: "Posted!", description: isVerified ? "Your post is live!" : "Pending admin approval." });
       setNewTitle("");
       setNewContent("");
       setShowNewPost(false);
-      loadPosts(selectedCategory.name);
-      
-      // Schedule bot reply for new post
+      loadPosts(selectedGroup.id, selectedGroup.name);
       if (newPost) scheduleBotReply(newPost.id);
     }
   };
 
   const submitReply = async (parentId: string) => {
-    if (!replyContent[parentId]?.trim() || !user || !selectedCategory) return;
-
-    let { data: groups } = await supabase.from("community_groups").select("id").limit(1);
-    let groupId = groups?.[0]?.id;
-    if (!groupId) return;
-
-    const isVerified = (profile as any)?.is_verified === true;
-
+    if (!replyContent[parentId]?.trim() || !user || !selectedGroup) return;
+    const isVerified = profile?.is_verified === true;
     const { error } = await supabase.from("forum_posts").insert({
-      group_id: groupId,
+      group_id: selectedGroup.id,
       user_id: user.id,
       user_name: profile?.display_name || "Anonymous",
       content: replyContent[parentId],
-      category: selectedCategory.name,
+      category: selectedGroup.name,
       parent_id: parentId,
       post_type: "answer",
       is_approved: isVerified,
     });
-
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "Reply submitted!", description: isVerified ? "Your reply is live!" : "Pending admin approval." });
+      toast({ title: "Reply submitted!" });
       setReplyContent(prev => ({ ...prev, [parentId]: "" }));
       setShowReplyFor(null);
       loadReplies(parentId);
-      
-      // Cancel bot timer since someone replied
       if (botTimers[parentId]) {
         clearTimeout(botTimers[parentId]);
         setBotTimers(prev => { const n = { ...prev }; delete n[parentId]; return n; });
@@ -256,7 +326,6 @@ export default function Community() {
 
   const vote = async (postId: string, type: "up" | "down") => {
     if (!user) { navigate("/signup"); return; }
-
     const existing = userVotes.find(v => v.post_id === postId);
     if (existing) {
       if (existing.vote_type === type) return;
@@ -264,32 +333,14 @@ export default function Community() {
     } else {
       await supabase.from("forum_votes").insert({ post_id: postId, user_id: user.id, vote_type: type });
     }
-
     const post = [...posts, ...Object.values(replies).flat()].find(p => p.id === postId);
     if (post) {
       const newUp = type === "up" ? post.upvotes + 1 : (existing?.vote_type === "up" ? post.upvotes - 1 : post.upvotes);
       const newDown = type === "down" ? post.downvotes + 1 : (existing?.vote_type === "down" ? post.downvotes - 1 : post.downvotes);
       await supabase.from("forum_posts").update({ upvotes: newUp, downvotes: newDown }).eq("id", postId);
     }
-
     loadUserVotes();
-    if (selectedCategory) loadPosts(selectedCategory.name);
-  };
-
-  const createCategory = async () => {
-    if (!newCategoryName.trim() || !user) return;
-    const { error } = await supabase.from("forum_categories").insert({
-      name: newCategoryName,
-      icon: "💬",
-      created_by: user.id,
-    });
-    if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    } else {
-      setNewCategoryName("");
-      setShowNewCategory(false);
-      loadCategories();
-    }
+    if (selectedGroup) loadPosts(selectedGroup.id, selectedGroup.name);
   };
 
   const sortedPosts = [...posts].sort((a, b) => {
@@ -304,18 +355,55 @@ export default function Community() {
     const shortId = post.user_id.slice(0, 6);
     const name = post.user_name || "Anonymous";
     const isBot = name === "mod_amit";
+    const isTeam = name === "HustleAI Team";
     return (
-      <span className={isBot ? "text-accent font-semibold" : ""}>
-        {name} {isBot && <Badge variant="outline" className="text-[8px] text-accent border-accent/30 ml-1">MOD</Badge>}
+      <span className={isBot ? "text-accent font-semibold" : isTeam ? "text-primary font-semibold" : ""}>
+        {name}
+        {isBot && <Badge variant="outline" className="text-[8px] text-accent border-accent/30 ml-1">MOD</Badge>}
+        {isTeam && <Badge variant="outline" className="text-[8px] text-primary border-primary/30 ml-1">TEAM</Badge>}
         <span className="text-muted-foreground font-normal"> • u/{shortId}</span>
       </span>
     );
   };
 
-  if (loading) {
+  // Separate groups into categories
+  const defaultGroups = groups.filter(g => g.is_default);
+  const optionalGroups = groups.filter(g => !g.is_default);
+  const joinedOptional = optionalGroups.filter(g => userMemberships.includes(g.id));
+  const availableForOnboarding = optionalGroups;
+
+  if (loading || hasOnboarded === null) {
     return <div className="min-h-screen bg-background flex items-center justify-center">
       <div className="animate-pulse text-primary font-display text-xl">Loading...</div>
     </div>;
+  }
+
+  // Show onboarding for logged-in users who haven't completed it
+  if (user && !hasOnboarded) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="pt-24 pb-12 px-4">
+          <div className="container mx-auto max-w-3xl">
+            <div className="text-center mb-8">
+              <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
+                <h1 className="text-3xl font-display font-bold mb-2">
+                  <span className="text-gradient">Welcome to the Community</span> 🎉
+                </h1>
+                <p className="text-muted-foreground">Let's get you set up — answer a few quick questions</p>
+              </motion.div>
+            </div>
+            <CommunityOnboarding
+              availableCategories={availableForOnboarding.map(g => ({ id: g.id, name: g.name, icon: g.icon }))}
+              maxChannels={maxChannels}
+              tierName={TIER_LABELS[tier]}
+              canRequestCategories={canRequestCategories}
+              onComplete={handleOnboardingComplete}
+            />
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -323,85 +411,124 @@ export default function Community() {
       <Navbar />
       <div className="pt-24 pb-12 px-4">
         <div className="container mx-auto max-w-5xl">
-          {!selectedCategory ? (
-            <div className="space-y-6">
+          {!selectedGroup ? (
+            <div className="space-y-8">
               <div className="text-center space-y-2">
                 <h1 className="text-3xl font-display font-bold">
-                  <span className="text-gradient">Community</span> Forums
+                  <span className="text-gradient">Community</span> Hub
                 </h1>
-                <p className="text-muted-foreground">Ask questions, share insights, and learn from fellow hustlers</p>
-                {isFreeUser && (
-                  <p className="text-xs text-muted-foreground">
-                    <Lock className="w-3 h-3 inline mr-1" />
-                    Free users can access General Discussion only. <button onClick={() => navigate("/payment")} className="text-primary hover:underline">Upgrade</button> to unlock all groups.
-                  </p>
-                )}
+                <p className="text-muted-foreground">Your channels, conversations, and connections</p>
               </div>
 
-              <div className="flex justify-end">
-                {user && !isFreeUser && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowNewCategory(!showNewCategory)}
-                    className="hover:border-primary/50 hover:text-primary transition-all"
-                  >
-                    <Plus className="w-4 h-4 mr-1" /> New Category
-                  </Button>
-                )}
-              </div>
-
-              {showNewCategory && (
-                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }}
-                  className="glass rounded-xl p-4 flex gap-2">
-                  <Input placeholder="Category name..." value={newCategoryName}
-                    onChange={e => setNewCategoryName(e.target.value)}
-                    className="focus:shadow-glow focus:border-primary transition-all" />
-                  <Button onClick={createCategory} className="bg-gradient-primary text-primary-foreground shrink-0">
-                    Create
-                  </Button>
-                </motion.div>
-              )}
-
-              <div className="grid md:grid-cols-2 gap-4">
-                {categories.map((cat, i) => {
-                  const locked = isFreeUser && !isGeneralCategory(cat.name);
-                  return (
+              {/* Default Channels */}
+              <div className="space-y-3">
+                <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                  <Shield className="w-4 h-4" /> Default Channels
+                </h2>
+                <div className="grid md:grid-cols-3 gap-3">
+                  {defaultGroups.map((group, i) => (
                     <motion.div
-                      key={cat.id}
+                      key={group.id}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: i * 0.06 }}
-                      onClick={() => openCategory(cat)}
-                      className={`glass rounded-xl p-6 space-y-3 cursor-pointer transition-all duration-500 group active:scale-[0.98] relative ${
-                        locked
-                          ? "opacity-60 hover:border-accent/30"
-                          : "hover:border-primary/30 hover:shadow-glow"
-                      }`}
+                      onClick={() => openGroup(group)}
+                      className="glass rounded-xl p-5 cursor-pointer transition-all duration-300 group hover:border-primary/30 hover:shadow-glow active:scale-[0.98]"
                     >
-                      {locked && (
+                      <div className="flex items-center gap-3 mb-2">
+                        <span className="text-2xl group-hover:scale-110 transition-transform">{group.icon}</span>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-display font-bold text-sm group-hover:text-gradient transition-all truncate">
+                            {group.name}
+                          </h3>
+                          {group.is_readonly && (
+                            <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                              <VolumeX className="w-3 h-3" /> Read-only
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      {group.description && <p className="text-xs text-muted-foreground line-clamp-2">{group.description}</p>}
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Joined Channels */}
+              {joinedOptional.length > 0 && (
+                <div className="space-y-3">
+                  <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                    <Hash className="w-4 h-4" /> Your Channels
+                    <Badge variant="secondary" className="text-[10px]">{joinedOptional.length}/{maxChannels}</Badge>
+                  </h2>
+                  <div className="grid md:grid-cols-2 gap-3">
+                    {joinedOptional.map((group, i) => (
+                      <motion.div
+                        key={group.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.06 }}
+                        onClick={() => openGroup(group)}
+                        className="glass rounded-xl p-5 cursor-pointer transition-all duration-300 group hover:border-primary/30 hover:shadow-glow active:scale-[0.98]"
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className="text-2xl group-hover:scale-110 transition-transform">{group.icon}</span>
+                          <div>
+                            <h3 className="font-display font-bold text-sm group-hover:text-gradient transition-all">{group.name}</h3>
+                            {group.description && <p className="text-xs text-muted-foreground">{group.description}</p>}
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Locked Channels */}
+              {optionalGroups.filter(g => !userMemberships.includes(g.id)).length > 0 && (
+                <div className="space-y-3">
+                  <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                    <Lock className="w-4 h-4" /> Explore More Channels
+                  </h2>
+                  <div className="grid md:grid-cols-2 gap-3">
+                    {optionalGroups.filter(g => !userMemberships.includes(g.id)).map((group, i) => (
+                      <motion.div
+                        key={group.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.06 }}
+                        className="glass rounded-xl p-5 opacity-50 relative"
+                      >
                         <div className="absolute top-3 right-3">
                           <Lock className="w-4 h-4 text-accent" />
                         </div>
-                      )}
-                      <div className="flex items-center gap-3">
-                        <span className="text-3xl group-hover:scale-110 transition-transform">{cat.icon}</span>
-                        <div>
-                          <h3 className="font-display font-bold text-lg group-hover:text-gradient transition-all">
-                            {cat.name}
-                          </h3>
-                          {cat.description && <p className="text-sm text-muted-foreground">{cat.description}</p>}
-                          {locked && <p className="text-[10px] text-accent">Pro+ members only</p>}
+                        <div className="flex items-center gap-3">
+                          <span className="text-2xl">{group.icon}</span>
+                          <div>
+                            <h3 className="font-display font-bold text-sm">{group.name}</h3>
+                            {group.description && <p className="text-xs text-muted-foreground">{group.description}</p>}
+                            <p className="text-[10px] text-accent mt-1">
+                              {tier === "free" ? "Upgrade to Pro+ to join" : "Channel limit reached"}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                    </motion.div>
-                  );
-                })}
-              </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                  {tier === "free" && (
+                    <div className="text-center">
+                      <Button onClick={() => navigate("/payment")} variant="outline" size="sm" className="text-primary border-primary/30">
+                        <Crown className="w-4 h-4 mr-1" /> Upgrade to unlock channels
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {!user && (
                 <div className="text-center glass rounded-xl p-8 space-y-3">
-                  <p className="text-muted-foreground">Sign up to post questions and join discussions</p>
+                  <Users className="w-10 h-10 text-primary mx-auto" />
+                  <p className="text-muted-foreground">Sign up to join the community and access all channels</p>
                   <Button className="bg-gradient-primary text-primary-foreground" onClick={() => navigate("/signup")}>
                     Join the Community
                   </Button>
@@ -410,23 +537,28 @@ export default function Community() {
             </div>
           ) : (
             <div className="space-y-4">
-              <Button variant="ghost" onClick={() => { setSelectedCategory(null); setPosts([]); setShowNewPost(false); }}
+              <Button variant="ghost" onClick={() => { setSelectedGroup(null); setPosts([]); setShowNewPost(false); }}
                 className="hover:text-primary transition-colors">
-                <ArrowLeft className="w-4 h-4 mr-1" /> Back to Forums
+                <ArrowLeft className="w-4 h-4 mr-1" /> Back to Channels
               </Button>
 
               <div className="glass rounded-xl p-6">
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center gap-3">
-                    <span className="text-3xl">{selectedCategory.icon}</span>
+                    <span className="text-3xl">{selectedGroup.icon}</span>
                     <div>
-                      <h2 className="font-display font-bold text-xl">{selectedCategory.name}</h2>
-                      {selectedCategory.description && (
-                        <p className="text-sm text-muted-foreground">{selectedCategory.description}</p>
+                      <h2 className="font-display font-bold text-xl flex items-center gap-2">
+                        {selectedGroup.name}
+                        {selectedGroup.is_readonly && (
+                          <Badge variant="outline" className="text-[10px]"><VolumeX className="w-3 h-3 mr-1" /> Read-only</Badge>
+                        )}
+                      </h2>
+                      {selectedGroup.description && (
+                        <p className="text-sm text-muted-foreground">{selectedGroup.description}</p>
                       )}
                     </div>
                   </div>
-                  {user && (
+                  {user && !selectedGroup.is_readonly && (
                     <Button onClick={() => setShowNewPost(!showNewPost)}
                       className="bg-gradient-primary text-primary-foreground hover:scale-[1.02] active:scale-[0.98] transition-transform">
                       <Plus className="w-4 h-4 mr-1" /> Ask Question
@@ -436,7 +568,7 @@ export default function Community() {
 
                 {/* New post form */}
                 <AnimatePresence>
-                  {showNewPost && (
+                  {showNewPost && !selectedGroup.is_readonly && (
                     <motion.div
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: "auto" }}
@@ -458,7 +590,7 @@ export default function Community() {
                       />
                       <div className="flex items-center justify-between">
                         <p className="text-[10px] text-muted-foreground flex items-center gap-1">
-                          <AlertCircle className="w-3 h-3" /> {(profile as any)?.is_verified ? "✅ Verified — auto-approved" : "Posts require admin approval before appearing publicly"}
+                          <AlertCircle className="w-3 h-3" /> {profile?.is_verified ? "✅ Verified — auto-approved" : "Posts require admin approval"}
                         </p>
                         <Button onClick={submitPost} size="sm"
                           className="bg-gradient-primary text-primary-foreground hover:scale-[1.02] active:scale-[0.98] transition-transform">
@@ -470,84 +602,86 @@ export default function Community() {
                 </AnimatePresence>
 
                 {/* Sort bar */}
-                <div className="flex items-center gap-2 mb-4 border-b border-border/50 pb-3">
-                  <Filter className="w-4 h-4 text-muted-foreground" />
-                  {(["hot", "new", "top"] as SortType[]).map(s => (
-                    <Button
-                      key={s}
-                      variant={sortBy === s ? "default" : "ghost"}
-                      size="sm"
-                      onClick={() => setSortBy(s)}
-                      className={`text-xs capitalize transition-all ${
-                        sortBy === s ? "bg-primary/20 text-primary" : "hover:text-primary"
-                      }`}
-                    >
-                      {s === "hot" && <Flame className="w-3 h-3 mr-1" />}
-                      {s === "new" && <Clock className="w-3 h-3 mr-1" />}
-                      {s === "top" && <ThumbsUp className="w-3 h-3 mr-1" />}
-                      {s}
-                    </Button>
-                  ))}
-                </div>
+                {!selectedGroup.is_readonly && (
+                  <div className="flex items-center gap-2 mb-4 border-b border-border/50 pb-3">
+                    <Filter className="w-4 h-4 text-muted-foreground" />
+                    {(["hot", "new", "top"] as SortType[]).map(s => (
+                      <Button
+                        key={s}
+                        variant={sortBy === s ? "default" : "ghost"}
+                        size="sm"
+                        onClick={() => setSortBy(s)}
+                        className={`text-xs capitalize transition-all ${
+                          sortBy === s ? "bg-primary/20 text-primary" : "hover:text-primary"
+                        }`}
+                      >
+                        {s === "hot" && <Flame className="w-3 h-3 mr-1" />}
+                        {s === "new" && <Clock className="w-3 h-3 mr-1" />}
+                        {s === "top" && <ThumbsUp className="w-3 h-3 mr-1" />}
+                        {s}
+                      </Button>
+                    ))}
+                  </div>
+                )}
 
                 {/* Posts */}
                 <div className="space-y-3">
                   {sortedPosts.length === 0 && (
                     <p className="text-center text-muted-foreground py-8 text-sm">
-                      No posts yet. Be the first to ask a question!
+                      {selectedGroup.is_readonly ? "Official announcements will appear here." : "No posts yet. Be the first to ask a question!"}
                     </p>
                   )}
                   {sortedPosts.map(post => {
                     const userVote = userVotes.find(v => v.post_id === post.id);
                     const score = post.upvotes - post.downvotes;
                     const isExpanded = expandedPosts.has(post.id);
+                    const isAnnouncement = post.post_type === "announcement";
 
                     return (
                       <motion.div
                         key={post.id}
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        className="rounded-xl border border-border/50 bg-secondary/20 hover:border-primary/20 transition-all duration-300 group"
+                        className={`rounded-xl border transition-all duration-300 group ${
+                          isAnnouncement
+                            ? "border-primary/30 bg-primary/5"
+                            : "border-border/50 bg-secondary/20 hover:border-primary/20"
+                        }`}
                       >
                         <div className="flex">
-                          {/* Vote column */}
-                          <div className="flex flex-col items-center py-4 px-3 gap-1">
-                            <button
-                              onClick={() => vote(post.id, "up")}
-                              className={`p-1 rounded transition-all hover:scale-110 ${
-                                userVote?.vote_type === "up" ? "text-primary" : "text-muted-foreground hover:text-primary"
-                              }`}
-                            >
-                              <ChevronUp className="w-5 h-5" />
-                            </button>
-                            <span className={`text-sm font-bold ${score > 0 ? "text-primary" : score < 0 ? "text-destructive" : "text-muted-foreground"}`}>
-                              {score}
-                            </span>
-                            <button
-                              onClick={() => vote(post.id, "down")}
-                              className={`p-1 rounded transition-all hover:scale-110 ${
-                                userVote?.vote_type === "down" ? "text-destructive" : "text-muted-foreground hover:text-destructive"
-                              }`}
-                            >
-                              <ChevronDown className="w-5 h-5" />
-                            </button>
-                          </div>
+                          {/* Vote column - hidden for readonly */}
+                          {!selectedGroup.is_readonly && (
+                            <div className="flex flex-col items-center py-4 px-3 gap-1">
+                              <button onClick={() => vote(post.id, "up")}
+                                className={`p-1 rounded transition-all hover:scale-110 ${
+                                  userVote?.vote_type === "up" ? "text-primary" : "text-muted-foreground hover:text-primary"
+                                }`}>
+                                <ChevronUp className="w-5 h-5" />
+                              </button>
+                              <span className={`text-sm font-bold ${score > 0 ? "text-primary" : score < 0 ? "text-destructive" : "text-muted-foreground"}`}>
+                                {score}
+                              </span>
+                              <button onClick={() => vote(post.id, "down")}
+                                className={`p-1 rounded transition-all hover:scale-110 ${
+                                  userVote?.vote_type === "down" ? "text-destructive" : "text-muted-foreground hover:text-destructive"
+                                }`}>
+                                <ChevronDown className="w-5 h-5" />
+                              </button>
+                            </div>
+                          )}
 
-                          {/* Content */}
                           <div className="flex-1 py-4 pr-4 space-y-2">
                             <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
                               <User className="w-3 h-3" />
                               {getUsernameDisplay(post)}
                               <span>•</span>
                               <span>{new Date(post.created_at).toLocaleDateString()}</span>
+                              {isAnnouncement && (
+                                <Badge className="text-[9px] bg-primary/20 text-primary border-0">📌 Pinned</Badge>
+                              )}
                               {!post.is_approved && post.user_id === user?.id && (
                                 <Badge variant="outline" className="text-[9px] text-yellow-500 border-yellow-500/30">
                                   <AlertCircle className="w-2.5 h-2.5 mr-0.5" /> Pending
-                                </Badge>
-                              )}
-                              {post.is_approved && (
-                                <Badge variant="outline" className="text-[9px] text-primary border-primary/30">
-                                  <CheckCircle className="w-2.5 h-2.5 mr-0.5" /> Approved
                                 </Badge>
                               )}
                             </div>
@@ -557,29 +691,31 @@ export default function Community() {
                                 {post.title}
                               </h3>
                             )}
-                            <p className="text-sm text-muted-foreground">{post.content}</p>
+                            <p className="text-sm text-muted-foreground whitespace-pre-line">{post.content}</p>
 
-                            <div className="flex items-center gap-3 pt-1">
-                              <button
-                                onClick={() => toggleExpand(post.id)}
-                                className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-1"
-                              >
-                                <MessageSquare className="w-3.5 h-3.5" />
-                                {replies[post.id]?.length || 0} answers
-                              </button>
-                              {user && (
+                            {!selectedGroup.is_readonly && (
+                              <div className="flex items-center gap-3 pt-1">
                                 <button
-                                  onClick={() => setShowReplyFor(showReplyFor === post.id ? null : post.id)}
-                                  className="text-xs text-muted-foreground hover:text-primary transition-colors"
+                                  onClick={() => toggleExpand(post.id)}
+                                  className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-1"
                                 >
-                                  Reply
+                                  <MessageSquare className="w-3.5 h-3.5" />
+                                  {replies[post.id]?.length || 0} answers
                                 </button>
-                              )}
-                            </div>
+                                {user && (
+                                  <button
+                                    onClick={() => setShowReplyFor(showReplyFor === post.id ? null : post.id)}
+                                    className="text-xs text-muted-foreground hover:text-primary transition-colors"
+                                  >
+                                    Reply
+                                  </button>
+                                )}
+                              </div>
+                            )}
 
                             {/* Reply input */}
                             <AnimatePresence>
-                              {showReplyFor === post.id && (
+                              {showReplyFor === post.id && !selectedGroup.is_readonly && (
                                 <motion.div
                                   initial={{ opacity: 0, height: 0 }}
                                   animate={{ opacity: 1, height: "auto" }}
@@ -601,7 +737,7 @@ export default function Community() {
                               )}
                             </AnimatePresence>
 
-                            {/* Replies / answers thread */}
+                            {/* Replies thread */}
                             <AnimatePresence>
                               {isExpanded && replies[post.id] && (
                                 <motion.div
