@@ -61,18 +61,7 @@ export default function Explore() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Nav */}
-      <nav className="fixed top-0 w-full z-50 glass border-b border-border/50">
-        <div className="container mx-auto flex items-center justify-between h-16 px-4">
-          <button onClick={() => navigate("/")} className="flex items-center gap-2">
-            <Zap className="w-6 h-6 text-primary" />
-            <span className="font-display font-bold text-xl">HustleAI</span>
-          </button>
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" onClick={() => navigate("/")}>Home</Button>
-          </div>
-        </div>
-      </nav>
+      <Navbar />
 
       <div className="pt-24 pb-12 px-4">
         <div className="container mx-auto max-w-6xl space-y-8">
