@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { SearchBar } from "@/components/SearchBar";
 import { FreelanceCard } from "@/components/FreelanceCard";
@@ -7,22 +7,21 @@ import { searchFreelanceIdeas, type FreelanceResult } from "@/lib/ai-search";
 import { Navbar } from "@/components/Navbar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Filter, X } from "lucide-react";
+import { Filter, X, Zap } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-const categories = ["All", "Tech", "Creative", "Writing", "Marketing", "Teaching", "Services", "E-commerce", "Finance"];
-const investments = ["All", "$0 - Free", "$1-50", "$50-200", "$200-500", "$500+"];
+const categories = ["All", "Tech", "Creative", "Freelance", "Marketing", "Education", "Service", "E-Commerce", "Finance", "Gig Economy", "Gaming", "Admin"];
 const difficulties = ["All", "Beginner", "Intermediate", "Advanced"];
+const types = ["All", "Online", "In-Person", "Hybrid"];
 
 export default function Explore() {
   const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
   const { toast } = useToast();
   const [results, setResults] = useState<FreelanceResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [activeCategory, setActiveCategory] = useState("All");
-  const [activeInvestment, setActiveInvestment] = useState("All");
   const [activeDifficulty, setActiveDifficulty] = useState("All");
+  const [activeType, setActiveType] = useState("All");
   const [lastQuery, setLastQuery] = useState("");
 
   const handleSearch = async (query: string) => {
@@ -45,18 +44,18 @@ export default function Explore() {
 
   const filtered = results.filter((r) => {
     if (activeCategory !== "All" && r.category !== activeCategory) return false;
-    if (activeInvestment !== "All" && r.investment !== activeInvestment) return false;
     if (activeDifficulty !== "All" && r.difficulty !== activeDifficulty) return false;
+    if (activeType !== "All" && r.type !== activeType) return false;
     return true;
   });
 
   const clearFilters = () => {
     setActiveCategory("All");
-    setActiveInvestment("All");
     setActiveDifficulty("All");
+    setActiveType("All");
   };
 
-  const hasActiveFilters = activeCategory !== "All" || activeInvestment !== "All" || activeDifficulty !== "All";
+  const hasActiveFilters = activeCategory !== "All" || activeDifficulty !== "All" || activeType !== "All";
 
   return (
     <div className="min-h-screen bg-background">
@@ -83,7 +82,9 @@ export default function Explore() {
                   <Badge
                     key={c}
                     variant={activeCategory === c ? "default" : "outline"}
-                    className={`cursor-pointer transition-colors ${activeCategory === c ? "bg-gradient-primary text-primary-foreground" : "hover:border-primary/50"}`}
+                    className={`cursor-pointer transition-all duration-300 hover:scale-105 ${
+                      activeCategory === c ? "bg-gradient-primary text-primary-foreground" : "hover:border-primary/50 hover:text-primary"
+                    }`}
                     onClick={() => setActiveCategory(c)}
                   >
                     {c}
@@ -92,15 +93,17 @@ export default function Explore() {
               </div>
 
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-sm text-muted-foreground ml-6 mr-2">Investment:</span>
-                {investments.map((inv) => (
+                <span className="text-sm text-muted-foreground ml-6 mr-2">Type:</span>
+                {types.map((t) => (
                   <Badge
-                    key={inv}
-                    variant={activeInvestment === inv ? "default" : "outline"}
-                    className={`cursor-pointer transition-colors ${activeInvestment === inv ? "bg-gradient-primary text-primary-foreground" : "hover:border-primary/50"}`}
-                    onClick={() => setActiveInvestment(inv)}
+                    key={t}
+                    variant={activeType === t ? "default" : "outline"}
+                    className={`cursor-pointer transition-all duration-300 hover:scale-105 ${
+                      activeType === t ? "bg-gradient-primary text-primary-foreground" : "hover:border-primary/50 hover:text-primary"
+                    }`}
+                    onClick={() => setActiveType(t)}
                   >
-                    {inv}
+                    {t}
                   </Badge>
                 ))}
               </div>
@@ -111,14 +114,17 @@ export default function Explore() {
                   <Badge
                     key={d}
                     variant={activeDifficulty === d ? "default" : "outline"}
-                    className={`cursor-pointer transition-colors ${activeDifficulty === d ? "bg-gradient-primary text-primary-foreground" : "hover:border-primary/50"}`}
+                    className={`cursor-pointer transition-all duration-300 hover:scale-105 ${
+                      activeDifficulty === d ? "bg-gradient-primary text-primary-foreground" : "hover:border-primary/50 hover:text-primary"
+                    }`}
                     onClick={() => setActiveDifficulty(d)}
                   >
                     {d}
                   </Badge>
                 ))}
                 {hasActiveFilters && (
-                  <Button variant="ghost" size="sm" onClick={clearFilters} className="text-xs text-muted-foreground">
+                  <Button variant="ghost" size="sm" onClick={clearFilters}
+                    className="text-xs text-muted-foreground hover:text-primary transition-colors">
                     <X className="w-3 h-3 mr-1" /> Clear
                   </Button>
                 )}
@@ -147,6 +153,9 @@ export default function Explore() {
                   Showing <span className="text-foreground font-medium">{filtered.length}</span> results
                   {lastQuery && <> for "<span className="text-primary">{lastQuery}</span>"</>}
                 </p>
+                <Badge variant="outline" className="text-[10px] text-primary border-primary/30">
+                  <Zap className="w-3 h-3 mr-1" /> Instant Search
+                </Badge>
               </div>
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <AnimatePresence>
@@ -161,16 +170,19 @@ export default function Explore() {
           {!isLoading && results.length > 0 && filtered.length === 0 && (
             <div className="text-center py-16 space-y-4">
               <p className="text-muted-foreground">No results match your filters.</p>
-              <Button variant="outline" onClick={clearFilters}>Clear Filters</Button>
+              <Button variant="outline" onClick={clearFilters}
+                className="hover:border-primary/50 hover:text-primary transition-all">
+                Clear Filters
+              </Button>
             </div>
           )}
 
           {!isLoading && results.length === 0 && (
             <div className="text-center py-24 space-y-4">
               <div className="text-6xl mb-4">🔍</div>
-              <h2 className="text-2xl font-display font-bold">Search for freelancing ideas</h2>
+              <h2 className="text-2xl font-display font-bold">Search for side hustle ideas</h2>
               <p className="text-muted-foreground max-w-md mx-auto">
-                Try something like "zero investment ideas for students" or "tech freelancing for beginners"
+                Try "zero investment ideas for students" or "tech freelancing for beginners"
               </p>
             </div>
           )}

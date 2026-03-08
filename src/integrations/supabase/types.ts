@@ -185,28 +185,76 @@ export type Database = {
         }
         Relationships: []
       }
+      forum_categories: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          icon: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       forum_posts: {
         Row: {
+          category: string | null
           content: string
           created_at: string
+          downvotes: number | null
           group_id: string
           id: string
+          is_approved: boolean | null
+          parent_id: string | null
+          post_type: string | null
+          title: string | null
+          upvotes: number | null
           user_id: string
           user_name: string | null
         }
         Insert: {
+          category?: string | null
           content: string
           created_at?: string
+          downvotes?: number | null
           group_id: string
           id?: string
+          is_approved?: boolean | null
+          parent_id?: string | null
+          post_type?: string | null
+          title?: string | null
+          upvotes?: number | null
           user_id: string
           user_name?: string | null
         }
         Update: {
+          category?: string | null
           content?: string
           created_at?: string
+          downvotes?: number | null
           group_id?: string
           id?: string
+          is_approved?: boolean | null
+          parent_id?: string | null
+          post_type?: string | null
+          title?: string | null
+          upvotes?: number | null
           user_id?: string
           user_name?: string | null
         }
@@ -216,6 +264,45 @@ export type Database = {
             columns: ["group_id"]
             isOneToOne: false
             referencedRelation: "community_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "forum_posts_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "forum_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      forum_votes: {
+        Row: {
+          created_at: string
+          id: string
+          post_id: string
+          user_id: string
+          vote_type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          post_id: string
+          user_id: string
+          vote_type: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          post_id?: string
+          user_id?: string
+          vote_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "forum_votes_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "forum_posts"
             referencedColumns: ["id"]
           },
         ]
@@ -288,6 +375,7 @@ export type Database = {
           subscription_tier: Database["public"]["Enums"]["subscription_tier"]
           updated_at: string
           user_id: string
+          username: string | null
         }
         Insert: {
           address?: string | null
@@ -302,6 +390,7 @@ export type Database = {
           subscription_tier?: Database["public"]["Enums"]["subscription_tier"]
           updated_at?: string
           user_id: string
+          username?: string | null
         }
         Update: {
           address?: string | null
@@ -316,6 +405,52 @@ export type Database = {
           subscription_tier?: Database["public"]["Enums"]["subscription_tier"]
           updated_at?: string
           user_id?: string
+          username?: string | null
+        }
+        Relationships: []
+      }
+      side_hustles: {
+        Row: {
+          category: string
+          created_at: string
+          description: string
+          earnings: string
+          effort: number
+          id: string
+          is_trending: boolean | null
+          startup_cost: string | null
+          tags: string[] | null
+          time_commitment: string | null
+          title: string
+          type: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description: string
+          earnings: string
+          effort?: number
+          id?: string
+          is_trending?: boolean | null
+          startup_cost?: string | null
+          tags?: string[] | null
+          time_commitment?: string | null
+          title: string
+          type?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string
+          earnings?: string
+          effort?: number
+          id?: string
+          is_trending?: boolean | null
+          startup_cost?: string | null
+          tags?: string[] | null
+          time_commitment?: string | null
+          title?: string
+          type?: string
         }
         Relationships: []
       }
