@@ -12,6 +12,8 @@ export interface FreelanceResult {
   type?: string;
   time_commitment?: string;
   is_trending?: boolean;
+  likes?: number;
+  dislikes?: number;
 }
 
 function effortToLabel(effort: number): string {
@@ -20,14 +22,30 @@ function effortToLabel(effort: number): string {
   return "Advanced";
 }
 
+export function mapDbResult(item: any): FreelanceResult {
+  return {
+    id: item.id,
+    title: item.title,
+    category: item.category,
+    description: item.description,
+    investment: item.startup_cost || "$0",
+    difficulty: effortToLabel(item.effort),
+    earning_potential: item.earnings,
+    tags: item.tags || [],
+    type: item.type,
+    time_commitment: item.time_commitment,
+    is_trending: item.is_trending,
+    likes: item.likes || 0,
+    dislikes: item.dislikes || 0,
+  };
+}
+
 export async function searchFreelanceIdeas(query: string): Promise<FreelanceResult[]> {
   const q = query.toLowerCase();
   const keywords = q.split(/\s+/).filter(w => w.length > 2);
 
-  // Build a text search filter
   let request = supabase.from("side_hustles").select("*");
 
-  // Use ilike for fuzzy matching on multiple fields
   if (keywords.length > 0) {
     const orFilters = keywords.flatMap(kw => [
       `title.ilike.%${kw}%`,
@@ -38,15 +56,13 @@ export async function searchFreelanceIdeas(query: string): Promise<FreelanceResu
     request = request.or(orFilters.join(","));
   }
 
-  const { data, error } = await request.limit(50);
+  const { data, error } = await request.order("likes", { ascending: false }).limit(50);
   if (error) throw new Error(error.message);
   if (!data || data.length === 0) {
-    // Fallback: return trending items
-    const { data: trending } = await supabase.from("side_hustles").select("*").limit(12);
-    return (trending || []).map(mapResult);
+    const { data: trending } = await supabase.from("side_hustles").select("*").order("likes", { ascending: false }).limit(12);
+    return (trending || []).map(mapDbResult);
   }
 
-  // Score and sort results
   const scored = data.map(item => {
     let score = 0;
     const titleLower = item.title.toLowerCase();
@@ -60,18 +76,17 @@ export async function searchFreelanceIdeas(query: string): Promise<FreelanceResu
       if (item.tags?.some((t: string) => t.includes(kw))) score += 4;
     }
 
-    // Boost zero investment items if query mentions "zero", "free", "no investment"
     if (q.includes("zero") || q.includes("free") || q.includes("no investment")) {
       if (item.startup_cost === "$0") score += 15;
     }
 
-    // Boost student-friendly (low effort, online)
     if (q.includes("student")) {
       if (item.effort <= 2) score += 8;
       if (item.type === "Online") score += 5;
     }
 
-    // Boost trending
+    // Boost by likes
+    score += (item.likes || 0) * 2;
     if (item.is_trending) score += 3;
 
     return { ...item, score };
@@ -79,21 +94,5 @@ export async function searchFreelanceIdeas(query: string): Promise<FreelanceResu
 
   scored.sort((a, b) => b.score - a.score);
 
-  return scored.slice(0, 15).map(mapResult);
-}
-
-function mapResult(item: any): FreelanceResult {
-  return {
-    id: item.id,
-    title: item.title,
-    category: item.category,
-    description: item.description,
-    investment: item.startup_cost || "$0",
-    difficulty: effortToLabel(item.effort),
-    earning_potential: item.earnings,
-    tags: item.tags || [],
-    type: item.type,
-    time_commitment: item.time_commitment,
-    is_trending: item.is_trending,
-  };
+  return scored.slice(0, 15).map(mapDbResult);
 }
