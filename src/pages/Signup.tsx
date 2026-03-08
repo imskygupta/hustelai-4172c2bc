@@ -63,6 +63,10 @@ export default function Signup() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!captchaToken) {
+      toast({ title: "Please complete the captcha", variant: "destructive" });
+      return;
+    }
     if (password.length < 6) {
       toast({ title: "Password too short", description: "Minimum 6 characters", variant: "destructive" });
       return;
@@ -73,7 +77,7 @@ export default function Signup() {
     if (error) {
       toast({ title: "Signup failed", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "Check your email!", description: "We sent you a verification link. Please verify to continue." });
+      toast({ title: "Check your email!", description: "We sent you a verification link. Please verify before signing in." });
       navigate("/login");
     }
   };
