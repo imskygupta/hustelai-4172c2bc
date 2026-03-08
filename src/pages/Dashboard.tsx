@@ -137,6 +137,12 @@ export default function Dashboard() {
   const isElite = tier === "elite" || isInfinity;
   const isPro = tier === "pro" || isElite;
   const isFree = tier === "free";
+  const emailVerified = user.email_confirmed_at != null;
+
+  // Search credit limits per tier
+  const searchLimits: Record<string, number> = { free: 3, pro: 5, elite: 10, infinity: 20 };
+  const maxSearches = searchLimits[tier] || 3;
+  const searchesLeft = Math.max(0, maxSearches - profile.search_count);
 
   // Filter webinars by tier access
   const accessibleWebinars = webinars.filter(w => {
