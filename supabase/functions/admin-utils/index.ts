@@ -17,27 +17,9 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    const authHeader = req.headers.get("Authorization") || "";
-    const token = authHeader.replace("Bearer ", "");
-
-    // Bootstrap action - one-time setup, secured by edge function access
-    if (action === "bootstrap_password") {
-      
-      let targetId = user_id;
-      if (!targetId && email) {
-        const { data: { users } } = await supabaseAdmin.auth.admin.listUsers();
-        const found = users?.find(u => u.email === email);
-        if (!found) throw new Error("User not found");
-        targetId = found.id;
-      }
-      
-      const { error } = await supabaseAdmin.auth.admin.updateUserById(targetId, { password });
-      if (error) throw error;
-      
-      return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    }
-
     // Verify caller is admin
+    const authHeader = req.headers.get("Authorization")!;
+    const token = authHeader.replace("Bearer ", "");
     const { data: { user: caller } } = await supabaseAdmin.auth.getUser(token);
     if (!caller) throw new Error("Unauthorized");
 
