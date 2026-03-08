@@ -15,6 +15,7 @@ import Blog from "./pages/Blog";
 import Reviews from "./pages/Reviews";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
+import AdminBlock from "./pages/AdminBlock";
 import Community from "./pages/Community";
 import Profile from "./pages/Profile";
 import Payment from "./pages/Payment";
@@ -56,6 +57,7 @@ const App = () => (
             <Route path="/company" element={<Company />} />
             <Route path="/relax" element={<Relax />} />
             <Route path="/hustle/:id" element={<HustleDetail />} />
+            <Route path="/admin" element={<AdminBlock />} />
             <Route path="/imskygupta-admin" element={<AdminLogin />} />
             <Route path="/admin-dashboard" element={<AdminDashboard />} />
             <Route path="*" element={<NotFound />} />

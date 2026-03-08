@@ -103,19 +103,20 @@ const tierColors: Record<string, string> = {
 };
 
 type AdminSection =
-  | "overview" | "users" | "notifications" | "webinars"
+  | "overview" | "users" | "roles" | "notifications" | "webinars"
   | "expert" | "chatbot" | "blogs" | "analytics" | "config"
   | "verification" | "payments" | "forum";
 
 const sidebarItems: { id: AdminSection; label: string; icon: any }[] = [
   { id: "overview", label: "Overview", icon: BarChart3 },
   { id: "users", label: "Users", icon: Users },
-  { id: "verification", label: "Verification", icon: Shield },
+  { id: "roles", label: "Role Manager", icon: Shield },
+  { id: "verification", label: "Verification", icon: UserCheck },
   { id: "payments", label: "Payments", icon: Zap },
   { id: "forum", label: "Forum Posts", icon: MessageSquare },
   { id: "notifications", label: "Notifications", icon: Bell },
   { id: "webinars", label: "Live Webinars", icon: Video },
-  { id: "expert", label: "Expert Guidance", icon: UserCheck },
+  { id: "expert", label: "Expert Guidance", icon: Compass },
   { id: "chatbot", label: "Personal Chatbot", icon: MessageSquare },
   { id: "blogs", label: "Blog Manager", icon: BookOpen },
   { id: "analytics", label: "Analytics", icon: Activity },
@@ -143,7 +144,11 @@ export default function AdminDashboard() {
   const [verifications, setVerifications] = useState<any[]>([]);
   const [payments, setPayments] = useState<any[]>([]);
   const [forumPosts, setForumPosts] = useState<any[]>([]);
-
+  const [userRoles, setUserRoles] = useState<any[]>([]);
+  const [roleUserId, setRoleUserId] = useState("");
+  const [roleToAssign, setRoleToAssign] = useState("moderator");
+  const [passwordForm, setPasswordForm] = useState({ current: "", new: "", confirm: "" });
+  const [changingPassword, setChangingPassword] = useState(false);
   // Forms
   const [notifTitle, setNotifTitle] = useState("");
   const [notifMessage, setNotifMessage] = useState("");
@@ -200,7 +205,7 @@ export default function AdminDashboard() {
 
   const loadAllData = async () => {
     setLoadingData(true);
-    const [usersRes, notifsRes, webRes, expertRes, blogRes, nlRes, contactRes, chatRes, verifRes, payRes, forumRes] = await Promise.all([
+    const [usersRes, notifsRes, webRes, expertRes, blogRes, nlRes, contactRes, chatRes, verifRes, payRes, forumRes, rolesRes] = await Promise.all([
       supabase.from("profiles").select("*").order("created_at", { ascending: false }),
       supabase.from("notifications").select("*").order("created_at", { ascending: false }),
       supabase.from("webinars").select("*").order("created_at", { ascending: false }),
@@ -212,6 +217,7 @@ export default function AdminDashboard() {
       supabase.from("user_verifications").select("*").order("created_at", { ascending: false }),
       supabase.from("payments").select("*").order("created_at", { ascending: false }),
       supabase.from("forum_posts").select("*").order("created_at", { ascending: false }).limit(100),
+      supabase.from("user_roles").select("*").order("created_at", { ascending: false }),
     ]);
     if (usersRes.data) setUsers(usersRes.data as UserProfile[]);
     if (notifsRes.data) setNotifications(notifsRes.data as Notification[]);
@@ -223,6 +229,7 @@ export default function AdminDashboard() {
     if (verifRes.data) setVerifications(verifRes.data);
     if (payRes.data) setPayments(payRes.data);
     if (forumRes.data) setForumPosts(forumRes.data);
+    if (rolesRes.data) setUserRoles(rolesRes.data);
     // Build chat users list
     if (chatRes.data) {
       const userMap = new Map<string, ChatUser>();
@@ -353,6 +360,47 @@ export default function AdminDashboard() {
   const deleteBlog = async (id: string) => {
     await supabase.from("blog_posts").delete().eq("id", id);
     setBlogPosts(blogPosts.filter(b => b.id !== id));
+  };
+
+  const assignRole = async () => {
+    if (!roleUserId || !roleToAssign) return;
+    const { error } = await supabase.from("user_roles").insert({
+      user_id: roleUserId, role: roleToAssign as any,
+    });
+    if (error) {
+      if (error.code === "23505") toast({ title: "Already assigned", description: "User already has this role.", variant: "destructive" });
+      else toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Role Assigned!" });
+      setRoleUserId("");
+      loadAllData();
+    }
+  };
+
+  const removeRole = async (id: string) => {
+    await supabase.from("user_roles").delete().eq("id", id);
+    setUserRoles(userRoles.filter(r => r.id !== id));
+    toast({ title: "Role Removed" });
+  };
+
+  const handleChangePassword = async () => {
+    if (passwordForm.new !== passwordForm.confirm) {
+      toast({ title: "Mismatch", description: "New passwords don't match.", variant: "destructive" });
+      return;
+    }
+    if (passwordForm.new.length < 6) {
+      toast({ title: "Too short", description: "Password must be at least 6 characters.", variant: "destructive" });
+      return;
+    }
+    setChangingPassword(true);
+    const { error } = await supabase.auth.updateUser({ password: passwordForm.new });
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Password Updated!", description: "Your admin password has been changed." });
+      setPasswordForm({ current: "", new: "", confirm: "" });
+    }
+    setChangingPassword(false);
   };
 
   if (loading || !isAdmin) {
@@ -588,7 +636,87 @@ export default function AdminDashboard() {
             </div>
           )}
 
-          {/* ===== NOTIFICATIONS ===== */}
+          {/* ===== ROLE MANAGER ===== */}
+          {section === "roles" && (
+            <div className="space-y-6">
+              <div className="glass rounded-xl p-6 space-y-4">
+                <h3 className="font-display font-bold flex items-center gap-2">
+                  <Shield className="w-5 h-5 text-primary" /> Assign Role
+                </h3>
+                <div className="grid md:grid-cols-3 gap-4">
+                  <Select value={roleUserId} onValueChange={setRoleUserId}>
+                    <SelectTrigger><SelectValue placeholder="Select User" /></SelectTrigger>
+                    <SelectContent>
+                      {users.map(u => (
+                        <SelectItem key={u.user_id} value={u.user_id}>
+                          {u.display_name || u.email} ({u.subscription_tier})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select value={roleToAssign} onValueChange={setRoleToAssign}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="admin">🛡️ Admin (Full Access)</SelectItem>
+                      <SelectItem value="moderator">📝 Moderator (Blog + Forum)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button onClick={assignRole} className="bg-gradient-primary text-primary-foreground">
+                    <Plus className="w-4 h-4 mr-1" /> Assign Role
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  <strong>Admin:</strong> Full dashboard access · <strong>Moderator:</strong> Can write blogs, moderate forum posts
+                </p>
+              </div>
+
+              <div className="space-y-3">
+                <h3 className="font-display font-bold">Current Roles ({userRoles.length})</h3>
+                {userRoles.length === 0 && <p className="text-sm text-muted-foreground">No roles assigned yet.</p>}
+                {userRoles.map((r: any) => {
+                  const rUser = users.find(u => u.user_id === r.user_id);
+                  return (
+                    <div key={r.id} className="glass rounded-xl p-4 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">
+                          {(rUser?.display_name || rUser?.email || "?")[0].toUpperCase()}
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium">{rUser?.display_name || rUser?.email || r.user_id.slice(0, 8)}</p>
+                          <p className="text-xs text-muted-foreground">{rUser?.email}</p>
+                        </div>
+                        <Badge className={r.role === "admin" ? "bg-destructive/20 text-destructive" : "bg-primary/20 text-primary"} variant="outline">
+                          {r.role === "admin" ? "🛡️" : "📝"} {r.role}
+                        </Badge>
+                      </div>
+                      <Button variant="ghost" size="sm" onClick={() => removeRole(r.id)}>
+                        <Trash2 className="w-4 h-4 text-destructive" />
+                      </Button>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Change Password */}
+              <div className="glass rounded-xl p-6 space-y-4">
+                <h3 className="font-display font-bold flex items-center gap-2">
+                  <Key className="w-5 h-5 text-primary" /> Change Admin Password
+                </h3>
+                <div className="grid md:grid-cols-3 gap-4">
+                  <Input type="password" placeholder="New Password" value={passwordForm.new}
+                    onChange={e => setPasswordForm({ ...passwordForm, new: e.target.value })} />
+                  <Input type="password" placeholder="Confirm New Password" value={passwordForm.confirm}
+                    onChange={e => setPasswordForm({ ...passwordForm, confirm: e.target.value })} />
+                  <Button onClick={handleChangePassword} disabled={changingPassword}
+                    className="bg-destructive text-destructive-foreground">
+                    {changingPassword ? "Updating..." : "Update Password"}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
+
           {section === "notifications" && (
             <div className="space-y-6">
               <div className="glass rounded-xl p-6 space-y-4">
