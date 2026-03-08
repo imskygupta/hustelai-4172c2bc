@@ -213,7 +213,7 @@ export default function AdminDashboard() {
 
   const loadAllData = async () => {
     setLoadingData(true);
-    const [usersRes, notifsRes, webRes, expertRes, blogRes, nlRes, contactRes, chatRes, verifRes, payRes, forumRes, rolesRes] = await Promise.all([
+    const [usersRes, notifsRes, webRes, expertRes, blogRes, nlRes, contactRes, chatRes, verifRes, payRes, forumRes, rolesRes, groupsRes, trendRes] = await Promise.all([
       supabase.from("profiles").select("*").order("created_at", { ascending: false }),
       supabase.from("notifications").select("*").order("created_at", { ascending: false }),
       supabase.from("webinars").select("*").order("created_at", { ascending: false }),
@@ -226,6 +226,8 @@ export default function AdminDashboard() {
       supabase.from("payments").select("*").order("created_at", { ascending: false }),
       supabase.from("forum_posts").select("*").order("created_at", { ascending: false }).limit(100),
       supabase.from("user_roles").select("*").order("created_at", { ascending: false }),
+      supabase.from("community_groups").select("*").order("created_at"),
+      supabase.from("trending_links").select("*").order("sort_order"),
     ]);
     if (usersRes.data) setUsers(usersRes.data as UserProfile[]);
     if (notifsRes.data) setNotifications(notifsRes.data as Notification[]);
