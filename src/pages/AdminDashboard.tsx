@@ -104,11 +104,15 @@ const tierColors: Record<string, string> = {
 
 type AdminSection =
   | "overview" | "users" | "notifications" | "webinars"
-  | "expert" | "chatbot" | "blogs" | "analytics" | "config";
+  | "expert" | "chatbot" | "blogs" | "analytics" | "config"
+  | "verification" | "payments" | "forum";
 
 const sidebarItems: { id: AdminSection; label: string; icon: any }[] = [
   { id: "overview", label: "Overview", icon: BarChart3 },
   { id: "users", label: "Users", icon: Users },
+  { id: "verification", label: "Verification", icon: Shield },
+  { id: "payments", label: "Payments", icon: Zap },
+  { id: "forum", label: "Forum Posts", icon: MessageSquare },
   { id: "notifications", label: "Notifications", icon: Bell },
   { id: "webinars", label: "Live Webinars", icon: Video },
   { id: "expert", label: "Expert Guidance", icon: UserCheck },
