@@ -87,7 +87,7 @@ export default function Dashboard() {
 
   if (!user || !profile) return null;
 
-  const tier = profile.subscription_tier;
+  const tier = profile.subscription_tier as string;
   const isInfinity = tier === "infinity";
   const isElite = tier === "elite" || isInfinity;
   const isPro = tier === "pro" || isElite;

@@ -7,7 +7,7 @@ interface Profile {
   user_id: string;
   display_name: string | null;
   email: string | null;
-  subscription_tier: "free" | "pro" | "elite";
+  subscription_tier: "free" | "pro" | "elite" | "infinity";
   search_count: number;
 }
 

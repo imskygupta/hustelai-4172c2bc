@@ -35,8 +35,8 @@ export default function Profile() {
     }
   }, [profile]);
 
-  const isPremium = profile && ["pro", "elite", "infinity"].includes(profile.subscription_tier);
-  const isElite = profile && ["elite", "infinity"].includes(profile.subscription_tier);
+  const isPremium = profile && ["pro", "elite", "infinity"].includes(profile.subscription_tier as string);
+  const isElite = profile && ["elite", "infinity"].includes(profile.subscription_tier as string);
 
   const saveProfile = async () => {
     if (!user) return;
