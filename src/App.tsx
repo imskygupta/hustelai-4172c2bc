@@ -60,6 +60,7 @@ const App = () => (
             <Route path="/relax" element={<Relax />} />
             <Route path="/hustle/:id" element={<HustleDetail />} />
             <Route path="/infinity-zone" element={<InfinityZone />} />
+            <Route path="/marketplace" element={<Marketplace />} />
             <Route path="/admin" element={<AdminBlock />} />
             <Route path="/imskygupta-admin" element={<AdminLogin />} />
             <Route path="/admin-dashboard" element={<AdminDashboard />} />
