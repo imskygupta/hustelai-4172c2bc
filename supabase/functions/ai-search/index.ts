@@ -10,13 +10,15 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { query } = await req.json();
+    const { query, limit } = await req.json();
     if (!query) {
       return new Response(JSON.stringify({ error: "Query is required" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    const count = Math.min(limit || 5, 5);
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
@@ -32,12 +34,9 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: `You are a freelancing and side hustle expert. Given a user query, generate 6-8 relevant freelancing opportunities, side hustles, or gig ideas. For each result provide practical, actionable information. Consider the user's constraints (budget, skills, time).`,
+            content: `You are a freelancing and side hustle expert. Given a user query, generate exactly ${count} relevant freelancing opportunities, side hustles, or gig ideas. For each result provide practical, actionable information. Consider the user's constraints (budget, skills, time).`,
           },
-          {
-            role: "user",
-            content: query,
-          },
+          { role: "user", content: query },
         ],
         tools: [
           {
@@ -54,7 +53,7 @@ serve(async (req) => {
                       type: "object",
                       properties: {
                         id: { type: "string", description: "Unique ID" },
-                        title: { type: "string", description: "Name of the freelancing role or side hustle" },
+                        title: { type: "string" },
                         category: {
                           type: "string",
                           enum: ["Tech", "Creative", "Writing", "Marketing", "Teaching", "Services", "E-commerce", "Finance", "Other"],
@@ -68,15 +67,10 @@ serve(async (req) => {
                           type: "string",
                           enum: ["Beginner", "Intermediate", "Advanced"],
                         },
-                        earning_potential: {
-                          type: "string",
-                          description: "e.g. $500-2000/month",
-                        },
-                        tags: {
-                          type: "array",
-                          items: { type: "string" },
-                          description: "2-4 relevant tags",
-                        },
+                        earning_potential: { type: "string" },
+                        tags: { type: "array", items: { type: "string" } },
+                        type: { type: "string", enum: ["Online", "In-Person", "Hybrid"] },
+                        time_commitment: { type: "string" },
                       },
                       required: ["id", "title", "category", "description", "investment", "difficulty", "earning_potential", "tags"],
                       additionalProperties: false,
@@ -97,17 +91,14 @@ serve(async (req) => {
       const status = response.status;
       const text = await response.text();
       console.error("AI gateway error:", status, text);
-
       if (status === 429) {
         return new Response(JSON.stringify({ error: "Rate limited. Please try again in a moment." }), {
-          status: 429,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       if (status === 402) {
-        return new Response(JSON.stringify({ error: "Usage limit reached. Please add credits." }), {
-          status: 402,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        return new Response(JSON.stringify({ error: "Usage limit reached." }), {
+          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       throw new Error(`AI error: ${status}`);
@@ -125,8 +116,7 @@ serve(async (req) => {
   } catch (e) {
     console.error("ai-search error:", e);
     return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 });

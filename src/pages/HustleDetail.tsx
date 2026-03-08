@@ -9,7 +9,7 @@ import { motion } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import {
   ArrowLeft, Download, Bookmark, BookmarkCheck, Loader2,
-  DollarSign, TrendingUp, Clock, Zap, Flame, Share2
+  DollarSign, TrendingUp, Clock, Zap, Flame,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
@@ -40,16 +40,40 @@ export default function HustleDetail() {
   useEffect(() => {
     if (!user) { navigate("/login"); return; }
     loadHustle();
-    checkSaved();
   }, [id, user]);
 
   const loadHustle = async () => {
     if (!id) return;
-    const { data } = await supabase.from("side_hustles").select("*").eq("id", id).single();
-    if (data) {
-      setHustle(data as HustleData);
-      generateRoadmap(data as HustleData);
+
+    // Check sessionStorage cache for roadmap
+    const cachedRoadmap = sessionStorage.getItem(`roadmap_${id}`);
+    const cachedHustle = sessionStorage.getItem(`hustle_${id}`);
+
+    if (cachedHustle) {
+      const h = JSON.parse(cachedHustle) as HustleData;
+      setHustle(h);
+      if (cachedRoadmap) {
+        setRoadmap(cachedRoadmap);
+      } else {
+        generateRoadmap(h);
+      }
+    } else {
+      const { data } = await supabase.from("side_hustles").select("*").eq("id", id).single();
+      if (data) {
+        const h = data as HustleData;
+        setHustle(h);
+        sessionStorage.setItem(`hustle_${id}`, JSON.stringify(h));
+        if (cachedRoadmap) {
+          setRoadmap(cachedRoadmap);
+        } else {
+          generateRoadmap(h);
+        }
+      }
     }
+
+    // Auto-bookmark
+    autoBookmark();
+    checkSaved();
   };
 
   const checkSaved = async () => {
@@ -58,13 +82,23 @@ export default function HustleDetail() {
     if (data && data.length > 0) setIsSaved(true);
   };
 
+  const autoBookmark = async () => {
+    if (!user || !id) return;
+    // Auto-save to bookmarks when viewing detail
+    await supabase.from("saved_hustles").upsert({
+      user_id: user.id,
+      hustle_id: id,
+      status: "saved",
+    } as any, { onConflict: "user_id,hustle_id" });
+    setIsSaved(true);
+  };
+
   const generateRoadmap = async (h: HustleData) => {
     if (!user || !profile) return;
 
-    // Check search limit (3 for free users)
     const tier = profile.subscription_tier;
     const maxSearches = tier === "free" ? 3 : tier === "pro" ? 15 : 999;
-    
+
     if (profile.search_count >= maxSearches) {
       toast({
         title: "Search limit reached",
@@ -77,7 +111,6 @@ export default function HustleDetail() {
     setIsGenerating(true);
 
     try {
-      // Increment search count
       await supabase.from("profiles").update({
         search_count: profile.search_count + 1,
       }).eq("user_id", user.id);
@@ -95,7 +128,10 @@ export default function HustleDetail() {
       });
 
       if (error) throw error;
-      setRoadmap(data?.roadmap || "Failed to generate roadmap.");
+      const rm = data?.roadmap || "Failed to generate roadmap.";
+      setRoadmap(rm);
+      // Cache in sessionStorage
+      sessionStorage.setItem(`roadmap_${id}`, rm);
     } catch (err: any) {
       toast({ title: "Generation failed", description: err.message, variant: "destructive" });
       setRoadmap("Failed to generate roadmap. Please try again.");
@@ -124,9 +160,7 @@ export default function HustleDetail() {
   const handlePrintPDF = () => {
     const printWindow = window.open("", "_blank");
     if (!printWindow) return;
-
     const content = contentRef.current?.innerHTML || "";
-    
     printWindow.document.write(`
       <!DOCTYPE html>
       <html>
@@ -143,24 +177,9 @@ export default function HustleDetail() {
           li { margin: 4px 0; line-height: 1.5; }
           code { background: #f0f0f0; padding: 2px 6px; border-radius: 3px; font-size: 13px; }
           pre { background: #f0f0f0; padding: 12px; border-radius: 6px; overflow-x: auto; margin: 8px 0; }
-          .watermark {
-            position: fixed; top: 50%; left: 50%;
-            transform: translate(-50%, -50%) rotate(-30deg);
-            font-size: 80px; font-weight: bold; color: rgba(13, 148, 136, 0.06);
-            white-space: nowrap; pointer-events: none; z-index: 0;
-          }
-          .watermark2 {
-            position: fixed; top: 25%; left: 30%;
-            transform: rotate(-30deg);
-            font-size: 50px; font-weight: bold; color: rgba(13, 148, 136, 0.04);
-            white-space: nowrap; pointer-events: none;
-          }
-          .watermark3 {
-            position: fixed; top: 70%; left: 60%;
-            transform: rotate(-30deg);
-            font-size: 50px; font-weight: bold; color: rgba(13, 148, 136, 0.04);
-            white-space: nowrap; pointer-events: none;
-          }
+          .watermark { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-30deg); font-size: 80px; font-weight: bold; color: rgba(13, 148, 136, 0.06); white-space: nowrap; pointer-events: none; z-index: 0; }
+          .watermark2 { position: fixed; top: 25%; left: 30%; transform: rotate(-30deg); font-size: 50px; font-weight: bold; color: rgba(13, 148, 136, 0.04); white-space: nowrap; pointer-events: none; }
+          .watermark3 { position: fixed; top: 70%; left: 60%; transform: rotate(-30deg); font-size: 50px; font-weight: bold; color: rgba(13, 148, 136, 0.04); white-space: nowrap; pointer-events: none; }
           .header { border-bottom: 2px solid #0d9488; padding-bottom: 16px; margin-bottom: 24px; }
           .header small { color: #666; }
           .footer { margin-top: 40px; border-top: 1px solid #e0e0e0; padding-top: 16px; text-align: center; color: #999; font-size: 12px; }
@@ -208,7 +227,6 @@ export default function HustleDetail() {
       <Navbar />
       <div className="pt-24 pb-12 px-4">
         <div className="container mx-auto max-w-4xl space-y-6">
-          {/* Back + Actions */}
           <div className="flex items-center justify-between flex-wrap gap-3">
             <Button variant="ghost" onClick={() => navigate(-1)} className="hover:text-primary">
               <ArrowLeft className="w-4 h-4 mr-1" /> Back
@@ -228,12 +246,7 @@ export default function HustleDetail() {
             </div>
           </div>
 
-          {/* Hustle Header Card */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="glass rounded-2xl p-8 space-y-4"
-          >
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass rounded-2xl p-8 space-y-4">
             <div className="flex items-center gap-3 flex-wrap">
               <Badge variant="outline" className="text-primary border-primary/30">{hustle.category}</Badge>
               <Badge variant="outline">{hustle.type}</Badge>
@@ -243,10 +256,8 @@ export default function HustleDetail() {
                 </Badge>
               )}
             </div>
-
             <h1 className="text-3xl md:text-4xl font-display font-bold">{hustle.title}</h1>
             <p className="text-muted-foreground text-lg">{hustle.description}</p>
-
             <div className="flex items-center gap-6 flex-wrap text-sm">
               <div className="flex items-center gap-1.5 text-primary">
                 <DollarSign className="w-4 h-4" />
@@ -267,18 +278,13 @@ export default function HustleDetail() {
                 </div>
               )}
             </div>
-
             {hustle.tags && hustle.tags.length > 0 && (
               <div className="flex flex-wrap gap-2">
                 {hustle.tags.map(tag => (
-                  <span key={tag} className="px-2.5 py-1 rounded-full text-xs bg-primary/10 text-primary">
-                    {tag}
-                  </span>
+                  <span key={tag} className="px-2.5 py-1 rounded-full text-xs bg-primary/10 text-primary">{tag}</span>
                 ))}
               </div>
             )}
-
-            {/* Search count indicator */}
             {profile && (
               <div className="flex items-center gap-2 text-xs text-muted-foreground pt-2 border-t border-border/50">
                 <span>Searches used: {profile.search_count}/{profile.subscription_tier === "free" ? 3 : profile.subscription_tier === "pro" ? 15 : "∞"}</span>
@@ -286,21 +292,12 @@ export default function HustleDetail() {
             )}
           </motion.div>
 
-          {/* AI Roadmap */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="glass rounded-2xl p-8"
-          >
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass rounded-2xl p-8">
             <div className="flex items-center gap-2 mb-6">
               <Zap className="w-5 h-5 text-primary" />
               <h2 className="text-xl font-display font-bold">AI-Generated Roadmap</h2>
-              <Badge variant="outline" className="text-primary border-primary/30 text-[10px]">
-                Powered by AI
-              </Badge>
+              <Badge variant="outline" className="text-primary border-primary/30 text-[10px]">Powered by AI</Badge>
             </div>
-
             {isGenerating ? (
               <div className="flex flex-col items-center justify-center py-16 space-y-4">
                 <Loader2 className="w-10 h-10 animate-spin text-primary" />
@@ -308,12 +305,7 @@ export default function HustleDetail() {
                 <p className="text-xs text-muted-foreground">This may take 10-15 seconds</p>
               </div>
             ) : (
-              <div ref={contentRef} className="prose prose-invert prose-sm max-w-none
-                prose-headings:font-display prose-headings:text-foreground
-                prose-p:text-muted-foreground prose-li:text-muted-foreground
-                prose-strong:text-foreground prose-a:text-primary
-                prose-code:bg-secondary prose-code:text-primary prose-code:rounded prose-code:px-1.5
-                prose-pre:bg-secondary/50 prose-pre:border prose-pre:border-border/50">
+              <div ref={contentRef} className="prose prose-invert prose-sm max-w-none prose-headings:font-display prose-headings:text-foreground prose-p:text-muted-foreground prose-li:text-muted-foreground prose-strong:text-foreground prose-a:text-primary prose-code:bg-secondary prose-code:text-primary prose-code:rounded prose-code:px-1.5 prose-pre:bg-secondary/50 prose-pre:border prose-pre:border-border/50">
                 <ReactMarkdown>{roadmap}</ReactMarkdown>
               </div>
             )}
