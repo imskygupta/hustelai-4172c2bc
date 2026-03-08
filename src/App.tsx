@@ -57,6 +57,7 @@ const App = () => (
             <Route path="/company" element={<Company />} />
             <Route path="/relax" element={<Relax />} />
             <Route path="/hustle/:id" element={<HustleDetail />} />
+            <Route path="/admin" element={<AdminBlock />} />
             <Route path="/imskygupta-admin" element={<AdminLogin />} />
             <Route path="/admin-dashboard" element={<AdminDashboard />} />
             <Route path="*" element={<NotFound />} />
