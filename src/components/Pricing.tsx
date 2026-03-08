@@ -31,7 +31,7 @@ const plans = [
     gradient: true,
     popular: true,
     features: [
-      "Unlimited AI searches",
+      "5 AI searches/day",
       "Promoted profile visibility",
       "Personalized monitoring",
       "Custom idea recommendations",
