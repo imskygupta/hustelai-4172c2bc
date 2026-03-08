@@ -433,13 +433,14 @@ export default function Dashboard() {
               </div>
               <div className="grid md:grid-cols-3 gap-4">
                 {[
-                  { icon: "🎓", title: "Create Courses", desc: "Build and sell courses to the community" },
-                  { icon: "🏪", title: "Sell Tools", desc: "List your tools & templates in the marketplace" },
-                  { icon: "👥", title: "Build Communities", desc: "Create and manage your own groups" },
+                  { icon: "🎓", title: "Create Courses", desc: "Build and sell courses to the community", tab: "courses" },
+                  { icon: "🏪", title: "Sell Tools", desc: "List your tools & templates in the marketplace", tab: "marketplace" },
+                  { icon: "👥", title: "Build Communities", desc: "Create and manage your own groups", tab: "communities" },
                 ].map((item) => (
-                  <div key={item.title} className="glass rounded-xl p-5 space-y-2 border-yellow-500/20 hover:border-yellow-500/40 transition-all cursor-pointer">
+                  <div key={item.title} onClick={() => navigate(`/infinity-zone?tab=${item.tab}`)}
+                    className="glass rounded-xl p-5 space-y-2 border-yellow-500/20 hover:border-yellow-500/40 hover:shadow-glow transition-all cursor-pointer group">
                     <span className="text-3xl">{item.icon}</span>
-                    <h3 className="font-display font-semibold">{item.title}</h3>
+                    <h3 className="font-display font-semibold group-hover:text-yellow-500 transition-colors">{item.title}</h3>
                     <p className="text-xs text-muted-foreground">{item.desc}</p>
                   </div>
                 ))}

@@ -26,6 +26,7 @@ import Affiliates from "./pages/Affiliates";
 import Company from "./pages/Company";
 import Relax from "./pages/Relax";
 import HustleDetail from "./pages/HustleDetail";
+import InfinityZone from "./pages/InfinityZone";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -57,6 +58,7 @@ const App = () => (
             <Route path="/company" element={<Company />} />
             <Route path="/relax" element={<Relax />} />
             <Route path="/hustle/:id" element={<HustleDetail />} />
+            <Route path="/infinity-zone" element={<InfinityZone />} />
             <Route path="/admin" element={<AdminBlock />} />
             <Route path="/imskygupta-admin" element={<AdminLogin />} />
             <Route path="/admin-dashboard" element={<AdminDashboard />} />

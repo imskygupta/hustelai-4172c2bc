@@ -27,7 +27,6 @@ serve(async (req) => {
     if (!isAdmin) throw new Error("Not admin");
 
     if (action === "set_password") {
-      // Find user by email or use user_id
       let targetId = user_id;
       if (!targetId && email) {
         const { data: { users } } = await supabaseAdmin.auth.admin.listUsers();
