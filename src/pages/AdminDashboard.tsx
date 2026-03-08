@@ -225,7 +225,7 @@ export default function AdminDashboard() {
       supabase.from("webinars").select("*").order("created_at", { ascending: false }),
       supabase.from("expert_assignments").select("*").order("created_at", { ascending: false }),
       supabase.from("blog_posts").select("*").order("created_at", { ascending: false }),
-      supabase.from("newsletter_subscribers").select("id", { count: "exact", head: true }),
+      supabase.from("newsletter_subscribers").select("*", { count: "exact" }),
       supabase.from("contact_submissions").select("id", { count: "exact", head: true }),
       supabase.from("chat_messages").select("*").order("created_at", { ascending: false }).limit(500),
       supabase.from("user_verifications").select("*").order("created_at", { ascending: false }),
