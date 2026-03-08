@@ -133,6 +133,15 @@ export default function Dashboard() {
     if (data) setExpertAssignments(data as ExpertAssignment[]);
   };
 
+  const loadTrendingLinks = async () => {
+    const { data } = await supabase
+      .from("trending_links")
+      .select("*")
+      .eq("is_active", true)
+      .order("sort_order");
+    if (data) setTrendingLinks(data as TrendingLink[]);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
