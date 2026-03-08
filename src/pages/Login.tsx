@@ -8,7 +8,6 @@ import { Zap, LogIn, Eye, EyeOff, ArrowRight, Shield, TrendingUp } from "lucide-
 import { useToast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import { ParticleBackground } from "@/components/ParticleBackground";
-import { ReCaptcha } from "@/components/ReCaptcha";
 import gsap from "gsap";
 
 const quotes = [
@@ -30,7 +29,6 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [captchaToken, setCaptchaToken] = useState("");
   const [quoteIdx, setQuoteIdx] = useState(0);
   const { signIn } = useAuth();
   const navigate = useNavigate();
@@ -59,10 +57,6 @@ export default function Login() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!captchaToken) {
-      toast({ title: "Please complete the captcha", variant: "destructive" });
-      return;
-    }
     setLoading(true);
     const { error } = await signIn(email, password);
     setLoading(false);
@@ -76,11 +70,8 @@ export default function Login() {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4 relative overflow-hidden">
       <ParticleBackground />
-
-      {/* Ambient glow */}
       <div ref={glowRef} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-primary/[0.04] blur-3xl pointer-events-none" />
 
-      {/* Rotating quote */}
       <div className="absolute top-8 left-0 right-0 text-center z-10">
         <AnimatePresence mode="wait">
           <motion.p
@@ -103,7 +94,6 @@ export default function Login() {
         className="w-full max-w-md relative z-10"
       >
         <div ref={formRef} className="glass rounded-2xl p-8 space-y-6 border-primary/20 hover:border-primary/40 transition-all duration-700 hover:shadow-glow relative overflow-hidden">
-          {/* Gradient border shimmer */}
           <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-primary/5 via-accent/5 to-primary/5 opacity-0 hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
 
           <div className="text-center space-y-2 gsap-stagger">
@@ -139,11 +129,8 @@ export default function Login() {
                 </button>
               </div>
             </div>
-            <div className="gsap-stagger flex justify-center">
-              <ReCaptcha onVerify={setCaptchaToken} />
-            </div>
             <div className="gsap-stagger">
-              <Button type="submit" disabled={loading || !captchaToken}
+              <Button type="submit" disabled={loading}
                 className="w-full h-12 bg-gradient-primary text-primary-foreground font-semibold text-base btn-press hover:shadow-glow transition-shadow duration-300">
                 {loading ? (
                   <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1 }} className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full" />
@@ -154,7 +141,6 @@ export default function Login() {
             </div>
           </form>
 
-          {/* Trust badges */}
           <div className="flex items-center justify-center gap-4 pt-2 gsap-stagger">
             {trustBadges.map(b => (
               <div key={b.label} className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
