@@ -158,6 +158,11 @@ export default function AdminDashboard() {
   const [roleToAssign, setRoleToAssign] = useState("moderator");
   const [passwordForm, setPasswordForm] = useState({ current: "", new: "", confirm: "" });
   const [changingPassword, setChangingPassword] = useState(false);
+  const [nlSubject, setNlSubject] = useState("");
+  const [nlBody, setNlBody] = useState("");
+  const [nlSending, setNlSending] = useState(false);
+  const [nlFromAccount, setNlFromAccount] = useState("contact");
+  const [subscribers, setSubscribers] = useState<any[]>([]);
   // Forms
   const [notifTitle, setNotifTitle] = useState("");
   const [notifMessage, setNotifMessage] = useState("");
