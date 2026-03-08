@@ -72,6 +72,7 @@ export default function Dashboard() {
   const [feedLoading, setFeedLoading] = useState(true);
   const [webinars, setWebinars] = useState<Webinar[]>([]);
   const [expertAssignments, setExpertAssignments] = useState<ExpertAssignment[]>([]);
+  const [trendingLinks, setTrendingLinks] = useState<TrendingLink[]>([]);
   const [activeTab, setActiveTab] = useState<"dashboard" | "affiliate">(
     searchParams.get("tab") === "affiliate" ? "affiliate" : "dashboard"
   );
