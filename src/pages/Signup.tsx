@@ -8,6 +8,7 @@ import { Zap, UserPlus, Eye, EyeOff, ArrowRight, CheckCircle } from "lucide-reac
 import { useToast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import { ParticleBackground } from "@/components/ParticleBackground";
+import { ReCaptcha } from "@/components/ReCaptcha";
 import gsap from "gsap";
 
 const quotes = [
