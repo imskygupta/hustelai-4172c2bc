@@ -1322,6 +1322,82 @@ export default function AdminDashboard() {
               )}
             </div>
           )}
+          {/* ===== COMMUNITY ===== */}
+          {section === "community" && (
+            <div className="space-y-4">
+              <h3 className="font-display font-bold">Community Channels ({communityGroups.length})</h3>
+              {communityGroups.map((g: any) => (
+                <div key={g.id} className="glass rounded-xl p-4 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">{g.icon}</span>
+                    <div>
+                      <p className="font-semibold text-sm">{g.name}</p>
+                      <p className="text-xs text-muted-foreground">{g.description || "No description"}</p>
+                      <div className="flex gap-2 mt-1">
+                        {g.is_default && <Badge variant="outline" className="text-[10px]">Default</Badge>}
+                        {g.is_readonly && <Badge variant="outline" className="text-[10px]">Read-only</Badge>}
+                        <Badge variant="outline" className="text-[10px]">Min: {g.min_tier}</Badge>
+                      </div>
+                    </div>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={() => { navigate("/community"); }}>
+                    <MessageSquare className="w-3 h-3 mr-1" /> View
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* ===== TRENDING LINKS ===== */}
+          {section === "trending" && (
+            <div className="space-y-6">
+              <div className="glass rounded-xl p-6 space-y-4">
+                <h3 className="font-display font-bold flex items-center gap-2">
+                  <Plus className="w-5 h-5 text-primary" /> Add Trending Link
+                </h3>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <Input placeholder="Title" value={newTrendTitle} onChange={e => setNewTrendTitle(e.target.value)} />
+                  <Input placeholder="Category (e.g. Trending, Tech, Creative)" value={newTrendCategory} onChange={e => setNewTrendCategory(e.target.value)} />
+                </div>
+                <Textarea placeholder="Description..." value={newTrendDesc} onChange={e => setNewTrendDesc(e.target.value)} />
+                <Input placeholder="Link URL (optional — Notion pages, articles, etc.)" value={newTrendLink} onChange={e => setNewTrendLink(e.target.value)} />
+                <Button onClick={async () => {
+                  if (!newTrendTitle) return;
+                  await supabase.from("trending_links").insert({
+                    title: newTrendTitle, description: newTrendDesc || null,
+                    category: newTrendCategory, link: newTrendLink || null,
+                    created_by: user!.id, sort_order: trendingLinks.length,
+                  });
+                  toast({ title: "Link Added!" });
+                  setNewTrendTitle(""); setNewTrendDesc(""); setNewTrendLink("");
+                  loadAllData();
+                }} className="bg-gradient-primary text-primary-foreground">
+                  <Plus className="w-4 h-4 mr-1" /> Add Link
+                </Button>
+              </div>
+              <div className="space-y-3">
+                <h3 className="font-display font-bold">Current Links ({trendingLinks.length})</h3>
+                {trendingLinks.map((t: any) => (
+                  <div key={t.id} className="glass rounded-xl p-4 flex items-start justify-between gap-4">
+                    <div className="space-y-1 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-sm">{t.title}</span>
+                        <Badge variant="outline" className="text-[10px]">{t.category}</Badge>
+                      </div>
+                      {t.description && <p className="text-xs text-muted-foreground">{t.description}</p>}
+                      {t.link && <a href={t.link} target="_blank" className="text-xs text-primary underline">{t.link}</a>}
+                    </div>
+                    <Button variant="ghost" size="sm" onClick={async () => {
+                      await supabase.from("trending_links").delete().eq("id", t.id);
+                      setTrendingLinks(trendingLinks.filter((l: any) => l.id !== t.id));
+                    }}>
+                      <Trash2 className="w-4 h-4 text-destructive" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </main>
     </div>
