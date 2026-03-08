@@ -20,7 +20,16 @@ import {
 interface FeedData {
   headlines: { text: string; source: string }[];
   stocks: { symbol: string; price: string; change: string; up: boolean }[];
-  discover: { title: string; description: string; category: string }[];
+  discover: { title: string; description: string; category: string; link?: string | null }[];
+}
+
+interface TrendingLink {
+  id: string;
+  title: string;
+  description: string | null;
+  category: string | null;
+  link: string | null;
+  sort_order: number;
 }
 
 interface Webinar {
@@ -63,6 +72,7 @@ export default function Dashboard() {
   const [feedLoading, setFeedLoading] = useState(true);
   const [webinars, setWebinars] = useState<Webinar[]>([]);
   const [expertAssignments, setExpertAssignments] = useState<ExpertAssignment[]>([]);
+  const [trendingLinks, setTrendingLinks] = useState<TrendingLink[]>([]);
   const [activeTab, setActiveTab] = useState<"dashboard" | "affiliate">(
     searchParams.get("tab") === "affiliate" ? "affiliate" : "dashboard"
   );
@@ -76,6 +86,7 @@ export default function Dashboard() {
       loadFeed();
       loadWebinars();
       loadExpertAssignments();
+      loadTrendingLinks();
     }
   }, [user]);
 
@@ -120,6 +131,15 @@ export default function Dashboard() {
   const loadExpertAssignments = async () => {
     const { data } = await supabase.from("expert_assignments").select("*").eq("user_id", user!.id).order("created_at", { ascending: false });
     if (data) setExpertAssignments(data as ExpertAssignment[]);
+  };
+
+  const loadTrendingLinks = async () => {
+    const { data } = await supabase
+      .from("trending_links")
+      .select("*")
+      .eq("is_active", true)
+      .order("sort_order");
+    if (data) setTrendingLinks(data as TrendingLink[]);
   };
 
   if (loading) {
@@ -358,17 +378,18 @@ export default function Dashboard() {
             </motion.div>
           )}
 
-          {/* Discover Cards */}
-          {feed?.discover && (
+          {/* Discover Cards - from DB trending_links */}
+          {(trendingLinks.length > 0 || feed?.discover) && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.25 }} className="space-y-4">
               <div className="flex items-center gap-3">
                 <ExternalLink className="w-5 h-5 text-primary" />
                 <h2 className="text-xl font-display font-bold">Discover What's Trending</h2>
               </div>
               <div className={`grid md:grid-cols-2 lg:grid-cols-3 gap-4 ${isFree ? "blur-sm pointer-events-none" : ""}`}>
-                {feed.discover.map((item, i) => (
+                {(trendingLinks.length > 0 ? trendingLinks : (feed?.discover || [])).map((item, i) => (
                   <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 + i * 0.08 }}
-                    className="glass rounded-xl p-5 space-y-3 hover:border-primary/30 hover:shadow-glow transition-all duration-300 cursor-pointer group">
+                    onClick={() => { if ('link' in item && item.link) window.open(item.link, "_blank"); }}
+                    className={`glass rounded-xl p-5 space-y-3 hover:border-primary/30 hover:shadow-glow transition-all duration-300 group ${('link' in item && item.link) ? "cursor-pointer" : ""}`}>
                     <div className="flex items-center justify-between">
                       <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-semibold">{item.category}</span>
                       <ArrowUpRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />

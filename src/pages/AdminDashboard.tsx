@@ -105,7 +105,7 @@ const tierColors: Record<string, string> = {
 type AdminSection =
   | "overview" | "users" | "roles" | "notifications" | "webinars"
   | "expert" | "chatbot" | "blogs" | "analytics" | "config"
-  | "verification" | "payments" | "forum";
+  | "verification" | "payments" | "forum" | "community" | "trending";
 
 const sidebarItems: { id: AdminSection; label: string; icon: any }[] = [
   { id: "overview", label: "Overview", icon: BarChart3 },
@@ -114,11 +114,13 @@ const sidebarItems: { id: AdminSection; label: string; icon: any }[] = [
   { id: "verification", label: "Verification", icon: UserCheck },
   { id: "payments", label: "Payments", icon: Zap },
   { id: "forum", label: "Forum Posts", icon: MessageSquare },
+  { id: "community", label: "Community", icon: Globe },
   { id: "notifications", label: "Notifications", icon: Bell },
   { id: "webinars", label: "Live Webinars", icon: Video },
   { id: "expert", label: "Expert Guidance", icon: Compass },
   { id: "chatbot", label: "Personal Chatbot", icon: MessageSquare },
   { id: "blogs", label: "Blog Manager", icon: BookOpen },
+  { id: "trending", label: "Trending Links", icon: ExternalLink },
   { id: "analytics", label: "Analytics", icon: Activity },
   { id: "config", label: "Config & Keys", icon: Settings },
 ];
@@ -144,6 +146,12 @@ export default function AdminDashboard() {
   const [verifications, setVerifications] = useState<any[]>([]);
   const [payments, setPayments] = useState<any[]>([]);
   const [forumPosts, setForumPosts] = useState<any[]>([]);
+  const [communityGroups, setCommunityGroups] = useState<any[]>([]);
+  const [trendingLinks, setTrendingLinks] = useState<any[]>([]);
+  const [newTrendTitle, setNewTrendTitle] = useState("");
+  const [newTrendDesc, setNewTrendDesc] = useState("");
+  const [newTrendCategory, setNewTrendCategory] = useState("Trending");
+  const [newTrendLink, setNewTrendLink] = useState("");
   const [userRoles, setUserRoles] = useState<any[]>([]);
   const [roleUserId, setRoleUserId] = useState("");
   const [roleToAssign, setRoleToAssign] = useState("moderator");
@@ -205,7 +213,7 @@ export default function AdminDashboard() {
 
   const loadAllData = async () => {
     setLoadingData(true);
-    const [usersRes, notifsRes, webRes, expertRes, blogRes, nlRes, contactRes, chatRes, verifRes, payRes, forumRes, rolesRes] = await Promise.all([
+    const [usersRes, notifsRes, webRes, expertRes, blogRes, nlRes, contactRes, chatRes, verifRes, payRes, forumRes, rolesRes, groupsRes, trendRes] = await Promise.all([
       supabase.from("profiles").select("*").order("created_at", { ascending: false }),
       supabase.from("notifications").select("*").order("created_at", { ascending: false }),
       supabase.from("webinars").select("*").order("created_at", { ascending: false }),
@@ -218,6 +226,8 @@ export default function AdminDashboard() {
       supabase.from("payments").select("*").order("created_at", { ascending: false }),
       supabase.from("forum_posts").select("*").order("created_at", { ascending: false }).limit(100),
       supabase.from("user_roles").select("*").order("created_at", { ascending: false }),
+      supabase.from("community_groups").select("*").order("created_at"),
+      supabase.from("trending_links").select("*").order("sort_order"),
     ]);
     if (usersRes.data) setUsers(usersRes.data as UserProfile[]);
     if (notifsRes.data) setNotifications(notifsRes.data as Notification[]);
@@ -229,6 +239,9 @@ export default function AdminDashboard() {
     if (verifRes.data) setVerifications(verifRes.data);
     if (payRes.data) setPayments(payRes.data);
     if (forumRes.data) setForumPosts(forumRes.data);
+    if (rolesRes.data) setUserRoles(rolesRes.data);
+    if (groupsRes.data) setCommunityGroups(groupsRes.data);
+    if (trendRes.data) setTrendingLinks(trendRes.data);
     if (rolesRes.data) setUserRoles(rolesRes.data);
     // Build chat users list
     if (chatRes.data) {
@@ -264,6 +277,8 @@ export default function AdminDashboard() {
     await supabase.auth.signInWithOtp({ email });
   };
 
+  const WELCOME_CHANNEL_ID = "c4541d1b-8b58-46b1-90b5-58c6e36251ef";
+
   const sendNotification = async () => {
     if (!notifTitle || !notifMessage) return;
     const { error } = await supabase.from("notifications").insert({
@@ -271,6 +286,19 @@ export default function AdminDashboard() {
       link: notifLink || null, target_tier: notifTier, created_by: user!.id,
     });
     if (!error) {
+      // Also post non-webinar notifications to Welcome & Onboarding channel
+      if (notifType !== "webinar") {
+        await supabase.from("forum_posts").insert({
+          group_id: WELCOME_CHANNEL_ID,
+          user_id: user!.id,
+          user_name: "HustleAI Team",
+          content: notifMessage + (notifLink ? `\n\n🔗 ${notifLink}` : ""),
+          title: `📢 ${notifTitle}`,
+          category: "Welcome & Onboarding",
+          post_type: "announcement",
+          is_approved: true,
+        });
+      }
       toast({ title: "Sent!" });
       setNotifTitle(""); setNotifMessage(""); setNotifLink("");
       loadAllData();
@@ -446,7 +474,7 @@ export default function AdminDashboard() {
             {sidebarCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
           </button>
         </div>
-        <nav className="p-2 space-y-1">
+        <nav className="p-2 space-y-1 overflow-y-auto" style={{ maxHeight: "calc(100vh - 56px - 100px)" }}>
           {sidebarItems.map((item) => (
             <button
               key={item.id}
@@ -1292,6 +1320,82 @@ export default function AdminDashboard() {
               {forumPosts.filter((p: any) => !p.is_approved).length === 0 && (
                 <p className="text-muted-foreground text-sm text-center py-8">All posts are approved! ✅</p>
               )}
+            </div>
+          )}
+          {/* ===== COMMUNITY ===== */}
+          {section === "community" && (
+            <div className="space-y-4">
+              <h3 className="font-display font-bold">Community Channels ({communityGroups.length})</h3>
+              {communityGroups.map((g: any) => (
+                <div key={g.id} className="glass rounded-xl p-4 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">{g.icon}</span>
+                    <div>
+                      <p className="font-semibold text-sm">{g.name}</p>
+                      <p className="text-xs text-muted-foreground">{g.description || "No description"}</p>
+                      <div className="flex gap-2 mt-1">
+                        {g.is_default && <Badge variant="outline" className="text-[10px]">Default</Badge>}
+                        {g.is_readonly && <Badge variant="outline" className="text-[10px]">Read-only</Badge>}
+                        <Badge variant="outline" className="text-[10px]">Min: {g.min_tier}</Badge>
+                      </div>
+                    </div>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={() => { navigate("/community"); }}>
+                    <MessageSquare className="w-3 h-3 mr-1" /> View
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* ===== TRENDING LINKS ===== */}
+          {section === "trending" && (
+            <div className="space-y-6">
+              <div className="glass rounded-xl p-6 space-y-4">
+                <h3 className="font-display font-bold flex items-center gap-2">
+                  <Plus className="w-5 h-5 text-primary" /> Add Trending Link
+                </h3>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <Input placeholder="Title" value={newTrendTitle} onChange={e => setNewTrendTitle(e.target.value)} />
+                  <Input placeholder="Category (e.g. Trending, Tech, Creative)" value={newTrendCategory} onChange={e => setNewTrendCategory(e.target.value)} />
+                </div>
+                <Textarea placeholder="Description..." value={newTrendDesc} onChange={e => setNewTrendDesc(e.target.value)} />
+                <Input placeholder="Link URL (optional — Notion pages, articles, etc.)" value={newTrendLink} onChange={e => setNewTrendLink(e.target.value)} />
+                <Button onClick={async () => {
+                  if (!newTrendTitle) return;
+                  await supabase.from("trending_links").insert({
+                    title: newTrendTitle, description: newTrendDesc || null,
+                    category: newTrendCategory, link: newTrendLink || null,
+                    created_by: user!.id, sort_order: trendingLinks.length,
+                  });
+                  toast({ title: "Link Added!" });
+                  setNewTrendTitle(""); setNewTrendDesc(""); setNewTrendLink("");
+                  loadAllData();
+                }} className="bg-gradient-primary text-primary-foreground">
+                  <Plus className="w-4 h-4 mr-1" /> Add Link
+                </Button>
+              </div>
+              <div className="space-y-3">
+                <h3 className="font-display font-bold">Current Links ({trendingLinks.length})</h3>
+                {trendingLinks.map((t: any) => (
+                  <div key={t.id} className="glass rounded-xl p-4 flex items-start justify-between gap-4">
+                    <div className="space-y-1 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-sm">{t.title}</span>
+                        <Badge variant="outline" className="text-[10px]">{t.category}</Badge>
+                      </div>
+                      {t.description && <p className="text-xs text-muted-foreground">{t.description}</p>}
+                      {t.link && <a href={t.link} target="_blank" className="text-xs text-primary underline">{t.link}</a>}
+                    </div>
+                    <Button variant="ghost" size="sm" onClick={async () => {
+                      await supabase.from("trending_links").delete().eq("id", t.id);
+                      setTrendingLinks(trendingLinks.filter((l: any) => l.id !== t.id));
+                    }}>
+                      <Trash2 className="w-4 h-4 text-destructive" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>
