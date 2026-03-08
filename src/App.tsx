@@ -28,6 +28,7 @@ import Relax from "./pages/Relax";
 import HustleDetail from "./pages/HustleDetail";
 import InfinityZone from "./pages/InfinityZone";
 import Marketplace from "./pages/Marketplace";
+import MarketplaceItem from "./pages/MarketplaceItem";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
@@ -65,6 +66,7 @@ const App = () => (
             <Route path="/hustle/:id" element={<HustleDetail />} />
             <Route path="/infinity-zone" element={<InfinityZone />} />
             <Route path="/marketplace" element={<Marketplace />} />
+            <Route path="/marketplace/:id" element={<MarketplaceItem />} />
             <Route path="/admin" element={<AdminBlock />} />
             <Route path="/imskygupta-admin" element={<AdminLogin />} />
             <Route path="/admin-dashboard" element={<AdminDashboard />} />

@@ -234,8 +234,9 @@ export default function Marketplace() {
                             </div>
                           </div>
                           {!isLocked && (
-                            <Button size="sm" className="w-full bg-gradient-primary text-primary-foreground">
-                              {it.price > 0 ? "Buy Now" : "Get Free"}
+                            <Button size="sm" className="w-full bg-gradient-primary text-primary-foreground"
+                              onClick={() => navigate(`/marketplace/${it.id}`)}>
+                              {it.price > 0 ? "View & Buy" : "View Details"}
                             </Button>
                           )}
                         </div>

@@ -59,7 +59,7 @@ serve(async (req) => {
             customer_phone: "9999999999",
           },
           order_meta: {
-            return_url: `${req.headers.get("origin") || "https://hustleai.app"}/dashboard?payment=success&order_id=${orderId}`,
+            return_url: `${req.headers.get("origin") || "https://hustelai.eu.cc"}/dashboard?payment=success&order_id=${orderId}`,
           },
         }),
       });

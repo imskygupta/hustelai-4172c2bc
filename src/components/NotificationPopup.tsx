@@ -35,6 +35,7 @@ export function NotificationPopup() {
   const { user, profile } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     if (user && profile) loadNotifications();
@@ -54,9 +55,11 @@ export function NotificationPopup() {
         const tierOrder = ["free", "pro", "elite", "infinity"];
         return tierOrder.indexOf(profile!.subscription_tier) >= tierOrder.indexOf(n.target_tier);
       });
+      // Load dismissed from localStorage only once per session
       const stored = JSON.parse(localStorage.getItem("dismissed_notifs") || "[]");
       setDismissed(new Set(stored));
       setNotifications(filtered);
+      setLoaded(true);
     }
   };
 
@@ -66,12 +69,24 @@ export function NotificationPopup() {
     localStorage.setItem("dismissed_notifs", JSON.stringify([...newDismissed]));
   };
 
+  const dismissAll = () => {
+    const allIds = new Set([...dismissed, ...notifications.map(n => n.id)]);
+    setDismissed(allIds);
+    localStorage.setItem("dismissed_notifs", JSON.stringify([...allIds]));
+  };
+
   const visible = notifications.filter(n => !dismissed.has(n.id));
 
-  if (visible.length === 0) return null;
+  if (!loaded || visible.length === 0) return null;
 
   return (
     <div className="fixed top-20 right-4 z-50 space-y-2 max-w-sm">
+      {visible.length > 1 && (
+        <button onClick={dismissAll}
+          className="text-[10px] text-muted-foreground hover:text-primary ml-auto block mb-1 transition-colors">
+          Mark all as read ({visible.length})
+        </button>
+      )}
       <AnimatePresence>
         {visible.slice(0, 3).map((n) => {
           const Icon = typeIcons[n.type] || Bell;
@@ -94,7 +109,7 @@ export function NotificationPopup() {
                     </a>
                   )}
                 </div>
-                <button onClick={() => dismiss(n.id)} className="text-muted-foreground hover:text-foreground">
+                <button onClick={() => dismiss(n.id)} className="text-muted-foreground hover:text-foreground" title="Mark as read">
                   <X className="w-4 h-4" />
                 </button>
               </div>
