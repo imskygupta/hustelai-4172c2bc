@@ -1,11 +1,12 @@
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Zap, ArrowRight, Menu, X, LogOut } from "lucide-react";
+import { Zap, ArrowRight, Menu, X, LogOut, Users, User } from "lucide-react";
 import { useState } from "react";
 
 const navLinks = [
   { label: "Explore", href: "/explore" },
+  { label: "Community", href: "/community" },
   { label: "Blog", href: "/blog" },
   { label: "About", href: "/about" },
   { label: "Reviews", href: "/reviews" },
@@ -25,7 +26,6 @@ export function Navbar() {
           <span className="font-display font-bold text-xl">HustleAI</span>
         </Link>
 
-        {/* Desktop */}
         <div className="hidden md:flex items-center gap-1">
           {navLinks.map((l) => (
             <Button key={l.href} variant="ghost" size="sm" onClick={() => navigate(l.href)}>
@@ -37,6 +37,9 @@ export function Navbar() {
         <div className="hidden md:flex items-center gap-3">
           {user ? (
             <>
+              <Button variant="ghost" size="sm" onClick={() => navigate("/profile")}>
+                <User className="w-4 h-4 mr-1" /> Profile
+              </Button>
               <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")}>Dashboard</Button>
               <Button variant="outline" size="sm" onClick={() => { signOut(); navigate("/"); }}>
                 <LogOut className="w-4 h-4 mr-1" /> Logout
@@ -52,13 +55,11 @@ export function Navbar() {
           )}
         </div>
 
-        {/* Mobile toggle */}
         <button className="md:hidden text-foreground" onClick={() => setMobileOpen(!mobileOpen)}>
           {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
         </button>
       </div>
 
-      {/* Mobile menu */}
       {mobileOpen && (
         <div className="md:hidden glass border-t border-border/50 px-4 py-4 space-y-2">
           {navLinks.map((l) => (
@@ -69,6 +70,7 @@ export function Navbar() {
           <div className="border-t border-border/50 pt-2 space-y-2">
             {user ? (
               <>
+                <Button variant="ghost" className="w-full justify-start" onClick={() => { navigate("/profile"); setMobileOpen(false); }}>Profile</Button>
                 <Button variant="ghost" className="w-full justify-start" onClick={() => { navigate("/dashboard"); setMobileOpen(false); }}>Dashboard</Button>
                 <Button variant="outline" className="w-full" onClick={() => { signOut(); navigate("/"); setMobileOpen(false); }}>
                   <LogOut className="w-4 h-4 mr-1" /> Logout
