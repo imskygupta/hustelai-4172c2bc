@@ -362,6 +362,47 @@ export default function AdminDashboard() {
     setBlogPosts(blogPosts.filter(b => b.id !== id));
   };
 
+  const assignRole = async () => {
+    if (!roleUserId || !roleToAssign) return;
+    const { error } = await supabase.from("user_roles").insert({
+      user_id: roleUserId, role: roleToAssign as any,
+    });
+    if (error) {
+      if (error.code === "23505") toast({ title: "Already assigned", description: "User already has this role.", variant: "destructive" });
+      else toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Role Assigned!" });
+      setRoleUserId("");
+      loadAllData();
+    }
+  };
+
+  const removeRole = async (id: string) => {
+    await supabase.from("user_roles").delete().eq("id", id);
+    setUserRoles(userRoles.filter(r => r.id !== id));
+    toast({ title: "Role Removed" });
+  };
+
+  const handleChangePassword = async () => {
+    if (passwordForm.new !== passwordForm.confirm) {
+      toast({ title: "Mismatch", description: "New passwords don't match.", variant: "destructive" });
+      return;
+    }
+    if (passwordForm.new.length < 6) {
+      toast({ title: "Too short", description: "Password must be at least 6 characters.", variant: "destructive" });
+      return;
+    }
+    setChangingPassword(true);
+    const { error } = await supabase.auth.updateUser({ password: passwordForm.new });
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Password Updated!", description: "Your admin password has been changed." });
+      setPasswordForm({ current: "", new: "", confirm: "" });
+    }
+    setChangingPassword(false);
+  };
+
   if (loading || !isAdmin) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -369,13 +410,6 @@ export default function AdminDashboard() {
       </div>
     );
   }
-
-  const envConfig = [
-    { key: "SUPABASE_URL", value: import.meta.env.VITE_SUPABASE_URL, status: "active" },
-    { key: "SUPABASE_ANON_KEY", value: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY?.slice(0, 20) + "...", status: "active" },
-    { key: "PROJECT_ID", value: import.meta.env.VITE_SUPABASE_PROJECT_ID, status: "active" },
-    { key: "LOVABLE_API_KEY", value: "Configured (Backend)", status: "active" },
-  ];
 
   const apiKeysInfo = [
     { name: "Lovable AI Gateway (Gemini)", status: "active", note: "Primary — google/gemini-2.5-flash" },
