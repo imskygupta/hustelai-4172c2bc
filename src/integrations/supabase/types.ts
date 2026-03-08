@@ -14,6 +14,71 @@ export type Database = {
   }
   public: {
     Tables: {
+      community_groups: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          icon: string | null
+          id: string
+          min_tier: Database["public"]["Enums"]["subscription_tier"]
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          min_tier?: Database["public"]["Enums"]["subscription_tier"]
+          name: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          min_tier?: Database["public"]["Enums"]["subscription_tier"]
+          name?: string
+        }
+        Relationships: []
+      }
+      forum_posts: {
+        Row: {
+          content: string
+          created_at: string
+          group_id: string
+          id: string
+          user_id: string
+          user_name: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          group_id: string
+          id?: string
+          user_id: string
+          user_name?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          group_id?: string
+          id?: string
+          user_id?: string
+          user_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "forum_posts_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "community_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       newsletter_subscribers: {
         Row: {
           email: string
@@ -32,35 +97,104 @@ export type Database = {
         }
         Relationships: []
       }
+      notifications: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          link: string | null
+          message: string
+          target_tier: string | null
+          title: string
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          link?: string | null
+          message: string
+          target_tier?: string | null
+          title: string
+          type?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          link?: string | null
+          message?: string
+          target_tier?: string | null
+          title?: string
+          type?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
+          address: string | null
+          bio: string | null
           created_at: string
           display_name: string | null
           email: string | null
           id: string
+          phone: string | null
+          resume_url: string | null
           search_count: number
           subscription_tier: Database["public"]["Enums"]["subscription_tier"]
           updated_at: string
           user_id: string
         }
         Insert: {
+          address?: string | null
+          bio?: string | null
           created_at?: string
           display_name?: string | null
           email?: string | null
           id?: string
+          phone?: string | null
+          resume_url?: string | null
           search_count?: number
           subscription_tier?: Database["public"]["Enums"]["subscription_tier"]
           updated_at?: string
           user_id: string
         }
         Update: {
+          address?: string | null
+          bio?: string | null
           created_at?: string
           display_name?: string | null
           email?: string | null
           id?: string
+          phone?: string | null
+          resume_url?: string | null
           search_count?: number
           subscription_tier?: Database["public"]["Enums"]["subscription_tier"]
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
         }
         Relationships: []
@@ -70,10 +204,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      subscription_tier: "free" | "pro" | "elite"
+      app_role: "admin" | "moderator" | "user"
+      subscription_tier: "free" | "pro" | "elite" | "infinity"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -201,7 +342,8 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      subscription_tier: ["free", "pro", "elite"],
+      app_role: ["admin", "moderator", "user"],
+      subscription_tier: ["free", "pro", "elite", "infinity"],
     },
   },
 } as const
