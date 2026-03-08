@@ -146,6 +146,12 @@ export default function AdminDashboard() {
   const [verifications, setVerifications] = useState<any[]>([]);
   const [payments, setPayments] = useState<any[]>([]);
   const [forumPosts, setForumPosts] = useState<any[]>([]);
+  const [communityGroups, setCommunityGroups] = useState<any[]>([]);
+  const [trendingLinks, setTrendingLinks] = useState<any[]>([]);
+  const [newTrendTitle, setNewTrendTitle] = useState("");
+  const [newTrendDesc, setNewTrendDesc] = useState("");
+  const [newTrendCategory, setNewTrendCategory] = useState("Trending");
+  const [newTrendLink, setNewTrendLink] = useState("");
   const [userRoles, setUserRoles] = useState<any[]>([]);
   const [roleUserId, setRoleUserId] = useState("");
   const [roleToAssign, setRoleToAssign] = useState("moderator");
