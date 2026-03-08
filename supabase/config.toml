@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.dashboard-feed]
 verify_jwt = false
+
+[functions.cashfree-payment]
+verify_jwt = false

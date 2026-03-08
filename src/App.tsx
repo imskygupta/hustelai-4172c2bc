@@ -43,6 +43,9 @@ const App = () => (
             <Route path="/reviews" element={<Reviews />} />
             <Route path="/community" element={<Community />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/payment" element={<Payment />} />
+            <Route path="/leaderboard" element={<Leaderboard />} />
+            <Route path="/saved-hustles" element={<SavedHustles />} />
             <Route path="/imskygupta-admin" element={<AdminLogin />} />
             <Route path="/admin-dashboard" element={<AdminDashboard />} />
             <Route path="*" element={<NotFound />} />
