@@ -114,11 +114,15 @@ export function Footer() {
         </div>
 
         <div className="border-t border-border/50 pt-6 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
-          <p>© 2026 HustleAI by SkyCart. All rights reserved.</p>
+          <p>© 2026 HustleAI. All rights reserved.</p>
           <div className="flex items-center gap-4">
-            <a href="mailto:contact@skycart.xyz" className="hover:text-primary transition-colors">Support</a>
+            <Link to="/privacy-policy" className="hover:text-primary transition-colors">Privacy Policy</Link>
             <span>·</span>
-            <span>AI-powered freelance discovery</span>
+            <Link to="/terms-conditions" className="hover:text-primary transition-colors">Terms & Conditions</Link>
+            <span>·</span>
+            <Link to="/refund-policy" className="hover:text-primary transition-colors">Refund Policy</Link>
+            <span>·</span>
+            <a href="mailto:support@hustelai.eu.cc" className="hover:text-primary transition-colors">Support</a>
           </div>
         </div>
       </div>
