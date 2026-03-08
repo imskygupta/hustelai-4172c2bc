@@ -137,6 +137,54 @@ export type Database = {
         }
         Relationships: []
       }
+      courses: {
+        Row: {
+          category: string | null
+          content: string | null
+          created_at: string
+          creator_id: string
+          currency: string
+          description: string | null
+          enrolled_count: number
+          id: string
+          is_published: boolean
+          price: number
+          thumbnail_url: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          content?: string | null
+          created_at?: string
+          creator_id: string
+          currency?: string
+          description?: string | null
+          enrolled_count?: number
+          id?: string
+          is_published?: boolean
+          price?: number
+          thumbnail_url?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          content?: string | null
+          created_at?: string
+          creator_id?: string
+          currency?: string
+          description?: string | null
+          enrolled_count?: number
+          id?: string
+          is_published?: boolean
+          price?: number
+          thumbnail_url?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       expert_assignments: {
         Row: {
           created_at: string
@@ -306,6 +354,57 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      marketplace_items: {
+        Row: {
+          category: string | null
+          created_at: string
+          currency: string
+          description: string | null
+          download_url: string | null
+          id: string
+          is_published: boolean
+          item_type: string
+          preview_url: string | null
+          price: number
+          sales_count: number
+          seller_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          currency?: string
+          description?: string | null
+          download_url?: string | null
+          id?: string
+          is_published?: boolean
+          item_type?: string
+          preview_url?: string | null
+          price?: number
+          sales_count?: number
+          seller_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          currency?: string
+          description?: string | null
+          download_url?: string | null
+          id?: string
+          is_published?: boolean
+          item_type?: string
+          preview_url?: string | null
+          price?: number
+          sales_count?: number
+          seller_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       newsletter_subscribers: {
         Row: {
