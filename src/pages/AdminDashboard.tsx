@@ -277,6 +277,8 @@ export default function AdminDashboard() {
     await supabase.auth.signInWithOtp({ email });
   };
 
+  const WELCOME_CHANNEL_ID = "c4541d1b-8b58-46b1-90b5-58c6e36251ef";
+
   const sendNotification = async () => {
     if (!notifTitle || !notifMessage) return;
     const { error } = await supabase.from("notifications").insert({
@@ -284,6 +286,19 @@ export default function AdminDashboard() {
       link: notifLink || null, target_tier: notifTier, created_by: user!.id,
     });
     if (!error) {
+      // Also post non-webinar notifications to Welcome & Onboarding channel
+      if (notifType !== "webinar") {
+        await supabase.from("forum_posts").insert({
+          group_id: WELCOME_CHANNEL_ID,
+          user_id: user!.id,
+          user_name: "HustleAI Team",
+          content: notifMessage + (notifLink ? `\n\n🔗 ${notifLink}` : ""),
+          title: `📢 ${notifTitle}`,
+          category: "Welcome & Onboarding",
+          post_type: "announcement",
+          is_approved: true,
+        });
+      }
       toast({ title: "Sent!" });
       setNotifTitle(""); setNotifMessage(""); setNotifLink("");
       loadAllData();
