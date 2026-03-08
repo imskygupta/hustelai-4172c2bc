@@ -10,11 +10,14 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
-import { User, Upload, FileText, Lock, MapPin, Phone, Mail, Crown } from "lucide-react";
+import { User, Upload, FileText, Lock, MapPin, Phone, Mail, Crown, Shield, Trash2, Key, Settings } from "lucide-react";
 import { VerificationSection } from "@/components/VerificationSection";
+import { EmailVerificationBanner } from "@/components/EmailVerificationBanner";
+
+type ProfileTab = "general" | "security" | "account";
 
 export default function Profile() {
-  const { user, profile, loading, refreshProfile } = useAuth();
+  const { user, profile, loading, refreshProfile, signOut } = useAuth();
   const navigate = useNavigate();
   const [displayName, setDisplayName] = useState("");
   const [bio, setBio] = useState("");
@@ -22,6 +25,8 @@ export default function Profile() {
   const [address, setAddress] = useState("");
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [activeTab, setActiveTab] = useState<ProfileTab>("general");
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) navigate("/login");
@@ -38,6 +43,7 @@ export default function Profile() {
 
   const isPremium = profile && ["pro", "elite", "infinity"].includes(profile.subscription_tier as string);
   const isElite = profile && ["elite", "infinity"].includes(profile.subscription_tier as string);
+  const emailVerified = user?.email_confirmed_at != null;
 
   const saveProfile = async () => {
     if (!user) return;
@@ -80,25 +86,36 @@ export default function Profile() {
     setUploading(false);
   };
 
+  const handleDeleteAccount = () => {
+    window.location.href = "mailto:contact@skycart.xyz?subject=Account Deletion Request&body=I would like to delete my HustleAI account. My email: " + encodeURIComponent(user?.email || "");
+  };
+
   if (loading) {
     return <div className="min-h-screen bg-background flex items-center justify-center">
       <div className="animate-pulse text-primary font-display text-xl">Loading...</div>
     </div>;
   }
 
+  const tabs: { key: ProfileTab; label: string; icon: any }[] = [
+    { key: "general", label: "General", icon: User },
+    { key: "security", label: "Security", icon: Shield },
+    { key: "account", label: "Account", icon: Settings },
+  ];
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
       <div className="pt-24 pb-12 px-4">
-        <div className="container mx-auto max-w-2xl space-y-6">
+        <div className="container mx-auto max-w-3xl space-y-6">
+          {/* Header */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <div className="glass rounded-2xl p-8 space-y-6">
-              <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-                  <User className="w-8 h-8 text-primary" />
-                </div>
-                <div>
-                  <h1 className="text-2xl font-display font-bold">My Profile</h1>
+            <div className="glass rounded-2xl p-6 flex items-center gap-4">
+              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                <User className="w-8 h-8 text-primary" />
+              </div>
+              <div className="flex-1">
+                <h1 className="text-2xl font-display font-bold">{profile?.display_name || "My Profile"}</h1>
+                <div className="flex items-center gap-2 mt-1">
                   <Badge className={
                     profile?.subscription_tier === "infinity" ? "bg-gradient-primary text-primary-foreground" :
                     profile?.subscription_tier === "elite" ? "bg-accent/20 text-accent" :
@@ -107,10 +124,35 @@ export default function Profile() {
                   }>
                     {profile?.subscription_tier}
                   </Badge>
+                  {emailVerified ? (
+                    <Badge variant="outline" className="text-[10px] border-primary/30 text-primary">✓ Verified</Badge>
+                  ) : (
+                    <Badge variant="outline" className="text-[10px] border-destructive/30 text-destructive">✗ Unverified</Badge>
+                  )}
                 </div>
               </div>
+            </div>
+          </motion.div>
 
-              <div className="space-y-4">
+          {!emailVerified && <EmailVerificationBanner email={user?.email || ""} />}
+
+          {/* Tab Navigation */}
+          <div className="flex gap-1 bg-secondary/30 rounded-xl p-1">
+            {tabs.map(tab => (
+              <button key={tab.key} onClick={() => setActiveTab(tab.key)}
+                className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg text-sm font-medium transition-all ${
+                  activeTab === tab.key ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
+                }`}>
+                <tab.icon className="w-4 h-4" />
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          {/* General Tab */}
+          {activeTab === "general" && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+              <div className="glass rounded-2xl p-8 space-y-4">
                 <div className="space-y-2">
                   <Label className="flex items-center gap-1"><Mail className="w-3 h-3" /> Email</Label>
                   <Input value={profile?.email || ""} disabled className="opacity-60" />
@@ -123,8 +165,6 @@ export default function Profile() {
                   <Label>Bio</Label>
                   <Textarea value={bio} onChange={(e) => setBio(e.target.value)} placeholder="Tell us about yourself..." />
                 </div>
-
-                {/* Premium fields */}
                 <div className="space-y-2">
                   <Label className="flex items-center gap-1">
                     <Phone className="w-3 h-3" /> Phone
@@ -147,70 +187,140 @@ export default function Profile() {
                     <Textarea disabled placeholder="Upgrade to Pro to add address" className="opacity-40" />
                   )}
                 </div>
-
                 <Button onClick={saveProfile} disabled={saving} className="w-full bg-gradient-primary text-primary-foreground">
                   {saving ? "Saving..." : "Save Profile"}
                 </Button>
               </div>
-            </div>
-          </motion.div>
 
-          {/* Resume Section */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-            <div className="glass rounded-2xl p-8 space-y-4">
-              <div className="flex items-center gap-3">
-                <FileText className="w-6 h-6 text-primary" />
-                <h2 className="text-xl font-display font-bold">Resume</h2>
-                {!isPremium && <Badge variant="outline" className="text-[10px]"><Lock className="w-2 h-2 mr-0.5" /> Pro+</Badge>}
-              </div>
-
-              {isPremium ? (
-                <div className="space-y-4">
-                  <p className="text-sm text-muted-foreground">
-                    {isElite
-                      ? "Upload your resume — our tech experts will personally review it and provide feedback."
-                      : "Upload your resume — AI will analyze it and provide improvement suggestions."}
-                  </p>
-                  {(profile as any)?.resume_url && (
-                    <div className="flex items-center gap-2 text-sm text-primary">
-                      <FileText className="w-4 h-4" />
-                      <span>Resume uploaded ✓</span>
-                    </div>
-                  )}
-                  <div>
-                    <label className="cursor-pointer">
+              {/* Resume Section */}
+              <div className="glass rounded-2xl p-8 space-y-4">
+                <div className="flex items-center gap-3">
+                  <FileText className="w-6 h-6 text-primary" />
+                  <h2 className="text-xl font-display font-bold">Resume</h2>
+                  {!isPremium && <Badge variant="outline" className="text-[10px]"><Lock className="w-2 h-2 mr-0.5" /> Pro+</Badge>}
+                </div>
+                {isPremium ? (
+                  <div className="space-y-4">
+                    <p className="text-sm text-muted-foreground">
+                      {isElite ? "Upload your resume — our tech experts will personally review it." : "Upload your resume — AI will analyze it."}
+                    </p>
+                    {(profile as any)?.resume_url && (
+                      <div className="flex items-center gap-2 text-sm text-primary">
+                        <FileText className="w-4 h-4" /> <span>Resume uploaded ✓</span>
+                      </div>
+                    )}
+                    <label className="cursor-pointer block">
                       <div className="border-2 border-dashed border-border/50 rounded-xl p-8 text-center hover:border-primary/30 transition-colors">
                         <Upload className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-                        <p className="text-sm text-muted-foreground">
-                          {uploading ? "Uploading..." : "Click to upload PDF/DOCX (max 5MB)"}
-                        </p>
+                        <p className="text-sm text-muted-foreground">{uploading ? "Uploading..." : "Click to upload PDF/DOCX (max 5MB)"}</p>
                       </div>
                       <input type="file" accept=".pdf,.docx,.doc" className="hidden" onChange={handleResumeUpload} disabled={uploading} />
                     </label>
-                  </div>
-                  {isElite && (
-                    <div className="bg-accent/10 rounded-lg p-4 border border-accent/20">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Crown className="w-4 h-4 text-accent" />
-                        <span className="font-semibold text-sm">Elite Perk: Personal Review</span>
+                    {isElite && (
+                      <div className="bg-accent/10 rounded-lg p-4 border border-accent/20">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Crown className="w-4 h-4 text-accent" />
+                          <span className="font-semibold text-sm">Elite Perk: Personal Review</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground">Our tech team will review your resume within 48 hours.</p>
                       </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-center py-6 opacity-50">
+                    <Lock className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                    <p className="text-sm text-muted-foreground">Upgrade to Pro or Elite to upload and analyze your resume</p>
+                  </div>
+                )}
+              </div>
+
+              <VerificationSection />
+            </motion.div>
+          )}
+
+          {/* Security Tab */}
+          {activeTab === "security" && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+              <div className="glass rounded-2xl p-8 space-y-4">
+                <div className="flex items-center gap-3">
+                  <Key className="w-6 h-6 text-primary" />
+                  <h2 className="text-xl font-display font-bold">Password</h2>
+                </div>
+                <p className="text-sm text-muted-foreground">Need to change your password? We'll send a reset link to your email.</p>
+                <Button variant="outline" onClick={async () => {
+                  const { error } = await supabase.auth.resetPasswordForEmail(user?.email || "", {
+                    redirectTo: `${window.location.origin}/reset-password`,
+                  });
+                  if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
+                  else toast({ title: "Reset link sent!", description: "Check your email." });
+                }}>
+                  <Mail className="w-4 h-4 mr-2" /> Send Password Reset Link
+                </Button>
+              </div>
+
+              <div className="glass rounded-2xl p-8 space-y-4">
+                <div className="flex items-center gap-3">
+                  <Shield className="w-6 h-6 text-primary" />
+                  <h2 className="text-xl font-display font-bold">Email Verification</h2>
+                </div>
+                {emailVerified ? (
+                  <div className="flex items-center gap-2 text-primary text-sm">
+                    <Shield className="w-4 h-4" /> Your email is verified ✓
+                  </div>
+                ) : (
+                  <EmailVerificationBanner email={user?.email || ""} />
+                )}
+              </div>
+            </motion.div>
+          )}
+
+          {/* Account Tab */}
+          {activeTab === "account" && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+              <div className="glass rounded-2xl p-8 space-y-4">
+                <div className="flex items-center gap-3">
+                  <Settings className="w-6 h-6 text-primary" />
+                  <h2 className="text-xl font-display font-bold">Account Settings</h2>
+                </div>
+                <div className="space-y-2 text-sm text-muted-foreground">
+                  <p><strong className="text-foreground">Account Type:</strong> {profile?.subscription_tier?.toUpperCase()}</p>
+                  <p><strong className="text-foreground">Member Since:</strong> {new Date(profile?.created_at || "").toLocaleDateString()}</p>
+                  <p><strong className="text-foreground">XP Points:</strong> {profile?.xp_points}</p>
+                  <p><strong className="text-foreground">Search Credits:</strong> {(profile as any)?.referral_credits || 0}</p>
+                </div>
+              </div>
+
+              <div className="glass rounded-2xl p-8 space-y-4">
+                <h3 className="font-display font-semibold flex items-center gap-2">
+                  <Trash2 className="w-5 h-5 text-destructive" /> Sign Out / Delete Account
+                </h3>
+                <Button variant="outline" onClick={async () => { await signOut(); navigate("/"); }}>
+                  Sign Out
+                </Button>
+                <div className="border-t border-border/50 pt-4 space-y-3">
+                  {!showDeleteConfirm ? (
+                    <Button variant="outline" className="border-destructive/30 text-destructive hover:bg-destructive/10"
+                      onClick={() => setShowDeleteConfirm(true)}>
+                      <Trash2 className="w-4 h-4 mr-2" /> Delete My Account
+                    </Button>
+                  ) : (
+                    <div className="bg-destructive/10 rounded-xl p-4 space-y-3 border border-destructive/20">
+                      <p className="text-sm text-destructive font-medium">⚠️ This action is irreversible</p>
                       <p className="text-xs text-muted-foreground">
-                        Our tech team will review your resume within 48 hours and provide personalized feedback.
+                        To delete your account, please send an email to <strong>contact@skycart.xyz</strong> from your registered email address requesting account deletion.
                       </p>
+                      <div className="flex gap-2">
+                        <Button size="sm" className="bg-destructive text-destructive-foreground" onClick={handleDeleteAccount}>
+                          <Mail className="w-3 h-3 mr-1" /> Send Email
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={() => setShowDeleteConfirm(false)}>Cancel</Button>
+                      </div>
                     </div>
                   )}
                 </div>
-              ) : (
-                <div className="text-center py-6 opacity-50">
-                  <Lock className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-                  <p className="text-sm text-muted-foreground">Upgrade to Pro or Elite to upload and analyze your resume</p>
-                </div>
-              )}
-            </div>
-          </motion.div>
-
-          {/* Verification Section */}
-          <VerificationSection />
+              </div>
+            </motion.div>
+          )}
         </div>
       </div>
     </div>
