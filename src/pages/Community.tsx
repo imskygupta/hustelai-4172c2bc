@@ -175,7 +175,7 @@ export default function Community() {
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "Reply submitted!", description: "Pending admin approval." });
+      toast({ title: "Reply submitted!", description: isVerified ? "Your reply is live!" : "Pending admin approval." });
       setReplyContent(prev => ({ ...prev, [parentId]: "" }));
       setShowReplyFor(null);
       loadReplies(parentId);
