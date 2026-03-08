@@ -28,6 +28,8 @@ import Relax from "./pages/Relax";
 import HustleDetail from "./pages/HustleDetail";
 import InfinityZone from "./pages/InfinityZone";
 import Marketplace from "./pages/Marketplace";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
