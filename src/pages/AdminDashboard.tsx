@@ -220,7 +220,9 @@ export default function AdminDashboard() {
     if (blogRes.data) setBlogPosts(blogRes.data as BlogPost[]);
     setNewsletterCount(nlRes.count || 0);
     setContactCount(contactRes.count || 0);
-
+    if (verifRes.data) setVerifications(verifRes.data);
+    if (payRes.data) setPayments(payRes.data);
+    if (forumRes.data) setForumPosts(forumRes.data);
     // Build chat users list
     if (chatRes.data) {
       const userMap = new Map<string, ChatUser>();
