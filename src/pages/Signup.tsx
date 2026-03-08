@@ -32,6 +32,8 @@ export default function Signup() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [quoteIdx, setQuoteIdx] = useState(0);
+  const [searchParams] = useSearchParams();
+  const referralCode = searchParams.get("ref") || "";
   const { signUp } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
