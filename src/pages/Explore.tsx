@@ -30,6 +30,15 @@ export default function Explore() {
     try {
       const data = await searchFreelanceIdeas(query);
       setResults(data);
+      
+      // Track search count for logged-in users
+      if (user && profile) {
+        const tier = profile.subscription_tier;
+        const maxSearches = tier === "free" ? 3 : tier === "pro" ? 15 : 999;
+        if (profile.search_count >= maxSearches) {
+          toast({ title: "Search limit reached", description: `You've used all ${maxSearches} searches. Upgrade to continue.`, variant: "destructive" });
+        }
+      }
     } catch (err: any) {
       toast({ title: "Search failed", description: err.message, variant: "destructive" });
     } finally {
