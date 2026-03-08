@@ -1022,6 +1022,9 @@ export default function AdminDashboard() {
                   ))}
                 </div>
               </div>
+            </div>
+          )}
+
           {/* ===== VERIFICATION ===== */}
           {section === "verification" && (
             <div className="space-y-4">
