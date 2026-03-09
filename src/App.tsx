@@ -81,6 +81,7 @@ const App = () => (
             <Route path="/admin-dashboard" element={<AdminDashboard />} />
             <Route path="/problem-leads" element={<ProblemLeads />} />
             <Route path="/proposal-draft" element={<ProposalDraft />} />
+            <Route path="/skill-gap" element={<SkillGap />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
