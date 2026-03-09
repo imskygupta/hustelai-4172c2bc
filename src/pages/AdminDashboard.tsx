@@ -454,13 +454,15 @@ export default function AdminDashboard() {
     setChangingPassword(false);
   };
 
-  if (loading || !isAdmin) {
+  if (loading || checkingAdmin) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="animate-pulse text-primary font-display text-xl">Loading Admin...</div>
       </div>
     );
   }
+
+  if (!user || !isAdmin) return null;
 
   const envConfig = [
     { key: "SUPABASE_URL", value: import.meta.env.VITE_SUPABASE_URL, status: "active" },
