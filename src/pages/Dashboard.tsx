@@ -460,6 +460,52 @@ export default function Dashboard() {
             ))}
           </div>
 
+          {/* AI-Powered Tools & Features */}
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.12 }} className="space-y-4">
+            <div className="flex items-center gap-3">
+              <Zap className="w-5 h-5 text-primary" />
+              <h2 className="text-xl font-display font-bold">AI-Powered Tools</h2>
+            </div>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {[
+                { icon: Search, label: "AI Hustle Search", desc: "Discover side hustles with AI-powered search", action: () => navigate("/explore"), minTier: "free", emoji: "🔍" },
+                { icon: Zap, label: "AI Tool Benchmarks", desc: "Compare AI tools like Cursor, Copilot & ChatGPT side-by-side", action: () => navigate("/ai-tools"), minTier: "pro", emoji: "⚡" },
+                { icon: FileText, label: "Proposal Draft AI", desc: "Generate winning freelance proposals with AI", action: () => navigate("/proposal-draft"), minTier: "pro", emoji: "📝" },
+                { icon: Brain, label: "Skill Gap Analyzer", desc: "Get a personalized learning roadmap for high-paying niches", action: () => navigate("/skill-gap"), minTier: "pro", emoji: "🧠" },
+                { icon: Target, label: "Problem Lead Finder", desc: "AI-powered radar for freelance opportunities from social media", action: () => navigate("/problem-leads"), minTier: "elite", emoji: "🎯" },
+                { icon: Store, label: "Marketplace", desc: "Sell templates, tools & digital products to the community", action: () => navigate("/marketplace"), minTier: "elite", emoji: "🏪" },
+              ].map((tool, i) => {
+                const locked = (tool.minTier === "pro" && isFree) ||
+                               (tool.minTier === "elite" && !isElite);
+                return (
+                  <motion.div key={tool.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.15 + i * 0.06 }}
+                    onClick={locked ? undefined : tool.action}
+                    className={`glass rounded-xl p-5 space-y-3 transition-all duration-300 group ${locked ? "opacity-50 blur-[0.5px]" : "cursor-pointer hover:shadow-glow hover:border-primary/30"}`}>
+                    <div className="flex items-center justify-between">
+                      <span className="text-2xl">{tool.emoji}</span>
+                      <div className="flex items-center gap-1.5">
+                        <Badge variant="outline" className="text-[10px]">
+                          {tool.minTier === "free" ? "All Tiers" : tool.minTier === "pro" ? "Pro+" : "Elite+"}
+                        </Badge>
+                        {locked && <Lock className="w-3.5 h-3.5 text-muted-foreground" />}
+                      </div>
+                    </div>
+                    <h3 className="font-display font-semibold text-sm group-hover:text-primary transition-colors">{tool.label}</h3>
+                    <p className="text-xs text-muted-foreground leading-relaxed">{tool.desc}</p>
+                  </motion.div>
+                );
+              })}
+            </div>
+            {isFree && (
+              <div className="text-center">
+                <Button className="bg-gradient-primary text-primary-foreground" size="sm" onClick={() => navigate("/#pricing")}>
+                  <Lock className="w-4 h-4 mr-1" /> Upgrade to Unlock AI Tools
+                </Button>
+              </div>
+            )}
+          </motion.div>
+
           {/* Live Webinars */}
           <motion.div id="webinars-section" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }} className="space-y-4">
             <div className="flex items-center gap-3">
