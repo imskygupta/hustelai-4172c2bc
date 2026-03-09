@@ -127,6 +127,12 @@ export function Navbar() {
         <div className="hidden md:flex items-center gap-3">
           {user ? (
             <>
+              {isAdmin && (
+                <Button variant="secondary" size="sm" onClick={() => navigate("/admin-dashboard")}
+                  className={isActive("/admin-dashboard") ? "bg-primary/10 text-primary" : ""}>
+                  <Shield className="w-4 h-4 mr-1" /> Admin Panel
+                </Button>
+              )}
               <Button variant="ghost" size="sm" onClick={() => navigate("/saved-hustles")}
                 className={isActive("/saved-hustles") ? "text-primary bg-primary/10" : ""}>
                 My Hustles
