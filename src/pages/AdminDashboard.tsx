@@ -274,6 +274,8 @@ export default function AdminDashboard() {
     // Load email settings
     const { data: emailData } = await supabase.from("email_settings").select("*").order("created_at");
     if (emailData) setEmailSettings(emailData);
+    const { data: aiData } = await supabase.from("ai_provider_keys").select("*").order("priority");
+    if (aiData) setAiProviders(aiData);
     if (chatRes.data) {
       const userMap = new Map<string, ChatUser>();
       for (const msg of chatRes.data) {
