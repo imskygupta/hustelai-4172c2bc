@@ -310,6 +310,39 @@ export type Database = {
         }
         Relationships: []
       }
+      email_settings: {
+        Row: {
+          category: string
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          label: string
+          smtp_email: string | null
+          smtp_password: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          label: string
+          smtp_email?: string | null
+          smtp_password?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          label?: string
+          smtp_email?: string | null
+          smtp_password?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       expert_assignments: {
         Row: {
           created_at: string

@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
-import { User, Upload, FileText, Lock, MapPin, Phone, Mail, Crown, Shield, Trash2, Key, Settings } from "lucide-react";
+import { User, Upload, FileText, Lock, MapPin, Phone, Mail, Crown, Shield, Trash2, Key, Settings, Gift } from "lucide-react";
 import { VerificationSection } from "@/components/VerificationSection";
 import { EmailVerificationBanner } from "@/components/EmailVerificationBanner";
 
@@ -27,6 +27,10 @@ export default function Profile() {
   const [uploading, setUploading] = useState(false);
   const [activeTab, setActiveTab] = useState<ProfileTab>("general");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [couponCode, setCouponCode] = useState("");
+  const [applyingCoupon, setApplyingCoupon] = useState(false);
+
+  const referredBy = (profile as any)?.referred_by;
 
   useEffect(() => {
     if (!loading && !user) navigate("/login");
@@ -66,6 +70,69 @@ export default function Profile() {
     setSaving(false);
   };
 
+  const applyCouponCode = async () => {
+    if (!couponCode.trim() || !user) return;
+    if (referredBy) {
+      toast({ title: "Already applied", description: "You have already used a referral code.", variant: "destructive" });
+      return;
+    }
+    setApplyingCoupon(true);
+    try {
+      // Find referrer by code
+      const { data: referrer } = await supabase
+        .from("profiles")
+        .select("user_id")
+        .eq("referral_code", couponCode.trim())
+        .single();
+
+      if (!referrer) {
+        toast({ title: "Invalid code", description: "This referral/coupon code doesn't exist.", variant: "destructive" });
+        setApplyingCoupon(false);
+        return;
+      }
+
+      if (referrer.user_id === user.id) {
+        toast({ title: "Can't use your own code", variant: "destructive" });
+        setApplyingCoupon(false);
+        return;
+      }
+
+      // Set referred_by on profile
+      await supabase.from("profiles").update({ referred_by: referrer.user_id } as any).eq("user_id", user.id);
+
+      // Create referral record
+      await supabase.from("referrals").insert({
+        referrer_id: referrer.user_id,
+        referred_user_id: user.id,
+        referral_code: couponCode.trim(),
+        status: "converted",
+        reward_type: "search_credit",
+        reward_amount: 1,
+        converted_at: new Date().toISOString(),
+      });
+
+      // Credit referrer
+      const { data: refProfile } = await supabase.from("profiles").select("referral_credits").eq("user_id", referrer.user_id).single();
+      await supabase.from("profiles").update({ referral_credits: ((refProfile as any)?.referral_credits || 0) + 1 } as any).eq("user_id", referrer.user_id);
+
+      // Log earning
+      await supabase.from("affiliate_earnings").insert({
+        affiliate_id: referrer.user_id,
+        source_user_id: user.id,
+        amount: 1,
+        type: "search_credit",
+        description: "Referral coupon applied post-signup",
+      });
+
+      toast({ title: "Coupon Applied! 🎉", description: "Referral linked successfully." });
+      setCouponCode("");
+      refreshProfile();
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    }
+    setApplyingCoupon(false);
+  };
+
   const handleResumeUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user) return;
@@ -87,7 +154,7 @@ export default function Profile() {
   };
 
   const handleDeleteAccount = () => {
-    window.location.href = "mailto:contact@skycart.xyz?subject=Account Deletion Request&body=I would like to delete my HustleAI account. My email: " + encodeURIComponent(user?.email || "");
+    window.location.href = "mailto:contact@hustelai.eu.cc?subject=Account Deletion Request&body=I would like to delete my HustleAI account. My email: " + encodeURIComponent(user?.email || "");
   };
 
   if (loading) {
@@ -190,6 +257,36 @@ export default function Profile() {
                 <Button onClick={saveProfile} disabled={saving} className="w-full bg-gradient-primary text-primary-foreground">
                   {saving ? "Saving..." : "Save Profile"}
                 </Button>
+              </div>
+
+              {/* Coupon / Referral Code Section */}
+              <div className="glass rounded-2xl p-8 space-y-4">
+                <div className="flex items-center gap-3">
+                  <Gift className="w-6 h-6 text-primary" />
+                  <h2 className="text-xl font-display font-bold">Coupon / Referral Code</h2>
+                </div>
+                {referredBy ? (
+                  <div className="flex items-center gap-2 text-primary text-sm">
+                    <Gift className="w-4 h-4" /> Referral code already applied ✓
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <p className="text-sm text-muted-foreground">
+                      Have a coupon or referral code from a friend? Apply it here (one-time only).
+                    </p>
+                    <div className="flex gap-2">
+                      <Input
+                        value={couponCode}
+                        onChange={(e) => setCouponCode(e.target.value)}
+                        placeholder="e.g. HA-abc12345"
+                        className="flex-1"
+                      />
+                      <Button onClick={applyCouponCode} disabled={applyingCoupon || !couponCode.trim()}>
+                        {applyingCoupon ? "Applying..." : "Apply"}
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Resume Section */}
@@ -307,7 +404,7 @@ export default function Profile() {
                     <div className="bg-destructive/10 rounded-xl p-4 space-y-3 border border-destructive/20">
                       <p className="text-sm text-destructive font-medium">⚠️ This action is irreversible</p>
                       <p className="text-xs text-muted-foreground">
-                        To delete your account, please send an email to <strong>contact@skycart.xyz</strong> from your registered email address requesting account deletion.
+                        To delete your account, please send an email to <strong>contact@hustelai.eu.cc</strong> from your registered email address requesting account deletion.
                       </p>
                       <div className="flex gap-2">
                         <Button size="sm" className="bg-destructive text-destructive-foreground" onClick={handleDeleteAccount}>
