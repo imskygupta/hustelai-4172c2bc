@@ -62,13 +62,36 @@ export default function Login() {
     }
   }, []);
 
+  const redirectAfterLogin = async (userId: string) => {
+    const { data: adminRole, error } = await supabase.rpc("has_role", {
+      _user_id: userId,
+      _role: "admin",
+    });
+
+    if (!error && adminRole) {
+      navigate("/admin-dashboard");
+      return;
+    }
+
+    navigate("/dashboard");
+  };
+
   const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     const { error } = await signIn(email, password);
-    setLoading(false);
+
     if (error) {
+      setLoading(false);
       toast({ title: "Login failed", description: error.message, variant: "destructive" });
+      return;
+    }
+
+    const { data: { user: signedInUser } } = await supabase.auth.getUser();
+    setLoading(false);
+
+    if (signedInUser) {
+      await redirectAfterLogin(signedInUser.id);
     } else {
       navigate("/dashboard");
     }
@@ -96,7 +119,7 @@ export default function Login() {
     if (error) {
       toast({ title: "Invalid Code", description: error.message, variant: "destructive" });
     } else if (data.user) {
-      navigate("/dashboard");
+      await redirectAfterLogin(data.user.id);
     }
   };
 

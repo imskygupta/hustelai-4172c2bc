@@ -132,6 +132,7 @@ export default function AdminDashboard() {
   const { user, profile, loading, signOut } = useAuth();
   const navigate = useNavigate();
   const [isAdmin, setIsAdmin] = useState(false);
+  const [checkingAdmin, setCheckingAdmin] = useState(true);
   const [section, setSection] = useState<AdminSection>("overview");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [users, setUsers] = useState<UserProfile[]>([]);
@@ -199,26 +200,35 @@ export default function AdminDashboard() {
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!loading && !user) navigate("/imskygupta-admin");
-  }, [loading, user]);
+    if (loading) return;
 
-  useEffect(() => {
-    if (user) checkAdmin();
-  }, [user]);
+    if (!user) {
+      navigate("/imskygupta-admin", { replace: true });
+      return;
+    }
+
+    void checkAdmin(user.id);
+  }, [loading, user?.id]);
 
   useEffect(() => {
     if (chatEndRef.current) chatEndRef.current.scrollIntoView({ behavior: "smooth" });
   }, [chatMessages]);
 
-  const checkAdmin = async () => {
-    const { data } = await supabase.rpc("has_role", { _user_id: user!.id, _role: "admin" as any });
-    if (data) {
-      setIsAdmin(true);
-      loadAllData();
-    } else {
+  const checkAdmin = async (userId: string) => {
+    setCheckingAdmin(true);
+    const { data, error } = await supabase.rpc("has_role", { _user_id: userId, _role: "admin" as any });
+
+    if (error || !data) {
+      setIsAdmin(false);
       toast({ title: "Access Denied", variant: "destructive" });
-      navigate("/dashboard");
+      navigate("/dashboard", { replace: true });
+      setCheckingAdmin(false);
+      return;
     }
+
+    setIsAdmin(true);
+    await loadAllData();
+    setCheckingAdmin(false);
   };
 
   const loadAllData = async () => {
@@ -444,13 +454,15 @@ export default function AdminDashboard() {
     setChangingPassword(false);
   };
 
-  if (loading || !isAdmin) {
+  if (loading || checkingAdmin) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="animate-pulse text-primary font-display text-xl">Loading Admin...</div>
       </div>
     );
   }
+
+  if (!user || !isAdmin) return null;
 
   const envConfig = [
     { key: "SUPABASE_URL", value: import.meta.env.VITE_SUPABASE_URL, status: "active" },

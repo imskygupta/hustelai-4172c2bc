@@ -1,7 +1,8 @@
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Zap, ArrowRight, Menu, X, LogOut, User, ChevronDown } from "lucide-react";
+import { Zap, ArrowRight, Menu, X, LogOut, User, ChevronDown, Shield } from "lucide-react";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -32,12 +33,37 @@ export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const checkAdminRole = async () => {
+      if (!user) {
+        if (mounted) setIsAdmin(false);
+        return;
+      }
+
+      const { data, error } = await supabase.rpc("has_role", {
+        _user_id: user.id,
+        _role: "admin",
+      });
+
+      if (mounted) setIsAdmin(!error && !!data);
+    };
+
+    void checkAdminRole();
+
+    return () => {
+      mounted = false;
+    };
+  }, [user?.id]);
 
   useEffect(() => {
     setMobileOpen(false);
@@ -101,6 +127,12 @@ export function Navbar() {
         <div className="hidden md:flex items-center gap-3">
           {user ? (
             <>
+              {isAdmin && (
+                <Button variant="secondary" size="sm" onClick={() => navigate("/admin-dashboard")}
+                  className={isActive("/admin-dashboard") ? "bg-primary/10 text-primary" : ""}>
+                  <Shield className="w-4 h-4 mr-1" /> Admin Panel
+                </Button>
+              )}
               <Button variant="ghost" size="sm" onClick={() => navigate("/saved-hustles")}
                 className={isActive("/saved-hustles") ? "text-primary bg-primary/10" : ""}>
                 My Hustles
@@ -164,6 +196,11 @@ export function Navbar() {
               <div className="border-t border-border/50 pt-2 mt-2 space-y-1">
                 {user ? (
                   <>
+                    {isAdmin && (
+                      <Button variant="secondary" className="w-full justify-start" onClick={() => navigate("/admin-dashboard")}>
+                        <Shield className="w-4 h-4 mr-1" /> Admin Panel
+                      </Button>
+                    )}
                     <Button variant="ghost" className="w-full justify-start" onClick={() => navigate("/saved-hustles")}>My Hustles</Button>
                     <Button variant="ghost" className="w-full justify-start" onClick={() => navigate("/profile")}>Profile</Button>
                     <Button variant="ghost" className="w-full justify-start" onClick={() => navigate("/dashboard")}>Dashboard</Button>
