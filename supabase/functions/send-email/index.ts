@@ -49,11 +49,12 @@ serve(async (req) => {
       }
     }
 
+    console.log("Connecting SMTP as:", smtpEmail, "host: cp1.dnspark.in:587");
     const client = new SMTPClient({
       connection: {
         hostname: "cp1.dnspark.in",
-        port: 465,
-        tls: true,
+        port: 587,
+        tls: false,
         auth: { username: smtpEmail, password: smtpPass },
       },
     });
