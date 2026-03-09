@@ -164,6 +164,12 @@ export default function AdminDashboard() {
   const [changingPassword, setChangingPassword] = useState(false);
   const [emailSettings, setEmailSettings] = useState<any[]>([]);
   const [emailSettingsLoading, setEmailSettingsLoading] = useState(false);
+  const [aiProviders, setAiProviders] = useState<any[]>([]);
+  const [newProviderName, setNewProviderName] = useState("");
+  const [newProviderDisplay, setNewProviderDisplay] = useState("");
+  const [newProviderKey, setNewProviderKey] = useState("");
+  const [newProviderEndpoint, setNewProviderEndpoint] = useState("");
+  const [newProviderModel, setNewProviderModel] = useState("");
   const [nlSubject, setNlSubject] = useState("");
   const [nlBody, setNlBody] = useState("");
   const [nlSending, setNlSending] = useState(false);
