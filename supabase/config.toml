@@ -20,3 +20,9 @@ verify_jwt = false
 
 [functions.admin-utils]
 verify_jwt = false
+
+[functions.send-welcome-email]
+verify_jwt = false
+
+[functions.send-otp-email]
+verify_jwt = false
