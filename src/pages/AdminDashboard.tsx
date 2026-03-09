@@ -106,7 +106,7 @@ const tierColors: Record<string, string> = {
 type AdminSection =
   | "overview" | "users" | "roles" | "notifications" | "webinars"
   | "expert" | "chatbot" | "blogs" | "analytics" | "config"
-  | "verification" | "payments" | "forum" | "community" | "trending" | "newsletter" | "email-settings";
+  | "verification" | "payments" | "forum" | "community" | "trending" | "newsletter" | "email-settings" | "ai-providers";
 
 const sidebarItems: { id: AdminSection; label: string; icon: any }[] = [
   { id: "overview", label: "Overview", icon: BarChart3 },
