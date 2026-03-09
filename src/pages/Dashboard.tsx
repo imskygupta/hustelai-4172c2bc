@@ -245,6 +245,11 @@ export default function Dashboard() {
               onClick={() => setActiveTab("affiliate")}>
               <Share2 className="w-4 h-4 mr-1" /> Affiliate
             </Button>
+            {(tier === "pro" || tier === "elite" || tier === "infinity") && (
+              <Button variant="ghost" size="sm" onClick={() => navigate("/proposal-draft")}>
+                <FileText className="w-4 h-4 mr-1" /> Proposal AI
+              </Button>
+            )}
             {(tier === "elite" || tier === "infinity") && (
               <>
                 <Button variant="ghost" size="sm" onClick={() => navigate("/marketplace")}>
