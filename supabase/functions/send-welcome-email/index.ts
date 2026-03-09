@@ -19,14 +19,13 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    // Verify caller is authenticated
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) throw new Error("Unauthorized");
     const token = authHeader.replace("Bearer ", "");
     const { data: { user } } = await supabaseAdmin.auth.getUser(token);
     if (!user) throw new Error("Unauthorized");
 
-    // Load SMTP credentials from email_settings (welcome category)
+    // Load SMTP from email_settings (welcome category)
     let smtpEmail = Deno.env.get("SMTP_CONTACT_EMAIL") || "contact@hustelai.eu.cc";
     let smtpPass = Deno.env.get("SMTP_CONTACT_PASSWORD") || "";
 
@@ -41,30 +40,27 @@ serve(async (req) => {
       smtpPass = setting.smtp_password;
     }
 
-    // If no password configured, try hello category, then fallback to env
     if (!smtpPass) {
-      const { data: helloSetting } = await supabaseAdmin
+      const { data: fallback } = await supabaseAdmin
         .from("email_settings")
         .select("smtp_email, smtp_password, is_active")
-        .eq("category", "hello")
+        .eq("category", "contact")
         .single();
-
-      if (helloSetting?.is_active && helloSetting.smtp_email && helloSetting.smtp_password) {
-        smtpEmail = helloSetting.smtp_email;
-        smtpPass = helloSetting.smtp_password;
+      if (fallback?.is_active && fallback.smtp_email && fallback.smtp_password) {
+        smtpEmail = fallback.smtp_email;
+        smtpPass = fallback.smtp_password;
       }
     }
 
     if (!smtpPass) {
-      console.log("No SMTP password configured, skipping welcome email");
-      return new Response(JSON.stringify({ success: true, skipped: true, reason: "No SMTP password configured" }), {
+      return new Response(JSON.stringify({ success: true, skipped: true, reason: "No SMTP password" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     const client = new SMTPClient({
       connection: {
-        hostname: "mail.hustelai.eu.cc",
+        hostname: "cp1.dnspark.in",
         port: 465,
         tls: true,
         auth: { username: smtpEmail, password: smtpPass },

@@ -11,7 +11,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { action, subject, body, recipients, from_account, category } = await req.json();
+    const { action, subject, body, recipients, from_account, category, test_to } = await req.json();
 
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL")!,
@@ -30,7 +30,7 @@ serve(async (req) => {
     let smtpEmail = Deno.env.get("SMTP_CONTACT_EMAIL") || "contact@hustelai.eu.cc";
     let smtpPass = Deno.env.get("SMTP_CONTACT_PASSWORD") || "";
 
-    // Try to load from email_settings table if category provided
+    // Try to load from email_settings table
     if (category || from_account) {
       const cat = category || (from_account === "support" ? "support" : "newsletters");
       const { data: setting } = await supabaseAdmin
@@ -50,12 +50,34 @@ serve(async (req) => {
 
     const client = new SMTPClient({
       connection: {
-        hostname: "mail.hustelai.eu.cc",
+        hostname: "cp1.dnspark.in",
         port: 465,
         tls: true,
         auth: { username: smtpEmail, password: smtpPass },
       },
     });
+
+    // === SEND TEST MAIL ===
+    if (action === "send_test") {
+      const testTo = test_to || "samratakash0000@gmail.com";
+      await client.send({
+        from: `HustleAI <${smtpEmail}>`,
+        to: testTo,
+        subject: `✅ HustleAI Test Email - ${category || "general"}`,
+        content: "auto",
+        html: generateEmailHTML(
+          `Test Email from ${category || "general"}`,
+          `<p>This is a <strong>test email</strong> sent from <strong>${smtpEmail}</strong> via the HustleAI admin panel.</p>
+           <p>Category: <strong>${category || "N/A"}</strong></p>
+           <p>If you received this, your SMTP settings are working correctly! ✅</p>
+           <p style="color:#999;font-size:12px;">Sent at: ${new Date().toISOString()}</p>`
+        ),
+      });
+      await client.close();
+      return new Response(JSON.stringify({ success: true, sent_to: testTo }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     if (action === "send_newsletter") {
       const { data: subs } = await supabaseAdmin.from("newsletter_subscribers").select("email");
@@ -128,17 +150,14 @@ function generateEmailHTML(subject: string, body: string): string {
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#ffffff;">
     <tr><td align="center" style="padding:40px 20px;">
       <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
-        <!-- Header -->
         <tr><td style="background:linear-gradient(135deg,#6366f1,#8b5cf6);padding:32px 40px;text-align:center;">
           <h1 style="margin:0;color:#ffffff;font-size:28px;font-weight:700;">⚡ HustleAI</h1>
           <p style="margin:8px 0 0;color:rgba(255,255,255,0.85);font-size:14px;">Your AI-Powered Side Hustle Platform</p>
         </td></tr>
-        <!-- Content -->
         <tr><td style="padding:40px;">
           <h2 style="margin:0 0 16px;color:#1a1a2e;font-size:22px;font-weight:600;">${subject || 'HustleAI Update'}</h2>
           <div style="color:#4a4a5a;font-size:15px;line-height:1.7;">${body || ''}</div>
         </td></tr>
-        <!-- Footer -->
         <tr><td style="padding:24px 40px;background:#f8f9fa;border-top:1px solid #eee;text-align:center;">
           <p style="margin:0;color:#999;font-size:12px;">© 2026 HustleAI. All rights reserved.</p>
           <p style="margin:4px 0 0;color:#999;font-size:11px;">
