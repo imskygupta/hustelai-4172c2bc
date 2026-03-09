@@ -34,6 +34,7 @@ import ResetPassword from "./pages/ResetPassword";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsConditions from "./pages/TermsConditions";
 import RefundPolicy from "./pages/RefundPolicy";
+import ProblemLeads from "./pages/ProblemLeads";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
