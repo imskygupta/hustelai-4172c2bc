@@ -1483,6 +1483,123 @@ export default function AdminDashboard() {
               </div>
             </div>
           )}
+          {/* ===== EMAIL SETTINGS ===== */}
+          {section === "email-settings" && (
+            <div className="space-y-6">
+              <div className="glass rounded-xl p-6 space-y-4">
+                <h3 className="font-display font-bold flex items-center gap-2">
+                  <Mail className="w-5 h-5 text-primary" /> Email Account Settings
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Configure SMTP email accounts for different notification types. Each category can use a different sender email for professional communication.
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                {emailSettings.map((es: any) => (
+                  <div key={es.id} className="glass rounded-xl p-6 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-display font-semibold">{es.label}</h4>
+                        <Badge variant="outline" className="text-[10px]">{es.category}</Badge>
+                        <Badge className={es.is_active ? "bg-primary/20 text-primary text-[10px]" : "bg-muted text-muted-foreground text-[10px]"}>
+                          {es.is_active ? "Active" : "Inactive"}
+                        </Badge>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={async () => {
+                          await supabase.from("email_settings").update({ is_active: !es.is_active } as any).eq("id", es.id);
+                          setEmailSettings(emailSettings.map((e: any) => e.id === es.id ? { ...e, is_active: !es.is_active } : e));
+                          toast({ title: es.is_active ? "Deactivated" : "Activated" });
+                        }}
+                      >
+                        {es.is_active ? "Disable" : "Enable"}
+                      </Button>
+                    </div>
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <Label className="text-xs text-muted-foreground">SMTP Email</Label>
+                        <Input
+                          type="email"
+                          value={es.smtp_email || ""}
+                          placeholder="e.g. payments@hustelai.eu.cc"
+                          onChange={(e) => {
+                            setEmailSettings(emailSettings.map((item: any) =>
+                              item.id === es.id ? { ...item, smtp_email: e.target.value } : item
+                            ));
+                          }}
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs text-muted-foreground">SMTP Password</Label>
+                        <Input
+                          type="password"
+                          value={es.smtp_password || ""}
+                          placeholder="Enter SMTP password"
+                          onChange={(e) => {
+                            setEmailSettings(emailSettings.map((item: any) =>
+                              item.id === es.id ? { ...item, smtp_password: e.target.value } : item
+                            ));
+                          }}
+                        />
+                      </div>
+                    </div>
+                    <Button
+                      size="sm"
+                      onClick={async () => {
+                        const { error } = await supabase.from("email_settings").update({
+                          smtp_email: es.smtp_email,
+                          smtp_password: es.smtp_password,
+                          updated_at: new Date().toISOString(),
+                        } as any).eq("id", es.id);
+                        if (error) {
+                          toast({ title: "Error", description: error.message, variant: "destructive" });
+                        } else {
+                          toast({ title: "Saved!", description: `${es.label} email settings updated.` });
+                        }
+                      }}
+                      className="bg-gradient-primary text-primary-foreground"
+                    >
+                      Save {es.label} Settings
+                    </Button>
+                  </div>
+                ))}
+                {emailSettings.length === 0 && (
+                  <p className="text-sm text-muted-foreground text-center py-8">No email settings configured. Reload the page.</p>
+                )}
+              </div>
+
+              {/* Add new email category */}
+              <div className="glass rounded-xl p-6 space-y-4">
+                <h4 className="font-display font-semibold flex items-center gap-2">
+                  <Plus className="w-4 h-4 text-primary" /> Add New Email Category
+                </h4>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <Input id="new-email-cat" placeholder="Category key (e.g. invoices)" />
+                  <Input id="new-email-label" placeholder="Display label (e.g. Invoices & Billing)" />
+                </div>
+                <Button onClick={async () => {
+                  const cat = (document.getElementById("new-email-cat") as HTMLInputElement)?.value.trim();
+                  const label = (document.getElementById("new-email-label") as HTMLInputElement)?.value.trim();
+                  if (!cat || !label) return;
+                  const { error } = await supabase.from("email_settings").insert({
+                    category: cat, label, smtp_email: "", smtp_password: "", is_active: false,
+                  });
+                  if (error) {
+                    toast({ title: "Error", description: error.code === "23505" ? "Category already exists" : error.message, variant: "destructive" });
+                  } else {
+                    toast({ title: "Category Added!" });
+                    const { data } = await supabase.from("email_settings").select("*").order("created_at");
+                    if (data) setEmailSettings(data);
+                  }
+                }} variant="outline">
+                  <Plus className="w-4 h-4 mr-1" /> Add Category
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       </main>
     </div>
