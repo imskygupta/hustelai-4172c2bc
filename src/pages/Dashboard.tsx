@@ -246,9 +246,14 @@ export default function Dashboard() {
               <Share2 className="w-4 h-4 mr-1" /> Affiliate
             </Button>
             {(tier === "elite" || tier === "infinity") && (
-              <Button variant="ghost" size="sm" onClick={() => navigate("/marketplace")}>
-                <Store className="w-4 h-4 mr-1" /> Marketplace
-              </Button>
+              <>
+                <Button variant="ghost" size="sm" onClick={() => navigate("/marketplace")}>
+                  <Store className="w-4 h-4 mr-1" /> Marketplace
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => navigate("/problem-leads")}>
+                  <Target className="w-4 h-4 mr-1" /> Lead Finder
+                </Button>
+              </>
             )}
           </div>
 
