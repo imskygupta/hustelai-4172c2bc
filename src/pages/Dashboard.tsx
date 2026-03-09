@@ -8,13 +8,15 @@ import { AffiliateTab } from "@/components/AffiliateTab";
 import { EmailVerificationBanner } from "@/components/EmailVerificationBanner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Search, Crown, Rocket, Sparkles, Star, Users, Video, Wrench,
   BookOpen, TrendingUp, MessageCircle, Gift, Lock,
   Newspaper, ArrowUpRight, ArrowDownRight, ExternalLink, User, FileText,
-  UserCheck, Clock, Calendar, Share2, Store, Target, Brain
+  UserCheck, Clock, Calendar, Share2, Store, Target, Brain, Zap,
+  BarChart3, Activity, Eye, History
 } from "lucide-react";
 
 interface FeedData {
@@ -73,9 +75,12 @@ export default function Dashboard() {
   const [webinars, setWebinars] = useState<Webinar[]>([]);
   const [expertAssignments, setExpertAssignments] = useState<ExpertAssignment[]>([]);
   const [trendingLinks, setTrendingLinks] = useState<TrendingLink[]>([]);
-  const [activeTab, setActiveTab] = useState<"dashboard" | "affiliate">(
-    searchParams.get("tab") === "affiliate" ? "affiliate" : "dashboard"
+  const [activeTab, setActiveTab] = useState<"dashboard" | "affiliate" | "command">(
+    searchParams.get("tab") === "affiliate" ? "affiliate" : searchParams.get("tab") === "command" ? "command" : "dashboard"
   );
+  const [savedHustlesCount, setSavedHustlesCount] = useState(0);
+  const [chatCount, setChatCount] = useState(0);
+  const [recentActivity, setRecentActivity] = useState<any[]>([]);
 
   useEffect(() => {
     if (!loading && !user) navigate("/login");
@@ -87,8 +92,40 @@ export default function Dashboard() {
       loadWebinars();
       loadExpertAssignments();
       loadTrendingLinks();
+      loadCommandCenterData();
     }
   }, [user]);
+
+  const loadCommandCenterData = async () => {
+    if (!user) return;
+    // Saved hustles count
+    const { count: hustleCount } = await supabase
+      .from("saved_hustles").select("*", { count: "exact", head: true }).eq("user_id", user.id);
+    setSavedHustlesCount(hustleCount || 0);
+
+    // Chat messages count (as proxy for AI usage)
+    const { count: msgCount } = await supabase
+      .from("chat_messages").select("*", { count: "exact", head: true }).eq("user_id", user.id).eq("role", "user");
+    setChatCount(msgCount || 0);
+
+    // Recent activity - combine saved hustles + chat messages
+    const { data: recentHustles } = await supabase
+      .from("saved_hustles").select("*, side_hustles(title)")
+      .eq("user_id", user.id).order("updated_at", { ascending: false }).limit(5);
+    const { data: recentChats } = await supabase
+      .from("chat_messages").select("content, created_at")
+      .eq("user_id", user.id).eq("role", "user").order("created_at", { ascending: false }).limit(5);
+
+    const activities: any[] = [];
+    (recentHustles || []).forEach((h: any) => activities.push({
+      type: "hustle", title: h.side_hustles?.title || "Saved Hustle", time: h.updated_at, status: h.status,
+    }));
+    (recentChats || []).forEach((c: any) => activities.push({
+      type: "chat", title: c.content.slice(0, 60) + (c.content.length > 60 ? "..." : ""), time: c.created_at,
+    }));
+    activities.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
+    setRecentActivity(activities.slice(0, 8));
+  };
 
   const loadFeed = async () => {
     try {
@@ -236,10 +273,14 @@ export default function Dashboard() {
           </motion.div>
 
           {/* Tab Switcher */}
-          <div className="flex gap-2 border-b border-border/50 pb-2">
+          <div className="flex gap-2 border-b border-border/50 pb-2 overflow-x-auto">
             <Button variant={activeTab === "dashboard" ? "default" : "ghost"} size="sm"
               onClick={() => setActiveTab("dashboard")}>
               <Search className="w-4 h-4 mr-1" /> Dashboard
+            </Button>
+            <Button variant={activeTab === "command" ? "default" : "ghost"} size="sm"
+              onClick={() => setActiveTab("command")}>
+              <Activity className="w-4 h-4 mr-1" /> Command Center
             </Button>
             <Button variant={activeTab === "affiliate" ? "default" : "ghost"} size="sm"
               onClick={() => setActiveTab("affiliate")}>
@@ -252,6 +293,9 @@ export default function Dashboard() {
                 </Button>
                 <Button variant="ghost" size="sm" onClick={() => navigate("/skill-gap")}>
                   <Brain className="w-4 h-4 mr-1" /> Skill Gap
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => navigate("/ai-tools")}>
+                  <Zap className="w-4 h-4 mr-1" /> AI Tools
                 </Button>
               </>
             )}
@@ -269,6 +313,107 @@ export default function Dashboard() {
 
           {activeTab === "affiliate" ? (
             <AffiliateTab />
+          ) : activeTab === "command" ? (
+            /* ====== COMMAND CENTER TAB ====== */
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+              {/* Usage Stats */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {[
+                  { icon: Search, label: "Searches Today", value: `${profile.search_count}/${maxSearches}`, pct: (profile.search_count / maxSearches) * 100, color: "text-primary" },
+                  { icon: MessageCircle, label: "AI Chats Sent", value: chatCount.toString(), pct: Math.min(chatCount * 2, 100), color: "text-accent" },
+                  { icon: BookOpen, label: "Saved Hustles", value: savedHustlesCount.toString(), pct: Math.min(savedHustlesCount * 10, 100), color: "text-primary" },
+                  { icon: Star, label: "XP Points", value: profile.xp_points.toString(), pct: Math.min(profile.xp_points / 10, 100), color: "text-yellow-500" },
+                ].map((stat, i) => (
+                  <motion.div key={stat.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.08 }} className="glass rounded-xl p-4 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <stat.icon className={`w-5 h-5 ${stat.color}`} />
+                      <span className="font-display font-bold text-lg">{stat.value}</span>
+                    </div>
+                    <p className="text-[11px] text-muted-foreground">{stat.label}</p>
+                    <Progress value={stat.pct} className="h-1" />
+                  </motion.div>
+                ))}
+              </div>
+
+              {/* Tier Usage Breakdown */}
+              <div className="glass rounded-xl p-5 space-y-4">
+                <h3 className="font-display font-semibold flex items-center gap-2">
+                  <BarChart3 className="w-5 h-5 text-primary" /> Monthly Usage
+                </h3>
+                <div className="space-y-3">
+                  {[
+                    { label: "AI Searches", used: profile.search_count, max: maxSearches * 30, desc: "searches this month" },
+                    { label: "AI Chat Messages", used: chatCount, max: isPro ? 500 : isFree ? 50 : 1000, desc: "messages sent" },
+                    { label: "Proposal Drafts", used: Math.floor(chatCount / 3), max: isPro ? 30 : isFree ? 5 : 100, desc: "proposals generated" },
+                    ...(isElite ? [{ label: "Lead Scans", used: Math.floor(chatCount / 5), max: 50, desc: "leads discovered" }] : []),
+                  ].map(item => (
+                    <div key={item.label} className="space-y-1">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">{item.label}</span>
+                        <span className="font-mono text-xs">{item.used} / {item.max} {item.desc}</span>
+                      </div>
+                      <Progress value={Math.min((item.used / item.max) * 100, 100)} className="h-1.5" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Quick Actions Row */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {[
+                  { icon: FileText, label: "New Proposal", action: () => navigate("/proposal-draft"), locked: isFree },
+                  { icon: Brain, label: "Skill Analysis", action: () => navigate("/skill-gap"), locked: isFree },
+                  { icon: Target, label: "Find Leads", action: () => navigate("/problem-leads"), locked: !isElite },
+                  { icon: Zap, label: "AI Tools", action: () => navigate("/ai-tools"), locked: isFree },
+                ].map(item => (
+                  <Button key={item.label} variant="outline" className={`h-auto py-3 flex flex-col gap-1 ${item.locked ? "opacity-40" : ""}`}
+                    onClick={item.locked ? undefined : item.action} disabled={item.locked}>
+                    <item.icon className="w-5 h-5 text-primary" />
+                    <span className="text-xs">{item.label}</span>
+                    {item.locked && <Lock className="w-3 h-3 text-muted-foreground" />}
+                  </Button>
+                ))}
+              </div>
+
+              {/* Recent Activity */}
+              <div className="glass rounded-xl p-5 space-y-3">
+                <h3 className="font-display font-semibold flex items-center gap-2">
+                  <History className="w-5 h-5 text-primary" /> Recent Activity
+                </h3>
+                {recentActivity.length > 0 ? (
+                  <div className="space-y-2">
+                    {recentActivity.map((a, i) => (
+                      <div key={i} className="flex items-center gap-3 py-2 border-b border-border/30 last:border-0">
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                          a.type === "hustle" ? "bg-primary/10" : "bg-accent/10"
+                        }`}>
+                          {a.type === "hustle" ? <BookOpen className="w-4 h-4 text-primary" /> : <MessageCircle className="w-4 h-4 text-accent" />}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm truncate">{a.title}</p>
+                          <p className="text-[10px] text-muted-foreground">
+                            {a.type === "hustle" ? `Hustle · ${a.status}` : "AI Chat"} · {new Date(a.time).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground text-center py-4">No activity yet. Start exploring! 🚀</p>
+                )}
+              </div>
+
+              {/* Saved Hustles Quick View */}
+              <div className="flex items-center justify-between">
+                <h3 className="font-display font-semibold flex items-center gap-2">
+                  <Eye className="w-5 h-5 text-primary" /> Your Hustles
+                </h3>
+                <Button variant="ghost" size="sm" className="text-primary" onClick={() => navigate("/saved-hustles")}>
+                  View All →
+                </Button>
+              </div>
+            </motion.div>
           ) : (
           <>
           {/* News Headlines */}
