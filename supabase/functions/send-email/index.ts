@@ -134,8 +134,9 @@ serve(async (req) => {
       });
     }
 
-    throw new Error("Unknown action");
+    throw new Error("Unknown action: " + action);
   } catch (error) {
+    console.error("send-email error:", error.message, error.stack);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 400,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
