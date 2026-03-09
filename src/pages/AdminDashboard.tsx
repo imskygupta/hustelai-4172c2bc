@@ -200,26 +200,35 @@ export default function AdminDashboard() {
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!loading && !user) navigate("/imskygupta-admin");
-  }, [loading, user]);
+    if (loading) return;
 
-  useEffect(() => {
-    if (user) checkAdmin();
-  }, [user]);
+    if (!user) {
+      navigate("/imskygupta-admin", { replace: true });
+      return;
+    }
+
+    void checkAdmin(user.id);
+  }, [loading, user?.id]);
 
   useEffect(() => {
     if (chatEndRef.current) chatEndRef.current.scrollIntoView({ behavior: "smooth" });
   }, [chatMessages]);
 
-  const checkAdmin = async () => {
-    const { data } = await supabase.rpc("has_role", { _user_id: user!.id, _role: "admin" as any });
-    if (data) {
-      setIsAdmin(true);
-      loadAllData();
-    } else {
+  const checkAdmin = async (userId: string) => {
+    setCheckingAdmin(true);
+    const { data, error } = await supabase.rpc("has_role", { _user_id: userId, _role: "admin" as any });
+
+    if (error || !data) {
+      setIsAdmin(false);
       toast({ title: "Access Denied", variant: "destructive" });
-      navigate("/dashboard");
+      navigate("/dashboard", { replace: true });
+      setCheckingAdmin(false);
+      return;
     }
+
+    setIsAdmin(true);
+    await loadAllData();
+    setCheckingAdmin(false);
   };
 
   const loadAllData = async () => {
