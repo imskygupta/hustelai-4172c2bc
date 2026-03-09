@@ -159,6 +159,8 @@ export default function AdminDashboard() {
   const [roleToAssign, setRoleToAssign] = useState("moderator");
   const [passwordForm, setPasswordForm] = useState({ current: "", new: "", confirm: "" });
   const [changingPassword, setChangingPassword] = useState(false);
+  const [emailSettings, setEmailSettings] = useState<any[]>([]);
+  const [emailSettingsLoading, setEmailSettingsLoading] = useState(false);
   const [nlSubject, setNlSubject] = useState("");
   const [nlBody, setNlBody] = useState("");
   const [nlSending, setNlSending] = useState(false);
