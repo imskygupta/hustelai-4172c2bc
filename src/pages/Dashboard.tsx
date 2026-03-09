@@ -14,7 +14,7 @@ import {
   Search, Crown, Rocket, Sparkles, Star, Users, Video, Wrench,
   BookOpen, TrendingUp, MessageCircle, Gift, Lock,
   Newspaper, ArrowUpRight, ArrowDownRight, ExternalLink, User, FileText,
-  UserCheck, Clock, Calendar, Share2, Store, Target
+  UserCheck, Clock, Calendar, Share2, Store, Target, Brain
 } from "lucide-react";
 
 interface FeedData {
@@ -246,9 +246,14 @@ export default function Dashboard() {
               <Share2 className="w-4 h-4 mr-1" /> Affiliate
             </Button>
             {(tier === "pro" || tier === "elite" || tier === "infinity") && (
-              <Button variant="ghost" size="sm" onClick={() => navigate("/proposal-draft")}>
-                <FileText className="w-4 h-4 mr-1" /> Proposal AI
-              </Button>
+              <>
+                <Button variant="ghost" size="sm" onClick={() => navigate("/proposal-draft")}>
+                  <FileText className="w-4 h-4 mr-1" /> Proposal AI
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => navigate("/skill-gap")}>
+                  <Brain className="w-4 h-4 mr-1" /> Skill Gap
+                </Button>
+              </>
             )}
             {(tier === "elite" || tier === "infinity") && (
               <>

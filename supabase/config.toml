@@ -26,3 +26,9 @@ verify_jwt = false
 
 [functions.send-otp-email]
 verify_jwt = false
+
+[functions.skill-gap-consultant]
+verify_jwt = false
+
+[functions.reputation-score]
+verify_jwt = false
