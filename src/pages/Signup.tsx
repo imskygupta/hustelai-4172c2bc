@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -72,8 +73,16 @@ export default function Signup() {
     if (error) {
       toast({ title: "Signup failed", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "Check your email!", description: "We sent you a verification link. Please verify before signing in." });
-      navigate("/login");
+      // Send branded welcome email via our own SMTP
+      try {
+        await supabase.functions.invoke("send-welcome-email", {
+          body: { email, displayName },
+        });
+      } catch (e) {
+        console.error("Welcome email failed:", e);
+      }
+      toast({ title: "Account created! 🎉", description: "Welcome to HustleAI! Redirecting to your dashboard..." });
+      navigate("/dashboard");
     }
   };
 
