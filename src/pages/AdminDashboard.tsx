@@ -253,7 +253,9 @@ export default function AdminDashboard() {
     if (groupsRes.data) setCommunityGroups(groupsRes.data);
     if (trendRes.data) setTrendingLinks(trendRes.data);
     if (rolesRes.data) setUserRoles(rolesRes.data);
-    // Build chat users list
+    // Load email settings
+    const { data: emailData } = await supabase.from("email_settings").select("*").order("created_at");
+    if (emailData) setEmailSettings(emailData);
     if (chatRes.data) {
       const userMap = new Map<string, ChatUser>();
       for (const msg of chatRes.data) {
