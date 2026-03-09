@@ -61,8 +61,8 @@ serve(async (req) => {
     const client = new SMTPClient({
       connection: {
         hostname: "cp1.dnspark.in",
-        port: 465,
-        tls: true,
+        port: 587,
+        tls: false,
         auth: { username: smtpEmail, password: smtpPass },
       },
     });
