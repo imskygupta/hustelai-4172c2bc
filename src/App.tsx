@@ -79,6 +79,7 @@ const App = () => (
             <Route path="/imskygupta-admin" element={<AdminLogin />} />
             <Route path="/admin-dashboard" element={<AdminDashboard />} />
             <Route path="/problem-leads" element={<ProblemLeads />} />
+            <Route path="/proposal-draft" element={<ProposalDraft />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
