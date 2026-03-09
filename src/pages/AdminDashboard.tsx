@@ -124,6 +124,7 @@ const sidebarItems: { id: AdminSection; label: string; icon: any }[] = [
   { id: "trending", label: "Trending Links", icon: ExternalLink },
   { id: "newsletter", label: "Newsletter", icon: Mail },
   { id: "email-settings", label: "Email Settings", icon: Settings },
+  { id: "ai-providers", label: "AI Providers", icon: Zap },
   { id: "analytics", label: "Analytics", icon: Activity },
   { id: "config", label: "Config & Keys", icon: Settings },
 ];
