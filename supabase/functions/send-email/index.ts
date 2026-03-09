@@ -11,7 +11,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { action, subject, body, recipients, from_account } = await req.json();
+    const { action, subject, body, recipients, from_account, category } = await req.json();
 
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL")!,
@@ -26,14 +26,27 @@ serve(async (req) => {
     const { data: isAdmin } = await supabaseAdmin.rpc("has_role", { _user_id: caller.id, _role: "admin" });
     if (!isAdmin) throw new Error("Not admin");
 
-    // Pick SMTP credentials based on from_account
-    const useSupport = from_account === "support";
-    const smtpEmail = useSupport
-      ? Deno.env.get("SMTP_SUPPORT_EMAIL")!
-      : Deno.env.get("SMTP_CONTACT_EMAIL")!;
-    const smtpPass = useSupport
-      ? Deno.env.get("SMTP_SUPPORT_PASSWORD")!
-      : Deno.env.get("SMTP_CONTACT_PASSWORD")!;
+    // Determine SMTP credentials
+    let smtpEmail = Deno.env.get("SMTP_CONTACT_EMAIL") || "contact@hustelai.eu.cc";
+    let smtpPass = Deno.env.get("SMTP_CONTACT_PASSWORD") || "";
+
+    // Try to load from email_settings table if category provided
+    if (category || from_account) {
+      const cat = category || (from_account === "support" ? "support" : "newsletters");
+      const { data: setting } = await supabaseAdmin
+        .from("email_settings")
+        .select("smtp_email, smtp_password, is_active")
+        .eq("category", cat)
+        .single();
+
+      if (setting && setting.is_active && setting.smtp_email && setting.smtp_password) {
+        smtpEmail = setting.smtp_email;
+        smtpPass = setting.smtp_password;
+      } else if (from_account === "support") {
+        smtpEmail = Deno.env.get("SMTP_SUPPORT_EMAIL") || smtpEmail;
+        smtpPass = Deno.env.get("SMTP_SUPPORT_PASSWORD") || smtpPass;
+      }
+    }
 
     const client = new SMTPClient({
       connection: {
@@ -45,12 +58,10 @@ serve(async (req) => {
     });
 
     if (action === "send_newsletter") {
-      // Fetch all newsletter subscribers
       const { data: subs } = await supabaseAdmin.from("newsletter_subscribers").select("email");
       const allRecipients = subs?.map((s: any) => s.email) || [];
       if (allRecipients.length === 0) throw new Error("No subscribers found");
 
-      // Send in batches of 20
       const batchSize = 20;
       let sent = 0;
       for (let i = 0; i < allRecipients.length; i += batchSize) {
@@ -78,7 +89,6 @@ serve(async (req) => {
     }
 
     if (action === "send_bulk") {
-      // Send to specific recipients
       if (!recipients || recipients.length === 0) throw new Error("No recipients");
       let sent = 0;
       for (const email of recipients) {
@@ -133,7 +143,7 @@ function generateEmailHTML(subject: string, body: string): string {
           <p style="margin:0;color:#999;font-size:12px;">© 2026 HustleAI. All rights reserved.</p>
           <p style="margin:4px 0 0;color:#999;font-size:11px;">
             <a href="https://hustelai.eu.cc" style="color:#6366f1;text-decoration:none;">hustelai.eu.cc</a> · 
-            <a href="mailto:support@hustelai.eu.cc" style="color:#6366f1;text-decoration:none;">support@hustelai.eu.cc</a>
+            <a href="mailto:contact@hustelai.eu.cc" style="color:#6366f1;text-decoration:none;">contact@hustelai.eu.cc</a>
           </p>
         </td></tr>
       </table>

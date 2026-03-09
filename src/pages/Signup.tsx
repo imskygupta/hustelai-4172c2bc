@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Zap, UserPlus, Eye, EyeOff, ArrowRight, CheckCircle } from "lucide-react";
+import { Zap, UserPlus, Eye, EyeOff, ArrowRight, CheckCircle, Gift } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import { ParticleBackground } from "@/components/ParticleBackground";
@@ -33,7 +33,8 @@ export default function Signup() {
   const [loading, setLoading] = useState(false);
   const [quoteIdx, setQuoteIdx] = useState(0);
   const [searchParams] = useSearchParams();
-  const referralCode = searchParams.get("ref") || "";
+  const refFromUrl = searchParams.get("ref") || "";
+  const [couponCode, setCouponCode] = useState(refFromUrl);
   const { signUp } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -66,7 +67,7 @@ export default function Signup() {
       return;
     }
     setLoading(true);
-    const { error } = await signUp(email, password, displayName, referralCode);
+    const { error } = await signUp(email, password, displayName, couponCode.trim());
     setLoading(false);
     if (error) {
       toast({ title: "Signup failed", description: error.message, variant: "destructive" });
@@ -111,7 +112,7 @@ export default function Signup() {
               <span className="font-display font-bold text-2xl group-hover:text-gradient transition-all">HustleAI</span>
             </Link>
             <p className="text-muted-foreground">Create your account and start hustling.</p>
-            {referralCode && (
+            {refFromUrl && (
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium">
                 🎁 Referred by a friend — you both earn rewards!
               </div>
@@ -140,6 +141,23 @@ export default function Signup() {
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
+            </div>
+            <div className="space-y-2 gsap-stagger">
+              <Label htmlFor="coupon" className="flex items-center gap-1.5">
+                <Gift className="w-3.5 h-3.5 text-primary" /> Coupon / Referral Code
+                <span className="text-muted-foreground text-[10px] ml-1">(optional)</span>
+              </Label>
+              <Input
+                id="coupon"
+                value={couponCode}
+                onChange={(e) => setCouponCode(e.target.value)}
+                placeholder="e.g. HA-abc12345"
+                disabled={!!refFromUrl}
+                className={`h-12 bg-secondary/50 focus:shadow-glow focus:border-primary transition-all ${refFromUrl ? 'opacity-70' : ''}`}
+              />
+              {refFromUrl && (
+                <p className="text-[10px] text-primary/70">✓ Auto-applied from referral link</p>
+              )}
             </div>
             <div className="gsap-stagger">
               <Button type="submit" disabled={loading}
