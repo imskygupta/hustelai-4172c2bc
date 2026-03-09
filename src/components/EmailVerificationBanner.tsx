@@ -17,7 +17,7 @@ export function EmailVerificationBanner({ email }: Props) {
     const { error } = await supabase.auth.resend({
       type: "signup",
       email,
-      options: { emailRedirectTo: window.location.origin },
+      options: { emailRedirectTo: "https://hustelai.eu.cc" },
     });
     setSending(false);
     if (error) {
