@@ -37,6 +37,7 @@ import RefundPolicy from "./pages/RefundPolicy";
 import ProblemLeads from "./pages/ProblemLeads";
 import ProposalDraft from "./pages/ProposalDraft";
 import SkillGap from "./pages/SkillGap";
+import AIToolBenchmarks from "./pages/AIToolBenchmarks";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
