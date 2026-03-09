@@ -1427,8 +1427,10 @@ export default function AdminDashboard() {
                   <Select value={nlFromAccount} onValueChange={setNlFromAccount}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="contact">From: contact@hustelai.eu.cc</SelectItem>
-                      <SelectItem value="support">From: support@hustelai.eu.cc</SelectItem>
+                      {emailSettings.filter((es: any) => es.is_active).map((es: any) => (
+                        <SelectItem key={es.category} value={es.category}>From: {es.smtp_email || es.label}</SelectItem>
+                      ))}
+                      <SelectItem value="contact">From: contact@hustelai.eu.cc (default)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
