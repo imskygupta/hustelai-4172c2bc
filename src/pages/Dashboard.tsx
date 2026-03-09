@@ -14,7 +14,7 @@ import {
   Search, Crown, Rocket, Sparkles, Star, Users, Video, Wrench,
   BookOpen, TrendingUp, MessageCircle, Gift, Lock,
   Newspaper, ArrowUpRight, ArrowDownRight, ExternalLink, User, FileText,
-  UserCheck, Clock, Calendar, Share2, Store, Target
+  UserCheck, Clock, Calendar, Share2, Store, Target, Brain
 } from "lucide-react";
 
 interface FeedData {
