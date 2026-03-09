@@ -106,7 +106,7 @@ const tierColors: Record<string, string> = {
 type AdminSection =
   | "overview" | "users" | "roles" | "notifications" | "webinars"
   | "expert" | "chatbot" | "blogs" | "analytics" | "config"
-  | "verification" | "payments" | "forum" | "community" | "trending" | "newsletter" | "email-settings";
+  | "verification" | "payments" | "forum" | "community" | "trending" | "newsletter" | "email-settings" | "ai-providers";
 
 const sidebarItems: { id: AdminSection; label: string; icon: any }[] = [
   { id: "overview", label: "Overview", icon: BarChart3 },
@@ -124,6 +124,7 @@ const sidebarItems: { id: AdminSection; label: string; icon: any }[] = [
   { id: "trending", label: "Trending Links", icon: ExternalLink },
   { id: "newsletter", label: "Newsletter", icon: Mail },
   { id: "email-settings", label: "Email Settings", icon: Settings },
+  { id: "ai-providers", label: "AI Providers", icon: Zap },
   { id: "analytics", label: "Analytics", icon: Activity },
   { id: "config", label: "Config & Keys", icon: Settings },
 ];
@@ -163,6 +164,12 @@ export default function AdminDashboard() {
   const [changingPassword, setChangingPassword] = useState(false);
   const [emailSettings, setEmailSettings] = useState<any[]>([]);
   const [emailSettingsLoading, setEmailSettingsLoading] = useState(false);
+  const [aiProviders, setAiProviders] = useState<any[]>([]);
+  const [newProviderName, setNewProviderName] = useState("");
+  const [newProviderDisplay, setNewProviderDisplay] = useState("");
+  const [newProviderKey, setNewProviderKey] = useState("");
+  const [newProviderEndpoint, setNewProviderEndpoint] = useState("");
+  const [newProviderModel, setNewProviderModel] = useState("");
   const [nlSubject, setNlSubject] = useState("");
   const [nlBody, setNlBody] = useState("");
   const [nlSending, setNlSending] = useState(false);
@@ -267,6 +274,8 @@ export default function AdminDashboard() {
     // Load email settings
     const { data: emailData } = await supabase.from("email_settings").select("*").order("created_at");
     if (emailData) setEmailSettings(emailData);
+    const { data: aiData } = await supabase.from("ai_provider_keys").select("*").order("priority");
+    if (aiData) setAiProviders(aiData);
     if (chatRes.data) {
       const userMap = new Map<string, ChatUser>();
       for (const msg of chatRes.data) {
@@ -1420,6 +1429,158 @@ export default function AdminDashboard() {
                     </Button>
                   </div>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {/* ===== AI PROVIDERS ===== */}
+          {section === "ai-providers" && (
+            <div className="space-y-6">
+              <div className="glass rounded-xl p-6 space-y-4">
+                <h3 className="font-display font-bold flex items-center gap-2">
+                  <Zap className="w-5 h-5 text-primary" /> AI Provider Management
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Manage AI providers used across the platform (search, chatbot, lead discovery). 
+                  The system tries providers in priority order — if one fails, it falls back to the next.
+                </p>
+              </div>
+
+              {/* Existing Providers */}
+              <div className="space-y-4">
+                {aiProviders.map((p: any) => (
+                  <div key={p.id} className="glass rounded-xl p-6 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-display font-semibold">{p.display_name}</h4>
+                        <Badge variant="outline" className="text-[10px]">Priority: {p.priority}</Badge>
+                        <Badge className={p.is_active ? "bg-primary/20 text-primary text-[10px]" : "bg-muted text-muted-foreground text-[10px]"}>
+                          {p.is_active ? "Active" : "Inactive"}
+                        </Badge>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={async () => {
+                            await supabase.from("ai_provider_keys").update({ is_active: !p.is_active } as any).eq("id", p.id);
+                            setAiProviders(aiProviders.map((a: any) => a.id === p.id ? { ...a, is_active: !p.is_active } : a));
+                            toast({ title: p.is_active ? "Deactivated" : "Activated" });
+                          }}
+                        >
+                          {p.is_active ? "Disable" : "Enable"}
+                        </Button>
+                        {p.provider_name !== "lovable_ai" && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={async () => {
+                              await supabase.from("ai_provider_keys").delete().eq("id", p.id);
+                              setAiProviders(aiProviders.filter((a: any) => a.id !== p.id));
+                              toast({ title: "Deleted" });
+                            }}
+                          >
+                            <Trash2 className="w-4 h-4 text-destructive" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <Label className="text-xs text-muted-foreground">API Endpoint</Label>
+                        <Input
+                          value={p.api_endpoint}
+                          onChange={(e) => setAiProviders(aiProviders.map((a: any) => a.id === p.id ? { ...a, api_endpoint: e.target.value } : a))}
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs text-muted-foreground">Default Model</Label>
+                        <Input
+                          value={p.default_model}
+                          onChange={(e) => setAiProviders(aiProviders.map((a: any) => a.id === p.id ? { ...a, default_model: e.target.value } : a))}
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs text-muted-foreground">API Key {p.provider_name === "lovable_ai" ? "(uses system secret)" : ""}</Label>
+                        <Input
+                          type="password"
+                          value={p.provider_name === "lovable_ai" ? "default" : p.api_key}
+                          disabled={p.provider_name === "lovable_ai"}
+                          onChange={(e) => setAiProviders(aiProviders.map((a: any) => a.id === p.id ? { ...a, api_key: e.target.value } : a))}
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs text-muted-foreground">Priority (lower = tried first)</Label>
+                        <Input
+                          type="number"
+                          value={p.priority}
+                          onChange={(e) => setAiProviders(aiProviders.map((a: any) => a.id === p.id ? { ...a, priority: parseInt(e.target.value) || 0 } : a))}
+                        />
+                      </div>
+                    </div>
+                    {p.notes && <p className="text-xs text-muted-foreground">{p.notes}</p>}
+                    <Button
+                      size="sm"
+                      onClick={async () => {
+                        const { error } = await supabase.from("ai_provider_keys").update({
+                          api_endpoint: p.api_endpoint,
+                          default_model: p.default_model,
+                          api_key: p.api_key,
+                          priority: p.priority,
+                          updated_at: new Date().toISOString(),
+                        } as any).eq("id", p.id);
+                        if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
+                        else toast({ title: "Saved!" });
+                      }}
+                      className="bg-gradient-primary text-primary-foreground"
+                    >
+                      Save Changes
+                    </Button>
+                  </div>
+                ))}
+              </div>
+
+              {/* Add New Provider */}
+              <div className="glass rounded-xl p-6 space-y-4">
+                <h4 className="font-display font-semibold flex items-center gap-2">
+                  <Plus className="w-4 h-4 text-primary" /> Add New AI Provider
+                </h4>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <Input placeholder="Provider name (e.g. openai)" value={newProviderName} onChange={e => setNewProviderName(e.target.value)} />
+                  <Input placeholder="Display name (e.g. OpenAI GPT-4)" value={newProviderDisplay} onChange={e => setNewProviderDisplay(e.target.value)} />
+                  <Input placeholder="API Key" type="password" value={newProviderKey} onChange={e => setNewProviderKey(e.target.value)} />
+                  <Input placeholder="API Endpoint URL" value={newProviderEndpoint} onChange={e => setNewProviderEndpoint(e.target.value)} />
+                  <Input placeholder="Default Model Name" value={newProviderModel} onChange={e => setNewProviderModel(e.target.value)} />
+                </div>
+                <Button
+                  onClick={async () => {
+                    if (!newProviderName || !newProviderDisplay || !newProviderKey || !newProviderEndpoint || !newProviderModel) {
+                      toast({ title: "All fields required", variant: "destructive" });
+                      return;
+                    }
+                    const maxPriority = Math.max(...aiProviders.map((p: any) => p.priority), 0);
+                    const { error } = await supabase.from("ai_provider_keys").insert({
+                      provider_name: newProviderName,
+                      display_name: newProviderDisplay,
+                      api_key: newProviderKey,
+                      api_endpoint: newProviderEndpoint,
+                      default_model: newProviderModel,
+                      priority: maxPriority + 1,
+                      is_active: true,
+                    } as any);
+                    if (error) {
+                      toast({ title: "Error", description: error.message, variant: "destructive" });
+                    } else {
+                      toast({ title: "Provider Added!" });
+                      setNewProviderName(""); setNewProviderDisplay(""); setNewProviderKey(""); setNewProviderEndpoint(""); setNewProviderModel("");
+                      const { data } = await supabase.from("ai_provider_keys").select("*").order("priority");
+                      if (data) setAiProviders(data);
+                    }
+                  }}
+                  variant="outline"
+                >
+                  <Plus className="w-4 h-4 mr-1" /> Add Provider
+                </Button>
               </div>
             </div>
           )}
