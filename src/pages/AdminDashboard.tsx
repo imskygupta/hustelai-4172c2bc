@@ -1450,7 +1450,7 @@ export default function AdminDashboard() {
                       setNlSending(true);
                       try {
                         const { data, error } = await supabase.functions.invoke("send-email", {
-                          body: { action: "send_newsletter", subject: nlSubject, body: nlBody, from_account: nlFromAccount },
+                          body: { action: "send_newsletter", subject: nlSubject, body: nlBody, category: nlFromAccount, from_account: nlFromAccount },
                         });
                         if (error) throw error;
                         toast({ title: "Newsletter Sent! ✉️", description: `Sent to ${data?.sent || 0} of ${data?.total || 0} subscribers.` });
