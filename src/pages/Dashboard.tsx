@@ -92,8 +92,40 @@ export default function Dashboard() {
       loadWebinars();
       loadExpertAssignments();
       loadTrendingLinks();
+      loadCommandCenterData();
     }
   }, [user]);
+
+  const loadCommandCenterData = async () => {
+    if (!user) return;
+    // Saved hustles count
+    const { count: hustleCount } = await supabase
+      .from("saved_hustles").select("*", { count: "exact", head: true }).eq("user_id", user.id);
+    setSavedHustlesCount(hustleCount || 0);
+
+    // Chat messages count (as proxy for AI usage)
+    const { count: msgCount } = await supabase
+      .from("chat_messages").select("*", { count: "exact", head: true }).eq("user_id", user.id).eq("role", "user");
+    setChatCount(msgCount || 0);
+
+    // Recent activity - combine saved hustles + chat messages
+    const { data: recentHustles } = await supabase
+      .from("saved_hustles").select("*, side_hustles(title)")
+      .eq("user_id", user.id).order("updated_at", { ascending: false }).limit(5);
+    const { data: recentChats } = await supabase
+      .from("chat_messages").select("content, created_at")
+      .eq("user_id", user.id).eq("role", "user").order("created_at", { ascending: false }).limit(5);
+
+    const activities: any[] = [];
+    (recentHustles || []).forEach((h: any) => activities.push({
+      type: "hustle", title: h.side_hustles?.title || "Saved Hustle", time: h.updated_at, status: h.status,
+    }));
+    (recentChats || []).forEach((c: any) => activities.push({
+      type: "chat", title: c.content.slice(0, 60) + (c.content.length > 60 ? "..." : ""), time: c.created_at,
+    }));
+    activities.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
+    setRecentActivity(activities.slice(0, 8));
+  };
 
   const loadFeed = async () => {
     try {
