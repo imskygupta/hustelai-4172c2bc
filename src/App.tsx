@@ -36,6 +36,7 @@ import TermsConditions from "./pages/TermsConditions";
 import RefundPolicy from "./pages/RefundPolicy";
 import ProblemLeads from "./pages/ProblemLeads";
 import ProposalDraft from "./pages/ProposalDraft";
+import SkillGap from "./pages/SkillGap";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
