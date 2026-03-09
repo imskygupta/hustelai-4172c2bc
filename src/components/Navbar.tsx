@@ -1,7 +1,8 @@
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Zap, ArrowRight, Menu, X, LogOut, User, ChevronDown } from "lucide-react";
+import { Zap, ArrowRight, Menu, X, LogOut, User, ChevronDown, Shield } from "lucide-react";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
