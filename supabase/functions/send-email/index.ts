@@ -19,10 +19,11 @@ serve(async (req) => {
     );
 
     // Verify caller is admin
-    const authHeader = req.headers.get("Authorization")!;
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) throw new Error("No auth header");
     const token = authHeader.replace("Bearer ", "");
-    const { data: { user: caller } } = await supabaseAdmin.auth.getUser(token);
-    if (!caller) throw new Error("Unauthorized");
+    const { data: { user: caller }, error: authErr } = await supabaseAdmin.auth.getUser(token);
+    if (authErr || !caller) throw new Error("Unauthorized: " + (authErr?.message || "no user"));
     const { data: isAdmin } = await supabaseAdmin.rpc("has_role", { _user_id: caller.id, _role: "admin" });
     if (!isAdmin) throw new Error("Not admin");
 
@@ -133,8 +134,9 @@ serve(async (req) => {
       });
     }
 
-    throw new Error("Unknown action");
+    throw new Error("Unknown action: " + action);
   } catch (error) {
+    console.error("send-email error:", error.message, error.stack);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 400,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
