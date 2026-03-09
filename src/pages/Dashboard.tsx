@@ -75,9 +75,12 @@ export default function Dashboard() {
   const [webinars, setWebinars] = useState<Webinar[]>([]);
   const [expertAssignments, setExpertAssignments] = useState<ExpertAssignment[]>([]);
   const [trendingLinks, setTrendingLinks] = useState<TrendingLink[]>([]);
-  const [activeTab, setActiveTab] = useState<"dashboard" | "affiliate">(
-    searchParams.get("tab") === "affiliate" ? "affiliate" : "dashboard"
+  const [activeTab, setActiveTab] = useState<"dashboard" | "affiliate" | "command">(
+    searchParams.get("tab") === "affiliate" ? "affiliate" : searchParams.get("tab") === "command" ? "command" : "dashboard"
   );
+  const [savedHustlesCount, setSavedHustlesCount] = useState(0);
+  const [chatCount, setChatCount] = useState(0);
+  const [recentActivity, setRecentActivity] = useState<any[]>([]);
 
   useEffect(() => {
     if (!loading && !user) navigate("/login");
