@@ -1561,24 +1561,48 @@ export default function AdminDashboard() {
                         />
                       </div>
                     </div>
-                    <Button
-                      size="sm"
-                      onClick={async () => {
-                        const { error } = await supabase.from("email_settings").update({
-                          smtp_email: es.smtp_email,
-                          smtp_password: es.smtp_password,
-                          updated_at: new Date().toISOString(),
-                        } as any).eq("id", es.id);
-                        if (error) {
-                          toast({ title: "Error", description: error.message, variant: "destructive" });
-                        } else {
-                          toast({ title: "Saved!", description: `${es.label} email settings updated.` });
-                        }
-                      }}
-                      className="bg-gradient-primary text-primary-foreground"
-                    >
-                      Save {es.label} Settings
-                    </Button>
+                    <div className="flex gap-2 flex-wrap">
+                      <Button
+                        size="sm"
+                        onClick={async () => {
+                          const { error } = await supabase.from("email_settings").update({
+                            smtp_email: es.smtp_email,
+                            smtp_password: es.smtp_password,
+                            updated_at: new Date().toISOString(),
+                          } as any).eq("id", es.id);
+                          if (error) {
+                            toast({ title: "Error", description: error.message, variant: "destructive" });
+                          } else {
+                            toast({ title: "Saved!", description: `${es.label} email settings updated.` });
+                          }
+                        }}
+                        className="bg-gradient-primary text-primary-foreground"
+                      >
+                        Save {es.label} Settings
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={async () => {
+                          if (!es.smtp_email || !es.smtp_password) {
+                            toast({ title: "Missing credentials", description: "Save email & password first.", variant: "destructive" });
+                            return;
+                          }
+                          toast({ title: "Sending test...", description: `From ${es.smtp_email}` });
+                          try {
+                            const { data, error } = await supabase.functions.invoke("send-email", {
+                              body: { action: "send_test", category: es.category, test_to: "samratakash0000@gmail.com" },
+                            });
+                            if (error) throw error;
+                            toast({ title: "Test mail sent! ✅", description: `Sent to samratakash0000@gmail.com from ${es.smtp_email}` });
+                          } catch (err: any) {
+                            toast({ title: "Test failed ❌", description: err.message, variant: "destructive" });
+                          }
+                        }}
+                      >
+                        <Send className="w-3.5 h-3.5 mr-1" /> Send Test Mail
+                      </Button>
+                    </div>
                   </div>
                 ))}
                 {emailSettings.length === 0 && (
