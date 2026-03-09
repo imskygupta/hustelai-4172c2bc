@@ -75,7 +75,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       password,
       options: {
         data: { display_name: displayName, referral_code: referralCode || "" },
-        emailRedirectTo: window.location.origin,
+        emailRedirectTo: "https://hustelai.eu.cc",
       },
     });
     // Referral tracking is now handled by the database trigger handle_referral_on_signup
