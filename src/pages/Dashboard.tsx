@@ -8,13 +8,15 @@ import { AffiliateTab } from "@/components/AffiliateTab";
 import { EmailVerificationBanner } from "@/components/EmailVerificationBanner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Search, Crown, Rocket, Sparkles, Star, Users, Video, Wrench,
   BookOpen, TrendingUp, MessageCircle, Gift, Lock,
   Newspaper, ArrowUpRight, ArrowDownRight, ExternalLink, User, FileText,
-  UserCheck, Clock, Calendar, Share2, Store, Target, Brain
+  UserCheck, Clock, Calendar, Share2, Store, Target, Brain, Zap,
+  BarChart3, Activity, Eye, History
 } from "lucide-react";
 
 interface FeedData {
