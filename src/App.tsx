@@ -85,6 +85,7 @@ const App = () => (
             <Route path="/proposal-draft" element={<ProposalDraft />} />
             <Route path="/skill-gap" element={<SkillGap />} />
             <Route path="/ai-tools" element={<AIToolBenchmarks />} />
+            <Route path="/knowledge-hub" element={<KnowledgeHub />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
