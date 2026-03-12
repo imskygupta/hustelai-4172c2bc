@@ -297,6 +297,9 @@ export default function Dashboard() {
                 <Button variant="ghost" size="sm" onClick={() => navigate("/ai-tools")}>
                   <Zap className="w-4 h-4 mr-1" /> AI Tools
                 </Button>
+                <Button variant="ghost" size="sm" onClick={() => navigate("/knowledge-hub")}>
+                  <BookOpen className="w-4 h-4 mr-1" /> Knowledge Hub
+                </Button>
               </>
             )}
             {(tier === "elite" || tier === "infinity") && (
