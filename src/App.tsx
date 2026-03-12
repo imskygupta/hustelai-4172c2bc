@@ -38,6 +38,7 @@ import ProblemLeads from "./pages/ProblemLeads";
 import ProposalDraft from "./pages/ProposalDraft";
 import SkillGap from "./pages/SkillGap";
 import AIToolBenchmarks from "./pages/AIToolBenchmarks";
+import KnowledgeHub from "./pages/KnowledgeHub";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -84,6 +85,7 @@ const App = () => (
             <Route path="/proposal-draft" element={<ProposalDraft />} />
             <Route path="/skill-gap" element={<SkillGap />} />
             <Route path="/ai-tools" element={<AIToolBenchmarks />} />
+            <Route path="/knowledge-hub" element={<KnowledgeHub />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
