@@ -473,6 +473,7 @@ export default function Dashboard() {
                 { icon: FileText, label: "Proposal Draft AI", desc: "Generate winning freelance proposals with AI", action: () => navigate("/proposal-draft"), minTier: "pro", emoji: "📝" },
                 { icon: Brain, label: "Skill Gap Analyzer", desc: "Get a personalized learning roadmap for high-paying niches", action: () => navigate("/skill-gap"), minTier: "pro", emoji: "🧠" },
                 { icon: Target, label: "Problem Lead Finder", desc: "AI-powered radar for freelance opportunities from social media", action: () => navigate("/problem-leads"), minTier: "elite", emoji: "🎯" },
+                { icon: BookOpen, label: "Knowledge Hub", desc: "Save prompts, export chats, organize knowledge & automate workflows", action: () => navigate("/knowledge-hub"), minTier: "pro", emoji: "📚" },
                 { icon: Store, label: "Marketplace", desc: "Sell templates, tools & digital products to the community", action: () => navigate("/marketplace"), minTier: "elite", emoji: "🏪" },
               ].map((tool, i) => {
                 const locked = (tool.minTier === "pro" && isFree) ||
