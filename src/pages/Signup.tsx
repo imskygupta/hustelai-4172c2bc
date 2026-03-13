@@ -46,7 +46,7 @@ export default function Signup() {
   // OTP verification state
   const [step, setStep] = useState<"signup" | "otp">("signup");
   const [otpCode, setOtpCode] = useState("");
-  const [generatedOTP, setGeneratedOTP] = useState("");
+  const [otpDeliveryMode, setOtpDeliveryMode] = useState<"custom" | "auth">("custom");
   const [verifying, setVerifying] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
 
@@ -77,29 +77,27 @@ export default function Signup() {
     }
   }, [resendCooldown]);
 
-  const generateOTP = () => {
-    return Math.floor(100000 + Math.random() * 900000).toString();
-  };
-
   const sendOTPEmail = async () => {
-    const otp = generateOTP();
-    setGeneratedOTP(otp);
-
     try {
-      // Store OTP in database
       const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        await supabase.from("email_verifications").insert({
-          user_id: user.id,
-          email,
-          otp_code: otp,
-        } as any);
 
-        // Send OTP email
-        await supabase.functions.invoke("send-otp-email", {
-          body: { email, otp, displayName },
+      if (user) {
+        const { error } = await supabase.functions.invoke("send-otp-email", {
+          body: { email, displayName },
         });
+
+        if (error) throw error;
+        setOtpDeliveryMode("custom");
+        return true;
       }
+
+      const { error: otpError } = await supabase.auth.signInWithOtp({
+        email,
+        options: { shouldCreateUser: false },
+      });
+
+      if (otpError) throw otpError;
+      setOtpDeliveryMode("auth");
       return true;
     } catch (e) {
       console.error("OTP send error:", e);
@@ -119,7 +117,6 @@ export default function Signup() {
     if (error) {
       toast({ title: "Signup failed", description: error.message, variant: "destructive" });
     } else {
-      // Send OTP for verification
       toast({ title: "Account created! 🎉", description: "Check your email for a 6-digit verification code." });
       const sent = await sendOTPEmail();
       if (sent) {
@@ -137,44 +134,62 @@ export default function Signup() {
       toast({ title: "Enter 6-digit code", variant: "destructive" });
       return;
     }
+
     setVerifying(true);
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Not logged in");
 
-      // Check OTP from database
-      const { data: verification } = await supabase
+      if (!user || otpDeliveryMode === "auth") {
+        const { data, error } = await supabase.auth.verifyOtp({
+          email,
+          token: otpCode,
+          type: "email",
+        });
+
+        if (error || !data.user) {
+          throw new Error(error?.message || "Invalid or expired verification code");
+        }
+
+        try {
+          await supabase.functions.invoke("send-welcome-email", {
+            body: { email, displayName },
+          });
+        } catch (e) {
+          console.error("Welcome email failed:", e);
+        }
+
+        toast({ title: "Email verified! ✅", description: "Welcome to HustleAI! Redirecting..." });
+        navigate("/dashboard");
+        return;
+      }
+
+      const { data: verification, error: verificationError } = await supabase
         .from("email_verifications")
-        .select("*")
+        .select("id, expires_at")
         .eq("user_id", user.id)
         .eq("otp_code", otpCode)
         .eq("verified", false)
         .order("created_at", { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle();
 
-      if (!verification) {
+      if (verificationError || !verification) {
         toast({ title: "Invalid code", description: "The OTP you entered is incorrect or expired.", variant: "destructive" });
-        setVerifying(false);
         return;
       }
 
-      // Check expiry
-      const expiresAt = new Date((verification as any).expires_at);
+      const expiresAt = new Date(verification.expires_at);
       if (expiresAt < new Date()) {
         toast({ title: "Code expired", description: "Please request a new code.", variant: "destructive" });
-        setVerifying(false);
         return;
       }
 
-      // Mark as verified
       await supabase
         .from("email_verifications")
         .update({ verified: true } as any)
-        .eq("id", (verification as any).id);
+        .eq("id", verification.id);
 
-      // Send welcome email
       try {
         await supabase.functions.invoke("send-welcome-email", {
           body: { email, displayName },
@@ -187,8 +202,9 @@ export default function Signup() {
       navigate("/dashboard");
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setVerifying(false);
     }
-    setVerifying(false);
   };
 
   const handleResendOTP = async () => {
