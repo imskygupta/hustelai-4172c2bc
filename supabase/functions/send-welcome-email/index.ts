@@ -26,7 +26,7 @@ serve(async (req) => {
     if (!user) throw new Error("Unauthorized");
 
     // Load SMTP from email_settings (welcome category)
-    let smtpEmail = Deno.env.get("SMTP_CONTACT_EMAIL") || "contact@hustelai.eu.cc";
+    let smtpEmail = Deno.env.get("SMTP_CONTACT_EMAIL") || "contact@hustlaiapp.in";
     let smtpPass = Deno.env.get("SMTP_CONTACT_PASSWORD") || "";
 
     const { data: setting } = await supabaseAdmin
