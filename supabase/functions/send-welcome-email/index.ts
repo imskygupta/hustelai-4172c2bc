@@ -117,7 +117,7 @@ function generateWelcomeHTML(name: string): string {
             <div style="text-align:center;margin:32px 0;">
               <a href="https://hustlaiapp.in/dashboard" style="display:inline-block;padding:14px 32px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;font-size:16px;font-weight:600;text-decoration:none;border-radius:8px;">Start Exploring →</a>
             </div>
-            <p style="color:#999;font-size:13px;">If you have any questions, reply to this email or reach out at <a href="mailto:contact@hustelai.eu.cc" style="color:#6366f1;">contact@hustelai.eu.cc</a></p>
+            <p style="color:#999;font-size:13px;">If you have any questions, reply to this email or reach out at <a href="mailto:contact@hustlaiapp.in" style="color:#6366f1;">contact@hustlaiapp.in</a></p>
           </div>
         </td></tr>
         <tr><td style="padding:24px 40px;background:#f8f9fa;border-top:1px solid #eee;text-align:center;">
