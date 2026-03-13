@@ -28,7 +28,7 @@ serve(async (req) => {
     if (!isAdmin) throw new Error("Not admin");
 
     // Determine SMTP credentials
-    let smtpEmail = Deno.env.get("SMTP_CONTACT_EMAIL") || "contact@hustelai.eu.cc";
+    let smtpEmail = Deno.env.get("SMTP_CONTACT_EMAIL") || "contact@hustlaiapp.in";
     let smtpPass = Deno.env.get("SMTP_CONTACT_PASSWORD") || "";
 
     // Try to load from email_settings table
