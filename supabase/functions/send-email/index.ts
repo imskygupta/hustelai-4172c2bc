@@ -28,7 +28,7 @@ serve(async (req) => {
     if (!isAdmin) throw new Error("Not admin");
 
     // Determine SMTP credentials
-    let smtpEmail = Deno.env.get("SMTP_CONTACT_EMAIL") || "contact@hustelai.eu.cc";
+    let smtpEmail = Deno.env.get("SMTP_CONTACT_EMAIL") || "contact@hustlaiapp.in";
     let smtpPass = Deno.env.get("SMTP_CONTACT_PASSWORD") || "";
 
     // Try to load from email_settings table
@@ -164,8 +164,8 @@ function generateEmailHTML(subject: string, body: string): string {
         <tr><td style="padding:24px 40px;background:#f8f9fa;border-top:1px solid #eee;text-align:center;">
           <p style="margin:0;color:#999;font-size:12px;">© 2026 HustleAI. All rights reserved.</p>
           <p style="margin:4px 0 0;color:#999;font-size:11px;">
-            <a href="https://hustelai.eu.cc" style="color:#6366f1;text-decoration:none;">hustelai.eu.cc</a> · 
-            <a href="mailto:contact@hustelai.eu.cc" style="color:#6366f1;text-decoration:none;">contact@hustelai.eu.cc</a>
+            <a href="https://hustlaiapp.in" style="color:#6366f1;text-decoration:none;">hustlaiapp.in</a> · 
+            <a href="mailto:contact@hustlaiapp.in" style="color:#6366f1;text-decoration:none;">contact@hustlaiapp.in</a>
           </p>
         </td></tr>
       </table>

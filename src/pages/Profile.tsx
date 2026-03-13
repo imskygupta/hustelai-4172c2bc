@@ -154,7 +154,7 @@ export default function Profile() {
   };
 
   const handleDeleteAccount = () => {
-    window.location.href = "mailto:contact@hustelai.eu.cc?subject=Account Deletion Request&body=I would like to delete my HustleAI account. My email: " + encodeURIComponent(user?.email || "");
+    window.location.href = "mailto:contact@hustlaiapp.in?subject=Account Deletion Request&body=I would like to delete my HustleAI account. My email: " + encodeURIComponent(user?.email || "");
   };
 
   if (loading) {
@@ -346,7 +346,7 @@ export default function Profile() {
                 <p className="text-sm text-muted-foreground">Need to change your password? We'll send a reset link to your email.</p>
                 <Button variant="outline" onClick={async () => {
                   const { error } = await supabase.auth.resetPasswordForEmail(user?.email || "", {
-                    redirectTo: "https://hustelai.eu.cc/reset-password",
+                    redirectTo: "https://hustlaiapp.in/reset-password",
                   });
                   if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
                   else toast({ title: "Reset link sent!", description: "Check your email." });
@@ -404,7 +404,7 @@ export default function Profile() {
                     <div className="bg-destructive/10 rounded-xl p-4 space-y-3 border border-destructive/20">
                       <p className="text-sm text-destructive font-medium">⚠️ This action is irreversible</p>
                       <p className="text-xs text-muted-foreground">
-                        To delete your account, please send an email to <strong>contact@hustelai.eu.cc</strong> from your registered email address requesting account deletion.
+                        To delete your account, please send an email to <strong>contact@hustlaiapp.in</strong> from your registered email address requesting account deletion.
                       </p>
                       <div className="flex gap-2">
                         <Button size="sm" className="bg-destructive text-destructive-foreground" onClick={handleDeleteAccount}>

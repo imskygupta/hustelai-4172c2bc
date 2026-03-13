@@ -196,7 +196,7 @@ export default function HustleDetail() {
         </div>
         <div style="position:relative;z-index:1;">${content}</div>
         <div class="footer">
-          <p>© ${new Date().getFullYear()} HustleAI — hustelai.eu.cc — AI-Powered Freelance Discovery</p>
+          <p>© ${new Date().getFullYear()} HustleAI — hustlaiapp.in — AI-Powered Freelance Discovery</p>
         </div>
       </body>
       </html>

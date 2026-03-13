@@ -1,38 +1,19 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { motion } from "framer-motion";
-import { Home, RefreshCw, ArrowLeft, Compass } from "lucide-react";
+import { Home, ArrowLeft, Compass } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 export default function NotFound() {
-  const [countdown, setCountdown] = useState(10);
-
-  const hardRedirectHome = () => {
-    // Clear caches, storage, sign out, then hard reload
-    if ("caches" in window) {
-      caches.keys().then((names) => names.forEach((n) => caches.delete(n)));
-    }
-    localStorage.clear();
-    sessionStorage.clear();
-    window.location.replace("/");
-  };
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          hardRedirectHome();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
+    const timer = setTimeout(() => navigate("/"), 8000);
+    return () => clearTimeout(timer);
+  }, [navigate]);
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4 relative overflow-hidden">
-      {/* Ambient glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-primary/[0.06] blur-3xl pointer-events-none" />
 
       <motion.div
@@ -41,7 +22,6 @@ export default function NotFound() {
         transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
         className="relative z-10 w-full max-w-lg text-center space-y-8"
       >
-        {/* Animated compass */}
         <motion.div
           animate={{ rotate: [0, 15, -15, 10, -10, 0] }}
           transition={{ duration: 3, repeat: Infinity, repeatDelay: 2 }}
@@ -50,21 +30,19 @@ export default function NotFound() {
           <Compass className="w-12 h-12 text-primary" />
         </motion.div>
 
-        {/* Heading */}
         <div className="space-y-3">
           <h1 className="text-5xl md:text-6xl font-display font-black text-foreground">
-            Oops!
+            Page Not Found
           </h1>
           <p className="text-lg text-muted-foreground max-w-sm mx-auto">
-            Looks like you've wandered off the map. This page doesn't exist or has been moved.
+            The page you're looking for doesn't exist or has been moved.
           </p>
         </div>
 
-        {/* Action buttons */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
           <Button
             size="lg"
-            onClick={hardRedirectHome}
+            onClick={() => navigate("/")}
             className="bg-gradient-primary text-primary-foreground font-semibold btn-press hover:shadow-glow transition-shadow w-full sm:w-auto"
           >
             <Home className="w-4 h-4 mr-2" />
@@ -73,7 +51,7 @@ export default function NotFound() {
           <Button
             variant="outline"
             size="lg"
-            onClick={() => window.history.back()}
+            onClick={() => navigate(-1)}
             className="w-full sm:w-auto"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
@@ -81,23 +59,8 @@ export default function NotFound() {
           </Button>
         </div>
 
-        {/* Countdown */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-          className="flex items-center justify-center gap-2 text-sm text-muted-foreground"
-        >
-          <RefreshCw className="w-3.5 h-3.5 animate-spin" style={{ animationDuration: "3s" }} />
-          <span>
-            Redirecting to homepage in{" "}
-            <span className="text-primary font-bold text-base">{countdown}</span>s
-          </span>
-        </motion.div>
-
-        {/* Subtle suggestion */}
         <p className="text-xs text-muted-foreground/60">
-          If this keeps happening, try clearing your browser cache or contact support.
+          You'll be redirected to the homepage shortly.
         </p>
       </motion.div>
     </div>
