@@ -4,8 +4,53 @@ import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
+
+const SMTP_HOST = "cp1.dnspark.in";
+const SMTP_CONNECTIONS = [
+  { port: 465, tls: true, label: "smtps-465" },
+  { port: 587, tls: false, label: "starttls-587" },
+] as const;
+
+async function sendWithSmtpFallback(smtpEmail: string, smtpPass: string, to: string, subject: string, html: string) {
+  let lastError: unknown = null;
+
+  for (const config of SMTP_CONNECTIONS) {
+    const client = new SMTPClient({
+      connection: {
+        hostname: SMTP_HOST,
+        port: config.port,
+        tls: config.tls,
+        auth: { username: smtpEmail, password: smtpPass },
+      },
+    });
+
+    try {
+      await client.send({
+        from: `HustleAI <${smtpEmail}>`,
+        to,
+        subject,
+        content: "auto",
+        html,
+      });
+      console.log(`Welcome mail sent via ${config.label}`);
+      return;
+    } catch (error) {
+      lastError = error;
+      const message = error instanceof Error ? error.message : String(error);
+      console.error(`Welcome SMTP attempt failed via ${config.label}:`, message);
+    } finally {
+      try {
+        await client.close();
+      } catch {
+        // no-op
+      }
+    }
+  }
+
+  throw lastError instanceof Error ? lastError : new Error("SMTP send failed on all connection attempts");
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -22,34 +67,24 @@ serve(async (req) => {
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) throw new Error("Unauthorized");
     const token = authHeader.replace("Bearer ", "");
-    const { data: { user } } = await supabaseAdmin.auth.getUser(token);
-    if (!user) throw new Error("Unauthorized");
+    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
+    if (authError || !user) throw new Error("Unauthorized");
 
-    // Load SMTP from email_settings (welcome category)
     let smtpEmail = Deno.env.get("SMTP_CONTACT_EMAIL") || "contact@hustlaiapp.in";
     let smtpPass = Deno.env.get("SMTP_CONTACT_PASSWORD") || "";
 
     const { data: setting } = await supabaseAdmin
       .from("email_settings")
       .select("smtp_email, smtp_password, is_active")
-      .eq("category", "welcome")
-      .single();
+      .in("category", ["hello", "support", "newsletters"])
+      .eq("is_active", true)
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
-    if (setting?.is_active && setting.smtp_email && setting.smtp_password) {
+    if (setting?.smtp_email && setting?.smtp_password) {
       smtpEmail = setting.smtp_email;
       smtpPass = setting.smtp_password;
-    }
-
-    if (!smtpPass) {
-      const { data: fallback } = await supabaseAdmin
-        .from("email_settings")
-        .select("smtp_email, smtp_password, is_active")
-        .eq("category", "contact")
-        .single();
-      if (fallback?.is_active && fallback.smtp_email && fallback.smtp_password) {
-        smtpEmail = fallback.smtp_email;
-        smtpPass = fallback.smtp_password;
-      }
     }
 
     if (!smtpPass) {
@@ -58,33 +93,16 @@ serve(async (req) => {
       });
     }
 
-    const client = new SMTPClient({
-      connection: {
-        hostname: "cp1.dnspark.in",
-        port: 587,
-        tls: false,
-        auth: { username: smtpEmail, password: smtpPass },
-      },
-    });
-
     const name = displayName || email.split("@")[0];
-
-    await client.send({
-      from: `HustleAI <${smtpEmail}>`,
-      to: email,
-      subject: "Welcome to HustleAI! 🚀",
-      content: "auto",
-      html: generateWelcomeHTML(name),
-    });
-
-    await client.close();
+    await sendWithSmtpFallback(smtpEmail, smtpPass, email, "Welcome to HustleAI! 🚀", generateWelcomeHTML(name));
 
     return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
-    console.error("Welcome email error:", error.message);
-    return new Response(JSON.stringify({ error: error.message }), {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error("Welcome email error:", message);
+    return new Response(JSON.stringify({ error: message }), {
       status: 400,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

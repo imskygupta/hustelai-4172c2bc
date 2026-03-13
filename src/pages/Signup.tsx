@@ -46,7 +46,7 @@ export default function Signup() {
   // OTP verification state
   const [step, setStep] = useState<"signup" | "otp">("signup");
   const [otpCode, setOtpCode] = useState("");
-  const [generatedOTP, setGeneratedOTP] = useState("");
+  const [otpDeliveryMode, setOtpDeliveryMode] = useState<"custom" | "auth">("custom");
   const [verifying, setVerifying] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
 
