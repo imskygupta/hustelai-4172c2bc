@@ -13,7 +13,7 @@ export default function TermsConditions() {
 
           <section className="space-y-4 text-muted-foreground text-sm leading-relaxed">
             <h2 className="text-lg font-display font-semibold text-foreground">1. Acceptance of Terms</h2>
-            <p>By accessing or using HustleAI (hustelai.eu.cc), you agree to be bound by these Terms and Conditions. If you do not agree, please do not use our services.</p>
+            <p>By accessing or using HustleAI (hustlaiapp.in), you agree to be bound by these Terms and Conditions. If you do not agree, please do not use our services.</p>
 
             <h2 className="text-lg font-display font-semibold text-foreground">2. Description of Service</h2>
             <p>HustleAI is an AI-powered platform that helps users discover, start, and grow side hustles and freelance opportunities. We offer free and premium subscription tiers with varying features.</p>
