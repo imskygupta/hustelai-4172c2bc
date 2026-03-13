@@ -62,8 +62,8 @@ export function Footer() {
               AI-powered freelance discovery platform. Find, start, and grow your next income stream.
             </p>
             <div className="space-y-2 text-sm text-muted-foreground">
-          <a href="mailto:contact@hustelai.eu.cc" className="flex items-center gap-2 hover:text-primary transition-colors">
-                <Mail className="w-4 h-4" /> contact@hustelai.eu.cc
+          <a href="mailto:contact@hustlaiapp.in" className="flex items-center gap-2 hover:text-primary transition-colors">
+                <Mail className="w-4 h-4" /> contact@hustlaiapp.in
               </a>
               <div className="flex items-center gap-2">
                 <MapPin className="w-4 h-4" /> India 🇮🇳
