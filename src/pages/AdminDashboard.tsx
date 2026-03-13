@@ -1603,7 +1603,7 @@ export default function AdminDashboard() {
                       {emailSettings.filter((es: any) => es.is_active).map((es: any) => (
                         <SelectItem key={es.category} value={es.category}>From: {es.smtp_email || es.label}</SelectItem>
                       ))}
-                      <SelectItem value="contact">From: contact@hustelai.eu.cc (default)</SelectItem>
+                      <SelectItem value="contact">From: contact@hustlaiapp.in (default)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
