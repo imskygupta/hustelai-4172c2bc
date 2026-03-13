@@ -154,7 +154,7 @@ export default function Profile() {
   };
 
   const handleDeleteAccount = () => {
-    window.location.href = "mailto:contact@hustelai.eu.cc?subject=Account Deletion Request&body=I would like to delete my HustleAI account. My email: " + encodeURIComponent(user?.email || "");
+    window.location.href = "mailto:contact@hustlaiapp.in?subject=Account Deletion Request&body=I would like to delete my HustleAI account. My email: " + encodeURIComponent(user?.email || "");
   };
 
   if (loading) {
