@@ -404,7 +404,7 @@ export default function Profile() {
                     <div className="bg-destructive/10 rounded-xl p-4 space-y-3 border border-destructive/20">
                       <p className="text-sm text-destructive font-medium">⚠️ This action is irreversible</p>
                       <p className="text-xs text-muted-foreground">
-                        To delete your account, please send an email to <strong>contact@hustelai.eu.cc</strong> from your registered email address requesting account deletion.
+                        To delete your account, please send an email to <strong>contact@hustlaiapp.in</strong> from your registered email address requesting account deletion.
                       </p>
                       <div className="flex gap-2">
                         <Button size="sm" className="bg-destructive text-destructive-foreground" onClick={handleDeleteAccount}>

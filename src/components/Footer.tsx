@@ -122,7 +122,7 @@ export function Footer() {
             <span>·</span>
             <Link to="/refund-policy" className="hover:text-primary transition-colors">Refund Policy</Link>
             <span>·</span>
-            <a href="mailto:support@hustelai.eu.cc" className="hover:text-primary transition-colors">Support</a>
+            <a href="mailto:support@hustlaiapp.in" className="hover:text-primary transition-colors">Support</a>
           </div>
         </div>
       </div>

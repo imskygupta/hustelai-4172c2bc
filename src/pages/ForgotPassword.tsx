@@ -19,7 +19,7 @@ export default function ForgotPassword() {
     e.preventDefault();
     setLoading(true);
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: "https://hustelai.eu.cc/reset-password",
+      redirectTo: "https://hustlaiapp.in/reset-password",
     });
     setLoading(false);
     if (error) {

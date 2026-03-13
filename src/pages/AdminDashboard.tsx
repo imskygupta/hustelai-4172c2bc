@@ -1700,7 +1700,7 @@ export default function AdminDashboard() {
                         <Input
                           type="email"
                           value={es.smtp_email || ""}
-                          placeholder="e.g. payments@hustelai.eu.cc"
+                          placeholder="e.g. payments@hustlaiapp.in"
                           onChange={(e) => {
                             setEmailSettings(emailSettings.map((item: any) =>
                               item.id === es.id ? { ...item, smtp_email: e.target.value } : item
