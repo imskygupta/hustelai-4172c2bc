@@ -88,14 +88,20 @@ export default function Signup() {
           body: { email, displayName },
         });
 
-        if (error) throw error;
-        setOtpDeliveryMode("custom");
-        return true;
+        if (!error) {
+          setOtpDeliveryMode("custom");
+          return true;
+        }
+
+        console.error("Custom OTP send failed, falling back to managed auth OTP:", error);
       }
 
       const { error: otpError } = await supabase.auth.signInWithOtp({
         email,
-        options: { shouldCreateUser: false },
+        options: {
+          shouldCreateUser: false,
+          emailRedirectTo: AUTH_EMAIL_REDIRECT_TO,
+        },
       });
 
       if (otpError) throw otpError;
