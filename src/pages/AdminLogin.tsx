@@ -1,60 +1,21 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { AUTH_EMAIL_REDIRECT_TO } from "@/lib/auth-config";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Shield, Mail, KeyRound, Lock, Eye, EyeOff } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-
-type LoginMethod = "password" | "otp";
-type OtpStep = "email" | "otp";
-
-export default function AdminLogin() {
-  const navigate = useNavigate();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [otp, setOtp] = useState("");
-  const [method, setMethod] = useState<LoginMethod>("password");
-  const [otpStep, setOtpStep] = useState<OtpStep>("email");
-  const [loading, setLoading] = useState(false);
-
-  const checkAdminAndRedirect = async (userId: string) => {
-    const { data: roleData } = await supabase.rpc("has_role", { _user_id: userId, _role: "admin" });
-    if (roleData) {
-      navigate("/admin-dashboard");
-    } else {
-      await supabase.auth.signOut();
-      toast({ title: "Access Denied", description: "You are not authorized to access the admin panel.", variant: "destructive" });
-    }
-  };
-
-  const handlePasswordLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email.trim() || !password.trim()) {
-      toast({ title: "Required", description: "Enter email and password.", variant: "destructive" });
-      return;
-    }
+...
     setLoading(true);
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) {
-      toast({ title: "Login Failed", description: error.message, variant: "destructive" });
-      setLoading(false);
-      return;
-    }
-    if (data.user) await checkAdminAndRedirect(data.user.id);
-    setLoading(false);
-  };
-
-  const handleSendOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email.trim()) {
-      toast({ title: "Email required", description: "Enter your admin email address.", variant: "destructive" });
-      return;
-    }
-    setLoading(true);
-    const { error } = await supabase.auth.signInWithOtp({ email });
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        shouldCreateUser: false,
+        emailRedirectTo: AUTH_EMAIL_REDIRECT_TO,
+      },
+    });
     if (error) {
       toast({ title: "Access Denied", description: error.message, variant: "destructive" });
     } else {

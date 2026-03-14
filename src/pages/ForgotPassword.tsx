@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { RESET_PASSWORD_REDIRECT_TO } from "@/lib/auth-config";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,18 +9,9 @@ import { Zap, ArrowLeft, Mail } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
 import { ParticleBackground } from "@/components/ParticleBackground";
-
-export default function ForgotPassword() {
-  const [email, setEmail] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [sent, setSent] = useState(false);
-  const { toast } = useToast();
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
+...
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: "https://hustlaiapp.in/reset-password",
+      redirectTo: RESET_PASSWORD_REDIRECT_TO,
     });
     setLoading(false);
     if (error) {
