@@ -103,7 +103,13 @@ export default function Login() {
     e.preventDefault();
     if (!email.trim()) return;
     setLoading(true);
-    const { error } = await supabase.auth.signInWithOtp({ email });
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        shouldCreateUser: false,
+        emailRedirectTo: AUTH_EMAIL_REDIRECT_TO,
+      },
+    });
     setLoading(false);
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
