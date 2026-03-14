@@ -3,6 +3,7 @@ import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
+import { AUTH_EMAIL_REDIRECT_TO } from "@/lib/auth-config";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -87,14 +88,20 @@ export default function Signup() {
           body: { email, displayName },
         });
 
-        if (error) throw error;
-        setOtpDeliveryMode("custom");
-        return true;
+        if (!error) {
+          setOtpDeliveryMode("custom");
+          return true;
+        }
+
+        console.error("Custom OTP send failed, falling back to managed auth OTP:", error);
       }
 
       const { error: otpError } = await supabase.auth.signInWithOtp({
         email,
-        options: { shouldCreateUser: false },
+        options: {
+          shouldCreateUser: false,
+          emailRedirectTo: AUTH_EMAIL_REDIRECT_TO,
+        },
       });
 
       if (otpError) throw otpError;
@@ -329,7 +336,8 @@ export default function Signup() {
                   className="w-full h-12 font-medium border-border/50 hover:border-primary/30 hover:bg-secondary/50 transition-all"
                   onClick={async () => {
                     const { error } = await lovable.auth.signInWithOAuth("google", {
-                      redirect_uri: window.location.origin,
+                      redirect_uri: AUTH_EMAIL_REDIRECT_TO,
+                      extraParams: { prompt: "select_account" },
                     });
                     if (error) toast({ title: "Google sign-up failed", description: String(error), variant: "destructive" });
                   }}

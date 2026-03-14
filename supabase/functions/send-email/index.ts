@@ -32,6 +32,10 @@ async function sendWithSmtpFallback(smtpEmail: string, smtpPass: string, payload
         tls: config.tls,
         auth: { username: smtpEmail, password: smtpPass },
       },
+      debug: {
+        log: false,
+        allowUnsecure: true,
+      },
     });
 
     try {
@@ -78,17 +82,24 @@ serve(async (req) => {
     let smtpPass = Deno.env.get("SMTP_CONTACT_PASSWORD") || "";
 
     if (category || from_account) {
-      const cat = category || (from_account === "support" ? "support" : "newsletters");
+      const requestedCategory = category || (from_account === "support" ? "support" : from_account === "contact" ? "contact" : "newsletters");
       const { data: setting } = await supabaseAdmin
         .from("email_settings")
         .select("smtp_email, smtp_password, is_active")
-        .eq("category", cat)
+        .eq("category", requestedCategory)
         .maybeSingle();
 
-      if (setting?.is_active && setting.smtp_email && setting.smtp_password) {
-        smtpEmail = setting.smtp_email;
-        smtpPass = setting.smtp_password;
-      } else if (from_account === "support") {
+      const isTestAction = action === "send_test";
+      const canUseSetting = Boolean(
+        setting?.smtp_email &&
+        setting?.smtp_password &&
+        (isTestAction || setting?.is_active),
+      );
+
+      if (canUseSetting) {
+        smtpEmail = setting!.smtp_email as string;
+        smtpPass = setting!.smtp_password as string;
+      } else if (requestedCategory === "support") {
         smtpEmail = Deno.env.get("SMTP_SUPPORT_EMAIL") || smtpEmail;
         smtpPass = Deno.env.get("SMTP_SUPPORT_PASSWORD") || smtpPass;
       }

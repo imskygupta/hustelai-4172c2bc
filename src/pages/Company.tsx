@@ -144,7 +144,7 @@ export default function Company() {
                 <h2 className="text-3xl font-display font-bold">Get in Touch</h2>
                 <p className="text-muted-foreground">
                   Have questions, partnerships, or media inquiries? Reach out anytime at{" "}
-                  <a href="mailto:contact@skycart.xyz" className="text-primary hover:underline font-medium">contact@skycart.xyz</a>
+                  <a href="mailto:contact@hustlaiapp.in" className="text-primary hover:underline font-medium">contact@hustlaiapp.in</a>
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
                   <Button size="lg" className="bg-gradient-primary text-primary-foreground" onClick={() => navigate("/contact")}>

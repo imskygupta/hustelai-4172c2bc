@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
+import { AUTH_EMAIL_REDIRECT_TO } from "@/lib/auth-config";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -102,7 +103,13 @@ export default function Login() {
     e.preventDefault();
     if (!email.trim()) return;
     setLoading(true);
-    const { error } = await supabase.auth.signInWithOtp({ email });
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        shouldCreateUser: false,
+        emailRedirectTo: AUTH_EMAIL_REDIRECT_TO,
+      },
+    });
     setLoading(false);
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -284,10 +291,11 @@ export default function Login() {
               type="button"
               variant="outline"
               className="w-full h-12 font-medium border-border/50 hover:border-primary/30 hover:bg-secondary/50 transition-all"
-              onClick={async () => {
-                const { error } = await lovable.auth.signInWithOAuth("google", {
-                  redirect_uri: window.location.origin,
-                });
+                onClick={async () => {
+                  const { error } = await lovable.auth.signInWithOAuth("google", {
+                    redirect_uri: AUTH_EMAIL_REDIRECT_TO,
+                    extraParams: { prompt: "select_account" },
+                  });
                 if (error) toast({ title: "Google sign-in failed", description: String(error), variant: "destructive" });
               }}
             >

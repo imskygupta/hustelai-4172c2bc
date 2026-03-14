@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { AUTH_EMAIL_REDIRECT_TO } from "@/lib/auth-config";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, Mail, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -17,7 +18,7 @@ export function EmailVerificationBanner({ email }: Props) {
     const { error } = await supabase.auth.resend({
       type: "signup",
       email,
-      options: { emailRedirectTo: "https://hustlaiapp.in" },
+      options: { emailRedirectTo: AUTH_EMAIL_REDIRECT_TO },
     });
     setSending(false);
     if (error) {

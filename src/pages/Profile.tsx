@@ -2,6 +2,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { RESET_PASSWORD_REDIRECT_TO } from "@/lib/auth-config";
 import { Navbar } from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -346,7 +347,7 @@ export default function Profile() {
                 <p className="text-sm text-muted-foreground">Need to change your password? We'll send a reset link to your email.</p>
                 <Button variant="outline" onClick={async () => {
                   const { error } = await supabase.auth.resetPasswordForEmail(user?.email || "", {
-                    redirectTo: "https://hustlaiapp.in/reset-password",
+                    redirectTo: RESET_PASSWORD_REDIRECT_TO,
                   });
                   if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
                   else toast({ title: "Reset link sent!", description: "Check your email." });

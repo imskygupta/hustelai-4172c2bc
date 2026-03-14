@@ -102,7 +102,7 @@ export default function Career() {
                       </div>
                     </div>
                     <Button variant="outline" size="sm" className="shrink-0 group-hover:bg-primary group-hover:text-primary-foreground transition-all"
-                      onClick={() => window.location.href = "mailto:contact@skycart.xyz?subject=Application: " + job.title}>
+                      onClick={() => window.location.href = "mailto:contact@hustlaiapp.in?subject=Application: " + job.title}>
                       Apply <ArrowRight className="w-3.5 h-3.5 ml-1" />
                     </Button>
                   </div>
@@ -118,9 +118,9 @@ export default function Career() {
             <ScrollReveal direction="scale">
               <div className="glass rounded-2xl p-12 text-center space-y-6 border-primary/20">
                 <h2 className="text-3xl font-display font-bold">Don't See Your Role?</h2>
-                <p className="text-muted-foreground">We're always looking for talented people. Send us your resume at <a href="mailto:contact@skycart.xyz" className="text-primary hover:underline">contact@skycart.xyz</a></p>
+                <p className="text-muted-foreground">We're always looking for talented people. Send us your resume at <a href="mailto:contact@hustlaiapp.in" className="text-primary hover:underline">contact@hustlaiapp.in</a></p>
                 <Button size="lg" className="bg-gradient-primary text-primary-foreground"
-                  onClick={() => window.location.href = "mailto:contact@skycart.xyz"}>
+                  onClick={() => window.location.href = "mailto:contact@hustlaiapp.in"}>
                   Get in Touch <ArrowRight className="w-5 h-5 ml-2" />
                 </Button>
               </div>

@@ -30,6 +30,10 @@ async function sendWithSmtpFallback(smtpEmail: string, smtpPass: string, to: str
         tls: config.tls,
         auth: { username: smtpEmail, password: smtpPass },
       },
+      debug: {
+        log: false,
+        allowUnsecure: true,
+      },
     });
 
     try {
@@ -83,18 +87,21 @@ serve(async (req) => {
     let smtpEmail = Deno.env.get("SMTP_CONTACT_EMAIL") || "contact@hustlaiapp.in";
     let smtpPass = Deno.env.get("SMTP_CONTACT_PASSWORD") || "";
 
-    const { data: setting } = await supabaseAdmin
+    const { data: settings } = await supabaseAdmin
       .from("email_settings")
-      .select("smtp_email, smtp_password, is_active")
-      .in("category", ["hello", "support", "newsletters"])
+      .select("category, smtp_email, smtp_password, is_active, updated_at")
+      .in("category", ["welcome", "contact", "support", "newsletters"])
       .eq("is_active", true)
-      .order("updated_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
+      .order("updated_at", { ascending: false });
 
-    if (setting?.smtp_email && setting?.smtp_password) {
-      smtpEmail = setting.smtp_email;
-      smtpPass = setting.smtp_password;
+    const preferredSetting =
+      settings?.find((item) => item.category === "welcome" && item.smtp_email && item.smtp_password) ||
+      settings?.find((item) => item.category === "contact" && item.smtp_email && item.smtp_password) ||
+      settings?.find((item) => item.smtp_email && item.smtp_password);
+
+    if (preferredSetting?.smtp_email && preferredSetting?.smtp_password) {
+      smtpEmail = preferredSetting.smtp_email;
+      smtpPass = preferredSetting.smtp_password;
     }
 
     if (!smtpPass) {

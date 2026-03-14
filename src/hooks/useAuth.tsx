@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { AUTH_EMAIL_REDIRECT_TO } from "@/lib/auth-config";
 import type { User, Session } from "@supabase/supabase-js";
 
 interface Profile {
@@ -75,7 +76,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       password,
       options: {
         data: { display_name: displayName, referral_code: referralCode || "" },
-        emailRedirectTo: "https://hustlaiapp.in",
+        emailRedirectTo: AUTH_EMAIL_REDIRECT_TO,
       },
     });
     // Referral tracking is now handled by the database trigger handle_referral_on_signup
