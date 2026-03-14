@@ -30,6 +30,10 @@ async function sendWithSmtpFallback(smtpEmail: string, smtpPass: string, to: str
         tls: config.tls,
         auth: { username: smtpEmail, password: smtpPass },
       },
+      debug: {
+        log: false,
+        allowUnsecure: true,
+      },
     });
 
     try {
