@@ -9,7 +9,16 @@ import { Zap, ArrowLeft, Mail } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
 import { ParticleBackground } from "@/components/ParticleBackground";
-...
+
+export default function ForgotPassword() {
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [sent, setSent] = useState(false);
+  const { toast } = useToast();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: RESET_PASSWORD_REDIRECT_TO,
     });

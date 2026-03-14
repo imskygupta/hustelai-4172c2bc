@@ -105,7 +105,19 @@ export default function Career() {
                       onClick={() => window.location.href = "mailto:contact@hustlaiapp.in?subject=Application: " + job.title}>
                       Apply <ArrowRight className="w-3.5 h-3.5 ml-1" />
                     </Button>
-...
+                  </div>
+                </ScrollReveal>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* CTA */}
+        <section className="py-20 px-4">
+          <div className="container mx-auto max-w-3xl">
+            <ScrollReveal direction="scale">
+              <div className="glass rounded-2xl p-12 text-center space-y-6 border-primary/20">
+                <h2 className="text-3xl font-display font-bold">Don't See Your Role?</h2>
                 <p className="text-muted-foreground">We're always looking for talented people. Send us your resume at <a href="mailto:contact@hustlaiapp.in" className="text-primary hover:underline">contact@hustlaiapp.in</a></p>
                 <Button size="lg" className="bg-gradient-primary text-primary-foreground"
                   onClick={() => window.location.href = "mailto:contact@hustlaiapp.in"}>
