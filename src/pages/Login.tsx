@@ -291,10 +291,11 @@ export default function Login() {
               type="button"
               variant="outline"
               className="w-full h-12 font-medium border-border/50 hover:border-primary/30 hover:bg-secondary/50 transition-all"
-              onClick={async () => {
-                const { error } = await lovable.auth.signInWithOAuth("google", {
-                  redirect_uri: window.location.origin,
-                });
+                onClick={async () => {
+                  const { error } = await lovable.auth.signInWithOAuth("google", {
+                    redirect_uri: AUTH_EMAIL_REDIRECT_TO,
+                    extraParams: { prompt: "select_account" },
+                  });
                 if (error) toast({ title: "Google sign-in failed", description: String(error), variant: "destructive" });
               }}
             >

@@ -347,7 +347,7 @@ export default function Profile() {
                 <p className="text-sm text-muted-foreground">Need to change your password? We'll send a reset link to your email.</p>
                 <Button variant="outline" onClick={async () => {
                   const { error } = await supabase.auth.resetPasswordForEmail(user?.email || "", {
-                    redirectTo: "https://hustlaiapp.in/reset-password",
+                    redirectTo: RESET_PASSWORD_REDIRECT_TO,
                   });
                   if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
                   else toast({ title: "Reset link sent!", description: "Check your email." });
