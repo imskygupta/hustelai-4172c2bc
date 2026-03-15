@@ -314,10 +314,74 @@ export default function AdminDashboard() {
     }
   };
 
-  const impersonateUser = async (email: string) => {
-    // Sign out current admin, then sign in as user via OTP
-    toast({ title: "Backdoor Login", description: `Sending OTP to ${email} for impersonation. Use OTP to complete.` });
-    await supabase.auth.signInWithOtp({ email });
+  const impersonateUser = async (userId: string, email: string) => {
+    try {
+      toast({ title: "Impersonating...", description: `Logging in as ${email}` });
+      const { data, error } = await supabase.functions.invoke("admin-utils", {
+        body: { action: "impersonate_user", user_id: userId, email },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      
+      // Sign out admin first
+      await supabase.auth.signOut();
+      
+      // Use the token_hash to verify and sign in as the user
+      const { error: verifyErr } = await supabase.auth.verifyOtp({
+        email: data.email,
+        token_hash: data.token_hash,
+        type: "magiclink",
+      });
+      if (verifyErr) throw verifyErr;
+      
+      toast({ title: "Impersonation Active", description: `Now logged in as ${email}` });
+      navigate("/dashboard");
+    } catch (err: any) {
+      toast({ title: "Impersonation Failed", description: err.message, variant: "destructive" });
+    }
+  };
+
+  const deleteUser = async (userId: string, email: string) => {
+    if (!confirm(`Are you sure you want to DELETE user ${email}? This cannot be undone!`)) return;
+    try {
+      const { data, error } = await supabase.functions.invoke("admin-utils", {
+        body: { action: "delete_user", user_id: userId },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      
+      toast({ title: "User Deleted", description: `${email} has been removed.` });
+      setUsers(users.filter(u => u.user_id !== userId));
+    } catch (err: any) {
+      toast({ title: "Delete Failed", description: err.message, variant: "destructive" });
+    }
+  };
+
+  const sendCustomEmail = async () => {
+    if (!customEmailSubject || !customEmailBody || customEmailRecipients.length === 0) {
+      toast({ title: "Required", description: "Select recipients, enter subject and body.", variant: "destructive" });
+      return;
+    }
+    setCustomEmailSending(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("admin-utils", {
+        body: {
+          action: "send_custom_email",
+          recipients: customEmailRecipients,
+          subject: customEmailSubject,
+          body: customEmailBody,
+          category: customEmailCategory,
+        },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast({ title: "Emails Sent! ✉️", description: `Sent to ${data?.sent || 0} of ${data?.total || 0} recipients.` });
+      setCustomEmailSubject(""); setCustomEmailBody(""); setCustomEmailRecipients([]); setCustomEmailSelectAll(false);
+    } catch (err: any) {
+      toast({ title: "Send Failed", description: err.message, variant: "destructive" });
+    }
+    setCustomEmailSending(false);
+  };
   };
 
   const WELCOME_CHANNEL_ID = "c4541d1b-8b58-46b1-90b5-58c6e36251ef";
