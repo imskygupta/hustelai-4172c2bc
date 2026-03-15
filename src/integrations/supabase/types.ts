@@ -913,6 +913,72 @@ export type Database = {
         }
         Relationships: []
       }
+      orders: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          id: string
+          invoice_number: string | null
+          item_id: string | null
+          item_title: string
+          item_type: string
+          notes: string | null
+          payment_id: string | null
+          seller_id: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          invoice_number?: string | null
+          item_id?: string | null
+          item_title: string
+          item_type?: string
+          notes?: string | null
+          payment_id?: string | null
+          seller_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          invoice_number?: string | null
+          item_id?: string | null
+          item_title?: string
+          item_type?: string
+          notes?: string | null
+          payment_id?: string | null
+          seller_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payments: {
         Row: {
           amount: number
