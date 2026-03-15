@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
-import { User, Upload, FileText, Lock, MapPin, Phone, Mail, Crown, Shield, Trash2, Key, Settings, Gift } from "lucide-react";
+import { User, Upload, FileText, Lock, MapPin, Phone, Mail, Crown, Shield, Trash2, Key, Settings, Gift, CreditCard, Package, Receipt } from "lucide-react";
 import { VerificationSection } from "@/components/VerificationSection";
 import { EmailVerificationBanner } from "@/components/EmailVerificationBanner";
 
