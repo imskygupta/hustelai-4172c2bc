@@ -15,7 +15,7 @@ import { User, Upload, FileText, Lock, MapPin, Phone, Mail, Crown, Shield, Trash
 import { VerificationSection } from "@/components/VerificationSection";
 import { EmailVerificationBanner } from "@/components/EmailVerificationBanner";
 
-type ProfileTab = "general" | "security" | "account";
+type ProfileTab = "general" | "security" | "account" | "billing";
 
 export default function Profile() {
   const { user, profile, loading, refreshProfile, signOut } = useAuth();
