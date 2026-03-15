@@ -106,7 +106,7 @@ const tierColors: Record<string, string> = {
 type AdminSection =
   | "overview" | "users" | "roles" | "notifications" | "webinars"
   | "expert" | "chatbot" | "blogs" | "analytics" | "config"
-  | "verification" | "payments" | "forum" | "community" | "trending" | "newsletter" | "email-settings" | "ai-providers";
+  | "verification" | "payments" | "forum" | "community" | "trending" | "newsletter" | "email-settings" | "ai-providers" | "send-email" | "orders";
 
 const sidebarItems: { id: AdminSection; label: string; icon: any }[] = [
   { id: "overview", label: "Overview", icon: BarChart3 },
@@ -114,6 +114,8 @@ const sidebarItems: { id: AdminSection; label: string; icon: any }[] = [
   { id: "roles", label: "Role Manager", icon: Shield },
   { id: "verification", label: "Verification", icon: UserCheck },
   { id: "payments", label: "Payments", icon: Zap },
+  { id: "orders", label: "Orders", icon: FileText },
+  { id: "send-email", label: "Send Email", icon: Send },
   { id: "forum", label: "Forum Posts", icon: MessageSquare },
   { id: "community", label: "Community", icon: Globe },
   { id: "notifications", label: "Notifications", icon: Bell },
@@ -165,6 +167,14 @@ export default function AdminDashboard() {
   const [emailSettings, setEmailSettings] = useState<any[]>([]);
   const [emailSettingsLoading, setEmailSettingsLoading] = useState(false);
   const [aiProviders, setAiProviders] = useState<any[]>([]);
+  const [orders, setOrders] = useState<any[]>([]);
+  // Custom email form
+  const [customEmailRecipients, setCustomEmailRecipients] = useState<string[]>([]);
+  const [customEmailSubject, setCustomEmailSubject] = useState("");
+  const [customEmailBody, setCustomEmailBody] = useState("");
+  const [customEmailCategory, setCustomEmailCategory] = useState("contact");
+  const [customEmailSending, setCustomEmailSending] = useState(false);
+  const [customEmailSelectAll, setCustomEmailSelectAll] = useState(false);
   const [newProviderName, setNewProviderName] = useState("");
   const [newProviderDisplay, setNewProviderDisplay] = useState("");
   const [newProviderKey, setNewProviderKey] = useState("");
@@ -240,7 +250,7 @@ export default function AdminDashboard() {
 
   const loadAllData = async () => {
     setLoadingData(true);
-    const [usersRes, notifsRes, webRes, expertRes, blogRes, nlRes, contactRes, chatRes, verifRes, payRes, forumRes, rolesRes, groupsRes, trendRes] = await Promise.all([
+    const [usersRes, notifsRes, webRes, expertRes, blogRes, nlRes, contactRes, chatRes, verifRes, payRes, forumRes, rolesRes, groupsRes, trendRes, ordersRes] = await Promise.all([
       supabase.from("profiles").select("*").order("created_at", { ascending: false }),
       supabase.from("notifications").select("*").order("created_at", { ascending: false }),
       supabase.from("webinars").select("*").order("created_at", { ascending: false }),
@@ -255,6 +265,7 @@ export default function AdminDashboard() {
       supabase.from("user_roles").select("*").order("created_at", { ascending: false }),
       supabase.from("community_groups").select("*").order("created_at"),
       supabase.from("trending_links").select("*").order("sort_order"),
+      supabase.from("orders").select("*").order("created_at", { ascending: false }),
     ]);
     if (usersRes.data) setUsers(usersRes.data as UserProfile[]);
     if (notifsRes.data) setNotifications(notifsRes.data as Notification[]);
@@ -270,7 +281,7 @@ export default function AdminDashboard() {
     if (rolesRes.data) setUserRoles(rolesRes.data);
     if (groupsRes.data) setCommunityGroups(groupsRes.data);
     if (trendRes.data) setTrendingLinks(trendRes.data);
-    if (rolesRes.data) setUserRoles(rolesRes.data);
+    if (ordersRes.data) setOrders(ordersRes.data);
     // Load email settings
     const { data: emailData } = await supabase.from("email_settings").select("*").order("created_at");
     if (emailData) setEmailSettings(emailData);
@@ -303,10 +314,73 @@ export default function AdminDashboard() {
     }
   };
 
-  const impersonateUser = async (email: string) => {
-    // Sign out current admin, then sign in as user via OTP
-    toast({ title: "Backdoor Login", description: `Sending OTP to ${email} for impersonation. Use OTP to complete.` });
-    await supabase.auth.signInWithOtp({ email });
+  const impersonateUser = async (userId: string, email: string) => {
+    try {
+      toast({ title: "Impersonating...", description: `Logging in as ${email}` });
+      const { data, error } = await supabase.functions.invoke("admin-utils", {
+        body: { action: "impersonate_user", user_id: userId, email },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      
+      // Sign out admin first
+      await supabase.auth.signOut();
+      
+      // Use the token_hash to verify and sign in as the user
+      const { error: verifyErr } = await supabase.auth.verifyOtp({
+        email: data.email,
+        token_hash: data.token_hash,
+        type: "magiclink",
+      });
+      if (verifyErr) throw verifyErr;
+      
+      toast({ title: "Impersonation Active", description: `Now logged in as ${email}` });
+      navigate("/dashboard");
+    } catch (err: any) {
+      toast({ title: "Impersonation Failed", description: err.message, variant: "destructive" });
+    }
+  };
+
+  const deleteUser = async (userId: string, email: string) => {
+    if (!confirm(`Are you sure you want to DELETE user ${email}? This cannot be undone!`)) return;
+    try {
+      const { data, error } = await supabase.functions.invoke("admin-utils", {
+        body: { action: "delete_user", user_id: userId },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      
+      toast({ title: "User Deleted", description: `${email} has been removed.` });
+      setUsers(users.filter(u => u.user_id !== userId));
+    } catch (err: any) {
+      toast({ title: "Delete Failed", description: err.message, variant: "destructive" });
+    }
+  };
+
+  const sendCustomEmail = async () => {
+    if (!customEmailSubject || !customEmailBody || customEmailRecipients.length === 0) {
+      toast({ title: "Required", description: "Select recipients, enter subject and body.", variant: "destructive" });
+      return;
+    }
+    setCustomEmailSending(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("admin-utils", {
+        body: {
+          action: "send_custom_email",
+          recipients: customEmailRecipients,
+          subject: customEmailSubject,
+          body: customEmailBody,
+          category: customEmailCategory,
+        },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast({ title: "Emails Sent! ✉️", description: `Sent to ${data?.sent || 0} of ${data?.total || 0} recipients.` });
+      setCustomEmailSubject(""); setCustomEmailBody(""); setCustomEmailRecipients([]); setCustomEmailSelectAll(false);
+    } catch (err: any) {
+      toast({ title: "Send Failed", description: err.message, variant: "destructive" });
+    }
+    setCustomEmailSending(false);
   };
 
   const WELCOME_CHANNEL_ID = "c4541d1b-8b58-46b1-90b5-58c6e36251ef";
@@ -681,11 +755,14 @@ export default function AdminDashboard() {
                           </TableCell>
                           <TableCell>
                             <div className="flex gap-1">
-                              <Button variant="ghost" size="sm" onClick={() => impersonateUser(u.email || "")}>
+                              <Button variant="ghost" size="sm" title="Impersonate" onClick={() => impersonateUser(u.user_id, u.email || "")}>
                                 <Eye className="w-3 h-3" />
                               </Button>
                               <Button variant="ghost" size="sm" onClick={() => { setSelectedChatUser(u.user_id); setSection("chatbot"); loadChatForUser(u.user_id); }}>
                                 <MessageSquare className="w-3 h-3" />
+                              </Button>
+                              <Button variant="ghost" size="sm" title="Delete User" onClick={() => deleteUser(u.user_id, u.email || "")}>
+                                <Trash2 className="w-3 h-3 text-destructive" />
                               </Button>
                             </div>
                           </TableCell>
@@ -1798,6 +1875,173 @@ export default function AdminDashboard() {
                   <Plus className="w-4 h-4 mr-1" /> Add Category
                 </Button>
               </div>
+            </div>
+          )}
+
+          {/* ===== SEND CUSTOM EMAIL ===== */}
+          {section === "send-email" && (
+            <div className="space-y-6">
+              <div className="glass rounded-xl p-6 space-y-4">
+                <h3 className="font-display font-bold flex items-center gap-2">
+                  <Send className="w-5 h-5 text-primary" /> Send Custom Email to Users
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Select users and send them custom emails about payments, invoices, or announcements via SMTP.
+                </p>
+
+                {/* Recipient Selection */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label className="font-semibold">Select Recipients ({customEmailRecipients.length} selected)</Label>
+                    <Button variant="outline" size="sm" onClick={() => {
+                      if (customEmailSelectAll) {
+                        setCustomEmailRecipients([]);
+                        setCustomEmailSelectAll(false);
+                      } else {
+                        setCustomEmailRecipients(users.filter(u => u.email).map(u => u.email!));
+                        setCustomEmailSelectAll(true);
+                      }
+                    }}>
+                      {customEmailSelectAll ? "Deselect All" : "Select All"}
+                    </Button>
+                  </div>
+                  <div className="max-h-[200px] overflow-y-auto space-y-1 border border-border/50 rounded-lg p-3">
+                    {users.map(u => (
+                      <label key={u.user_id} className="flex items-center gap-2 p-1.5 rounded hover:bg-muted/30 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={customEmailRecipients.includes(u.email || "")}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setCustomEmailRecipients([...customEmailRecipients, u.email || ""]);
+                            } else {
+                              setCustomEmailRecipients(customEmailRecipients.filter(r => r !== u.email));
+                              setCustomEmailSelectAll(false);
+                            }
+                          }}
+                          className="rounded"
+                        />
+                        <span className="text-sm">{u.display_name || u.email}</span>
+                        <span className="text-xs text-muted-foreground ml-auto">{u.email}</span>
+                        <Badge className={tierColors[u.subscription_tier] || ""} variant="outline">{u.subscription_tier}</Badge>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Email Content */}
+                <div className="grid md:grid-cols-2 gap-4">
+                  <Input placeholder="Email Subject" value={customEmailSubject} onChange={e => setCustomEmailSubject(e.target.value)} />
+                  <Select value={customEmailCategory} onValueChange={setCustomEmailCategory}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {emailSettings.filter((es: any) => es.is_active).map((es: any) => (
+                        <SelectItem key={es.category} value={es.category}>From: {es.smtp_email || es.label}</SelectItem>
+                      ))}
+                      <SelectItem value="contact">From: contact@hustlaiapp.in (default)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Quick Templates */}
+                <div className="flex gap-2 flex-wrap">
+                  <Button variant="outline" size="sm" onClick={() => {
+                    setCustomEmailSubject("Payment Confirmation - HustleAI");
+                    setCustomEmailBody(`<p>Dear User,</p><p>Your payment has been <strong>successfully received</strong>. Thank you for upgrading your HustleAI plan!</p><p>If you have any questions about your subscription, please don't hesitate to reach out.</p><p>Best regards,<br/>HustleAI Team</p>`);
+                  }}>💳 Payment Confirmation</Button>
+                  <Button variant="outline" size="sm" onClick={() => {
+                    setCustomEmailSubject("Invoice - HustleAI Subscription");
+                    setCustomEmailBody(`<p>Dear User,</p><p>Please find your invoice details below:</p><table style="border-collapse:collapse;width:100%;margin:16px 0;"><tr style="background:#f0f0f0;"><td style="padding:8px;border:1px solid #ddd;font-weight:bold;">Plan</td><td style="padding:8px;border:1px solid #ddd;">[Plan Name]</td></tr><tr><td style="padding:8px;border:1px solid #ddd;font-weight:bold;">Amount</td><td style="padding:8px;border:1px solid #ddd;">₹[Amount]</td></tr><tr><td style="padding:8px;border:1px solid #ddd;font-weight:bold;">Date</td><td style="padding:8px;border:1px solid #ddd;">[Date]</td></tr><tr><td style="padding:8px;border:1px solid #ddd;font-weight:bold;">Status</td><td style="padding:8px;border:1px solid #ddd;">Paid ✅</td></tr></table><p>Thank you for your trust!</p>`);
+                  }}>🧾 Invoice Template</Button>
+                  <Button variant="outline" size="sm" onClick={() => {
+                    setCustomEmailSubject("Subscription Update - HustleAI");
+                    setCustomEmailBody(`<p>Dear User,</p><p>We wanted to let you know about an update to your subscription:</p><ul><li>Your plan has been updated</li><li>New features are now available</li></ul><p>Visit your <a href="https://hustlaiapp.in/profile" style="color:#6366f1;">profile page</a> to see the changes.</p>`);
+                  }}>🔔 Subscription Update</Button>
+                  <Button variant="outline" size="sm" onClick={() => {
+                    setCustomEmailSubject("Your Order from HustleAI Marketplace");
+                    setCustomEmailBody(`<p>Dear User,</p><p>Your order has been processed successfully!</p><p><strong>Order Details:</strong></p><ul><li>Item: [Item Name]</li><li>Amount: ₹[Amount]</li><li>Status: Completed ✅</li></ul><p>You can access your purchase from the <a href="https://hustlaiapp.in/marketplace" style="color:#6366f1;">Marketplace</a>.</p>`);
+                  }}>📦 Order Confirmation</Button>
+                </div>
+
+                <Textarea
+                  placeholder="Email body (HTML supported)..."
+                  value={customEmailBody}
+                  onChange={e => setCustomEmailBody(e.target.value)}
+                  className="min-h-[200px]"
+                />
+                <Button onClick={sendCustomEmail} disabled={customEmailSending} className="bg-gradient-primary text-primary-foreground">
+                  <Send className="w-4 h-4 mr-1" /> {customEmailSending ? "Sending..." : `Send to ${customEmailRecipients.length} User(s)`}
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* ===== ORDERS ===== */}
+          {section === "orders" && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h3 className="font-display font-bold">Orders & Purchases ({orders.length})</h3>
+              </div>
+              {orders.length === 0 ? (
+                <div className="glass rounded-xl p-8 text-center">
+                  <FileText className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                  <p className="text-sm text-muted-foreground">No orders yet. Orders will appear when users purchase marketplace items.</p>
+                </div>
+              ) : (
+                <div className="glass rounded-xl overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Invoice</TableHead>
+                        <TableHead>User</TableHead>
+                        <TableHead>Item</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead>Amount</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {orders.map((o: any) => {
+                        const orderUser = users.find(u => u.user_id === o.user_id);
+                        return (
+                          <TableRow key={o.id}>
+                            <TableCell className="text-xs font-mono">{o.invoice_number || "—"}</TableCell>
+                            <TableCell className="text-sm">{orderUser?.display_name || orderUser?.email || o.user_id?.slice(0, 8)}</TableCell>
+                            <TableCell className="text-sm font-medium">{o.item_title}</TableCell>
+                            <TableCell><Badge variant="outline" className="text-[10px]">{o.item_type}</Badge></TableCell>
+                            <TableCell className="text-sm">₹{o.amount}</TableCell>
+                            <TableCell>
+                              <Badge className={
+                                o.status === "completed" ? "bg-primary/20 text-primary" :
+                                o.status === "pending" ? "bg-yellow-500/20 text-yellow-400" :
+                                "bg-destructive/20 text-destructive"
+                              } variant="outline">{o.status}</Badge>
+                            </TableCell>
+                            <TableCell className="text-xs text-muted-foreground">{new Date(o.created_at).toLocaleDateString()}</TableCell>
+                            <TableCell>
+                              <Select value={o.status} onValueChange={async (val) => {
+                                await supabase.from("orders").update({ status: val, updated_at: new Date().toISOString() } as any).eq("id", o.id);
+                                setOrders(orders.map((ord: any) => ord.id === o.id ? { ...ord, status: val } : ord));
+                                toast({ title: "Status Updated" });
+                              }}>
+                                <SelectTrigger className="w-28 h-8 text-xs"><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="pending">Pending</SelectItem>
+                                  <SelectItem value="completed">Completed</SelectItem>
+                                  <SelectItem value="refunded">Refunded</SelectItem>
+                                  <SelectItem value="cancelled">Cancelled</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
             </div>
           )}
         </div>

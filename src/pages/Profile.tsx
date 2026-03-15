@@ -11,11 +11,11 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
-import { User, Upload, FileText, Lock, MapPin, Phone, Mail, Crown, Shield, Trash2, Key, Settings, Gift } from "lucide-react";
+import { User, Upload, FileText, Lock, MapPin, Phone, Mail, Crown, Shield, Trash2, Key, Settings, Gift, CreditCard, Package, Receipt } from "lucide-react";
 import { VerificationSection } from "@/components/VerificationSection";
 import { EmailVerificationBanner } from "@/components/EmailVerificationBanner";
 
-type ProfileTab = "general" | "security" | "account";
+type ProfileTab = "general" | "security" | "account" | "billing";
 
 export default function Profile() {
   const { user, profile, loading, refreshProfile, signOut } = useAuth();
@@ -30,6 +30,9 @@ export default function Profile() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [couponCode, setCouponCode] = useState("");
   const [applyingCoupon, setApplyingCoupon] = useState(false);
+  const [userPayments, setUserPayments] = useState<any[]>([]);
+  const [userOrders, setUserOrders] = useState<any[]>([]);
+  const [loadingBilling, setLoadingBilling] = useState(false);
 
   const referredBy = (profile as any)?.referred_by;
 
@@ -45,6 +48,24 @@ export default function Profile() {
       setAddress((profile as any).address || "");
     }
   }, [profile]);
+
+  useEffect(() => {
+    if (user && activeTab === "billing") {
+      loadBillingData();
+    }
+  }, [user, activeTab]);
+
+  const loadBillingData = async () => {
+    if (!user) return;
+    setLoadingBilling(true);
+    const [payRes, ordRes] = await Promise.all([
+      supabase.from("payments").select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
+      supabase.from("orders").select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
+    ]);
+    if (payRes.data) setUserPayments(payRes.data);
+    if (ordRes.data) setUserOrders(ordRes.data);
+    setLoadingBilling(false);
+  };
 
   const isPremium = profile && ["pro", "elite", "infinity"].includes(profile.subscription_tier as string);
   const isElite = profile && ["elite", "infinity"].includes(profile.subscription_tier as string);
@@ -166,6 +187,7 @@ export default function Profile() {
 
   const tabs: { key: ProfileTab; label: string; icon: any }[] = [
     { key: "general", label: "General", icon: User },
+    { key: "billing", label: "Billing", icon: CreditCard },
     { key: "security", label: "Security", icon: Shield },
     { key: "account", label: "Account", icon: Settings },
   ];
@@ -336,7 +358,108 @@ export default function Profile() {
             </motion.div>
           )}
 
-          {/* Security Tab */}
+          {/* Billing Tab */}
+          {activeTab === "billing" && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+              {/* Subscription Info */}
+              <div className="glass rounded-2xl p-8 space-y-4">
+                <div className="flex items-center gap-3">
+                  <CreditCard className="w-6 h-6 text-primary" />
+                  <h2 className="text-xl font-display font-bold">Subscription</h2>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-muted/30 rounded-xl p-4">
+                    <p className="text-xs text-muted-foreground">Current Plan</p>
+                    <p className="text-lg font-display font-bold text-primary">{profile?.subscription_tier?.toUpperCase()}</p>
+                  </div>
+                  <div className="bg-muted/30 rounded-xl p-4">
+                    <p className="text-xs text-muted-foreground">Member Since</p>
+                    <p className="text-lg font-display font-bold">{user?.created_at ? new Date(user.created_at).toLocaleDateString() : "N/A"}</p>
+                  </div>
+                  <div className="bg-muted/30 rounded-xl p-4">
+                    <p className="text-xs text-muted-foreground">XP Points</p>
+                    <p className="text-lg font-display font-bold">{profile?.xp_points}</p>
+                  </div>
+                  <div className="bg-muted/30 rounded-xl p-4">
+                    <p className="text-xs text-muted-foreground">Search Credits</p>
+                    <p className="text-lg font-display font-bold">{(profile as any)?.referral_credits || 0}</p>
+                  </div>
+                </div>
+                {profile?.subscription_tier === "free" && (
+                  <Button onClick={() => navigate("/payment")} className="w-full bg-gradient-primary text-primary-foreground">
+                    <Crown className="w-4 h-4 mr-2" /> Upgrade Plan
+                  </Button>
+                )}
+              </div>
+
+              {/* Payment History */}
+              <div className="glass rounded-2xl p-8 space-y-4">
+                <div className="flex items-center gap-3">
+                  <Receipt className="w-6 h-6 text-primary" />
+                  <h2 className="text-xl font-display font-bold">Payment History</h2>
+                </div>
+                {loadingBilling ? (
+                  <p className="text-sm text-muted-foreground animate-pulse">Loading...</p>
+                ) : userPayments.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No payments yet.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {userPayments.map((p: any) => (
+                      <div key={p.id} className="flex items-center justify-between p-3 rounded-xl bg-muted/20 border border-border/30">
+                        <div>
+                          <p className="text-sm font-medium">{p.plan?.toUpperCase()} Plan</p>
+                          <p className="text-xs text-muted-foreground">Order: {p.order_id}</p>
+                          <p className="text-[10px] text-muted-foreground">{new Date(p.created_at).toLocaleString()}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-bold">₹{p.amount}</p>
+                          <Badge className={
+                            p.status === "paid" || p.status === "success" ? "bg-primary/20 text-primary" :
+                            p.status === "pending" ? "bg-yellow-500/20 text-yellow-400" :
+                            "bg-destructive/20 text-destructive"
+                          } variant="outline">{p.status}</Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Orders */}
+              <div className="glass rounded-2xl p-8 space-y-4">
+                <div className="flex items-center gap-3">
+                  <Package className="w-6 h-6 text-primary" />
+                  <h2 className="text-xl font-display font-bold">Orders & Purchases</h2>
+                </div>
+                {loadingBilling ? (
+                  <p className="text-sm text-muted-foreground animate-pulse">Loading...</p>
+                ) : userOrders.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No orders yet. Visit the <a href="/marketplace" className="text-primary underline">Marketplace</a> to explore.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {userOrders.map((o: any) => (
+                      <div key={o.id} className="flex items-center justify-between p-3 rounded-xl bg-muted/20 border border-border/30">
+                        <div>
+                          <p className="text-sm font-medium">{o.item_title}</p>
+                          <p className="text-xs text-muted-foreground">Invoice: {o.invoice_number || "—"}</p>
+                          <p className="text-[10px] text-muted-foreground">{new Date(o.created_at).toLocaleString()}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-bold">₹{o.amount}</p>
+                          <Badge className={
+                            o.status === "completed" ? "bg-primary/20 text-primary" :
+                            o.status === "pending" ? "bg-yellow-500/20 text-yellow-400" :
+                            "bg-destructive/20 text-destructive"
+                          } variant="outline">{o.status}</Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
+
           {activeTab === "security" && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
               <div className="glass rounded-2xl p-8 space-y-4">
