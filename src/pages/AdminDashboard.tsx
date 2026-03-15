@@ -382,7 +382,6 @@ export default function AdminDashboard() {
     }
     setCustomEmailSending(false);
   };
-  };
 
   const WELCOME_CHANNEL_ID = "c4541d1b-8b58-46b1-90b5-58c6e36251ef";
 
