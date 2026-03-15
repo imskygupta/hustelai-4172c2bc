@@ -50,6 +50,24 @@ export default function Profile() {
     }
   }, [profile]);
 
+  useEffect(() => {
+    if (user && activeTab === "billing") {
+      loadBillingData();
+    }
+  }, [user, activeTab]);
+
+  const loadBillingData = async () => {
+    if (!user) return;
+    setLoadingBilling(true);
+    const [payRes, ordRes] = await Promise.all([
+      supabase.from("payments").select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
+      supabase.from("orders").select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
+    ]);
+    if (payRes.data) setUserPayments(payRes.data);
+    if (ordRes.data) setUserOrders(ordRes.data);
+    setLoadingBilling(false);
+  };
+
   const isPremium = profile && ["pro", "elite", "infinity"].includes(profile.subscription_tier as string);
   const isElite = profile && ["elite", "infinity"].includes(profile.subscription_tier as string);
   const emailVerified = user?.email_confirmed_at != null;
