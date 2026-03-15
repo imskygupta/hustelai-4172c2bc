@@ -187,6 +187,7 @@ export default function Profile() {
 
   const tabs: { key: ProfileTab; label: string; icon: any }[] = [
     { key: "general", label: "General", icon: User },
+    { key: "billing", label: "Billing", icon: CreditCard },
     { key: "security", label: "Security", icon: Shield },
     { key: "account", label: "Account", icon: Settings },
   ];
