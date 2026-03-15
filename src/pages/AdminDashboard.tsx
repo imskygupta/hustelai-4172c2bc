@@ -281,7 +281,7 @@ export default function AdminDashboard() {
     if (rolesRes.data) setUserRoles(rolesRes.data);
     if (groupsRes.data) setCommunityGroups(groupsRes.data);
     if (trendRes.data) setTrendingLinks(trendRes.data);
-    if (rolesRes.data) setUserRoles(rolesRes.data);
+    if (ordersRes.data) setOrders(ordersRes.data);
     // Load email settings
     const { data: emailData } = await supabase.from("email_settings").select("*").order("created_at");
     if (emailData) setEmailSettings(emailData);
