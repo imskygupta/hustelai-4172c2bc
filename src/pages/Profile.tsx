@@ -30,6 +30,10 @@ export default function Profile() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [couponCode, setCouponCode] = useState("");
   const [applyingCoupon, setApplyingCoupon] = useState(false);
+  const [userPayments, setUserPayments] = useState<any[]>([]);
+  const [userOrders, setUserOrders] = useState<any[]>([]);
+  const [loadingBilling, setLoadingBilling] = useState(false);
+  const [applyingCoupon, setApplyingCoupon] = useState(false);
 
   const referredBy = (profile as any)?.referred_by;
 
