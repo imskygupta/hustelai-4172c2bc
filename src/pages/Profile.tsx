@@ -33,7 +33,6 @@ export default function Profile() {
   const [userPayments, setUserPayments] = useState<any[]>([]);
   const [userOrders, setUserOrders] = useState<any[]>([]);
   const [loadingBilling, setLoadingBilling] = useState(false);
-  const [applyingCoupon, setApplyingCoupon] = useState(false);
 
   const referredBy = (profile as any)?.referred_by;
 
