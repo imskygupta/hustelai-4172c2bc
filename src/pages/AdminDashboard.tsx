@@ -114,6 +114,8 @@ const sidebarItems: { id: AdminSection; label: string; icon: any }[] = [
   { id: "roles", label: "Role Manager", icon: Shield },
   { id: "verification", label: "Verification", icon: UserCheck },
   { id: "payments", label: "Payments", icon: Zap },
+  { id: "orders", label: "Orders", icon: FileText },
+  { id: "send-email", label: "Send Email", icon: Send },
   { id: "forum", label: "Forum Posts", icon: MessageSquare },
   { id: "community", label: "Community", icon: Globe },
   { id: "notifications", label: "Notifications", icon: Bell },
