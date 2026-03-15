@@ -358,7 +358,108 @@ export default function Profile() {
             </motion.div>
           )}
 
-          {/* Security Tab */}
+          {/* Billing Tab */}
+          {activeTab === "billing" && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+              {/* Subscription Info */}
+              <div className="glass rounded-2xl p-8 space-y-4">
+                <div className="flex items-center gap-3">
+                  <CreditCard className="w-6 h-6 text-primary" />
+                  <h2 className="text-xl font-display font-bold">Subscription</h2>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-muted/30 rounded-xl p-4">
+                    <p className="text-xs text-muted-foreground">Current Plan</p>
+                    <p className="text-lg font-display font-bold text-primary">{profile?.subscription_tier?.toUpperCase()}</p>
+                  </div>
+                  <div className="bg-muted/30 rounded-xl p-4">
+                    <p className="text-xs text-muted-foreground">Member Since</p>
+                    <p className="text-lg font-display font-bold">{user?.created_at ? new Date(user.created_at).toLocaleDateString() : "N/A"}</p>
+                  </div>
+                  <div className="bg-muted/30 rounded-xl p-4">
+                    <p className="text-xs text-muted-foreground">XP Points</p>
+                    <p className="text-lg font-display font-bold">{profile?.xp_points}</p>
+                  </div>
+                  <div className="bg-muted/30 rounded-xl p-4">
+                    <p className="text-xs text-muted-foreground">Search Credits</p>
+                    <p className="text-lg font-display font-bold">{(profile as any)?.referral_credits || 0}</p>
+                  </div>
+                </div>
+                {profile?.subscription_tier === "free" && (
+                  <Button onClick={() => navigate("/payment")} className="w-full bg-gradient-primary text-primary-foreground">
+                    <Crown className="w-4 h-4 mr-2" /> Upgrade Plan
+                  </Button>
+                )}
+              </div>
+
+              {/* Payment History */}
+              <div className="glass rounded-2xl p-8 space-y-4">
+                <div className="flex items-center gap-3">
+                  <Receipt className="w-6 h-6 text-primary" />
+                  <h2 className="text-xl font-display font-bold">Payment History</h2>
+                </div>
+                {loadingBilling ? (
+                  <p className="text-sm text-muted-foreground animate-pulse">Loading...</p>
+                ) : userPayments.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No payments yet.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {userPayments.map((p: any) => (
+                      <div key={p.id} className="flex items-center justify-between p-3 rounded-xl bg-muted/20 border border-border/30">
+                        <div>
+                          <p className="text-sm font-medium">{p.plan?.toUpperCase()} Plan</p>
+                          <p className="text-xs text-muted-foreground">Order: {p.order_id}</p>
+                          <p className="text-[10px] text-muted-foreground">{new Date(p.created_at).toLocaleString()}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-bold">₹{p.amount}</p>
+                          <Badge className={
+                            p.status === "paid" || p.status === "success" ? "bg-primary/20 text-primary" :
+                            p.status === "pending" ? "bg-yellow-500/20 text-yellow-400" :
+                            "bg-destructive/20 text-destructive"
+                          } variant="outline">{p.status}</Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Orders */}
+              <div className="glass rounded-2xl p-8 space-y-4">
+                <div className="flex items-center gap-3">
+                  <Package className="w-6 h-6 text-primary" />
+                  <h2 className="text-xl font-display font-bold">Orders & Purchases</h2>
+                </div>
+                {loadingBilling ? (
+                  <p className="text-sm text-muted-foreground animate-pulse">Loading...</p>
+                ) : userOrders.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No orders yet. Visit the <a href="/marketplace" className="text-primary underline">Marketplace</a> to explore.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {userOrders.map((o: any) => (
+                      <div key={o.id} className="flex items-center justify-between p-3 rounded-xl bg-muted/20 border border-border/30">
+                        <div>
+                          <p className="text-sm font-medium">{o.item_title}</p>
+                          <p className="text-xs text-muted-foreground">Invoice: {o.invoice_number || "—"}</p>
+                          <p className="text-[10px] text-muted-foreground">{new Date(o.created_at).toLocaleString()}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-bold">₹{o.amount}</p>
+                          <Badge className={
+                            o.status === "completed" ? "bg-primary/20 text-primary" :
+                            o.status === "pending" ? "bg-yellow-500/20 text-yellow-400" :
+                            "bg-destructive/20 text-destructive"
+                          } variant="outline">{o.status}</Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
+
           {activeTab === "security" && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
               <div className="glass rounded-2xl p-8 space-y-4">
