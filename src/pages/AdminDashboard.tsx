@@ -1877,6 +1877,173 @@ export default function AdminDashboard() {
               </div>
             </div>
           )}
+
+          {/* ===== SEND CUSTOM EMAIL ===== */}
+          {section === "send-email" && (
+            <div className="space-y-6">
+              <div className="glass rounded-xl p-6 space-y-4">
+                <h3 className="font-display font-bold flex items-center gap-2">
+                  <Send className="w-5 h-5 text-primary" /> Send Custom Email to Users
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Select users and send them custom emails about payments, invoices, or announcements via SMTP.
+                </p>
+
+                {/* Recipient Selection */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label className="font-semibold">Select Recipients ({customEmailRecipients.length} selected)</Label>
+                    <Button variant="outline" size="sm" onClick={() => {
+                      if (customEmailSelectAll) {
+                        setCustomEmailRecipients([]);
+                        setCustomEmailSelectAll(false);
+                      } else {
+                        setCustomEmailRecipients(users.filter(u => u.email).map(u => u.email!));
+                        setCustomEmailSelectAll(true);
+                      }
+                    }}>
+                      {customEmailSelectAll ? "Deselect All" : "Select All"}
+                    </Button>
+                  </div>
+                  <div className="max-h-[200px] overflow-y-auto space-y-1 border border-border/50 rounded-lg p-3">
+                    {users.map(u => (
+                      <label key={u.user_id} className="flex items-center gap-2 p-1.5 rounded hover:bg-muted/30 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={customEmailRecipients.includes(u.email || "")}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setCustomEmailRecipients([...customEmailRecipients, u.email || ""]);
+                            } else {
+                              setCustomEmailRecipients(customEmailRecipients.filter(r => r !== u.email));
+                              setCustomEmailSelectAll(false);
+                            }
+                          }}
+                          className="rounded"
+                        />
+                        <span className="text-sm">{u.display_name || u.email}</span>
+                        <span className="text-xs text-muted-foreground ml-auto">{u.email}</span>
+                        <Badge className={tierColors[u.subscription_tier] || ""} variant="outline">{u.subscription_tier}</Badge>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Email Content */}
+                <div className="grid md:grid-cols-2 gap-4">
+                  <Input placeholder="Email Subject" value={customEmailSubject} onChange={e => setCustomEmailSubject(e.target.value)} />
+                  <Select value={customEmailCategory} onValueChange={setCustomEmailCategory}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {emailSettings.filter((es: any) => es.is_active).map((es: any) => (
+                        <SelectItem key={es.category} value={es.category}>From: {es.smtp_email || es.label}</SelectItem>
+                      ))}
+                      <SelectItem value="contact">From: contact@hustlaiapp.in (default)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Quick Templates */}
+                <div className="flex gap-2 flex-wrap">
+                  <Button variant="outline" size="sm" onClick={() => {
+                    setCustomEmailSubject("Payment Confirmation - HustleAI");
+                    setCustomEmailBody(`<p>Dear User,</p><p>Your payment has been <strong>successfully received</strong>. Thank you for upgrading your HustleAI plan!</p><p>If you have any questions about your subscription, please don't hesitate to reach out.</p><p>Best regards,<br/>HustleAI Team</p>`);
+                  }}>💳 Payment Confirmation</Button>
+                  <Button variant="outline" size="sm" onClick={() => {
+                    setCustomEmailSubject("Invoice - HustleAI Subscription");
+                    setCustomEmailBody(`<p>Dear User,</p><p>Please find your invoice details below:</p><table style="border-collapse:collapse;width:100%;margin:16px 0;"><tr style="background:#f0f0f0;"><td style="padding:8px;border:1px solid #ddd;font-weight:bold;">Plan</td><td style="padding:8px;border:1px solid #ddd;">[Plan Name]</td></tr><tr><td style="padding:8px;border:1px solid #ddd;font-weight:bold;">Amount</td><td style="padding:8px;border:1px solid #ddd;">₹[Amount]</td></tr><tr><td style="padding:8px;border:1px solid #ddd;font-weight:bold;">Date</td><td style="padding:8px;border:1px solid #ddd;">[Date]</td></tr><tr><td style="padding:8px;border:1px solid #ddd;font-weight:bold;">Status</td><td style="padding:8px;border:1px solid #ddd;">Paid ✅</td></tr></table><p>Thank you for your trust!</p>`);
+                  }}>🧾 Invoice Template</Button>
+                  <Button variant="outline" size="sm" onClick={() => {
+                    setCustomEmailSubject("Subscription Update - HustleAI");
+                    setCustomEmailBody(`<p>Dear User,</p><p>We wanted to let you know about an update to your subscription:</p><ul><li>Your plan has been updated</li><li>New features are now available</li></ul><p>Visit your <a href="https://hustlaiapp.in/profile" style="color:#6366f1;">profile page</a> to see the changes.</p>`);
+                  }}>🔔 Subscription Update</Button>
+                  <Button variant="outline" size="sm" onClick={() => {
+                    setCustomEmailSubject("Your Order from HustleAI Marketplace");
+                    setCustomEmailBody(`<p>Dear User,</p><p>Your order has been processed successfully!</p><p><strong>Order Details:</strong></p><ul><li>Item: [Item Name]</li><li>Amount: ₹[Amount]</li><li>Status: Completed ✅</li></ul><p>You can access your purchase from the <a href="https://hustlaiapp.in/marketplace" style="color:#6366f1;">Marketplace</a>.</p>`);
+                  }}>📦 Order Confirmation</Button>
+                </div>
+
+                <Textarea
+                  placeholder="Email body (HTML supported)..."
+                  value={customEmailBody}
+                  onChange={e => setCustomEmailBody(e.target.value)}
+                  className="min-h-[200px]"
+                />
+                <Button onClick={sendCustomEmail} disabled={customEmailSending} className="bg-gradient-primary text-primary-foreground">
+                  <Send className="w-4 h-4 mr-1" /> {customEmailSending ? "Sending..." : `Send to ${customEmailRecipients.length} User(s)`}
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* ===== ORDERS ===== */}
+          {section === "orders" && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h3 className="font-display font-bold">Orders & Purchases ({orders.length})</h3>
+              </div>
+              {orders.length === 0 ? (
+                <div className="glass rounded-xl p-8 text-center">
+                  <FileText className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                  <p className="text-sm text-muted-foreground">No orders yet. Orders will appear when users purchase marketplace items.</p>
+                </div>
+              ) : (
+                <div className="glass rounded-xl overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Invoice</TableHead>
+                        <TableHead>User</TableHead>
+                        <TableHead>Item</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead>Amount</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {orders.map((o: any) => {
+                        const orderUser = users.find(u => u.user_id === o.user_id);
+                        return (
+                          <TableRow key={o.id}>
+                            <TableCell className="text-xs font-mono">{o.invoice_number || "—"}</TableCell>
+                            <TableCell className="text-sm">{orderUser?.display_name || orderUser?.email || o.user_id?.slice(0, 8)}</TableCell>
+                            <TableCell className="text-sm font-medium">{o.item_title}</TableCell>
+                            <TableCell><Badge variant="outline" className="text-[10px]">{o.item_type}</Badge></TableCell>
+                            <TableCell className="text-sm">₹{o.amount}</TableCell>
+                            <TableCell>
+                              <Badge className={
+                                o.status === "completed" ? "bg-primary/20 text-primary" :
+                                o.status === "pending" ? "bg-yellow-500/20 text-yellow-400" :
+                                "bg-destructive/20 text-destructive"
+                              } variant="outline">{o.status}</Badge>
+                            </TableCell>
+                            <TableCell className="text-xs text-muted-foreground">{new Date(o.created_at).toLocaleDateString()}</TableCell>
+                            <TableCell>
+                              <Select value={o.status} onValueChange={async (val) => {
+                                await supabase.from("orders").update({ status: val, updated_at: new Date().toISOString() } as any).eq("id", o.id);
+                                setOrders(orders.map((ord: any) => ord.id === o.id ? { ...ord, status: val } : ord));
+                                toast({ title: "Status Updated" });
+                              }}>
+                                <SelectTrigger className="w-28 h-8 text-xs"><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="pending">Pending</SelectItem>
+                                  <SelectItem value="completed">Completed</SelectItem>
+                                  <SelectItem value="refunded">Refunded</SelectItem>
+                                  <SelectItem value="cancelled">Cancelled</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </main>
     </div>
