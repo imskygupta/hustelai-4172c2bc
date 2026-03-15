@@ -755,11 +755,14 @@ export default function AdminDashboard() {
                           </TableCell>
                           <TableCell>
                             <div className="flex gap-1">
-                              <Button variant="ghost" size="sm" onClick={() => impersonateUser(u.email || "")}>
+                              <Button variant="ghost" size="sm" title="Impersonate" onClick={() => impersonateUser(u.user_id, u.email || "")}>
                                 <Eye className="w-3 h-3" />
                               </Button>
                               <Button variant="ghost" size="sm" onClick={() => { setSelectedChatUser(u.user_id); setSection("chatbot"); loadChatForUser(u.user_id); }}>
                                 <MessageSquare className="w-3 h-3" />
+                              </Button>
+                              <Button variant="ghost" size="sm" title="Delete User" onClick={() => deleteUser(u.user_id, u.email || "")}>
+                                <Trash2 className="w-3 h-3 text-destructive" />
                               </Button>
                             </div>
                           </TableCell>
