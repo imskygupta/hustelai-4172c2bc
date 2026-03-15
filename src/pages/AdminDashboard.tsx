@@ -167,6 +167,14 @@ export default function AdminDashboard() {
   const [emailSettings, setEmailSettings] = useState<any[]>([]);
   const [emailSettingsLoading, setEmailSettingsLoading] = useState(false);
   const [aiProviders, setAiProviders] = useState<any[]>([]);
+  const [orders, setOrders] = useState<any[]>([]);
+  // Custom email form
+  const [customEmailRecipients, setCustomEmailRecipients] = useState<string[]>([]);
+  const [customEmailSubject, setCustomEmailSubject] = useState("");
+  const [customEmailBody, setCustomEmailBody] = useState("");
+  const [customEmailCategory, setCustomEmailCategory] = useState("contact");
+  const [customEmailSending, setCustomEmailSending] = useState(false);
+  const [customEmailSelectAll, setCustomEmailSelectAll] = useState(false);
   const [newProviderName, setNewProviderName] = useState("");
   const [newProviderDisplay, setNewProviderDisplay] = useState("");
   const [newProviderKey, setNewProviderKey] = useState("");
