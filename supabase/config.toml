@@ -32,3 +32,9 @@ verify_jwt = false
 
 [functions.reputation-score]
 verify_jwt = false
+
+[functions.problem-leads]
+verify_jwt = false
+
+[functions.proposal-draft]
+verify_jwt = false
