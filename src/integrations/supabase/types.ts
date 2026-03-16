@@ -808,6 +808,36 @@ export type Database = {
         }
         Relationships: []
       }
+      lead_trends: {
+        Row: {
+          analysis: string | null
+          created_at: string
+          id: string
+          scanned_sources: string[] | null
+          total_posts_analyzed: number | null
+          trend_data: Json
+          user_id: string
+        }
+        Insert: {
+          analysis?: string | null
+          created_at?: string
+          id?: string
+          scanned_sources?: string[] | null
+          total_posts_analyzed?: number | null
+          trend_data?: Json
+          user_id: string
+        }
+        Update: {
+          analysis?: string | null
+          created_at?: string
+          id?: string
+          scanned_sources?: string[] | null
+          total_posts_analyzed?: number | null
+          trend_data?: Json
+          user_id?: string
+        }
+        Relationships: []
+      }
       marketplace_items: {
         Row: {
           category: string | null
@@ -1019,6 +1049,75 @@ export type Database = {
           payment_session_id?: string | null
           plan?: string
           status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      problem_leads: {
+        Row: {
+          author: string | null
+          contacted_at: string | null
+          converted_at: string | null
+          created_at: string
+          id: string
+          intent_level: string | null
+          intent_score: number | null
+          opportunity: string | null
+          outreach_notes: string | null
+          pain_point: string | null
+          personalized_outreach: string | null
+          platform_data: Json | null
+          service_category: string | null
+          source: string
+          source_url: string | null
+          status: string
+          suggested_pitch: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          author?: string | null
+          contacted_at?: string | null
+          converted_at?: string | null
+          created_at?: string
+          id?: string
+          intent_level?: string | null
+          intent_score?: number | null
+          opportunity?: string | null
+          outreach_notes?: string | null
+          pain_point?: string | null
+          personalized_outreach?: string | null
+          platform_data?: Json | null
+          service_category?: string | null
+          source?: string
+          source_url?: string | null
+          status?: string
+          suggested_pitch?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          author?: string | null
+          contacted_at?: string | null
+          converted_at?: string | null
+          created_at?: string
+          id?: string
+          intent_level?: string | null
+          intent_score?: number | null
+          opportunity?: string | null
+          outreach_notes?: string | null
+          pain_point?: string | null
+          personalized_outreach?: string | null
+          platform_data?: Json | null
+          service_category?: string | null
+          source?: string
+          source_url?: string | null
+          status?: string
+          suggested_pitch?: string | null
+          title?: string
           updated_at?: string
           user_id?: string
         }
