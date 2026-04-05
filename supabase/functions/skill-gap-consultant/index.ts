@@ -11,27 +11,51 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { user_id, current_skills, goals } = await req.json();
+    // === AUTH CHECK ===
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseAnon = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseAnon, {
+      global: { headers: { Authorization: authHeader } },
+    });
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims) {
+      return new Response(JSON.stringify({ error: "Unauthorized - invalid token" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const userId = claimsData.claims.sub as string;
+    // === END AUTH CHECK ===
+
+    const { current_skills, goals } = await req.json();
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
     // Fetch user profile for context
     let profileContext = "";
-    if (user_id) {
-      const supabase = createClient(
-        Deno.env.get("SUPABASE_URL")!,
-        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-      );
-      const { data: profile } = await supabase
+    try {
+      const serviceClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+      const { data: profile } = await serviceClient
         .from("profiles")
         .select("display_name, bio, subscription_tier")
-        .eq("user_id", user_id)
+        .eq("user_id", userId)
         .single();
 
       if (profile) {
         profileContext = `User: ${profile.display_name || "Freelancer"}, Bio: ${profile.bio || "Not set"}, Tier: ${profile.subscription_tier}`;
       }
+    } catch (e) {
+      console.error("Profile fetch error:", e);
     }
 
     const skillsList = current_skills?.length ? current_skills.join(", ") : "Not specified";
@@ -109,8 +133,6 @@ Return a JSON response with this exact structure (no markdown, just raw JSON):
 
     const data = await response.json();
     let content = data.choices?.[0]?.message?.content || "";
-
-    // Clean markdown code blocks if present
     content = content.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
 
     try {
