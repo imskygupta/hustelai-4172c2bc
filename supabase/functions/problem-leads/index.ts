@@ -280,26 +280,33 @@ serve(async (req) => {
   try {
     const { query, subreddits, sources, mode } = await req.json();
 
-    // Auth
+    // === AUTH CHECK ===
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
+    if (!authHeader?.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
-    const anonClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!);
-    const { data: { user }, error: authError } = await anonClient.auth.getUser(authHeader.replace("Bearer ", ""));
-    if (authError || !user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+    const supabaseAnon = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const authClient = createClient(supabaseUrl, supabaseAnon, {
+      global: { headers: { Authorization: authHeader } },
+    });
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data: claimsData, error: claimsError } = await authClient.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims) {
+      return new Response(JSON.stringify({ error: "Unauthorized - invalid token" }), {
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const { data: profile } = await supabase.from("profiles").select("subscription_tier").eq("user_id", user.id).single();
+    const userId = claimsData.claims.sub as string;
+    // === END AUTH CHECK ===
+
+    const supabase = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    const { data: profile } = await supabase.from("profiles").select("subscription_tier").eq("user_id", userId).single();
     if (!profile || !["elite", "infinity"].includes(profile.subscription_tier)) {
       return new Response(JSON.stringify({ error: "Elite or Infinity subscription required." }), {
         status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
