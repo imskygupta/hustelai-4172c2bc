@@ -87,7 +87,6 @@ export function Chatbot() {
       const { data, error } = await supabase.functions.invoke("ai-chatbot", {
         body: {
           messages: newMessages.map(m => ({ role: m.role, content: m.content })),
-          user_id: user?.id,
         },
       });
       if (error) throw error;
