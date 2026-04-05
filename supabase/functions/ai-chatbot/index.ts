@@ -11,11 +11,35 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { messages, user_id } = await req.json();
+    // === AUTH CHECK ===
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseAnon = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseAnon, {
+      global: { headers: { Authorization: authHeader } },
+    });
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims) {
+      return new Response(JSON.stringify({ error: "Unauthorized - invalid token" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const userId = claimsData.claims.sub as string;
+    // === END AUTH CHECK ===
+
+    const { messages } = await req.json();
     if (!messages || !Array.isArray(messages)) {
       return new Response(JSON.stringify({ error: "Messages array required" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
@@ -24,38 +48,33 @@ serve(async (req) => {
 
     // Fetch user profile for personalization
     let profileContext = "";
-    if (user_id) {
-      try {
-        const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-        const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-        const supabase = createClient(supabaseUrl, supabaseKey);
+    try {
+      const serviceClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+      const { data: profile } = await serviceClient
+        .from("profiles")
+        .select("display_name, email, bio, subscription_tier, search_count, phone, address")
+        .eq("user_id", userId)
+        .single();
 
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("display_name, email, bio, subscription_tier, search_count, phone, address")
-          .eq("user_id", user_id)
-          .single();
-
-        if (profile) {
-          profileContext = `\n\nUser Profile:
+      if (profile) {
+        profileContext = `\n\nUser Profile:
 - Name: ${profile.display_name || "Unknown"}
 - Email: ${profile.email || "N/A"}
 - Tier: ${profile.subscription_tier}
 - Bio: ${profile.bio || "Not set"}
 - Searches: ${profile.search_count}
 - Location: ${profile.address || "Not set"}`;
-        }
-
-        // Save user messages to chat_messages for admin visibility
-        const lastUserMsg = messages[messages.length - 1];
-        if (lastUserMsg?.role === "user") {
-          await supabase.from("chat_messages").insert({
-            user_id, role: "user", content: lastUserMsg.content,
-          });
-        }
-      } catch (e) {
-        console.error("Profile fetch error:", e);
       }
+
+      // Save user messages to chat_messages for admin visibility
+      const lastUserMsg = messages[messages.length - 1];
+      if (lastUserMsg?.role === "user") {
+        await serviceClient.from("chat_messages").insert({
+          user_id: userId, role: "user", content: lastUserMsg.content,
+        });
+      }
+    } catch (e) {
+      console.error("Profile fetch error:", e);
     }
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -92,14 +111,12 @@ Format responses with markdown. Keep responses concise but valuable. Use emojis 
 
     if (response.status === 429) {
       return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again in a moment." }), {
-        status: 429,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
     if (response.status === 402) {
       return new Response(JSON.stringify({ error: "AI credits exhausted. Please contact admin." }), {
-        status: 402,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
@@ -112,18 +129,14 @@ Format responses with markdown. Keep responses concise but valuable. Use emojis 
     const data = await response.json();
     const reply = data.choices?.[0]?.message?.content || "I couldn't generate a response. Please try again!";
 
-    // Save assistant reply to chat_messages
-    if (user_id) {
-      try {
-        const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-        const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-        const supabase = createClient(supabaseUrl, supabaseKey);
-        await supabase.from("chat_messages").insert({
-          user_id, role: "assistant", content: reply,
-        });
-      } catch (e) {
-        console.error("Save reply error:", e);
-      }
+    // Save assistant reply
+    try {
+      const serviceClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+      await serviceClient.from("chat_messages").insert({
+        user_id: userId, role: "assistant", content: reply,
+      });
+    } catch (e) {
+      console.error("Save reply error:", e);
     }
 
     return new Response(JSON.stringify({ reply }), {
@@ -132,8 +145,7 @@ Format responses with markdown. Keep responses concise but valuable. Use emojis 
   } catch (e) {
     console.error("ai-chatbot error:", e);
     return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 });
