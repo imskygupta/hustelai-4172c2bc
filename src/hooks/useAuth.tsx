@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, useRef, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AUTH_EMAIL_REDIRECT_TO } from "@/lib/auth-config";
 import type { User, Session } from "@supabase/supabase-js";
@@ -32,27 +32,65 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const refreshFailCount = useRef(0);
 
   const fetchProfile = async (userId: string) => {
-    const { data } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("user_id", userId)
-      .single();
-    if (data) setProfile(data as Profile);
+    try {
+      const { data } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("user_id", userId)
+        .single();
+      if (data) setProfile(data as Profile);
+    } catch {
+      // Silently handle profile fetch errors
+    }
   };
 
   const refreshProfile = async () => {
     if (user) await fetchProfile(user.id);
   };
 
+  const clearStaleSession = () => {
+    setSession(null);
+    setUser(null);
+    setProfile(null);
+    setLoading(false);
+    // Clear any stale tokens from storage to stop the refresh loop
+    try {
+      const keys = Object.keys(localStorage);
+      for (const key of keys) {
+        if (key.startsWith("sb-") && key.endsWith("-auth-token")) {
+          localStorage.removeItem(key);
+        }
+      }
+    } catch {
+      // Storage access may fail
+    }
+  };
+
   useEffect(() => {
+    let mounted = true;
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
+      async (event, session) => {
+        if (!mounted) return;
+
+        if (event === "TOKEN_REFRESHED") {
+          refreshFailCount.current = 0;
+        }
+
+        if (event === "SIGNED_OUT") {
+          clearStaleSession();
+          return;
+        }
+
         setSession(session);
         setUser(session?.user ?? null);
         if (session?.user) {
-          setTimeout(() => fetchProfile(session.user.id), 0);
+          setTimeout(() => {
+            if (mounted) fetchProfile(session.user.id);
+          }, 0);
         } else {
           setProfile(null);
         }
@@ -60,14 +98,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     );
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      if (!mounted) return;
+      if (error || !session) {
+        // If getSession fails, clear stale data
+        if (error) {
+          console.warn("Session expired, clearing auth state");
+          clearStaleSession();
+        } else {
+          setLoading(false);
+        }
+        return;
+      }
       setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) fetchProfile(session.user.id);
+      setUser(session.user);
+      fetchProfile(session.user.id);
       setLoading(false);
+    }).catch(() => {
+      if (mounted) clearStaleSession();
     });
 
-    return () => subscription.unsubscribe();
+    // Safety: catch unhandled refresh failures to prevent crash loops
+    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+      const msg = String(event.reason?.message || event.reason || "");
+      if (msg.includes("Lock broken") || msg.includes("refresh_token")) {
+        event.preventDefault();
+        refreshFailCount.current++;
+        if (refreshFailCount.current > 3) {
+          console.warn("Too many auth refresh failures, signing out");
+          clearStaleSession();
+          supabase.auth.signOut().catch(() => {});
+        }
+      }
+    };
+    window.addEventListener("unhandledrejection", handleUnhandledRejection);
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+      window.removeEventListener("unhandledrejection", handleUnhandledRejection);
+    };
   }, []);
 
   const signUp = async (email: string, password: string, displayName: string, referralCode?: string) => {
@@ -79,7 +149,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         emailRedirectTo: AUTH_EMAIL_REDIRECT_TO,
       },
     });
-    // Referral tracking is now handled by the database trigger handle_referral_on_signup
     return { error };
   };
 
@@ -90,7 +159,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     await supabase.auth.signOut();
-    setProfile(null);
+    clearStaleSession();
   };
 
   return (
