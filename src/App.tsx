@@ -26,6 +26,7 @@ import Affiliates from "./pages/Affiliates";
 import Company from "./pages/Company";
 import Relax from "./pages/Relax";
 import HustleDetail from "./pages/HustleDetail";
+import RoadmapViewer from "./pages/RoadmapViewer";
 import InfinityZone from "./pages/InfinityZone";
 import Marketplace from "./pages/Marketplace";
 import MarketplaceItem from "./pages/MarketplaceItem";
