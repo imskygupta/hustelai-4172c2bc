@@ -12,6 +12,7 @@ import {
   BookOpen, Calendar, DollarSign, TrendingUp,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface RoadmapData {
   id: string;
