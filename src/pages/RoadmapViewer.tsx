@@ -114,12 +114,63 @@ export default function RoadmapViewer() {
     toast({ title: "🔗 Link copied!", description: "Share this roadmap link" });
   };
 
+  const loadingTips = [
+    "⚡ Patience is the key to greatness...",
+    "📖 Preparing your personalized ebook...",
+    "🚀 Good things take time — loading your roadmap...",
+    "🧠 Great hustlers plan before they act...",
+    "💡 Your blueprint to success is almost ready...",
+  ];
+  const [tipIndex, setTipIndex] = useState(0);
+
+  useEffect(() => {
+    if (!loading) return;
+    const interval = setInterval(() => setTipIndex(i => (i + 1) % loadingTips.length), 3000);
+    return () => clearInterval(interval);
+  }, [loading]);
+
   if (loading || !roadmap) {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
-        <div className="pt-32 flex items-center justify-center">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <div className="pt-24 pb-16 px-4">
+          <div className="container mx-auto max-w-4xl space-y-6">
+            {/* Shimmer header */}
+            <div className="rounded-2xl border border-border/50 bg-card/50 p-8 md:p-12 space-y-4">
+              <div className="flex gap-2">
+                <Skeleton className="h-6 w-24 rounded-full" />
+                <Skeleton className="h-6 w-20 rounded-full" />
+                <Skeleton className="h-6 w-16 rounded-full" />
+              </div>
+              <Skeleton className="h-10 w-3/4" />
+              <Skeleton className="h-5 w-full max-w-xl" />
+              <div className="flex gap-4 pt-2">
+                <Skeleton className="h-5 w-28" />
+                <Skeleton className="h-5 w-32" />
+                <Skeleton className="h-5 w-36" />
+              </div>
+            </div>
+            {/* Shimmer content */}
+            <div className="rounded-2xl border border-border/50 bg-card/50 p-8 md:p-12 space-y-4">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <Skeleton key={i} className={`h-4 ${i % 3 === 0 ? "w-2/3" : i % 3 === 1 ? "w-full" : "w-4/5"}`} />
+              ))}
+              <Skeleton className="h-8 w-1/2 mt-4" />
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Skeleton key={`b-${i}`} className={`h-4 ${i % 2 === 0 ? "w-full" : "w-3/4"}`} />
+              ))}
+            </div>
+            {/* Tip text */}
+            <motion.p
+              key={tipIndex}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              className="text-center text-sm text-muted-foreground font-medium pt-2"
+            >
+              {loadingTips[tipIndex]}
+            </motion.p>
+          </div>
         </div>
       </div>
     );
