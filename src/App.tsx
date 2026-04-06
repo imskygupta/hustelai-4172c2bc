@@ -72,6 +72,7 @@ const App = () => (
             <Route path="/company" element={<Company />} />
             <Route path="/relax" element={<Relax />} />
             <Route path="/hustle/:id" element={<HustleDetail />} />
+            <Route path="/roadmap/:id" element={<RoadmapViewer />} />
             <Route path="/infinity-zone" element={<InfinityZone />} />
             <Route path="/marketplace" element={<Marketplace />} />
             <Route path="/marketplace/:id" element={<MarketplaceItem />} />

@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
-import { Bookmark, TrendingUp, DollarSign, Play, CheckCircle, Trash2, PlusCircle } from "lucide-react";
+import { Bookmark, TrendingUp, DollarSign, Play, CheckCircle, Trash2, PlusCircle, BookOpen } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface SavedHustle {
