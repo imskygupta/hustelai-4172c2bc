@@ -160,6 +160,14 @@ export default function SavedHustles() {
 
                 <p className="text-xs text-muted-foreground">{item.hustle?.description}</p>
 
+                {/* Roadmap Link */}
+                {item.roadmap_id && (
+                  <Button variant="outline" size="sm" onClick={() => navigate(`/roadmap/${item.roadmap_id}`)}
+                    className="gap-2 text-xs border-primary/30 text-primary hover:bg-primary/10 w-fit">
+                    <BookOpen className="w-3.5 h-3.5" /> View Roadmap Ebook
+                  </Button>
+                )}
+
                 {/* Income Logger */}
                 <div className="flex items-center gap-2 pt-2 border-t border-border/30">
                   <DollarSign className="w-4 h-4 text-primary" />
