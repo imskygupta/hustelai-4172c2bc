@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
-import { Bookmark, TrendingUp, DollarSign, Play, CheckCircle, Trash2, PlusCircle } from "lucide-react";
+import { Bookmark, TrendingUp, DollarSign, Play, CheckCircle, Trash2, PlusCircle, BookOpen } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface SavedHustle {
@@ -20,6 +20,7 @@ interface SavedHustle {
   started_at: string | null;
   created_at: string;
   hustle?: { title: string; category: string; earnings: string; description: string };
+  roadmap_id?: string | null;
 }
 
 export default function SavedHustles() {
@@ -40,7 +41,18 @@ export default function SavedHustles() {
       .eq("user_id", user!.id)
       .order("created_at", { ascending: false });
     if (data) {
-      setSaved(data.map((d: any) => ({ ...d, hustle: d.side_hustles })));
+      const items = data.map((d: any) => ({ ...d, hustle: d.side_hustles }));
+      // Fetch roadmap IDs for all hustles
+      const hustleIds = items.map((i: any) => i.hustle_id);
+      const { data: roadmaps } = await supabase
+        .from("hustle_roadmaps")
+        .select("id, hustle_id")
+        .eq("user_id", user!.id)
+        .in("hustle_id", hustleIds)
+        .order("created_at", { ascending: false });
+      const roadmapMap = new Map<string, string>();
+      roadmaps?.forEach((r: any) => { if (!roadmapMap.has(r.hustle_id)) roadmapMap.set(r.hustle_id, r.id); });
+      setSaved(items.map((i: any) => ({ ...i, roadmap_id: roadmapMap.get(i.hustle_id) || null })));
     }
   };
 
@@ -147,6 +159,14 @@ export default function SavedHustles() {
                 </div>
 
                 <p className="text-xs text-muted-foreground">{item.hustle?.description}</p>
+
+                {/* Roadmap Link */}
+                {item.roadmap_id && (
+                  <Button variant="outline" size="sm" onClick={() => navigate(`/roadmap/${item.roadmap_id}`)}
+                    className="gap-2 text-xs border-primary/30 text-primary hover:bg-primary/10 w-fit">
+                    <BookOpen className="w-3.5 h-3.5" /> View Roadmap Ebook
+                  </Button>
+                )}
 
                 {/* Income Logger */}
                 <div className="flex items-center gap-2 pt-2 border-t border-border/30">

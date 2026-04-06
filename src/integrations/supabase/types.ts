@@ -630,6 +630,59 @@ export type Database = {
           },
         ]
       }
+      hustle_roadmaps: {
+        Row: {
+          content: string
+          created_at: string
+          hustle_category: string
+          hustle_description: string
+          hustle_earnings: string | null
+          hustle_id: string
+          hustle_startup_cost: string | null
+          hustle_title: string
+          hustle_type: string | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          hustle_category?: string
+          hustle_description?: string
+          hustle_earnings?: string | null
+          hustle_id: string
+          hustle_startup_cost?: string | null
+          hustle_title: string
+          hustle_type?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          hustle_category?: string
+          hustle_description?: string
+          hustle_earnings?: string | null
+          hustle_id?: string
+          hustle_startup_cost?: string | null
+          hustle_title?: string
+          hustle_type?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hustle_roadmaps_hustle_id_fkey"
+            columns: ["hustle_id"]
+            isOneToOne: false
+            referencedRelation: "side_hustles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       hustle_votes: {
         Row: {
           created_at: string

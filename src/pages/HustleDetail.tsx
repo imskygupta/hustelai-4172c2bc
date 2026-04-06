@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -6,10 +6,12 @@ import { Navbar } from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
-import ReactMarkdown from "react-markdown";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
+} from "@/components/ui/dialog";
 import {
   ArrowLeft, Download, Bookmark, BookmarkCheck, Loader2,
-  DollarSign, TrendingUp, Clock, Zap, Flame,
+  DollarSign, TrendingUp, Clock, Zap, Flame, BookOpen, ExternalLink,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
@@ -32,10 +34,10 @@ export default function HustleDetail() {
   const navigate = useNavigate();
   const { user, profile, refreshProfile } = useAuth();
   const [hustle, setHustle] = useState<HustleData | null>(null);
-  const [roadmap, setRoadmap] = useState<string>("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
-  const contentRef = useRef<HTMLDivElement>(null);
+  const [showDialog, setShowDialog] = useState(false);
+  const [roadmapId, setRoadmapId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) { navigate("/login"); return; }
@@ -45,33 +47,32 @@ export default function HustleDetail() {
   const loadHustle = async () => {
     if (!id) return;
 
-    // Check sessionStorage cache for roadmap
-    const cachedRoadmap = sessionStorage.getItem(`roadmap_${id}`);
-    const cachedHustle = sessionStorage.getItem(`hustle_${id}`);
-
-    if (cachedHustle) {
-      const h = JSON.parse(cachedHustle) as HustleData;
-      setHustle(h);
-      if (cachedRoadmap) {
-        setRoadmap(cachedRoadmap);
-      } else {
-        generateRoadmap(h);
+    // Check if roadmap already exists for this hustle
+    if (user) {
+      const { data: existing } = await supabase
+        .from("hustle_roadmaps")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("hustle_id", id)
+        .order("created_at", { ascending: false })
+        .limit(1);
+      if (existing && existing.length > 0) {
+        setRoadmapId(existing[0].id);
       }
+    }
+
+    const cached = sessionStorage.getItem(`hustle_${id}`);
+    if (cached) {
+      setHustle(JSON.parse(cached) as HustleData);
     } else {
       const { data } = await supabase.from("side_hustles").select("*").eq("id", id).single();
       if (data) {
         const h = data as HustleData;
         setHustle(h);
         sessionStorage.setItem(`hustle_${id}`, JSON.stringify(h));
-        if (cachedRoadmap) {
-          setRoadmap(cachedRoadmap);
-        } else {
-          generateRoadmap(h);
-        }
       }
     }
 
-    // Auto-bookmark
     autoBookmark();
     checkSaved();
   };
@@ -84,57 +85,55 @@ export default function HustleDetail() {
 
   const autoBookmark = async () => {
     if (!user || !id) return;
-    // Auto-save to bookmarks when viewing detail
     await supabase.from("saved_hustles").upsert({
-      user_id: user.id,
-      hustle_id: id,
-      status: "saved",
+      user_id: user.id, hustle_id: id, status: "saved",
     } as any, { onConflict: "user_id,hustle_id" });
     setIsSaved(true);
   };
 
-  const generateRoadmap = async (h: HustleData) => {
-    if (!user || !profile) return;
+  const generateRoadmap = async () => {
+    if (!user || !profile || !hustle || !id) return;
 
     const tier = profile.subscription_tier;
     const maxSearches = tier === "free" ? 3 : tier === "pro" ? 15 : 999;
-
     if (profile.search_count >= maxSearches) {
-      toast({
-        title: "Search limit reached",
-        description: `You've used ${profile.search_count}/${maxSearches} searches. Upgrade to continue.`,
-        variant: "destructive",
-      });
+      toast({ title: "Search limit reached", description: `Upgrade to continue.`, variant: "destructive" });
       return;
     }
 
     setIsGenerating(true);
-
     try {
-      await supabase.from("profiles").update({
-        search_count: profile.search_count + 1,
-      }).eq("user_id", user.id);
+      await supabase.from("profiles").update({ search_count: profile.search_count + 1 }).eq("user_id", user.id);
       refreshProfile();
 
       const { data, error } = await supabase.functions.invoke("hustle-roadmap", {
         body: {
-          title: h.title,
-          category: h.category,
-          description: h.description,
-          earnings: h.earnings,
-          startup_cost: h.startup_cost,
-          type: h.type,
+          title: hustle.title, category: hustle.category, description: hustle.description,
+          earnings: hustle.earnings, startup_cost: hustle.startup_cost, type: hustle.type,
         },
       });
-
       if (error) throw error;
-      const rm = data?.roadmap || "Failed to generate roadmap.";
-      setRoadmap(rm);
-      // Cache in sessionStorage
-      sessionStorage.setItem(`roadmap_${id}`, rm);
+
+      const content = data?.roadmap || "Failed to generate roadmap.";
+
+      // Save to database
+      const { data: saved, error: saveErr } = await supabase.from("hustle_roadmaps").insert({
+        user_id: user.id,
+        hustle_id: id,
+        hustle_title: hustle.title,
+        hustle_category: hustle.category,
+        hustle_description: hustle.description,
+        hustle_earnings: hustle.earnings,
+        hustle_startup_cost: hustle.startup_cost || "",
+        hustle_type: hustle.type,
+        content,
+      } as any).select("id").single();
+
+      if (saveErr) throw saveErr;
+      setRoadmapId(saved.id);
+      setShowDialog(true);
     } catch (err: any) {
       toast({ title: "Generation failed", description: err.message, variant: "destructive" });
-      setRoadmap("Failed to generate roadmap. Please try again.");
     } finally {
       setIsGenerating(false);
     }
@@ -147,62 +146,10 @@ export default function HustleDetail() {
       setIsSaved(false);
       toast({ title: "Removed from saved" });
     } else {
-      await supabase.from("saved_hustles").upsert({
-        user_id: user.id,
-        hustle_id: id,
-        status: "saved",
-      } as any);
+      await supabase.from("saved_hustles").upsert({ user_id: user.id, hustle_id: id, status: "saved" } as any);
       setIsSaved(true);
       toast({ title: "💾 Saved!", description: "Track it in My Hustles" });
     }
-  };
-
-  const handlePrintPDF = () => {
-    const printWindow = window.open("", "_blank");
-    if (!printWindow) return;
-    const content = contentRef.current?.innerHTML || "";
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>${hustle?.title || "Hustle Roadmap"} - HustleAI</title>
-        <style>
-          * { margin: 0; padding: 0; box-sizing: border-box; }
-          body { font-family: 'Segoe UI', sans-serif; padding: 40px; color: #1a1a1a; position: relative; }
-          h1 { font-size: 28px; margin-bottom: 8px; }
-          h2 { font-size: 22px; margin: 24px 0 12px; color: #0d9488; }
-          h3 { font-size: 18px; margin: 16px 0 8px; }
-          p { margin: 8px 0; line-height: 1.6; }
-          ul, ol { margin: 8px 0 8px 24px; }
-          li { margin: 4px 0; line-height: 1.5; }
-          code { background: #f0f0f0; padding: 2px 6px; border-radius: 3px; font-size: 13px; }
-          pre { background: #f0f0f0; padding: 12px; border-radius: 6px; overflow-x: auto; margin: 8px 0; }
-          .watermark { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-30deg); font-size: 80px; font-weight: bold; color: rgba(13, 148, 136, 0.06); white-space: nowrap; pointer-events: none; z-index: 0; }
-          .watermark2 { position: fixed; top: 25%; left: 30%; transform: rotate(-30deg); font-size: 50px; font-weight: bold; color: rgba(13, 148, 136, 0.04); white-space: nowrap; pointer-events: none; }
-          .watermark3 { position: fixed; top: 70%; left: 60%; transform: rotate(-30deg); font-size: 50px; font-weight: bold; color: rgba(13, 148, 136, 0.04); white-space: nowrap; pointer-events: none; }
-          .header { border-bottom: 2px solid #0d9488; padding-bottom: 16px; margin-bottom: 24px; }
-          .header small { color: #666; }
-          .footer { margin-top: 40px; border-top: 1px solid #e0e0e0; padding-top: 16px; text-align: center; color: #999; font-size: 12px; }
-          @media print { .watermark, .watermark2, .watermark3 { position: fixed; } }
-        </style>
-      </head>
-      <body>
-        <div class="watermark">⚡ HustleAI</div>
-        <div class="watermark2">⚡ HustleAI</div>
-        <div class="watermark3">⚡ HustleAI</div>
-        <div class="header">
-          <h1>⚡ ${hustle?.title || ""}</h1>
-          <small>Generated by HustleAI — AI-Powered Side Hustle Discovery Platform</small>
-        </div>
-        <div style="position:relative;z-index:1;">${content}</div>
-        <div class="footer">
-          <p>© ${new Date().getFullYear()} HustleAI — hustlaiapp.in — AI-Powered Freelance Discovery</p>
-        </div>
-      </body>
-      </html>
-    `);
-    printWindow.document.close();
-    setTimeout(() => printWindow.print(), 500);
   };
 
   const difficultyLabel = (effort: number) => {
@@ -227,6 +174,7 @@ export default function HustleDetail() {
       <Navbar />
       <div className="pt-24 pb-12 px-4">
         <div className="container mx-auto max-w-4xl space-y-6">
+          {/* Top bar */}
           <div className="flex items-center justify-between flex-wrap gap-3">
             <Button variant="ghost" onClick={() => navigate(-1)} className="hover:text-primary">
               <ArrowLeft className="w-4 h-4 mr-1" /> Back
@@ -237,15 +185,10 @@ export default function HustleDetail() {
                 {isSaved ? <BookmarkCheck className="w-4 h-4 mr-1" /> : <Bookmark className="w-4 h-4 mr-1" />}
                 {isSaved ? "Saved" : "Save"}
               </Button>
-              {roadmap && (
-                <Button variant="outline" size="sm" onClick={handlePrintPDF}
-                  className="hover:border-primary/50 hover:text-primary">
-                  <Download className="w-4 h-4 mr-1" /> Export PDF
-                </Button>
-              )}
             </div>
           </div>
 
+          {/* Hustle Info Card */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass rounded-2xl p-8 space-y-4">
             <div className="flex items-center gap-3 flex-wrap">
               <Badge variant="outline" className="text-primary border-primary/30">{hustle.category}</Badge>
@@ -292,26 +235,92 @@ export default function HustleDetail() {
             )}
           </motion.div>
 
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass rounded-2xl p-8">
+          {/* Generate / View Roadmap Section */}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+            className="glass rounded-2xl p-8">
             <div className="flex items-center gap-2 mb-6">
               <Zap className="w-5 h-5 text-primary" />
-              <h2 className="text-xl font-display font-bold">AI-Generated Roadmap</h2>
+              <h2 className="text-xl font-display font-bold">AI-Powered Roadmap</h2>
               <Badge variant="outline" className="text-primary border-primary/30 text-[10px]">Powered by AI</Badge>
             </div>
+
             {isGenerating ? (
               <div className="flex flex-col items-center justify-center py-16 space-y-4">
-                <Loader2 className="w-10 h-10 animate-spin text-primary" />
-                <p className="text-muted-foreground">Generating your personalized roadmap...</p>
+                <div className="relative">
+                  <Loader2 className="w-12 h-12 animate-spin text-primary" />
+                  <div className="absolute inset-0 w-12 h-12 rounded-full border-2 border-primary/20 animate-ping" />
+                </div>
+                <p className="text-muted-foreground font-medium">Generating your personalized roadmap...</p>
                 <p className="text-xs text-muted-foreground">This may take 10-15 seconds</p>
               </div>
+            ) : roadmapId ? (
+              <div className="flex flex-col items-center justify-center py-12 space-y-6">
+                <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center">
+                  <BookOpen className="w-8 h-8 text-primary" />
+                </div>
+                <div className="text-center space-y-2">
+                  <h3 className="text-lg font-display font-semibold">Roadmap Ready! 🎉</h3>
+                  <p className="text-sm text-muted-foreground max-w-md">
+                    Your AI-generated ebook-style roadmap is saved and ready to read anytime.
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Button onClick={() => navigate(`/roadmap/${roadmapId}`)} className="gap-2">
+                    <BookOpen className="w-4 h-4" /> Read Roadmap
+                  </Button>
+                  <Button variant="outline" onClick={() => navigate(`/roadmap/${roadmapId}`)} className="gap-2">
+                    <Download className="w-4 h-4" /> Export PDF
+                  </Button>
+                </div>
+                <Button variant="ghost" size="sm" onClick={generateRoadmap} className="text-xs text-muted-foreground">
+                  🔄 Regenerate a new roadmap
+                </Button>
+              </div>
             ) : (
-              <div ref={contentRef} className="prose prose-invert prose-sm max-w-none prose-headings:font-display prose-headings:text-foreground prose-p:text-muted-foreground prose-li:text-muted-foreground prose-strong:text-foreground prose-a:text-primary prose-code:bg-secondary prose-code:text-primary prose-code:rounded prose-code:px-1.5 prose-pre:bg-secondary/50 prose-pre:border prose-pre:border-border/50">
-                <ReactMarkdown>{roadmap}</ReactMarkdown>
+              <div className="flex flex-col items-center justify-center py-12 space-y-6">
+                <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center">
+                  <Zap className="w-8 h-8 text-primary" />
+                </div>
+                <div className="text-center space-y-2">
+                  <h3 className="text-lg font-display font-semibold">Generate Your Roadmap</h3>
+                  <p className="text-sm text-muted-foreground max-w-md">
+                    Get a detailed, step-by-step AI roadmap with revenue strategies, tools, and resources — saved as an ebook you can read anytime.
+                  </p>
+                </div>
+                <Button size="lg" onClick={generateRoadmap} className="gap-2 px-8">
+                  <Zap className="w-5 h-5" /> Generate Roadmap
+                </Button>
               </div>
             )}
           </motion.div>
         </div>
       </div>
+
+      {/* Success Dialog */}
+      <Dialog open={showDialog} onOpenChange={setShowDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-xl">
+              <span className="text-2xl">🎉</span> Roadmap Generated!
+            </DialogTitle>
+            <DialogDescription>
+              Your AI-powered roadmap for <span className="font-medium text-foreground">{hustle.title}</span> is ready. View it as a beautiful ebook or download as PDF.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 pt-2">
+            <Button className="w-full gap-2" size="lg" onClick={() => { setShowDialog(false); navigate(`/roadmap/${roadmapId}`); }}>
+              <BookOpen className="w-5 h-5" /> View Roadmap Ebook
+              <ExternalLink className="w-3 h-3 ml-auto opacity-50" />
+            </Button>
+            <Button variant="outline" className="w-full gap-2" size="lg" onClick={() => { setShowDialog(false); navigate(`/roadmap/${roadmapId}`); }}>
+              <Download className="w-5 h-5" /> Download as PDF
+            </Button>
+            <Button variant="ghost" className="w-full text-xs text-muted-foreground" onClick={() => setShowDialog(false)}>
+              Maybe later — I'll find it in My Hustles
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
