@@ -197,6 +197,28 @@ export function Pricing() {
             </motion.div>
           ))}
         </div>
+
+        {/* Pay-As-You-Go Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="mt-8 glass rounded-2xl p-6 border-emerald-500/20 text-center space-y-3 max-w-xl mx-auto"
+        >
+          <div className="text-2xl">💳</div>
+          <h3 className="font-display font-bold text-lg">Pay-As-You-Go</h3>
+          <p className="text-sm text-muted-foreground">₹10/search — All AI tools unlocked per search, no subscription needed</p>
+          <Button variant="outline" onClick={() => navigate("/payment?type=wallet")} className="border-emerald-500/30 hover:bg-emerald-500/10">
+            Buy Credits
+          </Button>
+        </motion.div>
+
+        {/* View All Features */}
+        <div className="text-center mt-6">
+          <Button variant="link" onClick={() => navigate("/plans")} className="text-primary">
+            View all features & compare plans →
+          </Button>
+        </div>
       </div>
     </section>
   );

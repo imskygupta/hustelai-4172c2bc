@@ -17,7 +17,8 @@ import {
   MessageSquare, Settings, BarChart3, Key, Globe, FileText,
   UserCheck, Compass, ChevronLeft, ChevronRight, AlertTriangle,
   CheckCircle, XCircle, Mail, Phone, MapPin, Pencil, Plus,
-  Clock, ExternalLink, Activity, Database, Server, Zap
+  Clock, ExternalLink, Activity, Database, Server, Zap,
+  Wallet, Gift, Share2
 } from "lucide-react";
 
 interface UserProfile {
@@ -106,7 +107,8 @@ const tierColors: Record<string, string> = {
 type AdminSection =
   | "overview" | "users" | "roles" | "notifications" | "webinars"
   | "expert" | "chatbot" | "blogs" | "analytics" | "config"
-  | "verification" | "payments" | "forum" | "community" | "trending" | "newsletter" | "email-settings" | "ai-providers" | "send-email" | "orders";
+  | "verification" | "payments" | "forum" | "community" | "trending" | "newsletter" | "email-settings" | "ai-providers" | "send-email" | "orders"
+  | "payment-logs" | "bonus-kits" | "social-links";
 
 const sidebarItems: { id: AdminSection; label: string; icon: any }[] = [
   { id: "overview", label: "Overview", icon: BarChart3 },
@@ -114,7 +116,10 @@ const sidebarItems: { id: AdminSection; label: string; icon: any }[] = [
   { id: "roles", label: "Role Manager", icon: Shield },
   { id: "verification", label: "Verification", icon: UserCheck },
   { id: "payments", label: "Payments", icon: Zap },
+  { id: "payment-logs", label: "Payment Logs", icon: Clock },
   { id: "orders", label: "Orders", icon: FileText },
+  { id: "bonus-kits", label: "Bonus Kits", icon: Gift },
+  { id: "social-links", label: "Social Links", icon: Share2 },
   { id: "send-email", label: "Send Email", icon: Send },
   { id: "forum", label: "Forum Posts", icon: MessageSquare },
   { id: "community", label: "Community", icon: Globe },
@@ -168,6 +173,16 @@ export default function AdminDashboard() {
   const [emailSettingsLoading, setEmailSettingsLoading] = useState(false);
   const [aiProviders, setAiProviders] = useState<any[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
+  const [paymentLogs, setPaymentLogs] = useState<any[]>([]);
+  const [bonusKits, setBonusKits] = useState<any[]>([]);
+  const [socialLinks, setSocialLinks] = useState<any[]>([]);
+  const [newBonusTitle, setNewBonusTitle] = useState("");
+  const [newBonusDesc, setNewBonusDesc] = useState("");
+  const [newBonusLink, setNewBonusLink] = useState("");
+  const [newBonusTier, setNewBonusTier] = useState("all");
+  const [newSocialPlatform, setNewSocialPlatform] = useState("instagram");
+  const [newSocialUrl, setNewSocialUrl] = useState("");
+  const [newSocialIcon, setNewSocialIcon] = useState("");
   // Custom email form
   const [customEmailRecipients, setCustomEmailRecipients] = useState<string[]>([]);
   const [customEmailSubject, setCustomEmailSubject] = useState("");
@@ -287,6 +302,15 @@ export default function AdminDashboard() {
     if (emailData) setEmailSettings(emailData);
     const { data: aiData } = await supabase.from("ai_provider_keys").select("*").order("priority");
     if (aiData) setAiProviders(aiData);
+    // Load bonus kits, social links, payment logs
+    const { data: bonusData } = await supabase.from("bonus_kits" as any).select("*").order("created_at", { ascending: false });
+    if (bonusData) setBonusKits(bonusData as any);
+    const { data: socialData } = await supabase.from("social_links" as any).select("*").order("display_order");
+    if (socialData) setSocialLinks(socialData as any);
+    try {
+      const { data: logsData } = await supabase.functions.invoke("cashfree-payment", { body: { action: "get_payment_logs" } });
+      if (logsData?.logs) setPaymentLogs(logsData.logs);
+    } catch {}
     if (chatRes.data) {
       const userMap = new Map<string, ChatUser>();
       for (const msg of chatRes.data) {
@@ -2042,6 +2066,202 @@ export default function AdminDashboard() {
                   </Table>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* ===== PAYMENT LOGS ===== */}
+          {section === "payment-logs" && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h3 className="font-display font-bold">Payment Lifecycle Logs ({paymentLogs.length})</h3>
+                <Button variant="outline" size="sm" onClick={async () => {
+                  try {
+                    const { data } = await supabase.functions.invoke("cashfree-payment", { body: { action: "get_payment_logs" } });
+                    if (data?.logs) setPaymentLogs(data.logs);
+                    toast({ title: "Refreshed" });
+                  } catch {}
+                }}><RefreshCw className="w-4 h-4 mr-1" /> Refresh</Button>
+              </div>
+              {paymentLogs.length === 0 ? (
+                <div className="glass rounded-xl p-8 text-center">
+                  <Clock className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                  <p className="text-sm text-muted-foreground">No payment logs yet.</p>
+                </div>
+              ) : (
+                <div className="glass rounded-xl overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>User</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Message</TableHead>
+                        <TableHead>Time</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {paymentLogs.map((log: any) => {
+                        const logUser = users.find(u => u.user_id === log.user_id);
+                        return (
+                          <TableRow key={log.id}>
+                            <TableCell className="text-sm">{logUser?.display_name || logUser?.email || log.user_id?.slice(0, 8)}</TableCell>
+                            <TableCell>
+                              <Badge variant="outline" className={
+                                log.status === "completed" || log.status === "subscription_activated" ? "bg-primary/20 text-primary" :
+                                log.status === "confirmed" ? "bg-primary/20 text-primary" :
+                                log.status === "initiated" ? "bg-yellow-500/20 text-yellow-400" :
+                                log.status === "failed" ? "bg-destructive/20 text-destructive" :
+                                "bg-secondary text-secondary-foreground"
+                              }>{log.status}</Badge>
+                            </TableCell>
+                            <TableCell className="text-sm text-muted-foreground max-w-[300px] truncate">{log.message}</TableCell>
+                            <TableCell className="text-xs text-muted-foreground">{new Date(log.created_at).toLocaleString()}</TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ===== BONUS KITS ===== */}
+          {section === "bonus-kits" && (
+            <div className="space-y-6">
+              <h3 className="font-display font-bold">Bonus Kits & Promotional Links</h3>
+              <p className="text-sm text-muted-foreground">Add promotional links/ads shown to users after successful payment.</p>
+              
+              <div className="glass rounded-xl p-5 space-y-4">
+                <div className="grid md:grid-cols-2 gap-4">
+                  <Input placeholder="Title (e.g. Free Canva Pro)" value={newBonusTitle} onChange={e => setNewBonusTitle(e.target.value)} />
+                  <Input placeholder="Link URL" value={newBonusLink} onChange={e => setNewBonusLink(e.target.value)} />
+                </div>
+                <Input placeholder="Description (optional)" value={newBonusDesc} onChange={e => setNewBonusDesc(e.target.value)} />
+                <div className="flex gap-4 items-end">
+                  <div className="flex-1">
+                    <Label className="text-xs">Target Tier</Label>
+                    <Select value={newBonusTier} onValueChange={setNewBonusTier}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Users</SelectItem>
+                        <SelectItem value="pro">Pro Only</SelectItem>
+                        <SelectItem value="elite">Elite Only</SelectItem>
+                        <SelectItem value="infinity">Infinity Only</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button onClick={async () => {
+                    if (!newBonusTitle || !newBonusLink) return toast({ title: "Fill title and link", variant: "destructive" });
+                    await supabase.from("bonus_kits" as any).insert({
+                      title: newBonusTitle, description: newBonusDesc, link: newBonusLink,
+                      target_tier: newBonusTier, created_by: user?.id,
+                    } as any);
+                    setNewBonusTitle(""); setNewBonusDesc(""); setNewBonusLink("");
+                    const { data } = await supabase.from("bonus_kits" as any).select("*").order("created_at", { ascending: false });
+                    if (data) setBonusKits(data as any);
+                    toast({ title: "Bonus Kit Added ✅" });
+                  }} className="bg-gradient-primary text-primary-foreground">
+                    <Plus className="w-4 h-4 mr-1" /> Add
+                  </Button>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                {bonusKits.map((kit: any) => (
+                  <div key={kit.id} className="glass rounded-xl p-4 flex items-center gap-4">
+                    <Gift className="w-5 h-5 text-primary shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm truncate">{kit.title}</p>
+                      <p className="text-xs text-muted-foreground truncate">{kit.link}</p>
+                      {kit.description && <p className="text-xs text-muted-foreground">{kit.description}</p>}
+                    </div>
+                    <Badge variant="outline">{kit.target_tier}</Badge>
+                    <Badge variant="outline" className={kit.is_active ? "text-primary" : "text-muted-foreground"}>
+                      {kit.is_active ? "Active" : "Inactive"}
+                    </Badge>
+                    <Button variant="ghost" size="sm" onClick={async () => {
+                      await supabase.from("bonus_kits" as any).delete().eq("id", kit.id);
+                      setBonusKits(bonusKits.filter((b: any) => b.id !== kit.id));
+                      toast({ title: "Deleted" });
+                    }}><Trash2 className="w-4 h-4 text-destructive" /></Button>
+                  </div>
+                ))}
+                {bonusKits.length === 0 && (
+                  <div className="glass rounded-xl p-8 text-center">
+                    <Gift className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                    <p className="text-sm text-muted-foreground">No bonus kits yet. Add promotional links above.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* ===== SOCIAL LINKS ===== */}
+          {section === "social-links" && (
+            <div className="space-y-6">
+              <h3 className="font-display font-bold">Social Media Links</h3>
+              <p className="text-sm text-muted-foreground">Manage social media links shown in the footer and about page.</p>
+              
+              <div className="glass rounded-xl p-5 space-y-4">
+                <div className="grid md:grid-cols-3 gap-4">
+                  <div>
+                    <Label className="text-xs">Platform</Label>
+                    <Select value={newSocialPlatform} onValueChange={setNewSocialPlatform}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="instagram">Instagram</SelectItem>
+                        <SelectItem value="youtube">YouTube</SelectItem>
+                        <SelectItem value="twitter">Twitter/X</SelectItem>
+                        <SelectItem value="linkedin">LinkedIn</SelectItem>
+                        <SelectItem value="facebook">Facebook</SelectItem>
+                        <SelectItem value="telegram">Telegram</SelectItem>
+                        <SelectItem value="discord">Discord</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Input placeholder="URL (e.g. https://instagram.com/...)" value={newSocialUrl} onChange={e => setNewSocialUrl(e.target.value)} />
+                  <Input placeholder="Custom Icon (emoji, optional)" value={newSocialIcon} onChange={e => setNewSocialIcon(e.target.value)} />
+                </div>
+                <Button onClick={async () => {
+                  if (!newSocialUrl) return toast({ title: "Enter URL", variant: "destructive" });
+                  await supabase.from("social_links" as any).insert({
+                    platform: newSocialPlatform, url: newSocialUrl, icon: newSocialIcon || null,
+                    created_by: user?.id,
+                  } as any);
+                  setNewSocialUrl(""); setNewSocialIcon("");
+                  const { data } = await supabase.from("social_links" as any).select("*").order("display_order");
+                  if (data) setSocialLinks(data as any);
+                  toast({ title: "Social Link Added ✅" });
+                }} className="bg-gradient-primary text-primary-foreground">
+                  <Plus className="w-4 h-4 mr-1" /> Add Social Link
+                </Button>
+              </div>
+
+              <div className="space-y-3">
+                {socialLinks.map((link: any) => (
+                  <div key={link.id} className="glass rounded-xl p-4 flex items-center gap-4">
+                    <span className="text-xl">{link.icon || "🔗"}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm capitalize">{link.platform}</p>
+                      <p className="text-xs text-muted-foreground truncate">{link.url}</p>
+                    </div>
+                    <Badge variant="outline" className={link.is_active ? "text-primary" : "text-muted-foreground"}>
+                      {link.is_active ? "Active" : "Inactive"}
+                    </Badge>
+                    <Button variant="ghost" size="sm" onClick={async () => {
+                      await supabase.from("social_links" as any).delete().eq("id", link.id);
+                      setSocialLinks(socialLinks.filter((s: any) => s.id !== link.id));
+                      toast({ title: "Deleted" });
+                    }}><Trash2 className="w-4 h-4 text-destructive" /></Button>
+                  </div>
+                ))}
+                {socialLinks.length === 0 && (
+                  <div className="glass rounded-xl p-8 text-center">
+                    <Share2 className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                    <p className="text-sm text-muted-foreground">No social links yet. Add your social media above.</p>
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>

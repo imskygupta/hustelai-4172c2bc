@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Zap, Send, Mail, MapPin, ArrowUpRight } from "lucide-react";
@@ -11,7 +11,7 @@ const productLinks = [
   { label: "Community", href: "/community" },
   { label: "Leaderboard", href: "/leaderboard" },
   { label: "Blog", href: "/blog" },
-  { label: "Pricing", href: "/#pricing" },
+  { label: "Plans & Pricing", href: "/plans" },
 ];
 
 const companyLinks = [
@@ -23,10 +23,30 @@ const companyLinks = [
   { label: "Contact", href: "/contact" },
 ];
 
+const platformIcons: Record<string, string> = {
+  instagram: "📸",
+  youtube: "▶️",
+  twitter: "🐦",
+  linkedin: "💼",
+  facebook: "📘",
+  telegram: "✈️",
+  discord: "🎮",
+};
+
 export function Footer() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
+  const [socialLinks, setSocialLinks] = useState<any[]>([]);
   const { toast } = useToast();
+
+  useEffect(() => {
+    loadSocialLinks();
+  }, []);
+
+  const loadSocialLinks = async () => {
+    const { data } = await supabase.from("social_links" as any).select("*").eq("is_active", true).order("display_order");
+    if (data) setSocialLinks(data as any);
+  };
 
   const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,13 +82,25 @@ export function Footer() {
               AI-powered freelance discovery platform. Find, start, and grow your next income stream.
             </p>
             <div className="space-y-2 text-sm text-muted-foreground">
-          <a href="mailto:contact@hustlaiapp.in" className="flex items-center gap-2 hover:text-primary transition-colors">
+              <a href="mailto:contact@hustlaiapp.in" className="flex items-center gap-2 hover:text-primary transition-colors">
                 <Mail className="w-4 h-4" /> contact@hustlaiapp.in
               </a>
               <div className="flex items-center gap-2">
                 <MapPin className="w-4 h-4" /> India 🇮🇳
               </div>
             </div>
+            {/* Social Links */}
+            {socialLinks.length > 0 && (
+              <div className="flex flex-wrap gap-2 pt-2">
+                {socialLinks.map((link: any) => (
+                  <a key={link.id} href={link.url} target="_blank" rel="noopener noreferrer"
+                    className="w-9 h-9 rounded-lg bg-muted/50 flex items-center justify-center hover:bg-primary/10 hover:text-primary transition-all text-base"
+                    title={link.platform}>
+                    {link.icon || platformIcons[link.platform?.toLowerCase()] || "🔗"}
+                  </a>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Product */}
