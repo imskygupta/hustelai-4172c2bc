@@ -302,6 +302,15 @@ export default function AdminDashboard() {
     if (emailData) setEmailSettings(emailData);
     const { data: aiData } = await supabase.from("ai_provider_keys").select("*").order("priority");
     if (aiData) setAiProviders(aiData);
+    // Load bonus kits, social links, payment logs
+    const { data: bonusData } = await supabase.from("bonus_kits" as any).select("*").order("created_at", { ascending: false });
+    if (bonusData) setBonusKits(bonusData as any);
+    const { data: socialData } = await supabase.from("social_links" as any).select("*").order("display_order");
+    if (socialData) setSocialLinks(socialData as any);
+    try {
+      const { data: logsData } = await supabase.functions.invoke("cashfree-payment", { body: { action: "get_payment_logs" } });
+      if (logsData?.logs) setPaymentLogs(logsData.logs);
+    } catch {}
     if (chatRes.data) {
       const userMap = new Map<string, ChatUser>();
       for (const msg of chatRes.data) {
