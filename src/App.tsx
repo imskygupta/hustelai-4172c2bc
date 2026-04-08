@@ -19,6 +19,8 @@ import AdminBlock from "./pages/AdminBlock";
 import Community from "./pages/Community";
 import Profile from "./pages/Profile";
 import Payment from "./pages/Payment";
+import PaymentStatus from "./pages/PaymentStatus";
+import Plans from "./pages/Plans";
 import Leaderboard from "./pages/Leaderboard";
 import SavedHustles from "./pages/SavedHustles";
 import Career from "./pages/Career";
