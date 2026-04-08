@@ -168,7 +168,7 @@ export default function Plans() {
           <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} className="space-y-8">
             <div className="text-center space-y-3">
               <h2 className="text-2xl md:text-4xl font-display font-bold">
-                Why HustleAI > <span className="line-through text-muted-foreground">Everything Else</span>
+                Why HustleAI {'>'} <span className="line-through text-muted-foreground">Everything Else</span>
               </h2>
               <p className="text-muted-foreground">Stop wasting time. Start earning.</p>
             </div>
