@@ -173,6 +173,16 @@ export default function AdminDashboard() {
   const [emailSettingsLoading, setEmailSettingsLoading] = useState(false);
   const [aiProviders, setAiProviders] = useState<any[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
+  const [paymentLogs, setPaymentLogs] = useState<any[]>([]);
+  const [bonusKits, setBonusKits] = useState<any[]>([]);
+  const [socialLinks, setSocialLinks] = useState<any[]>([]);
+  const [newBonusTitle, setNewBonusTitle] = useState("");
+  const [newBonusDesc, setNewBonusDesc] = useState("");
+  const [newBonusLink, setNewBonusLink] = useState("");
+  const [newBonusTier, setNewBonusTier] = useState("all");
+  const [newSocialPlatform, setNewSocialPlatform] = useState("instagram");
+  const [newSocialUrl, setNewSocialUrl] = useState("");
+  const [newSocialIcon, setNewSocialIcon] = useState("");
   // Custom email form
   const [customEmailRecipients, setCustomEmailRecipients] = useState<string[]>([]);
   const [customEmailSubject, setCustomEmailSubject] = useState("");
