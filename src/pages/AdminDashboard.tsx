@@ -17,7 +17,8 @@ import {
   MessageSquare, Settings, BarChart3, Key, Globe, FileText,
   UserCheck, Compass, ChevronLeft, ChevronRight, AlertTriangle,
   CheckCircle, XCircle, Mail, Phone, MapPin, Pencil, Plus,
-  Clock, ExternalLink, Activity, Database, Server, Zap
+  Clock, ExternalLink, Activity, Database, Server, Zap,
+  Wallet, Gift, Share2
 } from "lucide-react";
 
 interface UserProfile {
@@ -106,7 +107,8 @@ const tierColors: Record<string, string> = {
 type AdminSection =
   | "overview" | "users" | "roles" | "notifications" | "webinars"
   | "expert" | "chatbot" | "blogs" | "analytics" | "config"
-  | "verification" | "payments" | "forum" | "community" | "trending" | "newsletter" | "email-settings" | "ai-providers" | "send-email" | "orders";
+  | "verification" | "payments" | "forum" | "community" | "trending" | "newsletter" | "email-settings" | "ai-providers" | "send-email" | "orders"
+  | "payment-logs" | "bonus-kits" | "social-links";
 
 const sidebarItems: { id: AdminSection; label: string; icon: any }[] = [
   { id: "overview", label: "Overview", icon: BarChart3 },
@@ -114,7 +116,10 @@ const sidebarItems: { id: AdminSection; label: string; icon: any }[] = [
   { id: "roles", label: "Role Manager", icon: Shield },
   { id: "verification", label: "Verification", icon: UserCheck },
   { id: "payments", label: "Payments", icon: Zap },
+  { id: "payment-logs", label: "Payment Logs", icon: Clock },
   { id: "orders", label: "Orders", icon: FileText },
+  { id: "bonus-kits", label: "Bonus Kits", icon: Gift },
+  { id: "social-links", label: "Social Links", icon: Share2 },
   { id: "send-email", label: "Send Email", icon: Send },
   { id: "forum", label: "Forum Posts", icon: MessageSquare },
   { id: "community", label: "Community", icon: Globe },
