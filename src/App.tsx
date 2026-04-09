@@ -42,6 +42,9 @@ import ProposalDraft from "./pages/ProposalDraft";
 import SkillGap from "./pages/SkillGap";
 import AIToolBenchmarks from "./pages/AIToolBenchmarks";
 import KnowledgeHub from "./pages/KnowledgeHub";
+import HustleBlueprint from "./pages/HustleBlueprint";
+import ResumeOptimizer from "./pages/ResumeOptimizer";
+import GigArbitrage from "./pages/GigArbitrage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -92,6 +95,9 @@ const App = () => (
             <Route path="/skill-gap" element={<SkillGap />} />
             <Route path="/ai-tools" element={<AIToolBenchmarks />} />
             <Route path="/knowledge-hub" element={<KnowledgeHub />} />
+            <Route path="/hustle-blueprint" element={<HustleBlueprint />} />
+            <Route path="/resume-optimizer" element={<ResumeOptimizer />} />
+            <Route path="/gig-arbitrage" element={<GigArbitrage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
