@@ -472,9 +472,12 @@ export default function Dashboard() {
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
               {[
                 { icon: Search, label: "AI Hustle Search", desc: "Discover side hustles with AI-powered search", action: () => navigate("/explore"), minTier: "free", emoji: "🔍" },
+                { icon: Rocket, label: "Blueprint Generator", desc: "Get a 7-day action plan with targets & outreach scripts", action: () => navigate("/hustle-blueprint"), minTier: "free", emoji: "🚀" },
+                { icon: FileText, label: "Resume Optimizer", desc: "Re-skin your CV for any freelance category with mock portfolio", action: () => navigate("/resume-optimizer"), minTier: "free", emoji: "📄" },
                 { icon: Zap, label: "AI Tool Benchmarks", desc: "Compare AI tools like Cursor, Copilot & ChatGPT side-by-side", action: () => navigate("/ai-tools"), minTier: "pro", emoji: "⚡" },
                 { icon: FileText, label: "Proposal Draft AI", desc: "Generate winning freelance proposals with AI", action: () => navigate("/proposal-draft"), minTier: "pro", emoji: "📝" },
                 { icon: Brain, label: "Skill Gap Analyzer", desc: "Get a personalized learning roadmap for high-paying niches", action: () => navigate("/skill-gap"), minTier: "pro", emoji: "🧠" },
+                { icon: TrendingUp, label: "Gig Arbitrage Monitor", desc: "Find price gaps across platforms — buy low, sell high", action: () => navigate("/gig-arbitrage"), minTier: "pro", emoji: "📊" },
                 { icon: Target, label: "Problem Lead Finder", desc: "AI-powered radar for freelance opportunities from social media", action: () => navigate("/problem-leads"), minTier: "elite", emoji: "🎯" },
                 { icon: BookOpen, label: "Knowledge Hub", desc: "Save prompts, export chats, organize knowledge & automate workflows", action: () => navigate("/knowledge-hub"), minTier: "pro", emoji: "📚" },
                 { icon: Store, label: "Marketplace", desc: "Sell templates, tools & digital products to the community", action: () => navigate("/marketplace"), minTier: "elite", emoji: "🏪" },
