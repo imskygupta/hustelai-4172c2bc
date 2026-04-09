@@ -170,6 +170,19 @@ export default function Index() {
       {/* Pricing */}
       <Pricing />
 
+      {/* Pricing CTA */}
+      <section className="pb-12 px-4">
+        <div className="container mx-auto text-center">
+          <Button
+            size="lg"
+            className="bg-gradient-primary text-primary-foreground text-lg px-10 h-14"
+            onClick={() => navigate("/plans")}
+          >
+            View All Plans & Compare <ArrowRight className="w-5 h-5 ml-2" />
+          </Button>
+        </div>
+      </section>
+
       {/* Testimonials */}
       <Testimonials />
 

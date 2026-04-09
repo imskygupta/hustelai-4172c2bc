@@ -38,3 +38,12 @@ verify_jwt = false
 
 [functions.proposal-draft]
 verify_jwt = false
+
+[functions.hustle-blueprint]
+verify_jwt = false
+
+[functions.resume-optimizer]
+verify_jwt = false
+
+[functions.gig-arbitrage]
+verify_jwt = false
