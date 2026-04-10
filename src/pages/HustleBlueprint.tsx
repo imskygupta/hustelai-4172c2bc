@@ -42,8 +42,6 @@ export default function HustleBlueprint() {
 
   useEffect(() => { if (user) setUsageCount(getUsage()); }, [user]);
 
-  if (!user) { navigate("/login"); return null; }
-
   const atLimit = usageCount >= maxUses;
 
   useEffect(() => {
