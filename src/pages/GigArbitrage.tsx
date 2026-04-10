@@ -42,8 +42,6 @@ export default function GigArbitrage() {
 
   useEffect(() => { if (user) setUsageCount(getUsage()); }, [user]);
 
-  if (!user) { navigate("/login"); return null; }
-
   const atLimit = usageCount >= maxUses;
 
   useEffect(() => {
@@ -53,6 +51,8 @@ export default function GigArbitrage() {
     const pi = setInterval(() => { progress += Math.random() * 3 + 0.5; if (progress > 95) progress = 95; setLoadingProgress(progress); }, 200);
     return () => { clearInterval(si); clearInterval(pi); };
   }, [loading]);
+
+  if (!user) { navigate("/login"); return null; }
 
   const analyze = async () => {
     if (!hasAccess) { toast.error("Gig Arbitrage requires Pro or higher tier"); return; }
