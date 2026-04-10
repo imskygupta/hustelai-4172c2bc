@@ -53,6 +53,8 @@ export default function HustleBlueprint() {
     return () => { clearInterval(si); clearInterval(pi); };
   }, [loading]);
 
+  if (!user) { navigate("/login"); return null; }
+
   const generateBlueprint = async () => {
     if (atLimit) { toast.error(`Limit reached (${maxUses}). Upgrade for more!`); return; }
     if (!hustleTitle.trim()) { toast.error("Enter a hustle title"); return; }
