@@ -64,9 +64,50 @@ export default function ResumeOptimizer() {
     if (user) setUsageCount(getUsage());
   }, [user]);
 
-  if (!user) { navigate("/login"); return null; }
-
   const atLimit = usageCount >= maxUses;
+
+  // Animated loading stages
+  useEffect(() => {
+    if (!loading) return;
+    let stageIndex = 0;
+    let progress = 0;
+
+    const stageInterval = setInterval(() => {
+      if (stageIndex < LOADING_STAGES.length - 1) {
+        stageIndex++;
+        setLoadingStage(stageIndex);
+      }
+    }, 2500);
+
+    const progressInterval = setInterval(() => {
+      progress += Math.random() * 3 + 0.5;
+      if (progress > 95) progress = 95;
+      setLoadingProgress(progress);
+    }, 200);
+
+    return () => {
+      clearInterval(stageInterval);
+      clearInterval(progressInterval);
+    };
+  }, [loading]);
+
+  // Score animation
+  useEffect(() => {
+    if (!showScore) return;
+    const target = 78 + Math.floor(Math.random() * 18);
+    let current = 0;
+    const interval = setInterval(() => {
+      current += 2;
+      if (current >= target) {
+        current = target;
+        clearInterval(interval);
+      }
+      setMatchScore(current);
+    }, 30);
+    return () => clearInterval(interval);
+  }, [showScore]);
+
+  if (!user) { navigate("/login"); return null; }
 
   // Animated loading stages
   useEffect(() => {
