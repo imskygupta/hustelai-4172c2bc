@@ -47,3 +47,18 @@ verify_jwt = false
 
 [functions.gig-arbitrage]
 verify_jwt = false
+
+[functions.send-invoice]
+verify_jwt = false
+
+[functions.upi-payment]
+verify_jwt = false
+
+[functions.gig-price-calculator]
+verify_jwt = false
+
+[functions.faceless-content]
+verify_jwt = false
+
+[functions.red-flag-scanner]
+verify_jwt = false
