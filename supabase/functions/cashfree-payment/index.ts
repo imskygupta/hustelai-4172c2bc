@@ -138,6 +138,43 @@ serve(async (req) => {
 
           await logPaymentStatus(payment.id, payment.user_id, "subscription_activated", `${payment.plan} plan activated, +${xpGain} XP awarded`);
         }
+
+        // Send invoice email (fire and forget — don't block redirect)
+        try {
+          const { data: profile } = await supabase.from("profiles")
+            .select("email, display_name").eq("user_id", payment.user_id).maybeSingle();
+          const userEmail = (profile as Record<string, unknown>)?.email as string;
+          const userName = (profile as Record<string, unknown>)?.display_name as string;
+
+          let itemLabel = "";
+          let itemType = "plan";
+          if (isWallet) {
+            const packKey = payment.plan.replace("wallet_", "");
+            const pack = WALLET_PACKS[packKey];
+            itemLabel = `${pack?.credits || 0} Search Credits`;
+            itemType = "wallet";
+          } else {
+            itemLabel = `${String(payment.plan).charAt(0).toUpperCase() + String(payment.plan).slice(1)} Plan (Monthly)`;
+          }
+
+          if (userEmail) {
+            await supabase.functions.invoke("send-invoice", {
+              body: {
+                user_id: payment.user_id,
+                user_email: userEmail,
+                user_name: userName,
+                amount: Number(payment.amount),
+                payment_method: "Cashfree",
+                payment_reference: order_id,
+                item_type: itemType,
+                item_label: itemLabel,
+                metadata: { cf_order_id: payment.cf_order_id },
+              },
+            });
+          }
+        } catch (invErr) {
+          console.error("Invoice send failed:", invErr);
+        }
       }
 
       return new Response(JSON.stringify({
