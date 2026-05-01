@@ -5,9 +5,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { Navbar } from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
-import { Check, Crown, Rocket, Star, Shield, Loader2, Wallet, ArrowRight, Sparkles } from "lucide-react";
+import { Check, Crown, Rocket, Star, Shield, Loader2, Wallet, ArrowRight, Sparkles, Smartphone, Copy, Upload, CreditCard, Zap, CheckCircle2, Clock } from "lucide-react";
 
 const plans = [
   { id: "pro", name: "Pro", price: 450, icon: Rocket, color: "text-primary", features: ["5 AI searches/day", "All AI tools access", "Pro forums", "Resume upload", "Weekly reports", "5% affiliate"] },
@@ -22,6 +26,16 @@ const walletPacks = [
   { id: "pack_100", credits: 100, price: 1000, label: "Pro Pack" },
 ];
 
+interface PaymentMethod {
+  id: string;
+  method_type: string;
+  label: string;
+  upi_id: string | null;
+  qr_image_url: string | null;
+  display_name: string | null;
+  priority: number;
+}
+
 export default function Payment() {
   const { user, profile, loading, refreshProfile } = useAuth();
   const navigate = useNavigate();
@@ -31,13 +45,22 @@ export default function Payment() {
     searchParams.get("type") === "wallet" ? "wallet" : "plans"
   );
   const [walletBalance, setWalletBalance] = useState(0);
+  const [upiMethods, setUpiMethods] = useState<PaymentMethod[]>([]);
+  const [upiDialog, setUpiDialog] = useState<{ open: boolean; itemId: string; itemType: "plan" | "wallet"; amount: number; label: string }>({ open: false, itemId: "", itemType: "plan", amount: 0, label: "" });
+  const [utr, setUtr] = useState("");
+  const [screenshotFile, setScreenshotFile] = useState<File | null>(null);
+  const [submittingUpi, setSubmittingUpi] = useState(false);
+  const [selectedUpiId, setSelectedUpiId] = useState<string>("");
 
   useEffect(() => {
     if (!loading && !user) navigate("/login");
   }, [loading, user]);
 
   useEffect(() => {
-    if (user) loadWallet();
+    if (user) {
+      loadWallet();
+      loadUpiMethods();
+    }
   }, [user]);
 
   const loadWallet = async () => {
@@ -47,6 +70,75 @@ export default function Payment() {
       });
       if (data) setWalletBalance(data.balance || 0);
     } catch {}
+  };
+
+  const loadUpiMethods = async () => {
+    const { data } = await supabase.from("payment_methods")
+      .select("*").eq("is_active", true).order("priority", { ascending: false });
+    if (data) {
+      setUpiMethods(data as PaymentMethod[]);
+      const firstUpi = (data as PaymentMethod[]).find(m => m.upi_id);
+      if (firstUpi?.upi_id) setSelectedUpiId(firstUpi.upi_id);
+    }
+  };
+
+  const openUpiDialog = (itemId: string, itemType: "plan" | "wallet", amount: number, label: string) => {
+    if (upiMethods.length === 0) {
+      toast({ title: "UPI not configured", description: "Please use Cashfree or contact admin", variant: "destructive" });
+      return;
+    }
+    setUpiDialog({ open: true, itemId, itemType, amount, label });
+    setUtr("");
+    setScreenshotFile(null);
+  };
+
+  const submitUpiPayment = async () => {
+    if (!user || !utr.trim()) {
+      toast({ title: "UTR required", description: "Enter your UPI transaction ID", variant: "destructive" });
+      return;
+    }
+    setSubmittingUpi(true);
+    try {
+      let screenshot_url = null;
+      if (screenshotFile) {
+        const ext = screenshotFile.name.split(".").pop();
+        const filePath = `${user.id}/${Date.now()}.${ext}`;
+        const { error: upErr } = await supabase.storage.from("payment-proofs")
+          .upload(filePath, screenshotFile, { upsert: false });
+        if (upErr) throw upErr;
+        const { data: pub } = supabase.storage.from("payment-proofs").getPublicUrl(filePath);
+        screenshot_url = pub.publicUrl;
+      }
+
+      const { data, error } = await supabase.functions.invoke("upi-payment", {
+        body: {
+          action: "submit",
+          payment_type: upiDialog.itemType,
+          plan: upiDialog.itemType === "plan" ? upiDialog.itemId : null,
+          wallet_pack: upiDialog.itemType === "wallet" ? upiDialog.itemId : null,
+          utr_number: utr.trim(),
+          screenshot_url,
+          upi_id_used: selectedUpiId,
+        },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      toast({
+        title: "✅ Payment submitted!",
+        description: "Admin will verify within 1–4 hours. You'll get an invoice via email once approved.",
+      });
+      setUpiDialog({ ...upiDialog, open: false });
+    } catch (err: any) {
+      toast({ title: "Submission failed", description: err.message, variant: "destructive" });
+    } finally {
+      setSubmittingUpi(false);
+    }
+  };
+
+  const copyUpi = (upiId: string) => {
+    navigator.clipboard.writeText(upiId);
+    toast({ title: "✓ UPI ID copied", description: upiId });
   };
 
   const initPayment = async (planId: string) => {
@@ -107,6 +199,8 @@ export default function Payment() {
   if (loading) return <div className="min-h-screen bg-background flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
 
   const currentTier = profile?.subscription_tier || "free";
+  const primaryUpi = upiMethods.find(m => m.upi_id) || null;
+  const primaryQr = upiMethods.find(m => m.qr_image_url) || null;
 
   return (
     <div className="min-h-screen bg-background">
@@ -115,11 +209,36 @@ export default function Payment() {
         <div className="container mx-auto max-w-5xl space-y-8">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center space-y-3">
             <h1 className="text-3xl font-display font-bold">Upgrade Your <span className="text-gradient">Hustle Plan</span></h1>
-            <p className="text-muted-foreground">Pay securely with Cashfree. Instant upgrade.</p>
-            <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
-              <Shield className="w-3 h-3" /> Secure payment powered by Cashfree
+            <p className="text-muted-foreground">Pay via UPI (recommended) or Cashfree. Instant for Cashfree, ~1–4 hr verification for UPI.</p>
+            <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground flex-wrap">
+              <span className="flex items-center gap-1"><Smartphone className="w-3 h-3 text-emerald-500" /> UPI · Zero fees</span>
+              <span className="flex items-center gap-1"><Shield className="w-3 h-3" /> Cashfree · Instant</span>
             </div>
           </motion.div>
+
+          {/* Priority 1 UPI Banner */}
+          {primaryUpi && (
+            <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
+              className="rounded-2xl p-5 bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-transparent border-2 border-emerald-500/30">
+              <div className="flex items-center gap-2 mb-2">
+                <Zap className="w-5 h-5 text-emerald-500" />
+                <h3 className="font-display font-bold text-lg">Pay via UPI — Recommended</h3>
+                <Badge className="bg-emerald-500 text-white text-[10px]">PRIORITY</Badge>
+              </div>
+              <p className="text-xs text-muted-foreground mb-3">
+                Send to our UPI ID, then submit your transaction ID. Activated within 1–4 hours. No transaction fees.
+              </p>
+              <div className="flex items-center gap-2 p-3 bg-background/60 rounded-lg border border-emerald-500/20">
+                <code className="flex-1 text-sm font-mono text-emerald-500 font-bold">{primaryUpi.upi_id}</code>
+                <Button size="sm" variant="ghost" onClick={() => copyUpi(primaryUpi.upi_id!)}>
+                  <Copy className="w-3 h-3 mr-1" /> Copy
+                </Button>
+              </div>
+              {primaryUpi.display_name && (
+                <p className="text-xs text-muted-foreground mt-2">Account: <span className="font-semibold">{primaryUpi.display_name}</span></p>
+              )}
+            </motion.div>
+          )}
 
           {/* Tab Toggle */}
           <div className="flex justify-center gap-2">
@@ -168,10 +287,19 @@ export default function Payment() {
                     ) : isCurrentOrLower ? (
                       <Button disabled className="w-full opacity-50">Already Included</Button>
                     ) : (
-                      <Button onClick={() => initPayment(plan.id)} disabled={!!processing}
-                        className={`w-full ${plan.id === "infinity" ? "bg-yellow-500 hover:bg-yellow-600 text-black" : "bg-gradient-primary text-primary-foreground"}`}>
-                        {processing === plan.id ? <><Loader2 className="w-4 h-4 mr-1 animate-spin" /> Processing...</> : `Upgrade to ${plan.name}`}
-                      </Button>
+                      <div className="space-y-2">
+                        {primaryUpi && (
+                          <Button onClick={() => openUpiDialog(plan.id, "plan", plan.price, `${plan.name} Plan`)} disabled={!!processing}
+                            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white">
+                            <Smartphone className="w-4 h-4 mr-1" /> Pay via UPI ₹{plan.price}
+                          </Button>
+                        )}
+                        <Button onClick={() => initPayment(plan.id)} disabled={!!processing} variant="outline"
+                          className="w-full border-primary/30 hover:bg-primary/10">
+                          {processing === plan.id ? <><Loader2 className="w-4 h-4 mr-1 animate-spin" /> Processing...</>
+                            : <><CreditCard className="w-4 h-4 mr-1" /> Cashfree Instead</>}
+                        </Button>
+                      </div>
                     )}
                   </motion.div>
                 );
@@ -198,10 +326,18 @@ export default function Payment() {
                       <p className="text-2xl font-display font-bold text-emerald-500">₹{pack.price}</p>
                       <p className="text-xs text-muted-foreground">₹{(pack.price / pack.credits).toFixed(0)}/search</p>
                     </div>
-                    <Button onClick={() => initWalletTopup(pack.id)} disabled={!!processing}
-                      className="w-full bg-emerald-600 hover:bg-emerald-700 text-white">
-                      {processing === pack.id ? <><Loader2 className="w-4 h-4 mr-1 animate-spin" /> Processing...</> : "Buy Now"}
-                    </Button>
+                    <div className="space-y-2">
+                      {primaryUpi && (
+                        <Button onClick={() => openUpiDialog(pack.id, "wallet", pack.price, `${pack.credits} Credits`)} disabled={!!processing}
+                          className="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs">
+                          <Smartphone className="w-3 h-3 mr-1" /> UPI ₹{pack.price}
+                        </Button>
+                      )}
+                      <Button onClick={() => initWalletTopup(pack.id)} disabled={!!processing} variant="outline" size="sm"
+                        className="w-full text-xs">
+                        {processing === pack.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <><CreditCard className="w-3 h-3 mr-1" /> Cashfree</>}
+                      </Button>
+                    </div>
                   </motion.div>
                 ))}
               </div>
@@ -213,6 +349,71 @@ export default function Payment() {
           )}
         </div>
       </div>
+
+      {/* UPI Payment Dialog */}
+      <Dialog open={upiDialog.open} onOpenChange={(o) => setUpiDialog({ ...upiDialog, open: o })}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Smartphone className="w-5 h-5 text-emerald-500" />
+              Pay ₹{upiDialog.amount} for {upiDialog.label}
+            </DialogTitle>
+            <DialogDescription>Step 1: Pay → Step 2: Submit your UPI transaction ID</DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            {/* QR Code */}
+            {primaryQr?.qr_image_url && (
+              <div className="text-center p-4 bg-white rounded-xl">
+                <img src={primaryQr.qr_image_url} alt="UPI QR" className="w-48 h-48 mx-auto object-contain" />
+                <p className="text-xs text-muted-foreground mt-2">Scan with any UPI app</p>
+              </div>
+            )}
+
+            {/* UPI ID selector */}
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground">Or send to UPI ID</Label>
+              <div className="space-y-2">
+                {upiMethods.filter(m => m.upi_id).map(m => (
+                  <div key={m.id} className="flex items-center gap-2 p-2 bg-emerald-500/5 rounded-lg border border-emerald-500/20">
+                    <input type="radio" checked={selectedUpiId === m.upi_id} onChange={() => setSelectedUpiId(m.upi_id!)} />
+                    <code className="flex-1 text-sm font-mono text-emerald-600 font-bold">{m.upi_id}</code>
+                    <Button type="button" size="sm" variant="ghost" onClick={() => copyUpi(m.upi_id!)}>
+                      <Copy className="w-3 h-3" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="border-t pt-4 space-y-3">
+              <div className="space-y-1">
+                <Label htmlFor="utr">UPI Transaction ID (UTR) *</Label>
+                <Input id="utr" value={utr} onChange={(e) => setUtr(e.target.value)}
+                  placeholder="e.g. 412345678901" maxLength={30} />
+                <p className="text-[11px] text-muted-foreground">Found in your UPI app's payment confirmation</p>
+              </div>
+
+              <div className="space-y-1">
+                <Label htmlFor="screenshot">Payment Screenshot (optional but recommended)</Label>
+                <Input id="screenshot" type="file" accept="image/*"
+                  onChange={(e) => setScreenshotFile(e.target.files?.[0] || null)} />
+              </div>
+
+              <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3 flex gap-2 text-xs">
+                <Clock className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                <span>Verification within 1–4 hours. Plan activates automatically + invoice emailed to you.</span>
+              </div>
+
+              <Button onClick={submitUpiPayment} disabled={submittingUpi || !utr.trim()}
+                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white">
+                {submittingUpi ? <><Loader2 className="w-4 h-4 mr-1 animate-spin" /> Submitting...</>
+                  : <><CheckCircle2 className="w-4 h-4 mr-1" /> Submit Payment Proof</>}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
