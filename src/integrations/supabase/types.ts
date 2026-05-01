@@ -751,6 +751,66 @@ export type Database = {
           },
         ]
       }
+      invoices: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          id: string
+          invoice_number: string
+          item_label: string
+          item_type: string
+          metadata: Json | null
+          payment_method: string
+          payment_reference: string | null
+          send_error: string | null
+          sent_to_admin: boolean
+          sent_to_user: boolean
+          status: string
+          user_email: string
+          user_id: string
+          user_name: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency?: string
+          id?: string
+          invoice_number: string
+          item_label: string
+          item_type?: string
+          metadata?: Json | null
+          payment_method: string
+          payment_reference?: string | null
+          send_error?: string | null
+          sent_to_admin?: boolean
+          sent_to_user?: boolean
+          status?: string
+          user_email: string
+          user_id: string
+          user_name?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          invoice_number?: string
+          item_label?: string
+          item_type?: string
+          metadata?: Json | null
+          payment_method?: string
+          payment_reference?: string | null
+          send_error?: string | null
+          sent_to_admin?: boolean
+          sent_to_user?: boolean
+          status?: string
+          user_email?: string
+          user_id?: string
+          user_name?: string | null
+        }
+        Relationships: []
+      }
       knowledge_exports: {
         Row: {
           content: string
@@ -927,6 +987,66 @@ export type Database = {
         }
         Relationships: []
       }
+      manual_payment_submissions: {
+        Row: {
+          admin_note: string | null
+          amount: number
+          created_at: string
+          currency: string
+          id: string
+          payment_type: string
+          plan: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          screenshot_url: string | null
+          status: string
+          updated_at: string
+          upi_id_used: string | null
+          user_id: string
+          user_note: string | null
+          utr_number: string
+          wallet_pack: string | null
+        }
+        Insert: {
+          admin_note?: string | null
+          amount: number
+          created_at?: string
+          currency?: string
+          id?: string
+          payment_type?: string
+          plan?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          screenshot_url?: string | null
+          status?: string
+          updated_at?: string
+          upi_id_used?: string | null
+          user_id: string
+          user_note?: string | null
+          utr_number: string
+          wallet_pack?: string | null
+        }
+        Update: {
+          admin_note?: string | null
+          amount?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          payment_type?: string
+          plan?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          screenshot_url?: string | null
+          status?: string
+          updated_at?: string
+          upi_id_used?: string | null
+          user_id?: string
+          user_note?: string | null
+          utr_number?: string
+          wallet_pack?: string | null
+        }
+        Relationships: []
+      }
       marketplace_items: {
         Row: {
           category: string | null
@@ -1097,6 +1217,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      payment_methods: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          display_name: string | null
+          id: string
+          is_active: boolean
+          label: string
+          method_type: string
+          priority: number
+          qr_image_url: string | null
+          updated_at: string
+          upi_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          display_name?: string | null
+          id?: string
+          is_active?: boolean
+          label: string
+          method_type?: string
+          priority?: number
+          qr_image_url?: string | null
+          updated_at?: string
+          upi_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          display_name?: string | null
+          id?: string
+          is_active?: boolean
+          label?: string
+          method_type?: string
+          priority?: number
+          qr_image_url?: string | null
+          updated_at?: string
+          upi_id?: string | null
+        }
+        Relationships: []
       }
       payment_status_logs: {
         Row: {
