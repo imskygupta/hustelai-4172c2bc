@@ -250,19 +250,19 @@ export default function Signup() {
         initial={{ opacity: 0, scale: 0.92, filter: "blur(8px)" }}
         animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
         transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-        className="w-full max-w-md relative z-10"
+        className="w-full max-w-lg relative z-10"
       >
-        <div ref={formRef} className="glass rounded-2xl p-8 space-y-6 border-accent/20 hover:border-accent/40 transition-all duration-700 hover:shadow-glow relative overflow-hidden">
+        <div ref={formRef} className="glass rounded-2xl p-6 space-y-4 border-accent/20 hover:border-accent/40 transition-all duration-700 hover:shadow-glow relative overflow-hidden">
           <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-accent/5 via-primary/5 to-accent/5 opacity-0 hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
 
           {step === "signup" ? (
             <>
-              <div className="text-center space-y-2 gsap-stagger">
+              <div className="text-center space-y-1 gsap-stagger">
                 <Link to="/" className="inline-flex items-center gap-2 group">
-                  <Zap className="w-8 h-8 text-primary group-hover:scale-125 transition-transform duration-300" />
-                  <span className="font-display font-bold text-2xl group-hover:text-gradient transition-all">HustleAI</span>
+                  <Zap className="w-7 h-7 text-primary group-hover:scale-125 transition-transform duration-300" />
+                  <span className="font-display font-bold text-xl group-hover:text-gradient transition-all">HustleAI</span>
                 </Link>
-                <p className="text-muted-foreground">Create your account and start hustling.</p>
+                <p className="text-sm text-muted-foreground">Create your account and start hustling.</p>
                 {refFromUrl && (
                   <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium">
                     🎁 Referred by a friend — you both earn rewards!
@@ -270,30 +270,32 @@ export default function Signup() {
                 )}
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-2 gsap-stagger">
+              <form onSubmit={handleSubmit} className="space-y-3">
+                <div className="grid grid-cols-2 gap-3 gsap-stagger">
+                  <div className="space-y-1.5">
                   <Label htmlFor="name">Display Name</Label>
                   <Input id="name" value={displayName} onChange={(e) => setDisplayName(e.target.value)}
-                    placeholder="Your name" required className="h-12 bg-secondary/50 focus:shadow-glow focus:border-primary transition-all" />
-                </div>
-                <div className="space-y-2 gsap-stagger">
+                    placeholder="Your name" required className="h-10 bg-secondary/50 focus:shadow-glow focus:border-primary transition-all" />
+                  </div>
+                  <div className="space-y-1.5">
                   <Label htmlFor="email">Email</Label>
                   <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@example.com" required className="h-12 bg-secondary/50 focus:shadow-glow focus:border-primary transition-all" />
+                    placeholder="you@example.com" required className="h-10 bg-secondary/50 focus:shadow-glow focus:border-primary transition-all" />
+                  </div>
                 </div>
-                <div className="space-y-2 gsap-stagger">
+                <div className="space-y-1.5 gsap-stagger">
                   <Label htmlFor="password">Password</Label>
                   <div className="relative">
                     <Input id="password" type={showPassword ? "text" : "password"} value={password}
                       onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required minLength={6}
-                      className="h-12 bg-secondary/50 focus:shadow-glow focus:border-primary transition-all" />
+                      className="h-10 bg-secondary/50 focus:shadow-glow focus:border-primary transition-all" />
                     <button type="button" onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors">
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                   </div>
                 </div>
-                <div className="space-y-2 gsap-stagger">
+                <div className="space-y-1.5 gsap-stagger">
                   <Label htmlFor="coupon" className="flex items-center gap-1.5">
                     <Gift className="w-3.5 h-3.5 text-primary" /> Coupon / Referral Code
                     <span className="text-muted-foreground text-[10px] ml-1">(optional)</span>
@@ -304,7 +306,7 @@ export default function Signup() {
                     onChange={(e) => setCouponCode(e.target.value)}
                     placeholder="e.g. HA-abc12345"
                     disabled={!!refFromUrl}
-                    className={`h-12 bg-secondary/50 focus:shadow-glow focus:border-primary transition-all ${refFromUrl ? 'opacity-70' : ''}`}
+                    className={`h-10 bg-secondary/50 focus:shadow-glow focus:border-primary transition-all ${refFromUrl ? 'opacity-70' : ''}`}
                   />
                   {refFromUrl && (
                     <p className="text-[10px] text-primary/70">✓ Auto-applied from referral link</p>
@@ -312,7 +314,7 @@ export default function Signup() {
                 </div>
                 <div className="gsap-stagger">
                   <Button type="submit" disabled={loading}
-                    className="w-full h-12 bg-gradient-primary text-primary-foreground font-semibold text-base btn-press hover:shadow-glow transition-shadow">
+                    className="w-full h-10 bg-gradient-primary text-primary-foreground font-semibold text-sm btn-press hover:shadow-glow transition-shadow">
                     {loading ? (
                       <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1 }} className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full" />
                     ) : (
@@ -333,7 +335,7 @@ export default function Signup() {
                 <Button
                   type="button"
                   variant="outline"
-                  className="w-full h-12 font-medium border-border/50 hover:border-primary/30 hover:bg-secondary/50 transition-all"
+                  className="w-full h-10 font-medium border-border/50 hover:border-primary/30 hover:bg-secondary/50 transition-all"
                   onClick={async () => {
                     try {
                       const isCustomDomain =

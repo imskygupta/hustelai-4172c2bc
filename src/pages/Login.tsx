@@ -155,17 +155,17 @@ export default function Login() {
         initial={{ opacity: 0, scale: 0.92, filter: "blur(8px)" }}
         animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
         transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-        className="w-full max-w-md relative z-10"
+        className="w-full max-w-lg relative z-10"
       >
-        <div ref={formRef} className="glass rounded-2xl p-8 space-y-6 border-primary/20 hover:border-primary/40 transition-all duration-700 hover:shadow-glow relative overflow-hidden">
+        <div ref={formRef} className="glass rounded-2xl p-6 space-y-4 border-primary/20 hover:border-primary/40 transition-all duration-700 hover:shadow-glow relative overflow-hidden">
           <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-primary/5 via-accent/5 to-primary/5 opacity-0 hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
 
-          <div className="text-center space-y-2 gsap-stagger">
+          <div className="text-center space-y-1 gsap-stagger">
             <Link to="/" className="inline-flex items-center gap-2 group">
-              <Zap className="w-8 h-8 text-primary group-hover:scale-125 transition-transform duration-300" />
-              <span className="font-display font-bold text-2xl group-hover:text-gradient transition-all">HustleAI</span>
+              <Zap className="w-7 h-7 text-primary group-hover:scale-125 transition-transform duration-300" />
+              <span className="font-display font-bold text-xl group-hover:text-gradient transition-all">HustleAI</span>
             </Link>
-            <p className="text-muted-foreground">Welcome back! Sign in to continue.</p>
+            <p className="text-sm text-muted-foreground">Welcome back! Sign in to continue.</p>
           </div>
 
           {/* Method toggle */}
@@ -186,24 +186,24 @@ export default function Login() {
 
           {/* Password Login */}
           {method === "password" && (
-            <form onSubmit={handlePasswordSubmit} className="space-y-4">
-              <div className="space-y-2 gsap-stagger">
+            <form onSubmit={handlePasswordSubmit} className="space-y-3">
+              <div className="space-y-1.5 gsap-stagger">
                 <Label htmlFor="email" className="text-sm font-medium">Email</Label>
                 <Input
                   id="email" type="email" value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@example.com" required
-                  className="h-12 transition-all duration-300 focus:shadow-glow focus:border-primary bg-secondary/50"
+                  className="h-10 transition-all duration-300 focus:shadow-glow focus:border-primary bg-secondary/50"
                 />
               </div>
-              <div className="space-y-2 gsap-stagger">
+              <div className="space-y-1.5 gsap-stagger">
                 <Label htmlFor="password" className="text-sm font-medium">Password</Label>
                 <div className="relative">
                   <Input
                     id="password" type={showPassword ? "text" : "password"} value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••" required
-                    className="h-12 transition-all duration-300 focus:shadow-glow focus:border-primary bg-secondary/50"
+                    className="h-10 transition-all duration-300 focus:shadow-glow focus:border-primary bg-secondary/50"
                   />
                   <button type="button" onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors">
@@ -213,7 +213,7 @@ export default function Login() {
               </div>
               <div className="gsap-stagger">
                 <Button type="submit" disabled={loading}
-                  className="w-full h-12 bg-gradient-primary text-primary-foreground font-semibold text-base btn-press hover:shadow-glow transition-shadow duration-300">
+                  className="w-full h-10 bg-gradient-primary text-primary-foreground font-semibold text-sm btn-press hover:shadow-glow transition-shadow duration-300">
                   {loading ? (
                     <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1 }} className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full" />
                   ) : (
@@ -226,8 +226,8 @@ export default function Login() {
 
           {/* OTP Login - Step 1: Email */}
           {method === "otp" && otpStep === "email" && (
-            <form onSubmit={handleSendOtp} className="space-y-4">
-              <div className="space-y-2 gsap-stagger">
+            <form onSubmit={handleSendOtp} className="space-y-3">
+              <div className="space-y-1.5 gsap-stagger">
                 <Label className="text-sm font-medium">Email</Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -235,13 +235,13 @@ export default function Login() {
                     type="email" value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@example.com" required
-                    className="h-12 pl-10 bg-secondary/50 focus:shadow-glow focus:border-primary transition-all"
+                    className="h-10 pl-10 bg-secondary/50 focus:shadow-glow focus:border-primary transition-all"
                   />
                 </div>
               </div>
               <div className="gsap-stagger">
                 <Button type="submit" disabled={loading}
-                  className="w-full h-12 bg-gradient-primary text-primary-foreground font-semibold text-base btn-press hover:shadow-glow transition-shadow">
+                  className="w-full h-10 bg-gradient-primary text-primary-foreground font-semibold text-sm btn-press hover:shadow-glow transition-shadow">
                   {loading ? "Sending Code..." : "Send 6-Digit Code"}
                 </Button>
               </div>
@@ -250,25 +250,25 @@ export default function Login() {
 
           {/* OTP Login - Step 2: Verify */}
           {method === "otp" && otpStep === "verify" && (
-            <form onSubmit={handleVerifyOtp} className="space-y-4">
+            <form onSubmit={handleVerifyOtp} className="space-y-3">
               <p className="text-sm text-center text-muted-foreground gsap-stagger">
                 A 6-digit code has been sent to <strong className="text-foreground">{email}</strong>
               </p>
-              <div className="space-y-2 gsap-stagger">
+              <div className="space-y-1.5 gsap-stagger">
                 <Label className="text-sm font-medium">Login Code</Label>
                 <div className="relative">
                   <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
                     value={otp} onChange={(e) => setOtp(e.target.value)}
                     type="text" placeholder="Enter 6-digit code"
-                    className="h-12 pl-10 text-center tracking-widest text-lg bg-secondary/50 focus:shadow-glow focus:border-primary"
+                    className="h-10 pl-10 text-center tracking-widest text-lg bg-secondary/50 focus:shadow-glow focus:border-primary"
                     maxLength={6} autoComplete="off"
                   />
                 </div>
               </div>
               <div className="gsap-stagger">
                 <Button type="submit" disabled={loading}
-                  className="w-full h-12 bg-gradient-primary text-primary-foreground font-semibold text-base btn-press hover:shadow-glow transition-shadow">
+                  className="w-full h-10 bg-gradient-primary text-primary-foreground font-semibold text-sm btn-press hover:shadow-glow transition-shadow">
                   {loading ? "Verifying..." : "Verify & Sign In"}
                 </Button>
               </div>
@@ -290,7 +290,7 @@ export default function Login() {
             <Button
               type="button"
               variant="outline"
-              className="w-full h-12 font-medium border-border/50 hover:border-primary/30 hover:bg-secondary/50 transition-all"
+              className="w-full h-10 font-medium border-border/50 hover:border-primary/30 hover:bg-secondary/50 transition-all"
               onClick={async () => {
                 try {
                   const isCustomDomain =
