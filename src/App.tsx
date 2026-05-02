@@ -45,6 +45,9 @@ import KnowledgeHub from "./pages/KnowledgeHub";
 import HustleBlueprint from "./pages/HustleBlueprint";
 import ResumeOptimizer from "./pages/ResumeOptimizer";
 import GigArbitrage from "./pages/GigArbitrage";
+import GigPriceCalculator from "./pages/GigPriceCalculator";
+import FacelessContent from "./pages/FacelessContent";
+import RedFlagScanner from "./pages/RedFlagScanner";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -98,6 +101,9 @@ const App = () => (
             <Route path="/hustle-blueprint" element={<HustleBlueprint />} />
             <Route path="/resume-optimizer" element={<ResumeOptimizer />} />
             <Route path="/gig-arbitrage" element={<GigArbitrage />} />
+            <Route path="/gig-price-calculator" element={<GigPriceCalculator />} />
+            <Route path="/faceless-content" element={<FacelessContent />} />
+            <Route path="/red-flag-scanner" element={<RedFlagScanner />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

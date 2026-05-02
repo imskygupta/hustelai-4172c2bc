@@ -20,6 +20,7 @@ import {
   Clock, ExternalLink, Activity, Database, Server, Zap,
   Wallet, Gift, Share2
 } from "lucide-react";
+import { PaymentMethodsManager } from "@/components/admin/PaymentMethodsManager";
 
 interface UserProfile {
   id: string;
@@ -1367,6 +1368,8 @@ export default function AdminDashboard() {
           {/* ===== PAYMENTS ===== */}
           {section === "payments" && (
             <div className="space-y-4">
+              <PaymentMethodsManager />
+
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 {[
                   { label: "Total Payments", value: payments.length },

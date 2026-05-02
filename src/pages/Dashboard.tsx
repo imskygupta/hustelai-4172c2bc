@@ -16,7 +16,7 @@ import {
   BookOpen, TrendingUp, MessageCircle, Gift, Lock,
   Newspaper, ArrowUpRight, ArrowDownRight, ExternalLink, User, FileText,
   UserCheck, Clock, Calendar, Share2, Store, Target, Brain, Zap,
-  BarChart3, Activity, Eye, History
+  BarChart3, Activity, Eye, History, DollarSign, Film, ShieldAlert
 } from "lucide-react";
 
 interface FeedData {
@@ -481,6 +481,9 @@ export default function Dashboard() {
                 { icon: Target, label: "Problem Lead Finder", desc: "AI-powered radar for freelance opportunities from social media", action: () => navigate("/problem-leads"), minTier: "elite", emoji: "🎯" },
                 { icon: BookOpen, label: "Knowledge Hub", desc: "Save prompts, export chats, organize knowledge & automate workflows", action: () => navigate("/knowledge-hub"), minTier: "pro", emoji: "📚" },
                 { icon: Store, label: "Marketplace", desc: "Sell templates, tools & digital products to the community", action: () => navigate("/marketplace"), minTier: "elite", emoji: "🏪" },
+                { icon: DollarSign, label: "Gig-Price Calculator", desc: "3-tier pricing structure with anchor pricing psychology — quote like a pro", action: () => navigate("/gig-price-calculator"), minTier: "free", emoji: "💰" },
+                { icon: Film, label: "Faceless Content", desc: "Turn any topic into a 6-scene viral storyboard for short-form video", action: () => navigate("/faceless-content"), minTier: "free", emoji: "🎬" },
+                { icon: ShieldAlert, label: "Red-Flag Scanner", desc: "Stoplight risk report on client messages — spot bad clients instantly", action: () => navigate("/red-flag-scanner"), minTier: "free", emoji: "🚦" },
               ].map((tool, i) => {
                 const locked = (tool.minTier === "pro" && isFree) ||
                                (tool.minTier === "elite" && !isElite);
