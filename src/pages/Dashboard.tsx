@@ -16,7 +16,7 @@ import {
   BookOpen, TrendingUp, MessageCircle, Gift, Lock,
   Newspaper, ArrowUpRight, ArrowDownRight, ExternalLink, User, FileText,
   UserCheck, Clock, Calendar, Share2, Store, Target, Brain, Zap,
-  BarChart3, Activity, Eye, History
+  BarChart3, Activity, Eye, History, DollarSign, Film, ShieldAlert
 } from "lucide-react";
 
 interface FeedData {
