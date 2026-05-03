@@ -811,6 +811,66 @@ export type Database = {
         }
         Relationships: []
       }
+      job_opportunity_submissions: {
+        Row: {
+          about: string | null
+          admin_notes: string | null
+          availability: string | null
+          created_at: string
+          email: string
+          expected_hourly_rate: string | null
+          experience_years: string
+          full_name: string
+          id: string
+          linkedin_url: string | null
+          phone: string | null
+          portfolio_url: string | null
+          preferred_platforms: string[] | null
+          primary_skill: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          about?: string | null
+          admin_notes?: string | null
+          availability?: string | null
+          created_at?: string
+          email: string
+          expected_hourly_rate?: string | null
+          experience_years: string
+          full_name: string
+          id?: string
+          linkedin_url?: string | null
+          phone?: string | null
+          portfolio_url?: string | null
+          preferred_platforms?: string[] | null
+          primary_skill: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          about?: string | null
+          admin_notes?: string | null
+          availability?: string | null
+          created_at?: string
+          email?: string
+          expected_hourly_rate?: string | null
+          experience_years?: string
+          full_name?: string
+          id?: string
+          linkedin_url?: string | null
+          phone?: string | null
+          portfolio_url?: string | null
+          preferred_platforms?: string[] | null
+          primary_skill?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       knowledge_exports: {
         Row: {
           content: string

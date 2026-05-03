@@ -13,6 +13,56 @@ const SMTP_CONNECTIONS = [
   { port: 587, tls: false, label: "starttls-587" },
 ] as const;
 
+async function sendWithResend(to: string, subject: string, html: string): Promise<boolean> {
+  const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+  if (!RESEND_API_KEY) return false;
+  try {
+    const resp = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${RESEND_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: "HustleAI <noreply@hustlaiapp.in>",
+        to: [to],
+        subject,
+        html,
+      }),
+    });
+    if (!resp.ok) {
+      const txt = await resp.text();
+      console.error("Resend failed:", resp.status, txt);
+      return false;
+    }
+    console.log("Welcome email sent via Resend");
+    return true;
+  } catch (e) {
+    console.error("Resend error:", e);
+    return false;
+  }
+}
+
+async function notifyAdminOfFailure(reason: string, email: string) {
+  const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+  if (!RESEND_API_KEY) return;
+  try {
+    await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${RESEND_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: "HustleAI Alerts <noreply@hustlaiapp.in>",
+        to: ["samratakash0000@gmail.com"],
+        subject: "⚠️ Welcome email delivery failed",
+        html: `<p>Welcome email failed for <strong>${email}</strong>.</p><p>Reason: ${reason}</p>`,
+      }),
+    });
+  } catch {}
+}
+
 async function sendWithSmtpFallback(smtpEmail: string, smtpPass: string, to: string, subject: string, html: string) {
   let lastError: unknown = null;
 
@@ -74,6 +124,19 @@ serve(async (req) => {
     const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
     if (authError || !user) throw new Error("Unauthorized");
 
+    const name = displayName || email.split("@")[0];
+    const subject = "Welcome to HustleAI! 🚀";
+    const html = generateWelcomeHTML(name);
+
+    // Priority 1: Resend (custom domain)
+    const resendOk = await sendWithResend(email, subject, html);
+    if (resendOk) {
+      return new Response(JSON.stringify({ success: true, provider: "resend" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Priority 2: SMTP fallback
     let smtpEmail = Deno.env.get("SMTP_CONTACT_EMAIL") || "contact@hustlaiapp.in";
     let smtpPass = Deno.env.get("SMTP_CONTACT_PASSWORD") || "";
 
@@ -95,15 +158,21 @@ serve(async (req) => {
     }
 
     if (!smtpPass) {
+      await notifyAdminOfFailure("No Resend key + no SMTP configured", email);
       return new Response(JSON.stringify({ success: true, skipped: true, reason: "No SMTP password" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const name = displayName || email.split("@")[0];
-    await sendWithSmtpFallback(smtpEmail, smtpPass, email, "Welcome to HustleAI! 🚀", generateWelcomeHTML(name));
+    try {
+      await sendWithSmtpFallback(smtpEmail, smtpPass, email, subject, html);
+    } catch (e) {
+      const reason = e instanceof Error ? e.message : String(e);
+      await notifyAdminOfFailure(`Resend + SMTP both failed: ${reason}`, email);
+      throw e;
+    }
 
-    return new Response(JSON.stringify({ success: true }), {
+    return new Response(JSON.stringify({ success: true, provider: "smtp" }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {

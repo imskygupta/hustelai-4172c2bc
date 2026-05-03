@@ -121,20 +121,21 @@ export default function Signup() {
     }
     setLoading(true);
     const { error } = await signUp(email, password, displayName, couponCode.trim());
-    setLoading(false);
     if (error) {
+      setLoading(false);
       toast({ title: "Signup failed", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: "Account created! 🎉", description: "Check your email for a 6-digit verification code." });
-      const sent = await sendOTPEmail();
-      if (sent) {
-        setStep("otp");
-        setResendCooldown(60);
-      } else {
-        toast({ title: "Warning", description: "Could not send OTP. You can resend from the next screen.", variant: "destructive" });
-        setStep("otp");
-      }
+      return;
     }
+
+    // Auto-confirm is enabled — user is already signed in. Fire welcome email & redirect.
+    try {
+      await supabase.functions.invoke("send-welcome-email", { body: { email, displayName } });
+    } catch (e) {
+      console.error("Welcome email failed:", e);
+    }
+    setLoading(false);
+    toast({ title: "Welcome to HustleAI! 🎉", description: "Redirecting to your dashboard..." });
+    navigate("/dashboard");
   };
 
   const handleVerifyOTP = async () => {
