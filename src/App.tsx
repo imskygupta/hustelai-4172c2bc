@@ -48,7 +48,9 @@ import GigArbitrage from "./pages/GigArbitrage";
 import GigPriceCalculator from "./pages/GigPriceCalculator";
 import FacelessContent from "./pages/FacelessContent";
 import RedFlagScanner from "./pages/RedFlagScanner";
+import SureHitJobs from "./pages/SureHitJobs";
 import NotFound from "./pages/NotFound";
+import { MobileBottomNav } from "@/components/MobileBottomNav";
 
 const queryClient = new QueryClient();
 
@@ -104,8 +106,10 @@ const App = () => (
             <Route path="/gig-price-calculator" element={<GigPriceCalculator />} />
             <Route path="/faceless-content" element={<FacelessContent />} />
             <Route path="/red-flag-scanner" element={<RedFlagScanner />} />
+            <Route path="/sure-hit-jobs" element={<SureHitJobs />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
+          <MobileBottomNav />
         </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>

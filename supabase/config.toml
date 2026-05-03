@@ -62,3 +62,6 @@ verify_jwt = false
 
 [functions.red-flag-scanner]
 verify_jwt = false
+
+[functions.job-opportunity-submit]
+verify_jwt = false
