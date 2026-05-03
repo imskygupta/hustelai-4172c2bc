@@ -16,7 +16,7 @@ import {
   BookOpen, TrendingUp, MessageCircle, Gift, Lock,
   Newspaper, ArrowUpRight, ArrowDownRight, ExternalLink, User, FileText,
   UserCheck, Clock, Calendar, Share2, Store, Target, Brain, Zap,
-  BarChart3, Activity, Eye, History, DollarSign, Film, ShieldAlert
+  BarChart3, Activity, Eye, History, DollarSign, Film, ShieldAlert, Briefcase
 } from "lucide-react";
 
 interface FeedData {
@@ -484,6 +484,7 @@ export default function Dashboard() {
                 { icon: DollarSign, label: "Gig-Price Calculator", desc: "3-tier pricing structure with anchor pricing psychology — quote like a pro", action: () => navigate("/gig-price-calculator"), minTier: "free", emoji: "💰" },
                 { icon: Film, label: "Faceless Content", desc: "Turn any topic into a 6-scene viral storyboard for short-form video", action: () => navigate("/faceless-content"), minTier: "free", emoji: "🎬" },
                 { icon: ShieldAlert, label: "Red-Flag Scanner", desc: "Stoplight risk report on client messages — spot bad clients instantly", action: () => navigate("/red-flag-scanner"), minTier: "free", emoji: "🚦" },
+                { icon: Briefcase, label: "🎯 Sure-Hit Jobs", desc: "Get personally referred to Outlier, Alignerr & Mercor by our QC team — Pro members only", action: () => navigate("/sure-hit-jobs"), minTier: "pro", emoji: "🎯" },
               ].map((tool, i) => {
                 const locked = (tool.minTier === "pro" && isFree) ||
                                (tool.minTier === "elite" && !isElite);
