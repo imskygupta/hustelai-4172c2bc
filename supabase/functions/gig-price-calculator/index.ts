@@ -58,8 +58,8 @@ serve(async (req) => {
         .eq("user_id", userId)
         .eq("status", "ai_tool_use:gig-price")
         .gte("created_at", since.toISOString());
-      if ((count ?? 0) >= 3) {
-        return new Response(JSON.stringify({ error: "Free tier limit reached (3 uses). Upgrade to Pro for unlimited access." }), {
+      if ((count ?? 0) >= 5) {
+        return new Response(JSON.stringify({ error: "Free tier limit reached (5 uses / 30 days). Upgrade to Pro for unlimited access." }), {
           status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
