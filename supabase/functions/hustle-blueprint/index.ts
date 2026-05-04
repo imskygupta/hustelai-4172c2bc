@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { callAIWithFallback } from "../_shared/ai-fallback.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -23,9 +24,6 @@ serve(async (req) => {
     const { hustle_title, hustle_description, user_skills } = await req.json();
     if (!hustle_title) return new Response(JSON.stringify({ error: "hustle_title is required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
-    const ZHIPU_API_KEY = Deno.env.get("ZHIPU_API_KEY");
-    if (!ZHIPU_API_KEY) throw new Error("ZHIPU_API_KEY not configured");
-
     const prompt = `You are HustleAI Blueprint Generator. Create a detailed 7-day action plan to help someone start "${hustle_title}".
 
 Description: ${hustle_description || "N/A"}
@@ -41,31 +39,13 @@ Generate a comprehensive blueprint with:
 
 Format with clear markdown headers and bullet points. Be specific and actionable, not generic.`;
 
-    const response = await fetch("https://open.bigmodel.cn/api/paas/v4/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${ZHIPU_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "glm-4.7-flash",
-        messages: [
-          { role: "system", content: "You are an expert freelance consultant who creates actionable 7-day blueprints. Be specific, practical, and motivating." },
-          { role: "user", content: prompt },
-        ],
-        temperature: 0.7,
-        max_tokens: 3000,
-      }),
+    const { content: blueprint } = await callAIWithFallback({
+      messages: [
+        { role: "system", content: "You are an expert freelance consultant who creates actionable 7-day blueprints. Be specific, practical, and motivating." },
+        { role: "user", content: prompt },
+      ],
+      temperature: 0.7,
     });
-
-    if (!response.ok) {
-      const errText = await response.text();
-      console.error("Zhipu API error:", response.status, errText);
-      throw new Error(`Zhipu API error: ${response.status}`);
-    }
-
-    const data = await response.json();
-    const blueprint = data.choices?.[0]?.message?.content || "Failed to generate blueprint.";
 
     return new Response(JSON.stringify({ blueprint }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

@@ -38,9 +38,6 @@ serve(async (req) => {
 
     const { current_skills, goals } = await req.json();
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
-
     // Fetch user profile for context
     let profileContext = "";
     try {
@@ -61,15 +58,9 @@ serve(async (req) => {
     const skillsList = current_skills?.length ? current_skills.join(", ") : "Not specified";
     const goalsText = goals || "Increase freelance income";
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
+    const { callAIWithFallback } = await import("../_shared/ai-fallback.ts");
+    const aiResult = await callAIWithFallback({
+      messages: [
           {
             role: "system",
             content: `You are an expert career consultant for freelancers. Analyze the user's current skills and suggest a personalized learning roadmap.
@@ -111,28 +102,8 @@ Return a JSON response with this exact structure (no markdown, just raw JSON):
             content: `My current skills: ${skillsList}\nMy goals: ${goalsText}\n\nAnalyze my skill gaps and create a learning roadmap with trending high-paying skills I should learn next. Focus on the Indian freelancing market and give earnings in INR.`
           }
         ],
-      }),
     });
-
-    if (response.status === 429) {
-      return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again in a moment." }), {
-        status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-    if (response.status === 402) {
-      return new Response(JSON.stringify({ error: "AI credits exhausted. Please contact admin." }), {
-        status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    if (!response.ok) {
-      const text = await response.text();
-      console.error("AI error:", response.status, text);
-      throw new Error(`AI error: ${response.status}`);
-    }
-
-    const data = await response.json();
-    let content = data.choices?.[0]?.message?.content || "";
+    let content = aiResult.content;
     content = content.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
 
     try {

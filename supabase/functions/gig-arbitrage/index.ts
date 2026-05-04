@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { callAIWithFallback } from "../_shared/ai-fallback.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -27,9 +28,6 @@ serve(async (req) => {
 
     const { category, skills } = await req.json();
     if (!category) return new Response(JSON.stringify({ error: "category is required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-
-    const ZHIPU_API_KEY = Deno.env.get("ZHIPU_API_KEY");
-    if (!ZHIPU_API_KEY) throw new Error("ZHIPU_API_KEY not configured");
 
     const prompt = `You are a Gig Arbitrage Analyst. Analyze the "${category}" freelance market and find price arbitrage opportunities.
 
@@ -59,31 +57,14 @@ Find and present:
 
 Format as clean markdown with tables where appropriate.`;
 
-    const response = await fetch("https://open.bigmodel.cn/api/paas/v4/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${ZHIPU_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "glm-4.5-air",
-        messages: [
-          { role: "system", content: "You are a savvy freelance market analyst who specializes in finding price arbitrage opportunities across platforms. Be specific with numbers and actionable advice." },
-          { role: "user", content: prompt },
-        ],
-        temperature: 0.8,
-        max_tokens: 3500,
-      }),
+    const { content: analysis } = await callAIWithFallback({
+      messages: [
+        { role: "system", content: "You are a savvy freelance market analyst who specializes in finding price arbitrage opportunities across platforms. Be specific with numbers and actionable advice." },
+        { role: "user", content: prompt },
+      ],
+      temperature: 0.8,
+      max_tokens: 3500,
     });
-
-    if (!response.ok) {
-      const errText = await response.text();
-      console.error("Zhipu API error:", response.status, errText);
-      throw new Error(`Zhipu API error: ${response.status}`);
-    }
-
-    const data = await response.json();
-    const analysis = data.choices?.[0]?.message?.content || "Failed to generate analysis.";
 
     return new Response(JSON.stringify({ analysis }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

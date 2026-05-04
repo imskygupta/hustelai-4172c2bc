@@ -81,43 +81,13 @@ Rules:
 8. Use a ${toneLabel.toLowerCase()} tone throughout
 9. Do NOT use placeholder brackets like [Your Name] — use the actual freelancer info provided`;
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
-
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: `Here is the job description I want to apply to:\n\n${job_description.slice(0, 3000)}` },
-        ],
-      }),
+    const { callAIWithFallback } = await import("../_shared/ai-fallback.ts");
+    const { content } = await callAIWithFallback({
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: `Here is the job description I want to apply to:\n\n${job_description.slice(0, 3000)}` },
+      ],
     });
-
-    if (!response.ok) {
-      const status = response.status;
-      const text = await response.text();
-      console.error("AI gateway error:", status, text);
-      if (status === 429) {
-        return new Response(JSON.stringify({ error: "Rate limited. Please try again in a moment." }), {
-          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      if (status === 402) {
-        return new Response(JSON.stringify({ error: "Usage limit reached." }), {
-          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      throw new Error(`AI error: ${status}`);
-    }
-
-    const data = await response.json();
-    const content = data.choices?.[0]?.message?.content;
     if (!content) throw new Error("No response from AI");
 
     return new Response(JSON.stringify({ proposal: content }), {
