@@ -1483,6 +1483,8 @@ export type Database = {
           email: string | null
           id: string
           is_verified: boolean
+          onboarding: Json | null
+          onboarding_completed: boolean
           phone: string | null
           referral_code: string | null
           referral_credits: number
@@ -1505,6 +1507,8 @@ export type Database = {
           email?: string | null
           id?: string
           is_verified?: boolean
+          onboarding?: Json | null
+          onboarding_completed?: boolean
           phone?: string | null
           referral_code?: string | null
           referral_credits?: number
@@ -1527,6 +1531,8 @@ export type Database = {
           email?: string | null
           id?: string
           is_verified?: boolean
+          onboarding?: Json | null
+          onboarding_completed?: boolean
           phone?: string | null
           referral_code?: string | null
           referral_credits?: number
