@@ -12,6 +12,8 @@ interface Profile {
   search_count: number;
   is_verified: boolean;
   xp_points: number;
+  onboarding_completed?: boolean;
+  onboarding?: any;
 }
 
 interface AuthContextType {
