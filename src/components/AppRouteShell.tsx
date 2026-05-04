@@ -49,6 +49,7 @@ export function AppRouteShell({ children }: { children: ReactNode }) {
  * Marketing pages (/, /about, /blog, etc.) and auth pages stay outside.
  */
 export const APP_SHELL_PATHS = new Set<string>([
+  "/dashboard",
   "/explore",
   "/saved-hustles",
   "/community",
