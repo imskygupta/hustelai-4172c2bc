@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
@@ -12,6 +12,7 @@ import { Progress } from "@/components/ui/progress";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { getMaxUses, getUsage, bumpUsage, awardXP } from "@/lib/tool-limits";
 import {
   Brain, Loader2, TrendingUp, Target, BookOpen, Zap,
   Plus, X, ArrowRight, Sparkles, Clock, DollarSign
@@ -58,6 +59,10 @@ export default function SkillGap() {
 
   const tier = profile?.subscription_tier || "free";
   const hasAccess = ["pro", "elite", "infinity"].includes(tier);
+  const maxUses = getMaxUses(tier);
+  const [usageCount, setUsageCount] = useState(0);
+  useEffect(() => { if (user) setUsageCount(getUsage("skillgap", user.id)); }, [user]);
+  const atLimit = usageCount >= maxUses;
 
   if (!user || !hasAccess) {
     return (
@@ -84,6 +89,7 @@ export default function SkillGap() {
   };
 
   const analyze = async () => {
+    if (atLimit) { toast({ title: `Limit reached (${maxUses}/${maxUses})`, description: "Upgrade for more uses.", variant: "destructive" }); return; }
     if (skills.length === 0) {
       toast({ title: "Add at least one skill", variant: "destructive" });
       return;
@@ -99,6 +105,8 @@ export default function SkillGap() {
         toast({ title: "Error", description: data.error, variant: "destructive" });
       } else if (data.result) {
         setResult(data.result);
+        setUsageCount(bumpUsage("skillgap", user.id));
+        awardXP(user.id, 10);
       }
     } catch {
       toast({ title: "Failed to analyze", description: "Please try again.", variant: "destructive" });
