@@ -133,6 +133,8 @@ export default function ResumeOptimizer() {
         const newCount = getUsage() + 1;
         localStorage.setItem(usageKey, String(newCount));
         setUsageCount(newCount);
+        // award XP silently
+        import("@/lib/tool-limits").then(m => m.awardXP(user!.id, 10));
       }, 500);
       toast.success("Resume optimized!");
     } catch (e: any) {
