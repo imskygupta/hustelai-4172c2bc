@@ -49,6 +49,7 @@ import GigPriceCalculator from "./pages/GigPriceCalculator";
 import FacelessContent from "./pages/FacelessContent";
 import RedFlagScanner from "./pages/RedFlagScanner";
 import SureHitJobs from "./pages/SureHitJobs";
+import Onboarding from "./pages/Onboarding";
 import NotFound from "./pages/NotFound";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
 
@@ -107,6 +108,7 @@ const App = () => (
             <Route path="/faceless-content" element={<FacelessContent />} />
             <Route path="/red-flag-scanner" element={<RedFlagScanner />} />
             <Route path="/sure-hit-jobs" element={<SureHitJobs />} />
+            <Route path="/onboarding" element={<Onboarding />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <MobileBottomNav />

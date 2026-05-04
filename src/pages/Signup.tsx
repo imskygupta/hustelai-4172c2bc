@@ -134,8 +134,8 @@ export default function Signup() {
       console.error("Welcome email failed:", e);
     }
     setLoading(false);
-    toast({ title: "Welcome to HustleAI! 🎉", description: "Redirecting to your dashboard..." });
-    navigate("/dashboard");
+    toast({ title: "Welcome to HustleAI! 🎉", description: "Let's personalize your workspace…" });
+    navigate("/onboarding");
   };
 
   const handleVerifyOTP = async () => {
