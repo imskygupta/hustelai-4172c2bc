@@ -34,8 +34,6 @@ serve(async (req) => {
     // === END AUTH CHECK ===
 
     const { title, category, description, earnings, startup_cost, type } = await req.json();
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
     const prompt = `You are an expert business advisor and career coach. Generate a comprehensive, actionable roadmap for starting this side hustle / freelancing opportunity:
 
