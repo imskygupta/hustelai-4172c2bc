@@ -89,6 +89,7 @@ export default function GigArbitrage() {
         const newCount = getUsage() + 1;
         localStorage.setItem(usageKey, String(newCount));
         setUsageCount(newCount);
+        import("@/lib/tool-limits").then(m => m.awardXP(user!.id, 10));
       }, 400);
       toast.success("Arbitrage analysis ready!");
     } catch (e: unknown) {
