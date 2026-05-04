@@ -22,7 +22,7 @@ const milestones = [
 ];
 
 const team = [
-  { name: "Sky Gupta", role: "Founder & CEO", desc: "Visionary behind HustleAI. Passionate about empowering the next generation of freelancers." },
+  { name: "SkyTech Team", role: "Builders of HustleAI", desc: "A small, focused product team building AI tools that help people discover, start, and scale freelance income." },
 ];
 
 export default function Company() {

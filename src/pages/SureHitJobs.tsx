@@ -14,7 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Briefcase, CheckCircle, Sparkles, Lock, Send, Trophy, Globe, Shield } from "lucide-react";
 import { motion } from "framer-motion";
 
-const PLATFORMS = ["Outlier", "Alignerr", "Mercor", "Toloka", "Scale AI"];
+const PLATFORMS = ["AI Training", "Data Labeling", "Remote Writing", "Remote Dev", "QA / Review"];
 
 export default function SureHitJobs() {
   const { user, profile, loading } = useAuth();
@@ -107,13 +107,13 @@ export default function SureHitJobs() {
             <span className="text-gradient">Sure-Hit Jobs</span>
           </h1>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Skip the cold applications. Get personally referred to <strong className="text-foreground">Outlier, Alignerr, Mercor</strong> & more by our QC team.
-            Real high-paying AI training & freelance gigs — direct invites, no public listing.
+            Skip cold applications. Get directly referred to vetted remote opportunities by the HustleAI team.
+            Real high-paying remote gigs — direct invites only, no public listings.
           </p>
           <div className="flex flex-wrap justify-center gap-3 text-sm">
             <div className="flex items-center gap-1.5 text-muted-foreground"><Trophy className="w-4 h-4 text-yellow-500" /> $20–$50/hr roles</div>
             <div className="flex items-center gap-1.5 text-muted-foreground"><Globe className="w-4 h-4 text-primary" /> Remote, global</div>
-            <div className="flex items-center gap-1.5 text-muted-foreground"><Shield className="w-4 h-4 text-emerald-500" /> Vetted by HustleAI</div>
+            <div className="flex items-center gap-1.5 text-muted-foreground"><Shield className="w-4 h-4 text-emerald-500" /> Vetted by HustleAI Team</div>
           </div>
         </motion.div>
 
@@ -131,7 +131,7 @@ export default function SureHitJobs() {
             <CheckCircle className="w-16 h-16 mx-auto text-emerald-500" />
             <h2 className="text-2xl font-semibold">You're in the pipeline!</h2>
             <p className="text-muted-foreground max-w-lg mx-auto">
-              Akash personally reviews every application. Expect a referral invite via email within 24-48 hours
+              Our team personally reviews every application. Expect a referral invite via email within 24-48 hours
               if you match a current opening. Check spam too 📧
             </p>
             <Button variant="outline" onClick={() => { setSubmittedId(null); }}>Submit another profile</Button>
@@ -180,7 +180,7 @@ export default function SureHitJobs() {
                 <Input value={form.linkedin_url} onChange={(e) => setForm({ ...form, linkedin_url: e.target.value })} placeholder="https://linkedin.com/in/…" />
               </div>
               <div className="space-y-2 md:col-span-2">
-                <Label>Preferred Platforms (you'll be referred where you fit)</Label>
+                <Label>Preferred Work Type (you'll be referred where you fit)</Label>
                 <div className="flex flex-wrap gap-2">
                   {PLATFORMS.map((p) => (
                     <button type="button" key={p} onClick={() => togglePlatform(p)}
@@ -215,7 +215,7 @@ export default function SureHitJobs() {
               {submitting ? "Submitting..." : (<><Send className="w-4 h-4 mr-2" /> Submit for Personal Referral</>)}
             </Button>
             <p className="text-[11px] text-center text-muted-foreground">
-              By submitting, you allow Akash (HustleAI founder & QC on Outlier/Alignerr) to refer you internally.
+              By submitting, you allow the HustleAI team to refer you internally to vetted partners.
               No fees. No spam.
             </p>
           </form>
