@@ -36,23 +36,24 @@ const platformIcons: Record<string, string> = {
 
 export function Footer() {
   const { pathname } = useLocation();
+  const hiddenInAppShell = isAppShellRoute(pathname);
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [socialLinks, setSocialLinks] = useState<any[]>([]);
   const { toast } = useToast();
 
-  useEffect(() => {
-    loadSocialLinks();
-  }, []);
-
-  // Hide marketing footer inside the SaaS app shell so users don't get
-  // confused thinking they're still on the landing page.
-  if (isAppShellRoute(pathname)) return null;
-
   const loadSocialLinks = async () => {
     const { data } = await supabase.from("social_links" as any).select("*").eq("is_active", true).order("display_order");
     if (data) setSocialLinks(data as any);
   };
+
+  useEffect(() => {
+    if (!hiddenInAppShell) loadSocialLinks();
+  }, [hiddenInAppShell]);
+
+  // Hide marketing footer inside the SaaS app shell so users don't get
+  // confused thinking they're still on the landing page.
+  if (hiddenInAppShell) return null;
 
   const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
