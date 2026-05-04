@@ -71,15 +71,22 @@ export function Navbar() {
   }, [location.pathname]);
 
   const isActive = (href: string) => location.pathname === href;
+  const isHome = location.pathname === "/";
 
   return (
     <nav className={`fixed top-0 w-full z-50 transition-all duration-500 ${
-      scrolled ? "glass border-b border-border/50 shadow-card" : "bg-transparent"
+      isHome
+        ? scrolled
+          ? "bg-white/85 backdrop-blur-xl border-b border-slate-200/70 shadow-sm"
+          : "bg-transparent"
+        : scrolled
+          ? "glass border-b border-border/50 shadow-card"
+          : "bg-transparent"
     }`}>
       <div className="container mx-auto flex items-center justify-between h-16 px-4">
         <Link to="/" className="flex items-center gap-2 group">
-          <Zap className="w-6 h-6 text-primary group-hover:scale-110 transition-transform" />
-          <span className="font-display font-bold text-xl">HustleAI</span>
+          <Zap className={`w-6 h-6 group-hover:scale-110 transition-transform ${isHome ? "text-emerald-600" : "text-primary"}`} />
+          <span className={`font-display font-bold text-xl ${isHome ? "text-slate-900" : ""}`}>HustleAI</span>
         </Link>
 
         {/* Desktop nav */}
@@ -88,7 +95,7 @@ export function Navbar() {
             l.children ? (
               <div key={l.label} className="relative"
                 onMouseEnter={() => setMoreOpen(true)} onMouseLeave={() => setMoreOpen(false)}>
-                <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
+                <Button variant="ghost" size="sm" className={isHome ? "text-slate-600 hover:text-slate-900 hover:bg-slate-100" : "text-muted-foreground hover:text-foreground"}>
                   {l.label} <ChevronDown className={`w-3 h-3 ml-1 transition-transform ${moreOpen ? "rotate-180" : ""}`} />
                 </Button>
                 <AnimatePresence>
@@ -98,13 +105,19 @@ export function Navbar() {
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 8, scale: 0.96 }}
                       transition={{ duration: 0.2 }}
-                      className="absolute top-full right-0 mt-1 w-48 glass rounded-xl border border-border/50 p-2 shadow-card"
+                      className={`absolute top-full right-0 mt-1 w-48 rounded-xl p-2 ${
+                        isHome
+                          ? "bg-white border border-slate-200 shadow-lg"
+                          : "glass border border-border/50 shadow-card"
+                      }`}
                     >
                       {l.children.map((child) => (
                         <button key={child.href}
                           onClick={() => { navigate(child.href); setMoreOpen(false); }}
                           className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
-                            isActive(child.href) ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                            isActive(child.href)
+                              ? isHome ? "bg-emerald-50 text-emerald-700" : "bg-primary/10 text-primary"
+                              : isHome ? "text-slate-600 hover:text-slate-900 hover:bg-slate-50" : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
                           }`}>
                           {child.label}
                         </button>
@@ -116,7 +129,11 @@ export function Navbar() {
             ) : (
               <Button key={l.href} variant="ghost" size="sm"
                 onClick={() => navigate(l.href!)}
-                className={`transition-all ${isActive(l.href!) ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"}`}>
+                className={`transition-all ${
+                  isActive(l.href!)
+                    ? isHome ? "text-emerald-700 bg-emerald-50" : "text-primary bg-primary/10"
+                    : isHome ? "text-slate-600 hover:text-slate-900 hover:bg-slate-100" : "text-muted-foreground hover:text-foreground"
+                }`}>
                 {l.label}
               </Button>
             )
@@ -133,28 +150,23 @@ export function Navbar() {
                   <Shield className="w-4 h-4 mr-1" /> Admin Panel
                 </Button>
               )}
-              <Button variant="ghost" size="sm" onClick={() => navigate("/saved-hustles")}
-                className={isActive("/saved-hustles") ? "text-primary bg-primary/10" : ""}>
-                My Hustles
-              </Button>
-              <Button variant="ghost" size="sm" onClick={() => navigate("/profile")}
-                className={isActive("/profile") ? "text-primary bg-primary/10" : ""}>
-                <User className="w-4 h-4 mr-1" /> Profile
-              </Button>
               <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")}
-                className={isActive("/dashboard") ? "text-primary bg-primary/10" : ""}>
+                className={isHome ? "text-slate-600 hover:text-slate-900 hover:bg-slate-100" : ""}>
                 Dashboard
               </Button>
-              <Button variant="outline" size="sm" onClick={() => { signOut(); navigate("/"); }}
-                className="border-destructive/30 text-destructive hover:bg-destructive/10">
-                <LogOut className="w-4 h-4 mr-1" /> Logout
+              <Button size="sm"
+                className={isHome ? "bg-emerald-500 hover:bg-emerald-600 text-white" : "bg-gradient-primary text-primary-foreground"}
+                onClick={() => navigate("/profile")}>
+                <User className="w-4 h-4 mr-1" /> Profile
               </Button>
             </>
           ) : (
             <>
               <Button variant="ghost" size="sm" onClick={() => navigate("/login")}
-                className={isActive("/login") ? "text-primary" : ""}>Login</Button>
-              <Button size="sm" className="bg-gradient-primary text-primary-foreground btn-press" onClick={() => navigate("/signup")}>
+                className={isHome ? "text-slate-600 hover:text-slate-900 hover:bg-slate-100" : ""}>Login</Button>
+              <Button size="sm"
+                className={`btn-press ${isHome ? "bg-slate-900 hover:bg-slate-800 text-white" : "bg-gradient-primary text-primary-foreground"}`}
+                onClick={() => navigate("/signup")}>
                 Get Started <ArrowRight className="w-4 h-4 ml-1" />
               </Button>
             </>
@@ -162,7 +174,7 @@ export function Navbar() {
         </div>
 
         {/* Mobile toggle */}
-        <button className="md:hidden text-foreground p-1" onClick={() => setMobileOpen(!mobileOpen)}>
+        <button className={`md:hidden p-1 ${isHome ? "text-slate-900" : "text-foreground"}`} onClick={() => setMobileOpen(!mobileOpen)}>
           {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
         </button>
       </div>
