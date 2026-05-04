@@ -5,51 +5,55 @@ import { Navbar } from "@/components/Navbar";
 import { Pricing } from "@/components/Pricing";
 import { Testimonials } from "@/components/Testimonials";
 import { Footer } from "@/components/Footer";
-import { ArrowRight, Zap, Brain, Target, TrendingUp, Shield, Globe, DollarSign } from "lucide-react";
+import { ArrowRight, Zap, Brain, Target, TrendingUp, Shield, Globe, Check, X, BadgeCheck, Sparkles, Activity } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(ScrollTrigger);
 
 const features = [
-  { icon: Brain, title: "AI-Powered Search", desc: "Get personalized freelancing ideas tailored to your skills, budget, and goals." },
-  { icon: Target, title: "Zero Investment Filter", desc: "Find opportunities that require no upfront cost — perfect for students and beginners." },
-  { icon: TrendingUp, title: "Real-Time Trends", desc: "Discover trending gigs and side hustles powered by live AI analysis." },
-  { icon: Shield, title: "Vetted Ideas", desc: "Every suggestion is validated with earning potential and difficulty ratings." },
-  { icon: Globe, title: "Global Opportunities", desc: "Find remote freelancing roles from anywhere in the world." },
-  { icon: Zap, title: "Instant Results", desc: "Get actionable ideas in seconds, not hours of research." },
+  { icon: Brain, title: "AI Match Engine", desc: "Tailored to your skills, budget, and goals — not generic listings." },
+  { icon: BadgeCheck, title: "Verified by AI", desc: "Every opportunity is scored and validated. No scams, no dead ends." },
+  { icon: TrendingUp, title: "Live Trend Pulse", desc: "Real-time trending gigs powered by continuous market analysis." },
+  { icon: Activity, title: "Roadmap, Not a Link", desc: "Get a 3-step plan for each hustle — start today, scale tomorrow." },
+  { icon: Globe, title: "Global + Indian Gigs", desc: "From Mercor & Outlier to local UPI side hustles." },
+  { icon: Zap, title: "Seconds, Not Hours", desc: "Stop scrolling job boards. Get an answer in one prompt." },
 ];
 
 const stats = [
-  { value: "500+", label: "Freelancing Categories" },
-  { value: "AI", label: "Powered Suggestions" },
-  { value: "$0", label: "To Get Started" },
-  { value: "24/7", label: "Live Search" },
+  { value: "500+", label: "Hustle categories" },
+  { value: "12", label: "AI tools included" },
+  { value: "₹0", label: "To start" },
+  { value: "24/7", label: "AI on-call" },
+];
+
+const typingPrompts = [
+  "Find me a side hustle for a Python dev with ₹0 budget...",
+  "Best freelancing gigs for a college student in India...",
+  "Remote AI jobs that pay in USD...",
+  "Passive income ideas for a working professional...",
+  "Faceless content niches trending in 2026...",
+];
+
+const comparison = [
+  { feature: "Personalized to your exact skills", us: true, others: false },
+  { feature: "AI-verified opportunities (not random links)", us: true, others: false },
+  { feature: "3-step roadmap per hustle", us: true, others: false },
+  { feature: "Source citations (Reddit, Twitter, real gigs)", us: true, others: false },
+  { feature: "Built-in pricing, proposal & resume tools", us: true, others: false },
+  { feature: "Generic job board listings", us: false, others: true },
+  { feature: "Hours of manual scrolling", us: false, others: true },
 ];
 
 export default function Index() {
   const navigate = useNavigate();
   const heroRef = useRef<HTMLDivElement>(null);
-  const dollarRefs = useRef<HTMLDivElement[]>([]);
+  const [typed, setTyped] = useState("");
+  const [promptIdx, setPromptIdx] = useState(0);
 
   useEffect(() => {
-    // GSAP floating dollar animations
-    dollarRefs.current.forEach((el, i) => {
-      if (!el) return;
-      gsap.to(el, {
-        y: -30 + Math.random() * 60,
-        x: -15 + Math.random() * 30,
-        rotation: -10 + Math.random() * 20,
-        duration: 3 + Math.random() * 2,
-        repeat: -1,
-        yoyo: true,
-        ease: "sine.inOut",
-        delay: i * 0.3,
-      });
-    });
-
     // Hero text entrance
     if (heroRef.current) {
       gsap.fromTo(
@@ -60,58 +64,83 @@ export default function Index() {
     }
   }, []);
 
+  // Typing animation for hero placeholder
+  useEffect(() => {
+    const current = typingPrompts[promptIdx];
+    let i = 0;
+    setTyped("");
+    const typer = setInterval(() => {
+      i++;
+      setTyped(current.slice(0, i));
+      if (i >= current.length) {
+        clearInterval(typer);
+        setTimeout(() => setPromptIdx((p) => (p + 1) % typingPrompts.length), 2200);
+      }
+    }, 45);
+    return () => clearInterval(typer);
+  }, [promptIdx]);
+
   const handleSearch = (query: string) => {
     navigate(`/explore?q=${encodeURIComponent(query)}`);
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-white text-slate-900">
       <Navbar />
 
       {/* Hero */}
-      <section className="pt-32 pb-20 px-4 relative overflow-hidden">
-        {/* Floating dollar symbols */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          {[...Array(12)].map((_, i) => (
-            <div
-              key={i}
-              ref={(el) => { if (el) dollarRefs.current[i] = el; }}
-              className="absolute text-primary/[0.07] font-display font-bold select-none"
-              style={{
-                left: `${5 + i * 8}%`,
-                top: `${10 + (i % 4) * 22}%`,
-                fontSize: `${30 + i * 8}px`,
-              }}
-            >
-              {i % 3 === 0 ? "$" : i % 3 === 1 ? "₹" : "€"}
-            </div>
-          ))}
-        </div>
+      <section className="pt-32 pb-20 px-4 relative overflow-hidden bg-gradient-to-b from-slate-50 via-white to-white">
+        {/* Subtle grid background */}
+        <div
+          className="absolute inset-0 pointer-events-none opacity-[0.5]"
+          style={{
+            backgroundImage:
+              "linear-gradient(to right, rgb(226 232 240 / 0.6) 1px, transparent 1px), linear-gradient(to bottom, rgb(226 232 240 / 0.6) 1px, transparent 1px)",
+            backgroundSize: "56px 56px",
+            maskImage: "radial-gradient(ellipse at center top, black 30%, transparent 75%)",
+          }}
+        />
+        {/* Soft accent glow */}
+        <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-emerald-200/30 blur-3xl rounded-full pointer-events-none" />
 
         <div ref={heroRef} className="container mx-auto max-w-4xl text-center space-y-8 relative z-10">
-          <div className="space-y-4">
-            <div className="gsap-fade inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/30 bg-primary/5 text-primary text-sm mb-4">
-              <Sparkle /> AI-Powered Freelance Discovery
+          <div className="space-y-5">
+            <div className="gsap-fade inline-flex items-center gap-2 px-3 py-1 rounded-full border border-slate-200 bg-white text-slate-600 text-xs shadow-sm">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+              AI-Powered Hustle Discovery — Live in 2026
             </div>
-            <h1 className="gsap-fade text-5xl md:text-7xl font-display font-bold leading-tight">
-              Find Your Next{" "}
-              <span className="text-gradient">Side Hustle</span>
+            <h1 className="gsap-fade text-5xl md:text-7xl font-display font-semibold leading-[1.05] tracking-tight text-slate-900">
+              The intelligence layer
               <br />
-              in Seconds
+              for your <span className="text-emerald-600">side hustle.</span>
             </h1>
-            <p className="gsap-fade text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
-              Stop scrolling job boards. Tell us your skills, budget, and goals — our AI finds the perfect freelancing opportunities for you in real time.
+            <p className="gsap-fade text-base md:text-lg text-slate-500 max-w-2xl mx-auto leading-relaxed">
+              Stop scrolling job boards. Tell HustleAI your skills, budget, and goals — get verified opportunities, AI-built roadmaps, and tools to land them. All in seconds.
             </p>
           </div>
 
           <div className="gsap-fade max-w-3xl mx-auto">
-            <SearchBar onSearch={handleSearch} size="lg" />
+            <SearchBar
+              onSearch={handleSearch}
+              size="lg"
+              variant="light"
+              placeholder={typed + (typed.length < typingPrompts[promptIdx].length ? "▍" : "")}
+            />
+          </div>
+
+          <div className="gsap-fade flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-slate-500 pt-2">
+            <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5 text-emerald-500" /> No credit card</span>
+            <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5 text-emerald-500" /> Free forever tier</span>
+            <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5 text-emerald-500" /> Indian + global gigs</span>
           </div>
         </div>
       </section>
 
       {/* Stats */}
-      <section className="py-12 border-y border-border/50">
+      <section className="py-12 border-y border-slate-200 bg-white">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {stats.map((stat, i) => (
@@ -123,8 +152,8 @@ export default function Index() {
                 viewport={{ once: true }}
                 className="text-center"
               >
-                <div className="text-3xl md:text-4xl font-display font-bold text-gradient">{stat.value}</div>
-                <div className="text-sm text-muted-foreground mt-1">{stat.label}</div>
+                <div className="text-3xl md:text-4xl font-display font-semibold text-slate-900">{stat.value}</div>
+                <div className="text-sm text-slate-500 mt-1">{stat.label}</div>
               </motion.div>
             ))}
           </div>
@@ -132,7 +161,7 @@ export default function Index() {
       </section>
 
       {/* Features */}
-      <section className="py-24 px-4">
+      <section className="py-24 px-4 bg-slate-50/50">
         <div className="container mx-auto max-w-6xl">
           <motion.div
             initial={{ opacity: 0 }}
@@ -140,11 +169,12 @@ export default function Index() {
             viewport={{ once: true }}
             className="text-center mb-16 space-y-4"
           >
-            <h2 className="text-3xl md:text-5xl font-display font-bold">
-              Why <span className="text-gradient">HustleAI</span>?
+            <div className="text-xs uppercase tracking-[0.18em] text-emerald-600 font-medium">Built for hustlers</div>
+            <h2 className="text-3xl md:text-5xl font-display font-semibold tracking-tight text-slate-900">
+              Everything you need.<br/>Nothing you don't.
             </h2>
-            <p className="text-muted-foreground max-w-xl mx-auto">
-              Unlike other platforms, we use AI to understand your exact needs and deliver personalized, actionable results.
+            <p className="text-slate-500 max-w-xl mx-auto">
+              Six AI-native primitives that turn "what should I do?" into income.
             </p>
           </motion.div>
 
@@ -156,71 +186,131 @@ export default function Index() {
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.08 }}
                 viewport={{ once: true }}
-                className="glass rounded-xl p-6 hover:shadow-glow hover:border-primary/30 transition-all duration-300 group"
+                className="bg-white border border-slate-200 rounded-xl p-6 hover:border-slate-300 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 group"
               >
-                <f.icon className="w-10 h-10 text-primary mb-4 group-hover:scale-110 transition-transform" />
-                <h3 className="font-display font-semibold text-lg mb-2">{f.title}</h3>
-                <p className="text-sm text-muted-foreground">{f.desc}</p>
+                <div className="w-10 h-10 rounded-lg bg-slate-900 flex items-center justify-center mb-4 group-hover:bg-emerald-500 transition-colors">
+                  <f.icon className="w-5 h-5 text-white" />
+                </div>
+                <h3 className="font-display font-semibold text-lg mb-2 text-slate-900">{f.title}</h3>
+                <p className="text-sm text-slate-500 leading-relaxed">{f.desc}</p>
               </motion.div>
             ))}
           </div>
         </div>
       </section>
 
+      {/* Why we're better — comparison */}
+      <section className="py-24 px-4 bg-white">
+        <div className="container mx-auto max-w-4xl">
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            className="text-center mb-12 space-y-4"
+          >
+            <div className="text-xs uppercase tracking-[0.18em] text-emerald-600 font-medium">The difference</div>
+            <h2 className="text-3xl md:text-5xl font-display font-semibold tracking-tight text-slate-900">
+              Why HustleAI &gt; everything else
+            </h2>
+            <p className="text-slate-500 max-w-xl mx-auto">
+              Upwork, Fiverr, Reddit threads, blog listicles. None of them know <em>you</em>.
+            </p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="rounded-2xl border border-slate-200 overflow-hidden bg-white shadow-sm"
+          >
+            <div className="grid grid-cols-[1fr_120px_120px] md:grid-cols-[1fr_160px_160px] bg-slate-50 border-b border-slate-200">
+              <div className="p-4 text-xs uppercase tracking-wider text-slate-500 font-medium">Capability</div>
+              <div className="p-4 text-center text-xs uppercase tracking-wider text-emerald-600 font-semibold border-l border-slate-200">HustleAI</div>
+              <div className="p-4 text-center text-xs uppercase tracking-wider text-slate-500 font-medium border-l border-slate-200">Others</div>
+            </div>
+            {comparison.map((row, i) => (
+              <div
+                key={row.feature}
+                className={`grid grid-cols-[1fr_120px_120px] md:grid-cols-[1fr_160px_160px] ${i !== comparison.length - 1 ? "border-b border-slate-100" : ""}`}
+              >
+                <div className="p-4 text-sm text-slate-700">{row.feature}</div>
+                <div className="p-4 flex items-center justify-center border-l border-slate-100">
+                  {row.us ? (
+                    <div className="w-6 h-6 rounded-full bg-emerald-500/10 flex items-center justify-center">
+                      <Check className="w-4 h-4 text-emerald-600" />
+                    </div>
+                  ) : (
+                    <X className="w-4 h-4 text-slate-300" />
+                  )}
+                </div>
+                <div className="p-4 flex items-center justify-center border-l border-slate-100">
+                  {row.others ? (
+                    <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center">
+                      <Check className="w-4 h-4 text-slate-400" />
+                    </div>
+                  ) : (
+                    <X className="w-4 h-4 text-slate-300" />
+                  )}
+                </div>
+              </div>
+            ))}
+          </motion.div>
+        </div>
+      </section>
+
       {/* Pricing */}
-      <Pricing />
+      <div className="bg-slate-50/50">
+        <Pricing />
+      </div>
 
       {/* Pricing CTA */}
-      <section className="pb-12 px-4">
+      <section className="pb-12 px-4 bg-slate-50/50">
         <div className="container mx-auto text-center">
           <Button
             size="lg"
-            className="bg-gradient-primary text-primary-foreground text-lg px-10 h-14"
+            className="bg-slate-900 hover:bg-slate-800 text-white text-base px-8 h-12"
             onClick={() => navigate("/plans")}
           >
-            View All Plans & Compare <ArrowRight className="w-5 h-5 ml-2" />
+            View all plans <ArrowRight className="w-4 h-4 ml-2" />
           </Button>
         </div>
       </section>
 
       {/* Testimonials */}
-      <Testimonials />
+      <div className="bg-white">
+        <Testimonials />
+      </div>
 
       {/* CTA */}
-      <section className="py-24 px-4">
+      <section className="py-24 px-4 bg-white">
         <div className="container mx-auto max-w-3xl">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
-            className="glass rounded-2xl p-12 text-center space-y-6 border-primary/20"
+            className="rounded-2xl p-12 text-center space-y-6 bg-slate-900 text-white relative overflow-hidden"
           >
-            <h2 className="text-3xl md:text-4xl font-display font-bold">
-              Ready to Find Your <span className="text-gradient">Perfect Hustle</span>?
+            <div className="absolute -top-20 -right-20 w-64 h-64 bg-emerald-500/20 blur-3xl rounded-full" />
+            <h2 className="text-3xl md:text-4xl font-display font-semibold tracking-tight relative">
+              Ready to find your perfect hustle?
             </h2>
-            <p className="text-muted-foreground">
-              Join thousands discovering their next income stream with AI-powered search.
+            <p className="text-slate-300 relative">
+              Join thousands discovering their next income stream with AI.
             </p>
             <Button
               size="lg"
-              className="bg-gradient-primary text-primary-foreground text-lg px-8 h-14"
+              className="bg-emerald-500 hover:bg-emerald-600 text-white text-base px-8 h-12 relative"
               onClick={() => navigate("/signup")}
             >
-              Start Exploring <ArrowRight className="w-5 h-5 ml-2" />
+              Start free <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
           </motion.div>
         </div>
       </section>
 
-      <Footer />
+      <div className="bg-white">
+        <Footer />
+      </div>
     </div>
-  );
-}
-
-function Sparkle() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="text-primary">
-      <path d="M8 0L9.79 6.21L16 8L9.79 9.79L8 16L6.21 9.79L0 8L6.21 6.21L8 0Z" fill="currentColor" />
-    </svg>
   );
 }
