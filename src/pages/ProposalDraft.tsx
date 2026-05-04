@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Navbar } from "@/components/Navbar";
@@ -12,8 +12,9 @@ import { toast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
 import {
   FileText, Loader2, Copy, RefreshCw, Rocket, Crown, Star,
-  Sparkles, CheckCircle, Zap,
+  Sparkles, CheckCircle, Zap, Lock,
 } from "lucide-react";
+import { getMaxUses, getUsage, bumpUsage, awardXP } from "@/lib/tool-limits";
 
 const tones = [
   { value: "Professional", label: "Professional", icon: "💼" },
@@ -40,8 +41,14 @@ export default function ProposalDraft() {
   const [generating, setGenerating] = useState(false);
 
   const isEligible = profile && ["pro", "elite", "infinity"].includes(profile.subscription_tier);
+  const tier = profile?.subscription_tier || "free";
+  const maxUses = getMaxUses(tier);
+  const [usageCount, setUsageCount] = useState(0);
+  useEffect(() => { if (user) setUsageCount(getUsage("proposal", user.id)); }, [user]);
+  const atLimit = usageCount >= maxUses;
 
   const handleGenerate = async () => {
+    if (atLimit) { toast({ title: `Limit reached (${maxUses}/${maxUses})`, description: "Upgrade for more uses.", variant: "destructive" }); return; }
     if (!jobDescription.trim() || jobDescription.trim().length < 10) {
       toast({ title: "Too short", description: "Please enter a more detailed job description (at least 10 characters).", variant: "destructive" });
       return;
@@ -68,6 +75,8 @@ export default function ProposalDraft() {
       if (!response.ok) throw new Error(result.error || "Failed to generate proposal");
 
       setProposal(result.proposal);
+      setUsageCount(bumpUsage("proposal", user!.id));
+      awardXP(user!.id, 10);
       toast({ title: "Proposal generated! ✨" });
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
