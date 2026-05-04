@@ -34,20 +34,22 @@ export function SearchBar({ onSearch, isLoading, size = "md", variant = "default
   return (
     <div className="w-full space-y-4">
       <form onSubmit={handleSubmit} className="relative">
-        <div className={`relative flex items-center rounded-xl ${
+        <div className={`rounded-xl ${
           isLight
             ? "bg-white border border-slate-200 shadow-[0_8px_30px_rgb(0,0,0,0.06)] hover:shadow-[0_8px_40px_rgb(16,185,129,0.15)] transition-shadow"
             : "glass"
-        } ${isLg ? "p-2" : "p-1.5"}`}>
-          <Search className={`absolute left-5 ${isLight ? "text-slate-400" : "text-muted-foreground"} ${isLg ? "w-5 h-5" : "w-4 h-4"}`} />
-          <Input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder={placeholder || "What kind of freelancing or side hustle are you looking for?"}
-            className={`border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 ${
-              isLight ? "text-slate-900 placeholder:text-slate-400" : ""
-            } ${isLg ? "pl-12 text-lg h-14" : "pl-10 h-11"}`}
-          />
+        } ${isLg ? "p-2" : "p-1.5"} flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-0`}>
+          <div className="relative flex-1 w-full">
+            <Search className={`absolute top-1/2 -translate-y-1/2 left-3 sm:left-4 ${isLight ? "text-slate-400" : "text-muted-foreground"} ${isLg ? "w-5 h-5" : "w-4 h-4"}`} />
+            <Input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder={placeholder || "What kind of freelancing or side hustle are you looking for?"}
+              className={`border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 w-full ${
+                isLight ? "text-slate-900 placeholder:text-slate-400" : ""
+              } ${isLg ? "pl-10 sm:pl-12 text-base sm:text-lg h-12 sm:h-14" : "pl-9 sm:pl-10 h-11"}`}
+            />
+          </div>
           <Button
             type="submit"
             disabled={isLoading || !query.trim()}
@@ -55,7 +57,7 @@ export function SearchBar({ onSearch, isLoading, size = "md", variant = "default
               isLight
                 ? "bg-emerald-500 hover:bg-emerald-600 text-white"
                 : "bg-gradient-primary text-primary-foreground"
-            } font-semibold shrink-0 ${isLg ? "h-12 px-6 text-base" : "h-9 px-4"}`}
+            } font-semibold shrink-0 w-full sm:w-auto ${isLg ? "h-11 sm:h-12 px-5 sm:px-6 text-sm sm:text-base" : "h-9 px-4"}`}
           >
             {isLoading ? (
               <Loader2 className="w-4 h-4 animate-spin" />
