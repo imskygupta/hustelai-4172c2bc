@@ -196,8 +196,11 @@ export default function RoadmapViewer() {
               <Button variant="outline" size="sm" onClick={handleShare}>
                 <Share2 className="w-4 h-4 mr-1" /> Share
               </Button>
-              <Button variant="outline" size="sm" onClick={handlePrintPDF} className="hover:border-primary/50 hover:text-primary">
+              <Button variant="outline" size="sm" onClick={() => roadmap && openRoadmapPrint(roadmap, true)} className="hover:border-primary/50 hover:text-primary">
                 <Download className="w-4 h-4 mr-1" /> Export PDF
+              </Button>
+              <Button size="sm" onClick={() => roadmap && openRoadmapPrint(roadmap)} className="bg-primary text-primary-foreground">
+                Open Clean View
               </Button>
             </div>
           </div>
