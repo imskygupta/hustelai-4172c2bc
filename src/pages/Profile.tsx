@@ -11,8 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
-import { User, Upload, FileText, Lock, MapPin, Phone, Mail, Crown, Shield, Trash2, Key, Settings, Gift, CreditCard, Package, Receipt } from "lucide-react";
-import { VerificationSection } from "@/components/VerificationSection";
+import { User, FileText, Lock, MapPin, Phone, Mail, Crown, Shield, Trash2, Key, Settings, Gift, CreditCard, Package, Receipt, ExternalLink, BadgeCheck } from "lucide-react";
 import { EmailVerificationBanner } from "@/components/EmailVerificationBanner";
 
 type ProfileTab = "general" | "security" | "account" | "billing";
@@ -25,7 +24,6 @@ export default function Profile() {
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
   const [saving, setSaving] = useState(false);
-  const [uploading, setUploading] = useState(false);
   const [activeTab, setActiveTab] = useState<ProfileTab>("general");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [couponCode, setCouponCode] = useState("");
@@ -155,25 +153,8 @@ export default function Profile() {
     setApplyingCoupon(false);
   };
 
-  const handleResumeUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !user) return;
-    if (file.size > 5 * 1024 * 1024) {
-      toast({ title: "File too large", description: "Max 5MB", variant: "destructive" });
-      return;
-    }
-    setUploading(true);
-    const path = `${user.id}/${file.name}`;
-    const { error } = await supabase.storage.from("resumes").upload(path, file, { upsert: true });
-    if (error) {
-      toast({ title: "Upload Failed", description: error.message, variant: "destructive" });
-    } else {
-      await supabase.from("profiles").update({ resume_url: path } as any).eq("user_id", user.id);
-      toast({ title: "Resume Uploaded!", description: isElite ? "Our tech team will review it soon." : "AI analysis available for Elite users." });
-      refreshProfile();
-    }
-    setUploading(false);
-  };
+  const RESUME_FORM_URL = "https://forms.gle/hUCbQE2auQSFUBy5A";
+  const KYC_FORM_URL = "https://forms.gle/638t96RWy1rpoJtP8";
 
   const handleDeleteAccount = () => {
     window.location.href = "mailto:contact@hustlaiapp.in?subject=Account Deletion Request&body=I would like to delete my HustleAI account. My email: " + encodeURIComponent(user?.email || "");
@@ -199,13 +180,13 @@ export default function Profile() {
         <div className="container mx-auto max-w-3xl space-y-6">
           {/* Header */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <div className="glass rounded-2xl p-6 flex items-center gap-4">
-              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-                <User className="w-8 h-8 text-primary" />
+            <div className="glass rounded-2xl p-4 sm:p-6 flex items-center gap-3 sm:gap-4">
+              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                <User className="w-7 h-7 sm:w-8 sm:h-8 text-primary" />
               </div>
-              <div className="flex-1">
-                <h1 className="text-2xl font-display font-bold">{profile?.display_name || "My Profile"}</h1>
-                <div className="flex items-center gap-2 mt-1">
+              <div className="flex-1 min-w-0">
+                <h1 className="text-xl sm:text-2xl font-display font-bold truncate">{profile?.display_name || "My Profile"}</h1>
+                <div className="flex items-center gap-2 mt-1 flex-wrap">
                   <Badge className={
                     profile?.subscription_tier === "infinity" ? "bg-gradient-primary text-primary-foreground" :
                     profile?.subscription_tier === "elite" ? "bg-accent/20 text-accent" :
@@ -226,15 +207,15 @@ export default function Profile() {
 
           {!emailVerified && <EmailVerificationBanner email={user?.email || ""} />}
 
-          {/* Tab Navigation */}
-          <div className="flex gap-1 bg-secondary/30 rounded-xl p-1">
+          {/* Tab Navigation - mobile-friendly scrollable */}
+          <div className="flex gap-1 bg-secondary/30 rounded-xl p-1 overflow-x-auto no-scrollbar">
             {tabs.map(tab => (
               <button key={tab.key} onClick={() => setActiveTab(tab.key)}
-                className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg text-sm font-medium transition-all ${
+                className={`flex-1 min-w-[80px] flex items-center justify-center gap-1.5 py-2.5 px-2 sm:px-3 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap transition-all ${
                   activeTab === tab.key ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
                 }`}>
-                <tab.icon className="w-4 h-4" />
-                {tab.label}
+                <tab.icon className="w-4 h-4 shrink-0" />
+                <span>{tab.label}</span>
               </button>
             ))}
           </div>
@@ -312,49 +293,58 @@ export default function Profile() {
                 )}
               </div>
 
-              {/* Resume Section */}
-              <div className="glass rounded-2xl p-8 space-y-4">
-                <div className="flex items-center gap-3">
+              {/* Resume Submission - Google Form */}
+              <div className="glass rounded-2xl p-6 sm:p-8 space-y-4">
+                <div className="flex items-center gap-3 flex-wrap">
                   <FileText className="w-6 h-6 text-primary" />
-                  <h2 className="text-xl font-display font-bold">Resume</h2>
+                  <h2 className="text-lg sm:text-xl font-display font-bold">Submit Your Resume</h2>
                   {!isPremium && <Badge variant="outline" className="text-[10px]"><Lock className="w-2 h-2 mr-0.5" /> Pro+</Badge>}
                 </div>
                 {isPremium ? (
-                  <div className="space-y-4">
+                  <>
                     <p className="text-sm text-muted-foreground">
-                      {isElite ? "Upload your resume — our tech experts will personally review it." : "Upload your resume — AI will analyze it."}
+                      {isElite
+                        ? "Send us your resume via the form below — our tech experts will personally review it within 48 hours."
+                        : "Submit your resume through our secure form — our AI will analyze it and respond shortly."}
                     </p>
-                    {(profile as any)?.resume_url && (
-                      <div className="flex items-center gap-2 text-sm text-primary">
-                        <FileText className="w-4 h-4" /> <span>Resume uploaded ✓</span>
-                      </div>
-                    )}
-                    <label className="cursor-pointer block">
-                      <div className="border-2 border-dashed border-border/50 rounded-xl p-8 text-center hover:border-primary/30 transition-colors">
-                        <Upload className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-                        <p className="text-sm text-muted-foreground">{uploading ? "Uploading..." : "Click to upload PDF/DOCX (max 5MB)"}</p>
-                      </div>
-                      <input type="file" accept=".pdf,.docx,.doc" className="hidden" onChange={handleResumeUpload} disabled={uploading} />
-                    </label>
+                    <a href={RESUME_FORM_URL} target="_blank" rel="noopener noreferrer" className="block">
+                      <Button className="w-full bg-gradient-primary text-primary-foreground btn-press">
+                        <ExternalLink className="w-4 h-4 mr-2" /> Open Resume Submission Form
+                      </Button>
+                    </a>
                     {isElite && (
                       <div className="bg-accent/10 rounded-lg p-4 border border-accent/20">
-                        <div className="flex items-center gap-2 mb-2">
+                        <div className="flex items-center gap-2 mb-1">
                           <Crown className="w-4 h-4 text-accent" />
                           <span className="font-semibold text-sm">Elite Perk: Personal Review</span>
                         </div>
                         <p className="text-xs text-muted-foreground">Our tech team will review your resume within 48 hours.</p>
                       </div>
                     )}
-                  </div>
+                  </>
                 ) : (
                   <div className="text-center py-6 opacity-50">
                     <Lock className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-                    <p className="text-sm text-muted-foreground">Upgrade to Pro or Elite to upload and analyze your resume</p>
+                    <p className="text-sm text-muted-foreground">Upgrade to Pro or Elite to submit your resume for analysis</p>
                   </div>
                 )}
               </div>
 
-              <VerificationSection />
+              {/* KYC Submission - Google Form */}
+              <div className="glass rounded-2xl p-6 sm:p-8 space-y-4">
+                <div className="flex items-center gap-3 flex-wrap">
+                  <BadgeCheck className="w-6 h-6 text-primary" />
+                  <h2 className="text-lg sm:text-xl font-display font-bold">Identity Verification (KYC)</h2>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Verified users can post in forums without admin approval and unlock trusted-seller perks. Submit your ID via the secure form below.
+                </p>
+                <a href={KYC_FORM_URL} target="_blank" rel="noopener noreferrer" className="block">
+                  <Button variant="outline" className="w-full border-primary/30 hover:bg-primary/10">
+                    <ExternalLink className="w-4 h-4 mr-2" /> Open KYC Submission Form
+                  </Button>
+                </a>
+              </div>
             </motion.div>
           )}
 
