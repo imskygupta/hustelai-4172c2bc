@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Zap, ArrowRight, Menu, X, LogOut, User, ChevronDown, Shield } from "lucide-react";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { isAppShellRoute } from "@/components/AppRouteShell";
 
 const navLinks = [
   { label: "Explore", href: "/explore" },
@@ -28,6 +29,10 @@ const navLinks = [
 
 export function Navbar() {
   const navigate = useNavigate();
+  const { pathname } = useLocation();
+  // Hide the marketing navbar on in-app SaaS-shell routes — the sidebar +
+  // topbar in AppShell replaces it. Cannot be overridden by individual pages.
+  if (isAppShellRoute(pathname)) return null;
   const location = useLocation();
   const { user, signOut } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);

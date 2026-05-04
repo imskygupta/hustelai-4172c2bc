@@ -4,7 +4,8 @@ import { Input } from "@/components/ui/input";
 import { Zap, Send, Mail, MapPin, ArrowUpRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
+import { isAppShellRoute } from "@/components/AppRouteShell";
 
 const productLinks = [
   { label: "Explore", href: "/explore" },
@@ -34,6 +35,7 @@ const platformIcons: Record<string, string> = {
 };
 
 export function Footer() {
+  const { pathname } = useLocation();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [socialLinks, setSocialLinks] = useState<any[]>([]);
@@ -42,6 +44,10 @@ export function Footer() {
   useEffect(() => {
     loadSocialLinks();
   }, []);
+
+  // Hide marketing footer inside the SaaS app shell so users don't get
+  // confused thinking they're still on the landing page.
+  if (isAppShellRoute(pathname)) return null;
 
   const loadSocialLinks = async () => {
     const { data } = await supabase.from("social_links" as any).select("*").eq("is_active", true).order("display_order");

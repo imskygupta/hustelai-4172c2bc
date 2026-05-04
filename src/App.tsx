@@ -52,6 +52,11 @@ import SureHitJobs from "./pages/SureHitJobs";
 import Onboarding from "./pages/Onboarding";
 import NotFound from "./pages/NotFound";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
+import { ScrollToTop } from "@/components/ScrollToTop";
+import { AppRouteShell } from "@/components/AppRouteShell";
+
+// Helper to wrap an in-app page in the SaaS sidebar shell
+const Shelled = (el: React.ReactNode) => <AppRouteShell>{el}</AppRouteShell>;
 
 const queryClient = new QueryClient();
 
@@ -62,6 +67,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <ScrollToTop />
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/explore" element={<Explore />} />
@@ -74,40 +80,40 @@ const App = () => (
             <Route path="/contact" element={<Contact />} />
             <Route path="/blog" element={<Blog />} />
             <Route path="/reviews" element={<Reviews />} />
-            <Route path="/community" element={<Community />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/payment" element={<Payment />} />
-            <Route path="/payment-status" element={<PaymentStatus />} />
-            <Route path="/plans" element={<Plans />} />
-            <Route path="/leaderboard" element={<Leaderboard />} />
-            <Route path="/saved-hustles" element={<SavedHustles />} />
+            <Route path="/community" element={Shelled(<Community />)} />
+            <Route path="/profile" element={Shelled(<Profile />)} />
+            <Route path="/payment" element={Shelled(<Payment />)} />
+            <Route path="/payment-status" element={Shelled(<PaymentStatus />)} />
+            <Route path="/plans" element={Shelled(<Plans />)} />
+            <Route path="/leaderboard" element={Shelled(<Leaderboard />)} />
+            <Route path="/saved-hustles" element={Shelled(<SavedHustles />)} />
             <Route path="/career" element={<Career />} />
-            <Route path="/affiliates" element={<Affiliates />} />
+            <Route path="/affiliates" element={Shelled(<Affiliates />)} />
             <Route path="/company" element={<Company />} />
-            <Route path="/relax" element={<Relax />} />
-            <Route path="/hustle/:id" element={<HustleDetail />} />
-            <Route path="/roadmap/:id" element={<RoadmapViewer />} />
-            <Route path="/infinity-zone" element={<InfinityZone />} />
-            <Route path="/marketplace" element={<Marketplace />} />
-            <Route path="/marketplace/:id" element={<MarketplaceItem />} />
+            <Route path="/relax" element={Shelled(<Relax />)} />
+            <Route path="/hustle/:id" element={Shelled(<HustleDetail />)} />
+            <Route path="/roadmap/:id" element={Shelled(<RoadmapViewer />)} />
+            <Route path="/infinity-zone" element={Shelled(<InfinityZone />)} />
+            <Route path="/marketplace" element={Shelled(<Marketplace />)} />
+            <Route path="/marketplace/:id" element={Shelled(<MarketplaceItem />)} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/terms-conditions" element={<TermsConditions />} />
             <Route path="/refund-policy" element={<RefundPolicy />} />
             <Route path="/admin" element={<AdminBlock />} />
             <Route path="/imskygupta-admin" element={<AdminLogin />} />
             <Route path="/admin-dashboard" element={<AdminDashboard />} />
-            <Route path="/problem-leads" element={<ProblemLeads />} />
-            <Route path="/proposal-draft" element={<ProposalDraft />} />
-            <Route path="/skill-gap" element={<SkillGap />} />
-            <Route path="/ai-tools" element={<AIToolBenchmarks />} />
-            <Route path="/knowledge-hub" element={<KnowledgeHub />} />
-            <Route path="/hustle-blueprint" element={<HustleBlueprint />} />
-            <Route path="/resume-optimizer" element={<ResumeOptimizer />} />
-            <Route path="/gig-arbitrage" element={<GigArbitrage />} />
-            <Route path="/gig-price-calculator" element={<GigPriceCalculator />} />
-            <Route path="/faceless-content" element={<FacelessContent />} />
-            <Route path="/red-flag-scanner" element={<RedFlagScanner />} />
-            <Route path="/sure-hit-jobs" element={<SureHitJobs />} />
+            <Route path="/problem-leads" element={Shelled(<ProblemLeads />)} />
+            <Route path="/proposal-draft" element={Shelled(<ProposalDraft />)} />
+            <Route path="/skill-gap" element={Shelled(<SkillGap />)} />
+            <Route path="/ai-tools" element={Shelled(<AIToolBenchmarks />)} />
+            <Route path="/knowledge-hub" element={Shelled(<KnowledgeHub />)} />
+            <Route path="/hustle-blueprint" element={Shelled(<HustleBlueprint />)} />
+            <Route path="/resume-optimizer" element={Shelled(<ResumeOptimizer />)} />
+            <Route path="/gig-arbitrage" element={Shelled(<GigArbitrage />)} />
+            <Route path="/gig-price-calculator" element={Shelled(<GigPriceCalculator />)} />
+            <Route path="/faceless-content" element={Shelled(<FacelessContent />)} />
+            <Route path="/red-flag-scanner" element={Shelled(<RedFlagScanner />)} />
+            <Route path="/sure-hit-jobs" element={Shelled(<SureHitJobs />)} />
             <Route path="/onboarding" element={<Onboarding />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
