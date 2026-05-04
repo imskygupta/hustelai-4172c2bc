@@ -75,10 +75,7 @@ Return JSON only (no markdown):
     } catch (e) {
       throw e;
     }
-    }
 
-    const data = await response.json();
-    let content = data.choices?.[0]?.message?.content || "";
     content = content.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
 
     try {
