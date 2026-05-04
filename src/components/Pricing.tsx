@@ -10,7 +10,6 @@ const plans = [
     priceINR: "₹0",
     period: "forever",
     icon: Sparkles,
-    gradient: false,
     features: [
       "3 AI-powered searches/day",
       "Basic personalization",
@@ -28,7 +27,6 @@ const plans = [
     priceINR: "₹450",
     period: "/month",
     icon: Rocket,
-    gradient: true,
     popular: true,
     features: [
       "5 AI searches/day",
@@ -50,7 +48,6 @@ const plans = [
     priceINR: "₹900",
     period: "/month",
     icon: Crown,
-    gradient: false,
     features: [
       "10 AI searches/day — everything in Pro",
       "Live webinars & guidance",
@@ -71,7 +68,6 @@ const plans = [
     priceINR: "₹2,250",
     period: "/month",
     icon: Star,
-    gradient: false,
     infinity: true,
     features: [
       "20 AI searches/day — everything in Elite",
@@ -94,34 +90,7 @@ export function Pricing() {
   const navigate = useNavigate();
 
   return (
-    <section className="py-24 px-4 relative overflow-hidden" id="pricing">
-      {/* Floating currency symbols */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {[...Array(10)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute text-primary/10 font-display font-bold"
-            style={{
-              left: `${5 + i * 10}%`,
-              top: `${15 + (i % 4) * 20}%`,
-              fontSize: `${30 + i * 8}px`,
-            }}
-            animate={{
-              y: [-20, 20, -20],
-              rotate: [-5, 5, -5],
-              opacity: [0.05, 0.15, 0.05],
-            }}
-            transition={{
-              duration: 4 + i * 0.5,
-              repeat: Infinity,
-              ease: "easeInOut",
-            }}
-          >
-            {i % 3 === 0 ? "₹" : i % 3 === 1 ? "$" : "♾️"}
-          </motion.div>
-        ))}
-      </div>
-
+    <section className="py-24 px-4 relative" id="pricing">
       <div className="container mx-auto max-w-7xl relative z-10">
         <motion.div
           initial={{ opacity: 0 }}
@@ -129,13 +98,11 @@ export function Pricing() {
           viewport={{ once: true }}
           className="text-center mb-16 space-y-4"
         >
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/30 bg-primary/5 text-primary text-sm">
-            ₹ Simple Pricing
-          </div>
-          <h2 className="text-3xl md:text-5xl font-display font-bold">
-            Choose Your <span className="text-gradient">Hustle Plan</span>
+          <div className="text-xs uppercase tracking-[0.18em] text-emerald-600 font-medium">Pricing</div>
+          <h2 className="text-3xl md:text-5xl font-display font-semibold tracking-tight text-slate-900">
+            Choose your hustle plan
           </h2>
-          <p className="text-muted-foreground max-w-xl mx-auto">
+          <p className="text-slate-500 max-w-xl mx-auto">
             Start free, upgrade when you're ready. Prices in INR for Indian hustlers.
           </p>
         </motion.div>
@@ -144,52 +111,68 @@ export function Pricing() {
           {plans.map((plan, i) => (
             <motion.div
               key={plan.name}
-              initial={{ opacity: 0, y: 30 }}
+              initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.1 }}
+              transition={{ delay: i * 0.08 }}
               viewport={{ once: true }}
-              className={`relative glass rounded-2xl p-6 flex flex-col ${
-                plan.popular ? "border-primary/50 shadow-glow scale-[1.02]" : 
-                plan.infinity ? "border-yellow-500/30" : "border-border/50"
+              className={`group relative rounded-2xl p-6 flex flex-col bg-white border transition-all duration-300 hover:-translate-y-1 ${
+                plan.popular
+                  ? "border-emerald-500/40 shadow-lg shadow-emerald-500/10 hover:shadow-emerald-500/20 hover:border-emerald-500"
+                  : plan.infinity
+                  ? "border-amber-300/60 hover:border-amber-400 hover:shadow-lg hover:shadow-amber-200/40"
+                  : "border-slate-200 hover:border-emerald-300 hover:shadow-lg hover:shadow-emerald-100"
               }`}
             >
               {plan.popular && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-gradient-primary text-primary-foreground text-xs font-semibold">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-emerald-500 text-white text-[11px] font-semibold tracking-wide shadow-sm">
                   Most Popular
                 </div>
               )}
               {plan.infinity && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-yellow-500 text-black text-xs font-semibold">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-amber-400 text-slate-900 text-[11px] font-semibold tracking-wide shadow-sm">
                   ♾️ Ultimate
                 </div>
               )}
+
               <div className="space-y-3 mb-5">
-                <plan.icon className={`w-8 h-8 ${
-                  plan.infinity ? "text-yellow-500" : plan.popular ? "text-primary" : "text-muted-foreground"
-                }`} />
-                <h3 className="font-display font-bold text-lg">{plan.name}</h3>
+                <div
+                  className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors ${
+                    plan.infinity
+                      ? "bg-amber-50 text-amber-600 group-hover:bg-amber-100"
+                      : plan.popular
+                      ? "bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100"
+                      : "bg-slate-100 text-slate-700 group-hover:bg-emerald-50 group-hover:text-emerald-600"
+                  }`}
+                >
+                  <plan.icon className="w-5 h-5" />
+                </div>
+                <h3 className="font-display font-semibold text-lg text-slate-900">{plan.name}</h3>
                 <div>
                   <div className="flex items-baseline gap-1">
-                    <span className="text-3xl font-display font-bold text-gradient">{plan.priceINR}</span>
-                    <span className="text-muted-foreground text-xs">{plan.period}</span>
+                    <span className="text-3xl font-display font-semibold text-slate-900">{plan.priceINR}</span>
+                    <span className="text-slate-500 text-xs">{plan.period}</span>
                   </div>
-                  <span className="text-xs text-muted-foreground">({plan.priceUSD} USD)</span>
+                  <span className="text-xs text-slate-400">({plan.priceUSD} USD)</span>
                 </div>
               </div>
+
               <ul className="space-y-2 flex-1 mb-6">
                 {plan.features.map((f) => (
                   <li key={f} className="flex items-start gap-2 text-xs">
-                    <Check className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" />
-                    <span className="text-muted-foreground">{f}</span>
+                    <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
+                    <span className="text-slate-600 leading-relaxed">{f}</span>
                   </li>
                 ))}
               </ul>
+
               <Button
-                className={`w-full ${
-                  plan.infinity ? "bg-yellow-500 hover:bg-yellow-600 text-black" :
-                  plan.popular ? "bg-gradient-primary text-primary-foreground" : ""
+                className={`w-full h-10 ${
+                  plan.infinity
+                    ? "bg-amber-400 hover:bg-amber-500 text-slate-900"
+                    : plan.popular
+                    ? "bg-emerald-500 hover:bg-emerald-600 text-white"
+                    : "bg-slate-900 hover:bg-emerald-500 text-white transition-colors"
                 }`}
-                variant={plan.popular || plan.infinity ? "default" : "outline"}
                 onClick={() => navigate(plan.name === "Free" ? "/signup" : "/payment")}
               >
                 {plan.cta}
@@ -203,19 +186,23 @@ export function Pricing() {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="mt-8 glass rounded-2xl p-6 border-emerald-500/20 text-center space-y-3 max-w-xl mx-auto"
+          className="mt-10 rounded-2xl p-8 text-center max-w-xl mx-auto bg-white border border-slate-200 hover:border-emerald-300 hover:shadow-lg hover:shadow-emerald-100 transition-all space-y-3"
         >
-          <div className="text-2xl">💳</div>
-          <h3 className="font-display font-bold text-lg">Pay-As-You-Go</h3>
-          <p className="text-sm text-muted-foreground">₹10/search — All AI tools unlocked per search, no subscription needed</p>
-          <Button variant="outline" onClick={() => navigate("/payment?type=wallet")} className="border-emerald-500/30 hover:bg-emerald-500/10">
+          <div className="inline-flex w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 items-center justify-center mx-auto">💳</div>
+          <h3 className="font-display font-semibold text-lg text-slate-900">Pay-As-You-Go</h3>
+          <p className="text-sm text-slate-500">₹10/search — All AI tools unlocked per search, no subscription needed</p>
+          <Button
+            variant="outline"
+            onClick={() => navigate("/payment?type=wallet")}
+            className="border-slate-300 text-slate-900 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-300"
+          >
             Buy Credits
           </Button>
         </motion.div>
 
         {/* View All Features */}
         <div className="text-center mt-6">
-          <Button variant="link" onClick={() => navigate("/plans")} className="text-primary">
+          <Button variant="link" onClick={() => navigate("/plans")} className="text-emerald-600 hover:text-emerald-700">
             View all features & compare plans →
           </Button>
         </div>

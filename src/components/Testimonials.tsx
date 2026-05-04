@@ -48,7 +48,7 @@ const testimonials = [
 
 export function Testimonials() {
   return (
-    <section className="py-24 px-4">
+    <section className="py-24 px-4 bg-white">
       <div className="container mx-auto max-w-6xl">
         <motion.div
           initial={{ opacity: 0 }}
@@ -56,10 +56,11 @@ export function Testimonials() {
           viewport={{ once: true }}
           className="text-center mb-16 space-y-4"
         >
-          <h2 className="text-3xl md:text-5xl font-display font-bold">
-            Loved by <span className="text-gradient">Hustlers</span>
+          <div className="text-xs uppercase tracking-[0.18em] text-emerald-600 font-medium">Testimonials</div>
+          <h2 className="text-3xl md:text-5xl font-display font-semibold tracking-tight text-slate-900">
+            Loved by hustlers
           </h2>
-          <p className="text-muted-foreground max-w-xl mx-auto">
+          <p className="text-slate-500 max-w-xl mx-auto">
             Thousands of freelancers trust HustleAI to power their income streams.
           </p>
         </motion.div>
@@ -72,24 +73,24 @@ export function Testimonials() {
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.1 }}
               viewport={{ once: true }}
-              className="glass rounded-xl p-6 space-y-4"
+              className="rounded-xl p-6 space-y-4 bg-white border border-slate-200 hover:border-emerald-300 hover:shadow-lg hover:shadow-emerald-100 hover:-translate-y-0.5 transition-all duration-300"
             >
               <div className="flex gap-1">
                 {[...Array(5)].map((_, j) => (
                   <Star
                     key={j}
-                    className={`w-4 h-4 ${j < t.rating ? "text-primary fill-primary" : "text-muted-foreground"}`}
+                    className={`w-4 h-4 ${j < t.rating ? "text-emerald-500 fill-emerald-500" : "text-slate-300"}`}
                   />
                 ))}
               </div>
-              <p className="text-sm text-muted-foreground leading-relaxed">"{t.text}"</p>
+              <p className="text-sm text-slate-600 leading-relaxed">"{t.text}"</p>
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gradient-primary flex items-center justify-center text-primary-foreground font-bold text-sm">
+                <div className="w-10 h-10 rounded-full bg-slate-900 flex items-center justify-center text-white font-semibold text-sm">
                   {t.avatar}
                 </div>
                 <div>
-                  <p className="font-display font-semibold text-sm">{t.name}</p>
-                  <p className="text-xs text-muted-foreground">{t.role}</p>
+                  <p className="font-display font-semibold text-sm text-slate-900">{t.name}</p>
+                  <p className="text-xs text-slate-500">{t.role}</p>
                 </div>
               </div>
             </motion.div>
