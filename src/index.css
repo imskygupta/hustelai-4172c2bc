@@ -6,50 +6,53 @@
 
 @layer base {
   :root {
-    --background: 220 20% 4%;
-    --foreground: 210 20% 92%;
+    /* Linear-style light theme */
+    --background: 0 0% 100%;
+    --foreground: 222 25% 12%;
 
-    --card: 220 18% 8%;
-    --card-foreground: 210 20% 92%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 25% 12%;
 
-    --popover: 220 18% 8%;
-    --popover-foreground: 210 20% 92%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 25% 12%;
 
-    --primary: 160 84% 50%;
-    --primary-foreground: 220 20% 4%;
+    /* Emerald primary, used sparingly (10% rule) */
+    --primary: 160 84% 39%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 16% 14%;
-    --secondary-foreground: 210 20% 85%;
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 222 25% 18%;
 
-    --muted: 220 14% 12%;
-    --muted-foreground: 215 12% 50%;
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 9% 46%;
 
-    --accent: 270 80% 60%;
-    --accent-foreground: 210 20% 92%;
+    --accent: 220 14% 96%;
+    --accent-foreground: 222 25% 18%;
 
-    --destructive: 0 72% 55%;
-    --destructive-foreground: 210 20% 92%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 220 14% 16%;
-    --input: 220 14% 16%;
-    --ring: 160 84% 50%;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 160 84% 39%;
 
     --radius: 0.75rem;
 
-    --sidebar-background: 220 18% 6%;
-    --sidebar-foreground: 210 20% 85%;
-    --sidebar-primary: 160 84% 50%;
-    --sidebar-primary-foreground: 220 20% 4%;
-    --sidebar-accent: 220 14% 12%;
-    --sidebar-accent-foreground: 210 20% 85%;
-    --sidebar-border: 220 14% 16%;
-    --sidebar-ring: 160 84% 50%;
+    /* Sidebar — light tone with emerald accent */
+    --sidebar-background: 220 20% 99%;
+    --sidebar-foreground: 222 20% 25%;
+    --sidebar-primary: 160 84% 39%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 14% 95%;
+    --sidebar-accent-foreground: 222 25% 18%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 160 84% 39%;
 
-    --gradient-primary: linear-gradient(135deg, hsl(160 84% 50%), hsl(190 90% 50%));
-    --gradient-accent: linear-gradient(135deg, hsl(270 80% 60%), hsl(320 80% 55%));
-    --gradient-card: linear-gradient(145deg, hsl(220 18% 10%), hsl(220 18% 6%));
-    --shadow-glow: 0 0 30px -5px hsl(160 84% 50% / 0.2);
-    --shadow-card: 0 4px 24px -4px hsl(0 0% 0% / 0.4);
+    --gradient-primary: linear-gradient(135deg, hsl(160 84% 42%), hsl(160 75% 35%));
+    --gradient-accent: linear-gradient(135deg, hsl(160 84% 42%), hsl(190 80% 45%));
+    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(220 20% 98%));
+    --shadow-glow: 0 8px 24px -8px hsl(160 84% 39% / 0.25);
+    --shadow-card: 0 1px 2px hsl(220 20% 12% / 0.04), 0 4px 16px -8px hsl(220 20% 12% / 0.08);
   }
 }
 
@@ -75,8 +78,8 @@
   }
 
   ::selection {
-    background: hsl(160 84% 50% / 0.2);
-    color: hsl(160 84% 50%);
+    background: hsl(160 84% 39% / 0.18);
+    color: hsl(160 84% 25%);
   }
 }
 
@@ -108,7 +111,7 @@
   }
 
   .glass {
-    @apply bg-card/60 backdrop-blur-xl border border-border/50;
+    @apply bg-white/80 backdrop-blur-xl border border-slate-200/80 shadow-sm;
   }
 
   /* Custom cursor glow effect */
@@ -121,7 +124,7 @@
     width: 200px;
     height: 200px;
     border-radius: 50%;
-    background: radial-gradient(circle, hsl(160 84% 50% / 0.08), transparent 70%);
+    background: radial-gradient(circle, hsl(160 84% 39% / 0.08), transparent 70%);
     pointer-events: none;
     transform: translate(-50%, -50%);
     opacity: 0;
