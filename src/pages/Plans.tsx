@@ -104,6 +104,28 @@ export default function Plans() {
             </p>
           </motion.div>
 
+          {/* Pain Points — moved up so visitors see the value prop first */}
+          <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} className="space-y-8">
+            <div className="text-center space-y-3">
+              <h2 className="text-2xl md:text-4xl font-display font-bold">
+                Why HustleAI {'>'} <span className="line-through text-muted-foreground">Everything Else</span>
+              </h2>
+              <p className="text-muted-foreground">Stop wasting time. Start earning.</p>
+            </div>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {painPoints.map((point, i) => (
+                <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.05 }}
+                  className="glass rounded-xl p-5 space-y-3">
+                  <span className="text-3xl">{point.icon}</span>
+                  <div>
+                    <p className="text-sm text-destructive line-through">{point.problem}</p>
+                    <p className="text-sm font-medium text-primary mt-1">✅ {point.solution}</p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+
           {/* Plan Cards Quick Summary */}
           <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
             {tiers.map((tier, i) => {
@@ -163,28 +185,6 @@ export default function Plans() {
               </motion.div>
             ))}
           </div>
-
-          {/* Pain Points */}
-          <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} className="space-y-8">
-            <div className="text-center space-y-3">
-              <h2 className="text-2xl md:text-4xl font-display font-bold">
-                Why HustleAI {'>'} <span className="line-through text-muted-foreground">Everything Else</span>
-              </h2>
-              <p className="text-muted-foreground">Stop wasting time. Start earning.</p>
-            </div>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {painPoints.map((point, i) => (
-                <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.05 }}
-                  className="glass rounded-xl p-5 space-y-3">
-                  <span className="text-3xl">{point.icon}</span>
-                  <div>
-                    <p className="text-sm text-destructive line-through">{point.problem}</p>
-                    <p className="text-sm font-medium text-primary mt-1">✅ {point.solution}</p>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
 
           {/* Pay As You Go */}
           <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
