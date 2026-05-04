@@ -52,6 +52,7 @@ import SureHitJobs from "./pages/SureHitJobs";
 import Onboarding from "./pages/Onboarding";
 import NotFound from "./pages/NotFound";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
+import { ScrollToTop } from "@/components/ScrollToTop";
 
 const queryClient = new QueryClient();
 
@@ -62,6 +63,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <ScrollToTop />
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/explore" element={<Explore />} />
