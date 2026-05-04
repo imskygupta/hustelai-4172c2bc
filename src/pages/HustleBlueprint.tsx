@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -9,11 +9,10 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Rocket, Loader2, Copy, Check, Sparkles, Lock, Brain, Search, Target, Map, Calendar, Zap, Download, Palette, RotateCcw } from "lucide-react";
+import { Rocket, Loader2, Copy, Check, Sparkles, Lock, Brain, Search, Target, Map, Calendar, Zap, Download, RotateCcw, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
-import ReactMarkdown from "react-markdown";
-import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
+import { openBlueprintPrint } from "@/lib/blueprint-print";
+import { getMaxUses, getUsage, bumpUsage, awardXP } from "@/lib/tool-limits";
 
 const LOADING_STAGES = [
   { icon: Brain, text: "Decoding your hustle potential...", stat: "Models Loaded" },
@@ -24,36 +23,24 @@ const LOADING_STAGES = [
   { icon: Sparkles, text: "Crafting outreach scripts & templates...", stat: "Scripts Written" },
 ];
 
-const TEMPLATE_THEMES = [
-  { name: "Elite Dark", accent: "217 91% 60%", bg: "220 13% 8%", text: "210 20% 92%", gradient: "linear-gradient(135deg, hsl(217 91% 60%), hsl(250 80% 60%))" },
-  { name: "Clean White", accent: "220 10% 20%", bg: "0 0% 98%", text: "220 13% 12%", gradient: "linear-gradient(135deg, hsl(220 10% 30%), hsl(220 10% 50%))" },
-  { name: "Growth Gradient", accent: "270 80% 60%", bg: "260 15% 8%", text: "260 20% 92%", gradient: "linear-gradient(135deg, hsl(270 80% 55%), hsl(217 91% 60%))" },
-];
-
 export default function HustleBlueprint() {
   const { user, profile } = useAuth();
   const navigate = useNavigate();
-  const canvasRef = useRef<HTMLDivElement>(null);
   const [hustleTitle, setHustleTitle] = useState("");
   const [hustleDesc, setHustleDesc] = useState("");
   const [userSkills, setUserSkills] = useState("");
   const [loading, setLoading] = useState(false);
   const [blueprint, setBlueprint] = useState("");
   const [copied, setCopied] = useState(false);
-  const [selectedTheme, setSelectedTheme] = useState(0);
   const [loadingStage, setLoadingStage] = useState(0);
   const [loadingProgress, setLoadingProgress] = useState(0);
-  const [downloading, setDownloading] = useState(false);
   const [actionScore, setActionScore] = useState(0);
   const [showScore, setShowScore] = useState(false);
 
   const tier = profile?.subscription_tier || "free";
-  const maxUses = tier === "free" ? 3 : tier === "pro" ? 5 : tier === "elite" ? 10 : 20;
-  const usageKey = `blueprint_uses_${user?.id}`;
-  const getUsage = () => parseInt(localStorage.getItem(usageKey) || "0", 10);
+  const maxUses = getMaxUses(tier);
   const [usageCount, setUsageCount] = useState(0);
-
-  useEffect(() => { if (user) setUsageCount(getUsage()); }, [user]);
+  useEffect(() => { if (user) setUsageCount(getUsage("blueprint", user.id)); }, [user]);
   const atLimit = usageCount >= maxUses;
 
   useEffect(() => {
@@ -85,13 +72,15 @@ export default function HustleBlueprint() {
       if (error) throw error;
       setBlueprint(data.blueprint);
       setLoadingProgress(100);
+      const score = 82 + Math.floor(Math.random() * 15);
       setTimeout(() => {
         setShowScore(true);
-        const newCount = getUsage() + 1;
-        localStorage.setItem(usageKey, String(newCount));
-        setUsageCount(newCount);
+        setUsageCount(bumpUsage("blueprint", user!.id));
+        awardXP(user!.id, 10);
+        // auto-open clean branded viewer in new tab — same UX as main hustle search
+        openBlueprintPrint({ title: hustleTitle, description: hustleDesc, actionScore: score, content: data.blueprint });
       }, 400);
-      toast.success("Blueprint generated!");
+      toast.success("Blueprint ready! Opening in new tab…");
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Failed to generate blueprint";
       toast.error(msg);
@@ -100,26 +89,9 @@ export default function HustleBlueprint() {
 
   const copyToClipboard = () => { navigator.clipboard.writeText(blueprint); setCopied(true); toast.success("Copied!"); setTimeout(() => setCopied(false), 2000); };
 
-  const downloadPDF = async () => {
-    if (!canvasRef.current) return;
-    setDownloading(true);
-    try {
-      const canvas = await html2canvas(canvasRef.current, { scale: 2, backgroundColor: `hsl(${theme.bg})`, useCORS: true, logging: false });
-      const pdf = new jsPDF("p", "mm", "a4");
-      const pw = pdf.internal.pageSize.getWidth();
-      const ph = pdf.internal.pageSize.getHeight();
-      const imgW = pw - 20;
-      const imgH = (canvas.height * imgW) / canvas.width;
-      let left = imgH; let pos = 10;
-      pdf.addImage(canvas.toDataURL("image/png"), "PNG", 10, pos, imgW, imgH);
-      left -= (ph - 20);
-      while (left > 0) { pos = left - imgH + 10; pdf.addPage(); pdf.addImage(canvas.toDataURL("image/png"), "PNG", 10, pos, imgW, imgH); left -= (ph - 20); }
-      pdf.save(`HustleAI_Blueprint_${hustleTitle.replace(/\s/g, "_")}.pdf`);
-      toast.success("PDF downloaded!");
-    } catch { toast.error("Failed to download PDF"); } finally { setDownloading(false); }
-  };
+  const openCleanView = (autoPrint = false) =>
+    openBlueprintPrint({ title: hustleTitle, description: hustleDesc, actionScore, content: blueprint }, autoPrint);
 
-  const theme = TEMPLATE_THEMES[selectedTheme];
   const CurrentIcon = LOADING_STAGES[loadingStage]?.icon || Brain;
 
   return (
@@ -241,85 +213,36 @@ export default function HustleBlueprint() {
                 <p className="text-sm text-muted-foreground max-w-md mx-auto">
                   {actionScore >= 90 ? "🔥 Elite readiness! This plan has everything to start earning in 7 days." :
                    actionScore >= 80 ? "💪 Highly actionable! Follow day-by-day and you'll land your first gig." :
-                   "✨ Solid foundation! The blueprint below will guide your hustle launch."}
+                   "✨ Solid foundation! Open the full blueprint to start your hustle launch."}
                 </p>
-                <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground">
-                  <span>📊 Benchmarked against {(Math.floor(Math.random() * 3000) + 5000).toLocaleString()} successful hustlers</span>
-                </div>
               </motion.div>
             )}
           </AnimatePresence>
 
-          {/* Result with Template */}
+          {/* Result actions — content lives in the new tab now */}
           {blueprint && (
-            <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-              <div className="glass rounded-xl p-4 flex flex-wrap items-center justify-between gap-3">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <Palette className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-sm font-medium">Template:</span>
-                  {TEMPLATE_THEMES.map((t, i) => (
-                    <button key={i} onClick={() => setSelectedTheme(i)}
-                      className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${i === selectedTheme ? "ring-2 ring-primary/50 scale-105" : "opacity-60 hover:opacity-100"}`}
-                      style={{ background: t.gradient, color: `hsl(${t.text})` }}>
-                      {t.name}
-                    </button>
-                  ))}
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button variant="outline" size="sm" onClick={copyToClipboard}>
-                    {copied ? <Check className="w-4 h-4 mr-1" /> : <Copy className="w-4 h-4 mr-1" />} {copied ? "Copied" : "Copy"}
-                  </Button>
-                  <Button size="sm" className="bg-gradient-primary text-primary-foreground btn-press" onClick={downloadPDF} disabled={downloading}>
-                    {downloading ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Download className="w-4 h-4 mr-1" />} Download PDF
-                  </Button>
-                </div>
+            <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}
+              className="glass rounded-2xl p-6 md:p-8 space-y-4 text-center">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs">
+                <Sparkles className="w-3.5 h-3.5" /> Blueprint Ready
               </div>
-
-              {/* Canvas */}
-              <div ref={canvasRef} className="rounded-2xl p-8 md:p-12 shadow-2xl relative overflow-hidden"
-                style={{ background: `hsl(${theme.bg})`, color: `hsl(${theme.text})`, border: `1px solid hsl(${theme.accent} / 0.3)` }}>
-                <div className="absolute top-0 left-0 right-0 h-2" style={{ background: theme.gradient }} />
-                <div className="absolute top-4 right-4 opacity-20 text-xs font-display" style={{ color: `hsl(${theme.accent})` }}>⚡ HustleAI</div>
-
-                {/* Hero */}
-                <div className="mb-8 space-y-3">
-                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium"
-                    style={{ background: `hsl(${theme.accent} / 0.1)`, color: `hsl(${theme.accent})`, border: `1px solid hsl(${theme.accent} / 0.2)` }}>
-                    <Rocket className="w-3 h-3" /> 7-Day Action Blueprint
-                  </div>
-                  <h2 className="text-2xl md:text-3xl font-bold" style={{ color: `hsl(${theme.accent})` }}>{hustleTitle}</h2>
-                  {hustleDesc && <p className="text-sm opacity-70 max-w-lg">{hustleDesc}</p>}
-                  {actionScore > 0 && (
-                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium"
-                      style={{ background: `hsl(${theme.accent} / 0.1)`, color: `hsl(${theme.accent})` }}>
-                      🎯 Action Score: {actionScore}%
-                    </div>
-                  )}
-                </div>
-
-                {/* Content */}
-                <div className="prose prose-sm max-w-none" style={{
-                  ['--tw-prose-body' as string]: `hsl(${theme.text})`,
-                  ['--tw-prose-headings' as string]: `hsl(${theme.accent})`,
-                  ['--tw-prose-bold' as string]: `hsl(${theme.text})`,
-                  ['--tw-prose-bullets' as string]: `hsl(${theme.accent})`,
-                  ['--tw-prose-links' as string]: `hsl(${theme.accent})`,
-                  ['--tw-prose-code' as string]: `hsl(${theme.accent})`,
-                  ['--tw-prose-hr' as string]: `hsl(${theme.accent} / 0.3)`,
-                }}>
-                  <ReactMarkdown>{blueprint}</ReactMarkdown>
-                </div>
-
-                <div className="mt-8 pt-4 flex items-center justify-between text-xs opacity-40"
-                  style={{ borderTop: `1px solid hsl(${theme.accent} / 0.2)` }}>
-                  <span>Generated by HustleAI Blueprint Generator</span>
-                  <span>{new Date().toLocaleDateString()}</span>
-                </div>
-              </div>
-
-              <div className="text-center">
-                <Button variant="outline" size="sm" onClick={() => { setBlueprint(""); setShowScore(false); }} className="gap-2">
-                  <RotateCcw className="w-4 h-4" /> Generate Again ({maxUses - usageCount} left)
+              <h3 className="font-display font-bold text-xl">Your blueprint opened in a new tab</h3>
+              <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                Closed the tab? Reopen the clean branded view, or download as PDF directly from there
+                (uses your browser's native PDF — small file, no overlap).
+              </p>
+              <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
+                <Button size="sm" className="bg-gradient-primary text-primary-foreground" onClick={() => openCleanView(false)}>
+                  <ExternalLink className="w-4 h-4 mr-1" /> Open in New Tab
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => openCleanView(true)}>
+                  <Download className="w-4 h-4 mr-1" /> Download PDF
+                </Button>
+                <Button size="sm" variant="outline" onClick={copyToClipboard}>
+                  {copied ? <Check className="w-4 h-4 mr-1" /> : <Copy className="w-4 h-4 mr-1" />} {copied ? "Copied" : "Copy Markdown"}
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => { setBlueprint(""); setShowScore(false); }}>
+                  <RotateCcw className="w-4 h-4 mr-1" /> Generate Again ({maxUses - usageCount} left)
                 </Button>
               </div>
             </motion.div>
