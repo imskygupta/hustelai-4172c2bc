@@ -6,11 +6,11 @@
 
 @layer base {
   :root {
-    /* Linear-style light theme */
-    --background: 0 0% 100%;
+    /* Linear-style light theme — warm cream tint instead of pure white */
+    --background: 42 38% 97%;
     --foreground: 222 25% 12%;
 
-    --card: 0 0% 100%;
+    --card: 40 35% 99%;
     --card-foreground: 222 25% 12%;
 
     --popover: 0 0% 100%;

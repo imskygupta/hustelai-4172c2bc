@@ -113,11 +113,13 @@ export function FreelanceCard({ result, index }: { result: FreelanceResult; inde
       onClick={handleClick}
       className="cursor-pointer"
     >
-      <Card className={`glass h-full transition-all duration-500 group ${
+      <Card className={`glass h-full transition-all duration-500 group relative overflow-hidden ${
         isHovered
           ? "border-primary/50 shadow-glow scale-[1.02]"
           : "hover:border-primary/20"
       }`}>
+        {/* Hover gradient sheen — emerald → cyan */}
+        <div className={`absolute inset-0 pointer-events-none transition-opacity duration-500 bg-gradient-to-br from-primary/10 via-transparent to-cyan-400/10 ${isHovered ? "opacity-100" : "opacity-0"}`} />
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between gap-2">
             <div className="flex items-center gap-2">

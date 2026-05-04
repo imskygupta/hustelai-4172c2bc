@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Filter, X, Zap, Sparkles, ChefHat } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { SignupCTADialog } from "@/components/SignupCTADialog";
 
 const categories = ["All", "Tech", "Creative", "Freelance", "Marketing", "Education", "Service", "E-Commerce", "Finance", "Gig Economy", "Gaming", "Admin"];
 const difficulties = ["All", "Beginner", "Intermediate", "Advanced"];
@@ -41,6 +42,7 @@ export default function Explore() {
   const [activeType, setActiveType] = useState("All");
   const [lastQuery, setLastQuery] = useState("");
   const [trendingCards, setTrendingCards] = useState<FreelanceResult[]>([]);
+  const [showSignupCTA, setShowSignupCTA] = useState(false);
 
   // Load top liked cards for display
   useEffect(() => {
@@ -86,9 +88,13 @@ export default function Explore() {
 
       // Step 3: Not enough matches - need AI generation (only for signed-in users)
       if (!user || !profile) {
-        // Guest: show whatever DB has
-        setResults(matchingResults.length > 0 ? matchingResults : dbResults.slice(0, 5));
+        // Guest: show all DB results + nudge with CTA when results are sparse
+        const guestResults = matchingResults.length > 0 ? matchingResults : dbResults.slice(0, 10);
+        setResults(guestResults);
         setIsLoading(false);
+        if (guestResults.length < 3) {
+          setTimeout(() => setShowSignupCTA(true), 600);
+        }
         return;
       }
 
@@ -196,6 +202,7 @@ export default function Explore() {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
+      <SignupCTADialog open={showSignupCTA} onClose={() => setShowSignupCTA(false)} query={lastQuery} />
 
       <div className="pt-24 pb-12 px-4">
         <div className="container mx-auto max-w-6xl space-y-8">
@@ -384,6 +391,19 @@ export default function Explore() {
               <Button variant="outline" onClick={clearFilters}
                 className="hover:border-primary/50 hover:text-primary transition-all">
                 Clear Filters
+              </Button>
+            </div>
+          )}
+
+          {!isLoading && !user && filtered.length > 0 && (
+            <div className="flex justify-center pt-4">
+              <Button
+                onClick={() => setShowSignupCTA(true)}
+                size="lg"
+                className="bg-gradient-primary text-primary-foreground font-semibold hover:shadow-glow transition-all group"
+              >
+                <Sparkles className="w-4 h-4 mr-2" />
+                Show more (private hustles)
               </Button>
             </div>
           )}

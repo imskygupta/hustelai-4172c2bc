@@ -240,7 +240,7 @@ export default function Signup() {
             animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
             exit={{ opacity: 0, y: 20, filter: "blur(4px)" }}
             transition={{ duration: 0.5 }}
-            className="text-sm md:text-base text-accent/80 font-display italic max-w-lg mx-auto px-4"
+            className="text-sm md:text-base font-display italic max-w-lg mx-auto px-4 bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent"
           >
             "{quotes[quoteIdx]}"
           </motion.p>
