@@ -1,6 +1,7 @@
 import { ReactNode } from "react";
 import { useLocation } from "react-router-dom";
 import { AppShell } from "@/components/AppShell";
+export { APP_SHELL_PATHS, APP_SHELL_PREFIXES, isAppShellRoute } from "@/components/app-shell-routes";
 
 /**
  * Wraps in-app pages in the SaaS sidebar shell so navigation feels like a
@@ -42,43 +43,4 @@ export function AppRouteShell({ children }: { children: ReactNode }) {
   const base = "/" + pathname.split("/")[1];
   const title = TITLES[pathname] || TITLES[base];
   return <AppShell title={title}>{children}</AppShell>;
-}
-
-/**
- * Paths that should be rendered INSIDE the SaaS shell (sidebar + topbar).
- * Marketing pages (/, /about, /blog, etc.) and auth pages stay outside.
- */
-export const APP_SHELL_PATHS = new Set<string>([
-  "/dashboard",
-  "/explore",
-  "/saved-hustles",
-  "/community",
-  "/leaderboard",
-  "/profile",
-  "/plans",
-  "/payment",
-  "/payment-status",
-  "/marketplace",
-  "/infinity-zone",
-  "/affiliates",
-  "/knowledge-hub",
-  "/problem-leads",
-  "/proposal-draft",
-  "/skill-gap",
-  "/ai-tools",
-  "/hustle-blueprint",
-  "/resume-optimizer",
-  "/gig-arbitrage",
-  "/gig-price-calculator",
-  "/faceless-content",
-  "/red-flag-scanner",
-  "/sure-hit-jobs",
-  "/relax",
-]);
-
-export const APP_SHELL_PREFIXES = ["/marketplace/", "/hustle/", "/roadmap/"];
-
-export function isAppShellRoute(pathname: string): boolean {
-  if (APP_SHELL_PATHS.has(pathname)) return true;
-  return APP_SHELL_PREFIXES.some((p) => pathname.startsWith(p));
 }

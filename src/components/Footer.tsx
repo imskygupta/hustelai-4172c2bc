@@ -5,7 +5,7 @@ import { Zap, Send, Mail, MapPin, ArrowUpRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Link, useLocation } from "react-router-dom";
-import { isAppShellRoute } from "@/components/AppRouteShell";
+import { isAppShellRoute } from "@/components/app-shell-routes";
 
 const productLinks = [
   { label: "Explore", href: "/explore" },

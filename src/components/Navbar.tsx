@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Zap, ArrowRight, Menu, X, LogOut, User, ChevronDown, Shield } from "lucide-react";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { isAppShellRoute } from "@/components/AppRouteShell";
+import { isAppShellRoute } from "@/components/app-shell-routes";
 
 const navLinks = [
   { label: "Explore", href: "/explore" },
