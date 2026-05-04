@@ -79,14 +79,14 @@ export function Navbar() {
   const isHome = location.pathname === "/";
 
   return (
-    <nav className={`fixed top-0 w-full z-50 transition-all duration-500 ${
+    <nav className={`fixed top-0 left-0 right-0 w-full z-50 transition-all duration-300 ${
       isHome
         ? scrolled
-          ? "bg-white/85 backdrop-blur-xl border-b border-slate-200/70 shadow-sm"
-          : "bg-transparent"
+          ? "bg-white/90 backdrop-blur-xl border-b border-slate-200/70 shadow-sm"
+          : "bg-white/70 backdrop-blur-md md:bg-transparent md:backdrop-blur-none border-b border-slate-200/50 md:border-transparent"
         : scrolled
           ? "glass border-b border-border/50 shadow-card"
-          : "bg-transparent"
+          : "bg-background/70 backdrop-blur-md md:bg-transparent md:backdrop-blur-none border-b border-border/40 md:border-transparent"
     }`}>
       <div className="container mx-auto flex items-center justify-between h-16 px-4">
         <Link to="/" className="flex items-center gap-2 group">

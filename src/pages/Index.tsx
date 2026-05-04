@@ -223,18 +223,18 @@ export default function Index() {
             viewport={{ once: true }}
             className="rounded-2xl border border-slate-200 overflow-hidden bg-white shadow-sm"
           >
-            <div className="grid grid-cols-[1fr_120px_120px] md:grid-cols-[1fr_160px_160px] bg-slate-50 border-b border-slate-200">
-              <div className="p-4 text-xs uppercase tracking-wider text-slate-500 font-medium">Capability</div>
-              <div className="p-4 text-center text-xs uppercase tracking-wider text-emerald-600 font-semibold border-l border-slate-200">HustleAI</div>
-              <div className="p-4 text-center text-xs uppercase tracking-wider text-slate-500 font-medium border-l border-slate-200">Others</div>
+            <div className="grid grid-cols-[1fr_70px_70px] sm:grid-cols-[1fr_120px_120px] md:grid-cols-[1fr_160px_160px] bg-slate-50 border-b border-slate-200">
+              <div className="p-3 sm:p-4 text-[10px] sm:text-xs uppercase tracking-wider text-slate-500 font-medium">Capability</div>
+              <div className="p-3 sm:p-4 text-center text-[10px] sm:text-xs uppercase tracking-wider text-emerald-600 font-semibold border-l border-slate-200">HustleAI</div>
+              <div className="p-3 sm:p-4 text-center text-[10px] sm:text-xs uppercase tracking-wider text-slate-500 font-medium border-l border-slate-200">Others</div>
             </div>
             {comparison.map((row, i) => (
               <div
                 key={row.feature}
-                className={`grid grid-cols-[1fr_120px_120px] md:grid-cols-[1fr_160px_160px] ${i !== comparison.length - 1 ? "border-b border-slate-100" : ""}`}
+                className={`grid grid-cols-[1fr_70px_70px] sm:grid-cols-[1fr_120px_120px] md:grid-cols-[1fr_160px_160px] ${i !== comparison.length - 1 ? "border-b border-slate-100" : ""}`}
               >
-                <div className="p-4 text-sm text-slate-700">{row.feature}</div>
-                <div className="p-4 flex items-center justify-center border-l border-slate-100">
+                <div className="p-3 sm:p-4 text-xs sm:text-sm text-slate-700">{row.feature}</div>
+                <div className="p-3 sm:p-4 flex items-center justify-center border-l border-slate-100">
                   {row.us ? (
                     <div className="w-6 h-6 rounded-full bg-emerald-500/10 flex items-center justify-center">
                       <Check className="w-4 h-4 text-emerald-600" />
@@ -243,7 +243,7 @@ export default function Index() {
                     <X className="w-4 h-4 text-slate-300" />
                   )}
                 </div>
-                <div className="p-4 flex items-center justify-center border-l border-slate-100">
+                <div className="p-3 sm:p-4 flex items-center justify-center border-l border-slate-100">
                   {row.others ? (
                     <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center">
                       <Check className="w-4 h-4 text-slate-400" />
