@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Navbar } from "@/components/Navbar";
@@ -10,7 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
-import { DollarSign, Loader2, RefreshCw, Sparkles, CheckCircle, Trophy, Zap, Target } from "lucide-react";
+import { DollarSign, Loader2, RefreshCw, Sparkles, CheckCircle, Trophy, Zap, Target, Lock } from "lucide-react";
+import { getMaxUses, getUsage, bumpUsage, awardXP } from "@/lib/tool-limits";
 
 type Tier = { name: string; price: number; delivery_days: number; what_you_get: string[]; best_for: string };
 type Result = { currency: string; tiers: Tier[]; rationale: string; psych_tip: string };
@@ -24,9 +25,14 @@ export default function GigPriceCalculator() {
   const [result, setResult] = useState<Result | null>(null);
   const [generating, setGenerating] = useState(false);
 
-  const isFree = profile?.subscription_tier === "free";
+  const tier = profile?.subscription_tier || "free";
+  const maxUses = getMaxUses(tier);
+  const [usageCount, setUsageCount] = useState(0);
+  useEffect(() => { if (user) setUsageCount(getUsage("pricecalc", user.id)); }, [user]);
+  const atLimit = usageCount >= maxUses;
 
   const handleGenerate = async () => {
+    if (atLimit) { toast({ title: `Limit reached (${maxUses}/${maxUses})`, description: "Upgrade for more uses.", variant: "destructive" }); return; }
     if (service.trim().length < 10) {
       toast({ title: "Too short", description: "Describe your service in at least 10 characters.", variant: "destructive" });
       return;
@@ -42,6 +48,8 @@ export default function GigPriceCalculator() {
       const json = await resp.json();
       if (!resp.ok) throw new Error(json.error || "Failed");
       setResult(json.result);
+      setUsageCount(bumpUsage("pricecalc", user!.id));
+      awardXP(user!.id, 10);
       toast({ title: "Pricing tiers ready! 💰" });
     } catch (e: any) {
       toast({ title: "Error", description: e.message, variant: "destructive" });
@@ -63,7 +71,7 @@ export default function GigPriceCalculator() {
           </div>
           <h1 className="text-4xl md:text-5xl font-display font-bold text-gradient mb-3">Quote like a pro.</h1>
           <p className="text-muted-foreground max-w-2xl mx-auto">Get a 3-tier pricing structure (Basic / Standard / Premium) instantly — using anchor pricing psychology that makes clients pick the middle tier.</p>
-          {isFree && <Badge className="mt-3 bg-yellow-500/10 text-yellow-500 border-yellow-500/30">Free tier: 3 uses</Badge>}
+          <Badge className="mt-3 bg-yellow-500/10 text-yellow-500 border-yellow-500/30">{usageCount}/{maxUses} uses · {tier.toUpperCase()} tier</Badge>
         </motion.div>
 
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass rounded-2xl p-6 space-y-4 mb-6">
@@ -93,8 +101,10 @@ export default function GigPriceCalculator() {
               </Select>
             </div>
           </div>
-          <Button onClick={handleGenerate} disabled={generating} className="w-full bg-gradient-primary text-primary-foreground h-12">
-            {generating ? <><Loader2 className="w-5 h-5 animate-spin mr-2" /> Calculating tiers...</> : <><Zap className="w-5 h-5 mr-2" /> Generate Pricing Tiers</>}
+          <Button onClick={handleGenerate} disabled={generating || atLimit} className="w-full bg-gradient-primary text-primary-foreground h-12">
+            {generating ? <><Loader2 className="w-5 h-5 animate-spin mr-2" /> Calculating tiers...</>
+              : atLimit ? <><Lock className="w-5 h-5 mr-2" /> Limit reached — upgrade</>
+              : <><Zap className="w-5 h-5 mr-2" /> Generate Pricing Tiers</>}
           </Button>
         </motion.div>
 

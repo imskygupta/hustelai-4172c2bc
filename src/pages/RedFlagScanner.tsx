@@ -9,7 +9,9 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
-import { ShieldAlert, Loader2, Zap, AlertTriangle, CheckCircle, MessageCircle, Copy, HelpCircle } from "lucide-react";
+import { ShieldAlert, Loader2, Zap, AlertTriangle, CheckCircle, MessageCircle, Copy, HelpCircle, Lock } from "lucide-react";
+import { getMaxUses, getUsage, bumpUsage, awardXP } from "@/lib/tool-limits";
+import { useEffect } from "react";
 
 type Risk = { severity: "high" | "medium" | "low"; title: string; explanation: string };
 type Benefit = { title: string; explanation: string };
@@ -35,9 +37,14 @@ export default function RedFlagScanner() {
   const [result, setResult] = useState<Result | null>(null);
   const [generating, setGenerating] = useState(false);
 
-  const isFree = profile?.subscription_tier === "free";
+  const tier = profile?.subscription_tier || "free";
+  const maxUses = getMaxUses(tier);
+  const [usageCount, setUsageCount] = useState(0);
+  useEffect(() => { if (user) setUsageCount(getUsage("redflag", user.id)); }, [user]);
+  const atLimit = usageCount >= maxUses;
 
   const handleScan = async () => {
+    if (atLimit) { toast({ title: `Limit reached (${maxUses}/${maxUses})`, description: "Upgrade for more uses.", variant: "destructive" }); return; }
     if (communication.trim().length < 30) {
       toast({ title: "Need more text", description: "Paste at least 30 characters of the client message.", variant: "destructive" });
       return;
@@ -53,6 +60,8 @@ export default function RedFlagScanner() {
       const json = await resp.json();
       if (!resp.ok) throw new Error(json.error || "Failed");
       setResult(json.result);
+      setUsageCount(bumpUsage("redflag", user!.id));
+      awardXP(user!.id, 10);
       toast({ title: "Scan complete 🛡️" });
     } catch (e: any) {
       toast({ title: "Error", description: e.message, variant: "destructive" });
@@ -77,14 +86,16 @@ export default function RedFlagScanner() {
           </div>
           <h1 className="text-4xl md:text-5xl font-display font-bold text-gradient mb-3">Spot bad clients. Keep good ones.</h1>
           <p className="text-muted-foreground max-w-2xl mx-auto">Paste a client message or job post — get a stoplight risk report (Red / Yellow / Green) with smart questions and a suggested reply.</p>
-          {isFree && <Badge className="mt-3 bg-yellow-500/10 text-yellow-500 border-yellow-500/30">Free tier: 3 uses</Badge>}
+          <Badge className="mt-3 bg-yellow-500/10 text-yellow-500 border-yellow-500/30">{usageCount}/{maxUses} uses · {tier.toUpperCase()} tier</Badge>
         </motion.div>
 
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass rounded-2xl p-6 space-y-4 mb-6">
           <h2 className="font-display font-bold">Paste the client communication</h2>
           <Textarea placeholder="Paste their full message, job post, or DM thread here..." value={communication} onChange={(e) => setCommunication(e.target.value)} className="min-h-[180px]" />
-          <Button onClick={handleScan} disabled={generating} className="w-full bg-gradient-primary text-primary-foreground h-12">
-            {generating ? <><Loader2 className="w-5 h-5 animate-spin mr-2" /> Scanning for red flags...</> : <><Zap className="w-5 h-5 mr-2" /> Run Stoplight Scan</>}
+          <Button onClick={handleScan} disabled={generating || atLimit} className="w-full bg-gradient-primary text-primary-foreground h-12">
+            {generating ? <><Loader2 className="w-5 h-5 animate-spin mr-2" /> Scanning for red flags...</>
+              : atLimit ? <><Lock className="w-5 h-5 mr-2" /> Limit reached — upgrade</>
+              : <><Zap className="w-5 h-5 mr-2" /> Run Stoplight Scan</>}
           </Button>
         </motion.div>
 

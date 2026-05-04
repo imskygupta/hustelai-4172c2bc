@@ -10,7 +10,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
-import { Film, Loader2, Zap, Sparkles, Camera, Mic, Type as TypeIcon, Clock } from "lucide-react";
+import { Film, Loader2, Zap, Sparkles, Camera, Mic, Type as TypeIcon, Clock, Lock } from "lucide-react";
+import { getMaxUses, getUsage, bumpUsage, awardXP } from "@/lib/tool-limits";
+import { useEffect } from "react";
 
 type Scene = { scene_number: number; visual: string; voiceover: string; text_overlay: string; duration_seconds: number };
 type Result = { title: string; hook: string; scenes: Scene[]; cta: string; hashtags: string[] };
@@ -24,9 +26,14 @@ export default function FacelessContent() {
   const [result, setResult] = useState<Result | null>(null);
   const [generating, setGenerating] = useState(false);
 
-  const isFree = profile?.subscription_tier === "free";
+  const tier = profile?.subscription_tier || "free";
+  const maxUses = getMaxUses(tier);
+  const [usageCount, setUsageCount] = useState(0);
+  useEffect(() => { if (user) setUsageCount(getUsage("faceless", user.id)); }, [user]);
+  const atLimit = usageCount >= maxUses;
 
   const handleGenerate = async () => {
+    if (atLimit) { toast({ title: `Limit reached (${maxUses}/${maxUses})`, description: "Upgrade for more uses.", variant: "destructive" }); return; }
     if (topic.trim().length < 5) { toast({ title: "Topic too short", variant: "destructive" }); return; }
     setGenerating(true); setResult(null);
     try {
@@ -39,6 +46,8 @@ export default function FacelessContent() {
       const json = await resp.json();
       if (!resp.ok) throw new Error(json.error || "Failed");
       setResult(json.result);
+      setUsageCount(bumpUsage("faceless", user!.id));
+      awardXP(user!.id, 10);
       toast({ title: "Storyboard ready! 🎬" });
     } catch (e: any) {
       toast({ title: "Error", description: e.message, variant: "destructive" });
@@ -62,7 +71,7 @@ export default function FacelessContent() {
           </div>
           <h1 className="text-4xl md:text-5xl font-display font-bold text-gradient-accent mb-3">From idea to viral storyboard.</h1>
           <p className="text-muted-foreground max-w-2xl mx-auto">Get a 6-scene short-form video script with visuals, voiceover, and text overlays — ready for Runway, Pika, or your editor.</p>
-          {isFree && <Badge className="mt-3 bg-yellow-500/10 text-yellow-500 border-yellow-500/30">Free tier: 3 uses</Badge>}
+          <Badge className="mt-3 bg-yellow-500/10 text-yellow-500 border-yellow-500/30">{usageCount}/{maxUses} uses · {tier.toUpperCase()} tier</Badge>
         </motion.div>
 
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass rounded-2xl p-6 space-y-4 mb-6">
@@ -89,8 +98,10 @@ export default function FacelessContent() {
               </SelectContent>
             </Select>
           </div>
-          <Button onClick={handleGenerate} disabled={generating} className="w-full bg-gradient-to-r from-accent to-primary text-primary-foreground h-12">
-            {generating ? <><Loader2 className="w-5 h-5 animate-spin mr-2" /> Building storyboard...</> : <><Zap className="w-5 h-5 mr-2" /> Generate 6-Scene Storyboard</>}
+          <Button onClick={handleGenerate} disabled={generating || atLimit} className="w-full bg-gradient-to-r from-accent to-primary text-primary-foreground h-12">
+            {generating ? <><Loader2 className="w-5 h-5 animate-spin mr-2" /> Building storyboard...</>
+              : atLimit ? <><Lock className="w-5 h-5 mr-2" /> Limit reached — upgrade</>
+              : <><Zap className="w-5 h-5 mr-2" /> Generate 6-Scene Storyboard</>}
           </Button>
         </motion.div>
 
