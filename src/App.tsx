@@ -54,9 +54,16 @@ import NotFound from "./pages/NotFound";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { AppRouteShell } from "@/components/AppRouteShell";
+import { RequireAuth } from "@/components/RequireAuth";
 
-// Helper to wrap an in-app page in the SaaS sidebar shell
-const Shelled = (el: React.ReactNode) => <AppRouteShell>{el}</AppRouteShell>;
+// Helper to wrap an in-app page in the SaaS sidebar shell.
+// All shelled routes require auth — guests are redirected to /signup so they
+// never see a logged-in dashboard / sidebar with Sign out etc.
+const Shelled = (el: React.ReactNode) => (
+  <RequireAuth>
+    <AppRouteShell>{el}</AppRouteShell>
+  </RequireAuth>
+);
 
 const queryClient = new QueryClient();
 
@@ -75,7 +82,7 @@ const App = () => (
             <Route path="/signup" element={<Signup />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/blog" element={<Blog />} />
@@ -84,7 +91,7 @@ const App = () => (
             <Route path="/profile" element={Shelled(<Profile />)} />
             <Route path="/payment" element={Shelled(<Payment />)} />
             <Route path="/payment-status" element={Shelled(<PaymentStatus />)} />
-            <Route path="/plans" element={Shelled(<Plans />)} />
+            <Route path="/plans" element={<Plans />} />
             <Route path="/leaderboard" element={Shelled(<Leaderboard />)} />
             <Route path="/saved-hustles" element={Shelled(<SavedHustles />)} />
             <Route path="/career" element={<Career />} />
