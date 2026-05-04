@@ -12,6 +12,7 @@ import {
   BookOpen, Calendar, DollarSign, TrendingUp,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { openRoadmapPrint } from "@/lib/roadmap-print";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface RoadmapData {
@@ -53,6 +54,10 @@ export default function RoadmapViewer() {
     }
     setRoadmap(data as RoadmapData);
     setLoading(false);
+    // Auto-open polished print/PDF view in a new tab — the in-app renderer
+    // produced cramped, badly formatted content. The print view is branded,
+    // print-ready, and download-friendly.
+    openRoadmapPrint(data as RoadmapData);
   };
 
   const handlePrintPDF = () => {
@@ -191,8 +196,11 @@ export default function RoadmapViewer() {
               <Button variant="outline" size="sm" onClick={handleShare}>
                 <Share2 className="w-4 h-4 mr-1" /> Share
               </Button>
-              <Button variant="outline" size="sm" onClick={handlePrintPDF} className="hover:border-primary/50 hover:text-primary">
+              <Button variant="outline" size="sm" onClick={() => roadmap && openRoadmapPrint(roadmap, true)} className="hover:border-primary/50 hover:text-primary">
                 <Download className="w-4 h-4 mr-1" /> Export PDF
+              </Button>
+              <Button size="sm" onClick={() => roadmap && openRoadmapPrint(roadmap)} className="bg-primary text-primary-foreground">
+                Open Clean View
               </Button>
             </div>
           </div>

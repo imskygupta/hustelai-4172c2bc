@@ -14,6 +14,7 @@ import {
   DollarSign, TrendingUp, Clock, Zap, Flame, BookOpen, ExternalLink,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { openRoadmapPrint } from "@/lib/roadmap-print";
 
 interface HustleData {
   id: string;
@@ -265,11 +266,11 @@ export default function HustleDetail() {
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <Button onClick={() => navigate(`/roadmap/${roadmapId}`)} className="gap-2">
+                  <Button onClick={() => roadmapId && openRoadmapPrint(roadmapId)} className="gap-2">
                     <BookOpen className="w-4 h-4" /> Read Roadmap
                   </Button>
-                  <Button variant="outline" onClick={() => navigate(`/roadmap/${roadmapId}`)} className="gap-2">
-                    <Download className="w-4 h-4" /> Export PDF
+                  <Button variant="outline" onClick={() => roadmapId && openRoadmapPrint(roadmapId, true)} className="gap-2">
+                    <Download className="w-4 h-4" /> Download PDF
                   </Button>
                 </div>
                 <Button variant="ghost" size="sm" onClick={generateRoadmap} className="text-xs text-muted-foreground">
@@ -308,11 +309,11 @@ export default function HustleDetail() {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3 pt-2">
-            <Button className="w-full gap-2" size="lg" onClick={() => { setShowDialog(false); navigate(`/roadmap/${roadmapId}`); }}>
-              <BookOpen className="w-5 h-5" /> View Roadmap Ebook
+            <Button className="w-full gap-2" size="lg" onClick={() => { setShowDialog(false); if (roadmapId) openRoadmapPrint(roadmapId); }}>
+              <BookOpen className="w-5 h-5" /> View Roadmap
               <ExternalLink className="w-3 h-3 ml-auto opacity-50" />
             </Button>
-            <Button variant="outline" className="w-full gap-2" size="lg" onClick={() => { setShowDialog(false); navigate(`/roadmap/${roadmapId}`); }}>
+            <Button variant="outline" className="w-full gap-2" size="lg" onClick={() => { setShowDialog(false); if (roadmapId) openRoadmapPrint(roadmapId, true); }}>
               <Download className="w-5 h-5" /> Download as PDF
             </Button>
             <Button variant="ghost" className="w-full text-xs text-muted-foreground" onClick={() => setShowDialog(false)}>
