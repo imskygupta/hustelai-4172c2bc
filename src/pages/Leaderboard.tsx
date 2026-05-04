@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Navbar } from "@/components/Navbar";
 import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
-import { Trophy, Medal, Award, Flame, Star, Crown, Rocket, Sparkles, Calendar, Gift } from "lucide-react";
+import { Trophy, Medal, Award, Star, Crown, Rocket, Sparkles, Calendar, Gift } from "lucide-react";
 import { getWeeklyLeaderboard, WEEKLY_XP_THRESHOLD, type WeeklyEntry } from "@/lib/weekly-leaderboard";
 
 interface DisplayRow {
