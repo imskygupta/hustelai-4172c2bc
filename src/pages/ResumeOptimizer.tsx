@@ -169,99 +169,86 @@ export default function ResumeOptimizer() {
     finally { setAiBusy(null); }
   };
 
-  // ----- Download PDF (clean A4) -----
+  // ----- Download PDF — open clean print-ready HTML in a new tab and trigger system print -----
   const downloadPDF = async (withWatermark: boolean) => {
     setDownloading(true);
     try {
-      const pdf = new jsPDF("p", "pt", "a4");
-      const W = pdf.internal.pageSize.getWidth();
-      const H = pdf.internal.pageSize.getHeight();
-      const M = 40;
-      const accent = selectedTemplate.accent.split(" ").map(p => p.trim());
-      // Convert hsl to rgb roughly via temp canvas (jsPDF needs rgb)
-      const toRgb = (hsl: string) => {
-        const c = document.createElement("canvas").getContext("2d")!;
-        c.fillStyle = `hsl(${hsl})`;
-        const m = c.fillStyle.match(/\d+/g)!.map(Number);
-        return m;
-      };
-      const accentRgb = toRgb(selectedTemplate.accent);
-      const textRgb = toRgb(selectedTemplate.text);
+      const accent = `hsl(${selectedTemplate.accent})`;
+      const text = `hsl(${selectedTemplate.text})`;
+      const esc = (s: string) =>
+        (s || "").replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c] as string));
+      const para = (s: string) => esc(s).replace(/\n/g, "<br/>");
+      const section = (title: string, body: string) =>
+        body && body.trim()
+          ? `<section><h2>${title}</h2><p>${para(body)}</p></section>`
+          : "";
 
-      // Top accent bar
-      pdf.setFillColor(accentRgb[0], accentRgb[1], accentRgb[2]);
-      pdf.rect(0, 0, W, 6, "F");
+      const contact = [resume.email, resume.phone, resume.location].filter(Boolean).map(esc).join("  •  ");
+      const wm = withWatermark
+        ? `<div class="wm">HustleAI</div>`
+        : "";
 
-      // Top-right small logo
-      pdf.setFontSize(8);
-      pdf.setTextColor(accentRgb[0], accentRgb[1], accentRgb[2]);
-      pdf.text("HustleAI", W - M, 24, { align: "right" });
+      const html = `<!doctype html>
+<html><head><meta charset="utf-8"/>
+<title>${esc(resume.fullName || "Resume")} — HustleAI</title>
+<style>
+  @page { size: A4; margin: 14mm 14mm 16mm 14mm; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: #fff; color: ${text}; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif; font-size: 11pt; line-height: 1.5; }
+  .top { height: 6px; background: ${accent}; margin: -14mm -14mm 12mm -14mm; }
+  header h1 { font-size: 22pt; margin: 0 0 4pt 0; letter-spacing: -0.5px; }
+  header .role { color: ${accent}; font-weight: 600; font-size: 12pt; margin: 0 0 6pt 0; }
+  header .contact { color: #555; font-size: 9.5pt; margin: 0; }
+  hr { border: none; border-top: 1px solid ${accent}; margin: 10pt 0 12pt; }
+  section { page-break-inside: avoid; margin-bottom: 10pt; }
+  h2 { font-size: 10.5pt; color: ${accent}; letter-spacing: 1px; text-transform: uppercase; margin: 0 0 4pt 0; border-bottom: 1px solid #eee; padding-bottom: 3pt; }
+  p { margin: 0; white-space: pre-wrap; }
+  .footer { position: fixed; bottom: 4mm; left: 14mm; right: 14mm; display: flex; justify-content: space-between; font-size: 8pt; color: ${accent}; border-top: 1px solid ${accent}; padding-top: 3pt; }
+  .wm { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; transform: rotate(-25deg); font-size: 90pt; color: rgba(0,0,0,0.05); font-weight: 800; pointer-events: none; z-index: 0; }
+  .printbar { position: fixed; top: 12px; right: 12px; z-index: 9999; display: flex; gap: 8px; }
+  .printbar button { background: ${accent}; color: #fff; border: 0; padding: 8px 14px; border-radius: 8px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+  .printbar .ghost { background: #fff; color: ${accent}; border: 1px solid ${accent}; }
+  @media print { .printbar { display: none; } }
+</style>
+</head>
+<body>
+  <div class="printbar">
+    <button class="ghost" onclick="window.close()">Close</button>
+    <button onclick="window.print()">Save as PDF</button>
+  </div>
+  ${wm}
+  <div class="top"></div>
+  <header>
+    <h1>${esc(resume.fullName || "Your Name")}</h1>
+    <p class="role">${esc(resume.title || "Professional Title")}</p>
+    <p class="contact">${contact}</p>
+  </header>
+  <hr/>
+  ${section("Summary", resume.summary)}
+  ${section("Experience", resume.experience)}
+  ${section("Skills", resume.skills)}
+  ${section("Education", resume.education)}
+  ${section("Achievements", resume.achievements)}
+  <div class="footer">
+    <span>Built with HustleAI · hustlaiapp.in</span>
+    <span>${esc(resume.fullName || "")}</span>
+  </div>
+  <script>
+    window.addEventListener('load', () => setTimeout(() => window.print(), 400));
+  </script>
+</body></html>`;
 
-      // Header
-      let y = 60;
-      pdf.setTextColor(textRgb[0], textRgb[1], textRgb[2]);
-      pdf.setFont("helvetica", "bold"); pdf.setFontSize(22);
-      pdf.text(resume.fullName || "Your Name", M, y);
-      y += 18;
-      pdf.setFont("helvetica", "normal"); pdf.setFontSize(11);
-      pdf.setTextColor(accentRgb[0], accentRgb[1], accentRgb[2]);
-      pdf.text(resume.title || "Professional Title", M, y);
-      y += 16;
-      pdf.setTextColor(100, 100, 100); pdf.setFontSize(9);
-      const contact = [resume.email, resume.phone, resume.location].filter(Boolean).join("  •  ");
-      pdf.text(contact, M, y);
-      y += 18;
-      pdf.setDrawColor(accentRgb[0], accentRgb[1], accentRgb[2]);
-      pdf.setLineWidth(0.8);
-      pdf.line(M, y, W - M, y);
-      y += 18;
-
-      const section = (title: string, body: string) => {
-        if (!body.trim()) return;
-        if (y > H - 90) { pdf.addPage(); y = 60; }
-        pdf.setFont("helvetica", "bold"); pdf.setFontSize(11);
-        pdf.setTextColor(accentRgb[0], accentRgb[1], accentRgb[2]);
-        pdf.text(title.toUpperCase(), M, y); y += 14;
-        pdf.setFont("helvetica", "normal"); pdf.setFontSize(10);
-        pdf.setTextColor(textRgb[0], textRgb[1], textRgb[2]);
-        const lines = pdf.splitTextToSize(body, W - M * 2);
-        for (const ln of lines) {
-          if (y > H - 60) { pdf.addPage(); y = 60; }
-          pdf.text(ln, M, y); y += 13;
-        }
-        y += 8;
-      };
-
-      section("Summary", resume.summary);
-      section("Experience", resume.experience);
-      section("Skills", resume.skills);
-      section("Education", resume.education);
-      section("Achievements", resume.achievements);
-
-      // Bottom watermark/logo on every page
-      const pages = pdf.getNumberOfPages();
-      for (let i = 1; i <= pages; i++) {
-        pdf.setPage(i);
-        // bottom accent bar
-        pdf.setFillColor(accentRgb[0], accentRgb[1], accentRgb[2]);
-        pdf.rect(0, H - 4, W, 4, "F");
-        pdf.setFontSize(8);
-        pdf.setTextColor(accentRgb[0], accentRgb[1], accentRgb[2]);
-        pdf.text("Built with HustleAI · hustlaiapp.in", M, H - 14);
-        pdf.setTextColor(150, 150, 150);
-        pdf.text(`Page ${i}/${pages}`, W - M, H - 14, { align: "right" });
-
-        if (withWatermark) {
-          pdf.setTextColor(220, 220, 220);
-          pdf.setFontSize(48);
-          pdf.text("HustleAI", W / 2, H / 2, { align: "center", angle: 30 });
-        }
+      const w = window.open("", "_blank");
+      if (!w) {
+        toast.error("Popup blocked — allow popups for this site to print your resume.");
+        return;
       }
-
-      pdf.save(`${(resume.fullName || "Resume").replace(/\s/g, "_")}_HustleAI.pdf`);
-      toast.success("Resume downloaded!");
+      w.document.open();
+      w.document.write(html);
+      w.document.close();
+      toast.success("Resume opened — use the print dialog to save as PDF.");
     } catch (e: any) {
-      toast.error(e.message || "Download failed");
+      toast.error(e.message || "Print failed");
     } finally {
       setDownloading(false);
     }
