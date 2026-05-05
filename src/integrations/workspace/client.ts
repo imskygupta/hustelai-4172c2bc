@@ -77,6 +77,41 @@ export type WorkDailyLog = {
   created_at: string;
 };
 
+export type WorkClient = {
+  id: string; owner_id: string; name: string;
+  email: string | null; phone: string | null; company: string | null;
+  notes: string | null; status: string | null; hourly_rate: number;
+  created_at: string;
+};
+export type WorkTimeEntry = {
+  id: string; owner_id: string; client_id: string | null;
+  description: string | null; started_at: string; ended_at: string | null;
+  duration_seconds: number; hourly_rate: number; created_at: string;
+};
+export type WorkFile = {
+  id: string; owner_id: string; client_id: string | null;
+  name: string; url: string; version: string; is_final: boolean; created_at: string;
+};
+export type WorkNote = {
+  id: string; owner_id: string; client_id: string | null;
+  content: string; color: string; created_at: string;
+};
+export type WorkExpense = {
+  id: string; owner_id: string; label: string; category: string;
+  amount: number; expense_date: string; created_at: string;
+};
+export type WorkCommLog = {
+  id: string; owner_id: string; client_id: string;
+  channel: string; summary: string; occurred_at: string; created_at: string;
+};
+export type WorkDeadline = {
+  id: string; owner_id: string; client_id: string | null;
+  title: string; due_date: string; is_done: boolean; created_at: string;
+};
+export type WorkPortal = {
+  id: string; owner_id: string; client_id: string; token: string; created_at: string;
+};
+
 /**
  * Lazily mirrors the user's primary-DB profile (id/email/tier) into the
  * secondary workspace DB the first time they touch a workspace feature.
