@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { isAppShellRoute } from "@/components/app-shell-routes";
 
 const navLinks = [
-  { label: "Products", href: "/products" },
+  { label: "B2B APIs", href: "/products" },
   { label: "Explore", href: "/explore" },
   { label: "Plans & Pricing", href: "/plans" },
   { label: "Marketplace", href: "/marketplace" },
