@@ -115,6 +115,7 @@ export default function Relax() {
   const [muted, setMuted] = useState(false);
   const intervalRef = useRef<number | null>(null);
   const gainRef = useRef<GainNode | null>(null);
+  const [vibe, setVibe] = useState<keyof typeof VIBE_SCALES>("chill");
 
   const getAudioCtx = useCallback(() => {
     if (!audioCtxRef.current) {
