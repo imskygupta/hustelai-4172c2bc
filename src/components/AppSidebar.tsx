@@ -6,13 +6,14 @@ import {
 import {
   LayoutDashboard, Search, Users, User, Crown, Wrench, Target, Store, BookOpen,
   FileText, Brain, Zap, TrendingUp, Briefcase, MessageCircle, Trophy, Bookmark,
-  CreditCard, Settings, LogOut, Sparkles, Film, ShieldAlert, DollarSign, Rocket, Bot, Building2, LayoutGrid,
+  CreditCard, Settings, LogOut, Sparkles, Film, ShieldAlert, DollarSign, Rocket, Bot, Building2, LayoutGrid, Hammer,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Badge } from "@/components/ui/badge";
 
 const mainItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
+  { title: "Work", url: "/work", icon: Hammer },
   { title: "Workspaces", url: "/workspaces", icon: Building2 },
   { title: "Hustle Canvas", url: "/canvas", icon: LayoutGrid },
   { title: "Explore Hustles", url: "/explore", icon: Search },
