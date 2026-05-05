@@ -84,7 +84,7 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <button
-              onClick={() => window.dispatchEvent(new Event("open-hustlebot"))}
+              onClick={() => navigate("/hustlebot")}
               className="group relative w-full mx-2 my-1 rounded-lg overflow-hidden
                          bg-gradient-to-br from-violet-500 via-fuchsia-500 to-amber-400 p-[1.5px]
                          shadow-[0_0_18px_rgba(168,85,247,0.45)] hover:shadow-[0_0_28px_rgba(168,85,247,0.7)] transition-all"
