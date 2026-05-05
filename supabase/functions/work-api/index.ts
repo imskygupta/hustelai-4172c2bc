@@ -41,6 +41,7 @@ const WORKSPACE_KEY = "sb_publishable_riUGl3kMundQwxXEg5wcyA_evCjBvqA";
 
 const RESEND_API_KEY  = Deno.env.get("RESEND_API_KEY");
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+const INNGEST_API_KEY = Deno.env.get("INNGEST_API_KEY");
 const RESEND_FROM     = "HustleAI <noreply@hustlaiapp.in>";
 
 /**
@@ -66,6 +67,31 @@ async function sendEmail(to: string, subject: string, html: string): Promise<voi
     if (!r.ok) console.error("[work-api:email]", r.status, await r.text().catch(() => ""));
   } catch (e: any) {
     console.error("[work-api:email] error", e?.message || e);
+  }
+}
+
+/**
+ * Fire-and-forget Inngest event emitter via Lovable connector gateway.
+ * Used to trigger durable background workflows (reminders, follow-ups).
+ */
+async function emitEvent(name: string, data: Record<string, unknown>): Promise<void> {
+  if (!LOVABLE_API_KEY || !INNGEST_API_KEY) {
+    console.warn("[work-api:inngest] missing LOVABLE_API_KEY / INNGEST_API_KEY — skipping event", name);
+    return;
+  }
+  try {
+    const r = await fetch("https://connector-gateway.lovable.dev/inngest/e/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
+        "X-Connection-Api-Key": INNGEST_API_KEY,
+      },
+      body: JSON.stringify({ name, data }),
+    });
+    if (!r.ok) console.error("[work-api:inngest]", name, r.status, await r.text().catch(() => ""));
+  } catch (e: any) {
+    console.error("[work-api:inngest] error", name, e?.message || e);
   }
 }
 
@@ -140,6 +166,19 @@ Deno.serve(async (req) => {
           );
         }
 
+        // 🔁 Trigger durable follow-up workflow (Day 3 reminder, Day 7 overdue).
+        emitEvent("work/invoice.created", {
+          invoice_id: data.id,
+          owner_id: userId,
+          owner_email: userEmail || null,
+          client_name,
+          client_email: clientEmail || null,
+          amount,
+          currency: "INR",
+          due_date: action.due_date || null,
+          invoice_number: data.invoice_number || null,
+        });
+
         return json({ ok: true, row: data });
       }
       case "invoice.update_status": {
@@ -160,6 +199,12 @@ Deno.serve(async (req) => {
             `<p>🎉 <strong>${row.client_name}</strong> marked invoice <strong>${row.invoice_number || row.id}</strong> as paid (${amt}).</p>`
           );
         }
+        // 🔁 Cancel/branch downstream reminders.
+        emitEvent("work/invoice.status_changed", {
+          invoice_id: action.id,
+          owner_id: userId,
+          status: action.status,
+        });
         return json({ ok: true });
       }
       case "invoice.delete": {
@@ -206,6 +251,11 @@ Deno.serve(async (req) => {
           notes: action.notes?.slice(0, 2000) || null,
         }, { onConflict: "owner_id,log_date" });
         if (error) throw error;
+        emitEvent("work/daily.logged", {
+          owner_id: userId,
+          owner_email: userEmail || null,
+          log_date: action.log_date,
+        });
         return json({ ok: true });
       }
       default:
