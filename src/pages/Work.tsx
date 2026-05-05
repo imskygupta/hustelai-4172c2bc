@@ -9,47 +9,18 @@ import { Card } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, FileText, CheckSquare, Flame, Bell, Trash2, Download, Loader2, Copy } from "lucide-react";
+import { Plus, FileText, CheckSquare, Flame, Bell, Trash2, Download, Loader2, Copy, Users, Clock, FolderOpen, StickyNote, Wallet, MessageSquare, AlarmClock, TrendingUp, Globe, LayoutDashboard } from "lucide-react";
 import { toast } from "sonner";
-
-const SETUP_SQL = `-- Run in hustl-production Supabase SQL editor
-create table if not exists public.work_invoices (
-  id uuid primary key default gen_random_uuid(),
-  owner_id uuid not null,
-  client_name text not null,
-  service text not null,
-  amount numeric not null default 0,
-  currency text not null default 'INR',
-  status text not null default 'pending',
-  due_date date,
-  notes text,
-  created_at timestamptz not null default now()
-);
-create table if not exists public.work_checklists (
-  id uuid primary key default gen_random_uuid(),
-  owner_id uuid not null,
-  title text not null,
-  template text not null default 'custom',
-  tasks jsonb not null default '[]'::jsonb,
-  created_at timestamptz not null default now()
-);
-create table if not exists public.work_daily_logs (
-  id uuid primary key default gen_random_uuid(),
-  owner_id uuid not null,
-  log_date date not null,
-  proposals_sent int not null default 0,
-  leads_found int not null default 0,
-  clients_contacted int not null default 0,
-  notes text,
-  created_at timestamptz not null default now(),
-  unique(owner_id, log_date)
-);
-alter table public.work_invoices enable row level security;
-alter table public.work_checklists enable row level security;
-alter table public.work_daily_logs enable row level security;
-create policy "anon_all_invoices" on public.work_invoices for all using (true) with check (true);
-create policy "anon_all_checklists" on public.work_checklists for all using (true) with check (true);
-create policy "anon_all_daily_logs" on public.work_daily_logs for all using (true) with check (true);`;
+import { WORK_SETUP_SQL as SETUP_SQL } from "@/lib/work-sql";
+import { ClientsTab } from "@/components/work/ClientsTab";
+import { TimeTab } from "@/components/work/TimeTab";
+import { FilesTab } from "@/components/work/FilesTab";
+import { NotesTab } from "@/components/work/NotesTab";
+import { ExpensesTab } from "@/components/work/ExpensesTab";
+import { CommTab } from "@/components/work/CommTab";
+import { DeadlinesTab } from "@/components/work/DeadlinesTab";
+import { AnalyticsTab } from "@/components/work/AnalyticsTab";
+import { PortalsTab } from "@/components/work/PortalsTab";
 
 const TEMPLATES: Record<string, string[]> = {
   "Website Project": ["Requirement gathering", "Wireframes", "Design mockups", "Development", "Client review", "Revisions", "Final delivery"],
@@ -63,7 +34,7 @@ function todayISO() { return new Date().toISOString().slice(0, 10); }
 
 export default function Work() {
   const { user } = useAuth();
-  const [tab, setTab] = useState("invoices");
+  const [tab, setTab] = useState("home");
   const [dbReady, setDbReady] = useState<"unknown" | "ok" | "missing">("unknown");
 
   return (
@@ -91,22 +62,95 @@ export default function Work() {
         )}
 
         <Tabs value={tab} onValueChange={setTab}>
-          <TabsList className="grid grid-cols-3 w-full md:w-auto md:inline-grid">
-            <TabsTrigger value="invoices"><FileText className="w-4 h-4 mr-1.5" /> Invoices</TabsTrigger>
-            <TabsTrigger value="checklists"><CheckSquare className="w-4 h-4 mr-1.5" /> Checklists</TabsTrigger>
-            <TabsTrigger value="daily"><Flame className="w-4 h-4 mr-1.5" /> Daily</TabsTrigger>
-          </TabsList>
+          <div className="overflow-x-auto -mx-1 px-1">
+            <TabsList className="inline-flex w-max">
+              <TabsTrigger value="home"><LayoutDashboard className="w-4 h-4 mr-1.5" /> Home</TabsTrigger>
+              <TabsTrigger value="invoices"><FileText className="w-4 h-4 mr-1.5" /> Invoices</TabsTrigger>
+              <TabsTrigger value="time"><Clock className="w-4 h-4 mr-1.5" /> Time</TabsTrigger>
+              <TabsTrigger value="clients"><Users className="w-4 h-4 mr-1.5" /> Clients</TabsTrigger>
+              <TabsTrigger value="checklists"><CheckSquare className="w-4 h-4 mr-1.5" /> Checklists</TabsTrigger>
+              <TabsTrigger value="files"><FolderOpen className="w-4 h-4 mr-1.5" /> Files</TabsTrigger>
+              <TabsTrigger value="notes"><StickyNote className="w-4 h-4 mr-1.5" /> Notes</TabsTrigger>
+              <TabsTrigger value="expenses"><Wallet className="w-4 h-4 mr-1.5" /> Expenses</TabsTrigger>
+              <TabsTrigger value="comm"><MessageSquare className="w-4 h-4 mr-1.5" /> Comm</TabsTrigger>
+              <TabsTrigger value="deadlines"><AlarmClock className="w-4 h-4 mr-1.5" /> Deadlines</TabsTrigger>
+              <TabsTrigger value="daily"><Flame className="w-4 h-4 mr-1.5" /> Daily</TabsTrigger>
+              <TabsTrigger value="analytics"><TrendingUp className="w-4 h-4 mr-1.5" /> Analytics</TabsTrigger>
+              <TabsTrigger value="portals"><Globe className="w-4 h-4 mr-1.5" /> Portals</TabsTrigger>
+            </TabsList>
+          </div>
+
+          <TabsContent value="home" className="mt-4"><HomeTab userId={user?.id} setTab={setTab} /></TabsContent>
 
           <TabsContent value="invoices" className="mt-4">
             <InvoicesTab userId={user?.id} onMissing={() => setDbReady("missing")} onReady={() => setDbReady("ok")} />
           </TabsContent>
+          <TabsContent value="time" className="mt-4"><TimeTab userId={user?.id} /></TabsContent>
+          <TabsContent value="clients" className="mt-4"><ClientsTab userId={user?.id} /></TabsContent>
           <TabsContent value="checklists" className="mt-4">
             <ChecklistsTab userId={user?.id} onMissing={() => setDbReady("missing")} onReady={() => setDbReady("ok")} />
           </TabsContent>
+          <TabsContent value="files" className="mt-4"><FilesTab userId={user?.id} /></TabsContent>
+          <TabsContent value="notes" className="mt-4"><NotesTab userId={user?.id} /></TabsContent>
+          <TabsContent value="expenses" className="mt-4"><ExpensesTab userId={user?.id} /></TabsContent>
+          <TabsContent value="comm" className="mt-4"><CommTab userId={user?.id} /></TabsContent>
+          <TabsContent value="deadlines" className="mt-4"><DeadlinesTab userId={user?.id} /></TabsContent>
           <TabsContent value="daily" className="mt-4">
             <DailyTab userId={user?.id} onMissing={() => setDbReady("missing")} onReady={() => setDbReady("ok")} />
           </TabsContent>
+          <TabsContent value="analytics" className="mt-4"><AnalyticsTab userId={user?.id} /></TabsContent>
+          <TabsContent value="portals" className="mt-4"><PortalsTab userId={user?.id} /></TabsContent>
         </Tabs>
+      </div>
+    </div>
+  );
+}
+
+/* ============== HOME (DASHBOARD SUMMARY) ============== */
+function HomeTab({ userId, setTab }: { userId?: string; setTab: (s: string) => void }) {
+  const [s, setS] = useState({ revenue: 0, pending: 0, clients: 0, dueToday: 0, hoursToday: 0 });
+
+  useEffect(() => { (async () => {
+    if (!userId) return;
+    const monthStart = new Date(); monthStart.setDate(1); monthStart.setHours(0,0,0,0);
+    const dayStart = new Date(); dayStart.setHours(0,0,0,0);
+    const todayISO = new Date().toISOString().slice(0,10);
+    const [{ data: inv }, { data: cls }, { data: dl }, { data: te }] = await Promise.all([
+      workspaceDb.from("work_invoices").select("*").eq("owner_id", userId),
+      workspaceDb.from("work_clients").select("id").eq("owner_id", userId),
+      workspaceDb.from("work_deadlines").select("*").eq("owner_id", userId).eq("due_date", todayISO),
+      workspaceDb.from("work_time_entries").select("duration_seconds,started_at").eq("owner_id", userId),
+    ]);
+    const invoices = (inv || []) as any[];
+    const revenue = invoices.filter(i => i.status === "paid" && new Date(i.created_at) >= monthStart).reduce((a,b)=>a+Number(b.amount),0);
+    const pending = invoices.filter(i => i.status !== "paid").reduce((a,b)=>a+Number(b.amount),0);
+    const hoursToday = ((te || []) as any[]).filter(t => new Date(t.started_at) >= dayStart).reduce((a,b)=>a+b.duration_seconds,0)/3600;
+    setS({ revenue, pending, clients: (cls||[]).length, dueToday: (dl||[]).length, hoursToday });
+  })(); }, [userId]);
+
+  const tile = (label: string, value: string, hint: string, target: string, tone: string) => (
+    <button onClick={() => setTab(target)} className="text-left">
+      <Card className="p-5 hover:shadow-md transition-all">
+        <div className="text-xs text-slate-500">{label}</div>
+        <div className={`text-2xl font-bold mt-1 ${tone}`}>{value}</div>
+        <div className="text-[11px] text-slate-400 mt-1">{hint}</div>
+      </Card>
+    </button>
+  );
+
+  return (
+    <div className="space-y-4">
+      <Card className="p-6 bg-gradient-to-br from-emerald-500 to-teal-600 text-white">
+        <div className="text-xs uppercase tracking-wider opacity-80">Freelancer OS</div>
+        <div className="text-2xl md:text-3xl font-bold mt-1">Where your business actually lives.</div>
+        <div className="text-sm opacity-90 mt-1">Track time, send invoices, manage clients, hit deadlines — one place.</div>
+      </Card>
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+        {tile("Earned this month", `₹${s.revenue.toLocaleString()}`, "paid invoices", "invoices", "text-emerald-700")}
+        {tile("Pending", `₹${s.pending.toLocaleString()}`, "to chase", "invoices", "text-amber-700")}
+        {tile("Active clients", String(s.clients), "in CRM", "clients", "text-slate-900")}
+        {tile("Due today", String(s.dueToday), "deadlines", "deadlines", "text-rose-700")}
+        {tile("Hours today", s.hoursToday.toFixed(1), "tracked", "time", "text-sky-700")}
       </div>
     </div>
   );
