@@ -42,6 +42,41 @@ export type CanvasNote = {
   created_at: string;
 };
 
+/* ---------- Workspace Core (free layer) ---------- */
+
+export type WorkInvoice = {
+  id: string;
+  owner_id: string;
+  client_name: string;
+  service: string;
+  amount: number;
+  currency: string;
+  status: "pending" | "paid" | "overdue";
+  due_date: string | null;
+  notes: string | null;
+  created_at: string;
+};
+
+export type WorkChecklist = {
+  id: string;
+  owner_id: string;
+  title: string;
+  template: string;
+  tasks: { label: string; done: boolean }[];
+  created_at: string;
+};
+
+export type WorkDailyLog = {
+  id: string;
+  owner_id: string;
+  log_date: string; // YYYY-MM-DD
+  proposals_sent: number;
+  leads_found: number;
+  clients_contacted: number;
+  notes: string | null;
+  created_at: string;
+};
+
 /**
  * Lazily mirrors the user's primary-DB profile (id/email/tier) into the
  * secondary workspace DB the first time they touch a workspace feature.
