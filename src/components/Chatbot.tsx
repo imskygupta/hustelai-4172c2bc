@@ -59,7 +59,8 @@ export function Chatbot() {
       const name = profile?.display_name || "Hustler";
       // First-ever chat → run a tiny profiling flow so HustleBot becomes
       // a personal "Gem" before answering generic questions.
-      const needsProfiling = !profile?.bio || profile.bio.trim().length < 10;
+      const bio = (profile as any)?.bio as string | undefined;
+      const needsProfiling = !bio || bio.trim().length < 10;
       if (needsProfiling) {
         setOnboardingStep(1);
         setMessages([
