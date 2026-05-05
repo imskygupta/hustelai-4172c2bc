@@ -2344,6 +2344,11 @@ export default function AdminDashboard() {
               })}
             </div>
           )}
+
+          {/* ===== FEATURE FLAGS ===== */}
+          {section === "feature-flags" && (
+            <FeatureFlagsManager />
+          )}
         </div>
       </main>
     </div>
