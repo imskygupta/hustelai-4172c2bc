@@ -153,7 +153,6 @@ export default function Dashboard() {
       }
     >
       <NotificationPopup />
-      <Chatbot />
 
       <div className="space-y-6 max-w-7xl mx-auto w-full">
         {!emailVerified && <EmailVerificationBanner email={user!.email || ""} />}
