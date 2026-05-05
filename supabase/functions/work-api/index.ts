@@ -17,11 +17,41 @@ const PRIMARY_ANON = Deno.env.get("SUPABASE_ANON_KEY")!;
 const WORKSPACE_URL = "https://utflzmecghdtcjupgdan.supabase.co";
 const WORKSPACE_KEY = "sb_publishable_riUGl3kMundQwxXEg5wcyA_evCjBvqA";
 
+const RESEND_API_KEY  = Deno.env.get("RESEND_API_KEY");
+const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+const RESEND_FROM     = "HustleAI <noreply@hustlaiapp.in>";
+
+/**
+ * Centralized email sender (Resend via Lovable connector gateway).
+ * Fire-and-forget — never throws, never blocks the main action.
+ * All external integrations (email, payments, notifications) live here.
+ */
+async function sendEmail(to: string, subject: string, html: string): Promise<void> {
+  if (!RESEND_API_KEY || !LOVABLE_API_KEY) {
+    console.warn("[work-api:email] missing RESEND_API_KEY / LOVABLE_API_KEY — skipping send");
+    return;
+  }
+  try {
+    const r = await fetch("https://connector-gateway.lovable.dev/resend/emails", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
+        "X-Connection-Api-Key": RESEND_API_KEY,
+      },
+      body: JSON.stringify({ from: RESEND_FROM, to: [to], subject, html }),
+    });
+    if (!r.ok) console.error("[work-api:email]", r.status, await r.text().catch(() => ""));
+  } catch (e: any) {
+    console.error("[work-api:email] error", e?.message || e);
+  }
+}
+
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
 type Action =
-  | { kind: "invoice.create"; client_name: string; service: string; amount: number; due_date?: string | null; notes?: string | null }
+  | { kind: "invoice.create"; client_name: string; service: string; amount: number; due_date?: string | null; notes?: string | null; client_email?: string | null }
   | { kind: "invoice.update_status"; id: string; status: "pending" | "paid" | "overdue" }
   | { kind: "invoice.delete"; id: string }
   | { kind: "checklist.create"; title: string; template: string; tasks: { label: string; done: boolean }[] }
@@ -42,6 +72,7 @@ Deno.serve(async (req) => {
   const { data: claimsRes, error: claimsErr } = await primary.auth.getClaims(auth.replace("Bearer ", ""));
   if (claimsErr || !claimsRes?.claims?.sub) return json({ error: "Unauthorized" }, 401);
   const userId = claimsRes.claims.sub as string;
+  const userEmail = (claimsRes.claims as any)?.email as string | undefined;
 
   // 2. Parse + validate
   let action: Action;
@@ -67,13 +98,46 @@ Deno.serve(async (req) => {
           notes: action.notes?.slice(0, 2000) || null,
         }).select().single();
         if (error) throw error;
+
+        // 🔌 Centralized integration: notify owner + optional client
+        const amt = `₹${Number(amount).toLocaleString("en-IN")}`;
+        const due = action.due_date ? ` (due ${action.due_date})` : "";
+        if (userEmail) {
+          sendEmail(
+            userEmail,
+            `Invoice created for ${client_name}`,
+            `<p>Your invoice <strong>${data.invoice_number || data.id}</strong> for <strong>${client_name}</strong> — ${service} — <strong>${amt}</strong>${due} is saved.</p><p>Track it in your HustleAI Work hub.</p>`
+          );
+        }
+        const clientEmail = action.client_email?.trim();
+        if (clientEmail && /\S+@\S+\.\S+/.test(clientEmail)) {
+          sendEmail(
+            clientEmail,
+            `Invoice ${data.invoice_number || ""} from HustleAI`,
+            `<p>Hi ${client_name},</p><p>Please find your invoice for <strong>${service}</strong> — total <strong>${amt}</strong>${due}.</p><p>Sent via HustleAI Work.</p>`
+          );
+        }
+
         return json({ ok: true, row: data });
       }
       case "invoice.update_status": {
         if (!action.id) return bad("id required");
         if (!["pending", "paid", "overdue"].includes(action.status)) return bad("invalid status");
-        const { error } = await ws.from("work_invoices").update({ status: action.status }).eq("id", action.id).eq("owner_id", userId);
+        const { data: row, error } = await ws.from("work_invoices")
+          .update({ status: action.status })
+          .eq("id", action.id).eq("owner_id", userId)
+          .select().maybeSingle();
         if (error) throw error;
+
+        // 🔌 Notify owner when an invoice is marked paid
+        if (action.status === "paid" && userEmail && row) {
+          const amt = `₹${Number(row.amount).toLocaleString("en-IN")}`;
+          sendEmail(
+            userEmail,
+            `Invoice paid — ${row.client_name}`,
+            `<p>🎉 <strong>${row.client_name}</strong> marked invoice <strong>${row.invoice_number || row.id}</strong> as paid (${amt}).</p>`
+          );
+        }
         return json({ ok: true });
       }
       case "invoice.delete": {
