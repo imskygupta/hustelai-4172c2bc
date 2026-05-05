@@ -13,7 +13,12 @@ if (SENTRY_DSN) {
 function reportError(err: unknown, ctx?: Record<string, any>) {
   console.error("[work-api]", err, ctx);
   if (SENTRY_DSN) {
-    try { Sentry.captureException(err, { extra: ctx }); } catch { /* ignore */ }
+    try {
+      Sentry.captureException(err, {
+        tags: { module: "work", action: ctx?.kind },
+        extra: ctx,
+      });
+    } catch { /* ignore */ }
   }
 }
 
