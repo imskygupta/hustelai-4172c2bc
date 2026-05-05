@@ -6,7 +6,7 @@ import {
 import {
   LayoutDashboard, Search, Users, User, Crown, Wrench, Target, Store, BookOpen,
   FileText, Brain, Zap, TrendingUp, Briefcase, MessageCircle, Trophy, Bookmark,
-  CreditCard, Settings, LogOut, Sparkles, Film, ShieldAlert, DollarSign, Rocket,
+  CreditCard, Settings, LogOut, Sparkles, Film, ShieldAlert, DollarSign, Rocket, Bot,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Badge } from "@/components/ui/badge";
@@ -80,6 +80,30 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent className="bg-sidebar">
+        {/* HustleBot — premium AI mentor button (glowing) */}
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <button
+              onClick={() => window.dispatchEvent(new Event("open-hustlebot"))}
+              className="group relative w-full mx-2 my-1 rounded-lg overflow-hidden
+                         bg-gradient-to-br from-violet-500 via-fuchsia-500 to-amber-400 p-[1.5px]
+                         shadow-[0_0_18px_rgba(168,85,247,0.45)] hover:shadow-[0_0_28px_rgba(168,85,247,0.7)] transition-all"
+            >
+              <span className="flex items-center gap-2 rounded-[7px] bg-white/95 px-3 py-2">
+                <span className="w-7 h-7 rounded-md bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center text-white shrink-0">
+                  <Bot className="w-4 h-4" />
+                </span>
+                {!collapsed && (
+                  <span className="flex flex-col items-start text-left min-w-0">
+                    <span className="text-[13px] font-semibold text-slate-900 leading-tight">HustleBot</span>
+                    <span className="text-[10px] text-fuchsia-600 font-medium">✨ Personal AI Mentor</span>
+                  </span>
+                )}
+              </span>
+            </button>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
         <SidebarGroup>
           <SidebarGroupLabel className="text-[10px] uppercase tracking-wider text-slate-400">Workspace</SidebarGroupLabel>
           <SidebarGroupContent>
