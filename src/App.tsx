@@ -57,6 +57,7 @@ import HustleBot from "./pages/HustleBot";
 import Workspaces from "./pages/Workspaces";
 import HustleCanvas from "./pages/HustleCanvas";
 import Work from "./pages/Work";
+import ClientPortal from "./pages/ClientPortal";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { AppRouteShell } from "@/components/AppRouteShell";
@@ -134,6 +135,7 @@ const App = () => (
             <Route path="/workspaces" element={Shelled(<Workspaces />)} />
             <Route path="/canvas" element={Shelled(<HustleCanvas />)} />
             <Route path="/work" element={Shelled(<Work />)} />
+            <Route path="/portal/:token" element={<ClientPortal />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <MobileBottomNav />

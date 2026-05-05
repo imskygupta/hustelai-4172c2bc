@@ -21,6 +21,7 @@ import {
   Wallet, Gift, Share2
 } from "lucide-react";
 import { PaymentMethodsManager } from "@/components/admin/PaymentMethodsManager";
+import { SQL_BLOCKS } from "@/lib/work-sql";
 
 interface UserProfile {
   id: string;
@@ -109,7 +110,7 @@ type AdminSection =
   | "overview" | "users" | "roles" | "notifications" | "webinars"
   | "expert" | "chatbot" | "blogs" | "analytics" | "config"
   | "verification" | "payments" | "forum" | "community" | "trending" | "newsletter" | "email-settings" | "ai-providers" | "send-email" | "orders"
-  | "payment-logs" | "bonus-kits" | "social-links";
+  | "payment-logs" | "bonus-kits" | "social-links" | "sql-setup";
 
 const sidebarItems: { id: AdminSection; label: string; icon: any }[] = [
   { id: "overview", label: "Overview", icon: BarChart3 },
@@ -135,6 +136,7 @@ const sidebarItems: { id: AdminSection; label: string; icon: any }[] = [
   { id: "ai-providers", label: "AI Providers", icon: Zap },
   { id: "analytics", label: "Analytics", icon: Activity },
   { id: "config", label: "Config & Keys", icon: Settings },
+  { id: "sql-setup", label: "SQL Setup", icon: Database },
 ];
 
 export default function AdminDashboard() {
@@ -2265,6 +2267,41 @@ export default function AdminDashboard() {
                   </div>
                 )}
               </div>
+            </div>
+          )}
+
+          {/* ===== SQL SETUP ===== */}
+          {section === "sql-setup" && (
+            <div className="space-y-6">
+              <div>
+                <h3 className="font-display font-bold text-lg">SQL Setup (secondary backend)</h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                  These blocks create the tables for Workspace, Canvas and the Work tab inside the
+                  secondary <code>hustl-production</code> backend. Open its SQL editor, paste and run.
+                  Re-running is safe (uses <code>create if not exists</code>).
+                </p>
+              </div>
+              {SQL_BLOCKS.map(b => (
+                <div key={b.id} className="glass rounded-xl p-5 space-y-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <div className="font-semibold text-sm">{b.label}</div>
+                      <div className="text-xs text-muted-foreground">{b.id}.sql · run once per backend</div>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        navigator.clipboard.writeText(b.sql);
+                        toast({ title: "SQL copied", description: "Paste it in your SQL editor and run." });
+                      }}
+                    >
+                      Copy SQL
+                    </Button>
+                  </div>
+                  <pre className="text-[10px] bg-muted/40 p-3 rounded overflow-auto max-h-72 leading-relaxed">{b.sql}</pre>
+                </div>
+              ))}
             </div>
           )}
         </div>
