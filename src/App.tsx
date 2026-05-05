@@ -51,6 +51,8 @@ import RedFlagScanner from "./pages/RedFlagScanner";
 import SureHitJobs from "./pages/SureHitJobs";
 import Onboarding from "./pages/Onboarding";
 import NotFound from "./pages/NotFound";
+import Products from "./pages/Products";
+import ProductDetail from "./pages/ProductDetail";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { AppRouteShell } from "@/components/AppRouteShell";
@@ -122,6 +124,8 @@ const App = () => (
             <Route path="/red-flag-scanner" element={Shelled(<RedFlagScanner />)} />
             <Route path="/sure-hit-jobs" element={Shelled(<SureHitJobs />)} />
             <Route path="/onboarding" element={<Onboarding />} />
+            <Route path="/products" element={<Products />} />
+            <Route path="/products/:slug" element={<ProductDetail />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <MobileBottomNav />

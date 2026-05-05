@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { Search, Bell, Crown, Sparkles, Rocket, Star, ChevronRight } from "lucide-react";
+import { VerifyEmailGate } from "@/components/VerifyEmailGate";
 
 interface AppShellProps {
   children: ReactNode;
@@ -40,6 +41,7 @@ export function AppShell({ children, title, breadcrumbs, actions }: AppShellProp
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-slate-50/50">
+        <VerifyEmailGate />
         <AppSidebar />
 
         <div className="flex-1 flex flex-col min-w-0">

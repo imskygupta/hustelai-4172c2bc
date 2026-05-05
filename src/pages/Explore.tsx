@@ -12,6 +12,7 @@ import { Filter, X, Zap, Sparkles, ChefHat } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { SignupCTADialog } from "@/components/SignupCTADialog";
+import { useRequireVerifiedEmail } from "@/components/VerifyEmailGate";
 
 const categories = ["All", "Tech", "Creative", "Freelance", "Marketing", "Education", "Service", "E-Commerce", "Finance", "Gig Economy", "Gaming", "Admin"];
 const difficulties = ["All", "Beginner", "Intermediate", "Advanced"];
@@ -34,6 +35,7 @@ export default function Explore() {
   const [searchParams] = useSearchParams();
   const { user, profile } = useAuth();
   const { toast } = useToast();
+  const { requireVerified } = useRequireVerifiedEmail();
   const [results, setResults] = useState<FreelanceResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isAiCooking, setIsAiCooking] = useState(false);
@@ -51,6 +53,7 @@ export default function Explore() {
   }, []);
 
   const handleSearch = async (query: string) => {
+    if (user && !requireVerified()) return;
     setIsLoading(true);
     setLastQuery(query);
 
