@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { workspaceDb, type WorkInvoice } from "@/integrations/workspace/client";
+import { workApi } from "@/lib/work-api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -39,23 +40,24 @@ export function InvoicesTab({ userId, onMissing, onReady }: { userId?: string; o
 
   async function save() {
     if (!userId || !form.client_name || !form.service || !form.amount) return toast.error("Fill required fields");
-    const { error } = await workspaceDb.from("work_invoices").insert({
-      owner_id: userId, client_name: form.client_name, service: form.service,
-      amount: Number(form.amount), currency: "INR", status: "pending",
-      due_date: form.due_date || null, notes: form.notes || null,
-    });
-    if (error) return toast.error(error.message);
+    try {
+      await workApi.invoice.create({
+        client_name: form.client_name, service: form.service,
+        amount: Number(form.amount),
+        due_date: form.due_date || null, notes: form.notes || null,
+      });
+    } catch (e: any) { return toast.error(e.message); }
     toast.success("Invoice created");
     setOpen(false); setForm({ client_name: "", service: "", amount: "", due_date: "", notes: "" });
     load();
   }
   async function setStatus(id: string, status: "pending" | "paid" | "overdue") {
-    const { error } = await workspaceDb.from("work_invoices").update({ status }).eq("id", id);
-    if (error) return toast.error(error.message); load();
+    try { await workApi.invoice.setStatus(id, status); load(); }
+    catch (e: any) { toast.error(e.message); }
   }
   async function remove(id: string) {
-    const { error } = await workspaceDb.from("work_invoices").delete().eq("id", id);
-    if (error) return toast.error(error.message); load();
+    try { await workApi.invoice.delete(id); load(); }
+    catch (e: any) { toast.error(e.message); }
   }
 
   function downloadInvoice(inv: WorkInvoice) {
