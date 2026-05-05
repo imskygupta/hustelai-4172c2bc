@@ -2280,28 +2280,65 @@ export default function AdminDashboard() {
                   secondary <code>hustl-production</code> backend. Open its SQL editor, paste and run.
                   Re-running is safe (uses <code>create if not exists</code>).
                 </p>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Tip: after you run a block, click <b>Mark as applied</b> — it will show a green
+                  <Badge variant="secondary" className="mx-1 text-[10px]">Applied</Badge> tag so you instantly
+                  know which blocks are new vs already run. State is saved per-browser.
+                </p>
               </div>
-              {SQL_BLOCKS.map(b => (
-                <div key={b.id} className="glass rounded-xl p-5 space-y-3">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <div className="font-semibold text-sm">{b.label}</div>
-                      <div className="text-xs text-muted-foreground">{b.id}.sql · run once per backend</div>
+              {SQL_BLOCKS.map(b => {
+                const key = `sql-applied:${b.id}`;
+                const applied = typeof window !== "undefined" && localStorage.getItem(key) === "1";
+                return (
+                  <div key={b.id} className={`glass rounded-xl p-5 space-y-3 ${applied ? "opacity-70" : ""}`}>
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-semibold text-sm">{b.label}</span>
+                          {applied
+                            ? <Badge variant="secondary" className="text-[10px] bg-emerald-100 text-emerald-700 border-emerald-200">✓ Applied</Badge>
+                            : <Badge variant="secondary" className="text-[10px] bg-amber-100 text-amber-700 border-amber-200">New · run me</Badge>}
+                        </div>
+                        <div className="text-xs text-muted-foreground mt-0.5">{b.id}.sql · run once per backend</div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            navigator.clipboard.writeText(b.sql);
+                            toast({ title: "SQL copied", description: "Paste it in your SQL editor and run." });
+                          }}
+                        >
+                          Copy SQL
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant={applied ? "ghost" : "default"}
+                          onClick={() => {
+                            if (applied) localStorage.removeItem(key);
+                            else localStorage.setItem(key, "1");
+                            // force a re-render
+                            setSection("sql-setup");
+                            setTimeout(() => setSection("sql-setup"), 0);
+                            window.dispatchEvent(new Event("storage"));
+                            // simplest: hard refresh of just this section via state nudge
+                            (b as any)._t = Date.now();
+                            toast({ title: applied ? "Marked as new" : "Marked as applied" });
+                            // trigger React update
+                            setTimeout(() => window.location.reload(), 250);
+                          }}
+                        >
+                          {applied ? "Mark as new" : "Mark as applied"}
+                        </Button>
+                      </div>
                     </div>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => {
-                        navigator.clipboard.writeText(b.sql);
-                        toast({ title: "SQL copied", description: "Paste it in your SQL editor and run." });
-                      }}
-                    >
-                      Copy SQL
-                    </Button>
+                    {!applied && (
+                      <pre className="text-[10px] bg-muted/40 p-3 rounded overflow-auto max-h-72 leading-relaxed">{b.sql}</pre>
+                    )}
                   </div>
-                  <pre className="text-[10px] bg-muted/40 p-3 rounded overflow-auto max-h-72 leading-relaxed">{b.sql}</pre>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
