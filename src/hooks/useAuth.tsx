@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, useRef, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AUTH_EMAIL_REDIRECT_TO } from "@/lib/auth-config";
+import { identify, resetAnalytics } from "@/lib/analytics";
 import type { User, Session } from "@supabase/supabase-js";
 
 interface Profile {
@@ -43,7 +44,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .select("*")
         .eq("user_id", userId)
         .single();
-      if (data) setProfile(data as Profile);
+      if (data) {
+        setProfile(data as Profile);
+        identify(userId, {
+          email: data.email,
+          tier: data.subscription_tier,
+        });
+      }
     } catch {
       // Silently handle profile fetch errors
     }
@@ -162,6 +169,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = async () => {
     await supabase.auth.signOut();
     clearStaleSession();
+    resetAnalytics();
   };
 
   return (

@@ -1,5 +1,7 @@
+import { useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
+import { track } from "@/lib/analytics";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -87,6 +89,8 @@ export default function Plans() {
   const { user, profile } = useAuth();
   const navigate = useNavigate();
   const currentTier = (profile as any)?.subscription_tier || "free";
+
+  useEffect(() => { track("pricing_viewed"); }, []);
 
   return (
     <div className="min-h-screen bg-background">

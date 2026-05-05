@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Trash2, Download, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { track } from "@/lib/analytics";
 
 export function InvoicesTab({ userId, onMissing, onReady }: { userId?: string; onMissing?: () => void; onReady?: () => void }) {
   const [items, setItems] = useState<WorkInvoice[]>([]);
@@ -47,12 +48,13 @@ export function InvoicesTab({ userId, onMissing, onReady }: { userId?: string; o
         due_date: form.due_date || null, notes: form.notes || null,
       });
     } catch (e: any) { return toast.error(e.message); }
+    track("invoice_created", { amount: Number(form.amount) });
     toast.success("Invoice created");
     setOpen(false); setForm({ client_name: "", service: "", amount: "", due_date: "", notes: "" });
     load();
   }
   async function setStatus(id: string, status: "pending" | "paid" | "overdue") {
-    try { await workApi.invoice.setStatus(id, status); load(); }
+    try { await workApi.invoice.setStatus(id, status); track("invoice_status_changed", { status }); load(); }
     catch (e: any) { toast.error(e.message); }
   }
   async function remove(id: string) {

@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Trash2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { track } from "@/lib/analytics";
 
 const TEMPLATES: Record<string, string[]> = {
   "Website Project": ["Requirement gathering", "Wireframes", "Design mockups", "Development", "Client review", "Revisions", "Final delivery"],
@@ -38,6 +39,7 @@ export function ChecklistsTab({ userId, onMissing, onReady }: { userId?: string;
     const tasks = (TEMPLATES[form.template] || ["New task"]).map(label => ({ label, done: false }));
     try { await workApi.checklist.create({ title: form.title, template: form.template, tasks }); }
     catch (e: any) { return toast.error(e.message); }
+    track("checklist_created", { template: form.template });
     toast.success("Checklist created");
     setOpen(false); setForm({ title: "", template: "Website Project" }); load();
   }
@@ -46,6 +48,7 @@ export function ChecklistsTab({ userId, onMissing, onReady }: { userId?: string;
     setItems(prev => prev.map(p => p.id === c.id ? { ...p, tasks } : p)); // optimistic
     try { await workApi.checklist.updateTasks(c.id, tasks); }
     catch (e: any) { toast.error(e.message); load(); }
+    track("checklist_updated", { checklist_id: c.id });
   }
   async function remove(id: string) {
     try { await workApi.checklist.delete(id); load(); }
