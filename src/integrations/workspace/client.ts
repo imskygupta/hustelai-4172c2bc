@@ -29,3 +29,38 @@ export type WorkspaceClient = {
   last_contact: string | null;
   created_at: string;
 };
+
+export type CanvasNote = {
+  id: string;
+  owner_id: string;
+  text: string;
+  color: "red" | "yellow" | "blue" | "green";
+  x: number;
+  y: number;
+  client_id: string | null;
+  last_action_at: string | null;
+  created_at: string;
+};
+
+/**
+ * Lazily mirrors the user's primary-DB profile (id/email/tier) into the
+ * secondary workspace DB the first time they touch a workspace feature.
+ * Idempotent. Failures are silent — mirror is best-effort.
+ */
+export async function mirrorProfile(input: { user_id: string; email?: string | null; tier?: string | null }) {
+  try {
+    await workspaceDb
+      .from("workspace_profiles")
+      .upsert(
+        {
+          user_id: input.user_id,
+          email: input.email || null,
+          tier: input.tier || "free",
+          last_synced_at: new Date().toISOString(),
+        },
+        { onConflict: "user_id" },
+      );
+  } catch {
+    /* silent */
+  }
+}
