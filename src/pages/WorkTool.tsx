@@ -76,7 +76,7 @@ export default function WorkTool() {
                 : "Coming soon — we're polishing this tool. Check back shortly."}
             </p>
             {isTier && (
-              <Button className="mt-5" onClick={() => navigate("/plans")}>Upgrade plan</Button>
+              <Button className="mt-5" onClick={() => { track("upgrade_clicked", { source: `work.${slug}` }); navigate("/plans"); }}>Upgrade plan</Button>
             )}
           </Card>
         </div>
