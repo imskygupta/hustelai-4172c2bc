@@ -330,7 +330,7 @@ export default function Index() {
                   Plug HustleAI into <span className="bg-gradient-to-r from-fuchsia-300 to-amber-200 bg-clip-text text-transparent">your product.</span>
                 </h2>
                 <p className="text-slate-300 text-base md:text-lg max-w-xl">
-                  Embed our 12 AI tools — Resume Optimizer, Proposal Drafter, Gig Pricer, Red-Flag Scanner & more — into your platform via clean REST APIs. Volume pricing, enterprise SLA, dedicated support.
+                  Embed our 20+ AI & Work tools — Invoices, Time tracker, Clients CRM, Resume Optimizer, Proposal Drafter, Gig Pricer, Red-Flag Scanner & more — into your platform via clean REST APIs. Volume pricing, enterprise SLA, dedicated support.
                 </p>
                 <div className="flex flex-wrap gap-3 pt-2">
                   <Button
