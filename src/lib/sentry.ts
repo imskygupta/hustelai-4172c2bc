@@ -1,17 +1,20 @@
 import * as Sentry from "@sentry/react";
 
-const DSN =
-  import.meta.env.VITE_SENTRY_DSN ||
-  "https://6e0833292c05effff24def2b803c03b7@o4511339052400640.ingest.us.sentry.io/4511339054891008";
+const DSN = import.meta.env.VITE_SENTRY_DSN as string | undefined;
 
 let initialized = false;
 
 export function initSentry() {
-  if (initialized || !DSN) return;
+  if (initialized) return;
+  if (!DSN) {
+    // No DSN configured — Sentry no-ops. Set VITE_SENTRY_DSN to enable.
+    return;
+  }
   Sentry.init({
     dsn: DSN,
     sendDefaultPii: true,
     environment: import.meta.env.MODE,
+    release: (import.meta.env.VITE_APP_VERSION as string | undefined) || undefined,
     tracesSampleRate: 0.1,
     replaysSessionSampleRate: 0,
     replaysOnErrorSampleRate: 1.0,
