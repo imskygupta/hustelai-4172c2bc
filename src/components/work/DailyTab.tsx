@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { workspaceDb, type WorkDailyLog } from "@/integrations/workspace/client";
+import { workApi } from "@/lib/work-api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -32,8 +33,8 @@ export function DailyTab({ userId, onMissing, onReady }: { userId?: string; onMi
 
   async function save() {
     if (!userId) return;
-    const { error } = await workspaceDb.from("work_daily_logs").upsert({ owner_id: userId, log_date: todayISO(), ...today }, { onConflict: "owner_id,log_date" });
-    if (error) return toast.error(error.message);
+    try { await workApi.daily.upsert({ log_date: todayISO(), ...today }); }
+    catch (e: any) { return toast.error(e.message); }
     toast.success("Saved today's log 🔥"); load();
   }
 
