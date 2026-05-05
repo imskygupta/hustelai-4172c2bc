@@ -12,6 +12,9 @@ const plans = [
     icon: Sparkles,
     features: [
       "3 AI-powered searches/day",
+      "Work Hub: Invoices, Time tracker, Clients CRM",
+      "Work Hub: Checklists, Deadlines, Daily streak",
+      "Work Hub: Client portals, Notes & Expenses",
       "Basic personalization",
       "Explore all categories",
       "Community access (limited)",
