@@ -27,6 +27,18 @@ export function bumpUsage(toolKey: string, userId?: string): number {
   return next;
 }
 
+/**
+ * Returns true if the user is within their monthly cap for `toolKey`.
+ * Increments usage when allowed. Use BEFORE making the AI call.
+ */
+export function enforceLimit(toolKey: string, userId: string | undefined, tier: Tier | undefined): { ok: boolean; used: number; max: number } {
+  const max = getMaxUses(tier);
+  const used = getUsage(toolKey, userId);
+  if (used >= max) return { ok: false, used, max };
+  bumpUsage(toolKey, userId);
+  return { ok: true, used: used + 1, max };
+}
+
 /** Silently award XP to the current user for using an AI tool. Default 10. */
 export async function awardXP(userId?: string, amount = 10) {
   if (!userId) return;
