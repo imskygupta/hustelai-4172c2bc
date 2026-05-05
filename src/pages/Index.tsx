@@ -24,7 +24,7 @@ const features = [
 
 const stats = [
   { value: "500+", label: "Hustle categories" },
-  { value: "12", label: "AI tools included" },
+  { value: "20+", label: "AI + Work tools" },
   { value: "₹0", label: "To start" },
   { value: "24/7", label: "AI on-call" },
 ];
@@ -42,6 +42,7 @@ const comparison = [
   { feature: "AI-verified opportunities (not random links)", us: true, others: false },
   { feature: "3-step roadmap per hustle", us: true, others: false },
   { feature: "Source citations (Reddit, Twitter, real gigs)", us: true, others: false },
+  { feature: "Built-in invoices, time tracker, CRM & client portals (free)", us: true, others: false },
   { feature: "Built-in pricing, proposal & resume tools", us: true, others: false },
   { feature: "Generic job board listings", us: false, others: true },
   { feature: "Hours of manual scrolling", us: false, others: true },
@@ -329,7 +330,7 @@ export default function Index() {
                   Plug HustleAI into <span className="bg-gradient-to-r from-fuchsia-300 to-amber-200 bg-clip-text text-transparent">your product.</span>
                 </h2>
                 <p className="text-slate-300 text-base md:text-lg max-w-xl">
-                  Embed our 12 AI tools — Resume Optimizer, Proposal Drafter, Gig Pricer, Red-Flag Scanner & more — into your platform via clean REST APIs. Volume pricing, enterprise SLA, dedicated support.
+                  Embed our 20+ AI & Work tools — Invoices, Time tracker, Clients CRM, Resume Optimizer, Proposal Drafter, Gig Pricer, Red-Flag Scanner & more — into your platform via clean REST APIs. Volume pricing, enterprise SLA, dedicated support.
                 </p>
                 <div className="flex flex-wrap gap-3 pt-2">
                   <Button

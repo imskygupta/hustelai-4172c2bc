@@ -15,7 +15,7 @@ import {
   Search, Crown, Rocket, Sparkles, Users, Video, BookOpen, TrendingUp, MessageCircle,
   Lock, ArrowUpRight, ArrowDownRight, ExternalLink, FileText, Calendar, Share2,
   Store, Target, Brain, Zap, BarChart3, Activity, History, DollarSign, Film,
-  ShieldAlert, Briefcase, Loader2, Bot, Music,
+  ShieldAlert, Briefcase, Loader2, Bot, Music, Hammer,
 } from "lucide-react";
 
 interface FeedData {
@@ -249,6 +249,7 @@ export default function Dashboard() {
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                   {[
                     { icon: Search, label: "AI Search", path: "/explore" },
+                    { icon: Hammer, label: "Work Hub", path: "/work" },
                     { icon: Rocket, label: "Blueprint", path: "/hustle-blueprint" },
                     { icon: FileText, label: "Resume AI", path: "/resume-optimizer" },
                     { icon: DollarSign, label: "Price Calc", path: "/gig-price-calculator" },
@@ -366,6 +367,7 @@ export default function Dashboard() {
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {[
                 { icon: Search, label: "AI Hustle Search", desc: "Discover hustles with AI", action: () => navigate("/explore"), tier: "free", emoji: "🔍" },
+                { icon: Hammer, label: "Work — Freelancer OS", desc: "Invoices, time, clients, deadlines", action: () => navigate("/work"), tier: "free", emoji: "🛠️" },
                 { icon: Rocket, label: "Blueprint Generator", desc: "7-day action plan", action: () => navigate("/hustle-blueprint"), tier: "free", emoji: "🚀" },
                 { icon: FileText, label: "Resume Optimizer", desc: "Tailored CV + portfolio", action: () => navigate("/resume-optimizer"), tier: "free", emoji: "📄" },
                 { icon: DollarSign, label: "Gig Price Calc", desc: "3-tier anchor pricing", action: () => navigate("/gig-price-calculator"), tier: "free", emoji: "💰" },
