@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MessageCircle, X, Send, Loader2, Bot, Sparkles } from "lucide-react";
@@ -15,6 +16,8 @@ interface Message {
 
 export function Chatbot() {
   const { user, profile } = useAuth();
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -23,12 +26,16 @@ export function Chatbot() {
   const [onboardingAnswers, setOnboardingAnswers] = useState<string[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Allow any component (e.g. sidebar item) to open HustleBot via a global event.
+  // HustleBot now lives on a dedicated full page. Any "open-hustlebot" event
+  // simply routes there. The legacy popup is hidden.
   useEffect(() => {
-    const openHandler = () => setOpen(true);
+    const openHandler = () => navigate("/hustlebot");
     window.addEventListener("open-hustlebot", openHandler);
     return () => window.removeEventListener("open-hustlebot", openHandler);
-  }, []);
+  }, [navigate]);
+
+  // Don't render the floating bubble on the dedicated HustleBot page.
+  if (pathname.startsWith("/hustlebot")) return null;
 
   // Load existing chat messages and set greeting
   useEffect(() => {
@@ -167,7 +174,7 @@ export function Chatbot() {
         {!open && (
           <motion.button
             initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}
-            onClick={() => setOpen(true)}
+            onClick={() => navigate("/hustlebot")}
             className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-gradient-to-br from-violet-500 via-fuchsia-500 to-amber-400 text-white flex items-center justify-center shadow-[0_0_30px_rgba(168,85,247,0.55)] hover:scale-110 transition-transform animate-pulse"
           >
             <Sparkles className="w-6 h-6" />
