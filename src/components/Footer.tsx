@@ -143,7 +143,9 @@ export function Footer() {
             <form onSubmit={handleSubscribe} className="flex gap-2">
               <Input
                 type="email" value={email} onChange={(e) => setEmail(e.target.value)}
-                placeholder="your@email.com" className="h-10 text-sm bg-secondary/50" required
+                placeholder="your@email.com"
+                className="h-10 text-sm bg-background border-border text-foreground placeholder:text-muted-foreground/70"
+                required
               />
               <Button type="submit" size="sm" className="bg-gradient-primary text-primary-foreground shrink-0 h-10 px-4 btn-press" disabled={loading}>
                 <Send className="w-4 h-4" />
