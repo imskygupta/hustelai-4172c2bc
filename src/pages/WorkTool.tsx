@@ -2,11 +2,12 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ArrowLeft, Bell, Copy } from "lucide-react";
+import { ArrowLeft, Bell, Copy, Lock } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { WORK_TOOLS } from "@/lib/work-tools";
 import { WORK_SETUP_SQL } from "@/lib/work-sql";
+import { useFeatureFlags, flagAccess, type Tier } from "@/lib/feature-flags";
 import { InvoicesTab } from "@/components/work/InvoicesTab";
 import { ChecklistsTab } from "@/components/work/ChecklistsTab";
 import { DailyTab } from "@/components/work/DailyTab";
@@ -23,9 +24,13 @@ import { PortalsTab } from "@/components/work/PortalsTab";
 export default function WorkTool() {
   const { slug } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const tool = WORK_TOOLS.find(t => t.slug === slug);
   const [missing, setMissing] = useState(false);
+  const { byKey, loading: flagsLoading } = useFeatureFlags();
+  const flag = byKey(`work.${slug}`);
+  const tier = (profile?.subscription_tier || "free") as Tier;
+  const acc = flagAccess(flag, tier);
 
   if (!tool) {
     return (
@@ -40,6 +45,33 @@ export default function WorkTool() {
 
   const onMissing = () => setMissing(true);
   const onReady = () => setMissing(false);
+
+  if (!flagsLoading && acc.locked) {
+    const isTier = acc.reason === "tier";
+    return (
+      <div className="min-h-screen bg-slate-50 p-4 md:p-8">
+        <div className="max-w-2xl mx-auto">
+          <Button variant="ghost" size="sm" onClick={() => navigate("/work")} className="text-slate-600 mb-4">
+            <ArrowLeft className="w-4 h-4 mr-1" /> Work
+          </Button>
+          <Card className="p-8 text-center">
+            <div className="w-12 h-12 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center mx-auto mb-4">
+              <Lock className="w-5 h-5" />
+            </div>
+            <h1 className="text-xl font-bold text-slate-900">{tool.label}</h1>
+            <p className="text-sm text-slate-600 mt-2">
+              {isTier
+                ? `This tool is available on the ${flag?.min_tier?.toUpperCase()} plan and above.`
+                : "Coming soon — we're polishing this tool. Check back shortly."}
+            </p>
+            {isTier && (
+              <Button className="mt-5" onClick={() => navigate("/plans")}>Upgrade plan</Button>
+            )}
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   const Body = () => {
     switch (slug) {

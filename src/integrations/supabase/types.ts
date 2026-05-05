@@ -544,6 +544,42 @@ export type Database = {
         }
         Relationships: []
       }
+      feature_flags: {
+        Row: {
+          category: string
+          created_at: string
+          description: string | null
+          enabled: boolean
+          feature_key: string
+          id: string
+          label: string
+          min_tier: Database["public"]["Enums"]["subscription_tier"] | null
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          enabled?: boolean
+          feature_key: string
+          id?: string
+          label: string
+          min_tier?: Database["public"]["Enums"]["subscription_tier"] | null
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          enabled?: boolean
+          feature_key?: string
+          id?: string
+          label?: string
+          min_tier?: Database["public"]["Enums"]["subscription_tier"] | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       forum_categories: {
         Row: {
           created_at: string
