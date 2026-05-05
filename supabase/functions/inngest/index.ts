@@ -1,5 +1,5 @@
-import { Inngest } from "https://esm.sh/inngest@3.27.4";
-import { serve } from "https://esm.sh/inngest@3.27.4/edge";
+import { Inngest } from "https://esm.sh/inngest@3.54.0";
+import { serve } from "https://esm.sh/inngest@3.54.0/edge";
 
 /**
  * HustleAI automation layer.
