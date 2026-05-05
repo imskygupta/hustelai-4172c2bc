@@ -1,5 +1,5 @@
 import { Inngest } from "https://esm.sh/inngest@3.27.4";
-import { serve } from "https://esm.sh/inngest@3.27.4/deno/fresh";
+import { serve } from "https://esm.sh/inngest@3.27.4/edge";
 
 /**
  * HustleAI automation layer.
@@ -164,18 +164,19 @@ const dailyNudge = inngest.createFunction(
 const handler = serve({
   client: inngest,
   functions: [invoiceFollowUp, invoiceFollowUpCancellable, dailyNudge],
+  // Supabase rewrites paths — pin the public path.
+  servePath: "/functions/v1/inngest",
 });
 
-// Wrap to add CORS for browser-based sync trigger.
 Deno.serve(async (req) => {
-  const corsHeaders = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-inngest-signature, x-inngest-server-kind, x-inngest-sdk",
-    "Access-Control-Allow-Methods": "GET, POST, PUT, OPTIONS",
-  };
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
-  const res = await handler(req);
-  const merged = new Headers(res.headers);
-  for (const [k, v] of Object.entries(corsHeaders)) merged.set(k, v);
-  return new Response(res.body, { status: res.status, headers: merged });
+  if (req.method === "OPTIONS") {
+    return new Response("ok", {
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-inngest-signature, x-inngest-server-kind, x-inngest-sdk",
+        "Access-Control-Allow-Methods": "GET, POST, PUT, OPTIONS",
+      },
+    });
+  }
+  return handler(req);
 });
