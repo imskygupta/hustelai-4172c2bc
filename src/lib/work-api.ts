@@ -1,14 +1,20 @@
 import { supabase } from "@/integrations/supabase/client";
+import { captureException } from "@/lib/sentry";
 
 /**
  * Thin client for the `work-api` edge function.
  * Reads stay direct (cheap); only writes go through the API for validation + consistency.
  */
 async function call<T = any>(body: any): Promise<T> {
-  const { data, error } = await supabase.functions.invoke("work-api", { body });
-  if (error) throw new Error(error.message || "Request failed");
-  if (data?.error) throw new Error(data.error);
-  return data as T;
+  try {
+    const { data, error } = await supabase.functions.invoke("work-api", { body });
+    if (error) throw new Error(error.message || "Request failed");
+    if (data?.error) throw new Error(data.error);
+    return data as T;
+  } catch (e) {
+    captureException(e, { area: "work-api", kind: body?.kind });
+    throw e;
+  }
 }
 
 export const workApi = {
