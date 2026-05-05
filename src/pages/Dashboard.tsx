@@ -15,7 +15,7 @@ import {
   Search, Crown, Rocket, Sparkles, Users, Video, BookOpen, TrendingUp, MessageCircle,
   Lock, ArrowUpRight, ArrowDownRight, ExternalLink, FileText, Calendar, Share2,
   Store, Target, Brain, Zap, BarChart3, Activity, History, DollarSign, Film,
-  ShieldAlert, Briefcase, Loader2, Bot, Music,
+  ShieldAlert, Briefcase, Loader2, Bot, Music, Hammer,
 } from "lucide-react";
 
 interface FeedData {
@@ -249,6 +249,7 @@ export default function Dashboard() {
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                   {[
                     { icon: Search, label: "AI Search", path: "/explore" },
+                    { icon: Hammer, label: "Work Hub", path: "/work" },
                     { icon: Rocket, label: "Blueprint", path: "/hustle-blueprint" },
                     { icon: FileText, label: "Resume AI", path: "/resume-optimizer" },
                     { icon: DollarSign, label: "Price Calc", path: "/gig-price-calculator" },
