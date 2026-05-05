@@ -21,6 +21,7 @@ import {
   Wallet, Gift, Share2
 } from "lucide-react";
 import { PaymentMethodsManager } from "@/components/admin/PaymentMethodsManager";
+import { SQL_BLOCKS } from "@/lib/work-sql";
 
 interface UserProfile {
   id: string;
@@ -109,7 +110,7 @@ type AdminSection =
   | "overview" | "users" | "roles" | "notifications" | "webinars"
   | "expert" | "chatbot" | "blogs" | "analytics" | "config"
   | "verification" | "payments" | "forum" | "community" | "trending" | "newsletter" | "email-settings" | "ai-providers" | "send-email" | "orders"
-  | "payment-logs" | "bonus-kits" | "social-links";
+  | "payment-logs" | "bonus-kits" | "social-links" | "sql-setup";
 
 const sidebarItems: { id: AdminSection; label: string; icon: any }[] = [
   { id: "overview", label: "Overview", icon: BarChart3 },
@@ -135,6 +136,7 @@ const sidebarItems: { id: AdminSection; label: string; icon: any }[] = [
   { id: "ai-providers", label: "AI Providers", icon: Zap },
   { id: "analytics", label: "Analytics", icon: Activity },
   { id: "config", label: "Config & Keys", icon: Settings },
+  { id: "sql-setup", label: "SQL Setup", icon: Database },
 ];
 
 export default function AdminDashboard() {
