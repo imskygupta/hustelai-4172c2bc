@@ -65,11 +65,11 @@ export default function FacelessContent() {
       <Navbar />
       <main className="container mx-auto px-4 pt-24 pb-16 max-w-6xl">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-10">
-          <div className="inline-flex items-center gap-3 mb-4 px-5 py-2 rounded-full bg-gradient-to-r from-accent/20 to-primary/20 border border-accent/30">
-            <Film className="w-5 h-5 text-accent" />
-            <span className="text-xs font-bold uppercase tracking-wider text-accent">Faceless Content Repurposer</span>
+          <div className="inline-flex items-center gap-3 mb-4 px-5 py-2 rounded-full bg-primary/15 border border-primary/40">
+            <Film className="w-5 h-5 text-primary" />
+            <span className="text-xs font-bold uppercase tracking-wider text-primary">Faceless Content Repurposer</span>
           </div>
-          <h1 className="text-4xl md:text-5xl font-display font-bold text-gradient-accent mb-3">From idea to viral storyboard.</h1>
+          <h1 className="text-4xl md:text-5xl font-display font-bold text-foreground mb-3">From idea to <span className="text-primary">viral storyboard.</span></h1>
           <p className="text-muted-foreground max-w-2xl mx-auto">Get a 6-scene short-form video script with visuals, voiceover, and text overlays — ready for Runway, Pika, or your editor.</p>
           <Badge className="mt-3 bg-yellow-500/10 text-yellow-500 border-yellow-500/30">{usageCount}/{maxUses} uses · {tier.toUpperCase()} tier</Badge>
         </motion.div>
@@ -98,7 +98,7 @@ export default function FacelessContent() {
               </SelectContent>
             </Select>
           </div>
-          <Button onClick={handleGenerate} disabled={generating || atLimit} className="w-full bg-gradient-to-r from-accent to-primary text-primary-foreground h-12">
+          <Button onClick={handleGenerate} disabled={generating || atLimit} className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold h-12">
             {generating ? <><Loader2 className="w-5 h-5 animate-spin mr-2" /> Building storyboard...</>
               : atLimit ? <><Lock className="w-5 h-5 mr-2" /> Limit reached — upgrade</>
               : <><Zap className="w-5 h-5 mr-2" /> Generate 6-Scene Storyboard</>}
