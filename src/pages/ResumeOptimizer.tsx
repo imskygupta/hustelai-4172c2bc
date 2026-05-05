@@ -15,7 +15,6 @@ import {
   ArrowRight, ArrowLeft, Check, Wand2, Crown, Trophy, Target, Zap,
 } from "lucide-react";
 import { toast } from "sonner";
-import jsPDF from "jspdf";
 import { getMaxUses, getUsage, bumpUsage, awardXP } from "@/lib/tool-limits";
 
 // =====================================================================
