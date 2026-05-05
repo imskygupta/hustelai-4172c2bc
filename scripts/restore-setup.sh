@@ -12,14 +12,20 @@ HustleAI restore checklist  (read top → bottom)
 ==========================================================
 
 1) GITHUB REPOSITORY  (deploys are wired to GitHub → Vercel)
-   Connected repo (owner/name):  imskyguptas-projects/hustelai
-   Default branch:               main
-   Vercel project name:          hustelai-066dc9ff
-   Vercel domains:               hustlaiapp.in, www.hustlaiapp.in
-   Re-link in new Lovable workspace:
-     • Lovable → Connectors → GitHub → Connect → pick the SAME repo above
-     • Vercel auto-rebuilds on push to main
-   ⚠ Do NOT create a new repo — keep the one Vercel is already pointing at.
+   Original repo (workspace #1):  imskyguptas-projects/hustelai
+   Current repo  (workspace #2):  imskygupta/hustelai-8517f2d6   ← active
+   Default branch:                main
+   Vercel project name:           hustelai-066dc9ff
+   Vercel domains:                hustlaiapp.in, www.hustlaiapp.in
+
+   ⚠ KNOWN GOTCHA — workspace transfers ALWAYS create a fresh GitHub repo.
+   Lovable's GitHub OAuth install is per-workspace, so the old repo cannot
+   be re-linked from a new workspace. After every transfer you MUST repoint
+   Vercel at the new repo:
+     1. Vercel → hustelai-066dc9ff → Settings → Git → Disconnect
+     2. Connect → pick the new repo shown above → branch: main
+     3. Domain (hustlaiapp.in) stays attached — no DNS change needed
+     4. Trigger a redeploy from the latest commit
 
 2) PRIMARY SUPABASE  (Lovable Cloud — auth, profiles, billing)
    Project ref:       vbnqaovxatucrgtnggea
