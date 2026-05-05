@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MessageCircle, X, Send, Loader2, Bot } from "lucide-react";
+import { MessageCircle, X, Send, Loader2, Bot, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -19,12 +19,27 @@ export function Chatbot() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [onboardingStep, setOnboardingStep] = useState<number>(0);
+  const [onboardingAnswers, setOnboardingAnswers] = useState<string[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Allow any component (e.g. sidebar item) to open HustleBot via a global event.
+  useEffect(() => {
+    const openHandler = () => setOpen(true);
+    window.addEventListener("open-hustlebot", openHandler);
+    return () => window.removeEventListener("open-hustlebot", openHandler);
+  }, []);
 
   // Load existing chat messages and set greeting
   useEffect(() => {
     if (user) loadExistingMessages();
   }, [user]);
+
+  const ONBOARDING_QUESTIONS = [
+    "First, what's your **core skill** right now? (e.g. coding, design, writing, video editing, none yet)",
+    "Cool. What's your **monthly income goal** in ₹? (rough number is fine)",
+    "Last one — how many **hours a week** can you actually put in?",
+  ];
 
   const loadExistingMessages = async () => {
     const { data } = await supabase
@@ -42,9 +57,22 @@ export function Chatbot() {
       })));
     } else {
       const name = profile?.display_name || "Hustler";
-      setMessages([
-        { role: "assistant", content: `Hey ${name}! 👋🔥 I'm **HustleBot**, your personal AI mentor. Ask me anything about freelancing, side hustles, or growing your income!` },
-      ]);
+      // First-ever chat → run a tiny profiling flow so HustleBot becomes
+      // a personal "Gem" before answering generic questions.
+      const needsProfiling = !profile?.bio || profile.bio.trim().length < 10;
+      if (needsProfiling) {
+        setOnboardingStep(1);
+        setMessages([
+          {
+            role: "assistant",
+            content: `Hey ${name}! 👋✨ I'm **HustleBot** — but think of me as *your* personal AI mentor (like a custom Gem, tuned to you).\n\nGimme 3 quick answers and every reply I give will be tailored to your goals.\n\n**Q1/3 —** ${ONBOARDING_QUESTIONS[0]}`,
+          },
+        ]);
+      } else {
+        setMessages([
+          { role: "assistant", content: `Hey ${name}! 👋🔥 I'm **HustleBot**, your personal AI mentor. Ask me anything about freelancing, side hustles, or growing your income!` },
+        ]);
+      }
     }
   };
 
@@ -80,7 +108,37 @@ export function Chatbot() {
     const userMsg: Message = { role: "user", content: input.trim() };
     const newMessages = [...messages, userMsg];
     setMessages(newMessages);
+    const userInput = input.trim();
     setInput("");
+
+    // === Onboarding flow (no AI call needed) ===
+    if (onboardingStep > 0 && onboardingStep <= 3) {
+      const updatedAnswers = [...onboardingAnswers, userInput];
+      setOnboardingAnswers(updatedAnswers);
+      if (onboardingStep < 3) {
+        const nextQ = ONBOARDING_QUESTIONS[onboardingStep];
+        setMessages([...newMessages, {
+          role: "assistant",
+          content: `Got it 🔥\n\n**Q${onboardingStep + 1}/3 —** ${nextQ}`,
+        }]);
+        setOnboardingStep(onboardingStep + 1);
+      } else {
+        // Finalize: persist as bio so the edge function can use it as RAG context.
+        const summary = `Skill: ${updatedAnswers[0]} | Income goal: ${updatedAnswers[1]} | Weekly hours: ${updatedAnswers[2]}`;
+        try {
+          if (user) {
+            await supabase.from("profiles").update({ bio: summary } as any).eq("user_id", user.id);
+          }
+        } catch (e) { console.error("Save bio failed", e); }
+        setMessages([...newMessages, {
+          role: "assistant",
+          content: `Locked in 🚀 You're now my personalised hustle student.\n\n• Skill → **${updatedAnswers[0]}**\n• Goal → **₹${updatedAnswers[1]}**\n• Hours → **${updatedAnswers[2]}/wk**\n\nAsk me anything — gigs, pricing, scripts, scaling. I'll always answer with *your* situation in mind.`,
+        }]);
+        setOnboardingStep(0);
+      }
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -109,9 +167,9 @@ export function Chatbot() {
           <motion.button
             initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}
             onClick={() => setOpen(true)}
-            className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-gradient-primary text-primary-foreground flex items-center justify-center shadow-glow hover:scale-110 transition-transform"
+            className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-gradient-to-br from-violet-500 via-fuchsia-500 to-amber-400 text-white flex items-center justify-center shadow-[0_0_30px_rgba(168,85,247,0.55)] hover:scale-110 transition-transform animate-pulse"
           >
-            <MessageCircle className="w-6 h-6" />
+            <Sparkles className="w-6 h-6" />
           </motion.button>
         )}
       </AnimatePresence>
