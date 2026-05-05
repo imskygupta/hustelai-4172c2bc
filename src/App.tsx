@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
+import { Sentry } from "@/lib/sentry";
 import Index from "./pages/Index";
 import Explore from "./pages/Explore";
 import Login from "./pages/Login";
@@ -76,6 +77,7 @@ const Shelled = (el: React.ReactNode) => (
 const queryClient = new QueryClient();
 
 const App = () => (
+  <Sentry.ErrorBoundary fallback={<div style={{ padding: 24 }}>Something went wrong. Please refresh.</div>}>
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <TooltipProvider>
@@ -145,6 +147,7 @@ const App = () => (
       </TooltipProvider>
     </AuthProvider>
   </QueryClientProvider>
+  </Sentry.ErrorBoundary>
 );
 
 export default App;

@@ -1,4 +1,21 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.95.0";
+import * as Sentry from "https://deno.land/x/sentry@8.45.0/index.mjs";
+
+const SENTRY_DSN = Deno.env.get("SENTRY_DSN");
+if (SENTRY_DSN) {
+  Sentry.init({
+    dsn: SENTRY_DSN,
+    tracesSampleRate: 0.1,
+    environment: Deno.env.get("SUPABASE_URL") || "edge",
+  });
+}
+
+function reportError(err: unknown, ctx?: Record<string, any>) {
+  console.error("[work-api]", err, ctx);
+  if (SENTRY_DSN) {
+    try { Sentry.captureException(err, { extra: ctx }); } catch { /* ignore */ }
+  }
+}
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -190,7 +207,7 @@ Deno.serve(async (req) => {
         return bad("Unknown action");
     }
   } catch (e: any) {
-    console.error("[work-api]", action.kind, e?.message || e);
+    reportError(e, { kind: action.kind, userId });
     return json({ error: e?.message || "Internal error" }, 500);
   }
 });

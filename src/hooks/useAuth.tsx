@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, useRef, ReactNode } fro
 import { supabase } from "@/integrations/supabase/client";
 import { AUTH_EMAIL_REDIRECT_TO } from "@/lib/auth-config";
 import { identify, resetAnalytics } from "@/lib/analytics";
+import { setSentryUser, clearSentryUser } from "@/lib/sentry";
 import type { User, Session } from "@supabase/supabase-js";
 
 interface Profile {
@@ -50,6 +51,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           email: data.email,
           tier: data.subscription_tier,
         });
+        setSentryUser({ id: userId, email: data.email, tier: data.subscription_tier });
       }
     } catch {
       // Silently handle profile fetch errors
@@ -170,6 +172,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await supabase.auth.signOut();
     clearStaleSession();
     resetAnalytics();
+    clearSentryUser();
   };
 
   return (
