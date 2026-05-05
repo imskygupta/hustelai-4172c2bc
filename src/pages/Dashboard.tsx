@@ -2,7 +2,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
-import { Chatbot } from "@/components/Chatbot";
 import { NotificationPopup } from "@/components/NotificationPopup";
 import { AffiliateTab } from "@/components/AffiliateTab";
 import { EmailVerificationBanner } from "@/components/EmailVerificationBanner";
@@ -154,7 +153,6 @@ export default function Dashboard() {
       }
     >
       <NotificationPopup />
-      <Chatbot />
 
       <div className="space-y-6 max-w-7xl mx-auto w-full">
         {!emailVerified && <EmailVerificationBanner email={user!.email || ""} />}

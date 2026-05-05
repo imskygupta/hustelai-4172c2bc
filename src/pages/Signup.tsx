@@ -133,6 +133,14 @@ export default function Signup() {
     } catch (e) {
       console.error("Welcome email failed:", e);
     }
+    // Also fire branded verify-reminder via Resend (non-blocking)
+    try {
+      await supabase.functions.invoke("send-resend-email", {
+        body: { to: email, template: "verify-reminder", data: { name: displayName } },
+      });
+    } catch (e) {
+      console.error("Verify reminder email failed:", e);
+    }
     setLoading(false);
     toast({ title: "Welcome to HustleAI! 🎉", description: "Let's personalize your workspace…" });
     navigate("/onboarding");

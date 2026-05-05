@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { Search, Bell, Crown, Sparkles, Rocket, Star, ChevronRight } from "lucide-react";
 import { VerifyEmailGate } from "@/components/VerifyEmailGate";
+import { Chatbot } from "@/components/Chatbot";
 
 interface AppShellProps {
   children: ReactNode;
@@ -113,6 +114,7 @@ export function AppShell({ children, title, breadcrumbs, actions }: AppShellProp
             {children}
           </main>
         </div>
+        <Chatbot />
       </div>
     </SidebarProvider>
   );
