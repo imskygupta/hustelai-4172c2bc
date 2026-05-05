@@ -2,7 +2,9 @@ import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 import { initAnalytics } from "./lib/analytics";
+import { initSentry } from "./lib/sentry";
 
+initSentry();
 initAnalytics();
 
 // SPA redirect handler: if 404.html redirected here with ?redirect= param
