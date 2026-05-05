@@ -3,12 +3,15 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { workspaceDb } from "@/integrations/workspace/client";
 import { Card } from "@/components/ui/card";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Lock } from "lucide-react";
 import { WORK_TOOLS } from "@/lib/work-tools";
+import { useFeatureFlags, flagAccess, type Tier } from "@/lib/feature-flags";
 
 export default function Work() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const navigate = useNavigate();
+  const { byKey } = useFeatureFlags();
+  const tier = (profile?.subscription_tier || "free") as Tier;
   const [s, setS] = useState({ revenue: 0, pending: 0, clients: 0, dueToday: 0, hoursToday: 0 });
 
   useEffect(() => { (async () => {
@@ -55,11 +58,17 @@ export default function Work() {
           <h2 className="font-semibold text-slate-900 mb-1">Tools</h2>
           <p className="text-xs text-slate-500 mb-3">Each tool has its own dedicated screen — no clutter.</p>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {WORK_TOOLS.map(t => (
+            {WORK_TOOLS.map(t => {
+              const flag = byKey(`work.${t.slug}`);
+              const acc = flagAccess(flag, tier);
+              const locked = acc.locked;
+              const lockLabel = acc.reason === "tier" ? `${flag?.min_tier?.toUpperCase()} only` : "Coming soon";
+              return (
               <button
                 key={t.slug}
-                onClick={() => navigate(`/work/${t.slug}`)}
-                className="group text-left rounded-xl border border-slate-200 bg-white p-4 hover:border-emerald-300 hover:shadow-md transition-all"
+                onClick={() => !locked && navigate(`/work/${t.slug}`)}
+                disabled={locked}
+                className={`group text-left rounded-xl border border-slate-200 bg-white p-4 transition-all ${locked ? "opacity-60 cursor-not-allowed" : "hover:border-emerald-300 hover:shadow-md"}`}
               >
                 <div className="flex items-start gap-3">
                   <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${t.tone}`}>
@@ -67,14 +76,20 @@ export default function Work() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
-                      <h3 className="font-semibold text-sm text-slate-900">{t.label}</h3>
-                      <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-emerald-500 transition-colors" />
+                      <h3 className="font-semibold text-sm text-slate-900 flex items-center gap-1.5">
+                        {t.label}
+                        {locked && <Lock className="w-3 h-3 text-slate-400" />}
+                      </h3>
+                      {locked
+                        ? <span className="text-[10px] font-semibold text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded">{lockLabel}</span>
+                        : <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-emerald-500 transition-colors" />}
                     </div>
                     <p className="text-xs text-slate-500 mt-0.5">{t.desc}</p>
                   </div>
                 </div>
               </button>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>
