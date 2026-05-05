@@ -111,7 +111,7 @@ export default function HustleBlueprint() {
               Get a 7-day action plan with targets, outreach scripts & checklists — built from 50K+ gig data.
             </p>
             {atLimit && (
-              <Button className="bg-gradient-primary text-primary-foreground" onClick={() => navigate("/#pricing")}>
+              <Button className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold" onClick={() => navigate("/payment")}>
                 <Lock className="w-4 h-4 mr-1" /> Upgrade for More
               </Button>
             )}
