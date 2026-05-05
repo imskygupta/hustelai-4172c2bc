@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
+import { enforceLimit } from "@/lib/tool-limits";
 
 const STATUSES = ["lead", "negotiating", "active", "closed", "lost"] as const;
 const VIBES = ["casual", "formal", "technical", "creative"] as const;
@@ -172,6 +173,8 @@ function ClientCard({ client, onEdit, onDelete, onUpdated }: {
 
   async function draftEmail() {
     if (!client.email) { toast.error("Add an email for this client first."); return; }
+    const gate = enforceLimit("workspace-ai", user?.id, profile?.subscription_tier);
+    if (!gate.ok) { toast.error(`Monthly AI limit reached (${gate.max}). Upgrade to keep going.`); return; }
     setDrafting(true);
     try {
       const { data, error } = await supabase.functions.invoke("workspace-ai", {
@@ -297,6 +300,8 @@ function ClientDialog({ open, onOpenChange, editing, ownerId, onSaved }: {
 
   async function aiScrape() {
     if (!form.link) { toast.error("Paste a LinkedIn or website URL first."); return; }
+    const gate = enforceLimit("workspace-ai", user?.id, profile?.subscription_tier);
+    if (!gate.ok) { toast.error(`Monthly AI limit reached (${gate.max}). Upgrade to keep going.`); return; }
     setScraping(true);
     try {
       const { data, error } = await supabase.functions.invoke("workspace-ai", {
