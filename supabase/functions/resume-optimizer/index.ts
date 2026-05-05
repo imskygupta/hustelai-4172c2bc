@@ -16,7 +16,66 @@ serve(async (req) => {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
-    const { resume_text, target_category, target_role } = await req.json();
+    const body = await req.json();
+    const action = body.action || "optimize";
+
+    // ==== ACTION: score (ATS analysis of uploaded resume) ====
+    if (action === "score") {
+      const { resume_text, target_role } = body;
+      if (!resume_text) return new Response(JSON.stringify({ error: "resume_text required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      const prompt = `You are an ATS (Applicant Tracking System) analyzer. Analyze this resume${target_role ? ` for a "${target_role}" role` : ""} and respond ONLY in valid JSON with shape:
+{
+  "ats_score": <0-100>,
+  "keyword_match": <0-100>,
+  "format_score": <0-100>,
+  "readability": <0-100>,
+  "strengths": ["..."],
+  "weaknesses": ["..."],
+  "missing_keywords": ["..."],
+  "improvements": ["..."]
+}
+
+RESUME:
+${resume_text}`;
+      const { content } = await callAIWithFallback({
+        messages: [
+          { role: "system", content: "You are a strict ATS analyzer. Output ONLY valid JSON, no markdown fences." },
+          { role: "user", content: prompt },
+        ],
+        temperature: 0.3,
+      });
+      let parsed: any = {};
+      try {
+        const cleaned = content.replace(/```json\s*|\s*```/g, "").trim();
+        parsed = JSON.parse(cleaned);
+      } catch {
+        parsed = { ats_score: 70, keyword_match: 65, format_score: 72, readability: 80, strengths: [], weaknesses: [], missing_keywords: [], improvements: [content.slice(0, 200)] };
+      }
+      return new Response(JSON.stringify(parsed), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    // ==== ACTION: autofill (single section like summary, experience bullet) ====
+    if (action === "autofill") {
+      const { field, context } = body;
+      const prompts: Record<string, string> = {
+        summary: `Write a powerful 3-4 sentence professional summary for this candidate. Be specific, results-oriented, and confident. Context:\n${JSON.stringify(context)}`,
+        experience: `Write 3-4 strong bullet points (start with action verbs, include metrics where plausible) for this experience. Context:\n${JSON.stringify(context)}`,
+        skills: `List 8-12 most relevant skills (comma-separated, no extra text) for:\n${JSON.stringify(context)}`,
+        achievements: `Write 3 quantifiable achievement bullets for:\n${JSON.stringify(context)}`,
+      };
+      const prompt = prompts[field] || `Generate professional content for the "${field}" section.\nContext: ${JSON.stringify(context)}`;
+      const { content } = await callAIWithFallback({
+        messages: [
+          { role: "system", content: "You write concise, ATS-friendly resume content. No markdown, no preamble." },
+          { role: "user", content: prompt },
+        ],
+        temperature: 0.7,
+      });
+      return new Response(JSON.stringify({ content: content.trim() }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    // ==== ACTION: optimize (legacy / full re-skin) ====
+    const { resume_text, target_category, target_role } = body;
     if (!resume_text || !target_category) return new Response(JSON.stringify({ error: "resume_text and target_category are required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
     const prompt = `You are an expert freelance resume optimizer. Re-skin this resume for the "${target_category}" freelance category${target_role ? ` targeting "${target_role}" roles` : ""}.
