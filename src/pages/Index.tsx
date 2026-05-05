@@ -24,7 +24,7 @@ const features = [
 
 const stats = [
   { value: "500+", label: "Hustle categories" },
-  { value: "12", label: "AI tools included" },
+  { value: "20+", label: "AI + Work tools" },
   { value: "₹0", label: "To start" },
   { value: "24/7", label: "AI on-call" },
 ];
@@ -42,6 +42,7 @@ const comparison = [
   { feature: "AI-verified opportunities (not random links)", us: true, others: false },
   { feature: "3-step roadmap per hustle", us: true, others: false },
   { feature: "Source citations (Reddit, Twitter, real gigs)", us: true, others: false },
+  { feature: "Built-in invoices, time tracker, CRM & client portals (free)", us: true, others: false },
   { feature: "Built-in pricing, proposal & resume tools", us: true, others: false },
   { feature: "Generic job board listings", us: false, others: true },
   { feature: "Hours of manual scrolling", us: false, others: true },
