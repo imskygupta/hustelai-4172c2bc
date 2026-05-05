@@ -88,6 +88,8 @@ export default function Plans() {
   const navigate = useNavigate();
   const currentTier = (profile as any)?.subscription_tier || "free";
 
+  useEffect(() => { track("pricing_viewed"); }, []);
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
