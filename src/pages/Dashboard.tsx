@@ -145,7 +145,7 @@ export default function Dashboard() {
             <Search className="w-4 h-4 mr-1.5" /> New search
           </Button>
           {!isInfinity && (
-            <Button size="sm" className="bg-emerald-500 hover:bg-emerald-600 text-white" onClick={() => navigate("/plans")}>
+            <Button size="sm" className="bg-emerald-500 hover:bg-emerald-600 text-white" onClick={() => navigate("/payment")}>
               <Crown className="w-4 h-4 mr-1.5" /> Upgrade
             </Button>
           )}
@@ -282,8 +282,8 @@ export default function Dashboard() {
                 {!isInfinity && (
                   <Button
                     size="sm"
-                    className="w-full bg-emerald-500 hover:bg-emerald-600 text-white"
-                    onClick={() => navigate("/plans")}
+                    className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-semibold"
+                    onClick={() => navigate("/payment")}
                   >
                     Upgrade plan
                   </Button>
