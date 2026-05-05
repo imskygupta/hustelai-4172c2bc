@@ -206,8 +206,8 @@ export function AppSidebar() {
             </div>
             {userTier !== "infinity" && (
               <button
-                onClick={() => navigate("/plans")}
-                className="text-[11px] text-emerald-700 hover:underline"
+                onClick={() => navigate("/payment")}
+                className="text-[11px] text-emerald-700 hover:underline font-medium"
               >
                 Upgrade for more →
               </button>
