@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { workspaceDb, type WorkChecklist } from "@/integrations/workspace/client";
+import { workApi } from "@/lib/work-api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -35,18 +36,21 @@ export function ChecklistsTab({ userId, onMissing, onReady }: { userId?: string;
   async function create() {
     if (!userId || !form.title) return toast.error("Title required");
     const tasks = (TEMPLATES[form.template] || ["New task"]).map(label => ({ label, done: false }));
-    const { error } = await workspaceDb.from("work_checklists").insert({ owner_id: userId, title: form.title, template: form.template, tasks });
-    if (error) return toast.error(error.message);
+    try { await workApi.checklist.create({ title: form.title, template: form.template, tasks }); }
+    catch (e: any) { return toast.error(e.message); }
     toast.success("Checklist created");
     setOpen(false); setForm({ title: "", template: "Website Project" }); load();
   }
   async function toggle(c: WorkChecklist, idx: number) {
     const tasks = c.tasks.map((t, i) => i === idx ? { ...t, done: !t.done } : t);
-    const { error } = await workspaceDb.from("work_checklists").update({ tasks }).eq("id", c.id);
-    if (error) return toast.error(error.message);
-    setItems(prev => prev.map(p => p.id === c.id ? { ...p, tasks } : p));
+    setItems(prev => prev.map(p => p.id === c.id ? { ...p, tasks } : p)); // optimistic
+    try { await workApi.checklist.updateTasks(c.id, tasks); }
+    catch (e: any) { toast.error(e.message); load(); }
   }
-  async function remove(id: string) { await workspaceDb.from("work_checklists").delete().eq("id", id); load(); }
+  async function remove(id: string) {
+    try { await workApi.checklist.delete(id); load(); }
+    catch (e: any) { toast.error(e.message); }
+  }
 
   return (
     <div className="space-y-4">
