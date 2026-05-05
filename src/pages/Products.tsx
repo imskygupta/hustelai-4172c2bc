@@ -59,7 +59,7 @@ export default function Products() {
               <Button size="lg" className="bg-white text-slate-900 hover:bg-slate-100">
                 Request API access <ArrowRight className="w-4 h-4 ml-1" />
               </Button>
-              <Button size="lg" variant="outline" className="border-white/20 text-white hover:bg-white/10">
+              <Button size="lg" variant="outline" className="border-white text-white bg-white/10 hover:bg-white/20 hover:text-white font-semibold">
                 Read docs
               </Button>
             </div>
@@ -129,7 +129,7 @@ export default function Products() {
                 <Button size="lg" className="bg-white text-slate-900 hover:bg-slate-100">
                   Get API key <ArrowRight className="w-4 h-4 ml-1" />
                 </Button>
-                <Button size="lg" variant="outline" className="border-white/30 text-white hover:bg-white/10">
+                <Button size="lg" variant="outline" className="border-white text-white bg-white/10 hover:bg-white/20 hover:text-white font-semibold">
                   Talk to sales
                 </Button>
               </div>
