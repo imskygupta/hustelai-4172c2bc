@@ -8,11 +8,11 @@ import { Link, useLocation } from "react-router-dom";
 import { isAppShellRoute } from "@/components/app-shell-routes";
 
 const productLinks = [
+  { label: "Products (B2B APIs)", href: "/products" },
   { label: "Explore", href: "/explore" },
-  { label: "Community", href: "/community" },
-  { label: "Leaderboard", href: "/leaderboard" },
-  { label: "Blog", href: "/blog" },
   { label: "Plans & Pricing", href: "/plans" },
+  { label: "Marketplace", href: "/marketplace" },
+  { label: "Blog", href: "/blog" },
 ];
 
 const companyLinks = [
