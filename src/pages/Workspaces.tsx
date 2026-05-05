@@ -162,6 +162,7 @@ export default function Workspaces() {
 function ClientCard({ client, onEdit, onDelete, onUpdated }: {
   client: WorkspaceClient; onEdit: () => void; onDelete: () => void; onUpdated: () => void;
 }) {
+  const { user, profile } = useAuth();
   const [drafting, setDrafting] = useState(false);
 
   async function meetNow() {
@@ -284,6 +285,7 @@ function ClientDialog({ open, onOpenChange, editing, ownerId, onSaved }: {
   open: boolean; onOpenChange: (b: boolean) => void;
   editing: WorkspaceClient | null; ownerId: string; onSaved: () => void;
 }) {
+  const { user, profile } = useAuth();
   const blank = {
     name: "", company: "", email: "", link: "",
     niche: "", vibe: "casual", budget: "medium", status: "lead", notes: "",
