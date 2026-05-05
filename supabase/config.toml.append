@@ -1,1 +1,0 @@
-# Note: send-resend-email requires verify_jwt = false for unauthenticated senders.
