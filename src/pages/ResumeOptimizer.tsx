@@ -209,7 +209,7 @@ export default function ResumeOptimizer() {
             </p>
             {atLimit && (
               <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} className="inline-block">
-                <Button className="bg-gradient-primary text-primary-foreground" onClick={() => navigate("/#pricing")}>
+                <Button className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold" onClick={() => navigate("/payment")}>
                   <Lock className="w-4 h-4 mr-1" /> Upgrade to Unlock More
                 </Button>
               </motion.div>
