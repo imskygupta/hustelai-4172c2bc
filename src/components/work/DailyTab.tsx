@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { track } from "@/lib/analytics";
 
 function todayISO() { return new Date().toISOString().slice(0, 10); }
 
@@ -35,6 +36,7 @@ export function DailyTab({ userId, onMissing, onReady }: { userId?: string; onMi
     if (!userId) return;
     try { await workApi.daily.upsert({ log_date: todayISO(), ...today }); }
     catch (e: any) { return toast.error(e.message); }
+    track("daily_log_added", { proposals: today.proposals_sent, leads: today.leads_found, clients: today.clients_contacted });
     toast.success("Saved today's log 🔥"); load();
   }
 

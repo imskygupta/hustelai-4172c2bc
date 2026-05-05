@@ -1,5 +1,6 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ArrowLeft, Bell, Copy, Lock } from "lucide-react";
@@ -8,6 +9,7 @@ import { toast } from "sonner";
 import { WORK_TOOLS } from "@/lib/work-tools";
 import { WORK_SETUP_SQL } from "@/lib/work-sql";
 import { useFeatureFlags, flagAccess, type Tier } from "@/lib/feature-flags";
+import { track } from "@/lib/analytics";
 import { InvoicesTab } from "@/components/work/InvoicesTab";
 import { ChecklistsTab } from "@/components/work/ChecklistsTab";
 import { DailyTab } from "@/components/work/DailyTab";
@@ -31,6 +33,15 @@ export default function WorkTool() {
   const flag = byKey(`work.${slug}`);
   const tier = (profile?.subscription_tier || "free") as Tier;
   const acc = flagAccess(flag, tier);
+
+  useEffect(() => {
+    if (!slug) return;
+    if (acc.locked) {
+      track("locked_feature_clicked", { feature: slug, reason: acc.reason });
+    } else {
+      track("tool_opened", { tool: slug });
+    }
+  }, [slug, acc.locked, acc.reason]);
 
   if (!tool) {
     return (
