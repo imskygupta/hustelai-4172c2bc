@@ -30,6 +30,13 @@ export function VerifyEmailGate() {
     return () => clearTimeout(t);
   }, [user, verified]);
 
+  // Allow other components to force-open the gate
+  useEffect(() => {
+    const handler = () => setOpen(true);
+    window.addEventListener("ha:open-verify-gate", handler);
+    return () => window.removeEventListener("ha:open-verify-gate", handler);
+  }, []);
+
   if (!user || verified) return null;
 
   const resend = async () => {
