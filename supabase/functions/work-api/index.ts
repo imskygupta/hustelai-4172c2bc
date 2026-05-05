@@ -166,6 +166,19 @@ Deno.serve(async (req) => {
           );
         }
 
+        // 🔁 Trigger durable follow-up workflow (Day 3 reminder, Day 7 overdue).
+        emitEvent("work/invoice.created", {
+          invoice_id: data.id,
+          owner_id: userId,
+          owner_email: userEmail || null,
+          client_name,
+          client_email: clientEmail || null,
+          amount,
+          currency: "INR",
+          due_date: action.due_date || null,
+          invoice_number: data.invoice_number || null,
+        });
+
         return json({ ok: true, row: data });
       }
       case "invoice.update_status": {
@@ -186,6 +199,12 @@ Deno.serve(async (req) => {
             `<p>🎉 <strong>${row.client_name}</strong> marked invoice <strong>${row.invoice_number || row.id}</strong> as paid (${amt}).</p>`
           );
         }
+        // 🔁 Cancel/branch downstream reminders.
+        emitEvent("work/invoice.status_changed", {
+          invoice_id: action.id,
+          owner_id: userId,
+          status: action.status,
+        });
         return json({ ok: true });
       }
       case "invoice.delete": {
@@ -232,6 +251,11 @@ Deno.serve(async (req) => {
           notes: action.notes?.slice(0, 2000) || null,
         }, { onConflict: "owner_id,log_date" });
         if (error) throw error;
+        emitEvent("work/daily.logged", {
+          owner_id: userId,
+          owner_email: userEmail || null,
+          log_date: action.log_date,
+        });
         return json({ ok: true });
       }
       default:
