@@ -73,7 +73,35 @@ const PRESETS: Preset[] = [
     bpm: 65,
     sequence: [[12], [], [16], [], [19], [], [16], [], [12, 7], [], [9], [], [7], [], [4], []],
   },
+  {
+    name: "Indian Raga",
+    emoji: "🪔",
+    bpm: 70,
+    // S R G M P D N – using close white-key approximation
+    sequence: [[0], [2], [4], [5], [7], [9], [11], [12], [11], [9], [7], [5], [4], [2], [0], []],
+  },
+  {
+    name: "Hip Hop Lo-Fi",
+    emoji: "🎧",
+    bpm: 84,
+    sequence: [[0], [], [3], [], [7], [], [3], [], [0, 10], [], [7], [], [3], [], [5], []],
+  },
+  {
+    name: "Pop Sparkle",
+    emoji: "💖",
+    bpm: 92,
+    sequence: [[7], [12], [14], [12], [9], [7], [4], [], [7], [12], [14], [16], [14], [12], [9], []],
+  },
 ];
+
+// Vibe-aware AI tone generator scales (used when user picks a vibe).
+const VIBE_SCALES: Record<string, number[]> = {
+  chill:  [0, 2, 4, 7, 9, 12, 14, 16, 19, 21],   // pentatonic major
+  indian: [0, 2, 4, 5, 7, 9, 11, 12, 14, 16],    // raga-ish
+  hiphop: [0, 3, 5, 7, 10, 12, 15, 17, 19, 22],  // minor pentatonic
+  pop:    [0, 4, 7, 9, 12, 16, 19, 21, 24],      // major triad + extensions
+  lofi:   [0, 3, 5, 8, 10, 12, 15, 17, 20],      // dorian-ish
+};
 
 export default function Relax() {
   const { user, profile } = useAuth();
