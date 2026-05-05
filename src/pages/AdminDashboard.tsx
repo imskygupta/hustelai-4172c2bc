@@ -2269,6 +2269,41 @@ export default function AdminDashboard() {
               </div>
             </div>
           )}
+
+          {/* ===== SQL SETUP ===== */}
+          {section === "sql-setup" && (
+            <div className="space-y-6">
+              <div>
+                <h3 className="font-display font-bold text-lg">SQL Setup (secondary backend)</h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                  These blocks create the tables for Workspace, Canvas and the Work tab inside the
+                  secondary <code>hustl-production</code> backend. Open its SQL editor, paste and run.
+                  Re-running is safe (uses <code>create if not exists</code>).
+                </p>
+              </div>
+              {SQL_BLOCKS.map(b => (
+                <div key={b.id} className="glass rounded-xl p-5 space-y-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <div className="font-semibold text-sm">{b.label}</div>
+                      <div className="text-xs text-muted-foreground">{b.id}.sql · run once per backend</div>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        navigator.clipboard.writeText(b.sql);
+                        toast({ title: "SQL copied", description: "Paste it in your SQL editor and run." });
+                      }}
+                    >
+                      Copy SQL
+                    </Button>
+                  </div>
+                  <pre className="text-[10px] bg-muted/40 p-3 rounded overflow-auto max-h-72 leading-relaxed">{b.sql}</pre>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </main>
     </div>
