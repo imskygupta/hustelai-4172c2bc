@@ -13,7 +13,7 @@ async function call<T = any>(body: any): Promise<T> {
 
 export const workApi = {
   invoice: {
-    create: (p: { client_name: string; service: string; amount: number; due_date?: string | null; notes?: string | null }) =>
+    create: (p: { client_name: string; service: string; amount: number; due_date?: string | null; notes?: string | null; client_email?: string | null }) =>
       call({ kind: "invoice.create", ...p }),
     setStatus: (id: string, status: "pending" | "paid" | "overdue") =>
       call({ kind: "invoice.update_status", id, status }),
