@@ -342,7 +342,7 @@ export default function Index() {
                   <Button
                     size="lg"
                     variant="outline"
-                    className="h-12 px-6 border-white/30 text-white hover:bg-white/10 hover:text-white"
+                    className="h-12 px-6 border-white text-white bg-white/10 hover:bg-white/20 hover:text-white font-semibold"
                     onClick={() => navigate("/contact")}
                   >
                     Talk to sales

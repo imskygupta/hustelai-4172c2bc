@@ -73,7 +73,35 @@ const PRESETS: Preset[] = [
     bpm: 65,
     sequence: [[12], [], [16], [], [19], [], [16], [], [12, 7], [], [9], [], [7], [], [4], []],
   },
+  {
+    name: "Indian Raga",
+    emoji: "🪔",
+    bpm: 70,
+    // S R G M P D N – using close white-key approximation
+    sequence: [[0], [2], [4], [5], [7], [9], [11], [12], [11], [9], [7], [5], [4], [2], [0], []],
+  },
+  {
+    name: "Hip Hop Lo-Fi",
+    emoji: "🎧",
+    bpm: 84,
+    sequence: [[0], [], [3], [], [7], [], [3], [], [0, 10], [], [7], [], [3], [], [5], []],
+  },
+  {
+    name: "Pop Sparkle",
+    emoji: "💖",
+    bpm: 92,
+    sequence: [[7], [12], [14], [12], [9], [7], [4], [], [7], [12], [14], [16], [14], [12], [9], []],
+  },
 ];
+
+// Vibe-aware AI tone generator scales (used when user picks a vibe).
+const VIBE_SCALES: Record<string, number[]> = {
+  chill:  [0, 2, 4, 7, 9, 12, 14, 16, 19, 21],   // pentatonic major
+  indian: [0, 2, 4, 5, 7, 9, 11, 12, 14, 16],    // raga-ish
+  hiphop: [0, 3, 5, 7, 10, 12, 15, 17, 19, 22],  // minor pentatonic
+  pop:    [0, 4, 7, 9, 12, 16, 19, 21, 24],      // major triad + extensions
+  lofi:   [0, 3, 5, 8, 10, 12, 15, 17, 20],      // dorian-ish
+};
 
 export default function Relax() {
   const { user, profile } = useAuth();
@@ -87,6 +115,7 @@ export default function Relax() {
   const [muted, setMuted] = useState(false);
   const intervalRef = useRef<number | null>(null);
   const gainRef = useRef<GainNode | null>(null);
+  const [vibe, setVibe] = useState<keyof typeof VIBE_SCALES>("chill");
 
   const getAudioCtx = useCallback(() => {
     if (!audioCtxRef.current) {
@@ -332,27 +361,53 @@ export default function Relax() {
               <p className="text-sm text-muted-foreground">
                 Let AI compose unique relaxing melodies based on your mood. Available for Pro, Elite, and Infinity members.
               </p>
+              {/* Vibe selector — open to all so they can preview the choice */}
+              <div className="flex flex-wrap gap-2 justify-center">
+                {([
+                  { key: "chill", label: "🌿 Chill" },
+                  { key: "indian", label: "🪔 Indian" },
+                  { key: "hiphop", label: "🎧 Hip Hop" },
+                  { key: "pop", label: "💖 Pop" },
+                  { key: "lofi", label: "🌙 Lo-Fi" },
+                ] as const).map(v => (
+                  <button
+                    key={v.key}
+                    onClick={() => setVibe(v.key)}
+                    className={`text-xs px-3 py-1.5 rounded-full border transition-all ${
+                      vibe === v.key
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-background border-border text-muted-foreground hover:border-primary/50"
+                    }`}
+                  >
+                    {v.label}
+                  </button>
+                ))}
+              </div>
               {!isPremium ? (
-                <Button variant="outline" onClick={() => navigate("/payment")}
-                  className="border-accent/30 text-accent hover:bg-accent/10">
+                <Button onClick={() => navigate("/payment")}
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold">
                   <Lock className="w-4 h-4 mr-1" /> Upgrade to Unlock
                 </Button>
               ) : (
                 <Button className="bg-gradient-primary text-primary-foreground"
                   onClick={() => {
-                    // Generate a random pleasant sequence
-                    const pentatonic = [0, 2, 4, 7, 9, 12, 14, 16, 19, 21];
+                    // Vibe-aware AI mix using the selected scale + vibe BPM hint.
+                    const scale = VIBE_SCALES[vibe];
+                    const vibeBpm: Record<string, number> = { chill: 70, indian: 72, hiphop: 88, pop: 96, lofi: 74 };
+                    const targetBpm = vibeBpm[vibe] ?? bpm;
+                    const density = vibe === "hiphop" || vibe === "pop" ? 0.7 : 0.5;
                     const seq: number[][] = Array.from({ length: 16 }, () => {
-                      if (Math.random() > 0.4) {
-                        const idx = pentatonic[Math.floor(Math.random() * pentatonic.length)];
-                        return [idx];
+                      if (Math.random() < density) {
+                        const idx = scale[Math.floor(Math.random() * scale.length)];
+                        return [Math.min(idx, NOTES.length - 1)];
                       }
                       return [];
                     });
-                    PRESETS.push({ name: "AI Mix", emoji: "🤖", bpm, sequence: seq });
+                    setBpm(targetBpm);
+                    PRESETS.push({ name: `AI · ${vibe}`, emoji: "🤖", bpm: targetBpm, sequence: seq });
                     startPreset(PRESETS.length - 1);
                   }}>
-                  <Sparkles className="w-4 h-4 mr-1" /> Generate AI Tone
+                  <Sparkles className="w-4 h-4 mr-1" /> Generate {vibe.charAt(0).toUpperCase() + vibe.slice(1)} Tone
                 </Button>
               )}
             </div>

@@ -15,7 +15,7 @@ import {
   Search, Crown, Rocket, Sparkles, Users, Video, BookOpen, TrendingUp, MessageCircle,
   Lock, ArrowUpRight, ArrowDownRight, ExternalLink, FileText, Calendar, Share2,
   Store, Target, Brain, Zap, BarChart3, Activity, History, DollarSign, Film,
-  ShieldAlert, Briefcase, Loader2,
+  ShieldAlert, Briefcase, Loader2, Bot, Music,
 } from "lucide-react";
 
 interface FeedData {
@@ -145,7 +145,7 @@ export default function Dashboard() {
             <Search className="w-4 h-4 mr-1.5" /> New search
           </Button>
           {!isInfinity && (
-            <Button size="sm" className="bg-emerald-500 hover:bg-emerald-600 text-white" onClick={() => navigate("/plans")}>
+            <Button size="sm" className="bg-emerald-500 hover:bg-emerald-600 text-white" onClick={() => navigate("/payment")}>
               <Crown className="w-4 h-4 mr-1.5" /> Upgrade
             </Button>
           )}
@@ -254,6 +254,8 @@ export default function Dashboard() {
                     { icon: DollarSign, label: "Price Calc", path: "/gig-price-calculator" },
                     { icon: Film, label: "Content", path: "/faceless-content" },
                     { icon: ShieldAlert, label: "Red-Flag", path: "/red-flag-scanner" },
+                    { icon: Bot, label: "HustleBot", path: "/hustlebot" },
+                    { icon: Music, label: "Relax Mode", path: "/relax" },
                   ].map(q => (
                     <button
                       key={q.label}
@@ -282,8 +284,8 @@ export default function Dashboard() {
                 {!isInfinity && (
                   <Button
                     size="sm"
-                    className="w-full bg-emerald-500 hover:bg-emerald-600 text-white"
-                    onClick={() => navigate("/plans")}
+                    className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-semibold"
+                    onClick={() => navigate("/payment")}
                   >
                     Upgrade plan
                   </Button>
