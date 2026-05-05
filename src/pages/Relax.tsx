@@ -333,8 +333,8 @@ export default function Relax() {
                 Let AI compose unique relaxing melodies based on your mood. Available for Pro, Elite, and Infinity members.
               </p>
               {!isPremium ? (
-                <Button variant="outline" onClick={() => navigate("/payment")}
-                  className="border-accent/30 text-accent hover:bg-accent/10">
+                <Button onClick={() => navigate("/payment")}
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold">
                   <Lock className="w-4 h-4 mr-1" /> Upgrade to Unlock
                 </Button>
               ) : (
