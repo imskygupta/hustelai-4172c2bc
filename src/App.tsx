@@ -53,6 +53,7 @@ import Onboarding from "./pages/Onboarding";
 import NotFound from "./pages/NotFound";
 import Products from "./pages/Products";
 import ProductDetail from "./pages/ProductDetail";
+import HustleBot from "./pages/HustleBot";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { AppRouteShell } from "@/components/AppRouteShell";
@@ -126,6 +127,7 @@ const App = () => (
             <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/products" element={<Products />} />
             <Route path="/products/:slug" element={<ProductDetail />} />
+            <Route path="/hustlebot" element={Shelled(<HustleBot />)} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <MobileBottomNav />
