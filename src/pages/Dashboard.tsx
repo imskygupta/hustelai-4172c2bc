@@ -567,3 +567,36 @@ function KpiCard({
     </div>
   );
 }
+
+function CockpitGroup({
+  title, desc, accent, tools,
+}: {
+  title: string; desc: string;
+  accent: "emerald" | "amber" | "violet";
+  tools: { icon: any; label: string; path: string }[];
+}) {
+  const map = {
+    emerald: { dot: "bg-emerald-500", chip: "bg-emerald-50 text-emerald-700", hover: "hover:border-emerald-300 hover:bg-emerald-50/40" },
+    amber:   { dot: "bg-amber-500",   chip: "bg-amber-50 text-amber-700",     hover: "hover:border-amber-300 hover:bg-amber-50/40" },
+    violet:  { dot: "bg-violet-500",  chip: "bg-violet-50 text-violet-700",   hover: "hover:border-violet-300 hover:bg-violet-50/40" },
+  }[accent];
+  const navigate = useNavigate();
+  return (
+    <div className="rounded-xl border border-slate-200 p-4 bg-slate-50/40">
+      <div className="flex items-center gap-2 mb-1">
+        <span className={`w-1.5 h-1.5 rounded-full ${map.dot}`} />
+        <h4 className="text-sm font-semibold text-slate-900">{title}</h4>
+      </div>
+      <p className="text-[11px] text-slate-500 mb-3">{desc}</p>
+      <div className="grid grid-cols-2 gap-1.5">
+        {tools.map(t => (
+          <button key={t.label} onClick={() => navigate(t.path)}
+            className={`group flex items-center gap-1.5 px-2 py-1.5 rounded-md border border-slate-200 bg-white text-left transition-all ${map.hover}`}>
+            <t.icon className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+            <span className="text-[11px] font-medium text-slate-700 truncate">{t.label}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
