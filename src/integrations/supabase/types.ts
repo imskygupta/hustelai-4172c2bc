@@ -2047,6 +2047,59 @@ export type Database = {
         }
         Relationships: []
       }
+      workspace_documents: {
+        Row: {
+          created_at: string
+          data: Json
+          doc_number: string | null
+          doc_type: string
+          due_at: string | null
+          id: string
+          owner_id: string
+          status: string
+          theme: string
+          title: string
+          updated_at: string
+          workspace_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          data?: Json
+          doc_number?: string | null
+          doc_type: string
+          due_at?: string | null
+          id?: string
+          owner_id: string
+          status?: string
+          theme?: string
+          title?: string
+          updated_at?: string
+          workspace_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          data?: Json
+          doc_number?: string | null
+          doc_type?: string
+          due_at?: string | null
+          id?: string
+          owner_id?: string
+          status?: string
+          theme?: string
+          title?: string
+          updated_at?: string
+          workspace_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workspace_documents_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       workspaces: {
         Row: {
           ai_summary: string | null

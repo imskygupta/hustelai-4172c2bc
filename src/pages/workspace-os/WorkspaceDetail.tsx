@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -26,12 +26,14 @@ export default function WorkspaceDetail() {
   if (loading) return <Skeleton className="h-96 rounded-2xl" />;
   if (!w) return <p className="text-muted-foreground">Workspace not found.</p>;
 
-  const recs: string[] = [];
-  if (!w.pricing?.amount) recs.push("Add pricing details");
-  if (!w.deliverables?.length) recs.push("Confirm deliverables list");
-  if (!w.deadlines?.length) recs.push("Set timeline milestones");
-  recs.push("Generate quotation (coming soon)");
-  recs.push("Draft agreement (coming soon)");
+  const recs: { label: string; href: string }[] = [
+    { label: "Generate quotation", href: `/workspaces/${w.id}/docs/new/quotation` },
+    { label: "Draft agreement", href: `/workspaces/${w.id}/docs/new/agreement` },
+    { label: "Create invoice", href: `/workspaces/${w.id}/docs/new/invoice` },
+    { label: "Service card", href: `/workspaces/${w.id}/docs/new/service_card` },
+    { label: "Business card", href: `/workspaces/${w.id}/docs/new/business_card` },
+    { label: "All documents →", href: `/workspaces/${w.id}/docs` },
+  ];
 
   return (
     <div className="space-y-6">
@@ -104,10 +106,12 @@ export default function WorkspaceDetail() {
               <Bell className="h-4 w-4 text-primary" />
               <h3 className="text-sm font-medium">HustleBot</h3>
             </div>
-            <ul className="space-y-2">
+            <ul className="space-y-1">
               {recs.map((r, i) => (
-                <li key={i} className="text-sm rounded-md px-2 py-1.5 hover:bg-muted/60 cursor-pointer">
-                  {r}
+                <li key={i}>
+                  <Link to={r.href} className="block text-sm rounded-md px-2 py-1.5 hover:bg-muted/60">
+                    {r.label}
+                  </Link>
                 </li>
               ))}
             </ul>
