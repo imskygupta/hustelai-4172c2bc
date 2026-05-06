@@ -4,6 +4,7 @@ import { AgreementTemplate } from "./templates/AgreementTemplate";
 import { InvoiceTemplate } from "./templates/InvoiceTemplate";
 import { ServiceCardTemplate } from "./templates/ServiceCardTemplate";
 import { BusinessCardTemplate } from "./templates/BusinessCardTemplate";
+import { ProposalTemplate } from "./templates/ProposalTemplate";
 
 export function DocPreview({
   type, data, themeId, watermark, refEl,
@@ -19,6 +20,7 @@ export function DocPreview({
       {type === "quotation" && <QuotationTemplate data={data} themeId={themeId} watermark={watermark} />}
       {type === "agreement" && <AgreementTemplate data={data} themeId={themeId} watermark={watermark} />}
       {type === "invoice" && <InvoiceTemplate data={data} themeId={themeId} watermark={watermark} />}
+      {type === "proposal" && <ProposalTemplate data={data} themeId={themeId} watermark={watermark} />}
       {type === "service_card" && <ServiceCardTemplate data={data} themeId={themeId} watermark={watermark} />}
       {type === "business_card" && <BusinessCardTemplate data={data} themeId={themeId} watermark={watermark} />}
     </div>
