@@ -471,6 +471,41 @@ export default function Community() {
                 <p className="text-muted-foreground">Your channels, conversations, and connections</p>
               </div>
 
+              {/* Discord Connect card */}
+              {user && (
+                <div className="glass rounded-xl p-5 flex items-center gap-4 border-primary/20">
+                  <div className="w-11 h-11 rounded-xl bg-[#5865F2]/15 flex items-center justify-center text-[#5865F2]">
+                    <Link2 className="w-5 h-5" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-display font-bold text-sm flex items-center gap-2">
+                      Discord
+                      {discordLink && (
+                        <Badge variant="outline" className="text-[10px] text-emerald-500 border-emerald-500/30">
+                          <CheckCircle2 className="w-3 h-3 mr-1" /> Connected
+                        </Badge>
+                      )}
+                    </h3>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {discordLink
+                        ? `Linked as @${discordLink.discord_username || "discord-user"} — roles auto-sync with your tier.`
+                        : "Link your Discord to unlock premium channels and auto role sync."}
+                    </p>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant={discordLink ? "outline" : "default"}
+                    className={discordLink ? "" : "bg-[#5865F2] hover:bg-[#5865F2]/90 text-white"}
+                    onClick={() => toast({
+                      title: "Discord OAuth coming soon",
+                      description: "Backend OAuth flow is being wired up — stay tuned.",
+                    })}
+                  >
+                    {discordLink ? "Manage" : "Connect Discord"}
+                  </Button>
+                </div>
+              )}
+
               {/* Default Channels */}
               <div className="space-y-3">
                 <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
