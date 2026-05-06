@@ -2290,6 +2290,24 @@ export default function AdminDashboard() {
                   know which blocks are new vs already run. State is saved per-browser.
                 </p>
               </div>
+              {/* Backend connections reference */}
+              <div className="grid md:grid-cols-2 gap-3">
+                {[
+                  { label: "Workspace DB (hustl-production)", ref: "uvejxrhrxpcmgrfxfynx", url: "https://uvejxrhrxpcmgrfxfynx.supabase.co", purpose: "Work hub, canvas, workspace clients" },
+                  { label: "Community DB (hustl discord-workspace-production)", ref: "qeswhaytgvosfzzgraef", url: "https://qeswhaytgvosfzzgraef.supabase.co", purpose: "Forum posts/votes, memberships, Discord links, mod queue" },
+                ].map(b => (
+                  <div key={b.ref} className="glass rounded-xl p-4 space-y-1.5 border-primary/10">
+                    <div className="font-semibold text-sm">{b.label}</div>
+                    <div className="text-[11px] text-muted-foreground">{b.purpose}</div>
+                    <div className="text-[11px] font-mono break-all">ref: <span className="text-foreground">{b.ref}</span></div>
+                    <div className="text-[11px] font-mono break-all">url: <span className="text-foreground">{b.url}</span></div>
+                    <Button size="sm" variant="outline" className="mt-1 h-7 text-[11px]"
+                      onClick={() => { navigator.clipboard.writeText(b.ref); toast({ title: "Project ref copied" }); }}>
+                      Copy ref
+                    </Button>
+                  </div>
+                ))}
+              </div>
               {SQL_BLOCKS.map(b => {
                 const key = `sql-applied:${b.id}`;
                 const applied = typeof window !== "undefined" && localStorage.getItem(key) === "1";

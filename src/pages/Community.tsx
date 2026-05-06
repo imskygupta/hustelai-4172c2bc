@@ -14,7 +14,8 @@ import {
   MessageSquare, Send, ArrowLeft, ThumbsUp, ThumbsDown,
   Plus, Filter, Clock, Flame, CheckCircle, AlertCircle,
   ChevronDown, ChevronUp, User, Lock, Hash, Volume2, VolumeX,
-  Users, Crown, Shield, BookOpen, Bell, X, Link2, CheckCircle2
+  Users, Crown, Shield, BookOpen, Bell, X, Link2, CheckCircle2,
+  Flag, Pin, EyeOff, MoreHorizontal
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -42,6 +43,9 @@ interface ForumPost {
   post_type: string | null;
   created_at: string;
   group_id: string;
+  is_pinned?: boolean;
+  is_locked?: boolean;
+  is_hidden?: boolean;
 }
 
 interface ForumVote {
@@ -143,6 +147,67 @@ export default function Community() {
       .eq("user_id", user.id)
       .maybeSingle();
     setDiscordLink(data as any);
+  };
+
+  // Handle Discord OAuth return (?discord=connected|denied|error)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const status = params.get("discord");
+    if (!status) return;
+    if (status === "connected") {
+      toast({ title: "Discord connected 🎉", description: "Your account is now linked." });
+      if (user) loadDiscordLink();
+    } else if (status === "denied") {
+      toast({ title: "Discord auth cancelled", variant: "destructive" });
+    } else {
+      const reason = params.get("reason") || "unknown";
+      toast({ title: "Discord connect failed", description: reason, variant: "destructive" });
+    }
+    // Clean URL
+    window.history.replaceState({}, "", window.location.pathname);
+  }, [user]);
+
+  const startDiscordOAuth = async () => {
+    if (!user) return;
+    try {
+      const { data, error } = await supabase.functions.invoke("discord-oauth/initiate", { method: "GET" });
+      if (error || !data?.url) {
+        toast({ title: "Couldn't start Discord login", description: error?.message || "Try again", variant: "destructive" });
+        return;
+      }
+      window.location.href = data.url;
+    } catch (e: any) {
+      toast({ title: "Network error", description: e?.message, variant: "destructive" });
+    }
+  };
+
+  const disconnectDiscord = async () => {
+    if (!user) return;
+    await communityDb.from("discord_links").delete().eq("user_id", user.id);
+    setDiscordLink(null);
+    toast({ title: "Discord disconnected" });
+  };
+
+  // ---------- Moderation ----------
+  const reportPost = async (postId: string) => {
+    if (!user) return;
+    const reason = window.prompt("Why are you reporting this post?\n(spam, abuse, off-topic, etc.)");
+    if (!reason) return;
+    const { error } = await communityDb.from("forum_reports").insert({
+      post_id: postId, reporter_id: user.id, reason: reason.slice(0, 200),
+    });
+    if (error) toast({ title: "Couldn't submit report", description: error.message, variant: "destructive" });
+    else toast({ title: "Reported", description: "Mods will review it shortly." });
+  };
+
+  const modAction = async (postId: string, patch: Partial<ForumPost>) => {
+    if (!isAdmin || !user) return;
+    const { error } = await communityDb.from("forum_posts").update({
+      ...patch, moderated_by: user.id, moderated_at: new Date().toISOString(),
+    } as any).eq("id", postId);
+    if (error) { toast({ title: "Mod action failed", description: error.message, variant: "destructive" }); return; }
+    setPosts(prev => prev.map(p => p.id === postId ? { ...p, ...patch } as ForumPost : p));
+    toast({ title: "Updated" });
   };
 
   const dismissWelcomeNotif = (postId: string) => {
@@ -397,13 +462,18 @@ export default function Community() {
     if (selectedGroup) loadPosts(selectedGroup.id, selectedGroup.name);
   };
 
-  const sortedPosts = [...posts].sort((a, b) => {
-    if (sortBy === "new") return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-    if (sortBy === "top") return (b.upvotes - b.downvotes) - (a.upvotes - a.downvotes);
-    const scoreA = (a.upvotes - a.downvotes) + (new Date(a.created_at).getTime() / 1e10);
-    const scoreB = (b.upvotes - b.downvotes) + (new Date(b.created_at).getTime() / 1e10);
-    return scoreB - scoreA;
-  });
+  const sortedPosts = [...posts]
+    // Hide moderated posts from non-admins (and from non-authors)
+    .filter(p => !p.is_hidden || isAdmin || p.user_id === user?.id)
+    .sort((a, b) => {
+      // Pinned always on top
+      if (!!a.is_pinned !== !!b.is_pinned) return a.is_pinned ? -1 : 1;
+      if (sortBy === "new") return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      if (sortBy === "top") return (b.upvotes - b.downvotes) - (a.upvotes - a.downvotes);
+      const scoreA = (a.upvotes - a.downvotes) + (new Date(a.created_at).getTime() / 1e10);
+      const scoreB = (b.upvotes - b.downvotes) + (new Date(b.created_at).getTime() / 1e10);
+      return scoreB - scoreA;
+    });
 
   const getUsernameDisplay = (post: ForumPost) => {
     const shortId = post.user_id.slice(0, 6);
@@ -496,12 +566,9 @@ export default function Community() {
                     size="sm"
                     variant={discordLink ? "outline" : "default"}
                     className={discordLink ? "" : "bg-[#5865F2] hover:bg-[#5865F2]/90 text-white"}
-                    onClick={() => toast({
-                      title: "Discord OAuth coming soon",
-                      description: "Backend OAuth flow is being wired up — stay tuned.",
-                    })}
+                    onClick={discordLink ? disconnectDiscord : startDiscordOAuth}
                   >
-                    {discordLink ? "Manage" : "Connect Discord"}
+                    {discordLink ? "Disconnect" : "Connect Discord"}
                   </Button>
                 </div>
               )}
@@ -835,6 +902,49 @@ export default function Community() {
                                     <AlertCircle className="w-2.5 h-2.5 mr-0.5" /> Pending
                                   </Badge>
                                 )}
+                                {post.is_pinned && (
+                                  <Badge className="text-[9px] bg-amber-500/20 text-amber-400 border-0">
+                                    <Pin className="w-2.5 h-2.5 mr-0.5" /> Pinned
+                                  </Badge>
+                                )}
+                                {post.is_locked && (
+                                  <Badge variant="outline" className="text-[9px] text-muted-foreground">
+                                    <Lock className="w-2.5 h-2.5 mr-0.5" /> Locked
+                                  </Badge>
+                                )}
+                                {post.is_hidden && (
+                                  <Badge variant="outline" className="text-[9px] text-destructive border-destructive/30">
+                                    <EyeOff className="w-2.5 h-2.5 mr-0.5" /> Hidden
+                                  </Badge>
+                                )}
+                                <div className="ml-auto flex items-center gap-1">
+                                  {user && user.id !== post.user_id && (
+                                    <button onClick={() => reportPost(post.id)}
+                                      title="Report"
+                                      className="p-1 rounded hover:bg-destructive/10 hover:text-destructive transition-colors">
+                                      <Flag className="w-3 h-3" />
+                                    </button>
+                                  )}
+                                  {isAdmin && (
+                                    <>
+                                      <button onClick={() => modAction(post.id, { is_pinned: !post.is_pinned })}
+                                        title={post.is_pinned ? "Unpin" : "Pin"}
+                                        className="p-1 rounded hover:bg-primary/10 hover:text-primary transition-colors">
+                                        <Pin className="w-3 h-3" />
+                                      </button>
+                                      <button onClick={() => modAction(post.id, { is_locked: !post.is_locked })}
+                                        title={post.is_locked ? "Unlock" : "Lock"}
+                                        className="p-1 rounded hover:bg-primary/10 hover:text-primary transition-colors">
+                                        <Lock className="w-3 h-3" />
+                                      </button>
+                                      <button onClick={() => modAction(post.id, { is_hidden: !post.is_hidden })}
+                                        title={post.is_hidden ? "Unhide" : "Hide"}
+                                        className="p-1 rounded hover:bg-destructive/10 hover:text-destructive transition-colors">
+                                        <EyeOff className="w-3 h-3" />
+                                      </button>
+                                    </>
+                                  )}
+                                </div>
                               </div>
 
                               {post.title && (
@@ -853,7 +963,7 @@ export default function Community() {
                                     <MessageSquare className="w-3.5 h-3.5" />
                                     {replies[post.id]?.length || 0} answers
                                   </button>
-                                  {user && canPostInChannel(selectedGroup) && (
+                                  {user && canPostInChannel(selectedGroup) && !post.is_locked && (
                                     <button
                                       onClick={() => setShowReplyFor(showReplyFor === post.id ? null : post.id)}
                                       className="text-xs text-muted-foreground hover:text-primary transition-colors"
