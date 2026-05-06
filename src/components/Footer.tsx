@@ -89,14 +89,15 @@ export function Footer() {
               <span className="font-display font-bold text-xl">HustleAI</span>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              HustleAI Workspace OS — AI-powered business workflow platform for freelancers, creators and agencies.
+              HustleAI Workspace OS — AI-powered workspace operating system for freelancers, creators and digital operators.
             </p>
             <div className="space-y-2 text-sm text-muted-foreground">
               <a href={`mailto:${CONTACT_EMAIL}`} className="flex items-center gap-2 hover:text-primary transition-colors">
                 <Mail className="w-4 h-4" /> {CONTACT_EMAIL}
               </a>
-              <div className="flex items-center gap-2">
-                <MapPin className="w-4 h-4" /> India 🇮🇳
+              <div className="flex items-start gap-2">
+                <MapPin className="w-4 h-4 mt-0.5 shrink-0" />
+                <span>Prayagraj, Uttar Pradesh, India 🇮🇳</span>
               </div>
             </div>
             {/* Social Links */}
