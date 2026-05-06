@@ -963,7 +963,7 @@ export default function Community() {
                                     <MessageSquare className="w-3.5 h-3.5" />
                                     {replies[post.id]?.length || 0} answers
                                   </button>
-                                  {user && canPostInChannel(selectedGroup) && (
+                                  {user && canPostInChannel(selectedGroup) && !post.is_locked && (
                                     <button
                                       onClick={() => setShowReplyFor(showReplyFor === post.id ? null : post.id)}
                                       className="text-xs text-muted-foreground hover:text-primary transition-colors"
