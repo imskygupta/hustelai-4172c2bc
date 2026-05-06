@@ -1,4 +1,4 @@
-export type DocType = "quotation" | "agreement" | "invoice" | "service_card" | "business_card";
+export type DocType = "quotation" | "agreement" | "invoice" | "proposal" | "service_card" | "business_card";
 export type ThemeId = "minimal-dark" | "glass-gradient" | "corporate-clean" | "creative-studio" | "cyber-neon";
 
 export interface DocBase {
@@ -59,12 +59,30 @@ export interface BusinessCardData extends DocBase {
   socials: { label: string; url: string }[];
 }
 
-export type AnyDocData = QuotationData | AgreementData | InvoiceData | ServiceCardData | BusinessCardData;
+export interface ProposalSection { heading: string; body: string }
+export interface ProposalData extends DocBase {
+  client: { name: string; company?: string; email?: string };
+  number: string;
+  date: string;
+  title: string;
+  summary: string;
+  problem: string;
+  approach: string;
+  deliverables: string[];
+  timeline: string;
+  investment: string;
+  whyUs: string;
+  sections?: ProposalSection[];
+  cta: string;
+}
+
+export type AnyDocData = QuotationData | AgreementData | InvoiceData | ProposalData | ServiceCardData | BusinessCardData;
 
 export const DOC_META: Record<DocType, { label: string; icon: string; tagline: string }> = {
   quotation: { label: "Quotations", icon: "📄", tagline: "Premium project quotes" },
   agreement: { label: "Agreements", icon: "🤝", tagline: "Template-driven contracts" },
   invoice: { label: "Invoices", icon: "🧾", tagline: "Get paid on time" },
+  proposal: { label: "Proposals", icon: "✨", tagline: "Win the project" },
   service_card: { label: "Service Cards", icon: "💎", tagline: "Social-shareable offers" },
   business_card: { label: "Business Cards", icon: "🪪", tagline: "Modern brand identity" },
 };
