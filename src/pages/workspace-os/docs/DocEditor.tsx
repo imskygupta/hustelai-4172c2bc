@@ -178,17 +178,8 @@ export default function DocEditor() {
             aiBusy={aiBusy} aiAssist={aiAssist}
           />
         </div>
-      </div>
 
-      <UpgradePrompt
-        open={!!upsell}
-        onClose={() => setUpsell(null)}
-        entitlement={upsell || "remove_watermark"}
-        context="Workspace OS"
-      />
-
-      {/* Live preview wrapper closing handled below */}
-      <div className="hidden">
+        {/* Live preview */}
         <motion.div
           initial={{ opacity: 0 }} animate={{ opacity: 1 }}
           className="overflow-auto rounded-2xl border border-border bg-muted/30 p-6 max-h-[80vh]"
@@ -198,6 +189,13 @@ export default function DocEditor() {
           </div>
         </motion.div>
       </div>
+
+      <UpgradePrompt
+        open={!!upsell}
+        onClose={() => setUpsell(null)}
+        entitlement={upsell || "remove_watermark"}
+        context="Workspace OS"
+      />
     </div>
   );
 }
