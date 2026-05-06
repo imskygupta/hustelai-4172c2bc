@@ -9,7 +9,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 const DISCORD_CLIENT_ID = "1501472209003086004";
@@ -17,11 +17,50 @@ const COMMUNITY_URL = "https://qeswhaytgvosfzzgraef.supabase.co";
 const COMMUNITY_KEY = "sb_publishable_MfXLYdThZHM45f6V9DyNsw_ADD2HqIv";
 const APP_ORIGIN = "https://hustlaiapp.in";
 const SCOPES = "identify";
+const FUNCTION_NAME = "discord-oauth";
+
+function cleanBaseUrl(value: string | null | undefined) {
+  return (value || "").trim().replace(/\/+$/, "");
+}
 
 function getRedirectUri(req: Request) {
+  const configured = cleanBaseUrl(Deno.env.get("DISCORD_REDIRECT_URI"));
+  if (configured) return configured;
+
+  const cloudUrl = cleanBaseUrl(Deno.env.get("SUPABASE_URL"));
+  if (cloudUrl) return `${cloudUrl}/functions/v1/${FUNCTION_NAME}/callback`;
+
   const url = new URL(req.url);
-  // Always points to this function's /callback path on the same origin Discord redirected to.
-  return `${url.origin}${url.pathname.replace(/\/(initiate|callback)?$/, "")}/callback`;
+  url.protocol = "https:";
+  return `${url.origin}/functions/v1/${FUNCTION_NAME}/callback`;
+}
+
+async function syncDiscordRole(userId: string) {
+  const cloudUrl = cleanBaseUrl(Deno.env.get("SUPABASE_URL"));
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (!cloudUrl || !serviceKey) return;
+
+  const admin = createClient(cloudUrl, serviceKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+  const { data: profile } = await admin
+    .from("profiles")
+    .select("subscription_tier")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  const syncRes = await fetch(`${cloudUrl}/functions/v1/discord-sync-role/internal`, {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${serviceKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ user_id: userId, tier: profile?.subscription_tier ?? null }),
+  });
+
+  if (!syncRes.ok) {
+    console.warn("[discord-oauth] role sync trigger failed", syncRes.status, await syncRes.text().catch(() => ""));
+  }
 }
 
 async function hmac(secret: string, msg: string) {
@@ -161,6 +200,8 @@ Deno.serve(async (req) => {
       { onConflict: "user_id" },
     );
     if (upErr) return back("error", `&reason=db_${encodeURIComponent(upErr.message.slice(0, 60))}`);
+
+    await syncDiscordRole(parsed.uid).catch((e) => console.warn("[discord-oauth] role sync skipped", e?.message || e));
 
     return back("connected");
   }
