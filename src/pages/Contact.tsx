@@ -46,7 +46,7 @@ export default function Contact() {
               className="space-y-8"
             >
               {[
-                { icon: Mail, label: "Email", value: "contact@hustlaiapp.in" },
+                { icon: Mail, label: "Email", value: "hustlaiapp@zohomail.in" },
                 { icon: MessageSquare, label: "Support", value: "24/7 Live Chat" },
                 { icon: MapPin, label: "Location", value: "Bangalore, India" },
               ].map((item) => (
