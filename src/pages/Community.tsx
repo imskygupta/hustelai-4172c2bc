@@ -2,6 +2,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { communityDb } from "@/integrations/community/client";
 import { Navbar } from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -141,7 +142,7 @@ export default function Community() {
 
   const checkOnboarding = async () => {
     if (!user) return;
-    const { data } = await supabase
+    const { data } = await communityDb
       .from("community_onboarding")
       .select("id")
       .eq("user_id", user.id)
@@ -151,7 +152,7 @@ export default function Community() {
 
   const loadMemberships = async () => {
     if (!user) return;
-    const { data } = await supabase
+    const { data } = await communityDb
       .from("community_memberships")
       .select("channel_id")
       .eq("user_id", user.id);
@@ -159,7 +160,7 @@ export default function Community() {
   };
 
   const loadGroups = async () => {
-    const { data } = await supabase
+    const { data } = await communityDb
       .from("community_groups")
       .select("*")
       .order("created_at");
@@ -171,7 +172,7 @@ export default function Community() {
   };
 
   const loadWelcomeNotifCount = async () => {
-    const { count } = await supabase
+    const { count } = await communityDb
       .from("forum_posts")
       .select("id", { count: "exact", head: true })
       .eq("group_id", WELCOME_CHANNEL_ID)
@@ -183,12 +184,12 @@ export default function Community() {
 
   const loadUserVotes = async () => {
     if (!user) return;
-    const { data } = await supabase.from("forum_votes").select("post_id, vote_type").eq("user_id", user.id);
+    const { data } = await communityDb.from("forum_votes").select("post_id, vote_type").eq("user_id", user.id);
     if (data) setUserVotes(data);
   };
 
   const loadPosts = async (groupId: string, groupName: string) => {
-    const { data } = await supabase
+    const { data } = await communityDb
       .from("forum_posts")
       .select("*")
       .eq("group_id", groupId)
@@ -198,7 +199,7 @@ export default function Community() {
   };
 
   const loadReplies = async (postId: string) => {
-    const { data } = await supabase
+    const { data } = await communityDb
       .from("forum_posts")
       .select("*")
       .eq("parent_id", postId)
@@ -209,7 +210,7 @@ export default function Community() {
   const handleOnboardingComplete = async (data: any) => {
     if (!user) return;
 
-    await supabase.from("community_onboarding").insert({
+    await communityDb.from("community_onboarding").insert({
       user_id: user.id,
       interests: data.interests,
       experience_level: data.experienceLevel,
@@ -220,7 +221,7 @@ export default function Community() {
 
     const defaultGroups = groups.filter(g => g.is_default);
     for (const g of defaultGroups) {
-      await supabase.from("community_memberships").insert({
+      await communityDb.from("community_memberships").insert({
         user_id: user.id,
         channel_id: g.id,
       }).select();
@@ -229,7 +230,7 @@ export default function Community() {
     for (const catName of data.preferredCategories) {
       const group = groups.find(g => g.name === catName);
       if (group) {
-        await supabase.from("community_memberships").insert({
+        await communityDb.from("community_memberships").insert({
           user_id: user.id,
           channel_id: group.id,
         }).select();
@@ -237,7 +238,7 @@ export default function Community() {
     }
 
     for (const cat of data.customCategories) {
-      await supabase.from("category_requests").insert({
+      await communityDb.from("category_requests").insert({
         user_id: user.id,
         category_name: cat,
       });
@@ -280,7 +281,7 @@ export default function Community() {
 
   const scheduleBotReply = (postId: string) => {
     const timer = window.setTimeout(async () => {
-      const { data: existingReplies } = await supabase
+      const { data: existingReplies } = await communityDb
         .from("forum_posts")
         .select("id")
         .eq("parent_id", postId)
@@ -289,7 +290,7 @@ export default function Community() {
       if (!existingReplies || existingReplies.length === 0) {
         if (!selectedGroup) return;
         const botReply = BOT_REPLIES[Math.floor(Math.random() * BOT_REPLIES.length)];
-        await supabase.from("forum_posts").insert({
+        await communityDb.from("forum_posts").insert({
           group_id: selectedGroup.id,
           user_id: user?.id || "",
           user_name: "mod_amit",
@@ -315,7 +316,7 @@ export default function Community() {
     if (!newContent.trim() || !selectedGroup || !user) return;
 
     const isVerified = profile?.is_verified === true;
-    const { data: newPost, error } = await supabase.from("forum_posts").insert({
+    const { data: newPost, error } = await communityDb.from("forum_posts").insert({
       group_id: selectedGroup.id,
       user_id: user.id,
       user_name: isAdmin ? "HustleAI Team" : (profile?.display_name || "Anonymous"),
@@ -341,7 +342,7 @@ export default function Community() {
   const submitReply = async (parentId: string) => {
     if (!replyContent[parentId]?.trim() || !user || !selectedGroup) return;
     const isVerified = profile?.is_verified === true;
-    const { error } = await supabase.from("forum_posts").insert({
+    const { error } = await communityDb.from("forum_posts").insert({
       group_id: selectedGroup.id,
       user_id: user.id,
       user_name: isAdmin ? "HustleAI Team" : (profile?.display_name || "Anonymous"),
@@ -370,15 +371,15 @@ export default function Community() {
     const existing = userVotes.find(v => v.post_id === postId);
     if (existing) {
       if (existing.vote_type === type) return;
-      await supabase.from("forum_votes").update({ vote_type: type }).eq("post_id", postId).eq("user_id", user.id);
+      await communityDb.from("forum_votes").update({ vote_type: type }).eq("post_id", postId).eq("user_id", user.id);
     } else {
-      await supabase.from("forum_votes").insert({ post_id: postId, user_id: user.id, vote_type: type });
+      await communityDb.from("forum_votes").insert({ post_id: postId, user_id: user.id, vote_type: type });
     }
     const post = [...posts, ...Object.values(replies).flat()].find(p => p.id === postId);
     if (post) {
       const newUp = type === "up" ? post.upvotes + 1 : (existing?.vote_type === "up" ? post.upvotes - 1 : post.upvotes);
       const newDown = type === "down" ? post.downvotes + 1 : (existing?.vote_type === "down" ? post.downvotes - 1 : post.downvotes);
-      await supabase.from("forum_posts").update({ upvotes: newUp, downvotes: newDown }).eq("id", postId);
+      await communityDb.from("forum_posts").update({ upvotes: newUp, downvotes: newDown }).eq("id", postId);
     }
     loadUserVotes();
     if (selectedGroup) loadPosts(selectedGroup.id, selectedGroup.name);
