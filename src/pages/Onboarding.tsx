@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { SEO } from "@/components/SEO";
+
 import {
   Target, GraduationCap, Sparkles, Clock, Wallet, ArrowRight, ArrowLeft,
   CheckCircle2, Zap, Loader2,
@@ -109,6 +111,7 @@ export default function Onboarding() {
   if (loading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
+      <SEO title="Onboarding | HustleAI Workspace OS" description="HustleAI Workspace OS — internal page." path="" noindex />
         <Loader2 className="w-6 h-6 animate-spin text-emerald-500" />
       </div>
     );

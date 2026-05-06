@@ -8,6 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Shield, Mail, KeyRound, Lock, Eye, EyeOff } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
+import { SEO } from "@/components/SEO";
+
 type LoginMethod = "password" | "otp";
 type OtpStep = "email" | "otp";
 
@@ -86,6 +88,7 @@ export default function AdminLogin() {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <SEO title="Admin Login | HustleAI Workspace OS" description="HustleAI Workspace OS — internal page." path="" noindex />
       <div className="glass rounded-2xl p-8 w-full max-w-md space-y-8">
         <div className="text-center space-y-2">
           <div className="w-16 h-16 mx-auto rounded-full bg-destructive/10 flex items-center justify-center">

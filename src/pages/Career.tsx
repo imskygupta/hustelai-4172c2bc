@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Briefcase, Rocket, Users, Heart, Code, Palette, Megaphone, BarChart3, ArrowRight, MapPin, Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
+import { SEO } from "@/components/SEO";
+
 const openings = [
   { title: "Full-Stack Developer", dept: "Engineering", type: "Remote", icon: Code, desc: "Build and scale the HustleAI platform with React, Node.js, and cloud infrastructure." },
   { title: "UI/UX Designer", dept: "Design", type: "Remote", icon: Palette, desc: "Craft beautiful, intuitive interfaces that help users discover their perfect hustle." },
@@ -27,6 +29,7 @@ export default function Career() {
   return (
     <PageTransition>
       <div className="min-h-screen bg-background">
+              <SEO title="Careers — HustleAI Workspace OS" description="Join the team building the AI Workspace OS for freelancers." path="/career" />
         <Navbar />
 
         {/* Hero */}

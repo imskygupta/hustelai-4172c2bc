@@ -9,6 +9,8 @@ import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
+import { SEO } from "@/components/SEO";
+
 const moreReviews = [
   { name: "Deepak Verma", role: "Video Editor", text: "HustleAI's free tier helped me explore different niches before committing. Once I went Pro, my income doubled in just one month.", rating: 5, avatar: "DV" },
   { name: "Kavitha Nair", role: "SEO Specialist", text: "The AI search is pure magic. It found me a niche no one was talking about. Now I'm the go-to person for that service!", rating: 5, avatar: "KN" },
@@ -60,6 +62,7 @@ export default function Reviews() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO title="Reviews — HustleAI Workspace OS" description="Reviews and testimonials from freelancers and agencies using HustleAI Workspace OS." path="/reviews" />
       <Navbar />
       <div className="pt-24 pb-16 px-4">
         <div className="container mx-auto max-w-6xl">

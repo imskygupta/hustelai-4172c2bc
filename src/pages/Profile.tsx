@@ -14,6 +14,8 @@ import { motion } from "framer-motion";
 import { User, FileText, Lock, MapPin, Phone, Mail, Crown, Shield, Trash2, Key, Settings, Gift, CreditCard, Package, Receipt, ExternalLink, BadgeCheck } from "lucide-react";
 import { EmailVerificationBanner } from "@/components/EmailVerificationBanner";
 
+import { SEO } from "@/components/SEO";
+
 type ProfileTab = "general" | "security" | "account" | "billing";
 
 export default function Profile() {
@@ -175,6 +177,7 @@ export default function Profile() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO title="Profile | HustleAI Workspace OS" description="HustleAI Workspace OS — internal page." path="" noindex />
       <Navbar />
       <div className="pt-24 pb-12 px-4">
         <div className="container mx-auto max-w-3xl space-y-6">

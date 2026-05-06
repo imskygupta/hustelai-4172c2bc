@@ -9,6 +9,8 @@ import { toast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import { Check, Loader2, XCircle, Clock, CreditCard, Rocket, Gift, ArrowRight, PartyPopper, Wallet } from "lucide-react";
 
+import { SEO } from "@/components/SEO";
+
 const STATUS_STAGES = [
   { key: "initiated", label: "Payment Initiated", icon: CreditCard },
   { key: "processing", label: "Processing Payment", icon: Clock },
@@ -91,6 +93,7 @@ export default function PaymentStatus() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO title="Payment status | HustleAI Workspace OS" description="HustleAI Workspace OS — internal page." path="" noindex />
       <Navbar />
 
       {/* Confetti */}

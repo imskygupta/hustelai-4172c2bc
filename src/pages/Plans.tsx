@@ -7,6 +7,8 @@ import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
+import { SEO } from "@/components/SEO";
+
 import {
   Check, X, Sparkles, Rocket, Crown, Star, Wallet, Shield, Zap,
   Bot, FileText, Target, Brain, BarChart3, BookOpen,
@@ -106,6 +108,7 @@ export default function Plans() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO title="Pricing — HustleAI Workspace OS Plans" description="Simple, transparent pricing for the freelancer Workspace OS. Free, Pro, Elite and Infinity plans built for client work." path="/plans" />
       <Navbar />
       <div className="pt-24 pb-12 px-4">
         <div className="container mx-auto max-w-7xl space-y-16">

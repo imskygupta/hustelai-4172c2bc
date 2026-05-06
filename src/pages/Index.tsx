@@ -11,6 +11,8 @@ import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
+import { SEO, softwareJsonLd, orgJsonLd } from "@/components/SEO";
+
 gsap.registerPlugin(ScrollTrigger);
 
 const features = [
@@ -87,6 +89,7 @@ export default function Index() {
 
   return (
     <div className="min-h-screen bg-white text-slate-900">
+      <SEO title="HustleAI Workspace OS — AI CRM & Workspace for Freelancers" description="HustleAI Workspace OS is the AI-powered operating system for freelancers and agencies — CRM, invoices, proposals, client portals." path="/" jsonLd={[softwareJsonLd, orgJsonLd]} />
       <Navbar />
 
       {/* Hero */}

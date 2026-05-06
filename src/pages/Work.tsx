@@ -7,6 +7,8 @@ import { ArrowRight, Lock } from "lucide-react";
 import { WORK_TOOLS } from "@/lib/work-tools";
 import { useFeatureFlags, flagAccess, type Tier } from "@/lib/feature-flags";
 
+import { SEO } from "@/components/SEO";
+
 export default function Work() {
   const { user, profile } = useAuth();
   const navigate = useNavigate();
@@ -34,6 +36,7 @@ export default function Work() {
 
   return (
     <div className="min-h-screen bg-slate-50 p-4 md:p-8">
+      <SEO title="Work hub | HustleAI Workspace OS" description="HustleAI Workspace OS — internal page." path="" noindex />
       <div className="max-w-6xl mx-auto space-y-6">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-slate-900">Work</h1>

@@ -3,6 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { HelmetProvider } from "react-helmet-async";
 import { AuthProvider } from "@/hooks/useAuth";
 import { Sentry } from "@/lib/sentry";
 import Index from "./pages/Index";
@@ -72,6 +73,20 @@ import DocEditor from "./pages/workspace-os/docs/DocEditor";
 import Work from "./pages/Work";
 import WorkTool from "./pages/WorkTool";
 import ClientPortal from "./pages/ClientPortal";
+import {
+  FreelancerCRMPage,
+  AIInvoiceGeneratorPage,
+  QuotationGeneratorPage,
+  ProposalGeneratorPage,
+  ClientOnboardingPage,
+  WorkspaceOSMarketingPage,
+  FreelancerWorkspacePage,
+  AIDocumentGeneratorPage,
+  ClientPortalSoftwarePage,
+  AgencyWorkflowToolsPage,
+  FreelancerProductivityToolsPage,
+  AIBusinessCardMakerPage,
+} from "./pages/seo/landings";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { AppRouteShell } from "@/components/AppRouteShell";
@@ -90,6 +105,7 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <Sentry.ErrorBoundary fallback={<div style={{ padding: 24 }}>Something went wrong. Please refresh.</div>}>
+  <HelmetProvider>
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <TooltipProvider>
@@ -99,6 +115,19 @@ const App = () => (
           <ScrollToTop />
           <Routes>
             <Route path="/" element={<Index />} />
+            {/* SEO landing pages (public) */}
+            <Route path="/freelancer-crm" element={<FreelancerCRMPage />} />
+            <Route path="/ai-invoice-generator" element={<AIInvoiceGeneratorPage />} />
+            <Route path="/quotation-generator" element={<QuotationGeneratorPage />} />
+            <Route path="/proposal-generator" element={<ProposalGeneratorPage />} />
+            <Route path="/client-onboarding-software" element={<ClientOnboardingPage />} />
+            <Route path="/workspace-os" element={<WorkspaceOSMarketingPage />} />
+            <Route path="/freelancer-workspace" element={<FreelancerWorkspacePage />} />
+            <Route path="/ai-document-generator" element={<AIDocumentGeneratorPage />} />
+            <Route path="/client-portal-software" element={<ClientPortalSoftwarePage />} />
+            <Route path="/agency-workflow-tools" element={<AgencyWorkflowToolsPage />} />
+            <Route path="/freelancer-productivity-tools" element={<FreelancerProductivityToolsPage />} />
+            <Route path="/ai-business-card-maker" element={<AIBusinessCardMakerPage />} />
             <Route path="/explore" element={<Explore />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
@@ -173,6 +202,7 @@ const App = () => (
       </TooltipProvider>
     </AuthProvider>
   </QueryClientProvider>
+  </HelmetProvider>
   </Sentry.ErrorBoundary>
 );
 

@@ -11,6 +11,8 @@ import { motion } from "framer-motion";
 import { Bookmark, TrendingUp, DollarSign, Play, CheckCircle, Trash2, PlusCircle, BookOpen } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
+import { SEO } from "@/components/SEO";
+
 interface SavedHustle {
   id: string;
   hustle_id: string;
@@ -94,6 +96,7 @@ export default function SavedHustles() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO title="Saved | HustleAI Workspace OS" description="HustleAI Workspace OS — internal page." path="" noindex />
       <Navbar />
       <div className="pt-24 pb-12 px-4">
         <div className="container mx-auto max-w-4xl space-y-8">

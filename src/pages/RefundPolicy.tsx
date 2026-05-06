@@ -3,9 +3,12 @@ import { Footer } from "@/components/Footer";
 import { PageTransition } from "@/components/PageTransition";
 import { AlertTriangle } from "lucide-react";
 
+import { SEO } from "@/components/SEO";
+
 export default function RefundPolicy() {
   return (
     <PageTransition>
+            <SEO title="Refund Policy | HustleAI Workspace OS" description="Refund policy for HustleAI Workspace OS subscriptions." path="/refund-policy" />
       <Navbar />
       <main className="min-h-screen pt-24 pb-16 px-4">
         <div className="container mx-auto max-w-3xl prose prose-invert">

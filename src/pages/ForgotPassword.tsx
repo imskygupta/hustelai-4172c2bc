@@ -10,6 +10,8 @@ import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
 import { ParticleBackground } from "@/components/ParticleBackground";
 
+import { SEO } from "@/components/SEO";
+
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
@@ -33,6 +35,7 @@ export default function ForgotPassword() {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4 relative overflow-hidden">
+      <SEO title="Reset password | HustleAI Workspace OS" description="HustleAI Workspace OS — internal page." path="" noindex />
       <ParticleBackground />
       <motion.div
         initial={{ opacity: 0, scale: 0.92 }}

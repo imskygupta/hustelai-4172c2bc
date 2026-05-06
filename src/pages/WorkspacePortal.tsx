@@ -6,6 +6,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 
+import { SEO } from "@/components/SEO";
+
 const FN_URL = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/workspace-portal`;
 
 async function call(body: any) {
@@ -56,6 +58,7 @@ export default function WorkspacePortal() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
+      <SEO title="Workspace portal | HustleAI Workspace OS" description="HustleAI Workspace OS — internal page." path="" noindex />
       <header className="border-b border-border/50 backdrop-blur-xl bg-background/60">
         <div className="max-w-4xl mx-auto px-6 py-5 flex items-center gap-3">
           <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-primary/30 flex items-center justify-center overflow-hidden">

@@ -11,6 +11,8 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
+import { SEO } from "@/components/SEO";
+
 import {
   Search, Crown, Rocket, Sparkles, Users, Video, BookOpen, TrendingUp, MessageCircle,
   Lock, ArrowUpRight, ArrowDownRight, ExternalLink, FileText, Calendar, Share2,
@@ -112,6 +114,7 @@ export default function Dashboard() {
   if (loading || !profile) {
     return (
       <div className="min-h-screen flex items-center justify-center">
+      <SEO title="Dashboard | HustleAI Workspace OS" description="HustleAI Workspace OS — internal page." path="" noindex />
         <Loader2 className="w-6 h-6 animate-spin text-emerald-500" />
       </div>
     );
