@@ -9,6 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowRight, Sparkles, Zap, Shield, Globe2, Code2 } from "lucide-react";
 import { PRODUCTS } from "@/data/products";
 
+import { SEO } from "@/components/SEO";
+
 gsap.registerPlugin(ScrollTrigger);
 
 const SHARP = "from-[#FF3CAC] via-[#784BA0] to-[#2B86C5]"; // sharper saas gradient
@@ -36,6 +38,7 @@ export default function Products() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-white overflow-hidden">
+      <SEO title="Products — HustleAI Workspace OS" description="Explore HustleAI Workspace OS modules: CRM, invoices, proposals, portals and AI assists." path="/products" />
       <Navbar />
       <main ref={heroRef} className="relative">
         {/* Hero */}

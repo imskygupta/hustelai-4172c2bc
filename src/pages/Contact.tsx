@@ -8,6 +8,8 @@ import { Mail, MessageSquare, MapPin } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 
+import { SEO } from "@/components/SEO";
+
 export default function Contact() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -23,6 +25,7 @@ export default function Contact() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO title="Contact HustleAI Workspace OS" description="Get in touch with the HustleAI Workspace OS team. Support, sales and partnerships." path="/contact" />
       <Navbar />
       <div className="pt-24 pb-16 px-4">
         <div className="container mx-auto max-w-4xl">

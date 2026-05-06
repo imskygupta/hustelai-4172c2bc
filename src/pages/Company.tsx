@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Zap, Target, Eye, Heart, Globe, Users, Shield, Award, ArrowRight, Mail } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
+import { SEO } from "@/components/SEO";
+
 const values = [
   { icon: Target, title: "Mission-Driven", desc: "Every feature we build aims to democratize freelancing access for everyone, everywhere." },
   { icon: Eye, title: "Transparency", desc: "Open pricing, honest communication, no hidden fees — ever." },

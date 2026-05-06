@@ -2,9 +2,12 @@ import { Navbar } from "@/components/Navbar";
 import { motion } from "framer-motion";
 import { Zap, Target, Users, Globe } from "lucide-react";
 
+import { SEO } from "@/components/SEO";
+
 export default function About() {
   return (
     <div className="min-h-screen bg-background">
+      <SEO title="About HustleAI Workspace OS" description="HustleAI is the AI-powered Workspace OS for freelancers, creators and agencies. Learn about our mission and team." path="/about" />
       <Navbar />
       <div className="pt-24 pb-16 px-4">
         <div className="container mx-auto max-w-4xl space-y-16">

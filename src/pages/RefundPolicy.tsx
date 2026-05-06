@@ -3,6 +3,8 @@ import { Footer } from "@/components/Footer";
 import { PageTransition } from "@/components/PageTransition";
 import { AlertTriangle } from "lucide-react";
 
+import { SEO } from "@/components/SEO";
+
 export default function RefundPolicy() {
   return (
     <PageTransition>

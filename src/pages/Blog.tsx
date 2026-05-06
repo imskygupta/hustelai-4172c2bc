@@ -6,6 +6,8 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import ReactMarkdown from "react-markdown";
 
+import { SEO } from "@/components/SEO";
+
 const staticPosts = [
   { title: "10 Zero-Investment Side Hustles for 2026", excerpt: "Start earning today without spending a single rupee.", date: "Mar 5, 2026", readTime: "5 min", category: "Getting Started", content: "" },
   { title: "How to Price Your Freelance Services", excerpt: "Stop undercharging! Learn pricing frameworks.", date: "Mar 3, 2026", readTime: "7 min", category: "Strategy", content: "" },
@@ -34,6 +36,7 @@ export default function Blog() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO title="Blog — HustleAI Workspace OS" description="Tips, guides and playbooks for freelancers and agencies running their business on HustleAI Workspace OS." path="/blog" />
       <Navbar />
       <div className="pt-24 pb-16 px-4">
         <div className="container mx-auto max-w-5xl">
