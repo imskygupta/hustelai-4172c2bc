@@ -145,6 +145,45 @@ export default function Community() {
     setDiscordLink(data as any);
   };
 
+  // Handle Discord OAuth return (?discord=connected|denied|error)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const status = params.get("discord");
+    if (!status) return;
+    if (status === "connected") {
+      toast({ title: "Discord connected 🎉", description: "Your account is now linked." });
+      if (user) loadDiscordLink();
+    } else if (status === "denied") {
+      toast({ title: "Discord auth cancelled", variant: "destructive" });
+    } else {
+      const reason = params.get("reason") || "unknown";
+      toast({ title: "Discord connect failed", description: reason, variant: "destructive" });
+    }
+    // Clean URL
+    window.history.replaceState({}, "", window.location.pathname);
+  }, [user]);
+
+  const startDiscordOAuth = async () => {
+    if (!user) return;
+    try {
+      const { data, error } = await supabase.functions.invoke("discord-oauth/initiate", { method: "GET" });
+      if (error || !data?.url) {
+        toast({ title: "Couldn't start Discord login", description: error?.message || "Try again", variant: "destructive" });
+        return;
+      }
+      window.location.href = data.url;
+    } catch (e: any) {
+      toast({ title: "Network error", description: e?.message, variant: "destructive" });
+    }
+  };
+
+  const disconnectDiscord = async () => {
+    if (!user) return;
+    await communityDb.from("discord_links").delete().eq("user_id", user.id);
+    setDiscordLink(null);
+    toast({ title: "Discord disconnected" });
+  };
+
   const dismissWelcomeNotif = (postId: string) => {
     const newDismissed = new Set(dismissedNotifs).add(postId);
     setDismissedNotifs(newDismissed);
@@ -496,12 +535,9 @@ export default function Community() {
                     size="sm"
                     variant={discordLink ? "outline" : "default"}
                     className={discordLink ? "" : "bg-[#5865F2] hover:bg-[#5865F2]/90 text-white"}
-                    onClick={() => toast({
-                      title: "Discord OAuth coming soon",
-                      description: "Backend OAuth flow is being wired up — stay tuned.",
-                    })}
+                    onClick={discordLink ? disconnectDiscord : startDiscordOAuth}
                   >
-                    {discordLink ? "Manage" : "Connect Discord"}
+                    {discordLink ? "Disconnect" : "Connect Discord"}
                   </Button>
                 </div>
               )}
