@@ -14,7 +14,8 @@ import {
   MessageSquare, Send, ArrowLeft, ThumbsUp, ThumbsDown,
   Plus, Filter, Clock, Flame, CheckCircle, AlertCircle,
   ChevronDown, ChevronUp, User, Lock, Hash, Volume2, VolumeX,
-  Users, Crown, Shield, BookOpen, Bell, X, Link2, CheckCircle2
+  Users, Crown, Shield, BookOpen, Bell, X, Link2, CheckCircle2,
+  Flag, Pin, EyeOff, MoreHorizontal
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -42,6 +43,9 @@ interface ForumPost {
   post_type: string | null;
   created_at: string;
   group_id: string;
+  is_pinned?: boolean;
+  is_locked?: boolean;
+  is_hidden?: boolean;
 }
 
 interface ForumVote {
