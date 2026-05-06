@@ -1,19 +1,20 @@
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Briefcase, Plus, Sparkles, KeyRound, Bell, FileText, Receipt, Users } from "lucide-react";
+import { Briefcase, Plus, Sparkles, KeyRound, FileText, Receipt, Users, Kanban, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const NAV = [
   { to: "/workspaces", label: "Overview", icon: Briefcase, end: true },
+  { to: "/workspaces/pipeline", label: "Pipeline", icon: Kanban, end: false },
+  { to: "/workspaces/revenue", label: "Revenue", icon: TrendingUp, end: false },
   { to: "/workspaces/new", label: "New Workspace", icon: Plus, end: false },
   { to: "/workspaces/ai-settings", label: "Connect AI Fuel", icon: KeyRound, end: false },
 ];
 
 const SOON = [
-  { label: "Quotations", icon: FileText },
-  { label: "Agreements", icon: FileText },
-  { label: "Invoices", icon: Receipt },
-  { label: "CRM", icon: Users },
+  { label: "Stripe sync", icon: Receipt },
+  { label: "Email automations", icon: FileText },
+  { label: "Team seats", icon: Users },
 ];
 
 export default function WorkspaceOS() {

@@ -62,6 +62,8 @@ import WorkspaceOverview from "./pages/workspace-os/Overview";
 import NewWorkspace from "./pages/workspace-os/NewWorkspace";
 import WorkspaceDetail from "./pages/workspace-os/WorkspaceDetail";
 import AISettings from "./pages/workspace-os/AISettings";
+import Pipeline from "./pages/workspace-os/Pipeline";
+import Revenue from "./pages/workspace-os/Revenue";
 import DocsList from "./pages/workspace-os/docs/DocsList";
 import DocEditor from "./pages/workspace-os/docs/DocEditor";
 import Work from "./pages/Work";
@@ -146,6 +148,8 @@ const App = () => (
               <Route index element={<WorkspaceOverview />} />
               <Route path="new" element={<NewWorkspace />} />
               <Route path="ai-settings" element={<AISettings />} />
+              <Route path="pipeline" element={<Pipeline />} />
+              <Route path="revenue" element={<Revenue />} />
               <Route path=":id" element={<WorkspaceDetail />} />
               <Route path=":id/docs" element={<DocsList />} />
               <Route path=":id/docs/new/:type" element={<DocEditor />} />
