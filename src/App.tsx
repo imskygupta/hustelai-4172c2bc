@@ -16,6 +16,8 @@ import Blog from "./pages/Blog";
 import Reviews from "./pages/Reviews";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
+import AdminCommunications from "./pages/admin/Communications";
+import NotificationPreferences from "./pages/settings/NotificationPreferences";
 import AdminBlock from "./pages/AdminBlock";
 import Community from "./pages/Community";
 import Profile from "./pages/Profile";
@@ -129,6 +131,8 @@ const App = () => (
             <Route path="/admin" element={<AdminBlock />} />
             <Route path="/imskygupta-admin" element={<AdminLogin />} />
             <Route path="/admin-dashboard" element={<AdminDashboard />} />
+            <Route path="/admin/communications" element={<AdminCommunications />} />
+            <Route path="/settings/notifications" element={Shelled(<NotificationPreferences />)} />
             <Route path="/problem-leads" element={Shelled(<ProblemLeads />)} />
             <Route path="/proposal-draft" element={Shelled(<ProposalDraft />)} />
             <Route path="/skill-gap" element={Shelled(<SkillGap />)} />
