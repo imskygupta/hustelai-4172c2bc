@@ -2860,6 +2860,36 @@ export type Database = {
         }
         Relationships: []
       }
+      workspace_doc_exports: {
+        Row: {
+          created_at: string
+          doc_type: string
+          document_id: string | null
+          filename: string | null
+          id: string
+          user_id: string
+          workspace_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          doc_type: string
+          document_id?: string | null
+          filename?: string | null
+          id?: string
+          user_id: string
+          workspace_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          doc_type?: string
+          document_id?: string | null
+          filename?: string | null
+          id?: string
+          user_id?: string
+          workspace_id?: string | null
+        }
+        Relationships: []
+      }
       workspace_doc_versions: {
         Row: {
           created_at: string | null
@@ -3380,13 +3410,49 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      admin_usage_summary: {
+        Row: {
+          ai_calls_30d: number | null
+          email: string | null
+          exports_30d: number | null
+          has_byo_key: boolean | null
+          subscription_tier:
+            | Database["public"]["Enums"]["subscription_tier"]
+            | null
+          user_id: string | null
+          workspace_count: number | null
+        }
+        Insert: {
+          ai_calls_30d?: never
+          email?: string | null
+          exports_30d?: never
+          has_byo_key?: never
+          subscription_tier?:
+            | Database["public"]["Enums"]["subscription_tier"]
+            | null
+          user_id?: string | null
+          workspace_count?: never
+        }
+        Update: {
+          ai_calls_30d?: never
+          email?: string | null
+          exports_30d?: never
+          has_byo_key?: never
+          subscription_tier?:
+            | Database["public"]["Enums"]["subscription_tier"]
+            | null
+          user_id?: string | null
+          workspace_count?: never
+        }
+        Relationships: []
+      }
     }
     Functions: {
       consume_ai_quota: {
         Args: { _feature: string; _user_id: string }
         Returns: Json
       }
+      consume_export_quota: { Args: { _user_id: string }; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

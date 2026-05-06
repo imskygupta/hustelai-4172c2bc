@@ -13,6 +13,8 @@ import { DOC_META } from "@/lib/workspace-docs/types";
 import type { DocType, ThemeId } from "@/lib/workspace-docs/types";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import UpgradePrompt from "@/components/workspace-os/UpgradePrompt";
+import type { EntitlementKey } from "@/lib/workspace-os/entitlements";
 
 const PAID_TIERS = ["pro", "elite", "infinity"];
 
@@ -30,6 +32,7 @@ export default function DocEditor() {
   const [exporting, setExporting] = useState(false);
   const [aiBusy, setAiBusy] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);
+  const [upsell, setUpsell] = useState<EntitlementKey | null>(null);
   const previewRef = useRef<HTMLDivElement | null>(null);
 
   const tier = (profile as any)?.subscription_tier || "free";
@@ -89,8 +92,24 @@ export default function DocEditor() {
     if (!previewRef.current) return;
     setExporting(true);
     try {
+      // Server-side daily quota check
+      const { data: q } = await supabase.rpc("consume_export_quota" as any, { _user_id: user!.id });
+      if (q && (q as any).allowed === false) {
+        setExporting(false);
+        toast.error(`Daily export limit reached (${(q as any).used}/${(q as any).max} on ${(q as any).tier})`);
+        setUpsell("unlimited_proposals");
+        return;
+      }
       const fmt = docType === "service_card" ? "square" : docType === "business_card" ? "card" : "a4";
-      await exportNodeToPdf(previewRef.current, `${title.replace(/\s+/g, "-")}.pdf`, fmt as any);
+      const filename = `${title.replace(/\s+/g, "-")}.pdf`;
+      await exportNodeToPdf(previewRef.current, filename, fmt as any);
+      // Log the export (best-effort)
+      try {
+        await (supabase as any).from("workspace_doc_exports").insert({
+          user_id: user!.id, workspace_id: id, document_id: docRow?.id || null,
+          doc_type: docType, filename,
+        });
+      } catch { /* non-fatal */ }
       toast.success("PDF exported");
     } catch (e: any) {
       toast.error(e?.message || "Export failed");
@@ -146,9 +165,12 @@ export default function DocEditor() {
           </Section>
 
           {watermark && (
-            <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-3 text-xs text-amber-700 dark:text-amber-400">
-              Free plan exports include a HustleAI watermark. Upgrade to remove.
-            </div>
+            <button
+              onClick={() => setUpsell("remove_watermark")}
+              className="w-full text-left rounded-xl border border-amber-500/30 bg-amber-500/5 hover:bg-amber-500/10 p-3 text-xs text-amber-700 dark:text-amber-400 transition-colors"
+            >
+              Free plan exports include a HustleAI watermark. <span className="underline font-medium">Upgrade to remove →</span>
+            </button>
           )}
 
           <DocForm
@@ -167,6 +189,13 @@ export default function DocEditor() {
           </div>
         </motion.div>
       </div>
+
+      <UpgradePrompt
+        open={!!upsell}
+        onClose={() => setUpsell(null)}
+        entitlement={upsell || "remove_watermark"}
+        context="Workspace OS"
+      />
     </div>
   );
 }
