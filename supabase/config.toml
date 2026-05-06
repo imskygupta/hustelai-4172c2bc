@@ -83,3 +83,9 @@ verify_jwt = false
 
 [functions.workspace-portal]
 verify_jwt = false
+
+[functions.sitemap]
+verify_jwt = false
+
+[functions.robots]
+verify_jwt = false
