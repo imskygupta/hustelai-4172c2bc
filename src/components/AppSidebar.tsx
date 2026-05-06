@@ -38,7 +38,7 @@ const aiTools = [
 ];
 
 const businessItems = [
-  { title: "Marketplace", url: "/marketplace", icon: Store },
+  { title: "Integrations", url: "/marketplace", icon: Store },
   { title: "Infinity Zone", url: "/infinity-zone", icon: Sparkles },
   { title: "Affiliates", url: "/affiliates", icon: Crown },
   { title: "Plans & Billing", url: "/plans", icon: CreditCard },
