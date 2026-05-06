@@ -1,34 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://hustlaiapp.in/</loc><lastmod>2026-05-06</lastmod><changefreq>weekly</changefreq><priority>1.0</priority></url>
-
-  <!-- SEO landing pages -->
-  <url><loc>https://hustlaiapp.in/freelancer-crm</loc><lastmod>2026-05-06</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
-  <url><loc>https://hustlaiapp.in/workspace-os</loc><lastmod>2026-05-06</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
-  <url><loc>https://hustlaiapp.in/freelancer-workspace</loc><lastmod>2026-05-06</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
-  <url><loc>https://hustlaiapp.in/ai-invoice-generator</loc><lastmod>2026-05-06</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://hustlaiapp.in/quotation-generator</loc><lastmod>2026-05-06</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://hustlaiapp.in/proposal-generator</loc><lastmod>2026-05-06</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://hustlaiapp.in/client-onboarding-software</loc><lastmod>2026-05-06</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://hustlaiapp.in/client-portal-software</loc><lastmod>2026-05-06</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://hustlaiapp.in/ai-document-generator</loc><lastmod>2026-05-06</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://hustlaiapp.in/agency-workflow-tools</loc><lastmod>2026-05-06</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://hustlaiapp.in/freelancer-productivity-tools</loc><lastmod>2026-05-06</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://hustlaiapp.in/ai-business-card-maker</loc><lastmod>2026-05-06</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
-
-  <!-- Marketing -->
-  <url><loc>https://hustlaiapp.in/plans</loc><lastmod>2026-05-06</lastmod><changefreq>monthly</changefreq><priority>0.9</priority></url>
-  <url><loc>https://hustlaiapp.in/products</loc><lastmod>2026-05-06</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://hustlaiapp.in/about</loc><lastmod>2026-05-06</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
-  <url><loc>https://hustlaiapp.in/company</loc><lastmod>2026-05-06</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
-  <url><loc>https://hustlaiapp.in/contact</loc><lastmod>2026-05-06</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
-  <url><loc>https://hustlaiapp.in/career</loc><lastmod>2026-05-06</lastmod><changefreq>monthly</changefreq><priority>0.5</priority></url>
-  <url><loc>https://hustlaiapp.in/reviews</loc><lastmod>2026-05-06</lastmod><changefreq>weekly</changefreq><priority>0.6</priority></url>
-  <url><loc>https://hustlaiapp.in/blog</loc><lastmod>2026-05-06</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://hustlaiapp.in/affiliates</loc><lastmod>2026-05-06</lastmod><changefreq>monthly</changefreq><priority>0.5</priority></url>
-
-  <!-- Legal -->
-  <url><loc>https://hustlaiapp.in/privacy-policy</loc><lastmod>2026-05-06</lastmod><changefreq>yearly</changefreq><priority>0.3</priority></url>
-  <url><loc>https://hustlaiapp.in/terms-conditions</loc><lastmod>2026-05-06</lastmod><changefreq>yearly</changefreq><priority>0.3</priority></url>
-  <url><loc>https://hustlaiapp.in/refund-policy</loc><lastmod>2026-05-06</lastmod><changefreq>yearly</changefreq><priority>0.3</priority></url>
-</urlset>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <sitemap>
+    <loc>https://vbnqaovxatucrgtnggea.supabase.co/functions/v1/sitemap</loc>
+  </sitemap>
+</sitemapindex>
