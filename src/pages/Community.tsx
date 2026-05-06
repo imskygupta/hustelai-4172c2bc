@@ -17,7 +17,6 @@ import {
   Users, Crown, Shield, BookOpen, Bell, X, Link2, CheckCircle2
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
-import { communityDb as _communityDb } from "@/integrations/community/client";
 
 interface CommunityGroup {
   id: string;
@@ -138,7 +137,7 @@ export default function Community() {
 
   const loadDiscordLink = async () => {
     if (!user) return;
-    const { data } = await _communityDb
+    const { data } = await communityDb
       .from("discord_links")
       .select("discord_username")
       .eq("user_id", user.id)
