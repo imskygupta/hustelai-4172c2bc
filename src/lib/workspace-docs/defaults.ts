@@ -1,5 +1,5 @@
 import { nextDocNumber } from "./export-pdf";
-import type { AgreementData, BusinessCardData, DocType, InvoiceData, QuotationData, ServiceCardData } from "./types";
+import type { AgreementData, BusinessCardData, DocType, InvoiceData, ProposalData, QuotationData, ServiceCardData } from "./types";
 
 const today = () => new Date().toISOString().slice(0, 10);
 const plusDays = (n: number) => new Date(Date.now() + n * 86400000).toISOString().slice(0, 10);
@@ -84,6 +84,23 @@ export function defaultDoc(type: DocType, profile: any, workspace: any): any {
         socials: [{ label: "Instagram", url: "https://instagram.com" }, { label: "Twitter", url: "https://twitter.com" }],
       };
       return b;
+    }
+    case "proposal": {
+      const p: ProposalData = {
+        brand, client,
+        number: nextDocNumber("P"),
+        date: today(),
+        title: workspace?.project_scope?.split(".")[0] || "Project Proposal",
+        summary: "A focused proposal outlining scope, approach and investment.",
+        problem: "What the client is trying to solve.",
+        approach: "Our phased approach to deliver outcomes, not just deliverables.",
+        deliverables: workspace?.deliverables || ["Discovery", "Design", "Build", "Launch"],
+        timeline: "Phase 1 — Week 1 · Phase 2 — Weeks 2-3 · Launch — Week 4",
+        investment: workspace?.pricing?.amount ? `${workspace?.pricing?.currency || "INR"} ${workspace.pricing.amount}` : "INR 50,000",
+        whyUs: "Senior, hands-on, async-friendly. Premium craft without agency overhead.",
+        cta: "Book a kick-off call",
+      };
+      return p;
     }
   }
 }

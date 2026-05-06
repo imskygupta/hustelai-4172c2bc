@@ -107,7 +107,8 @@ export default function DocEditor() {
         body: { task, context: ctx, section: opts.section, input: opts.input },
       });
       if (error || !res?.ok) {
-        toast.error(res?.error || error?.message || "AI failed");
+        const msg = res?.message || res?.error || error?.message || "AI failed";
+        toast.error(msg, { duration: 6000 });
         return;
       }
       opts.apply?.(res.result);
@@ -213,6 +214,7 @@ function DocForm({ type, data, setData, aiBusy, aiAssist }: any) {
       <Section title="Brand">
         <Field label="Name"><Input value={data.brand.name} onChange={e => update("brand.name", e.target.value)} /></Field>
         <Field label="Tagline / role"><Input value={data.brand.tagline || ""} onChange={e => update("brand.tagline", e.target.value)} /></Field>
+        <Field label="Logo URL (optional)"><Input value={data.brand.logo || ""} placeholder="https://…" onChange={e => update("brand.logo", e.target.value)} /></Field>
       </Section>
 
       {type === "quotation" && (
@@ -348,6 +350,39 @@ function DocForm({ type, data, setData, aiBusy, aiAssist }: any) {
               </div>
             ))}
             <button className="text-xs text-primary" onClick={() => update("socials", [...(data.socials || []), { label: "Link", url: "" }])}>+ Add link</button>
+          </Section>
+        </>
+      )}
+
+      {type === "proposal" && (
+        <>
+          <Section title="Client">
+            <Field label="Name"><Input value={data.client.name} onChange={e => update("client.name", e.target.value)} /></Field>
+            <Field label="Company"><Input value={data.client.company || ""} onChange={e => update("client.company", e.target.value)} /></Field>
+          </Section>
+          <Section title="Proposal">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-medium text-muted-foreground">Auto-fill all sections</label>
+              <AIBtn busy={aiBusy === "proposal_full"} label="Generate full draft" onClick={() => aiAssist("proposal_full", { apply: (r: any) => setData((d: any) => ({ ...d, ...r })) })} />
+            </div>
+            <Field label="Title"><Input value={data.title} onChange={e => update("title", e.target.value)} /></Field>
+            {(["summary", "problem", "approach", "timeline", "investment", "whyUs"] as const).map(k => (
+              <div key={k}>
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-medium text-muted-foreground capitalize">{k.replace(/([A-Z])/g, " $1")}</label>
+                  <AIBtn
+                    busy={aiBusy === "draft_proposal_section" + k}
+                    label="Draft"
+                    onClick={() => aiAssist("draft_proposal_section", { section: k, apply: (r: any) => update(k, r.text || data[k]) })}
+                  />
+                </div>
+                <Textarea rows={2} value={data[k] || ""} onChange={e => update(k, e.target.value)} />
+              </div>
+            ))}
+            <Field label="CTA"><Input value={data.cta} onChange={e => update("cta", e.target.value)} /></Field>
+          </Section>
+          <Section title="Deliverables (one per line)">
+            <Textarea rows={4} value={(data.deliverables || []).join("\n")} onChange={e => update("deliverables", e.target.value.split("\n").filter(Boolean))} />
           </Section>
         </>
       )}
