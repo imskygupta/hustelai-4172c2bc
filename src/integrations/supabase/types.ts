@@ -86,6 +86,42 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_usage_log: {
+        Row: {
+          created_at: string
+          error: string | null
+          feature: string
+          id: string
+          ok: boolean
+          provider_used: string
+          tokens_in: number | null
+          tokens_out: number | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          error?: string | null
+          feature: string
+          id?: string
+          ok?: boolean
+          provider_used: string
+          tokens_in?: number | null
+          tokens_out?: number | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          error?: string | null
+          feature?: string
+          id?: string
+          ok?: boolean
+          provider_used?: string
+          tokens_in?: number | null
+          tokens_out?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       automation_rules: {
         Row: {
           action_config: Json | null
@@ -1813,6 +1849,45 @@ export type Database = {
         }
         Relationships: []
       }
+      user_ai_keys: {
+        Row: {
+          api_key: string
+          created_at: string
+          id: string
+          is_active: boolean
+          last_test_ok: boolean | null
+          last_tested_at: string | null
+          model: string | null
+          provider: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          api_key: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          last_test_ok?: boolean | null
+          last_tested_at?: string | null
+          model?: string | null
+          provider?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          api_key?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          last_test_ok?: boolean | null
+          last_tested_at?: string | null
+          model?: string | null
+          provider?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -1969,6 +2044,54 @@ export type Database = {
           status?: string
           target_tier?: string
           title?: string
+        }
+        Relationships: []
+      }
+      workspaces: {
+        Row: {
+          ai_summary: string | null
+          client_name: string
+          created_at: string
+          deadlines: Json
+          deliverables: Json
+          id: string
+          owner_id: string
+          payment_terms: Json
+          pricing: Json
+          project_scope: string | null
+          source_inputs: Json
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          ai_summary?: string | null
+          client_name: string
+          created_at?: string
+          deadlines?: Json
+          deliverables?: Json
+          id?: string
+          owner_id: string
+          payment_terms?: Json
+          pricing?: Json
+          project_scope?: string | null
+          source_inputs?: Json
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          ai_summary?: string | null
+          client_name?: string
+          created_at?: string
+          deadlines?: Json
+          deliverables?: Json
+          id?: string
+          owner_id?: string
+          payment_terms?: Json
+          pricing?: Json
+          project_scope?: string | null
+          source_inputs?: Json
+          status?: string
+          updated_at?: string
         }
         Relationships: []
       }
