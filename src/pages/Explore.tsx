@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { SearchBar } from "@/components/SearchBar";
 import { FreelanceCard } from "@/components/FreelanceCard";
@@ -8,32 +8,35 @@ import { type FreelanceResult, mapDbResult } from "@/lib/ai-search";
 import { Navbar } from "@/components/Navbar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Filter, X, Zap, Sparkles, ChefHat } from "lucide-react";
+import { Filter, X, Zap, Sparkles, ChefHat, Compass, Rocket, Activity, ArrowRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { SignupCTADialog } from "@/components/SignupCTADialog";
 import { useRequireVerifiedEmail } from "@/components/VerifyEmailGate";
+import { CategoryGrid, type CategoryDef } from "@/components/explore/CategoryGrid";
+import { ActionStack } from "@/components/explore/ActionStack";
 
 const categories = ["All", "Tech", "Creative", "Freelance", "Marketing", "Education", "Service", "E-Commerce", "Finance", "Gig Economy", "Gaming", "Admin"];
 const difficulties = ["All", "Beginner", "Intermediate", "Advanced"];
 const types = ["All", "Online", "In-Person", "Hybrid"];
 
 const popularTemplates = [
-  "How to earn money using ChatGPT and Canva?",
-  "Zero investment side hustles for college students",
-  "Freelancing ideas for beginners with no experience",
-  "How to make money on Reddit and Twitter?",
-  "Best online tutoring and teaching gigs",
-  "Passive income ideas under $50 investment",
-  "How to start dropshipping with no money?",
-  "Content writing and blogging side hustles",
-  "How to earn from YouTube without showing face?",
-  "Top micro-task and survey sites that actually pay",
+  "AI automation agency for SMBs",
+  "Productized design services for startups",
+  "Notion templates as a digital product",
+  "Content systems for personal brands",
+  "Freelance SEO retainer for ecommerce",
+  "Faceless YouTube operations",
+  "Cold outreach service for B2B SaaS",
+  "Micro SaaS ideas for indie founders",
+  "Done-for-you LinkedIn ghostwriting",
+  "n8n automation workflows for agencies",
 ];
 
 export default function Explore() {
   const [searchParams] = useSearchParams();
   const { user, profile } = useAuth();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const { requireVerified } = useRequireVerifiedEmail();
   const [results, setResults] = useState<FreelanceResult[]>([]);
@@ -45,6 +48,7 @@ export default function Explore() {
   const [lastQuery, setLastQuery] = useState("");
   const [trendingCards, setTrendingCards] = useState<FreelanceResult[]>([]);
   const [showSignupCTA, setShowSignupCTA] = useState(false);
+  const [activeContext, setActiveContext] = useState<string>("");
 
   // Load top liked cards for display
   useEffect(() => {
@@ -56,6 +60,7 @@ export default function Explore() {
     if (user && !requireVerified()) return;
     setIsLoading(true);
     setLastQuery(query);
+    setActiveContext(query);
 
     // Check sessionStorage cache
     const cacheKey = `search_${query.toLowerCase().trim()}`;
@@ -207,12 +212,47 @@ export default function Explore() {
       <Navbar />
       <SignupCTADialog open={showSignupCTA} onClose={() => setShowSignupCTA(false)} query={lastQuery} />
 
-      <div className="pt-24 pb-12 px-4">
-        <div className="container mx-auto max-w-6xl space-y-8">
-          {/* Search */}
-          <div className="max-w-3xl mx-auto">
-            <SearchBar onSearch={handleSearch} isLoading={isLoading} />
-          </div>
+      {/* Cinematic hero */}
+      <section className="relative pt-24 pb-10 px-4 overflow-hidden">
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-[-10%] left-1/2 -translate-x-1/2 w-[80%] h-[420px] rounded-full bg-primary/15 blur-[120px]" />
+          <div className="absolute top-[20%] right-[5%] w-[320px] h-[320px] rounded-full bg-cyan-500/10 blur-[100px]" />
+          <div className="absolute top-[30%] left-[5%] w-[280px] h-[280px] rounded-full bg-violet-500/10 blur-[100px]" />
+          <div className="absolute inset-0 bg-[linear-gradient(to_bottom,transparent,hsl(var(--background)))]" />
+        </div>
+
+        <div className="container relative mx-auto max-w-6xl">
+          <motion.div
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="text-center max-w-3xl mx-auto space-y-4"
+          >
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-primary/30 bg-primary/5 text-xs font-medium text-primary">
+              <Compass className="w-3.5 h-3.5" /> Opportunity Discovery Engine
+            </div>
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold tracking-tight">
+              Discover your next <span className="text-gradient">income system</span>
+            </h1>
+            <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto">
+              AI-powered opportunity engine for freelancers, operators and creators. Find, validate and launch — then operationalize it inside Workspace OS.
+            </p>
+
+            <div className="pt-4">
+              <SearchBar onSearch={handleSearch} isLoading={isLoading} size="lg" />
+            </div>
+
+            <div className="flex items-center justify-center gap-4 pt-2 text-xs text-muted-foreground">
+              <span className="flex items-center gap-1"><Activity className="w-3.5 h-3.5 text-emerald-500" /> Live demand signals</span>
+              <span className="flex items-center gap-1"><Sparkles className="w-3.5 h-3.5 text-violet-500" /> AI-classified</span>
+              <span className="hidden md:flex items-center gap-1"><Rocket className="w-3.5 h-3.5 text-cyan-500" /> Workspace-ready</span>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      <div className="pb-16 px-4">
+        <div className="container mx-auto max-w-6xl space-y-10">
 
           {/* AI Cooking Animation */}
           {isAiCooking && (
@@ -234,50 +274,44 @@ export default function Explore() {
             </motion.div>
           )}
 
-          {/* Popular Templates - show when no results yet */}
+          {/* Default state — opportunity browser */}
           {!isLoading && results.length === 0 && !isAiCooking && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="space-y-6"
+              className="space-y-12"
             >
-              <div className="text-center space-y-2">
-                <div className="text-6xl mb-4">🔍</div>
-                <h2 className="text-2xl font-display font-bold">Discover Side Hustle Ideas</h2>
-                <p className="text-muted-foreground max-w-md mx-auto">
-                  Search or pick a popular question below to get started
-                </p>
+              {/* Premium category grid */}
+              <div className="space-y-4">
+                <div className="flex items-end justify-between gap-4 flex-wrap">
+                  <div>
+                    <div className="flex items-center gap-2 text-primary text-xs font-semibold uppercase tracking-wider">
+                      <Compass className="w-3.5 h-3.5" /> Opportunity Categories
+                    </div>
+                    <h2 className="text-2xl md:text-3xl font-display font-bold mt-1">Browse the operating systems</h2>
+                    <p className="text-sm text-muted-foreground mt-1">Pick a category to load curated opportunities and an execution stack.</p>
+                  </div>
+                </div>
+                <CategoryGrid onPick={(c: CategoryDef) => handleSearch(c.query)} />
               </div>
 
-              <div className="max-w-3xl mx-auto">
-                <div className="flex items-center gap-2 mb-4 justify-center">
-                  <Sparkles className="w-4 h-4 text-primary" />
-                  <span className="text-sm font-medium text-primary">Popular Searches</span>
-                </div>
-                <div className="grid sm:grid-cols-2 gap-3">
-                  {popularTemplates.map((template, i) => (
-                    <motion.button
-                      key={template}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: i * 0.05 }}
-                      onClick={() => handleSearch(template)}
-                      className="text-left px-4 py-3 rounded-xl border border-border bg-card/50 hover:border-primary/50 hover:bg-primary/5 transition-all duration-300 group"
-                    >
-                      <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">
-                        {template}
-                      </span>
-                    </motion.button>
-                  ))}
-                </div>
-              </div>
+              {/* Action stack — discovery → execution moat */}
+              <ActionStack />
 
-              {/* Trending / Most Liked Section */}
+              {/* Trending opportunities */}
               {trendingCards.length > 0 && (
-                <div className="space-y-4 pt-4">
-                  <div className="flex items-center gap-2 justify-center">
-                    <Zap className="w-4 h-4 text-primary" />
-                    <span className="text-sm font-medium text-primary">Most Popular Hustles</span>
+                <div className="space-y-4">
+                  <div className="flex items-end justify-between gap-4 flex-wrap">
+                    <div>
+                      <div className="flex items-center gap-2 text-primary text-xs font-semibold uppercase tracking-wider">
+                        <Activity className="w-3.5 h-3.5" /> Trending Opportunities
+                      </div>
+                      <h2 className="text-2xl md:text-3xl font-display font-bold mt-1">Live demand signals</h2>
+                      <p className="text-sm text-muted-foreground mt-1">Data-driven opportunities ranked by community traction.</p>
+                    </div>
+                    <Button variant="ghost" onClick={() => navigate("/saved-hustles")} className="text-primary hover:text-primary">
+                      Saved hustles <ArrowRight className="w-4 h-4 ml-1" />
+                    </Button>
                   </div>
                   <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {trendingCards.map((r, i) => (
@@ -286,6 +320,30 @@ export default function Explore() {
                   </div>
                 </div>
               )}
+
+              {/* Popular operator queries */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-primary" />
+                  <span className="text-sm font-medium text-primary">Operator Queries</span>
+                </div>
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {popularTemplates.map((template, i) => (
+                    <motion.button
+                      key={template}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.04 }}
+                      onClick={() => handleSearch(template)}
+                      className="text-left px-4 py-3 rounded-xl border border-border bg-card/40 hover:border-primary/50 hover:bg-primary/5 transition-all duration-300 group"
+                    >
+                      <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">
+                        {template}
+                      </span>
+                    </motion.button>
+                  ))}
+                </div>
+              </div>
             </motion.div>
           )}
 
@@ -369,6 +427,9 @@ export default function Explore() {
 
           {!isLoading && filtered.length > 0 && (
             <>
+              {/* Action stack appears at top of any results — discovery → execution */}
+              <ActionStack context={activeContext || undefined} />
+
               <div className="flex items-center justify-between">
                 <p className="text-sm text-muted-foreground">
                   Showing <span className="text-foreground font-medium">{filtered.length}</span> results
