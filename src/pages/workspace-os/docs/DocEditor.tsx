@@ -107,7 +107,8 @@ export default function DocEditor() {
         body: { task, context: ctx, section: opts.section, input: opts.input },
       });
       if (error || !res?.ok) {
-        toast.error(res?.error || error?.message || "AI failed");
+        const msg = res?.message || res?.error || error?.message || "AI failed";
+        toast.error(msg, { duration: 6000 });
         return;
       }
       opts.apply?.(res.result);
