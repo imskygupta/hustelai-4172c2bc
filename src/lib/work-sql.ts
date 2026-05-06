@@ -289,6 +289,14 @@ create table if not exists public.forum_posts (
 create index if not exists idx_forum_posts_group on public.forum_posts(group_id);
 create index if not exists idx_forum_posts_parent on public.forum_posts(parent_id);
 
+-- Moderation columns (idempotent)
+alter table public.forum_posts add column if not exists is_pinned boolean default false;
+alter table public.forum_posts add column if not exists is_locked boolean default false;
+alter table public.forum_posts add column if not exists is_hidden boolean default false;
+alter table public.forum_posts add column if not exists hidden_reason text;
+alter table public.forum_posts add column if not exists moderated_by uuid;
+alter table public.forum_posts add column if not exists moderated_at timestamptz;
+
 create table if not exists public.forum_votes (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null,
@@ -310,6 +318,21 @@ create table if not exists public.discord_links (
 );
 create index if not exists idx_discord_links_discord on public.discord_links(discord_user_id);
 
+-- Forum reports (mod queue)
+create table if not exists public.forum_reports (
+  id uuid primary key default gen_random_uuid(),
+  post_id uuid not null,
+  reporter_id uuid not null,
+  reason text not null,
+  details text,
+  status text not null default 'pending',
+  resolved_by uuid,
+  resolved_at timestamptz,
+  created_at timestamptz not null default now()
+);
+create index if not exists idx_forum_reports_status on public.forum_reports(status);
+create index if not exists idx_forum_reports_post on public.forum_reports(post_id);
+
 -- RLS (anon-readable; user_id is the authoritative scope passed from app,
 -- matches the Work Hub secondary-DB pattern)
 alter table public.community_groups       enable row level security;
@@ -320,6 +343,7 @@ alter table public.forum_categories       enable row level security;
 alter table public.forum_posts            enable row level security;
 alter table public.forum_votes            enable row level security;
 alter table public.discord_links          enable row level security;
+alter table public.forum_reports          enable row level security;
 
 do $$ begin create policy "anon_all_groups"      on public.community_groups      for all using (true) with check (true);
 exception when duplicate_object then null; end $$;
@@ -336,6 +360,8 @@ exception when duplicate_object then null; end $$;
 do $$ begin create policy "anon_all_forumvotes"  on public.forum_votes           for all using (true) with check (true);
 exception when duplicate_object then null; end $$;
 do $$ begin create policy "anon_all_discord"     on public.discord_links         for all using (true) with check (true);
+exception when duplicate_object then null; end $$;
+do $$ begin create policy "anon_all_reports"     on public.forum_reports         for all using (true) with check (true);
 exception when duplicate_object then null; end $$;
 
 -- Seed a couple of default channels so the hub isn't empty
