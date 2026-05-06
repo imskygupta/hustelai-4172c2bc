@@ -1,6 +1,6 @@
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Briefcase, Plus, Sparkles, KeyRound, FileText, Receipt, Users, Kanban, TrendingUp } from "lucide-react";
+import { Briefcase, Plus, Sparkles, KeyRound, FileText, Receipt, Users, Kanban, TrendingUp, Hammer, Clock, ClipboardList, AlarmClock, Globe, Wallet, FolderOpen, Mail } from "lucide-react";
 import { cn } from "@/lib/utils";
 import NotificationCenter from "@/components/workspace-os/NotificationCenter";
 
@@ -10,6 +10,19 @@ const NAV = [
   { to: "/workspaces/revenue", label: "Revenue", icon: TrendingUp, end: false },
   { to: "/workspaces/new", label: "New Workspace", icon: Plus, end: false },
   { to: "/workspaces/ai-settings", label: "Connect AI Fuel", icon: KeyRound, end: false },
+];
+
+const TOOLS = [
+  { to: "/work",            label: "Work Hub",     icon: Hammer },
+  { to: "/work/clients",    label: "Clients (CRM)",icon: Users },
+  { to: "/work/invoices",   label: "Invoices",     icon: Receipt },
+  { to: "/work/time",       label: "Time Tracker", icon: Clock },
+  { to: "/work/checklists", label: "Checklists",   icon: ClipboardList },
+  { to: "/work/files",      label: "Files",        icon: FolderOpen },
+  { to: "/work/deadlines",  label: "Deadlines",    icon: AlarmClock },
+  { to: "/work/expenses",   label: "Expenses",     icon: Wallet },
+  { to: "/work/comm",       label: "Comm Log",     icon: Mail },
+  { to: "/work/portals",    label: "Client Portals", icon: Globe },
 ];
 
 const SOON = [
@@ -69,6 +82,25 @@ export default function WorkspaceOS() {
               {item.label}
             </NavLink>
           ))}
+
+          <div className="pt-6">
+            <p className="px-3 text-[10px] uppercase tracking-wider text-muted-foreground/70 mb-2">Daily tools</p>
+            {TOOLS.map(t => (
+              <NavLink
+                key={t.to}
+                to={t.to}
+                className={({ isActive }) => cn(
+                  "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all",
+                  isActive
+                    ? "bg-primary/10 text-primary font-medium"
+                    : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+                )}
+              >
+                <t.icon className="h-4 w-4" />
+                {t.label}
+              </NavLink>
+            ))}
+          </div>
 
           <div className="pt-6">
             <p className="px-3 text-[10px] uppercase tracking-wider text-muted-foreground/70 mb-2">Coming next</p>
