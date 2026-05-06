@@ -7,28 +7,27 @@ import { AUTH_EMAIL_REDIRECT_TO } from "@/lib/auth-config";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Zap, LogIn, Eye, EyeOff, ArrowRight, Shield, TrendingUp, KeyRound, Mail } from "lucide-react";
+import { Zap, LogIn, Eye, EyeOff, ArrowRight, Shield, Briefcase, KeyRound, Mail, Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import { ParticleBackground } from "@/components/ParticleBackground";
 import gsap from "gsap";
 
 const quotes = [
-  "Your hustle today is your empire tomorrow. 🚀",
-  "Don't wait for opportunity — create it. 💡",
-  "Every expert was once a beginner. Start now. 🌱",
-  "Side hustle now, financial freedom later. 💰",
-  "The best time to start was yesterday. The next best time is now. ⏰",
+  "Your workspace, your way. Run client work like a pro studio.",
+  "Clients, projects, invoices — unified in one operating system.",
+  "Less switching tabs. More billable hours.",
+  "Built for freelancers, creators and modern agencies.",
+  "The professional command center for independent work.",
 ];
 
 const trustBadges = [
-  { icon: Shield, label: "Verified Platform" },
-  { icon: TrendingUp, label: "10K+ Users" },
-  { icon: Zap, label: "AI-Powered" },
+  { icon: Shield, label: "Secure by design" },
+  { icon: Briefcase, label: "Workspace OS" },
+  { icon: Sparkles, label: "AI-assisted" },
 ];
 
-type LoginMethod = "password" | "otp";
-type OtpStep = "email" | "verify";
+type LoginMethod = "password" | "magic";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -37,8 +36,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [quoteIdx, setQuoteIdx] = useState(0);
   const [method, setMethod] = useState<LoginMethod>("password");
-  const [otpStep, setOtpStep] = useState<OtpStep>("email");
-  const [otp, setOtp] = useState("");
+  const [linkSent, setLinkSent] = useState(false);
   const { signIn } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -99,7 +97,7 @@ export default function Login() {
     }
   };
 
-  const handleSendOtp = async (e: React.FormEvent) => {
+  const handleSendMagicLink = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim()) return;
     setLoading(true);
@@ -114,20 +112,8 @@ export default function Login() {
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "Code Sent! 📧", description: "Check your email for the 6-digit login code." });
-      setOtpStep("verify");
-    }
-  };
-
-  const handleVerifyOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    const { data, error } = await supabase.auth.verifyOtp({ email, token: otp, type: "email" });
-    setLoading(false);
-    if (error) {
-      toast({ title: "Invalid Code", description: error.message, variant: "destructive" });
-    } else if (data.user) {
-      await redirectAfterLogin(data.user.id);
+      toast({ title: "Sign-in link sent", description: "Check your inbox for a secure sign-in link." });
+      setLinkSent(true);
     }
   };
 
@@ -164,23 +150,24 @@ export default function Login() {
             <Link to="/" className="inline-flex items-center gap-2 group">
               <Zap className="w-7 h-7 text-primary group-hover:scale-125 transition-transform duration-300" />
               <span className="font-display font-bold text-xl group-hover:text-gradient transition-all">HustleAI</span>
+              <span className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground border border-border/60 rounded px-1.5 py-0.5">Workspace OS</span>
             </Link>
-            <p className="text-sm text-muted-foreground">Welcome back! Sign in to continue.</p>
+            <p className="text-sm text-muted-foreground">Sign in to your workspace</p>
           </div>
 
           {/* Method toggle */}
           <div className="flex rounded-lg bg-muted/30 p-1 gsap-stagger">
             <button
-              onClick={() => { setMethod("password"); setOtpStep("email"); }}
+              onClick={() => { setMethod("password"); setLinkSent(false); }}
               className={`flex-1 py-2 rounded-md text-sm font-medium transition-all ${method === "password" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
             >
               <LogIn className="w-3.5 h-3.5 inline mr-1.5" />Password
             </button>
             <button
-              onClick={() => setMethod("otp")}
-              className={`flex-1 py-2 rounded-md text-sm font-medium transition-all ${method === "otp" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+              onClick={() => { setMethod("magic"); setLinkSent(false); }}
+              className={`flex-1 py-2 rounded-md text-sm font-medium transition-all ${method === "magic" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
             >
-              <KeyRound className="w-3.5 h-3.5 inline mr-1.5" />OTP Login
+              <Mail className="w-3.5 h-3.5 inline mr-1.5" />Magic Link
             </button>
           </div>
 
@@ -224,17 +211,20 @@ export default function Login() {
             </form>
           )}
 
-          {/* OTP Login - Step 1: Email */}
-          {method === "otp" && otpStep === "email" && (
-            <form onSubmit={handleSendOtp} className="space-y-3">
+          {/* Magic Link */}
+          {method === "magic" && !linkSent && (
+            <form onSubmit={handleSendMagicLink} className="space-y-3">
+              <p className="text-xs text-muted-foreground gsap-stagger">
+                We'll email you a secure sign-in link. No password needed.
+              </p>
               <div className="space-y-1.5 gsap-stagger">
-                <Label className="text-sm font-medium">Email</Label>
+                <Label className="text-sm font-medium">Work email</Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
                     type="email" value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@example.com" required
+                    placeholder="you@company.com" required
                     className="h-10 pl-10 bg-secondary/50 focus:shadow-glow focus:border-primary transition-all"
                   />
                 </div>
@@ -242,41 +232,23 @@ export default function Login() {
               <div className="gsap-stagger">
                 <Button type="submit" disabled={loading}
                   className="w-full h-10 bg-gradient-primary text-primary-foreground font-semibold text-sm btn-press hover:shadow-glow transition-shadow">
-                  {loading ? "Sending Code..." : "Send 6-Digit Code"}
+                  {loading ? "Sending link…" : "Email me a sign-in link"}
                 </Button>
               </div>
             </form>
           )}
 
-          {/* OTP Login - Step 2: Verify */}
-          {method === "otp" && otpStep === "verify" && (
-            <form onSubmit={handleVerifyOtp} className="space-y-3">
-              <p className="text-sm text-center text-muted-foreground gsap-stagger">
-                A 6-digit code has been sent to <strong className="text-foreground">{email}</strong>
-              </p>
-              <div className="space-y-1.5 gsap-stagger">
-                <Label className="text-sm font-medium">Login Code</Label>
-                <div className="relative">
-                  <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    value={otp} onChange={(e) => setOtp(e.target.value)}
-                    type="text" placeholder="Enter 6-digit code"
-                    className="h-10 pl-10 text-center tracking-widest text-lg bg-secondary/50 focus:shadow-glow focus:border-primary"
-                    maxLength={6} autoComplete="off"
-                  />
-                </div>
+          {method === "magic" && linkSent && (
+            <div className="space-y-3 text-center gsap-stagger">
+              <div className="w-12 h-12 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
+                <Mail className="w-6 h-6 text-primary" />
               </div>
-              <div className="gsap-stagger">
-                <Button type="submit" disabled={loading}
-                  className="w-full h-10 bg-gradient-primary text-primary-foreground font-semibold text-sm btn-press hover:shadow-glow transition-shadow">
-                  {loading ? "Verifying..." : "Verify & Sign In"}
-                </Button>
-              </div>
-              <button type="button" onClick={() => { setOtpStep("email"); setOtp(""); }}
-                className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors gsap-stagger">
+              <p className="text-sm text-foreground">Check <strong>{email}</strong> for your secure sign-in link.</p>
+              <button type="button" onClick={() => setLinkSent(false)}
+                className="text-xs text-muted-foreground hover:text-foreground transition-colors">
                 Use a different email
               </button>
-            </form>
+            </div>
           )}
 
           {/* Divider */}
