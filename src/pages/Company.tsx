@@ -33,6 +33,7 @@ export default function Company() {
   return (
     <PageTransition>
       <div className="min-h-screen bg-background">
+              <SEO title="Company — HustleAI Workspace OS" description="About the company behind HustleAI Workspace OS." path="/company" />
         <Navbar />
 
         {/* Hero */}

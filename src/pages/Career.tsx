@@ -29,6 +29,7 @@ export default function Career() {
   return (
     <PageTransition>
       <div className="min-h-screen bg-background">
+              <SEO title="Careers — HustleAI Workspace OS" description="Join the team building the AI Workspace OS for freelancers." path="/career" />
         <Navbar />
 
         {/* Hero */}

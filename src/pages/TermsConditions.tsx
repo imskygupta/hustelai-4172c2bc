@@ -7,6 +7,7 @@ import { SEO } from "@/components/SEO";
 export default function TermsConditions() {
   return (
     <PageTransition>
+            <SEO title="Terms & Conditions | HustleAI Workspace OS" description="Terms of use for the HustleAI Workspace OS platform." path="/terms-conditions" />
       <Navbar />
       <main className="min-h-screen pt-24 pb-16 px-4">
         <div className="container mx-auto max-w-3xl prose prose-invert">

@@ -7,6 +7,7 @@ import { SEO } from "@/components/SEO";
 export default function PrivacyPolicy() {
   return (
     <PageTransition>
+            <SEO title="Privacy Policy | HustleAI Workspace OS" description="How HustleAI Workspace OS collects, uses and protects your data." path="/privacy-policy" />
       <Navbar />
       <main className="min-h-screen pt-24 pb-16 px-4">
         <div className="container mx-auto max-w-3xl prose prose-invert">
