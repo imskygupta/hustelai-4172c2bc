@@ -8,7 +8,7 @@ import type { DocType } from "@/lib/workspace-docs/types";
 import { ArrowLeft, Plus, FileText } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
-const TYPES: DocType[] = ["quotation", "agreement", "invoice", "service_card", "business_card"];
+const TYPES: DocType[] = ["quotation", "agreement", "invoice", "proposal", "service_card", "business_card"];
 
 export default function DocsList() {
   const { id } = useParams();
@@ -45,7 +45,7 @@ export default function DocsList() {
       </div>
 
       {/* Create new */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
         {TYPES.map((t, i) => (
           <motion.button
             key={t}
