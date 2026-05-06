@@ -34,7 +34,7 @@ export default function AdminCommunications() {
     setSending(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      let q = supabase.from("profiles").select("user_id,email");
+      let q: any = supabase.from("profiles").select("user_id,email");
       if (audience === "tier") q = q.eq("subscription_tier", tier);
       const { data: targets } = await q.limit(2000);
       const emails = ((targets as any[]) || []).map((t: any) => t.email).filter(Boolean);
