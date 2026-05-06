@@ -107,7 +107,7 @@ export default function AdminLogin() {
             onClick={() => setMethod("otp")}
             className={`flex-1 py-2 rounded-md text-sm font-medium transition-all ${method === "otp" ? "bg-destructive text-destructive-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
           >
-            <KeyRound className="w-3.5 h-3.5 inline mr-1.5" />OTP / Magic Link
+            <KeyRound className="w-3.5 h-3.5 inline mr-1.5" />Magic Link
           </button>
         </div>
 
