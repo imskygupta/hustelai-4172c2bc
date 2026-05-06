@@ -25,6 +25,7 @@ import {
 import { PaymentMethodsManager } from "@/components/admin/PaymentMethodsManager";
 import { SQL_BLOCKS } from "@/lib/work-sql";
 import { FeatureFlagsManager } from "@/components/admin/FeatureFlagsManager";
+import { UsageAnalyticsManager } from "@/components/admin/UsageAnalyticsManager";
 import { SeoLandingManager } from "@/components/admin/SeoLandingManager";
 import { SeoBlogManager } from "@/components/admin/SeoBlogManager";
 
@@ -118,7 +119,7 @@ type AdminSection =
   | "expert" | "chatbot" | "blogs" | "analytics" | "config"
   | "verification" | "payments" | "forum" | "community" | "trending" | "newsletter" | "email-settings" | "ai-providers" | "send-email" | "orders"
   | "payment-logs" | "bonus-kits" | "social-links" | "sql-setup" | "feature-flags";
-type AdminSectionExt = AdminSection | "seo-pages" | "seo-blog";
+type AdminSectionExt = AdminSection | "seo-pages" | "seo-blog" | "usage-analytics";
 
 const sidebarItems: { id: AdminSection; label: string; icon: any }[] = [
   { id: "overview", label: "Overview", icon: BarChart3 },
@@ -2378,6 +2379,7 @@ export default function AdminDashboard() {
           )}
           {(section as AdminSectionExt) === "seo-pages" && <SeoLandingManager />}
           {(section as AdminSectionExt) === "seo-blog" && <SeoBlogManager />}
+          {(section as AdminSectionExt) === "usage-analytics" && <UsageAnalyticsManager />}
         </div>
       </main>
     </div>
