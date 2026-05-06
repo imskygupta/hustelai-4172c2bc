@@ -95,6 +95,20 @@ serve(async (req) => {
 
         if (sub.payment_type === "plan" && sub.plan) {
           await supabase.from("profiles").update({ subscription_tier: sub.plan }).eq("user_id", sub.user_id);
+          // Discord role sync (fire-and-forget)
+          try {
+            const projectRef = (Deno.env.get("SUPABASE_URL") || "").match(/https:\/\/([^.]+)\./)?.[1];
+            if (projectRef) {
+              fetch(`https://${projectRef}.supabase.co/functions/v1/discord-sync-role/internal`, {
+                method: "POST",
+                headers: {
+                  "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ user_id: sub.user_id, tier: sub.plan }),
+              }).catch(() => {});
+            }
+          } catch (_) { /* ignore */ }
         } else if (sub.payment_type === "wallet" && sub.wallet_pack) {
           const credits = WALLET_PACKS[sub.wallet_pack]?.credits || 0;
           // Try to upsert wallet
