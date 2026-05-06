@@ -1713,7 +1713,7 @@ export default function AdminDashboard() {
                       {emailSettings.filter((es: any) => es.is_active).map((es: any) => (
                         <SelectItem key={es.category} value={es.category}>From: {es.smtp_email || es.label}</SelectItem>
                       ))}
-                      <SelectItem value="contact">From: contact@hustlaiapp.in (default)</SelectItem>
+                      <SelectItem value="contact">From: hustlaiapp@zohomail.in (default)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -1862,10 +1862,10 @@ export default function AdminDashboard() {
                           toast({ title: "Sending test...", description: `From ${es.smtp_email}` });
                           try {
                             const { data, error } = await supabase.functions.invoke("send-email", {
-                              body: { action: "send_test", category: es.category, test_to: "samratakash0000@gmail.com" },
+                              body: { action: "send_test", category: es.category, test_to: "hustlaiapp@zohomail.in" },
                             });
                             if (error) throw error;
-                            toast({ title: "Test mail sent! ✅", description: `Sent to samratakash0000@gmail.com from ${es.smtp_email}` });
+                            toast({ title: "Test mail sent! ✅", description: `Sent to hustlaiapp@zohomail.in from ${es.smtp_email}` });
                           } catch (err: any) {
                             toast({ title: "Test failed ❌", description: err.message, variant: "destructive" });
                           }
@@ -1971,7 +1971,7 @@ export default function AdminDashboard() {
                       {emailSettings.filter((es: any) => es.is_active).map((es: any) => (
                         <SelectItem key={es.category} value={es.category}>From: {es.smtp_email || es.label}</SelectItem>
                       ))}
-                      <SelectItem value="contact">From: contact@hustlaiapp.in (default)</SelectItem>
+                      <SelectItem value="contact">From: hustlaiapp@zohomail.in (default)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
