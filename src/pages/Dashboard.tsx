@@ -15,7 +15,8 @@ import {
   Search, Crown, Rocket, Sparkles, Users, Video, BookOpen, TrendingUp, MessageCircle,
   Lock, ArrowUpRight, ArrowDownRight, ExternalLink, FileText, Calendar, Share2,
   Store, Target, Brain, Zap, BarChart3, Activity, History, DollarSign, Film,
-  ShieldAlert, Briefcase, Loader2, Bot, Music, Hammer,
+  ShieldAlert, Briefcase, Loader2, Bot, Music, Hammer, KeyRound, Receipt, Clock,
+  ClipboardList, FolderOpen, Wallet, AlarmClock, Globe, Kanban, Layers, Mail,
 } from "lucide-react";
 
 interface FeedData {
