@@ -76,6 +76,11 @@ import ClientPortal from "./pages/ClientPortal";
 import DynamicSeoPage from "./pages/seo/DynamicSeoPage";
 import SeoBlogIndex from "./pages/seo/SeoBlogIndex";
 import SeoBlogPost from "./pages/seo/SeoBlogPost";
+import TopicsIndex from "./pages/seo/TopicsIndex";
+import TopicHub from "./pages/seo/TopicHub";
+import AuthorPage from "./pages/seo/AuthorPage";
+import TagArchive from "./pages/seo/TagArchive";
+import CategoryArchive from "./pages/seo/CategoryArchive";
 import {
   FreelancerCRMPage,
   AIInvoiceGeneratorPage,
@@ -133,7 +138,12 @@ const App = () => (
             <Route path="/ai-business-card-maker" element={<AIBusinessCardMakerPage />} />
             {/* Dynamic SEO blog */}
             <Route path="/insights" element={<SeoBlogIndex />} />
+            <Route path="/insights/tag/:slug" element={<TagArchive />} />
+            <Route path="/insights/category/:slug" element={<CategoryArchive />} />
             <Route path="/insights/:slug" element={<SeoBlogPost />} />
+            <Route path="/topics" element={<TopicsIndex />} />
+            <Route path="/topics/:slug" element={<TopicHub />} />
+            <Route path="/authors/:slug" element={<AuthorPage />} />
             {/* Admin preview for landing pages */}
             <Route path="/_preview/page/:slug" element={<DynamicSeoPage preview />} />
             <Route path="/_preview/blog/:slug" element={<SeoBlogPost preview />} />
