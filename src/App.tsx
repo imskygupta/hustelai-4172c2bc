@@ -62,6 +62,8 @@ import WorkspaceOverview from "./pages/workspace-os/Overview";
 import NewWorkspace from "./pages/workspace-os/NewWorkspace";
 import WorkspaceDetail from "./pages/workspace-os/WorkspaceDetail";
 import AISettings from "./pages/workspace-os/AISettings";
+import DocsList from "./pages/workspace-os/docs/DocsList";
+import DocEditor from "./pages/workspace-os/docs/DocEditor";
 import Work from "./pages/Work";
 import WorkTool from "./pages/WorkTool";
 import ClientPortal from "./pages/ClientPortal";
@@ -145,6 +147,9 @@ const App = () => (
               <Route path="new" element={<NewWorkspace />} />
               <Route path="ai-settings" element={<AISettings />} />
               <Route path=":id" element={<WorkspaceDetail />} />
+              <Route path=":id/docs" element={<DocsList />} />
+              <Route path=":id/docs/new/:type" element={<DocEditor />} />
+              <Route path=":id/docs/:docId" element={<DocEditor />} />
             </Route>
             <Route path="/workspaces-legacy" element={Shelled(<Workspaces />)} />
             <Route path="/canvas" element={Shelled(<HustleCanvas />)} />
