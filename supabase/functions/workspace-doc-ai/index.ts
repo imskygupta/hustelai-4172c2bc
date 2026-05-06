@@ -14,6 +14,8 @@ const TASKS: Record<string, string> = {
   service_card_copy: `Generate a service card with bullets. Context: {{context}}. Return JSON: { "service": string, "hook": string, "bullets": string[] (4 items, each <60 chars), "price": string, "cta": string (3 words max) }`,
   payment_structure: `Suggest a smart payment structure for the project context: {{context}}. Return JSON: { "structure": string (one sentence) }`,
   scope_summary: `Summarize this scope in 1 sentence, crisp. Context: {{context}}. Return JSON: { "summary": string }`,
+  draft_proposal_section: `Draft a concise, persuasive proposal section (3-5 sentences) for: "{{section}}". Project context: {{context}}. Return JSON: { "text": string }`,
+  proposal_full: `Generate a full freelancer proposal from this context: {{context}}. Premium, confident, outcome-focused. Return JSON: { "title": string, "summary": string, "problem": string, "approach": string, "deliverables": string[] (4-6 short items), "timeline": string, "investment": string, "whyUs": string, "cta": string (5 words max) }`,
 };
 
 async function callUserKey(provider: string, apiKey: string, model: string | null, messages: any[]) {
@@ -71,6 +73,25 @@ Deno.serve(async (req) => {
     const { data: keyRow } = await supabase
       .from("user_ai_keys").select("provider, api_key, model, is_active")
       .eq("user_id", user.id).eq("is_active", true).maybeSingle();
+
+    // Server-side daily quota — bypass when user has BYO key.
+    const hasKey = !!keyRow?.api_key;
+    if (!hasKey) {
+      const { data: quota, error: qErr } = await supabase.rpc("consume_ai_quota", {
+        _user_id: user.id, _feature: `doc_ai:${task}`,
+      });
+      if (qErr) {
+        return new Response(JSON.stringify({ error: qErr.message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      const q = quota as any;
+      if (!q?.allowed) {
+        return new Response(JSON.stringify({
+          error: "quota_exceeded",
+          used: q?.used, max: q?.max,
+          message: `Daily limit reached (${q?.used}/${q?.max}). Connect your own AI key in Settings → AI Providers for unlimited assists.`,
+        }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+    }
 
     let content = "", used = "platform", ok = true, err: string | null = null;
     try {
