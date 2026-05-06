@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import type { FreelanceResult } from "@/lib/ai-search";
+import { OpportunitySignals } from "@/components/explore/OpportunitySignals";
 
 const difficultyColors: Record<string, string> = {
   Beginner: "bg-primary/20 text-primary border-primary/30",
@@ -181,6 +182,8 @@ export function FreelanceCard({ result, index }: { result: FreelanceResult; inde
               </span>
             ))}
           </div>
+
+          <OpportunitySignals result={result} />
 
           {/* Like / Dislike + Save row */}
           <div className="flex items-center justify-between pt-1">
