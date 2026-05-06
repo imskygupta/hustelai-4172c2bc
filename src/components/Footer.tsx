@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Link, useLocation } from "react-router-dom";
 import { isAppShellRoute } from "@/components/app-shell-routes";
+import { CONTACT_EMAIL, SUPPORT_EMAIL } from "@/config/branding";
 
 const productLinks = [
   { label: "Products (B2B APIs)", href: "/products" },
@@ -89,8 +90,8 @@ export function Footer() {
               AI-powered freelance discovery platform. Find, start, and grow your next income stream.
             </p>
             <div className="space-y-2 text-sm text-muted-foreground">
-              <a href="mailto:contact@hustlaiapp.in" className="flex items-center gap-2 hover:text-primary transition-colors">
-                <Mail className="w-4 h-4" /> contact@hustlaiapp.in
+              <a href={`mailto:${CONTACT_EMAIL}`} className="flex items-center gap-2 hover:text-primary transition-colors">
+                <Mail className="w-4 h-4" /> {CONTACT_EMAIL}
               </a>
               <div className="flex items-center gap-2">
                 <MapPin className="w-4 h-4" /> India 🇮🇳
@@ -163,7 +164,7 @@ export function Footer() {
             <span>·</span>
             <Link to="/refund-policy" className="hover:text-primary transition-colors">Refund Policy</Link>
             <span>·</span>
-            <a href="mailto:support@hustlaiapp.in" className="hover:text-primary transition-colors">Support</a>
+            <a href={`mailto:${SUPPORT_EMAIL}`} className="hover:text-primary transition-colors">Support</a>
           </div>
         </div>
       </div>

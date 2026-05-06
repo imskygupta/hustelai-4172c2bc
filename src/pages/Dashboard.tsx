@@ -15,7 +15,8 @@ import {
   Search, Crown, Rocket, Sparkles, Users, Video, BookOpen, TrendingUp, MessageCircle,
   Lock, ArrowUpRight, ArrowDownRight, ExternalLink, FileText, Calendar, Share2,
   Store, Target, Brain, Zap, BarChart3, Activity, History, DollarSign, Film,
-  ShieldAlert, Briefcase, Loader2, Bot, Music, Hammer,
+  ShieldAlert, Briefcase, Loader2, Bot, Music, Hammer, KeyRound, Receipt, Clock,
+  ClipboardList, FolderOpen, Wallet, AlarmClock, Globe, Kanban, Layers, Mail,
 } from "lucide-react";
 
 interface FeedData {
@@ -329,6 +330,73 @@ export default function Dashboard() {
               )}
             </div>
 
+            {/* COCKPIT — Workspace OS modules at a glance */}
+            <div className="rounded-xl border border-slate-200 bg-white p-5">
+              <div className="flex items-center justify-between mb-1">
+                <h3 className="font-display font-semibold text-slate-900 flex items-center gap-2">
+                  <Layers className="w-4 h-4 text-emerald-600" /> Your cockpit
+                </h3>
+                <Button variant="ghost" size="sm" className="text-emerald-600 hover:text-emerald-700 h-7" onClick={() => navigate("/workspaces")}>
+                  Open Workspace OS <ArrowUpRight className="w-3 h-3 ml-0.5" />
+                </Button>
+              </div>
+              <p className="text-xs text-slate-500 mb-4">Every module that powers your freelance business — one cockpit, no tab-hunting.</p>
+
+              <div className="grid md:grid-cols-3 gap-4">
+                <CockpitGroup
+                  title="Client OS"
+                  desc="CRM, pipelines & retainers"
+                  accent="emerald"
+                  tools={[
+                    { icon: Users, label: "Clients (CRM)", path: "/work/clients" },
+                    { icon: Kanban, label: "Pipeline", path: "/workspaces/pipeline" },
+                    { icon: Layers, label: "Retainers", path: "/workspaces" },
+                    { icon: Mail, label: "Comm Log", path: "/work/comm" },
+                  ]}
+                />
+                <CockpitGroup
+                  title="Money OS"
+                  desc="Invoices, time & revenue"
+                  accent="amber"
+                  tools={[
+                    { icon: Receipt, label: "Invoices", path: "/work/invoices" },
+                    { icon: Clock, label: "Time Tracker", path: "/work/time" },
+                    { icon: Wallet, label: "Expenses", path: "/work/expenses" },
+                    { icon: BarChart3, label: "Revenue", path: "/workspaces/revenue" },
+                  ]}
+                />
+                <CockpitGroup
+                  title="Delivery OS"
+                  desc="Projects, files & portals"
+                  accent="violet"
+                  tools={[
+                    { icon: ClipboardList, label: "Checklists", path: "/work/checklists" },
+                    { icon: FolderOpen, label: "Files", path: "/work/files" },
+                    { icon: AlarmClock, label: "Deadlines", path: "/work/deadlines" },
+                    { icon: Globe, label: "Client Portals", path: "/work/portals" },
+                  ]}
+                />
+              </div>
+
+              {/* AI Fuel band */}
+              <div className="mt-4 rounded-xl border border-emerald-200 bg-gradient-to-r from-emerald-50/80 via-white to-emerald-50/40 p-4 flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0">
+                    <KeyRound className="w-5 h-5 text-emerald-600" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-slate-900">Add AI fuel to your cockpit</p>
+                    <p className="text-xs text-slate-500 truncate">
+                      Connect Gemini, OpenAI or your own key — power proposals, replies & doc intelligence across every module.
+                    </p>
+                  </div>
+                </div>
+                <Button size="sm" className="bg-emerald-500 hover:bg-emerald-600 text-white shrink-0" onClick={() => navigate("/workspaces/ai-settings")}>
+                  Connect AI
+                </Button>
+              </div>
+            </div>
+
             {/* Webinars */}
             {accessibleWebinars.length > 0 && (
               <div className="rounded-xl border border-slate-200 bg-white p-5">
@@ -495,6 +563,39 @@ function KpiCard({
       <p className="text-[10px] text-slate-400 mb-2">{sub}</p>
       <div className="h-1 bg-slate-100 rounded-full overflow-hidden">
         <div className={`h-full ${map.bar}`} style={{ width: `${Math.min(progress, 100)}%` }} />
+      </div>
+    </div>
+  );
+}
+
+function CockpitGroup({
+  title, desc, accent, tools,
+}: {
+  title: string; desc: string;
+  accent: "emerald" | "amber" | "violet";
+  tools: { icon: any; label: string; path: string }[];
+}) {
+  const map = {
+    emerald: { dot: "bg-emerald-500", chip: "bg-emerald-50 text-emerald-700", hover: "hover:border-emerald-300 hover:bg-emerald-50/40" },
+    amber:   { dot: "bg-amber-500",   chip: "bg-amber-50 text-amber-700",     hover: "hover:border-amber-300 hover:bg-amber-50/40" },
+    violet:  { dot: "bg-violet-500",  chip: "bg-violet-50 text-violet-700",   hover: "hover:border-violet-300 hover:bg-violet-50/40" },
+  }[accent];
+  const navigate = useNavigate();
+  return (
+    <div className="rounded-xl border border-slate-200 p-4 bg-slate-50/40">
+      <div className="flex items-center gap-2 mb-1">
+        <span className={`w-1.5 h-1.5 rounded-full ${map.dot}`} />
+        <h4 className="text-sm font-semibold text-slate-900">{title}</h4>
+      </div>
+      <p className="text-[11px] text-slate-500 mb-3">{desc}</p>
+      <div className="grid grid-cols-2 gap-1.5">
+        {tools.map(t => (
+          <button key={t.label} onClick={() => navigate(t.path)}
+            className={`group flex items-center gap-1.5 px-2 py-1.5 rounded-md border border-slate-200 bg-white text-left transition-all ${map.hover}`}>
+            <t.icon className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+            <span className="text-[11px] font-medium text-slate-700 truncate">{t.label}</span>
+          </button>
+        ))}
       </div>
     </div>
   );

@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { Briefcase, ArrowRight, Sparkles, Bell, Plus } from "lucide-react";
+import { Briefcase, ArrowRight, Sparkles, Bell, Plus, Hammer, Receipt, Users, Clock, Globe, KeyRound } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 type WS = {
@@ -49,6 +49,38 @@ export default function Overview() {
       <section>
         <h2 className="text-2xl font-semibold tracking-tight">Your workspaces</h2>
         <p className="text-sm text-muted-foreground mt-1">Each workspace = one client engagement. AI keeps it organised.</p>
+      </section>
+
+      {/* Marketing strip — power up freelancers & agencies */}
+      <section className="rounded-2xl border border-emerald-200/60 bg-gradient-to-br from-emerald-50/60 via-background to-background p-6">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="max-w-xl">
+            <div className="text-[10px] uppercase tracking-[0.18em] text-emerald-700 font-semibold mb-1">Built for serious freelancers & agencies</div>
+            <h3 className="text-lg font-semibold tracking-tight">Stop juggling 9 tools. Run your studio from one workspace.</h3>
+            <p className="text-sm text-muted-foreground mt-1">
+              CRM, invoices, time tracking, deadlines, files, portals — and an AI co-pilot — wired together.
+              Most freelance "tools" stop at one feature. We give you the operating system.
+            </p>
+          </div>
+          <Link to="/workspaces/ai-settings" className="inline-flex items-center gap-2 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 text-sm font-medium shadow-sm shrink-0">
+            <KeyRound className="h-4 w-4" /> Add AI fuel
+          </Link>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-2 mt-5">
+          {[
+            { icon: Users,   label: "Clients CRM",  to: "/work/clients" },
+            { icon: Receipt, label: "Invoices",     to: "/work/invoices" },
+            { icon: Clock,   label: "Time Tracker", to: "/work/time" },
+            { icon: Hammer,  label: "Work Hub",     to: "/work" },
+            { icon: Globe,   label: "Client Portals", to: "/work/portals" },
+          ].map(t => (
+            <Link key={t.label} to={t.to}
+              className="flex items-center gap-2 rounded-lg border border-border/60 bg-background/60 hover:border-emerald-300 hover:bg-emerald-50/40 px-3 py-2 transition-all">
+              <t.icon className="h-4 w-4 text-emerald-600" />
+              <span className="text-xs font-medium">{t.label}</span>
+            </Link>
+          ))}
+        </div>
       </section>
 
       {/* HustleBot recs */}
