@@ -1,16 +1,30 @@
-User-agent: Googlebot
-Allow: /
-
-User-agent: Bingbot
-Allow: /
-
-User-agent: Twitterbot
-Allow: /
-
-User-agent: facebookexternalhit
-Allow: /
-
 User-agent: *
 Allow: /
+
+Disallow: /login
+Disallow: /signup
+Disallow: /forgot-password
+Disallow: /reset-password
+Disallow: /onboarding
+Disallow: /dashboard
+Disallow: /profile
+Disallow: /payment
+Disallow: /payment-status
+Disallow: /saved-hustles
+Disallow: /admin
+Disallow: /admin-dashboard
+Disallow: /imskygupta-admin
+Disallow: /admin/
+Disallow: /settings/
+Disallow: /workspace
+Disallow: /workspaces
+Disallow: /workspaces-legacy
+Disallow: /work
+Disallow: /canvas
+Disallow: /hustlebot
+Disallow: /portal/
+Disallow: /p/
+Disallow: /hustle/
+Disallow: /roadmap/
 
 Sitemap: https://hustlaiapp.in/sitemap.xml
