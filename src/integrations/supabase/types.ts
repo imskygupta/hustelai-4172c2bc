@@ -1825,6 +1825,48 @@ export type Database = {
           },
         ]
       }
+      seo_authors: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string
+          display_name: string
+          expertise: string[] | null
+          id: string
+          is_published: boolean
+          slug: string
+          social_links: Json | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          display_name: string
+          expertise?: string[] | null
+          id?: string
+          is_published?: boolean
+          slug: string
+          social_links?: Json | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          display_name?: string
+          expertise?: string[] | null
+          id?: string
+          is_published?: boolean
+          slug?: string
+          social_links?: Json | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       seo_blocks: {
         Row: {
           block_key: string
@@ -1863,73 +1905,132 @@ export type Database = {
       }
       seo_blog_posts: {
         Row: {
+          author_id: string | null
           author_name: string | null
+          auto_link_enabled: boolean
           category: string | null
           content: string
           cover_image: string | null
           created_at: string
           created_by: string | null
           excerpt: string | null
+          faq_blocks: Json
+          frequently_used_with: string[] | null
           id: string
           is_indexed: boolean
           json_ld: Json
           meta_description: string
           og_image: string | null
           published_at: string | null
+          reading_time_minutes: number
+          related_post_ids: string[] | null
+          related_tool_ids: string[] | null
           seo_score: number
           slug: string
           status: Database["public"]["Enums"]["seo_status"]
           tags: string[]
           title: string
+          toc: Json
+          topic_id: string | null
           updated_at: string
         }
         Insert: {
+          author_id?: string | null
           author_name?: string | null
+          auto_link_enabled?: boolean
           category?: string | null
           content?: string
           cover_image?: string | null
           created_at?: string
           created_by?: string | null
           excerpt?: string | null
+          faq_blocks?: Json
+          frequently_used_with?: string[] | null
           id?: string
           is_indexed?: boolean
           json_ld?: Json
           meta_description?: string
           og_image?: string | null
           published_at?: string | null
+          reading_time_minutes?: number
+          related_post_ids?: string[] | null
+          related_tool_ids?: string[] | null
           seo_score?: number
           slug: string
           status?: Database["public"]["Enums"]["seo_status"]
           tags?: string[]
           title: string
+          toc?: Json
+          topic_id?: string | null
           updated_at?: string
         }
         Update: {
+          author_id?: string | null
           author_name?: string | null
+          auto_link_enabled?: boolean
           category?: string | null
           content?: string
           cover_image?: string | null
           created_at?: string
           created_by?: string | null
           excerpt?: string | null
+          faq_blocks?: Json
+          frequently_used_with?: string[] | null
           id?: string
           is_indexed?: boolean
           json_ld?: Json
           meta_description?: string
           og_image?: string | null
           published_at?: string | null
+          reading_time_minutes?: number
+          related_post_ids?: string[] | null
+          related_tool_ids?: string[] | null
           seo_score?: number
           slug?: string
           status?: Database["public"]["Enums"]["seo_status"]
           tags?: string[]
           title?: string
+          toc?: Json
+          topic_id?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      seo_internal_links: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          keyword: string
+          priority: number
+          target_slug: string
+          target_type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          keyword: string
+          priority?: number
+          target_slug: string
+          target_type?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          keyword?: string
+          priority?: number
+          target_slug?: string
+          target_type?: string
         }
         Relationships: []
       }
       seo_pages: {
         Row: {
+          auto_link_enabled: boolean
           badge: string | null
+          breadcrumb_label: string | null
           bullets: Json
           canonical_url: string | null
           changefreq: string
@@ -1937,17 +2038,22 @@ export type Database = {
           created_by: string | null
           cta_href: string | null
           cta_label: string | null
+          faq_blocks: Json
           faqs: Json
           h1: string
           id: string
           is_indexed: boolean
+          is_pillar: boolean
           json_ld: Json
           locale: string
           meta_description: string
           og_image: string | null
+          parent_page_id: string | null
           priority: number
           published_at: string | null
           related_links: Json
+          related_page_ids: string[] | null
+          related_tool_ids: string[] | null
           sections: Json
           seo_score: number
           slug: string
@@ -1955,10 +2061,13 @@ export type Database = {
           subhead: string
           template_key: string | null
           title: string
+          topic_id: string | null
           updated_at: string
         }
         Insert: {
+          auto_link_enabled?: boolean
           badge?: string | null
+          breadcrumb_label?: string | null
           bullets?: Json
           canonical_url?: string | null
           changefreq?: string
@@ -1966,17 +2075,22 @@ export type Database = {
           created_by?: string | null
           cta_href?: string | null
           cta_label?: string | null
+          faq_blocks?: Json
           faqs?: Json
           h1?: string
           id?: string
           is_indexed?: boolean
+          is_pillar?: boolean
           json_ld?: Json
           locale?: string
           meta_description?: string
           og_image?: string | null
+          parent_page_id?: string | null
           priority?: number
           published_at?: string | null
           related_links?: Json
+          related_page_ids?: string[] | null
+          related_tool_ids?: string[] | null
           sections?: Json
           seo_score?: number
           slug: string
@@ -1984,10 +2098,13 @@ export type Database = {
           subhead?: string
           template_key?: string | null
           title: string
+          topic_id?: string | null
           updated_at?: string
         }
         Update: {
+          auto_link_enabled?: boolean
           badge?: string | null
+          breadcrumb_label?: string | null
           bullets?: Json
           canonical_url?: string | null
           changefreq?: string
@@ -1995,17 +2112,22 @@ export type Database = {
           created_by?: string | null
           cta_href?: string | null
           cta_label?: string | null
+          faq_blocks?: Json
           faqs?: Json
           h1?: string
           id?: string
           is_indexed?: boolean
+          is_pillar?: boolean
           json_ld?: Json
           locale?: string
           meta_description?: string
           og_image?: string | null
+          parent_page_id?: string | null
           priority?: number
           published_at?: string | null
           related_links?: Json
+          related_page_ids?: string[] | null
+          related_tool_ids?: string[] | null
           sections?: Json
           seo_score?: number
           slug?: string
@@ -2013,7 +2135,23 @@ export type Database = {
           subhead?: string
           template_key?: string | null
           title?: string
+          topic_id?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      seo_post_tags: {
+        Row: {
+          post_id: string
+          tag_id: string
+        }
+        Insert: {
+          post_id: string
+          tag_id: string
+        }
+        Update: {
+          post_id?: string
+          tag_id?: string
         }
         Relationships: []
       }
@@ -2049,6 +2187,123 @@ export type Database = {
           is_active?: boolean
           status_code?: number
           to_path?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      seo_related_tools: {
+        Row: {
+          category: string | null
+          created_at: string
+          description: string | null
+          icon: string | null
+          id: string
+          is_active: boolean
+          label: string
+          slug: string
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          label: string
+          slug: string
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          label?: string
+          slug?: string
+          updated_at?: string
+          url?: string
+        }
+        Relationships: []
+      }
+      seo_tags: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          slug: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          slug: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          slug?: string
+        }
+        Relationships: []
+      }
+      seo_topics: {
+        Row: {
+          color: string | null
+          cover_image: string | null
+          created_at: string
+          description: string | null
+          hero_keyword: string | null
+          icon: string | null
+          id: string
+          is_published: boolean
+          keywords: string[] | null
+          pillar_page_id: string | null
+          priority: number | null
+          seo_score: number | null
+          slug: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          color?: string | null
+          cover_image?: string | null
+          created_at?: string
+          description?: string | null
+          hero_keyword?: string | null
+          icon?: string | null
+          id?: string
+          is_published?: boolean
+          keywords?: string[] | null
+          pillar_page_id?: string | null
+          priority?: number | null
+          seo_score?: number | null
+          slug: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          color?: string | null
+          cover_image?: string | null
+          created_at?: string
+          description?: string | null
+          hero_keyword?: string | null
+          icon?: string | null
+          id?: string
+          is_published?: boolean
+          keywords?: string[] | null
+          pillar_page_id?: string | null
+          priority?: number | null
+          seo_score?: number | null
+          slug?: string
+          title?: string
           updated_at?: string
         }
         Relationships: []
