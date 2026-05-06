@@ -25,6 +25,8 @@ import {
 import { PaymentMethodsManager } from "@/components/admin/PaymentMethodsManager";
 import { SQL_BLOCKS } from "@/lib/work-sql";
 import { FeatureFlagsManager } from "@/components/admin/FeatureFlagsManager";
+import { SeoLandingManager } from "@/components/admin/SeoLandingManager";
+import { SeoBlogManager } from "@/components/admin/SeoBlogManager";
 
 import { SEO } from "@/components/SEO";
 
@@ -116,6 +118,7 @@ type AdminSection =
   | "expert" | "chatbot" | "blogs" | "analytics" | "config"
   | "verification" | "payments" | "forum" | "community" | "trending" | "newsletter" | "email-settings" | "ai-providers" | "send-email" | "orders"
   | "payment-logs" | "bonus-kits" | "social-links" | "sql-setup" | "feature-flags";
+type AdminSectionExt = AdminSection | "seo-pages" | "seo-blog";
 
 const sidebarItems: { id: AdminSection; label: string; icon: any }[] = [
   { id: "overview", label: "Overview", icon: BarChart3 },
@@ -143,6 +146,8 @@ const sidebarItems: { id: AdminSection; label: string; icon: any }[] = [
   { id: "config", label: "Config & Keys", icon: Settings },
   { id: "sql-setup", label: "SQL Setup", icon: Database },
   { id: "feature-flags", label: "Feature Flags", icon: Flag },
+  { id: "seo-pages" as AdminSection, label: "SEO Pages", icon: Globe },
+  { id: "seo-blog" as AdminSection, label: "Insights / Blog", icon: BookOpen },
 ];
 
 export default function AdminDashboard() {
@@ -2371,6 +2376,8 @@ export default function AdminDashboard() {
           {section === "feature-flags" && (
             <FeatureFlagsManager />
           )}
+          {(section as AdminSectionExt) === "seo-pages" && <SeoLandingManager />}
+          {(section as AdminSectionExt) === "seo-blog" && <SeoBlogManager />}
         </div>
       </main>
     </div>
