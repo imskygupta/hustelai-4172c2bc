@@ -12,6 +12,10 @@ import PaymentsTracker from "@/components/workspace-os/PaymentsTracker";
 import ActivityTimeline from "@/components/workspace-os/ActivityTimeline";
 import RemindersList from "@/components/workspace-os/RemindersList";
 import HustleBotRail from "@/components/workspace-os/HustleBotRail";
+import FilesUploader from "@/components/workspace-os/FilesUploader";
+import CommentsPanel from "@/components/workspace-os/CommentsPanel";
+import PortalPanel from "@/components/workspace-os/PortalPanel";
+import RetainerPanel from "@/components/workspace-os/RetainerPanel";
 
 export default function WorkspaceDetail() {
   const { id } = useParams();
@@ -72,6 +76,10 @@ export default function WorkspaceDetail() {
             <TabsTrigger value="crm">CRM</TabsTrigger>
             <TabsTrigger value="tasks">Tasks</TabsTrigger>
             <TabsTrigger value="payments">Payments</TabsTrigger>
+            <TabsTrigger value="collab">Collab</TabsTrigger>
+            <TabsTrigger value="portal">Portal</TabsTrigger>
+            <TabsTrigger value="files">Files</TabsTrigger>
+            <TabsTrigger value="retainer">Retainer</TabsTrigger>
             <TabsTrigger value="activity">Activity</TabsTrigger>
             <TabsTrigger value="docs" asChild><Link to={`/workspaces/${w.id}/docs`}>Docs</Link></TabsTrigger>
           </TabsList>
@@ -99,6 +107,10 @@ export default function WorkspaceDetail() {
           <TabsContent value="crm"><CRMPanel workspace={w} onUpdate={setW} /></TabsContent>
           <TabsContent value="tasks"><TasksKanban workspaceId={w.id} ownerId={w.owner_id} /></TabsContent>
           <TabsContent value="payments"><PaymentsTracker workspaceId={w.id} ownerId={w.owner_id} /></TabsContent>
+          <TabsContent value="collab"><CommentsPanel workspaceId={w.id} ownerId={w.owner_id} /></TabsContent>
+          <TabsContent value="portal"><PortalPanel workspaceId={w.id} ownerId={w.owner_id} /></TabsContent>
+          <TabsContent value="files"><FilesUploader workspaceId={w.id} ownerId={w.owner_id} /></TabsContent>
+          <TabsContent value="retainer"><RetainerPanel workspaceId={w.id} ownerId={w.owner_id} /></TabsContent>
           <TabsContent value="activity" className="space-y-4">
             <RemindersList workspaceId={w.id} ownerId={w.owner_id} />
             <ActivityTimeline workspaceId={w.id} />

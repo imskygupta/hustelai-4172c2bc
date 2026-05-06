@@ -2,6 +2,7 @@ import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Briefcase, Plus, Sparkles, KeyRound, FileText, Receipt, Users, Kanban, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
+import NotificationCenter from "@/components/workspace-os/NotificationCenter";
 
 const NAV = [
   { to: "/workspaces", label: "Overview", icon: Briefcase, end: true },
@@ -37,12 +38,15 @@ export default function WorkspaceOS() {
               <p className="text-xs text-muted-foreground">Your freelancer cockpit</p>
             </div>
           </div>
-          <NavLink
-            to="/workspaces/new"
-            className="hidden sm:inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-4 py-2 text-sm font-medium shadow-lg shadow-primary/30 hover:scale-[1.02] transition-transform"
-          >
-            <Plus className="h-4 w-4" /> New Workspace
-          </NavLink>
+          <div className="flex items-center gap-2">
+            <NotificationCenter />
+            <NavLink
+              to="/workspaces/new"
+              className="hidden sm:inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-4 py-2 text-sm font-medium shadow-lg shadow-primary/30 hover:scale-[1.02] transition-transform"
+            >
+              <Plus className="h-4 w-4" /> New Workspace
+            </NavLink>
+          </div>
         </div>
       </motion.header>
 
