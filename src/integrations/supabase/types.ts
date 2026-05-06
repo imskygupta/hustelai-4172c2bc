@@ -1825,6 +1825,234 @@ export type Database = {
           },
         ]
       }
+      seo_blocks: {
+        Row: {
+          block_key: string
+          block_type: string
+          created_at: string
+          created_by: string | null
+          data: Json
+          id: string
+          is_active: boolean
+          label: string
+          updated_at: string
+        }
+        Insert: {
+          block_key: string
+          block_type?: string
+          created_at?: string
+          created_by?: string | null
+          data?: Json
+          id?: string
+          is_active?: boolean
+          label: string
+          updated_at?: string
+        }
+        Update: {
+          block_key?: string
+          block_type?: string
+          created_at?: string
+          created_by?: string | null
+          data?: Json
+          id?: string
+          is_active?: boolean
+          label?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      seo_blog_posts: {
+        Row: {
+          author_name: string | null
+          category: string | null
+          content: string
+          cover_image: string | null
+          created_at: string
+          created_by: string | null
+          excerpt: string | null
+          id: string
+          is_indexed: boolean
+          json_ld: Json
+          meta_description: string
+          og_image: string | null
+          published_at: string | null
+          seo_score: number
+          slug: string
+          status: Database["public"]["Enums"]["seo_status"]
+          tags: string[]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author_name?: string | null
+          category?: string | null
+          content?: string
+          cover_image?: string | null
+          created_at?: string
+          created_by?: string | null
+          excerpt?: string | null
+          id?: string
+          is_indexed?: boolean
+          json_ld?: Json
+          meta_description?: string
+          og_image?: string | null
+          published_at?: string | null
+          seo_score?: number
+          slug: string
+          status?: Database["public"]["Enums"]["seo_status"]
+          tags?: string[]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          author_name?: string | null
+          category?: string | null
+          content?: string
+          cover_image?: string | null
+          created_at?: string
+          created_by?: string | null
+          excerpt?: string | null
+          id?: string
+          is_indexed?: boolean
+          json_ld?: Json
+          meta_description?: string
+          og_image?: string | null
+          published_at?: string | null
+          seo_score?: number
+          slug?: string
+          status?: Database["public"]["Enums"]["seo_status"]
+          tags?: string[]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      seo_pages: {
+        Row: {
+          badge: string | null
+          bullets: Json
+          canonical_url: string | null
+          changefreq: string
+          created_at: string
+          created_by: string | null
+          cta_href: string | null
+          cta_label: string | null
+          faqs: Json
+          h1: string
+          id: string
+          is_indexed: boolean
+          json_ld: Json
+          locale: string
+          meta_description: string
+          og_image: string | null
+          priority: number
+          published_at: string | null
+          related_links: Json
+          sections: Json
+          seo_score: number
+          slug: string
+          status: Database["public"]["Enums"]["seo_status"]
+          subhead: string
+          template_key: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          badge?: string | null
+          bullets?: Json
+          canonical_url?: string | null
+          changefreq?: string
+          created_at?: string
+          created_by?: string | null
+          cta_href?: string | null
+          cta_label?: string | null
+          faqs?: Json
+          h1?: string
+          id?: string
+          is_indexed?: boolean
+          json_ld?: Json
+          locale?: string
+          meta_description?: string
+          og_image?: string | null
+          priority?: number
+          published_at?: string | null
+          related_links?: Json
+          sections?: Json
+          seo_score?: number
+          slug: string
+          status?: Database["public"]["Enums"]["seo_status"]
+          subhead?: string
+          template_key?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          badge?: string | null
+          bullets?: Json
+          canonical_url?: string | null
+          changefreq?: string
+          created_at?: string
+          created_by?: string | null
+          cta_href?: string | null
+          cta_label?: string | null
+          faqs?: Json
+          h1?: string
+          id?: string
+          is_indexed?: boolean
+          json_ld?: Json
+          locale?: string
+          meta_description?: string
+          og_image?: string | null
+          priority?: number
+          published_at?: string | null
+          related_links?: Json
+          sections?: Json
+          seo_score?: number
+          slug?: string
+          status?: Database["public"]["Enums"]["seo_status"]
+          subhead?: string
+          template_key?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      seo_redirects: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          from_path: string
+          hit_count: number
+          id: string
+          is_active: boolean
+          status_code: number
+          to_path: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          from_path: string
+          hit_count?: number
+          id?: string
+          is_active?: boolean
+          status_code?: number
+          to_path: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          from_path?: string
+          hit_count?: number
+          id?: string
+          is_active?: boolean
+          status_code?: number
+          to_path?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       side_hustles: {
         Row: {
           category: string
@@ -2832,6 +3060,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
+      seo_status: "draft" | "published" | "archived"
       subscription_tier: "free" | "pro" | "elite" | "infinity"
     }
     CompositeTypes: {
@@ -2961,6 +3190,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "moderator", "user"],
+      seo_status: ["draft", "published", "archived"],
       subscription_tier: ["free", "pro", "elite", "infinity"],
     },
   },
