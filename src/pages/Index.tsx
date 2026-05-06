@@ -293,17 +293,17 @@ export default function Index() {
           >
             <div className="absolute -top-20 -right-20 w-64 h-64 bg-emerald-500/20 blur-3xl rounded-full" />
             <h2 className="text-3xl md:text-4xl font-display font-semibold tracking-tight relative">
-              Ready to find your perfect hustle?
+              Run your freelance business like a studio.
             </h2>
             <p className="text-slate-300 relative">
-              Join thousands discovering their next income stream with AI.
+              Create your first workspace in under a minute. Free to start.
             </p>
             <Button
               size="lg"
               className="bg-emerald-500 hover:bg-emerald-600 text-white text-base px-8 h-12 relative"
               onClick={() => navigate("/signup")}
             >
-              Start free <ArrowRight className="w-4 h-4 ml-2" />
+              Start your workspace <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
           </motion.div>
         </div>
