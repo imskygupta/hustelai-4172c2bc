@@ -212,8 +212,145 @@ do $$ begin create policy "anon_all_wsc" on public.workspace_clients for all usi
 exception when duplicate_object then null; end $$;
 `;
 
+// =========================================================
+// Community backend (3rd Supabase project: hustl discord-workspace-production)
+// Forum, channels, votes, onboarding, category requests, Discord links.
+// Run in: qeswhaytgvosfzzgraef Supabase → SQL editor.
+// =========================================================
+export const COMMUNITY_SETUP_SQL = `-- =========================================================
+-- HustleAI · Community / Forum + Discord links
+-- Run in: hustl discord-workspace-production Supabase → SQL editor
+-- =========================================================
+
+create table if not exists public.community_groups (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  icon text default '💬',
+  description text,
+  min_tier text not null default 'pro',
+  is_default boolean default false,
+  is_readonly boolean default false,
+  created_by uuid,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.community_memberships (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null,
+  channel_id uuid not null,
+  joined_at timestamptz not null default now(),
+  unique(user_id, channel_id)
+);
+
+create table if not exists public.community_onboarding (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null unique,
+  interests text[] default '{}',
+  experience_level text default 'beginner',
+  goals text[] default '{}',
+  preferred_categories text[] default '{}',
+  custom_category_requests text[] default '{}',
+  completed_at timestamptz not null default now()
+);
+
+create table if not exists public.category_requests (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null,
+  category_name text not null,
+  status text not null default 'pending',
+  reviewed_by uuid,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.forum_categories (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  description text,
+  icon text default '💬',
+  created_by uuid,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.forum_posts (
+  id uuid primary key default gen_random_uuid(),
+  group_id uuid not null,
+  user_id uuid not null,
+  user_name text,
+  title text,
+  content text not null,
+  category text default 'General',
+  post_type text default 'question',
+  parent_id uuid,
+  upvotes int default 0,
+  downvotes int default 0,
+  is_approved boolean default false,
+  created_at timestamptz not null default now()
+);
+create index if not exists idx_forum_posts_group on public.forum_posts(group_id);
+create index if not exists idx_forum_posts_parent on public.forum_posts(parent_id);
+
+create table if not exists public.forum_votes (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null,
+  post_id uuid not null,
+  vote_type text not null,
+  created_at timestamptz not null default now(),
+  unique(user_id, post_id)
+);
+
+-- Discord OAuth link table (frontend-safe fields only; tokens stay backend)
+create table if not exists public.discord_links (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null unique,
+  discord_user_id text not null,
+  discord_username text,
+  discord_avatar text,
+  discord_connected_at timestamptz not null default now(),
+  discord_role_synced_at timestamptz
+);
+create index if not exists idx_discord_links_discord on public.discord_links(discord_user_id);
+
+-- RLS (anon-readable; user_id is the authoritative scope passed from app,
+-- matches the Work Hub secondary-DB pattern)
+alter table public.community_groups       enable row level security;
+alter table public.community_memberships  enable row level security;
+alter table public.community_onboarding   enable row level security;
+alter table public.category_requests      enable row level security;
+alter table public.forum_categories       enable row level security;
+alter table public.forum_posts            enable row level security;
+alter table public.forum_votes            enable row level security;
+alter table public.discord_links          enable row level security;
+
+do $$ begin create policy "anon_all_groups"      on public.community_groups      for all using (true) with check (true);
+exception when duplicate_object then null; end $$;
+do $$ begin create policy "anon_all_memberships" on public.community_memberships for all using (true) with check (true);
+exception when duplicate_object then null; end $$;
+do $$ begin create policy "anon_all_onboarding"  on public.community_onboarding  for all using (true) with check (true);
+exception when duplicate_object then null; end $$;
+do $$ begin create policy "anon_all_catreq"      on public.category_requests     for all using (true) with check (true);
+exception when duplicate_object then null; end $$;
+do $$ begin create policy "anon_all_forumcat"    on public.forum_categories      for all using (true) with check (true);
+exception when duplicate_object then null; end $$;
+do $$ begin create policy "anon_all_forumposts"  on public.forum_posts           for all using (true) with check (true);
+exception when duplicate_object then null; end $$;
+do $$ begin create policy "anon_all_forumvotes"  on public.forum_votes           for all using (true) with check (true);
+exception when duplicate_object then null; end $$;
+do $$ begin create policy "anon_all_discord"     on public.discord_links         for all using (true) with check (true);
+exception when duplicate_object then null; end $$;
+
+-- Seed a couple of default channels so the hub isn't empty
+insert into public.community_groups (name, icon, description, min_tier, is_default, is_readonly)
+select * from (values
+  ('Welcome',      '👋', 'Announcements & updates from the team', 'pro', true,  true),
+  ('General Chat', '💬', 'Hang out, ask anything',                'pro', true,  false),
+  ('Wins',         '🏆', 'Share your hustle wins',                'pro', true,  false)
+) as v(name, icon, description, min_tier, is_default, is_readonly)
+where not exists (select 1 from public.community_groups);
+`;
+
 export const SQL_BLOCKS = [
   { id: "work", label: "Workspace Core (Work tab) — invoices, time, clients, expenses, etc.", sql: WORK_SETUP_SQL },
   { id: "canvas", label: "Hustle Canvas — sticky notes board", sql: CANVAS_SETUP_SQL },
   { id: "workspaces", label: "Workspaces — client list & action bar", sql: WORKSPACES_SETUP_SQL },
+  { id: "community", label: "Community / Forum + Discord links — 3rd backend (qeswhaytgvosfzzgraef)", sql: COMMUNITY_SETUP_SQL },
 ];
