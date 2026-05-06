@@ -3195,6 +3195,57 @@ export type Database = {
         }
         Relationships: []
       }
+      workspace_roadmaps: {
+        Row: {
+          ai_provider: string | null
+          classification: Json
+          created_at: string
+          id: string
+          next_actions: Json
+          owner_id: string
+          phases: Json
+          recommended_docs: Json
+          recommended_tools: Json
+          source_input: string | null
+          suggested_reminders: Json
+          updated_at: string
+          version: number
+          workspace_id: string
+        }
+        Insert: {
+          ai_provider?: string | null
+          classification?: Json
+          created_at?: string
+          id?: string
+          next_actions?: Json
+          owner_id: string
+          phases?: Json
+          recommended_docs?: Json
+          recommended_tools?: Json
+          source_input?: string | null
+          suggested_reminders?: Json
+          updated_at?: string
+          version?: number
+          workspace_id: string
+        }
+        Update: {
+          ai_provider?: string | null
+          classification?: Json
+          created_at?: string
+          id?: string
+          next_actions?: Json
+          owner_id?: string
+          phases?: Json
+          recommended_docs?: Json
+          recommended_tools?: Json
+          source_input?: string | null
+          suggested_reminders?: Json
+          updated_at?: string
+          version?: number
+          workspace_id?: string
+        }
+        Relationships: []
+      }
       workspace_tasks: {
         Row: {
           blockers: string | null
