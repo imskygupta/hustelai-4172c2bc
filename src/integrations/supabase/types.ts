@@ -2077,6 +2077,192 @@ export type Database = {
         }
         Relationships: []
       }
+      workspace_approvals: {
+        Row: {
+          approved_at: string | null
+          comment: string | null
+          created_at: string | null
+          id: string
+          owner_id: string
+          rejected_at: string | null
+          status: string
+          target_id: string
+          target_type: string
+          viewed_at: string | null
+          workspace_id: string
+        }
+        Insert: {
+          approved_at?: string | null
+          comment?: string | null
+          created_at?: string | null
+          id?: string
+          owner_id: string
+          rejected_at?: string | null
+          status?: string
+          target_id: string
+          target_type: string
+          viewed_at?: string | null
+          workspace_id: string
+        }
+        Update: {
+          approved_at?: string | null
+          comment?: string | null
+          created_at?: string | null
+          id?: string
+          owner_id?: string
+          rejected_at?: string | null
+          status?: string
+          target_id?: string
+          target_type?: string
+          viewed_at?: string | null
+          workspace_id?: string
+        }
+        Relationships: []
+      }
+      workspace_client_events: {
+        Row: {
+          created_at: string | null
+          event_type: string
+          id: string
+          metadata: Json | null
+          owner_id: string
+          portal_id: string | null
+          target_id: string | null
+          target_type: string | null
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          event_type: string
+          id?: string
+          metadata?: Json | null
+          owner_id: string
+          portal_id?: string | null
+          target_id?: string | null
+          target_type?: string | null
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string | null
+          event_type?: string
+          id?: string
+          metadata?: Json | null
+          owner_id?: string
+          portal_id?: string | null
+          target_id?: string | null
+          target_type?: string | null
+          workspace_id?: string
+        }
+        Relationships: []
+      }
+      workspace_collaborators: {
+        Row: {
+          accepted_at: string | null
+          collaborator_id: string | null
+          email: string
+          id: string
+          invited_at: string | null
+          owner_id: string
+          role: string
+          workspace_id: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          collaborator_id?: string | null
+          email: string
+          id?: string
+          invited_at?: string | null
+          owner_id: string
+          role?: string
+          workspace_id: string
+        }
+        Update: {
+          accepted_at?: string | null
+          collaborator_id?: string | null
+          email?: string
+          id?: string
+          invited_at?: string | null
+          owner_id?: string
+          role?: string
+          workspace_id?: string
+        }
+        Relationships: []
+      }
+      workspace_comments: {
+        Row: {
+          author_name: string | null
+          author_type: string
+          body: string
+          created_at: string | null
+          id: string
+          owner_id: string
+          parent_id: string | null
+          target_id: string | null
+          target_type: string
+          workspace_id: string
+        }
+        Insert: {
+          author_name?: string | null
+          author_type?: string
+          body: string
+          created_at?: string | null
+          id?: string
+          owner_id: string
+          parent_id?: string | null
+          target_id?: string | null
+          target_type?: string
+          workspace_id: string
+        }
+        Update: {
+          author_name?: string | null
+          author_type?: string
+          body?: string
+          created_at?: string | null
+          id?: string
+          owner_id?: string
+          parent_id?: string | null
+          target_id?: string | null
+          target_type?: string
+          workspace_id?: string
+        }
+        Relationships: []
+      }
+      workspace_doc_versions: {
+        Row: {
+          created_at: string | null
+          data: Json
+          doc_id: string
+          id: string
+          note: string | null
+          owner_id: string
+          theme: string | null
+          version: number
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          data: Json
+          doc_id: string
+          id?: string
+          note?: string | null
+          owner_id: string
+          theme?: string | null
+          version?: number
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string | null
+          data?: Json
+          doc_id?: string
+          id?: string
+          note?: string | null
+          owner_id?: string
+          theme?: string | null
+          version?: number
+          workspace_id?: string
+        }
+        Relationships: []
+      }
       workspace_documents: {
         Row: {
           created_at: string
@@ -2130,6 +2316,78 @@ export type Database = {
           },
         ]
       }
+      workspace_files: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_client_visible: boolean | null
+          mime_type: string | null
+          name: string
+          owner_id: string
+          size_bytes: number | null
+          storage_path: string
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_client_visible?: boolean | null
+          mime_type?: string | null
+          name: string
+          owner_id: string
+          size_bytes?: number | null
+          storage_path: string
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_client_visible?: boolean | null
+          mime_type?: string | null
+          name?: string
+          owner_id?: string
+          size_bytes?: number | null
+          storage_path?: string
+          workspace_id?: string
+        }
+        Relationships: []
+      }
+      workspace_notifications: {
+        Row: {
+          body: string | null
+          created_at: string | null
+          id: string
+          kind: string
+          link: string | null
+          read: boolean | null
+          title: string
+          user_id: string
+          workspace_id: string | null
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string | null
+          id?: string
+          kind: string
+          link?: string | null
+          read?: boolean | null
+          title: string
+          user_id: string
+          workspace_id?: string | null
+        }
+        Update: {
+          body?: string | null
+          created_at?: string | null
+          id?: string
+          kind?: string
+          link?: string | null
+          read?: boolean | null
+          title?: string
+          user_id?: string
+          workspace_id?: string | null
+        }
+        Relationships: []
+      }
       workspace_payments: {
         Row: {
           amount: number
@@ -2181,6 +2439,54 @@ export type Database = {
         }
         Relationships: []
       }
+      workspace_portals: {
+        Row: {
+          created_at: string | null
+          expires_at: string | null
+          id: string
+          last_viewed_at: string | null
+          owner_id: string
+          show_docs: boolean | null
+          show_notes: boolean | null
+          show_payments: boolean | null
+          show_reminders: boolean | null
+          show_tasks: boolean | null
+          token: string
+          views: number | null
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          last_viewed_at?: string | null
+          owner_id: string
+          show_docs?: boolean | null
+          show_notes?: boolean | null
+          show_payments?: boolean | null
+          show_reminders?: boolean | null
+          show_tasks?: boolean | null
+          token: string
+          views?: number | null
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          last_viewed_at?: string | null
+          owner_id?: string
+          show_docs?: boolean | null
+          show_notes?: boolean | null
+          show_payments?: boolean | null
+          show_reminders?: boolean | null
+          show_tasks?: boolean | null
+          token?: string
+          views?: number | null
+          workspace_id?: string
+        }
+        Relationships: []
+      }
       workspace_reminders: {
         Row: {
           created_at: string | null
@@ -2210,6 +2516,48 @@ export type Database = {
           kind?: string | null
           owner_id?: string
           title?: string
+          workspace_id?: string
+        }
+        Relationships: []
+      }
+      workspace_retainers: {
+        Row: {
+          active: boolean | null
+          created_at: string | null
+          currency: string | null
+          deliverables: Json | null
+          id: string
+          monthly_amount: number
+          next_invoice_at: string | null
+          owner_id: string
+          recurring_reminders: Json | null
+          updated_at: string | null
+          workspace_id: string
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string | null
+          currency?: string | null
+          deliverables?: Json | null
+          id?: string
+          monthly_amount?: number
+          next_invoice_at?: string | null
+          owner_id: string
+          recurring_reminders?: Json | null
+          updated_at?: string | null
+          workspace_id: string
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string | null
+          currency?: string | null
+          deliverables?: Json | null
+          id?: string
+          monthly_amount?: number
+          next_invoice_at?: string | null
+          owner_id?: string
+          recurring_reminders?: Json | null
+          updated_at?: string | null
           workspace_id?: string
         }
         Relationships: []
