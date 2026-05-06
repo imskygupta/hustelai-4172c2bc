@@ -14,6 +14,7 @@ const STATIC_ROUTES: { path: string; priority: number; changefreq: string }[] = 
   { path: "/reviews", priority: 0.5, changefreq: "weekly" },
   { path: "/products", priority: 0.6, changefreq: "weekly" },
   { path: "/insights", priority: 0.7, changefreq: "weekly" },
+  { path: "/topics", priority: 0.8, changefreq: "weekly" },
   { path: "/privacy-policy", priority: 0.3, changefreq: "yearly" },
   { path: "/terms-conditions", priority: 0.3, changefreq: "yearly" },
   { path: "/refund-policy", priority: 0.3, changefreq: "yearly" },
@@ -66,6 +67,22 @@ Deno.serve(async () => {
       "weekly",
       0.6,
     ));
+  }
+
+  const { data: topics } = await supabase
+    .from("seo_topics")
+    .select("slug, updated_at, is_published")
+    .eq("is_published", true);
+  for (const t of topics ?? []) {
+    parts.push(urlEntry(`${SITE}/topics/${t.slug}`, t.updated_at ?? now, "weekly", 0.7));
+  }
+
+  const { data: authors } = await supabase
+    .from("seo_authors")
+    .select("slug, updated_at, is_published")
+    .eq("is_published", true);
+  for (const a of authors ?? []) {
+    parts.push(urlEntry(`${SITE}/authors/${a.slug}`, a.updated_at ?? now, "monthly", 0.4));
   }
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${parts.join("")}</urlset>`;
