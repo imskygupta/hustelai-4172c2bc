@@ -80,3 +80,6 @@ verify_jwt = false
 
 [functions.discord-sync-role]
 verify_jwt = false
+
+[functions.workspace-portal]
+verify_jwt = false

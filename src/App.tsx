@@ -64,6 +64,7 @@ import WorkspaceDetail from "./pages/workspace-os/WorkspaceDetail";
 import AISettings from "./pages/workspace-os/AISettings";
 import Pipeline from "./pages/workspace-os/Pipeline";
 import Revenue from "./pages/workspace-os/Revenue";
+import WorkspacePortal from "./pages/WorkspacePortal";
 import DocsList from "./pages/workspace-os/docs/DocsList";
 import DocEditor from "./pages/workspace-os/docs/DocEditor";
 import Work from "./pages/Work";
@@ -160,6 +161,7 @@ const App = () => (
             <Route path="/work" element={Shelled(<Work />)} />
             <Route path="/work/:slug" element={Shelled(<WorkTool />)} />
             <Route path="/portal/:token" element={<ClientPortal />} />
+            <Route path="/p/:token" element={<WorkspacePortal />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <MobileBottomNav />
