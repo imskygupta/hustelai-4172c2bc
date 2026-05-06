@@ -111,15 +111,15 @@ export default function Index() {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
               </span>
-              AI-Powered Hustle Discovery — Live in 2026
+              HustleAI Workspace OS — Live for freelancers & agencies
             </div>
             <h1 className="gsap-fade text-5xl md:text-7xl font-display font-semibold leading-[1.05] tracking-tight text-slate-900">
-              The intelligence layer
+              Manage clients, projects &amp;
               <br />
-              for your <span className="text-emerald-600">side hustle.</span>
+              invoices in one <span className="text-emerald-600">AI workspace.</span>
             </h1>
             <p className="gsap-fade text-base md:text-lg text-slate-500 max-w-2xl mx-auto leading-relaxed">
-              Stop scrolling job boards. Tell HustleAI your skills, budget, and goals — get verified opportunities, AI-built roadmaps, and tools to land them. All in seconds.
+              The freelancer operating system. Run your client work, agreements, payments and workflows from a single AI-powered workspace — built for freelancers, creators, consultants and modern agencies.
             </p>
           </div>
 
