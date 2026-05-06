@@ -462,13 +462,18 @@ export default function Community() {
     if (selectedGroup) loadPosts(selectedGroup.id, selectedGroup.name);
   };
 
-  const sortedPosts = [...posts].sort((a, b) => {
-    if (sortBy === "new") return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-    if (sortBy === "top") return (b.upvotes - b.downvotes) - (a.upvotes - a.downvotes);
-    const scoreA = (a.upvotes - a.downvotes) + (new Date(a.created_at).getTime() / 1e10);
-    const scoreB = (b.upvotes - b.downvotes) + (new Date(b.created_at).getTime() / 1e10);
-    return scoreB - scoreA;
-  });
+  const sortedPosts = [...posts]
+    // Hide moderated posts from non-admins (and from non-authors)
+    .filter(p => !p.is_hidden || isAdmin || p.user_id === user?.id)
+    .sort((a, b) => {
+      // Pinned always on top
+      if (!!a.is_pinned !== !!b.is_pinned) return a.is_pinned ? -1 : 1;
+      if (sortBy === "new") return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      if (sortBy === "top") return (b.upvotes - b.downvotes) - (a.upvotes - a.downvotes);
+      const scoreA = (a.upvotes - a.downvotes) + (new Date(a.created_at).getTime() / 1e10);
+      const scoreB = (b.upvotes - b.downvotes) + (new Date(b.created_at).getTime() / 1e10);
+      return scoreB - scoreA;
+    });
 
   const getUsernameDisplay = (post: ForumPost) => {
     const shortId = post.user_id.slice(0, 6);
