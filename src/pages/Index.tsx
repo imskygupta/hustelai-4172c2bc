@@ -111,15 +111,15 @@ export default function Index() {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
               </span>
-              AI-Powered Hustle Discovery — Live in 2026
+              HustleAI Workspace OS — Live for freelancers & agencies
             </div>
             <h1 className="gsap-fade text-5xl md:text-7xl font-display font-semibold leading-[1.05] tracking-tight text-slate-900">
-              The intelligence layer
+              Manage clients, projects &amp;
               <br />
-              for your <span className="text-emerald-600">side hustle.</span>
+              invoices in one <span className="text-emerald-600">AI workspace.</span>
             </h1>
             <p className="gsap-fade text-base md:text-lg text-slate-500 max-w-2xl mx-auto leading-relaxed">
-              Stop scrolling job boards. Tell HustleAI your skills, budget, and goals — get verified opportunities, AI-built roadmaps, and tools to land them. All in seconds.
+              The freelancer operating system. Run your client work, agreements, payments and workflows from a single AI-powered workspace — built for freelancers, creators, consultants and modern agencies.
             </p>
           </div>
 
@@ -293,17 +293,17 @@ export default function Index() {
           >
             <div className="absolute -top-20 -right-20 w-64 h-64 bg-emerald-500/20 blur-3xl rounded-full" />
             <h2 className="text-3xl md:text-4xl font-display font-semibold tracking-tight relative">
-              Ready to find your perfect hustle?
+              Run your freelance business like a studio.
             </h2>
             <p className="text-slate-300 relative">
-              Join thousands discovering their next income stream with AI.
+              Create your first workspace in under a minute. Free to start.
             </p>
             <Button
               size="lg"
               className="bg-emerald-500 hover:bg-emerald-600 text-white text-base px-8 h-12 relative"
               onClick={() => navigate("/signup")}
             >
-              Start free <ArrowRight className="w-4 h-4 ml-2" />
+              Start your workspace <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
           </motion.div>
         </div>
