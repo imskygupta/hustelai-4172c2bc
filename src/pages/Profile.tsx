@@ -157,7 +157,7 @@ export default function Profile() {
   const KYC_FORM_URL = "https://forms.gle/638t96RWy1rpoJtP8";
 
   const handleDeleteAccount = () => {
-    window.location.href = "mailto:contact@hustlaiapp.in?subject=Account Deletion Request&body=I would like to delete my HustleAI account. My email: " + encodeURIComponent(user?.email || "");
+    window.location.href = "mailto:hustlaiapp@zohomail.in?subject=Account Deletion Request&body=I would like to delete my HustleAI account. My email: " + encodeURIComponent(user?.email || "");
   };
 
   if (loading) {
@@ -518,7 +518,7 @@ export default function Profile() {
                     <div className="bg-destructive/10 rounded-xl p-4 space-y-3 border border-destructive/20">
                       <p className="text-sm text-destructive font-medium">⚠️ This action is irreversible</p>
                       <p className="text-xs text-muted-foreground">
-                        To delete your account, please send an email to <strong>contact@hustlaiapp.in</strong> from your registered email address requesting account deletion.
+                        To delete your account, please send an email to <strong>hustlaiapp@zohomail.in</strong> from your registered email address requesting account deletion.
                       </p>
                       <div className="flex gap-2">
                         <Button size="sm" className="bg-destructive text-destructive-foreground" onClick={handleDeleteAccount}>

@@ -155,8 +155,8 @@ export default function Integrations() {
               <p className="text-sm text-muted-foreground">
                 We're rolling out native, OAuth-based integrations across deployment, CRM, communication and AI tools.
                 Want a specific integration first? Email{" "}
-                <a href="mailto:contact@hustlaiapp.in" className="text-primary hover:underline">
-                  contact@hustlaiapp.in
+                <a href="mailto:hustlaiapp@zohomail.in" className="text-primary hover:underline">
+                  hustlaiapp@zohomail.in
                 </a>.
               </p>
             </div>

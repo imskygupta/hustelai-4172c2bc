@@ -175,7 +175,7 @@ export default function Affiliates() {
               <div className="glass rounded-2xl p-12 text-center space-y-6 border-accent/20">
                 <Zap className="w-12 h-12 text-accent mx-auto" />
                 <h2 className="text-3xl font-display font-bold">Start Earning Today</h2>
-                <p className="text-muted-foreground">Questions? Reach out at <a href="mailto:contact@hustlaiapp.in" className="text-primary hover:underline">contact@hustlaiapp.in</a></p>
+                <p className="text-muted-foreground">Questions? Reach out at <a href="mailto:hustlaiapp@zohomail.in" className="text-primary hover:underline">hustlaiapp@zohomail.in</a></p>
                 <Button size="lg" className="bg-gradient-primary text-primary-foreground" onClick={() => navigate(user ? "/dashboard?tab=affiliate" : "/signup")}>
                   {user ? "Open Affiliate Dashboard" : "Join the Program"} <ArrowRight className="w-5 h-5 ml-2" />
                 </Button>

@@ -46,8 +46,8 @@ export default function RefundPolicy() {
             <h2 className="text-lg font-display font-semibold text-foreground">6. Contact for Billing Issues</h2>
             <p>For any billing-related questions or disputes, reach out to us at:</p>
             <ul className="list-disc pl-5">
-              <li>Email: <a href="mailto:contact@hustlaiapp.in" className="text-primary hover:underline">contact@hustlaiapp.in</a></li>
-              <li>Support: <a href="mailto:support@hustlaiapp.in" className="text-primary hover:underline">support@hustlaiapp.in</a></li>
+              <li>Email: <a href="mailto:hustlaiapp@zohomail.in" className="text-primary hover:underline">hustlaiapp@zohomail.in</a></li>
+              <li>Support: <a href="mailto:hustlaiapp@zohomail.in" className="text-primary hover:underline">hustlaiapp@zohomail.in</a></li>
             </ul>
           </section>
         </div>
