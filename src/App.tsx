@@ -201,6 +201,7 @@ const App = () => (
             <Route path="/workspaces" element={Shelled(<WorkspaceOS />)}>
               <Route index element={<WorkspaceOverview />} />
               <Route path="new" element={<NewWorkspace />} />
+              <Route path="roadmap" element={<RoadmapCockpit />} />
               <Route path="ai-settings" element={<AISettings />} />
               <Route path="pipeline" element={<Pipeline />} />
               <Route path="revenue" element={<Revenue />} />
