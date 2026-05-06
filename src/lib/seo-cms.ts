@@ -33,6 +33,14 @@ export interface SeoPageRow {
   published_at: string | null;
   created_at: string;
   updated_at: string;
+  topic_id?: string | null;
+  is_pillar?: boolean;
+  parent_page_id?: string | null;
+  breadcrumb_label?: string | null;
+  related_page_ids?: string[];
+  related_tool_ids?: string[];
+  faq_blocks?: SeoFAQDB[];
+  auto_link_enabled?: boolean;
 }
 
 export interface SeoBlogRow {
@@ -54,6 +62,15 @@ export interface SeoBlogRow {
   published_at: string | null;
   created_at: string;
   updated_at: string;
+  topic_id?: string | null;
+  author_id?: string | null;
+  reading_time_minutes?: number;
+  toc?: { level: number; text: string; slug: string }[];
+  related_post_ids?: string[];
+  related_tool_ids?: string[];
+  faq_blocks?: SeoFAQDB[];
+  frequently_used_with?: string[];
+  auto_link_enabled?: boolean;
 }
 
 const PAGE = "seo_pages" as any;
