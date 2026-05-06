@@ -149,6 +149,7 @@ const sidebarItems: { id: AdminSection; label: string; icon: any }[] = [
   { id: "feature-flags", label: "Feature Flags", icon: Flag },
   { id: "seo-pages" as AdminSection, label: "SEO Pages", icon: Globe },
   { id: "seo-blog" as AdminSection, label: "Insights / Blog", icon: BookOpen },
+  { id: "usage-analytics" as AdminSection, label: "Usage Analytics", icon: BarChart3 },
 ];
 
 export default function AdminDashboard() {
