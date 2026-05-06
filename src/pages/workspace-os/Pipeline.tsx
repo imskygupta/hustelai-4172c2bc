@@ -47,11 +47,10 @@ export default function Pipeline() {
                 </div>
                 <div className="space-y-2 min-h-[60px]">
                   {list.map(w => (
-                    <motion.div
+                    <div
                       key={w.id}
                       draggable
                       onDragStart={e => e.dataTransfer.setData("text/plain", w.id)}
-                      layout
                       className="cursor-grab active:cursor-grabbing"
                     >
                       <Link to={`/workspaces/${w.id}`} className="block rounded-lg border border-border bg-background p-3 hover:border-primary/40">
@@ -66,7 +65,7 @@ export default function Pipeline() {
                           {w.pricing?.amount && <span className="text-[10px] font-medium text-primary">₹{w.pricing.amount}</span>}
                         </div>
                       </Link>
-                    </motion.div>
+                    </div>
                   ))}
                 </div>
               </div>
