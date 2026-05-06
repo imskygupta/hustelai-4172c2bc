@@ -51,7 +51,7 @@ export default function Contact() {
               {[
                 { icon: Mail, label: "Email", value: "hustlaiapp@zohomail.in" },
                 { icon: MessageSquare, label: "Support", value: "24/7 Live Chat" },
-                { icon: MapPin, label: "Location", value: "Bangalore, India" },
+                { icon: MapPin, label: "Location", value: "Prayagraj, Uttar Pradesh, India" },
               ].map((item) => (
                 <div key={item.label} className="flex items-center gap-4">
                   <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
