@@ -14,9 +14,10 @@ import {
   MessageSquare, Send, ArrowLeft, ThumbsUp, ThumbsDown,
   Plus, Filter, Clock, Flame, CheckCircle, AlertCircle,
   ChevronDown, ChevronUp, User, Lock, Hash, Volume2, VolumeX,
-  Users, Crown, Shield, BookOpen, Bell, X
+  Users, Crown, Shield, BookOpen, Bell, X, Link2, CheckCircle2
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
+import { communityDb as _communityDb } from "@/integrations/community/client";
 
 interface CommunityGroup {
   id: string;
@@ -101,6 +102,7 @@ export default function Community() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [welcomeNotifCount, setWelcomeNotifCount] = useState(0);
   const [dismissedNotifs, setDismissedNotifs] = useState<Set<string>>(new Set());
+  const [discordLink, setDiscordLink] = useState<{ discord_username: string | null } | null>(null);
 
   const tier = profile?.subscription_tier || "free";
   const maxChannels = TIER_CHANNEL_LIMITS[tier] || 0;
@@ -113,6 +115,7 @@ export default function Community() {
       loadUserVotes();
       checkAdminRole();
       loadDismissedNotifs();
+      loadDiscordLink();
     } else {
       setHasOnboarded(false);
     }
@@ -131,6 +134,16 @@ export default function Community() {
   const loadDismissedNotifs = () => {
     const stored = JSON.parse(localStorage.getItem("dismissed_welcome_notifs") || "[]");
     setDismissedNotifs(new Set(stored));
+  };
+
+  const loadDiscordLink = async () => {
+    if (!user) return;
+    const { data } = await _communityDb
+      .from("discord_links")
+      .select("discord_username")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    setDiscordLink(data as any);
   };
 
   const dismissWelcomeNotif = (postId: string) => {
