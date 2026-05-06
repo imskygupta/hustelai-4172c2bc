@@ -9,59 +9,63 @@ const plans = [
     priceUSD: "$0",
     priceINR: "₹0",
     period: "forever",
+    tagline: "Perfect for getting started",
     icon: Sparkles,
     features: [
-      "3 AI-powered searches/day",
-      "Work Hub: Invoices, Time tracker, Clients CRM",
-      "Work Hub: Checklists, Deadlines, Daily streak",
-      "Work Hub: Client portals, Notes & Expenses",
-      "Basic personalization",
-      "Explore all categories",
-      "Community access (limited)",
-      "Basic side hustle ideas",
-      "Affiliate: 1 search credit/referral",
-      "Marketplace: View 2 free items",
+      "1 Workspace",
+      "3 AI assists / day",
+      "Client CRM & contacts",
+      "Invoices & agreements",
+      "Project checklists & time tracking",
+      "Notes & activity timeline",
+      "Basic client portal",
+      "Community access",
+      "Watermarked exports",
     ],
-    cta: "Start Free",
+    cta: "Start Workspace",
   },
   {
     name: "Pro",
     priceUSD: "$5",
     priceINR: "₹450",
     period: "/month",
+    tagline: "For active freelancers",
     icon: Rocket,
     popular: true,
     features: [
-      "5 AI searches/day",
-      "Promoted profile visibility",
-      "Personalized monitoring",
-      "Custom idea recommendations",
+      "5 Workspaces",
+      "5 AI assists / day",
+      "Custom branding on documents",
+      "Advanced invoices & quotations",
+      "Client approval flows",
+      "Workspace analytics",
+      "Recurring reminders",
+      "Revenue dashboard",
+      "Premium templates",
+      "Watermark-free exports",
       "Priority support",
-      "Pro community & forums",
-      "Profile & resume upload",
-      "Weekly trending reports",
-      "Affiliate: 5% commission",
-      "Full marketplace browsing",
     ],
-    cta: "Go Pro",
+    cta: "Upgrade to Pro",
   },
   {
     name: "Elite",
     priceUSD: "$10",
     priceINR: "₹900",
     period: "/month",
+    tagline: "For growing freelance businesses",
     icon: Crown,
     features: [
-      "10 AI searches/day — everything in Pro",
-      "Live webinars & guidance",
-      "AI Chatbot (Personal Mentor)",
-      "Advanced elite communities",
-      "Expert resume review",
-      "Free tools & software licenses",
-      "Hacks & methods library",
-      "1-on-1 strategy sessions",
-      "Affiliate: 6% commission",
-      "Sell 1 course + 1 tool + 1 item",
+      "Unlimited workspaces",
+      "10 AI assists / day",
+      "AI workspace assistant",
+      "Advanced CRM & pipeline",
+      "Retainer management",
+      "Team collaboration",
+      "Shared client portals",
+      "Automation workflows",
+      "Workspace insights",
+      "Elite community access",
+      "Strategy sessions",
     ],
     cta: "Go Elite",
   },
@@ -70,22 +74,23 @@ const plans = [
     priceUSD: "$25",
     priceINR: "₹2,250",
     period: "/month",
+    tagline: "For agencies & power users",
     icon: Star,
     infinity: true,
     features: [
-      "20 AI searches/day — everything in Elite",
-      "Create & sell courses (up to 5)",
-      "Sell tools & templates (up to 5)",
-      "5 additional marketplace items",
-      "Infinity members lounge",
-      "Revenue sharing program",
-      "Priority 1-on-1 coaching",
-      "Custom branding tools",
-      "Affiliate: 10% + custom rates",
-      "Own affiliate program for products",
-      "API access & integrations",
+      "Everything in Elite",
+      "Unlimited AI assists",
+      "Advanced automations",
+      "API access",
+      "White-label branding",
+      "Advanced integrations",
+      "Team permissions & roles",
+      "Client analytics",
+      "Multi-user collaboration",
+      "Priority onboarding",
+      "Early access features",
     ],
-    cta: "Go Infinity ♾️",
+    cta: "Go Infinity",
   },
 ];
 
@@ -103,10 +108,10 @@ export function Pricing() {
         >
           <div className="text-xs uppercase tracking-[0.18em] text-emerald-600 font-medium">Pricing</div>
           <h2 className="text-3xl md:text-5xl font-display font-semibold tracking-tight text-slate-900">
-            Choose your hustle plan
+            Pricing built for client work.
           </h2>
           <p className="text-slate-500 max-w-xl mx-auto">
-            Start free, upgrade when you're ready. Prices in INR for Indian hustlers.
+            Workspaces, CRM, invoices, portals and AI assistance — one operating layer for freelancers and agencies.
           </p>
         </motion.div>
 
@@ -150,6 +155,7 @@ export function Pricing() {
                   <plan.icon className="w-5 h-5" />
                 </div>
                 <h3 className="font-display font-semibold text-lg text-slate-900">{plan.name}</h3>
+                <p className="text-xs text-slate-500 -mt-1">{plan.tagline}</p>
                 <div>
                   <div className="flex items-baseline gap-1">
                     <span className="text-3xl font-display font-semibold text-slate-900">{plan.priceINR}</span>
@@ -192,8 +198,8 @@ export function Pricing() {
           className="mt-10 rounded-2xl p-8 text-center max-w-xl mx-auto bg-white border border-slate-200 hover:border-emerald-300 hover:shadow-lg hover:shadow-emerald-100 transition-all space-y-3"
         >
           <div className="inline-flex w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 items-center justify-center mx-auto">💳</div>
-          <h3 className="font-display font-semibold text-lg text-slate-900">Pay-As-You-Go</h3>
-          <p className="text-sm text-slate-500">₹10/search — All AI tools unlocked per search, no subscription needed</p>
+          <h3 className="font-display font-semibold text-lg text-slate-900">AI assist credits</h3>
+          <p className="text-sm text-slate-500">₹10 / assist — top up on demand without a subscription. Ideal for occasional use.</p>
           <Button
             variant="outline"
             onClick={() => navigate("/payment?type=wallet")}
