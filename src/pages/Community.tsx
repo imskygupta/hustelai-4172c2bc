@@ -595,6 +595,11 @@ export default function Community() {
                   >
                     {discordLink ? "Disconnect" : "Connect Discord"}
                   </Button>
+                  {discordLink && (
+                    <Button size="sm" variant="ghost" onClick={resyncDiscordRole}>
+                      Resync role
+                    </Button>
+                  )}
                 </div>
               )}
 
