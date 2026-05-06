@@ -139,13 +139,13 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_ANON_KEY")!,
       { global: { headers: { Authorization: auth } } },
     );
-    const { data: claims, error: cErr } = await sb.auth.getClaims(auth.replace("Bearer ", ""));
-    if (cErr || !claims?.claims?.sub) {
+    const { data: udata, error: cErr } = await sb.auth.getUser(auth.replace("Bearer ", ""));
+    if (cErr || !udata?.user?.id) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    const userId = claims.claims.sub as string;
+    const userId = udata.user.id as string;
 
     // Fetch tier from primary DB profiles
     const admin = createClient(
