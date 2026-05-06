@@ -24,11 +24,15 @@ export interface SeoLandingProps {
   ctaLabel?: string;
   ctaHref?: string;
   badge?: string;
+  noindex?: boolean;
+  ogImage?: string;
+  extraJsonLd?: Record<string, any>[];
 }
 
 export function SeoLanding({
   path, title, description, h1, subhead, bullets, sections, faqs, related,
   ctaLabel = "Start free", ctaHref = "/signup", badge = "AI Workspace OS",
+  noindex = false, ogImage, extraJsonLd = [],
 }: SeoLandingProps) {
   return (
     <div className="min-h-screen bg-background">
@@ -36,7 +40,9 @@ export function SeoLanding({
         title={title}
         description={description}
         path={path}
-        jsonLd={[softwareJsonLd, faqJsonLd(faqs)]}
+        noindex={noindex}
+        image={ogImage}
+        jsonLd={[softwareJsonLd, faqJsonLd(faqs), ...extraJsonLd]}
       />
       <Navbar />
       <main className="pt-24 pb-16">
