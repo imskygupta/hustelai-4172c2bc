@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 
 const tiers = ["Free", "Pro", "Elite", "Infinity", "Pay-As-You-Go"];
-const tierColors = ["text-muted-foreground", "text-primary", "text-accent", "text-yellow-500", "text-emerald-500"];
+const tierColors = ["text-slate-500", "text-emerald-600", "text-purple-600", "text-amber-500", "text-emerald-600"];
 const tierIcons = [Sparkles, Rocket, Crown, Star, Wallet];
 const tierPrices = ["₹0", "₹450/mo", "₹900/mo", "₹2,250/mo", "₹10/search"];
 
