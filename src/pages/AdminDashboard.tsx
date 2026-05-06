@@ -2,6 +2,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { communityDb } from "@/integrations/community/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -282,9 +283,9 @@ export default function AdminDashboard() {
       supabase.from("chat_messages").select("*").order("created_at", { ascending: false }).limit(500),
       supabase.from("user_verifications").select("*").order("created_at", { ascending: false }),
       supabase.from("payments").select("*").order("created_at", { ascending: false }),
-      supabase.from("forum_posts").select("*").order("created_at", { ascending: false }).limit(100),
+      communityDb.from("forum_posts").select("*").order("created_at", { ascending: false }).limit(100),
       supabase.from("user_roles").select("*").order("created_at", { ascending: false }),
-      supabase.from("community_groups").select("*").order("created_at"),
+      communityDb.from("community_groups").select("*").order("created_at"),
       supabase.from("trending_links").select("*").order("sort_order"),
       supabase.from("orders").select("*").order("created_at", { ascending: false }),
     ]);
@@ -424,7 +425,7 @@ export default function AdminDashboard() {
     if (!error) {
       // Also post non-webinar notifications to Welcome & Onboarding channel
       if (notifType !== "webinar") {
-        await supabase.from("forum_posts").insert({
+        await communityDb.from("forum_posts").insert({
           group_id: WELCOME_CHANNEL_ID,
           user_id: user!.id,
           user_name: "HustleAI Team",
@@ -1445,14 +1446,14 @@ export default function AdminDashboard() {
                   </div>
                   <div className="flex gap-2">
                     <Button size="sm" className="bg-primary/20 text-primary h-8" onClick={async () => {
-                      await supabase.from("forum_posts").update({ is_approved: true }).eq("id", post.id);
+                      await communityDb.from("forum_posts").update({ is_approved: true }).eq("id", post.id);
                       setForumPosts(forumPosts.map((p: any) => p.id === post.id ? { ...p, is_approved: true } : p));
                       toast({ title: "Approved!" });
                     }}>
                       <CheckCircle className="w-3 h-3 mr-1" /> Approve
                     </Button>
                     <Button size="sm" variant="ghost" className="text-destructive h-8" onClick={async () => {
-                      await supabase.from("forum_posts").delete().eq("id", post.id);
+                      await communityDb.from("forum_posts").delete().eq("id", post.id);
                       setForumPosts(forumPosts.filter((p: any) => p.id !== post.id));
                     }}>
                       <Trash2 className="w-3 h-3" />
