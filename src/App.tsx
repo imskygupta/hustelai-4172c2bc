@@ -73,6 +73,9 @@ import DocEditor from "./pages/workspace-os/docs/DocEditor";
 import Work from "./pages/Work";
 import WorkTool from "./pages/WorkTool";
 import ClientPortal from "./pages/ClientPortal";
+import DynamicSeoPage from "./pages/seo/DynamicSeoPage";
+import SeoBlogIndex from "./pages/seo/SeoBlogIndex";
+import SeoBlogPost from "./pages/seo/SeoBlogPost";
 import {
   FreelancerCRMPage,
   AIInvoiceGeneratorPage,
@@ -128,6 +131,12 @@ const App = () => (
             <Route path="/agency-workflow-tools" element={<AgencyWorkflowToolsPage />} />
             <Route path="/freelancer-productivity-tools" element={<FreelancerProductivityToolsPage />} />
             <Route path="/ai-business-card-maker" element={<AIBusinessCardMakerPage />} />
+            {/* Dynamic SEO blog */}
+            <Route path="/insights" element={<SeoBlogIndex />} />
+            <Route path="/insights/:slug" element={<SeoBlogPost />} />
+            {/* Admin preview for landing pages */}
+            <Route path="/_preview/page/:slug" element={<DynamicSeoPage preview />} />
+            <Route path="/_preview/blog/:slug" element={<SeoBlogPost preview />} />
             <Route path="/explore" element={<Explore />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
