@@ -57,6 +57,11 @@ import ProductDetail from "./pages/ProductDetail";
 import HustleBot from "./pages/HustleBot";
 import Workspaces from "./pages/Workspaces";
 import HustleCanvas from "./pages/HustleCanvas";
+import WorkspaceOS from "./pages/workspace-os/WorkspaceOS";
+import WorkspaceOverview from "./pages/workspace-os/Overview";
+import NewWorkspace from "./pages/workspace-os/NewWorkspace";
+import WorkspaceDetail from "./pages/workspace-os/WorkspaceDetail";
+import AISettings from "./pages/workspace-os/AISettings";
 import Work from "./pages/Work";
 import WorkTool from "./pages/WorkTool";
 import ClientPortal from "./pages/ClientPortal";
@@ -135,7 +140,13 @@ const App = () => (
             <Route path="/products" element={<Products />} />
             <Route path="/products/:slug" element={<ProductDetail />} />
             <Route path="/hustlebot" element={Shelled(<HustleBot />)} />
-            <Route path="/workspaces" element={Shelled(<Workspaces />)} />
+            <Route path="/workspaces" element={Shelled(<WorkspaceOS />)}>
+              <Route index element={<WorkspaceOverview />} />
+              <Route path="new" element={<NewWorkspace />} />
+              <Route path="ai-settings" element={<AISettings />} />
+              <Route path=":id" element={<WorkspaceDetail />} />
+            </Route>
+            <Route path="/workspaces-legacy" element={Shelled(<Workspaces />)} />
             <Route path="/canvas" element={Shelled(<HustleCanvas />)} />
             <Route path="/work" element={Shelled(<Work />)} />
             <Route path="/work/:slug" element={Shelled(<WorkTool />)} />
