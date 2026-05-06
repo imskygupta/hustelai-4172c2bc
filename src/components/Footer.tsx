@@ -9,10 +9,12 @@ import { isAppShellRoute } from "@/components/app-shell-routes";
 import { CONTACT_EMAIL, SUPPORT_EMAIL } from "@/config/branding";
 
 const productLinks = [
-  { label: "Products (B2B APIs)", href: "/products" },
-  { label: "Explore", href: "/explore" },
+  { label: "Workspace OS", href: "/workspace-os" },
+  { label: "Freelancer CRM", href: "/freelancer-crm" },
+  { label: "AI Invoice Generator", href: "/ai-invoice-generator" },
+  { label: "Proposal Generator", href: "/proposal-generator" },
+  { label: "Client Portals", href: "/client-portal-software" },
   { label: "Plans & Pricing", href: "/plans" },
-  { label: "Marketplace", href: "/marketplace" },
   { label: "Blog", href: "/blog" },
 ];
 
@@ -87,7 +89,7 @@ export function Footer() {
               <span className="font-display font-bold text-xl">HustleAI</span>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              AI-powered freelance discovery platform. Find, start, and grow your next income stream.
+              HustleAI Workspace OS — AI-powered business workflow platform for freelancers, creators and agencies.
             </p>
             <div className="space-y-2 text-sm text-muted-foreground">
               <a href={`mailto:${CONTACT_EMAIL}`} className="flex items-center gap-2 hover:text-primary transition-colors">
