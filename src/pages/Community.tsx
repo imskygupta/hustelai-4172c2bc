@@ -897,6 +897,49 @@ export default function Community() {
                                     <AlertCircle className="w-2.5 h-2.5 mr-0.5" /> Pending
                                   </Badge>
                                 )}
+                                {post.is_pinned && (
+                                  <Badge className="text-[9px] bg-amber-500/20 text-amber-400 border-0">
+                                    <Pin className="w-2.5 h-2.5 mr-0.5" /> Pinned
+                                  </Badge>
+                                )}
+                                {post.is_locked && (
+                                  <Badge variant="outline" className="text-[9px] text-muted-foreground">
+                                    <Lock className="w-2.5 h-2.5 mr-0.5" /> Locked
+                                  </Badge>
+                                )}
+                                {post.is_hidden && (
+                                  <Badge variant="outline" className="text-[9px] text-destructive border-destructive/30">
+                                    <EyeOff className="w-2.5 h-2.5 mr-0.5" /> Hidden
+                                  </Badge>
+                                )}
+                                <div className="ml-auto flex items-center gap-1">
+                                  {user && user.id !== post.user_id && (
+                                    <button onClick={() => reportPost(post.id)}
+                                      title="Report"
+                                      className="p-1 rounded hover:bg-destructive/10 hover:text-destructive transition-colors">
+                                      <Flag className="w-3 h-3" />
+                                    </button>
+                                  )}
+                                  {isAdmin && (
+                                    <>
+                                      <button onClick={() => modAction(post.id, { is_pinned: !post.is_pinned })}
+                                        title={post.is_pinned ? "Unpin" : "Pin"}
+                                        className="p-1 rounded hover:bg-primary/10 hover:text-primary transition-colors">
+                                        <Pin className="w-3 h-3" />
+                                      </button>
+                                      <button onClick={() => modAction(post.id, { is_locked: !post.is_locked })}
+                                        title={post.is_locked ? "Unlock" : "Lock"}
+                                        className="p-1 rounded hover:bg-primary/10 hover:text-primary transition-colors">
+                                        <Lock className="w-3 h-3" />
+                                      </button>
+                                      <button onClick={() => modAction(post.id, { is_hidden: !post.is_hidden })}
+                                        title={post.is_hidden ? "Unhide" : "Hide"}
+                                        className="p-1 rounded hover:bg-destructive/10 hover:text-destructive transition-colors">
+                                        <EyeOff className="w-3 h-3" />
+                                      </button>
+                                    </>
+                                  )}
+                                </div>
                               </div>
 
                               {post.title && (
