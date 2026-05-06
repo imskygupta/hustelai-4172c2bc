@@ -13,6 +13,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ParticleBackground } from "@/components/ParticleBackground";
 import gsap from "gsap";
 
+import { SEO } from "@/components/SEO";
+
 const quotes = [
   "Your workspace, your way. Run client work like a pro studio.",
   "Clients, projects, invoices — unified in one operating system.",
@@ -119,6 +121,7 @@ export default function Login() {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4 relative overflow-hidden">
+      <SEO title="Login | HustleAI Workspace OS" description="HustleAI Workspace OS — internal page." path="" noindex />
       <ParticleBackground />
       <div ref={glowRef} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-primary/[0.04] blur-3xl pointer-events-none" />
 

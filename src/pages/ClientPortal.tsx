@@ -4,6 +4,8 @@ import { workspaceDb } from "@/integrations/workspace/client";
 import { Card } from "@/components/ui/card";
 import { Loader2, Globe, FileText, AlarmClock, FolderOpen } from "lucide-react";
 
+import { SEO } from "@/components/SEO";
+
 export default function ClientPortal() {
   const { token } = useParams<{ token: string }>();
   const [loading, setLoading] = useState(true);
@@ -28,6 +30,7 @@ export default function ClientPortal() {
 
   return (
     <div className="min-h-screen bg-slate-50 p-4 md:p-8">
+      <SEO title="Client portal | HustleAI Workspace OS" description="HustleAI Workspace OS — internal page." path="" noindex />
       <div className="max-w-3xl mx-auto">
         <div className="flex items-center gap-2 mb-6">
           <Globe className="w-5 h-5 text-emerald-600" />

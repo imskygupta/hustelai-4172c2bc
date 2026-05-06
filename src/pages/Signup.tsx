@@ -14,6 +14,8 @@ import { ParticleBackground } from "@/components/ParticleBackground";
 import gsap from "gsap";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 
+import { SEO } from "@/components/SEO";
+
 const quotes = [
   "The journey of a thousand miles begins with a single step. 🏃",
   "Your only limit is your mind. Break through. 💥",
@@ -237,6 +239,7 @@ export default function Signup() {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4 relative overflow-hidden">
+      <SEO title="Sign up | HustleAI Workspace OS" description="HustleAI Workspace OS — internal page." path="" noindex />
       <ParticleBackground />
       <div ref={glowRef} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-accent/[0.03] blur-3xl pointer-events-none" />
 

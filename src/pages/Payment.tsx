@@ -13,6 +13,8 @@ import { toast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
 import { Check, Crown, Rocket, Star, Shield, Loader2, Wallet, ArrowRight, Sparkles, Smartphone, Copy, Upload, CreditCard, Zap, CheckCircle2, Clock } from "lucide-react";
 
+import { SEO } from "@/components/SEO";
+
 const plans = [
   { id: "pro", name: "Pro", price: 450, icon: Rocket, color: "text-primary", features: ["5 AI searches/day", "All AI tools access", "Pro forums", "Resume upload", "Weekly reports", "5% affiliate"] },
   { id: "elite", name: "Elite", price: 900, icon: Crown, color: "text-accent", features: ["10 AI searches/day", "Everything in Pro", "HustleBot AI Mentor", "Lead Discovery", "Live webinars", "1-on-1 sessions", "6% affiliate"] },
@@ -204,6 +206,7 @@ export default function Payment() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO title="Payment | HustleAI Workspace OS" description="HustleAI Workspace OS — internal page." path="" noindex />
       <Navbar />
       <div className="pt-24 pb-12 px-4">
         <div className="container mx-auto max-w-5xl space-y-8">

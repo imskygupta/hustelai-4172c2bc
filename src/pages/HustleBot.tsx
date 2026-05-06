@@ -11,6 +11,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { TIER_LIMITS } from "@/lib/tool-limits";
 
+import { SEO } from "@/components/SEO";
+
 interface Message {
   role: "user" | "assistant";
   content: string;

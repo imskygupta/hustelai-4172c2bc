@@ -26,6 +26,8 @@ import { PaymentMethodsManager } from "@/components/admin/PaymentMethodsManager"
 import { SQL_BLOCKS } from "@/lib/work-sql";
 import { FeatureFlagsManager } from "@/components/admin/FeatureFlagsManager";
 
+import { SEO } from "@/components/SEO";
+
 interface UserProfile {
   id: string;
   user_id: string;
@@ -571,6 +573,7 @@ export default function AdminDashboard() {
   if (loading || checkingAdmin) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
+      <SEO title="Admin | HustleAI Workspace OS" description="HustleAI Workspace OS — internal page." path="" noindex />
         <div className="animate-pulse text-primary font-display text-xl">Loading Admin...</div>
       </div>
     );
