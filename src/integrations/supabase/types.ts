@@ -2047,6 +2047,36 @@ export type Database = {
         }
         Relationships: []
       }
+      workspace_activity: {
+        Row: {
+          created_at: string | null
+          event_type: string
+          id: string
+          message: string
+          metadata: Json | null
+          owner_id: string
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          event_type: string
+          id?: string
+          message: string
+          metadata?: Json | null
+          owner_id: string
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string | null
+          event_type?: string
+          id?: string
+          message?: string
+          metadata?: Json | null
+          owner_id?: string
+          workspace_id?: string
+        }
+        Relationships: []
+      }
       workspace_documents: {
         Row: {
           created_at: string
@@ -2100,50 +2130,218 @@ export type Database = {
           },
         ]
       }
+      workspace_payments: {
+        Row: {
+          amount: number
+          created_at: string | null
+          currency: string | null
+          due_date: string | null
+          id: string
+          label: string
+          notes: string | null
+          owner_id: string
+          paid_amount: number | null
+          paid_at: string | null
+          payment_type: string | null
+          status: string | null
+          updated_at: string | null
+          workspace_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string | null
+          currency?: string | null
+          due_date?: string | null
+          id?: string
+          label: string
+          notes?: string | null
+          owner_id: string
+          paid_amount?: number | null
+          paid_at?: string | null
+          payment_type?: string | null
+          status?: string | null
+          updated_at?: string | null
+          workspace_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          currency?: string | null
+          due_date?: string | null
+          id?: string
+          label?: string
+          notes?: string | null
+          owner_id?: string
+          paid_amount?: number | null
+          paid_at?: string | null
+          payment_type?: string | null
+          status?: string | null
+          updated_at?: string | null
+          workspace_id?: string
+        }
+        Relationships: []
+      }
+      workspace_reminders: {
+        Row: {
+          created_at: string | null
+          done: boolean | null
+          due_at: string
+          id: string
+          kind: string | null
+          owner_id: string
+          title: string
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          done?: boolean | null
+          due_at: string
+          id?: string
+          kind?: string | null
+          owner_id: string
+          title: string
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string | null
+          done?: boolean | null
+          due_at?: string
+          id?: string
+          kind?: string | null
+          owner_id?: string
+          title?: string
+          workspace_id?: string
+        }
+        Relationships: []
+      }
+      workspace_tasks: {
+        Row: {
+          blockers: string | null
+          created_at: string | null
+          description: string | null
+          due_date: string | null
+          id: string
+          owner_id: string
+          position: number | null
+          progress: number | null
+          stage: string
+          title: string
+          updated_at: string | null
+          workspace_id: string
+        }
+        Insert: {
+          blockers?: string | null
+          created_at?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          owner_id: string
+          position?: number | null
+          progress?: number | null
+          stage?: string
+          title: string
+          updated_at?: string | null
+          workspace_id: string
+        }
+        Update: {
+          blockers?: string | null
+          created_at?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          owner_id?: string
+          position?: number | null
+          progress?: number | null
+          stage?: string
+          title?: string
+          updated_at?: string | null
+          workspace_id?: string
+        }
+        Relationships: []
+      }
       workspaces: {
         Row: {
           ai_summary: string | null
           client_name: string
+          company_name: string | null
+          contact_email: string | null
+          contact_phone: string | null
           created_at: string
           deadlines: Json
           deliverables: Json
           id: string
+          last_contact_at: string | null
+          lifetime_value: number | null
+          logo_url: string | null
+          notes: string | null
           owner_id: string
           payment_terms: Json
+          pipeline_stage: string | null
           pricing: Json
           project_scope: string | null
+          social_links: Json | null
+          source: string | null
           source_inputs: Json
           status: string
+          tags: string[] | null
+          timezone: string | null
+          total_paid: number | null
           updated_at: string
         }
         Insert: {
           ai_summary?: string | null
           client_name: string
+          company_name?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
           created_at?: string
           deadlines?: Json
           deliverables?: Json
           id?: string
+          last_contact_at?: string | null
+          lifetime_value?: number | null
+          logo_url?: string | null
+          notes?: string | null
           owner_id: string
           payment_terms?: Json
+          pipeline_stage?: string | null
           pricing?: Json
           project_scope?: string | null
+          social_links?: Json | null
+          source?: string | null
           source_inputs?: Json
           status?: string
+          tags?: string[] | null
+          timezone?: string | null
+          total_paid?: number | null
           updated_at?: string
         }
         Update: {
           ai_summary?: string | null
           client_name?: string
+          company_name?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
           created_at?: string
           deadlines?: Json
           deliverables?: Json
           id?: string
+          last_contact_at?: string | null
+          lifetime_value?: number | null
+          logo_url?: string | null
+          notes?: string | null
           owner_id?: string
           payment_terms?: Json
+          pipeline_stage?: string | null
           pricing?: Json
           project_scope?: string | null
+          social_links?: Json | null
+          source?: string | null
           source_inputs?: Json
           status?: string
+          tags?: string[] | null
+          timezone?: string | null
+          total_paid?: number | null
           updated_at?: string
         }
         Relationships: []
