@@ -188,6 +188,28 @@ export default function Community() {
     toast({ title: "Discord disconnected" });
   };
 
+  // ---------- Moderation ----------
+  const reportPost = async (postId: string) => {
+    if (!user) return;
+    const reason = window.prompt("Why are you reporting this post?\n(spam, abuse, off-topic, etc.)");
+    if (!reason) return;
+    const { error } = await communityDb.from("forum_reports").insert({
+      post_id: postId, reporter_id: user.id, reason: reason.slice(0, 200),
+    });
+    if (error) toast({ title: "Couldn't submit report", description: error.message, variant: "destructive" });
+    else toast({ title: "Reported", description: "Mods will review it shortly." });
+  };
+
+  const modAction = async (postId: string, patch: Partial<ForumPost>) => {
+    if (!isAdmin || !user) return;
+    const { error } = await communityDb.from("forum_posts").update({
+      ...patch, moderated_by: user.id, moderated_at: new Date().toISOString(),
+    } as any).eq("id", postId);
+    if (error) { toast({ title: "Mod action failed", description: error.message, variant: "destructive" }); return; }
+    setPosts(prev => prev.map(p => p.id === postId ? { ...p, ...patch } as ForumPost : p));
+    toast({ title: "Updated" });
+  };
+
   const dismissWelcomeNotif = (postId: string) => {
     const newDismissed = new Set(dismissedNotifs).add(postId);
     setDismissedNotifs(newDismissed);
