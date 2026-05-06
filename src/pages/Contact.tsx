@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Mail, MessageSquare, MapPin } from "lucide-react";
+import { CONTACT_EMAIL } from "@/config/branding";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -49,9 +50,9 @@ export default function Contact() {
               className="space-y-8"
             >
               {[
-                { icon: Mail, label: "Email", value: "hustlaiapp@zohomail.in" },
+              { icon: Mail, label: "Email", value: CONTACT_EMAIL },
                 { icon: MessageSquare, label: "Support", value: "24/7 Live Chat" },
-                { icon: MapPin, label: "Location", value: "Bangalore, India" },
+                { icon: MapPin, label: "Location", value: "Prayagraj, Uttar Pradesh, India" },
               ].map((item) => (
                 <div key={item.label} className="flex items-center gap-4">
                   <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">

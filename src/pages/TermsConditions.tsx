@@ -1,8 +1,9 @@
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { PageTransition } from "@/components/PageTransition";
-
 import { SEO } from "@/components/SEO";
+import { Scale } from "lucide-react";
+import { BRAND, SUPPORT_EMAIL } from "@/config/branding";
 
 export default function TermsConditions() {
   return (
@@ -10,48 +11,40 @@ export default function TermsConditions() {
             <SEO title="Terms & Conditions | HustleAI Workspace OS" description="Terms of use for the HustleAI Workspace OS platform." path="/terms-conditions" />
       <Navbar />
       <main className="min-h-screen pt-24 pb-16 px-4">
-        <div className="container mx-auto max-w-3xl prose prose-invert">
-          <h1 className="text-3xl font-display font-bold text-foreground mb-8">Terms & Conditions</h1>
-          <p className="text-muted-foreground text-sm mb-4">Last updated: March 8, 2026</p>
+        <div className="container mx-auto max-w-3xl">
+          <header className="mb-10 space-y-3">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium">
+              <Scale className="w-3.5 h-3.5" /> Legal
+            </div>
+            <h1 className="text-3xl md:text-4xl font-display font-semibold tracking-tight text-foreground">Terms & Conditions</h1>
+            <p className="text-sm text-muted-foreground">Last updated: May 6, 2026</p>
+          </header>
 
-          <section className="space-y-4 text-muted-foreground text-sm leading-relaxed">
-            <h2 className="text-lg font-display font-semibold text-foreground">1. Acceptance of Terms</h2>
-            <p>By accessing or using HustleAI (hustlaiapp.in), you agree to be bound by these Terms and Conditions. If you do not agree, please do not use our services.</p>
+          <article className="rounded-2xl border border-border bg-card shadow-sm p-6 md:p-10 space-y-8 text-sm md:text-[0.95rem] leading-relaxed text-muted-foreground">
+            {[
+              { h: "1. Acceptance of Terms", p: `By accessing or using ${BRAND.name} (${BRAND.domain}), you agree to be bound by these Terms. If you do not agree, please do not use the platform.` },
+              { h: "2. Description of Service", p: `${BRAND.name} is a SaaS workflow platform — a freelancer workspace and productivity software for managing clients, projects, documents, invoices, portals and AI-assisted operations.` },
+              { h: "3. User Accounts", p: "You are responsible for the security of your account credentials and for all activity under your account. You must provide accurate information and be at least 18 years old to register." },
+              { h: "4. Subscription Plans", p: "We offer Free, Pro (₹450/mo), Elite (₹900/mo), and Infinity (₹2,250/mo) plans, plus pay-as-you-go AI assist credits. Subscriptions renew automatically on a monthly cycle until cancelled. Features and pricing may change with prior notice." },
+              { h: "5. Cancellation", p: "You can cancel your subscription at any time from your billing settings. Cancellation stops future renewals; the current paid period remains active until its end date." },
+              { h: "6. Acceptable Use", p: "You agree not to use the platform for unlawful activity, to send spam, to attempt unauthorised access, to abuse AI assists, or to interfere with platform availability or other users." },
+              { h: "7. Intellectual Property", p: `All product code, branding and content of ${BRAND.name} are owned by us. You retain ownership of content you create inside your workspace.` },
+              { h: "8. Limitation of Liability", p: `${BRAND.name} is provided on an "as is" basis. To the maximum extent permitted by law, we are not liable for indirect, incidental or consequential damages arising from use of the platform.` },
+              { h: "9. Termination", p: "We may suspend or terminate accounts that violate these terms, abuse the service, or pose a security risk to other users." },
+              { h: "10. Governing Law", p: "These terms are governed by and construed in accordance with the laws of India. Disputes will be subject to the courts of Prayagraj, Uttar Pradesh." },
+            ].map((s) => (
+              <section key={s.h} className="space-y-2">
+                <h2 className="text-base md:text-lg font-display font-semibold text-foreground">{s.h}</h2>
+                <p>{s.p}</p>
+              </section>
+            ))}
 
-            <h2 className="text-lg font-display font-semibold text-foreground">2. Description of Service</h2>
-            <p>HustleAI is an AI-powered platform that helps users discover, start, and grow side hustles and freelance opportunities. We offer free and premium subscription tiers with varying features.</p>
-
-            <h2 className="text-lg font-display font-semibold text-foreground">3. User Accounts</h2>
-            <p>You are responsible for maintaining the confidentiality of your account credentials. You must provide accurate information during registration. You must be at least 18 years old to create an account.</p>
-
-            <h2 className="text-lg font-display font-semibold text-foreground">4. Subscription Plans</h2>
-            <p>HustleAI offers Pro (₹450/mo), Elite (₹900/mo), and Infinity (₹2,250/mo) plans. Subscriptions are billed monthly. Features and pricing are subject to change with prior notice.</p>
-
-            <h2 className="text-lg font-display font-semibold text-foreground">5. User Conduct</h2>
-            <p>You agree not to use the platform for any unlawful purpose, post spam or misleading content, attempt to gain unauthorized access to other accounts, or interfere with the platform's functionality.</p>
-
-            <h2 className="text-lg font-display font-semibold text-foreground">6. Intellectual Property</h2>
-            <p>All content, features, and functionality of HustleAI are owned by us and protected by intellectual property laws. You may not reproduce, distribute, or create derivative works without permission.</p>
-
-            <h2 className="text-lg font-display font-semibold text-foreground">7. Marketplace</h2>
-            <p>Products and services listed on the HustleAI Marketplace are provided by third-party sellers. HustleAI acts as a facilitator and is not responsible for the quality or delivery of marketplace items.</p>
-
-            <h2 className="text-lg font-display font-semibold text-foreground">8. Limitation of Liability</h2>
-            <p>HustleAI is provided "as is" without warranty. We are not liable for any indirect, incidental, or consequential damages arising from your use of the platform.</p>
-
-            <h2 className="text-lg font-display font-semibold text-foreground">9. Termination</h2>
-            <p>We reserve the right to suspend or terminate your account at our discretion if you violate these terms, without prior notice or liability.</p>
-
-            <h2 className="text-lg font-display font-semibold text-foreground">10. Governing Law</h2>
-            <p>These terms shall be governed by and construed in accordance with the laws of India.</p>
-
-            <h2 className="text-lg font-display font-semibold text-foreground">11. Contact</h2>
-            <p>For questions about these terms, contact us at:</p>
-            <ul className="list-disc pl-5">
-              <li>Email: <a href="mailto:hustlaiapp@zohomail.in" className="text-primary hover:underline">hustlaiapp@zohomail.in</a></li>
-              <li>Support: <a href="mailto:hustlaiapp@zohomail.in" className="text-primary hover:underline">hustlaiapp@zohomail.in</a></li>
-            </ul>
-          </section>
+            <section className="space-y-2 pt-4 border-t border-border">
+              <h2 className="text-base md:text-lg font-display font-semibold text-foreground">11. Contact</h2>
+              <p>For questions about these terms, contact <a href={`mailto:${SUPPORT_EMAIL}`} className="text-primary hover:underline font-medium">{SUPPORT_EMAIL}</a>.</p>
+              <p className="text-xs">{BRAND.name} · Prayagraj, Uttar Pradesh, India</p>
+            </section>
+          </article>
         </div>
       </main>
       <Footer />
