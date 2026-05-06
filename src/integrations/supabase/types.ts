@@ -469,6 +469,93 @@ export type Database = {
         }
         Relationships: []
       }
+      email_campaigns: {
+        Row: {
+          audience: string
+          audience_filter: Json | null
+          body_html: string
+          created_at: string
+          created_by: string
+          failed_count: number
+          id: string
+          sent_at: string | null
+          sent_count: number
+          status: string
+          subject: string
+          title: string
+        }
+        Insert: {
+          audience?: string
+          audience_filter?: Json | null
+          body_html: string
+          created_at?: string
+          created_by: string
+          failed_count?: number
+          id?: string
+          sent_at?: string | null
+          sent_count?: number
+          status?: string
+          subject: string
+          title: string
+        }
+        Update: {
+          audience?: string
+          audience_filter?: Json | null
+          body_html?: string
+          created_at?: string
+          created_by?: string
+          failed_count?: number
+          id?: string
+          sent_at?: string | null
+          sent_count?: number
+          status?: string
+          subject?: string
+          title?: string
+        }
+        Relationships: []
+      }
+      email_logs: {
+        Row: {
+          campaign_id: string | null
+          created_at: string
+          error: string | null
+          id: string
+          metadata: Json | null
+          provider_id: string | null
+          recipient: string
+          status: string
+          subject: string | null
+          template: string
+          user_id: string | null
+        }
+        Insert: {
+          campaign_id?: string | null
+          created_at?: string
+          error?: string | null
+          id?: string
+          metadata?: Json | null
+          provider_id?: string | null
+          recipient: string
+          status?: string
+          subject?: string | null
+          template: string
+          user_id?: string | null
+        }
+        Update: {
+          campaign_id?: string | null
+          created_at?: string
+          error?: string | null
+          id?: string
+          metadata?: Json | null
+          provider_id?: string | null
+          recipient?: string
+          status?: string
+          subject?: string | null
+          template?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       email_settings: {
         Row: {
           category: string
@@ -1245,6 +1332,42 @@ export type Database = {
           email?: string
           id?: string
           subscribed_at?: string
+        }
+        Relationships: []
+      }
+      notification_preferences: {
+        Row: {
+          collaboration_alerts: boolean
+          community_notifications: boolean
+          email_enabled: boolean
+          invoice_reminders: boolean
+          payment_alerts: boolean
+          product_announcements: boolean
+          updated_at: string
+          user_id: string
+          workspace_updates: boolean
+        }
+        Insert: {
+          collaboration_alerts?: boolean
+          community_notifications?: boolean
+          email_enabled?: boolean
+          invoice_reminders?: boolean
+          payment_alerts?: boolean
+          product_announcements?: boolean
+          updated_at?: string
+          user_id: string
+          workspace_updates?: boolean
+        }
+        Update: {
+          collaboration_alerts?: boolean
+          community_notifications?: boolean
+          email_enabled?: boolean
+          invoice_reminders?: boolean
+          payment_alerts?: boolean
+          product_announcements?: boolean
+          updated_at?: string
+          user_id?: string
+          workspace_updates?: boolean
         }
         Relationships: []
       }
