@@ -63,6 +63,7 @@ import HustleCanvas from "./pages/HustleCanvas";
 import WorkspaceOS from "./pages/workspace-os/WorkspaceOS";
 import WorkspaceOverview from "./pages/workspace-os/Overview";
 import NewWorkspace from "./pages/workspace-os/NewWorkspace";
+import RoadmapCockpit from "./pages/workspace-os/RoadmapCockpit";
 import WorkspaceDetail from "./pages/workspace-os/WorkspaceDetail";
 import AISettings from "./pages/workspace-os/AISettings";
 import Pipeline from "./pages/workspace-os/Pipeline";
