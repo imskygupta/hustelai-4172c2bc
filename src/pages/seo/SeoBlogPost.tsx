@@ -61,9 +61,13 @@ export default function SeoBlogPost({ preview = false }: { preview?: boolean }) 
       const r = isPreview ? await fetchAnyBlog(slug) : await fetchPublishedBlog(slug);
       if (!cancelled) setPost(r);
       if (!r) return;
-      const [a, t, rel, tl, fw, ln] = await Promise.all([
-        r.author_id ? supabase.from("seo_authors" as any).select("*").eq("id", r.author_id).maybeSingle().then((x) => (x.data as any) ?? null) : Promise.resolve(null),
-        r.topic_id ? fetchTopic((await supabase.from("seo_topics" as any).select("slug").eq("id", r.topic_id).maybeSingle()).data?.slug ?? "") : Promise.resolve(null),
+      const topicRow = r.topic_id
+        ? ((await supabase.from("seo_topics" as any).select("*").eq("id", r.topic_id).maybeSingle()).data as any) ?? null
+        : null;
+      const [a, rel, tl, fw, ln] = await Promise.all([
+        r.author_id
+          ? supabase.from("seo_authors" as any).select("*").eq("id", r.author_id).maybeSingle().then((x) => (x.data as any) ?? null)
+          : Promise.resolve(null),
         fetchPostsByIds(r.related_post_ids ?? []),
         fetchToolsByIds(r.related_tool_ids ?? []),
         fetchToolsByIds(r.frequently_used_with ?? []),
@@ -71,7 +75,7 @@ export default function SeoBlogPost({ preview = false }: { preview?: boolean }) 
       ]);
       if (cancelled) return;
       setAuthor(a as any);
-      setTopic(t as any);
+      setTopic(topicRow as any);
       setRelated(rel);
       setTools(tl);
       setTogether(fw);
