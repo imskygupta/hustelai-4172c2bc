@@ -139,6 +139,21 @@ serve(async (req) => {
           await logPaymentStatus(payment.id, payment.user_id, "subscription_activated", `${payment.plan} plan activated, +${xpGain} XP awarded`);
         }
 
+        // Discord role sync (fire-and-forget)
+        try {
+          const projectRef = (Deno.env.get("SUPABASE_URL") || "").match(/https:\/\/([^.]+)\./)?.[1];
+          if (projectRef) {
+            fetch(`https://${projectRef}.supabase.co/functions/v1/discord-sync-role/internal`, {
+              method: "POST",
+              headers: {
+                "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ user_id: payment.user_id, tier: payment.plan }),
+            }).catch(() => {});
+          }
+        } catch (_) { /* ignore */ }
+
         // Send invoice email (fire and forget — don't block redirect)
         try {
           const { data: profile } = await supabase.from("profiles")

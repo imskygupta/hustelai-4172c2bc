@@ -188,6 +188,31 @@ export default function Community() {
     toast({ title: "Discord disconnected" });
   };
 
+  const resyncDiscordRole = async () => {
+    if (!user) return;
+    toast({ title: "Syncing Discord role…" });
+    try {
+      const { data, error } = await supabase.functions.invoke("discord-sync-role", { method: "POST" });
+      if (error) {
+        toast({ title: "Sync failed", description: error.message, variant: "destructive" });
+        return;
+      }
+      if (data?.ok) {
+        toast({ title: "Role synced ✅", description: `Tier: ${data.tier}` });
+      } else {
+        const reason = data?.reason || "unknown";
+        const hint = reason === "user_not_in_guild"
+          ? "Join the Discord server first, then resync."
+          : reason === "not_linked"
+          ? "Connect Discord first."
+          : reason;
+        toast({ title: "Couldn't sync", description: hint, variant: "destructive" });
+      }
+    } catch (e: any) {
+      toast({ title: "Network error", description: e?.message, variant: "destructive" });
+    }
+  };
+
   // ---------- Moderation ----------
   const reportPost = async (postId: string) => {
     if (!user) return;
@@ -570,6 +595,11 @@ export default function Community() {
                   >
                     {discordLink ? "Disconnect" : "Connect Discord"}
                   </Button>
+                  {discordLink && (
+                    <Button size="sm" variant="ghost" onClick={resyncDiscordRole}>
+                      Resync role
+                    </Button>
+                  )}
                 </div>
               )}
 

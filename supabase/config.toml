@@ -77,3 +77,6 @@ verify_jwt = false
 
 [functions.discord-oauth]
 verify_jwt = false
+
+[functions.discord-sync-role]
+verify_jwt = false

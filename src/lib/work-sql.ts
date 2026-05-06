@@ -318,6 +318,10 @@ create table if not exists public.discord_links (
 );
 create index if not exists idx_discord_links_discord on public.discord_links(discord_user_id);
 
+-- Add tier-sync metadata (idempotent)
+alter table public.discord_links add column if not exists last_synced_tier text;
+alter table public.discord_links add column if not exists last_synced_at timestamptz;
+
 -- Forum reports (mod queue)
 create table if not exists public.forum_reports (
   id uuid primary key default gen_random_uuid(),
