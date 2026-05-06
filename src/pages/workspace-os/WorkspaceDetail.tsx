@@ -16,6 +16,7 @@ import FilesUploader from "@/components/workspace-os/FilesUploader";
 import CommentsPanel from "@/components/workspace-os/CommentsPanel";
 import PortalPanel from "@/components/workspace-os/PortalPanel";
 import RetainerPanel from "@/components/workspace-os/RetainerPanel";
+import RoadmapEngine from "@/components/workspace-os/RoadmapEngine";
 
 export default function WorkspaceDetail() {
   const { id } = useParams();
@@ -73,6 +74,7 @@ export default function WorkspaceDetail() {
         <Tabs value={tab} onValueChange={(v) => setParams({ tab: v })} className="space-y-4">
           <TabsList className="bg-muted/40">
             <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="roadmap">Roadmap</TabsTrigger>
             <TabsTrigger value="crm">CRM</TabsTrigger>
             <TabsTrigger value="tasks">Tasks</TabsTrigger>
             <TabsTrigger value="payments">Payments</TabsTrigger>
@@ -102,6 +104,10 @@ export default function WorkspaceDetail() {
             <Link to={`/workspaces/${w.id}/docs`} className="inline-flex items-center gap-2 text-sm text-primary hover:underline">
               <FileText className="h-4 w-4" /> Open documents
             </Link>
+          </TabsContent>
+
+          <TabsContent value="roadmap">
+            <RoadmapEngine workspaceId={w.id} workspace={w} />
           </TabsContent>
 
           <TabsContent value="crm"><CRMPanel workspace={w} onUpdate={setW} /></TabsContent>

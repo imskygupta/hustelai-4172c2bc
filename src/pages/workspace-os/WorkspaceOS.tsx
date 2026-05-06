@@ -1,6 +1,6 @@
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Briefcase, Plus, Sparkles, KeyRound, FileText, Receipt, Users, Kanban, TrendingUp, Hammer, Clock, ClipboardList, AlarmClock, Globe, Wallet, FolderOpen, Mail } from "lucide-react";
+import { Briefcase, Plus, Sparkles, KeyRound, FileText, Receipt, Users, Kanban, TrendingUp, Hammer, Clock, ClipboardList, AlarmClock, Globe, Wallet, FolderOpen, Mail, Brain } from "lucide-react";
 import { cn } from "@/lib/utils";
 import NotificationCenter from "@/components/workspace-os/NotificationCenter";
 
@@ -8,6 +8,7 @@ import { SEO } from "@/components/SEO";
 
 const NAV = [
   { to: "/workspaces", label: "Overview", icon: Briefcase, end: true },
+  { to: "/workspaces/roadmap", label: "Roadmap Engine", icon: Brain, end: false },
   { to: "/workspaces/pipeline", label: "Pipeline", icon: Kanban, end: false },
   { to: "/workspaces/revenue", label: "Revenue", icon: TrendingUp, end: false },
   { to: "/workspaces/new", label: "New Workspace", icon: Plus, end: false },
