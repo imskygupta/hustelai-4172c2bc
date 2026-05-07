@@ -24,6 +24,19 @@ function slugify(s: string) {
   return `${base}-${suffix}`;
 }
 
+function makeToken() {
+  return Array.from(crypto.getRandomValues(new Uint8Array(18)))
+    .map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
+const VALID_STATUSES = new Set([
+  // legacy
+  "new", "reviewed", "converted", "archived",
+]);
+const VALID_STAGES = new Set([
+  "lead", "qualified", "proposal_sent", "negotiation", "won", "active", "retainer", "lost",
+]);
+
 async function analyzeSubmission(payload: any) {
   if (!LOVABLE_API_KEY) return null;
   const sys = `You are an AI project analyst for a freelancer. Given a client intake submission, return STRICT JSON only:
@@ -123,8 +136,46 @@ Deno.serve(async (req) => {
       }
       case "submission.update_status": {
         if (!body.id || !body.status) return json({ error: "id + status required" }, 400);
-        if (!["new", "reviewed", "converted", "archived"].includes(body.status)) return json({ error: "invalid status" }, 400);
+        if (!VALID_STATUSES.has(body.status)) return json({ error: "invalid status" }, 400);
         const { error } = await ws.from("intake_submissions").update({ status: body.status }).eq("id", body.id).eq("owner_id", userId);
+        if (error) throw error;
+        return json({ ok: true });
+      }
+      case "submission.set_stage": {
+        if (!body.id || !body.stage) return json({ error: "id + stage required" }, 400);
+        if (!VALID_STAGES.has(body.stage)) return json({ error: "invalid stage" }, 400);
+        const { error } = await ws.from("intake_submissions")
+          .update({ pipeline_stage: body.stage })
+          .eq("id", body.id).eq("owner_id", userId);
+        if (error) throw error;
+        return json({ ok: true });
+      }
+      case "submission.generate_portal_link": {
+        if (!body.id) return json({ error: "id required" }, 400);
+        const { data: sub } = await ws.from("intake_submissions")
+          .select("portal_token, workspace_id").eq("id", body.id).eq("owner_id", userId).maybeSingle();
+        if (!sub) return json({ error: "Not found" }, 404);
+        let token = sub.portal_token;
+        if (!token) {
+          token = makeToken();
+          await ws.from("intake_submissions").update({ portal_token: token }).eq("id", body.id).eq("owner_id", userId);
+          await ws.from("client_portal_links").insert({
+            owner_id: userId,
+            workspace_id: sub.workspace_id || null,
+            submission_id: body.id,
+            token,
+          });
+        }
+        return json({ ok: true, token });
+      }
+      case "submission.mark_converted": {
+        if (!body.id) return json({ error: "id required" }, 400);
+        const patch: any = { status: "converted", pipeline_stage: body.stage || "won" };
+        if (body.workspace_id) {
+          patch.workspace_id = body.workspace_id;
+          patch.converted_workspace_id = body.workspace_id;
+        }
+        const { error } = await ws.from("intake_submissions").update(patch).eq("id", body.id).eq("owner_id", userId);
         if (error) throw error;
         return json({ ok: true });
       }
