@@ -3,7 +3,9 @@ import { ClerkProvider } from "@clerk/clerk-react";
 import { ConsoleErrorBoundary } from "./ConsoleErrorBoundary";
 import { AlertTriangle, Loader2 } from "lucide-react";
 
-const CLERK_PUBLISHABLE_KEY = "pk_live_Y2xlcmsuYXBpLmh1c3RsYWlhcHAuaW4k";
+const CLERK_PUBLISHABLE_KEY =
+  (import.meta.env.VITE_CLERK_PUBLISHABLE_KEY as string | undefined) ||
+  "pk_live_Y2xlcmsuYXBpLmh1c3RsYWlhcHAuaW4k";
 const LOAD_TIMEOUT_MS = 9000;
 
 function ConsoleLoadingScreen() {

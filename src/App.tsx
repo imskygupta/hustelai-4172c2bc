@@ -129,6 +129,8 @@ import ConsoleBilling from "./pages/api-platform/console/Billing";
 import ConsoleSettings from "./pages/api-platform/console/Settings";
 import ConsoleLogin from "./pages/api-platform/console/Login";
 import ConsoleSignup from "./pages/api-platform/console/Signup";
+import ConsoleLogs from "./pages/api-platform/console/Logs";
+import ConsolePlayground from "./pages/api-platform/console/Playground";
 import { ClerkGate } from "./pages/api-platform/console/ClerkGate";
 import { Navigate } from "react-router-dom";
 
@@ -145,6 +147,8 @@ const ConsoleTree = () => (
         <Route path="keys" element={<ConsoleApiKeys />} />
         <Route path="usage" element={<ConsoleUsage />} />
         <Route path="billing" element={<ConsoleBilling />} />
+        <Route path="playground" element={<ConsolePlayground />} />
+        <Route path="logs" element={<ConsoleLogs />} />
         <Route path="settings" element={<ConsoleSettings />} />
       </Route>
     </Routes>
