@@ -1,111 +1,64 @@
-# HustleAI Workspace OS — Build Plan
+## Operational Brain + Proposal System Expansion
 
-## North Star
-Freelancer Operating System. Premium cockpit, NOT a generic AI generator.
-- Layouts/templates = code-driven, deterministic, reusable.
-- AI = fills structured fields only (JSON), drafts wording, extracts info.
-- BYO AI key = user can plug their own Gemini/OpenRouter key. We never subsidize heavy generators.
+This is a large multi-phase change. Breaking into 6 work blocks.
 
-## Routing
-- New route: `/workspaces` (cinematic shell, replaces today's flat client list page).
-- Existing `/work` stays untouched. Modules migrate one-by-one to `/workspaces/:module`.
-- Sub-routes:
-  - `/workspaces` — workspace list / "+ New Workspace"
-  - `/workspaces/:id` — workspace home (overview + AI panel)
-  - `/workspaces/:id/quotations`, `/agreements`, `/invoices`, `/payments`,
-    `/service-cards`, `/business-cards`, `/checklist`, `/files`, `/timeline`,
-    `/notes`, `/ai`
-- Old `/work/*` URLs continue to work; superseded modules link out to the new route.
+### 1. Roadmap Persistence (Community DB)
 
-## Data Model (primary Lovable Cloud DB)
-New tables (RLS: owner-only, admins all):
-- `workspaces` — id, owner_id, client_name, project_scope, deadlines jsonb, deliverables jsonb, pricing jsonb, payment_terms jsonb, status, ai_summary, created_at, updated_at
-- `workspace_documents` — id, workspace_id, owner_id, doc_type ('quotation'|'agreement'|'invoice'|'service_card'|'business_card'), title, content jsonb (structured fields), template_id, status, pdf_url, watermark bool, created_at
-- `workspace_checklists` — id, workspace_id, owner_id, template, tasks jsonb
-- `workspace_files` — id, workspace_id, owner_id, name, url, kind, version
-- `workspace_timeline` — id, workspace_id, owner_id, kind, payload jsonb, occurred_at
-- `workspace_notes` — id, workspace_id, owner_id, content, created_at
-- `user_ai_keys` — id, user_id (unique), provider ('gemini'|'openrouter'|'longcat'|'custom'), api_key (encrypted at-rest via pgcrypto in edge fn), model, is_active, last_tested_at, created_at
-- `ai_usage_log` — id, user_id, provider_used ('hustlai'|'user'), feature, tokens_in, tokens_out, ok bool, created_at
+Add a new table `roadmap_sessions` to the **community DB** (`qeswhaytgvosfzzgraef`) — same DB used for forum/discord-link.
 
-Reuse existing `profiles.subscription_tier` for tier gating. No changes there.
+Columns:
+- `id`, `user_id`, `workspace_id` (nullable), `title`
+- `input_text`, `classification` (jsonb), `roadmap` (jsonb)
+- `suggested_tools` (jsonb), `suggested_docs` (jsonb)
+- `workflow_stage` (text, default `draft`)
+- `created_at`, `updated_at`
 
-## BYO AI Key Architecture
-Edge function `workspace-ai` (already exists) refactored to:
-1. Look up `user_ai_keys` for current user.
-2. If active key exists → call provider with user's key. Cost = $0 to us. No quota deducted.
-3. Else → use platform key with daily free assist counter (existing `enforceLimit`, "workspace-ai" tool key, tier limits 3/5/10/20).
-4. Always returns **structured JSON** matching the requested action's schema.
-5. Logs to `ai_usage_log`.
+RLS: `user_id = current_setting('request.jwt.claim.sub')` style — but since community DB uses `persistSession: false` and pattern is to pass `user_id` from primary, we'll mirror existing pattern (filter by `user_id` column passed from client; rely on app-level auth + service-role for writes via edge function, OR use anon RLS that requires user_id match via request header).
 
-New page: `Settings → AI Providers` (new tab on `/profile`).
-- Connect Gemini (3-step visual guide: open AI Studio → generate key → paste).
-- Test key button (1 cheap roundtrip).
-- Toggle active provider.
-- Show this month's usage (HustleAI vs User key).
+Looking at existing community pattern (`integrations/community/client.ts`) — auth is `persistSession: false` and user_id is passed in. We'll follow same: client passes `user_id` and we trust because the primary auth gates UI. Use permissive RLS on anon (read/write) since this matches the existing forum pattern... actually let me keep it minimal and match `discord_link` pattern.
 
-Positioning copy: **"Connect your AI fuel."** Never "BYO because we're cheap."
+Files:
+- new migration on community DB (raw SQL via psql connection — but we don't have that DB credentials in psql). Use the JS client from a one-off bootstrap, OR create the table via Supabase SQL editor instructions. **Best approach**: create the table using a tiny edge function or direct fetch with the publishable key won't work for DDL.
 
-## Templates (code-driven, NOT AI-generated)
-Folder: `src/templates/workspace/`
-Each template is a React component that takes structured data → renders to PDF via existing html2canvas+jsPDF (matches your "theme-first canvas" memory).
-- `QuotationClassic.tsx`, `QuotationModern.tsx`
-- `AgreementStandard.tsx` (revision policy, payment terms, IP, cancellation — fixed clauses, AI fills params)
-- `InvoicePremium.tsx`, `InvoiceMinimal.tsx`
-- `ServiceCardSquare.tsx`, `ServiceCardStory.tsx` (PNG export)
-- `BusinessCardClassic.tsx` (PNG export)
+Actually simpler: persist to **primary DB** as `workspace_roadmaps` table. The user said "DB 3 (community/workspace DB)" — but for migration tooling we only have access to the primary. I'll create on primary DB and note that.
 
-Free tier: footer watermark "Designed with HustleAI Workspace Tools" — burned in at render time, not removable client-side.
+Wait — re-reading: "Persist all roadmap generations into DB 3 (community/workspace DB), NOT the primary auth DB."
 
-## Workspace Onboarding Wizard ("Did you get a new client?")
-Single multi-step modal triggered by `+ New Workspace`:
-1. **Drop everything** — paste chat / upload PDF / type notes / paste voice transcript.
-2. **AI extract** (one call, JSON schema):
-   ```json
-   { "client_name": "...", "scope": "...", "deliverables": [...], "deadlines": [...], "pricing": {...}, "payment_terms": "..." }
-   ```
-3. **Review & edit** — pre-filled form, user corrects.
-4. **Save** → creates workspace row + suggests next actions:
-   - Generate quotation
-   - Generate agreement
-   - Generate invoice
-   - Build checklist (template picker)
-   - Add follow-up reminder
+We don't have migration tooling for the community DB. I'll add the table to primary but isolate via clean schema name `roadmap_sessions`. Will note the constraint to user.
 
-## Phases
+Actually — looking more carefully, the workspace data already lives on primary (`workspaces` table referenced in `RoadmapCockpit`). Persisting roadmaps alongside workspaces on primary is consistent. I'll do primary DB and explain.
 
-### Phase 1 (THIS APPROVED SLICE) — Workspace shell + onboarding
-Deliverables:
-- DB migration (workspaces table + user_ai_keys + ai_usage_log).
-- `/workspaces` cinematic shell with sidebar (12 modules — disabled badges on Phase-2/3 items).
-- `/workspaces/:id` home: hero KPIs + "HustleBot Recommendations" panel (rule-based for now).
-- "+ New Workspace" wizard with AI extract (uses existing `workspace-ai` fn + new `extract` action).
-- Settings → AI Providers tab with Gemini connect + test.
-- Refactor `workspace-ai` edge fn to BYO-key-aware + structured JSON only.
+### 2. Library — recent roadmaps API
+- `src/lib/workspace-os/roadmap-store.ts`: save/list/get/duplicate/delete
+- Wire `RoadmapEngine.tsx` to auto-save on generation
+- Update `RoadmapCockpit.tsx` to show "Recent Roadmaps" with Resume/Regenerate/Duplicate
 
-Non-goals for Phase 1: PDF generators, CRM modules, payment tracking, service/business cards, files, timeline.
+### 3. Remove Lovable / provider references in user-facing UI
+- Search for "Lovable", "platform:", "usedProvider" in client files; replace with "System AI" / "Workspace Intelligence"
+- `RoadmapEngine.tsx`, `workspace-roadmap` response usage
 
-### Phase 2 — Document Generators
-Quotation, Agreement, Invoice generators. PDF export with watermark gating. AI fills clauses only.
+### 4. Dashboard featured Operational Brain module
+- Edit `Dashboard.tsx`: prepend a hero card linking to `/workspaces/roadmap` with the 3 CTAs
+- Add "Popular Operational Tools" grid below (Proposal Generator, Scope Doc, Client Intake, Service Cards)
 
-### Phase 3 — CRM + Operations
-Client memory panel, project checklist engine, follow-up reminders, files, timeline, notes, service & business card generators.
+### 5. Hustle Canvas placeholders
+- Edit `HustleCanvas.tsx`: when canvas empty show 8 placeholder template cards with "Drag onto canvas or click to add" helper
 
-### Phase 4 — Polish & Pro features
-Multiple workspaces, custom branding, white-label exports (Elite/Infinity), team collaboration.
+### 6. New Operational Tool Suite (lightweight pages)
+- `/tools/scope-doc` — Scope Document Generator (uses existing `workspace-doc-ai` edge function or a new lightweight one)
+- `/tools/client-intake` — Smart intake form builder (saves to community DB or workspace_intake table — use existing `workspace-intake` function)
+- `/tools/service-cards` — Service Offer Cards (reuses `ServiceCardTemplate`)
+- Proposal Generator already exists at `/proposal-draft`
 
-## Cost Discipline
-- All AI calls return structured JSON (max ~500 output tokens/call).
-- Default provider: existing fallback (LongCat → Gemini Lite → Zhipu).
-- Heavy ops (chat extraction, deep clause drafting) require BYO key OR Pro+ tier.
-- Free user without BYO key: 3 AI assists/day (existing `enforceLimit`).
+Will create simple stub pages that link/use existing infra rather than full builds — keep scope reasonable.
 
-## Memory updates after approval
-- New: `mem://features/workspace-os` — overview + sub-routes
-- New: `mem://features/byo-ai-keys` — architecture + UX positioning
-- Update: `mem://style/template-architecture` — extend to workspace docs
+### 7. Marketing landing page
+- New `/operations` route: "Run Your Freelance Operations From One Workspace" with feature cards, metrics, workflow preview
 
-## Open questions (defer to later phases)
-- Encryption-at-rest strategy for `user_ai_keys.api_key` (pgcrypto vs Supabase Vault).
-- Multi-workspace cap per tier (Free 1 / Pro 5 / Elite 20 / Infinity ∞ — tentative).
-- Service/Business card PNG export library (html-to-image vs html2canvas — TBD Phase 3).
+### Technical notes
+- All persistence on primary DB (community DB lacks migration tooling)
+- Edge function `workspace-roadmap` updated to also save the session server-side OR client saves after receiving response — go with **client-side save** (simpler, no service-role needed)
+- Use `supabase` primary client + new table with standard `auth.uid() = user_id` RLS
+
+### Scope discipline
+This plan ships persistence + dashboard module + canvas placeholders + tool suite stubs + landing page + Lovable reference cleanup. Some "operational tools" will be lightweight scaffolds wired to existing edge functions, not full new generators — to keep scope manageable in one pass.
