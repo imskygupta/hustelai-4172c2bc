@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 import { SEO } from "@/components/SEO";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { AuthAwareCTA } from "./AuthAwareCTA";
+import { API_PLATFORM_ROUTES } from "@/lib/apiPlatformRoutes";
 import {
   Activity,
   ArrowRight,
@@ -257,12 +259,7 @@ export default function ApiPlatform() {
             <Link to="/docs" className="hover:text-white">Docs</Link>
           </nav>
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" className="hidden text-zinc-300 hover:text-white sm:inline-flex" asChild>
-              <Link to="/login">Sign in</Link>
-            </Button>
-            <Button size="sm" className="bg-emerald-500 text-black hover:bg-emerald-400" asChild>
-              <Link to="/signup">Get API key</Link>
-            </Button>
+            <AuthAwareCTA size="sm" />
           </div>
         </div>
       </header>
@@ -285,11 +282,7 @@ export default function ApiPlatform() {
                 <span className="text-emerald-400">api.hustlaiapp.in</span>.
               </p>
               <div className="mt-7 flex flex-wrap items-center gap-3">
-                <Button size="lg" className="bg-emerald-500 text-black hover:bg-emerald-400" asChild>
-                  <Link to="/signup">
-                    Get API key <ArrowRight className="ml-1 h-4 w-4" />
-                  </Link>
-                </Button>
+                <AuthAwareCTA size="lg" />
                 <Button size="lg" variant="outline" className="border-white/10 bg-white/[0.02] text-zinc-200 hover:bg-white/[0.05]" asChild>
                   <a href="#playground">Read API reference</a>
                 </Button>
@@ -659,7 +652,7 @@ export default function ApiPlatform() {
                 className={`mt-6 w-full ${p.featured ? "bg-emerald-500 text-black hover:bg-emerald-400" : "bg-white/[0.05] text-white hover:bg-white/[0.1]"}`}
                 asChild
               >
-                <Link to="/signup">{p.name === "Enterprise" ? "Contact sales" : "Start building"}</Link>
+                <a href={API_PLATFORM_ROUTES.signup()}>{p.name === "Enterprise" ? "Contact sales" : "Start building"}</a>
               </Button>
             </div>
           ))}
@@ -680,7 +673,7 @@ export default function ApiPlatform() {
             </p>
             <div className="mt-7 flex flex-wrap gap-3">
               <Button size="lg" className="bg-emerald-500 text-black hover:bg-emerald-400" asChild>
-                <Link to="/signup">Get API key <ArrowRight className="ml-1 h-4 w-4" /></Link>
+                <a href={API_PLATFORM_ROUTES.signup()}>Get API key <ArrowRight className="ml-1 h-4 w-4" /></a>
               </Button>
               <Button size="lg" variant="outline" className="border-white/10 bg-white/[0.02] text-zinc-200 hover:bg-white/[0.05]" asChild>
                 <Link to="/docs">Read the docs</Link>
