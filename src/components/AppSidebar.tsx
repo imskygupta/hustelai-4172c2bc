@@ -7,44 +7,53 @@ import {
   LayoutDashboard, Search, Users, User, Crown, Wrench, Target, Store, BookOpen,
   FileText, Brain, Zap, TrendingUp, Briefcase, MessageCircle, Trophy, Bookmark,
   CreditCard, Settings, LogOut, Sparkles, Film, ShieldAlert, DollarSign, Rocket, Bot, Building2, LayoutGrid, Hammer, Video,
+  Flame, Plug,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Badge } from "@/components/ui/badge";
 
-const mainItems = [
+// Workspace OS — the core operational surface
+const workspaceOsItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
-  { title: "Work", url: "/work", icon: Hammer },
   { title: "Workspaces", url: "/workspaces", icon: Building2 },
+  { title: "Work Hub", url: "/work", icon: Hammer },
+  { title: "Clients (CRM)", url: "/work/clients", icon: Users },
+  { title: "Documents", url: "/workspaces/blocks", icon: FileText },
   { title: "Hustle Canvas", url: "/canvas", icon: LayoutGrid },
+];
+
+// AI Systems — high-leverage AI tools
+const aiSystems = [
+  { title: "Hustle Blueprint", url: "/hustle-blueprint", icon: Rocket, tier: "free" },
+  { title: "Proposal AI", url: "/proposal-draft", icon: FileText, tier: "pro" },
+  { title: "Roadmap Engine", url: "/workspaces", icon: Brain, tier: "pro" },
+  { title: "Red-Flag Scanner", url: "/red-flag-scanner", icon: ShieldAlert, tier: "free" },
+  { title: "Resume Optimizer", url: "/resume-optimizer", icon: FileText, tier: "free" },
+  { title: "Gig Price Calc", url: "/gig-price-calculator", icon: DollarSign, tier: "free" },
+  { title: "AI Tool Bench", url: "/ai-tools", icon: Zap, tier: "pro" },
+  { title: "Skill Gap", url: "/skill-gap", icon: Brain, tier: "pro" },
+  { title: "Knowledge Hub", url: "/knowledge-hub", icon: BookOpen, tier: "pro" },
+  { title: "Faceless Content", url: "/faceless-content", icon: Film, tier: "free" },
+  { title: "Lead Finder", url: "/problem-leads", icon: Target, tier: "elite" },
+  { title: "Sure-Hit Jobs", url: "/sure-hit-jobs", icon: Briefcase, tier: "pro" },
+  { title: "Gig Arbitrage", url: "/gig-arbitrage", icon: TrendingUp, tier: "pro" },
+];
+
+// Growth — community + visibility
+const growthItems = [
   { title: "Explore Hustles", url: "/explore", icon: Search },
   { title: "Saved", url: "/saved-hustles", icon: Bookmark },
   { title: "Community", url: "/community", icon: Users },
   { title: "Leaderboard", url: "/leaderboard", icon: Trophy },
-];
-
-const aiTools = [
-  { title: "Hustle Blueprint", url: "/hustle-blueprint", icon: Rocket, tier: "free" },
-  { title: "Resume Optimizer", url: "/resume-optimizer", icon: FileText, tier: "free" },
-  { title: "Gig Price Calc", url: "/gig-price-calculator", icon: DollarSign, tier: "free" },
-  { title: "Faceless Content", url: "/faceless-content", icon: Film, tier: "free" },
-  { title: "Red-Flag Scanner", url: "/red-flag-scanner", icon: ShieldAlert, tier: "free" },
-  { title: "Proposal Draft", url: "/proposal-draft", icon: FileText, tier: "pro" },
-  { title: "Skill Gap", url: "/skill-gap", icon: Brain, tier: "pro" },
-  { title: "AI Tool Bench", url: "/ai-tools", icon: Zap, tier: "pro" },
-  { title: "Gig Arbitrage", url: "/gig-arbitrage", icon: TrendingUp, tier: "pro" },
-  { title: "Knowledge Hub", url: "/knowledge-hub", icon: BookOpen, tier: "pro" },
-  { title: "Lead Finder", url: "/problem-leads", icon: Target, tier: "elite" },
-  { title: "Sure-Hit Jobs", url: "/sure-hit-jobs", icon: Briefcase, tier: "pro" },
-];
-
-const businessItems = [
-  { title: "Integrations", url: "/marketplace", icon: Store },
-  { title: "Infinity Zone", url: "/infinity-zone", icon: Sparkles },
   { title: "Affiliates", url: "/affiliates", icon: Crown },
-  { title: "Plans & Billing", url: "/plans", icon: CreditCard },
 ];
 
-const accountItems = [
+// Settings — billing, integrations, profile
+const settingsItems = [
+  { title: "Plans & Billing", url: "/plans", icon: CreditCard },
+  { title: "Integrations", url: "/marketplace", icon: Plug },
+  { title: "AI Fuel (BYO key)", url: "/workspaces/ai-settings", icon: Flame },
+  { title: "Infinity Zone", url: "/infinity-zone", icon: Sparkles },
   { title: "Profile", url: "/profile", icon: User },
   { title: "Settings", url: "/profile?tab=settings", icon: Settings },
 ];
@@ -108,10 +117,10 @@ export function AppSidebar() {
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel className="text-[10px] uppercase tracking-wider text-slate-400">Workspace</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-[10px] uppercase tracking-wider text-slate-400">Workspace OS</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {mainItems.map((item) => (
+              {workspaceOsItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild isActive={isActive(item.url)}>
                     <NavLink to={item.url} className={linkCls(isActive(item.url))}>
@@ -126,10 +135,10 @@ export function AppSidebar() {
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel className="text-[10px] uppercase tracking-wider text-slate-400">AI Tools</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-[10px] uppercase tracking-wider text-slate-400">AI Systems</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {aiTools.map((item) => {
+              {aiSystems.map((item) => {
                 const locked = tierRank(item.tier) > rank;
                 return (
                   <SidebarMenuItem key={item.title}>
@@ -156,10 +165,10 @@ export function AppSidebar() {
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel className="text-[10px] uppercase tracking-wider text-slate-400">Business</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-[10px] uppercase tracking-wider text-slate-400">Growth</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {businessItems.map((item) => (
+              {growthItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild isActive={isActive(item.url)}>
                     <NavLink to={item.url} className={linkCls(isActive(item.url))}>
@@ -174,10 +183,10 @@ export function AppSidebar() {
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel className="text-[10px] uppercase tracking-wider text-slate-400">Account</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-[10px] uppercase tracking-wider text-slate-400">Settings</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {accountItems.map((item) => (
+              {settingsItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild isActive={isActive(item.url)}>
                     <NavLink to={item.url} className={linkCls(isActive(item.url))}>
