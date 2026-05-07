@@ -112,7 +112,28 @@ import { AppRouteShell } from "@/components/AppRouteShell";
 import { RequireAuth } from "@/components/RequireAuth";
 import { DocsSubdomainRedirect } from "@/components/DocsSubdomainRedirect";
 import { ApiSubdomainRedirect } from "@/components/ApiSubdomainRedirect";
+import { ConsoleSubdomainRedirect } from "@/components/ConsoleSubdomainRedirect";
 import ApiPlatform from "./pages/api-platform/ApiPlatform";
+import { ClerkProvider } from "@clerk/clerk-react";
+import ConsoleLayout from "./pages/api-platform/console/ConsoleLayout";
+import ConsoleOverview from "./pages/api-platform/console/Overview";
+import ConsoleApiKeys from "./pages/api-platform/console/ApiKeys";
+import ConsoleUsage from "./pages/api-platform/console/Usage";
+import ConsoleLogs from "./pages/api-platform/console/Logs";
+import ConsoleEndpoints from "./pages/api-platform/console/Endpoints";
+import ConsoleWebhooks from "./pages/api-platform/console/Webhooks";
+import ConsoleBilling from "./pages/api-platform/console/Billing";
+import ConsoleSettings from "./pages/api-platform/console/Settings";
+
+const CLERK_PUBLISHABLE_KEY = "pk_live_Y2xlcmsuYXBpLmh1c3RsYWlhcHAuaW4k";
+
+/** Console routes wrapped in their own ClerkProvider so the freelancer
+ * dashboard never loads Clerk and stays on Supabase auth. */
+const ConsoleRoot = () => (
+  <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY}>
+    <ConsoleLayout />
+  </ClerkProvider>
+);
 
 // Helper to wrap an in-app page in the SaaS sidebar shell.
 // All shelled routes require auth — guests are redirected to /signup so they
@@ -137,6 +158,7 @@ const App = () => (
           <ScrollToTop />
           <DocsSubdomainRedirect />
           <ApiSubdomainRedirect />
+          <ConsoleSubdomainRedirect />
           <Routes>
             <Route path="/" element={<Index />} />
             {/* SEO landing pages (public) */}
@@ -243,6 +265,16 @@ const App = () => (
               <Route path=":slug" element={<DocsArticle />} />
             </Route>
             <Route path="/api-platform" element={<ApiPlatform />} />
+            <Route path="/console" element={<ConsoleRoot />}>
+              <Route index element={<ConsoleOverview />} />
+              <Route path="keys" element={<ConsoleApiKeys />} />
+              <Route path="usage" element={<ConsoleUsage />} />
+              <Route path="logs" element={<ConsoleLogs />} />
+              <Route path="endpoints" element={<ConsoleEndpoints />} />
+              <Route path="webhooks" element={<ConsoleWebhooks />} />
+              <Route path="billing" element={<ConsoleBilling />} />
+              <Route path="settings" element={<ConsoleSettings />} />
+            </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
           <MobileBottomNav />
