@@ -132,6 +132,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <ScrollToTop />
+          <DocsSubdomainRedirect />
           <Routes>
             <Route path="/" element={<Index />} />
             {/* SEO landing pages (public) */}
