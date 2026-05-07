@@ -11,12 +11,15 @@ const navLinks = [
   { label: "Workspaces", href: "/workspaces" },
   { label: "Resources", href: "/explore" },
   { label: "Pricing", href: "/plans" },
+  { label: "Developers", href: "https://api.hustlaiapp.in", external: true },
   { label: "Integrations", href: "/marketplace" },
   { label: "Blog", href: "/blog" },
   {
     label: "More",
     children: [
-      { label: "B2B APIs", href: "/products" },
+      { label: "B2B APIs", href: "https://api.hustlaiapp.in", external: true },
+      { label: "API Console", href: "https://console.api.hustlaiapp.in", external: true },
+      { label: "API Docs", href: "https://docs.hustlaiapp.in", external: true },
       { label: "About", href: "/about" },
       { label: "Company", href: "/company" },
       { label: "Careers", href: "/career" },
@@ -120,7 +123,14 @@ export function Navbar() {
                     >
                       {l.children.map((child) => (
                         <button key={child.href}
-                          onClick={() => { navigate(child.href); setMoreOpen(false); }}
+                          onClick={() => {
+                            setMoreOpen(false);
+                            if ((child as any).external) {
+                              window.location.href = child.href;
+                            } else {
+                              navigate(child.href);
+                            }
+                          }}
                           className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
                             isActive(child.href)
                               ? isHome ? "bg-emerald-50 text-emerald-700" : "bg-primary/10 text-primary"
@@ -135,7 +145,10 @@ export function Navbar() {
               </div>
             ) : (
               <Button key={l.href} variant="ghost" size="sm"
-                onClick={() => navigate(l.href!)}
+                onClick={() => {
+                  if ((l as any).external) window.location.href = l.href!;
+                  else navigate(l.href!);
+                }}
                 className={`transition-all ${
                   isActive(l.href!)
                     ? isHome ? "text-emerald-700 bg-emerald-50" : "text-primary bg-primary/10"
@@ -201,13 +214,19 @@ export function Navbar() {
                 l.children ? (
                   l.children.map((child) => (
                     <Button key={child.href} variant="ghost" className={`w-full justify-start ${isActive(child.href) ? "text-primary bg-primary/10" : ""}`}
-                      onClick={() => navigate(child.href)}>
+                      onClick={() => {
+                        if ((child as any).external) window.location.href = child.href;
+                        else navigate(child.href);
+                      }}>
                       {child.label}
                     </Button>
                   ))
                 ) : (
                   <Button key={l.href} variant="ghost" className={`w-full justify-start ${isActive(l.href!) ? "text-primary bg-primary/10" : ""}`}
-                    onClick={() => navigate(l.href!)}>
+                    onClick={() => {
+                      if ((l as any).external) window.location.href = l.href!;
+                      else navigate(l.href!);
+                    }}>
                     {l.label}
                   </Button>
                 )
