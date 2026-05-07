@@ -3,12 +3,15 @@ import { Link, NavLink, Outlet } from "react-router-dom";
 import { UserButton } from "@clerk/clerk-react";
 import {
   Activity,
+  BookOpen,
   CreditCard,
   Gauge,
   Key,
   LayoutDashboard,
   Menu,
+  ScrollText,
   Settings2,
+  TerminalSquare,
   X,
 } from "lucide-react";
 import { Helmet } from "react-helmet-async";
@@ -19,6 +22,8 @@ const NAV: { to: string; label: string; icon: any }[] = [
   { to: "/console/keys", label: "API keys", icon: Key },
   { to: "/console/usage", label: "Usage", icon: Gauge },
   { to: "/console/billing", label: "Billing", icon: CreditCard },
+  { to: "/console/playground", label: "Playground", icon: TerminalSquare },
+  { to: "/console/logs", label: "Logs", icon: ScrollText },
   { to: "/console/settings", label: "Settings", icon: Settings2 },
 ];
 
