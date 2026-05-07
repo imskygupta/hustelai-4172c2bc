@@ -43,6 +43,7 @@ export default function DocEditor() {
   const [clients, setClients] = useState<ClientProfile[]>([]);
   const [blocks, setBlocks] = useState<DocBlock[]>([]);
   const [converting, setConverting] = useState(false);
+  const [convertOpen, setConvertOpen] = useState(false);
   const previewRef = useRef<HTMLDivElement | null>(null);
 
   const tier = (profile as any)?.subscription_tier || "free";
@@ -199,18 +200,30 @@ export default function DocEditor() {
 
           {/* Convert */}
           {(CONVERSION_TARGETS[docType] || []).length > 0 && docRow && (
-            <div className="relative group">
-              <button disabled={converting} className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs hover:bg-muted disabled:opacity-50">
+            <div className="relative">
+              <button
+                onClick={() => setConvertOpen(o => !o)}
+                disabled={converting}
+                className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs hover:bg-muted disabled:opacity-50"
+              >
                 {converting ? <Loader2 className="h-3 w-3 animate-spin" /> : <ArrowRight className="h-3 w-3" />} Convert
               </button>
-              <div className="absolute right-0 top-full mt-1 hidden group-hover:block bg-popover border border-border rounded-lg shadow-xl py-1 min-w-[160px] z-10">
-                {CONVERSION_TARGETS[docType].map(t => (
-                  <button key={t} onClick={() => doConvert(t)}
-                    className="block w-full text-left px-3 py-1.5 text-xs hover:bg-muted capitalize">
-                    → {t}
-                  </button>
-                ))}
-              </div>
+              {convertOpen && (
+                <>
+                  <div className="fixed inset-0 z-10" onClick={() => setConvertOpen(false)} />
+                  <div className="absolute right-0 top-full mt-1 bg-popover border border-border rounded-lg shadow-xl py-1 min-w-[180px] z-20">
+                    {CONVERSION_TARGETS[docType].map(t => (
+                      <button
+                        key={t}
+                        onClick={() => { setConvertOpen(false); doConvert(t); }}
+                        className="block w-full text-left px-3 py-2 text-xs hover:bg-muted capitalize"
+                      >
+                        → {t}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
           )}
 
