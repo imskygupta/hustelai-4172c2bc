@@ -1,6 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { Search, BookOpen, ChevronRight, Menu, X, ExternalLink } from "lucide-react";
+import { Helmet } from "react-helmet-async";
+import {
+  Search, BookOpen, Menu, X, ExternalLink, Command,
+  LayoutGrid, Sparkles, Code2, Compass, ArrowUpRight,
+} from "lucide-react";
 import {
   listDocsCategories,
   listDocsPages,
@@ -8,7 +12,6 @@ import {
   type DocsPage,
 } from "@/integrations/docs/client";
 import { Input } from "@/components/ui/input";
-import { SEO } from "@/components/SEO";
 import { cn } from "@/lib/utils";
 
 export default function DocsLayout() {
@@ -112,36 +115,65 @@ export default function DocsLayout() {
   );
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <SEO
-        title="Docs — HustleAI Workspace OS"
-        description="Official documentation for HustleAI Workspace OS: setup guides, CRM, invoices, AI Fuel, proposals, and more."
-        path="/docs"
-      />
+    <div className="docs-shell min-h-screen bg-[hsl(var(--background))] text-foreground [color-scheme:dark]">
+      <Helmet>
+        <title>HustleAI Docs — Guides, workflows & operational systems for freelancers</title>
+        <meta
+          name="description"
+          content="Official HustleAI Workspace OS documentation. Guides, workflows, CRM, invoices, AI Fuel, proposals, intake, client portals and more."
+        />
+        <meta name="robots" content="index,follow" />
+        <link rel="canonical" href={`https://docs.hustlaiapp.in${pathname}`} />
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content="HustleAI Docs" />
+        <meta
+          property="og:description"
+          content="Guides, workflows and operational systems for freelancers."
+        />
+        <meta property="og:url" content={`https://docs.hustlaiapp.in${pathname}`} />
+        <meta property="og:image" content="https://hustlaiapp.in/favicon.png" />
+        <meta name="twitter:card" content="summary_large_image" />
+      </Helmet>
 
-      {/* Top bar */}
-      <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      {/* Top bar — distinct dark "docs" shell */}
+      <header className="sticky top-0 z-40 border-b border-white/5 bg-[hsl(222_22%_7%)]/85 backdrop-blur supports-[backdrop-filter]:bg-[hsl(222_22%_7%)]/70">
         <div className="max-w-[1400px] mx-auto px-4 lg:px-8 h-14 flex items-center justify-between gap-4">
-          <Link to="/docs" className="flex items-center gap-2 font-semibold">
-            <div className="w-7 h-7 rounded-md bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center">
+          <Link to="/docs" className="flex items-center gap-2 font-semibold shrink-0">
+            <div className="w-7 h-7 rounded-md bg-gradient-to-br from-primary to-primary/50 flex items-center justify-center shadow-lg shadow-primary/20">
               <BookOpen className="w-4 h-4 text-primary-foreground" />
             </div>
-            <span className="text-sm">
-              HustleAI <span className="text-muted-foreground">/ Docs</span>
+            <span className="text-sm tracking-tight">
+              HustleAI <span className="text-muted-foreground font-normal">/ Docs</span>
             </span>
           </Link>
-          <div className="hidden md:flex items-center gap-3 text-sm">
-            <Link to="/" className="text-muted-foreground hover:text-foreground">App</Link>
-            <Link to="/blog" className="text-muted-foreground hover:text-foreground">Blog</Link>
+
+          {/* CMD+K placeholder search */}
+          <button
+            onClick={() => document.getElementById("docs-sidebar-search")?.focus()}
+            className="hidden md:flex items-center gap-2 flex-1 max-w-md mx-4 h-9 px-3 rounded-md border border-white/10 bg-white/[0.02] text-sm text-muted-foreground hover:border-white/20 hover:text-foreground transition-colors"
+          >
+            <Search className="w-3.5 h-3.5" />
+            <span className="flex-1 text-left">Search docs…</span>
+            <kbd className="hidden lg:inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded border border-white/10 bg-white/5">
+              <Command className="w-2.5 h-2.5" /> K
+            </kbd>
+          </button>
+
+          <nav className="hidden md:flex items-center gap-1 text-sm">
+            <DocsTopLink to="/docs" icon={LayoutGrid}>Categories</DocsTopLink>
+            <DocsTopLink to="/docs/changelog" icon={Sparkles}>Changelog</DocsTopLink>
+            <DocsTopLink to="/docs/api" icon={Code2}>API</DocsTopLink>
+            <DocsTopLink to="/docs/quickstart" icon={Compass}>Guides</DocsTopLink>
             <a
               href="https://hustlaiapp.in"
-              className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1"
+              className="ml-1 inline-flex items-center gap-1.5 px-3 h-8 rounded-md text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
             >
-              hustlaiapp.in <ExternalLink className="w-3 h-3" />
+              Back to app <ArrowUpRight className="w-3 h-3" />
             </a>
-          </div>
+          </nav>
+
           <button
-            className="md:hidden p-2 rounded-md border border-border"
+            className="md:hidden p-2 rounded-md border border-white/10"
             onClick={() => setOpenMobile((v) => !v)}
             aria-label="Toggle menu"
           >
@@ -160,15 +192,44 @@ export default function DocsLayout() {
 
         {/* Mobile drawer */}
         {openMobile && (
-          <aside className="lg:hidden fixed inset-x-0 top-14 bottom-0 z-30 bg-background border-t border-border overflow-y-auto p-4">
+          <aside className="lg:hidden fixed inset-x-0 top-14 bottom-0 z-30 bg-[hsl(222_22%_7%)] border-t border-white/5 overflow-y-auto p-4">
             {Sidebar}
           </aside>
         )}
 
-        <main className="min-w-0">
+        <main className="min-w-0 text-[15px] leading-relaxed">
           <Outlet context={{ pages, cats }} />
         </main>
       </div>
+
+      <footer className="border-t border-white/5 mt-16 py-8 text-center text-xs text-muted-foreground">
+        <div className="max-w-[1400px] mx-auto px-4 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div>Powered by <span className="text-foreground font-medium">HustleAI Workspace OS</span></div>
+          <div className="flex gap-4">
+            <a href="https://hustlaiapp.in" className="hover:text-foreground">hustlaiapp.in</a>
+            <Link to="/docs" className="hover:text-foreground">Docs home</Link>
+          </div>
+        </div>
+      </footer>
     </div>
+  );
+}
+
+function DocsTopLink({
+  to, icon: Icon, children,
+}: { to: string; icon: any; children: React.ReactNode }) {
+  return (
+    <NavLink
+      to={to}
+      end
+      className={({ isActive }) =>
+        cn(
+          "inline-flex items-center gap-1.5 px-2.5 h-8 rounded-md text-muted-foreground hover:text-foreground hover:bg-white/[0.04] transition-colors text-xs",
+          isActive && "text-foreground bg-white/[0.04]",
+        )
+      }
+    >
+      <Icon className="w-3.5 h-3.5" /> {children}
+    </NavLink>
   );
 }
