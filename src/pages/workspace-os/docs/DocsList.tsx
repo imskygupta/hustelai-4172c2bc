@@ -7,6 +7,7 @@ import { DOC_META } from "@/lib/workspace-docs/types";
 import type { DocType } from "@/lib/workspace-docs/types";
 import { ArrowLeft, Plus, FileText } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { STATUS_LABELS, STATUS_TONE, type DocStatus } from "@/lib/workspace-docs/infra";
 
 const TYPES: DocType[] = ["quotation", "agreement", "invoice", "proposal", "service_card", "business_card"];
 
@@ -87,7 +88,9 @@ export default function DocsList() {
                     {DOC_META[d.doc_type as DocType]?.label} · {d.doc_number || "draft"} · {new Date(d.updated_at).toLocaleDateString()}
                   </p>
                 </div>
-                <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded bg-muted">{d.status}</span>
+                <span className={`text-[10px] uppercase tracking-wider px-2 py-0.5 rounded ${STATUS_TONE[(d.status || "draft") as DocStatus] || "bg-muted"}`}>
+                  {STATUS_LABELS[(d.status || "draft") as DocStatus] || d.status}
+                </span>
               </Link>
             ))}
           </div>
