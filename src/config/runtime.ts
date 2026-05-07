@@ -116,6 +116,73 @@ export function setKillSwitches(keys: string[]) {
 }
 
 /* ---------------------------------------------------------------- */
+/* Server-side runtime config (api_runtime_config)                   */
+/* ---------------------------------------------------------------- */
+
+/** In-memory cache of the server runtime config. Populated by
+ *  loadServerRuntimeConfig() at app boot. Safe defaults if fetch fails. */
+let SERVER_CONFIG: Record<string, any> = {};
+let SERVER_CONFIG_LOADED = false;
+
+export function getServerConfig(): Record<string, any> {
+  return { ...SERVER_CONFIG };
+}
+
+export function isServerConfigLoaded(): boolean {
+  return SERVER_CONFIG_LOADED;
+}
+
+/** Reads a single server flag with safe coercion to boolean. */
+function serverBool(key: string): boolean | null {
+  if (!(key in SERVER_CONFIG)) return null;
+  const v = SERVER_CONFIG[key];
+  if (typeof v === "boolean") return v;
+  if (typeof v === "string") return ["true","1","yes","on"].includes(v.toLowerCase());
+  return Boolean(v);
+}
+
+/** Read URL ?override= (e.g. ?override=disable_ai:true,maintenance_mode:false).
+ *  Highest priority — useful for an admin to test in their own browser. */
+function readUrlOverrides(): Record<string, boolean> {
+  const out: Record<string, boolean> = {};
+  try {
+    if (typeof window === "undefined") return out;
+    const raw = new URLSearchParams(window.location.search).get("override");
+    if (!raw) return out;
+    raw.split(",").forEach(pair => {
+      const [k, v] = pair.split(":").map(s => s.trim().toLowerCase());
+      if (k && v) out[k] = ["true","1","yes","on"].includes(v);
+    });
+  } catch { /* ignore */ }
+  return out;
+}
+
+/** Updates the in-memory cache. Used after admin saves a change so the
+ *  UI reflects it instantly without a page reload. */
+export function setServerConfigInMemory(next: Record<string, any>) {
+  SERVER_CONFIG = { ...next };
+  SERVER_CONFIG_LOADED = true;
+}
+
+/** Boot-time fetch. Wrapped in try/catch — a failure NEVER blocks the
+ *  root domain. Defaults stay in effect until the next successful fetch. */
+export async function loadServerRuntimeConfig(): Promise<void> {
+  try {
+    const { supabase } = await import("@/integrations/supabase/client");
+    const { data, error } = await supabase
+      .from("api_runtime_config")
+      .select("key,value");
+    if (error || !data) return;
+    const next: Record<string, any> = {};
+    for (const row of data as any[]) next[row.key] = row.value;
+    SERVER_CONFIG = next;
+    SERVER_CONFIG_LOADED = true;
+  } catch (err) {
+    console.warn("[runtime] server config load failed, using defaults:", err);
+  }
+}
+
+/* ---------------------------------------------------------------- */
 /* Feature flags                                                     */
 /* ---------------------------------------------------------------- */
 
@@ -144,6 +211,33 @@ const KILL_TO_FLAGS: Record<string, FeatureFlag[]> = {
   experimental: ["ENABLE_EXPERIMENTAL_TOOLS", "ENABLE_BETA_TOOLS"],
 };
 
+/** Map a server config key (snake_case) onto FeatureFlag(s) it disables when true. */
+const SERVER_KILL_TO_FLAGS: Record<string, FeatureFlag[]> = {
+  disable_ai:           ["ENABLE_AI_TOOLS", "ENABLE_AI_EXPORTS"],
+  disable_api:          ["ENABLE_API_PLATFORM", "ENABLE_CONSOLE"],
+  disable_console:      ["ENABLE_CONSOLE"],
+  disable_exports:      ["ENABLE_AI_EXPORTS"],
+  disable_routing:      ["ENABLE_SUBDOMAIN_ROUTING"],
+  disable_docs:         ["ENABLE_DOCS"],
+  disable_experimental: ["ENABLE_EXPERIMENTAL_TOOLS", "ENABLE_BETA_TOOLS"],
+};
+
+/** Server "Safe Mode" disables this group all at once. */
+const SAFE_MODE_FLAGS: FeatureFlag[] = [
+  "ENABLE_AI_TOOLS",
+  "ENABLE_AI_EXPORTS",
+  "ENABLE_EXPERIMENTAL_TOOLS",
+  "ENABLE_BETA_TOOLS",
+  "ENABLE_SUBDOMAIN_ROUTING",
+];
+
+/** Compute current flag values fresh on every read.
+ *  Priority (highest wins):
+ *    1. URL ?override=key:value
+ *    2. Server runtime config (api_runtime_config)
+ *    3. localStorage kill switches
+ *    4. env defaults
+ */
 function buildFlags(): Record<FeatureFlag, boolean> {
   const base: Record<FeatureFlag, boolean> = {
     ENABLE_DOCS:                envBool("VITE_ENABLE_DOCS", true),
@@ -157,22 +251,44 @@ function buildFlags(): Record<FeatureFlag, boolean> {
     ENABLE_BETA_TOOLS:          envBool("VITE_ENABLE_BETA_TOOLS", false),
     ENABLE_COMMUNITY:           envBool("VITE_ENABLE_COMMUNITY", true),
   };
+  // 3. localStorage kill switches
   const kills = readKillSwitches();
   for (const k of kills) {
     const flags = KILL_TO_FLAGS[k];
     if (flags) for (const f of flags) base[f] = false;
   }
+  // 2. Server config — overrides localStorage
+  if (serverBool("safe_mode")) {
+    for (const f of SAFE_MODE_FLAGS) base[f] = false;
+  }
+  for (const [key, flags] of Object.entries(SERVER_KILL_TO_FLAGS)) {
+    if (serverBool(key) === true) for (const f of flags) base[f] = false;
+  }
+  // 1. URL overrides — highest priority
+  const urlOverrides = readUrlOverrides();
+  for (const [key, val] of Object.entries(urlOverrides)) {
+    const flags = SERVER_KILL_TO_FLAGS[key];
+    if (flags) for (const f of flags) base[f] = !val; // override `disable_x:true` => flag false
+  }
   return base;
 }
 
-const FLAGS = buildFlags();
-
 export function isEnabled(flag: FeatureFlag): boolean {
-  return FLAGS[flag] === true;
+  return buildFlags()[flag] === true;
 }
 
 export function getAllFlags(): Record<FeatureFlag, boolean> {
-  return { ...FLAGS };
+  return buildFlags();
+}
+
+/** Read-only mode: blocks all writes, key generation, exports.
+ *  Read this from any mutating UI to disable buttons + show a banner. */
+export function isReadOnlyMode(): boolean {
+  return serverBool("readonly_mode") === true;
+}
+
+export function isSafeMode(): boolean {
+  return serverBool("safe_mode") === true;
 }
 
 /* ---------------------------------------------------------------- */
@@ -184,6 +300,7 @@ export function isMaintenanceMode(): boolean {
     if (typeof window === "undefined") return false;
     if (detectSurface() === "status") return false; // status always reachable
     if (window.location.search.includes("maintenance=1")) return true;
+    if (serverBool("maintenance_mode") === true) return true;
     return envBool("VITE_MAINTENANCE_MODE", false);
   } catch {
     return false;
@@ -220,6 +337,10 @@ export interface RuntimeSnapshot {
   flags: Record<FeatureFlag, boolean>;
   killSwitches: string[];
   maintenance: boolean;
+  safeMode: boolean;
+  readOnly: boolean;
+  serverConfig: Record<string, any>;
+  serverConfigLoaded: boolean;
   environment: string;
   buildVersion: string;
   aiProviders: AiProvider[];
@@ -235,6 +356,10 @@ export function getRuntimeSnapshot(): RuntimeSnapshot {
     flags: getAllFlags(),
     killSwitches: [...readKillSwitches()],
     maintenance: isMaintenanceMode(),
+    safeMode: isSafeMode(),
+    readOnly: isReadOnlyMode(),
+    serverConfig: getServerConfig(),
+    serverConfigLoaded: isServerConfigLoaded(),
     environment: envStr("MODE", "production"),
     buildVersion: envStr("VITE_APP_VERSION", "dev"),
     aiProviders: getAiProviderChain(),

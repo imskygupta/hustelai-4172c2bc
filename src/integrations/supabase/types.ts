@@ -149,6 +149,69 @@ export type Database = {
         }
         Relationships: []
       }
+      api_runtime_audit_logs: {
+        Row: {
+          action: string
+          admin_user_id: string | null
+          config_key: string
+          created_at: string
+          id: string
+          new_value: Json | null
+          old_value: Json | null
+        }
+        Insert: {
+          action?: string
+          admin_user_id?: string | null
+          config_key: string
+          created_at?: string
+          id?: string
+          new_value?: Json | null
+          old_value?: Json | null
+        }
+        Update: {
+          action?: string
+          admin_user_id?: string | null
+          config_key?: string
+          created_at?: string
+          id?: string
+          new_value?: Json | null
+          old_value?: Json | null
+        }
+        Relationships: []
+      }
+      api_runtime_config: {
+        Row: {
+          created_at: string
+          environment: string
+          id: string
+          key: string
+          notes: string | null
+          updated_at: string
+          updated_by: string | null
+          value: Json
+        }
+        Insert: {
+          created_at?: string
+          environment?: string
+          id?: string
+          key: string
+          notes?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          value?: Json
+        }
+        Update: {
+          created_at?: string
+          environment?: string
+          id?: string
+          key?: string
+          notes?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          value?: Json
+        }
+        Relationships: []
+      }
       automation_rules: {
         Row: {
           action_config: Json | null
