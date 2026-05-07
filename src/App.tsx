@@ -121,25 +121,34 @@ import Health from "./pages/Health";
 import AdminRuntime from "./pages/admin/Runtime";
 import RuntimeProviders from "./pages/admin/RuntimeProviders";
 import ApiPlatform from "./pages/api-platform/ApiPlatform";
-import { ClerkProvider } from "@clerk/clerk-react";
 import ConsoleLayout from "./pages/api-platform/console/ConsoleLayout";
-import ConsoleOverview from "./pages/api-platform/console/Overview";
+import ConsoleDashboard from "./pages/api-platform/console/Dashboard";
 import ConsoleApiKeys from "./pages/api-platform/console/ApiKeys";
 import ConsoleUsage from "./pages/api-platform/console/Usage";
-import ConsoleLogs from "./pages/api-platform/console/Logs";
-import ConsoleEndpoints from "./pages/api-platform/console/Endpoints";
-import ConsoleWebhooks from "./pages/api-platform/console/Webhooks";
 import ConsoleBilling from "./pages/api-platform/console/Billing";
 import ConsoleSettings from "./pages/api-platform/console/Settings";
+import ConsoleLogin from "./pages/api-platform/console/Login";
+import ConsoleSignup from "./pages/api-platform/console/Signup";
+import { ClerkGate } from "./pages/api-platform/console/ClerkGate";
+import { Navigate } from "react-router-dom";
 
-const CLERK_PUBLISHABLE_KEY = "pk_live_Y2xlcmsuYXBpLmh1c3RsYWlhcHAuaW4k";
-
-/** Console routes wrapped in their own ClerkProvider so the freelancer
- * dashboard never loads Clerk and stays on Supabase auth. */
-const ConsoleRoot = () => (
-  <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY}>
-    <ConsoleLayout />
-  </ClerkProvider>
+/** All /console/* routes share one Clerk instance + error boundary +
+ * timeout fallback so the console subdomain NEVER renders a blank screen. */
+const ConsoleTree = () => (
+  <ClerkGate>
+    <Routes>
+      <Route path="login/*" element={<ConsoleLogin />} />
+      <Route path="signup/*" element={<ConsoleSignup />} />
+      <Route element={<ConsoleLayout />}>
+        <Route index element={<Navigate to="dashboard" replace />} />
+        <Route path="dashboard" element={<ConsoleDashboard />} />
+        <Route path="keys" element={<ConsoleApiKeys />} />
+        <Route path="usage" element={<ConsoleUsage />} />
+        <Route path="billing" element={<ConsoleBilling />} />
+        <Route path="settings" element={<ConsoleSettings />} />
+      </Route>
+    </Routes>
+  </ClerkGate>
 );
 
 // Helper to wrap an in-app page in the SaaS sidebar shell.
@@ -274,16 +283,7 @@ const App = () => (
               <Route path=":slug" element={<DocsArticle />} />
             </Route>
             <Route path="/api-platform" element={<ApiPlatform />} />
-            <Route path="/console" element={<ConsoleRoot />}>
-              <Route index element={<ConsoleOverview />} />
-              <Route path="keys" element={<ConsoleApiKeys />} />
-              <Route path="usage" element={<ConsoleUsage />} />
-              <Route path="logs" element={<ConsoleLogs />} />
-              <Route path="endpoints" element={<ConsoleEndpoints />} />
-              <Route path="webhooks" element={<ConsoleWebhooks />} />
-              <Route path="billing" element={<ConsoleBilling />} />
-              <Route path="settings" element={<ConsoleSettings />} />
-            </Route>
+            <Route path="/console/*" element={<ConsoleTree />} />
             <Route path="/status" element={<Status />} />
             <Route path="/api/health" element={<Health kind="health" />} />
             <Route path="/api/status" element={<Health kind="status" />} />
