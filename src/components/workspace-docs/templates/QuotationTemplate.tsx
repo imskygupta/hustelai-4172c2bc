@@ -9,10 +9,13 @@ export function QuotationTemplate({ data, themeId, watermark }: { data: Quotatio
   return (
     <ThemedSurface themeId={themeId} watermark={watermark} footerText={(data as any).brand?.footer}>
       <header style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", paddingBottom: 24, borderBottom: `1px solid ${t.divider}` }}>
-        <div>
+        <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
+          {data.brand.logo && <img src={data.brand.logo} alt="" style={{ width: 56, height: 56, objectFit: "contain", borderRadius: 8 }} />}
+          <div>
           <p style={{ fontSize: 11, letterSpacing: 3, textTransform: "uppercase", color: t.muted, margin: 0 }}>Quotation</p>
           <h1 style={{ fontFamily: t.display, fontSize: 32, margin: "6px 0 4px", color: t.text }}>{data.brand.name}</h1>
           {data.brand.tagline && <p style={{ fontSize: 12, color: t.muted, margin: 0 }}>{data.brand.tagline}</p>}
+          </div>
         </div>
         <div style={{ textAlign: "right", fontSize: 11, color: t.muted, lineHeight: 1.6 }}>
           <div><strong style={{ color: t.text }}>#{data.number}</strong></div>

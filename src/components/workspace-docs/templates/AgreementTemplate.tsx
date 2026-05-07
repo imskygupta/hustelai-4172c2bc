@@ -13,6 +13,7 @@ export function AgreementTemplate({ data, themeId, watermark }: { data: Agreemen
   return (
     <ThemedSurface themeId={themeId} watermark={watermark} footerText={(data as any).brand?.footer}>
       <header style={{ textAlign: "center", paddingBottom: 24, borderBottom: `1px solid ${t.divider}` }}>
+        {data.brand.logo && <img src={data.brand.logo} alt="" style={{ width: 56, height: 56, objectFit: "contain", borderRadius: 8, margin: "0 auto 8px", display: "block" }} />}
         <p style={{ fontSize: 11, letterSpacing: 4, color: t.muted, margin: 0 }}>SERVICE AGREEMENT</p>
         <h1 style={{ fontFamily: t.display, fontSize: 28, margin: "8px 0 4px" }}>{data.brand.name} × {data.client.name}</h1>
         <p style={{ fontSize: 11, color: t.muted, margin: 0 }}>#{data.number} · {data.date}</p>
@@ -27,17 +28,18 @@ export function AgreementTemplate({ data, themeId, watermark }: { data: Agreemen
       {data.jurisdiction && <Section title="7. Jurisdiction" body={data.jurisdiction} />}
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, marginTop: 48 }}>
-        <SignatureBlock t={t} label="Service provider" name={data.brand.name} />
+        <SignatureBlock t={t} label="Service provider" name={data.brand.name} signatureUrl={(data as any).brand?.signature} />
         <SignatureBlock t={t} label="Client" name={data.client.name} />
       </div>
     </ThemedSurface>
   );
 }
 
-function SignatureBlock({ t, label, name }: any) {
+function SignatureBlock({ t, label, name, signatureUrl }: any) {
   return (
     <div>
       <p style={{ fontSize: 10, letterSpacing: 2, color: t.muted, textTransform: "uppercase", margin: "0 0 32px" }}>{label}</p>
+      {signatureUrl && <img src={signatureUrl} alt="signature" style={{ maxHeight: 48, maxWidth: 180, objectFit: "contain", marginBottom: 4 }} />}
       <div style={{ borderTop: `1px solid ${t.border}`, paddingTop: 6 }}>
         <p style={{ fontSize: 13, color: t.text, margin: 0, fontWeight: 600 }}>{name}</p>
         <p style={{ fontSize: 10, color: t.muted, margin: "2px 0 0" }}>Signature & date</p>
