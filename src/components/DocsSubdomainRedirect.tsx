@@ -14,18 +14,21 @@ export function DocsSubdomainRedirect() {
   const { pathname, search, hash } = useLocation();
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    const host = window.location.hostname;
-    const isDocsHost = host.startsWith("docs.");
-    if (!isDocsHost) return;
-    if (pathname.startsWith("/docs")) return;
-
-    // Map "/" → "/docs", "/foo" → "/docs/foo"
-    const target =
-      pathname === "/" || pathname === ""
-        ? "/docs"
-        : `/docs${pathname.startsWith("/") ? "" : "/"}${pathname}`;
-    navigate(`${target}${search}${hash}`, { replace: true });
+    try {
+      if (typeof window === "undefined") return;
+      const host = window.location.hostname || "";
+      // Strict match: only docs.* (not docs-foo., not foo.docs.)
+      if (!/^docs\./i.test(host)) return;
+      if (pathname.startsWith("/docs")) return;
+      const target =
+        pathname === "/" || pathname === ""
+          ? "/docs"
+          : `/docs${pathname.startsWith("/") ? "" : "/"}${pathname}`;
+      navigate(`${target}${search}${hash}`, { replace: true });
+    } catch (err) {
+      // Never break the root site if hostname parsing throws.
+      console.warn("[DocsSubdomainRedirect] safe-fallback:", err);
+    }
   }, [pathname, search, hash, navigate]);
 
   return null;

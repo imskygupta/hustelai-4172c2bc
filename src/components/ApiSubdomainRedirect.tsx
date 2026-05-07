@@ -10,17 +10,20 @@ export function ApiSubdomainRedirect() {
   const { pathname, search, hash } = useLocation();
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    const host = window.location.hostname;
-    const isApiHost = host.startsWith("api.");
-    if (!isApiHost) return;
-    if (pathname.startsWith("/api-platform")) return;
-
-    const target =
-      pathname === "/" || pathname === ""
-        ? "/api-platform"
-        : `/api-platform${pathname.startsWith("/") ? "" : "/"}${pathname}`;
-    navigate(`${target}${search}${hash}`, { replace: true });
+    try {
+      if (typeof window === "undefined") return;
+      const host = window.location.hostname || "";
+      // Match api.* but NOT console.api.*
+      if (!/^api\./i.test(host)) return;
+      if (pathname.startsWith("/api-platform")) return;
+      const target =
+        pathname === "/" || pathname === ""
+          ? "/api-platform"
+          : `/api-platform${pathname.startsWith("/") ? "" : "/"}${pathname}`;
+      navigate(`${target}${search}${hash}`, { replace: true });
+    } catch (err) {
+      console.warn("[ApiSubdomainRedirect] safe-fallback:", err);
+    }
   }, [pathname, search, hash, navigate]);
 
   return null;
