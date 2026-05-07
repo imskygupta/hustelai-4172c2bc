@@ -22,14 +22,24 @@ export async function convertSubmissionToWorkspace(submission: any, userId: stri
   }).select("id").single();
   if (wsErr) throw wsErr;
 
-  // 2) Save client profile (idempotent on email)
+  // 2) Save client profile if not already present (no unique constraint on email)
   if (submission.client_email) {
-    await (supabase as any).from("client_profiles").upsert({
-      user_id: userId,
-      name: clientName,
-      email: submission.client_email,
-      company: submission.client_company || null,
-    }, { onConflict: "user_id,email" }).select().maybeSingle().then(() => {}, () => {});
+    try {
+      const { data: existing } = await (supabase as any)
+        .from("client_profiles")
+        .select("id")
+        .eq("user_id", userId)
+        .eq("email", submission.client_email)
+        .maybeSingle();
+      if (!existing) {
+        await (supabase as any).from("client_profiles").insert({
+          user_id: userId,
+          name: clientName,
+          email: submission.client_email,
+          company: submission.client_company || null,
+        });
+      }
+    } catch { /* non-fatal */ }
   }
 
   // 3) Create draft proposal + quotation seeded from submission
