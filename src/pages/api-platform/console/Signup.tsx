@@ -1,5 +1,7 @@
 import { SignUp } from "@clerk/clerk-react";
 import { Helmet } from "react-helmet-async";
+import { Link } from "react-router-dom";
+import { AuthShell, clerkAppearance } from "./AuthShell";
 
 export default function ConsoleSignup() {
   return (
@@ -8,31 +10,28 @@ export default function ConsoleSignup() {
         <title>Create account — HustleAI Console</title>
         <meta name="robots" content="noindex,nofollow" />
       </Helmet>
-      <div className="min-h-screen bg-[#05070a] text-zinc-200 grid place-items-center px-4 py-10">
-        <div className="w-full max-w-md">
-          <div className="text-center mb-6">
-            <div className="inline-flex items-center gap-2">
-              <div className="h-8 w-8 rounded-md bg-emerald-500/15 border border-emerald-400/30 grid place-items-center text-emerald-300 font-mono text-[12px]">H</div>
-              <div className="text-left">
-                <div className="text-[14px] font-semibold text-zinc-100 leading-tight">HustleAI</div>
-                <div className="text-[10px] uppercase tracking-[0.18em] text-emerald-400/80">Console · Beta</div>
-              </div>
-            </div>
-          </div>
-          <SignUp
-            routing="path"
-            path="/console/signup"
-            signInUrl="/console/login"
-            afterSignUpUrl="/console/dashboard"
-            appearance={{
-              elements: {
-                rootBox: "mx-auto",
-                card: "bg-white/[0.02] border border-white/[0.08] shadow-none",
-              },
-            }}
-          />
-        </div>
-      </div>
+      <AuthShell
+        headline="Build AI products in days, not months."
+        eyebrow="Get started free"
+        title="Create your developer account"
+        subtitle="50,000 API calls on us. No credit card required."
+        footer={
+          <span>
+            Already have an account?{" "}
+            <Link to="/console/login" className="text-emerald-400 hover:text-emerald-300 font-medium">
+              Sign in
+            </Link>
+          </span>
+        }
+      >
+        <SignUp
+          routing="path"
+          path="/console/signup"
+          signInUrl="/console/login"
+          afterSignUpUrl="/console/dashboard"
+          appearance={clerkAppearance}
+        />
+      </AuthShell>
     </>
   );
 }
