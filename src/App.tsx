@@ -81,6 +81,9 @@ import IntakeSubmit from "./pages/IntakeSubmit";
 import Work from "./pages/Work";
 import WorkTool from "./pages/WorkTool";
 import ClientPortal from "./pages/ClientPortal";
+import DocsLayout from "./pages/docs/DocsLayout";
+import DocsHome from "./pages/docs/DocsHome";
+import DocsArticle from "./pages/docs/DocsArticle";
 import DynamicSeoPage from "./pages/seo/DynamicSeoPage";
 import SeoBlogIndex from "./pages/seo/SeoBlogIndex";
 import SeoBlogPost from "./pages/seo/SeoBlogPost";
@@ -230,6 +233,10 @@ const App = () => (
             <Route path="/portal/:token" element={<ClientPortal />} />
             <Route path="/p/:token" element={<WorkspacePortal />} />
             <Route path="/intake/:slug" element={<IntakeSubmit />} />
+            <Route path="/docs" element={<DocsLayout />}>
+              <Route index element={<DocsHome />} />
+              <Route path=":slug" element={<DocsArticle />} />
+            </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
           <MobileBottomNav />
