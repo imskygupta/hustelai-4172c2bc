@@ -39,7 +39,13 @@ export function QuotationTemplate({ data, themeId, watermark }: { data: Quotatio
       </section>
 
       <section data-pdf-break style={{ marginTop: 36 }}>
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13, tableLayout: "fixed" }}>
+          <colgroup>
+            <col style={{ width: "55%" }} />
+            <col style={{ width: "10%" }} />
+            <col style={{ width: "15%" }} />
+            <col style={{ width: "20%" }} />
+          </colgroup>
           <thead>
             <tr style={{ borderBottom: `2px solid ${t.divider}` }}>
               <th style={{ textAlign: "left", padding: "10px 0", color: t.muted, fontWeight: 500, fontSize: 11, textTransform: "uppercase", letterSpacing: 1 }}>Item</th>
@@ -50,14 +56,14 @@ export function QuotationTemplate({ data, themeId, watermark }: { data: Quotatio
           </thead>
           <tbody>
             {data.items.map((it, i) => (
-              <tr key={i} style={{ borderBottom: `1px solid ${t.divider}` }}>
-                <td style={{ padding: "12px 0" }}>
+              <tr key={i} data-pdf-break style={{ borderBottom: `1px solid ${t.divider}` }}>
+                <td style={{ padding: "12px 8px 12px 0", wordBreak: "break-word", overflowWrap: "anywhere" }}>
                   <div style={{ color: t.text, fontWeight: 500 }}>{it.title}</div>
                   {it.description && <div style={{ color: t.muted, fontSize: 11, marginTop: 2 }}>{it.description}</div>}
                 </td>
                 <td style={{ textAlign: "right", color: t.text }}>{it.qty}</td>
-                <td style={{ textAlign: "right", color: t.text }}>{cur} {it.rate.toLocaleString()}</td>
-                <td style={{ textAlign: "right", color: t.text, fontWeight: 600 }}>{cur} {(it.qty * it.rate).toLocaleString()}</td>
+                <td style={{ textAlign: "right", color: t.text, whiteSpace: "nowrap" }}>{cur} {it.rate.toLocaleString()}</td>
+                <td style={{ textAlign: "right", color: t.text, fontWeight: 600, whiteSpace: "nowrap" }}>{cur} {(it.qty * it.rate).toLocaleString()}</td>
               </tr>
             ))}
           </tbody>
