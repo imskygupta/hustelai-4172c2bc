@@ -1808,6 +1808,51 @@ export type Database = {
         }
         Relationships: []
       }
+      roadmap_sessions: {
+        Row: {
+          classification: Json
+          created_at: string
+          id: string
+          input_text: string
+          roadmap: Json
+          suggested_docs: Json
+          suggested_tools: Json
+          title: string
+          updated_at: string
+          user_id: string
+          workflow_stage: string
+          workspace_id: string | null
+        }
+        Insert: {
+          classification?: Json
+          created_at?: string
+          id?: string
+          input_text?: string
+          roadmap?: Json
+          suggested_docs?: Json
+          suggested_tools?: Json
+          title?: string
+          updated_at?: string
+          user_id: string
+          workflow_stage?: string
+          workspace_id?: string | null
+        }
+        Update: {
+          classification?: Json
+          created_at?: string
+          id?: string
+          input_text?: string
+          roadmap?: Json
+          suggested_docs?: Json
+          suggested_tools?: Json
+          title?: string
+          updated_at?: string
+          user_id?: string
+          workflow_stage?: string
+          workspace_id?: string | null
+        }
+        Relationships: []
+      }
       saved_hustles: {
         Row: {
           created_at: string

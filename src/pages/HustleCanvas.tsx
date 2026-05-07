@@ -262,8 +262,40 @@ export default function HustleCanvas() {
             <div style={{ transform: `scale(${zoom})`, transformOrigin: "0 0", width: "200%", height: "200%" }}>
               {notes.map(n => <Sticky key={n.id} note={n} onMove={(x, y) => updateNote(n.id, { x, y })} onAction={() => fireAction(n)} onDelete={() => deleteNote(n.id)} onText={t => updateNote(n.id, { text: t })} />)}
               {notes.length === 0 && (
-                <div className="absolute inset-0 flex items-center justify-center text-slate-400 text-sm pointer-events-none">
-                  Click a color in the toolbar to drop your first note 👆
+                <div className="absolute inset-0 p-8 overflow-auto">
+                  <div className="max-w-4xl mx-auto">
+                    <div className="text-center mb-6">
+                      <p className="text-sm font-semibold text-slate-700">Start with an operational template</p>
+                      <p className="text-xs text-slate-500 mt-1">Drag onto canvas or click to add — these become live nodes you can edit</p>
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                      {[
+                        { label: "Proposal Generator", color: "yellow" as Color, hint: "Tailored client pitch" },
+                        { label: "Client Intake", color: "yellow" as Color, hint: "Discovery questions" },
+                        { label: "Scope Agreement", color: "blue" as Color, hint: "Deliverables + timelines" },
+                        { label: "Invoice System", color: "green" as Color, hint: "Get paid faster" },
+                        { label: "CRM Pipeline", color: "blue" as Color, hint: "Track every lead" },
+                        { label: "Content Workflow", color: "yellow" as Color, hint: "Plan → publish loop" },
+                        { label: "Automation Flow", color: "red" as Color, hint: "n8n / Zapier ops" },
+                        { label: "Portfolio Board", color: "green" as Color, hint: "Showcase wins" },
+                      ].map(t => {
+                        const M = COLOR_META[t.color];
+                        return (
+                          <button
+                            key={t.label}
+                            onClick={() => addNote(t.color, t.label, 200 + Math.random() * 200, 200 + Math.random() * 150)}
+                            className={`text-left p-3 rounded-xl border border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm transition-all group`}
+                          >
+                            <div className={`w-7 h-7 rounded-lg ${M.bg} ring-1 ${M.ring} flex items-center justify-center mb-2`}>
+                              <M.icon className="w-3.5 h-3.5 text-slate-700" />
+                            </div>
+                            <p className="text-xs font-semibold text-slate-900">{t.label}</p>
+                            <p className="text-[10px] text-slate-500 mt-0.5">{t.hint}</p>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
                 </div>
               )}
             </div>

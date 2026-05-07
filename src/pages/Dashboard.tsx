@@ -20,6 +20,7 @@ import {
   ShieldAlert, Briefcase, Loader2, Bot, Music, Hammer, KeyRound, Receipt, Clock,
   ClipboardList, FolderOpen, Wallet, AlarmClock, Globe, Kanban, Layers, Mail,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 
 interface FeedData {
   headlines: { text: string; source: string }[];
@@ -187,6 +188,73 @@ export default function Dashboard() {
             sub="Conversations sent" accent="sky"
             progress={Math.min(chatCount * 2, 100)}
           />
+        </div>
+
+        {/* Operational Brain — featured module */}
+        <div className="relative overflow-hidden rounded-2xl border border-violet-200 bg-gradient-to-br from-violet-50 via-white to-fuchsia-50 p-5 sm:p-6">
+          <div className="absolute -top-12 -right-12 w-48 h-48 rounded-full bg-gradient-to-br from-violet-200/50 to-fuchsia-200/40 blur-2xl pointer-events-none" />
+          <div className="relative grid lg:grid-cols-3 gap-5 items-center">
+            <div className="lg:col-span-2">
+              <span className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.18em] font-semibold text-violet-700 bg-violet-100 rounded-full px-2.5 py-0.5">
+                <Brain className="w-3 h-3" /> Operational Brain
+              </span>
+              <h2 className="font-display font-semibold text-xl sm:text-2xl text-slate-900 mt-2">AI Roadmap Engine</h2>
+              <p className="text-sm text-slate-600 mt-1 max-w-xl">
+                Describe a client, project or service. The engine classifies it with lightweight AI and generates workflows, recommended tools, suggested documents and next actions instantly.
+              </p>
+              <div className="flex flex-wrap gap-2 mt-4">
+                <Button size="sm" className="bg-slate-900 hover:bg-slate-800 text-white" onClick={() => navigate("/workspaces/roadmap")}>
+                  <Sparkles className="w-3.5 h-3.5 mr-1.5" /> Generate workflow
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => navigate("/workspaces/new")}>
+                  <Briefcase className="w-3.5 h-3.5 mr-1.5" /> Start new client system
+                </Button>
+                <Button size="sm" variant="ghost" className="text-slate-700" onClick={() => navigate("/workspaces/roadmap")}>
+                  <Target className="w-3.5 h-3.5 mr-1.5" /> Analyze project
+                </Button>
+              </div>
+            </div>
+            <div className="hidden lg:flex flex-col gap-1.5">
+              {[
+                { label: "Classify brief", color: "bg-emerald-500" },
+                { label: "Generate phases", color: "bg-violet-500" },
+                { label: "Suggest tools", color: "bg-sky-500" },
+                { label: "Draft docs", color: "bg-amber-500" },
+              ].map(s => (
+                <div key={s.label} className="flex items-center gap-2 text-xs text-slate-700 bg-white/70 backdrop-blur rounded-lg border border-slate-200 px-3 py-2">
+                  <span className={`w-1.5 h-1.5 rounded-full ${s.color}`} />
+                  {s.label}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Popular Operational Tools */}
+        <div className="rounded-2xl border border-slate-200 bg-white p-5">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="font-display font-semibold text-slate-900">Popular operational tools</h3>
+              <p className="text-xs text-slate-500 mt-0.5">Built for freelancers — start faster with the systems clients pay for</p>
+            </div>
+            <Link to="/operations" className="text-xs text-violet-700 hover:underline inline-flex items-center gap-1">Tour the OS <ArrowUpRight className="w-3 h-3" /></Link>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+            {[
+              { icon: FileText, label: "Proposal Generator", desc: "Tailored client pitches", path: "/proposal-draft", color: "from-emerald-500 to-teal-500" },
+              { icon: ClipboardList, label: "Scope Document", desc: "Deliverables & milestones", path: "/workspaces", color: "from-violet-500 to-fuchsia-500" },
+              { icon: Users, label: "Smart Client Intake", desc: "Onboarding questionnaires", path: "/workspaces/new", color: "from-sky-500 to-indigo-500" },
+              { icon: Layers, label: "Service Offer Cards", desc: "Premium service decks", path: "/workspaces", color: "from-amber-500 to-orange-500" },
+            ].map(t => (
+              <button key={t.label} onClick={() => navigate(t.path)} className="text-left rounded-xl border border-slate-200 hover:border-slate-300 bg-white hover:shadow-sm transition-all p-3 group">
+                <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${t.color} flex items-center justify-center mb-2`}>
+                  <t.icon className="w-4 h-4 text-white" />
+                </div>
+                <p className="text-sm font-medium text-slate-900">{t.label}</p>
+                <p className="text-[11px] text-slate-500 mt-0.5">{t.desc}</p>
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Live ticker / market strip */}

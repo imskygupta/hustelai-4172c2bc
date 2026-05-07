@@ -58,6 +58,7 @@ import NotFound from "./pages/NotFound";
 import Products from "./pages/Products";
 import ProductDetail from "./pages/ProductDetail";
 import HustleBot from "./pages/HustleBot";
+import Operations from "./pages/Operations";
 import Workspaces from "./pages/Workspaces";
 import HustleCanvas from "./pages/HustleCanvas";
 import WorkspaceOS from "./pages/workspace-os/WorkspaceOS";
@@ -177,6 +178,7 @@ const App = () => (
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/terms-conditions" element={<TermsConditions />} />
             <Route path="/refund-policy" element={<RefundPolicy />} />
+            <Route path="/operations" element={<Operations />} />
             <Route path="/admin" element={<AdminBlock />} />
             <Route path="/imskygupta-admin" element={<AdminLogin />} />
             <Route path="/admin-dashboard" element={<AdminDashboard />} />
