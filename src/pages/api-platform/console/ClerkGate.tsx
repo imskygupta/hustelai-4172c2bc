@@ -1,7 +1,7 @@
 import { ReactNode, useEffect, useState } from "react";
 import { ClerkProvider } from "@clerk/clerk-react";
 import { ConsoleErrorBoundary } from "./ConsoleErrorBoundary";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Loader2 } from "lucide-react";
 
 const CLERK_PUBLISHABLE_KEY = "pk_live_Y2xlcmsuYXBpLmh1c3RsYWlhcHAuaW4k";
 const LOAD_TIMEOUT_MS = 9000;
@@ -97,7 +97,7 @@ export function ClerkGate({ children }: { children: ReactNode }) {
 
   return (
     <ConsoleErrorBoundary key={retryKey}>
-      <ClerkProvider publishableKey={REAL_KEY || CLERK_PUBLISHABLE_KEY}>
+      <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY}>
         {state === "booting" ? <ConsoleLoadingScreen /> : null}
         <div style={{ display: state === "ready" ? "block" : "none" }}>
           {children}
