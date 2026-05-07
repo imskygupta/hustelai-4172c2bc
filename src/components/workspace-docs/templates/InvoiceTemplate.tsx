@@ -11,7 +11,7 @@ export function InvoiceTemplate({ data, themeId, watermark }: { data: InvoiceDat
 
   return (
     <ThemedSurface themeId={themeId} watermark={watermark} footerText={(data as any).brand?.footer}>
-      <header style={{ display: "flex", justifyContent: "space-between" }}>
+      <header data-pdf-break style={{ display: "flex", justifyContent: "space-between" }}>
         <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
           {data.brand.logo && <img src={data.brand.logo} alt="" style={{ width: 56, height: 56, objectFit: "contain", borderRadius: 8 }} />}
           <div>
@@ -31,7 +31,7 @@ export function InvoiceTemplate({ data, themeId, watermark }: { data: InvoiceDat
         </div>
       </header>
 
-      <section style={{ marginTop: 28, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
+      <section data-pdf-break style={{ marginTop: 28, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
         <div>
           <p style={{ fontSize: 10, letterSpacing: 2, color: t.muted, margin: "0 0 6px", textTransform: "uppercase" }}>Bill from</p>
           <p style={{ fontSize: 13, color: t.text, margin: 0, fontWeight: 600 }}>{data.brand.name}</p>
@@ -56,7 +56,7 @@ export function InvoiceTemplate({ data, themeId, watermark }: { data: InvoiceDat
         </thead>
         <tbody>
           {data.items.map((it, i) => (
-            <tr key={i} style={{ borderBottom: `1px solid ${t.divider}` }}>
+            <tr key={i} data-pdf-break style={{ borderBottom: `1px solid ${t.divider}` }}>
               <td style={{ padding: "12px 0", color: t.text }}>{it.title}</td>
               <td style={{ textAlign: "right", padding: "12px 0", color: t.text }}>{it.qty}</td>
               <td style={{ textAlign: "right", padding: "12px 0", color: t.text }}>{cur} {it.rate.toLocaleString()}</td>
@@ -66,7 +66,7 @@ export function InvoiceTemplate({ data, themeId, watermark }: { data: InvoiceDat
         </tbody>
       </table>
 
-      <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 18 }}>
+      <div data-pdf-break style={{ display: "flex", justifyContent: "flex-end", marginTop: 18 }}>
         <div style={{ minWidth: 260 }}>
           <Row t={t} label="Subtotal" value={`${cur} ${subtotal.toLocaleString()}`} />
           {!!data.taxPercent && <Row t={t} label={`Tax (${data.taxPercent}%)`} value={`${cur} ${tax.toLocaleString()}`} />}
@@ -76,7 +76,7 @@ export function InvoiceTemplate({ data, themeId, watermark }: { data: InvoiceDat
       </div>
 
       {data.notes && (
-        <section style={{ marginTop: 28, fontSize: 12, color: t.muted, lineHeight: 1.6 }}>{data.notes}</section>
+        <section data-pdf-break style={{ marginTop: 28, fontSize: 12, color: t.muted, lineHeight: 1.6 }}>{data.notes}</section>
       )}
     </ThemedSurface>
   );

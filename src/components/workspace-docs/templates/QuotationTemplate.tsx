@@ -8,7 +8,7 @@ export function QuotationTemplate({ data, themeId, watermark }: { data: Quotatio
   const cur = data.currency || "INR";
   return (
     <ThemedSurface themeId={themeId} watermark={watermark} footerText={(data as any).brand?.footer}>
-      <header style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", paddingBottom: 24, borderBottom: `1px solid ${t.divider}` }}>
+      <header data-pdf-break style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", paddingBottom: 24, borderBottom: `1px solid ${t.divider}` }}>
         <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
           {data.brand.logo && <img src={data.brand.logo} alt="" style={{ width: 56, height: 56, objectFit: "contain", borderRadius: 8 }} />}
           <div>
@@ -24,7 +24,7 @@ export function QuotationTemplate({ data, themeId, watermark }: { data: Quotatio
         </div>
       </header>
 
-      <section style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 32, marginTop: 28 }}>
+      <section data-pdf-break style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 32, marginTop: 28 }}>
         <div>
           <p style={{ fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: t.muted, margin: "0 0 6px" }}>Prepared for</p>
           <p style={{ fontSize: 16, fontWeight: 600, margin: 0, color: t.text }}>{data.client.name}</p>
@@ -38,7 +38,7 @@ export function QuotationTemplate({ data, themeId, watermark }: { data: Quotatio
         </div>
       </section>
 
-      <section style={{ marginTop: 36 }}>
+      <section data-pdf-break style={{ marginTop: 36 }}>
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
           <thead>
             <tr style={{ borderBottom: `2px solid ${t.divider}` }}>
@@ -72,14 +72,14 @@ export function QuotationTemplate({ data, themeId, watermark }: { data: Quotatio
         </div>
       </section>
 
-      <section style={{ marginTop: 36, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }}>
+      <section data-pdf-break style={{ marginTop: 36, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }}>
         <Block t={t} label="Revisions" value={`${data.revisions}`} />
         <Block t={t} label="Timeline" value={data.timeline} />
         <Block t={t} label="Payment" value={data.paymentStructure} />
       </section>
 
       {data.notes && (
-        <section style={{ marginTop: 28, padding: 16, background: t.surface, borderRadius: 8, border: `1px solid ${t.border}` }}>
+        <section data-pdf-break style={{ marginTop: 28, padding: 16, background: t.surface, borderRadius: 8, border: `1px solid ${t.border}` }}>
           <p style={{ fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: t.muted, margin: "0 0 6px" }}>Notes</p>
           <p style={{ fontSize: 12, color: t.text, margin: 0, lineHeight: 1.6 }}>{data.notes}</p>
         </section>

@@ -29,10 +29,45 @@ async function waitForReady(root: HTMLElement) {
 }
 
 /**
+ * Walk the cloned DOM and return a sorted list of "safe break" Y offsets
+ * (relative to the captured target's top, in CSS pixels). These come from:
+ *  - element boundaries marked with data-pdf-break (sections, table rows)
+ *  - <section>, <tr>, <h1>-<h3>, <p> bottoms as a fallback heuristic
+ * The exporter snaps each page slice to the nearest safe boundary at-or-
+ * before the page edge so headings, paragraphs, and table rows are never
+ * cut in half across A4 pages.
+ */
+function collectSafeBreaks(target: HTMLElement): number[] {
+  const targetTop = target.getBoundingClientRect().top;
+  const breaks = new Set<number>();
+  const selector = [
+    "[data-pdf-break]",
+    "section",
+    "tr",
+    "h1", "h2", "h3",
+    "p",
+    "li",
+  ].join(",");
+  target.querySelectorAll<HTMLElement>(selector).forEach(el => {
+    const r = el.getBoundingClientRect();
+    // bottom edge relative to target top
+    const yBottom = Math.round(r.bottom - targetTop);
+    if (yBottom > 0) breaks.add(yBottom);
+    // also offer the top as an "above-this-element" break
+    const yTop = Math.round(r.top - targetTop);
+    if (yTop > 0) breaks.add(yTop);
+  });
+  return Array.from(breaks).sort((a, b) => a - b);
+}
+
+/**
  * Render the source node into an off-screen, full-scale clone so CSS
  * transforms (preview scaling) cannot corrupt text layout in the PDF.
  */
-async function renderClone(node: HTMLElement, scale = 2): Promise<HTMLCanvasElement> {
+async function renderClone(
+  node: HTMLElement,
+  scale = 2,
+): Promise<{ canvas: HTMLCanvasElement; safeBreaksPx: number[]; cssHeight: number }> {
   const host = document.createElement("div");
   // Off-screen but still laid out and painted (display:none breaks fonts/measurements).
   Object.assign(host.style, {
@@ -52,6 +87,8 @@ async function renderClone(node: HTMLElement, scale = 2): Promise<HTMLCanvasElem
   try {
     await waitForReady(clone);
     const target = (clone.firstElementChild as HTMLElement) || clone;
+    const cssHeight = target.scrollHeight;
+    const safeBreaksCss = collectSafeBreaks(target);
     const canvas = await html2canvas(target, {
       scale,
       useCORS: true,
@@ -60,7 +97,10 @@ async function renderClone(node: HTMLElement, scale = 2): Promise<HTMLCanvasElem
       windowWidth: target.scrollWidth,
       windowHeight: target.scrollHeight,
     });
-    return canvas;
+    // Convert CSS-px breakpoints to canvas-px (account for html2canvas scale).
+    const ratio = canvas.height / cssHeight || scale;
+    const safeBreaksPx = safeBreaksCss.map(y => Math.round(y * ratio));
+    return { canvas, safeBreaksPx, cssHeight };
   } finally {
     document.body.removeChild(host);
   }
@@ -68,7 +108,7 @@ async function renderClone(node: HTMLElement, scale = 2): Promise<HTMLCanvasElem
 
 export async function exportNodeToPdf(node: HTMLElement, filename: string, format: PageFormat = "a4") {
   const cfg = SIZES[format];
-  const canvas = await renderClone(node, 2);
+  const { canvas, safeBreaksPx } = await renderClone(node, 2);
   const pdf = new jsPDF({
     unit: "mm",
     format: format === "a4" ? "a4" : [cfg.w, cfg.h],
@@ -91,21 +131,43 @@ export async function exportNodeToPdf(node: HTMLElement, filename: string, forma
     return;
   }
 
-  // A4 multi-page: slice the tall capture into A4-sized pages so long
-  // documents do not collide / overlap on a single squished page.
+  // A4 multi-page: slice the tall capture into A4-sized pages, snapping
+  // each slice to a "safe break" so headings, paragraphs, and table rows
+  // are never cut in half across pages.
   const pxPerMm = canvas.width / pageW;          // captured pixels per mm
-  const pageHeightPx = Math.floor(pageH * pxPerMm);
+  const maxPageHeightPx = Math.floor(pageH * pxPerMm);
+  // Don't snap higher than 75% of the page — avoids huge whitespace.
+  const minPageHeightPx = Math.floor(maxPageHeightPx * 0.75);
   const totalHeightPx = canvas.height;
 
   let renderedPx = 0;
   let pageIndex = 0;
   while (renderedPx < totalHeightPx) {
-    const sliceHeightPx = Math.min(pageHeightPx, totalHeightPx - renderedPx);
+    const remaining = totalHeightPx - renderedPx;
+    let sliceHeightPx = Math.min(maxPageHeightPx, remaining);
+
+    // If more content remains beyond this page, try to snap to a safe break.
+    if (remaining > maxPageHeightPx && safeBreaksPx.length > 0) {
+      const pageBottomAbs = renderedPx + maxPageHeightPx;
+      const minAbs = renderedPx + minPageHeightPx;
+      // Find the largest safe break <= pageBottomAbs and >= minAbs.
+      let snapped = -1;
+      for (let i = safeBreaksPx.length - 1; i >= 0; i--) {
+        const bp = safeBreaksPx[i];
+        if (bp <= pageBottomAbs && bp >= minAbs) { snapped = bp; break; }
+        if (bp < minAbs) break;
+      }
+      if (snapped > 0) sliceHeightPx = snapped - renderedPx;
+    }
+
     const slice = document.createElement("canvas");
     slice.width = canvas.width;
     slice.height = sliceHeightPx;
     const ctx = slice.getContext("2d");
     if (!ctx) break;
+    // White background so transparent template areas don't render as black.
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, slice.width, slice.height);
     ctx.drawImage(
       canvas,
       0, renderedPx, canvas.width, sliceHeightPx,
@@ -117,6 +179,8 @@ export async function exportNodeToPdf(node: HTMLElement, filename: string, forma
     pdf.addImage(img, "PNG", 0, 0, pageW, sliceHeightMm, undefined, "FAST");
     renderedPx += sliceHeightPx;
     pageIndex += 1;
+    // Safety: never loop forever
+    if (pageIndex > 50) break;
   }
 
   pdf.save(filename);

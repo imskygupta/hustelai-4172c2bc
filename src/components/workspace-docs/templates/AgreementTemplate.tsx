@@ -12,7 +12,7 @@ export function AgreementTemplate({ data, themeId, watermark }: { data: Agreemen
   );
   return (
     <ThemedSurface themeId={themeId} watermark={watermark} footerText={(data as any).brand?.footer}>
-      <header style={{ textAlign: "center", paddingBottom: 24, borderBottom: `1px solid ${t.divider}` }}>
+      <header data-pdf-break style={{ textAlign: "center", paddingBottom: 24, borderBottom: `1px solid ${t.divider}` }}>
         {data.brand.logo && <img src={data.brand.logo} alt="" style={{ width: 56, height: 56, objectFit: "contain", borderRadius: 8, margin: "0 auto 8px", display: "block" }} />}
         <p style={{ fontSize: 11, letterSpacing: 4, color: t.muted, margin: 0 }}>SERVICE AGREEMENT</p>
         <h1 style={{ fontFamily: t.display, fontSize: 28, margin: "8px 0 4px" }}>{data.brand.name} × {data.client.name}</h1>
