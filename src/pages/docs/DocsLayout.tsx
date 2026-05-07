@@ -31,6 +31,17 @@ export default function DocsLayout() {
     setOpenMobile(false);
   }, [pathname]);
 
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        document.getElementById("docs-sidebar-search")?.focus();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
   const grouped = useMemo(() => {
     const term = q.trim().toLowerCase();
     return cats.map((c) => ({
