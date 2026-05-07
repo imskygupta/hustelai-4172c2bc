@@ -21,9 +21,9 @@ export default function ConsoleSignup() {
           </div>
           <SignUp
             routing="path"
-            path="/signup"
-            signInUrl="/login"
-            afterSignUpUrl="/dashboard"
+            path="/console/signup"
+            signInUrl="/console/login"
+            afterSignUpUrl="/console/dashboard"
             appearance={{
               elements: {
                 rootBox: "mx-auto",

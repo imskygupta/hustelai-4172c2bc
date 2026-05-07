@@ -15,7 +15,7 @@ export function RequireConsoleAuth({ children }: { children: ReactNode }) {
       </ClerkLoading>
       <ClerkLoaded>
         <SignedOut>
-          <RedirectToSignIn redirectUrl="/login" />
+          <RedirectToSignIn redirectUrl="/console/login" />
         </SignedOut>
         <SignedIn>{children}</SignedIn>
       </ClerkLoaded>
