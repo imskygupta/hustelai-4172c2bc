@@ -214,13 +214,19 @@ export function Navbar() {
                 l.children ? (
                   l.children.map((child) => (
                     <Button key={child.href} variant="ghost" className={`w-full justify-start ${isActive(child.href) ? "text-primary bg-primary/10" : ""}`}
-                      onClick={() => navigate(child.href)}>
+                      onClick={() => {
+                        if ((child as any).external) window.location.href = child.href;
+                        else navigate(child.href);
+                      }}>
                       {child.label}
                     </Button>
                   ))
                 ) : (
                   <Button key={l.href} variant="ghost" className={`w-full justify-start ${isActive(l.href!) ? "text-primary bg-primary/10" : ""}`}
-                    onClick={() => navigate(l.href!)}>
+                    onClick={() => {
+                      if ((l as any).external) window.location.href = l.href!;
+                      else navigate(l.href!);
+                    }}>
                     {l.label}
                   </Button>
                 )
