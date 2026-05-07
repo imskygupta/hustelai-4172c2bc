@@ -17,7 +17,7 @@ export function ConsoleSubdomainRedirect() {
       if (pathname.startsWith("/console")) return;
       const target =
         pathname === "/" || pathname === ""
-          ? "/console"
+          ? "/console/dashboard"
           : `/console${pathname.startsWith("/") ? "" : "/"}${pathname}`;
       navigate(`${target}${search}${hash}`, { replace: true });
     } catch (err) {
