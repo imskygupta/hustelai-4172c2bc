@@ -72,6 +72,12 @@ verify_jwt = false
 [functions.work-api]
 verify_jwt = false
 
+[functions.intake-api]
+verify_jwt = false
+
+[functions.intake-public]
+verify_jwt = false
+
 [functions.inngest]
 verify_jwt = false
 
