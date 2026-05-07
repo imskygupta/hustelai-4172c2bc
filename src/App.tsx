@@ -118,6 +118,7 @@ import { isMaintenance, MaintenancePage } from "@/components/MaintenanceGate";
 import { RootErrorFallback } from "@/components/RootErrorFallback";
 import Status from "./pages/Status";
 import Health from "./pages/Health";
+import AdminRuntime from "./pages/admin/Runtime";
 import ApiPlatform from "./pages/api-platform/ApiPlatform";
 import { ClerkProvider } from "@clerk/clerk-react";
 import ConsoleLayout from "./pages/api-platform/console/ConsoleLayout";
@@ -286,6 +287,7 @@ const App = () => (
             <Route path="/api/health" element={<Health kind="health" />} />
             <Route path="/api/status" element={<Health kind="status" />} />
             <Route path="/api/version" element={<Health kind="version" />} />
+            <Route path="/admin/runtime" element={<AdminRuntime />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <MobileBottomNav />
