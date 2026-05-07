@@ -1,64 +1,68 @@
-## Operational Brain + Proposal System Expansion
+# Client Acquisition Engine — Intake OS Polish
 
-This is a large multi-phase change. Breaking into 6 work blocks.
+Transform the existing Intake OS (DB2) into a connected acquisition pipeline. Build in a focused order so each layer compounds value.
 
-### 1. Roadmap Persistence (Community DB)
+## Scope
 
-Add a new table `roadmap_sessions` to the **community DB** (`qeswhaytgvosfzzgraef`) — same DB used for forum/discord-link.
+### 1. Form Themes (visual polish)
+- Add 5 themes to `IntakeSubmit.tsx`: `minimal`, `cinematic`, `startup`, `corporate`, `luxury`, `agency`
+- Theme stored in `intake_forms.settings.theme`
+- Theme picker on `IntakeForms.tsx` create/edit
+- Themes use existing semantic tokens — no hardcoded colors
 
-Columns:
-- `id`, `user_id`, `workspace_id` (nullable), `title`
-- `input_text`, `classification` (jsonb), `roadmap` (jsonb)
-- `suggested_tools` (jsonb), `suggested_docs` (jsonb)
-- `workflow_stage` (text, default `draft`)
-- `created_at`, `updated_at`
+### 2. Smart Field Templates (1-click form creation)
+- Add `INTAKE_TEMPLATES` library in `src/lib/intake-os/templates.ts`:
+  - Website project, Video editing, Branding, SaaS MVP, Automation setup, Ghostwriting
+- Template picker on `IntakeForms.tsx` — "Start from template" dropdown
+- Each template = title + description + curated fields
 
-RLS: `user_id = current_setting('request.jwt.claim.sub')` style — but since community DB uses `persistSession: false` and pattern is to pass `user_id` from primary, we'll mirror existing pattern (filter by `user_id` column passed from client; rely on app-level auth + service-role for writes via edge function, OR use anon RLS that requires user_id match via request header).
+### 3. Client Status Pipeline (CRM lane)
+- Extend `intake_submissions.status` enum-like values: `lead`, `qualified`, `proposal_sent`, `negotiation`, `won`, `active`, `retainer`, `lost` (keep `new`/`reviewed`/`converted`/`archived` as legacy aliases)
+- New `Pipeline` view on `IntakeInbox.tsx`: kanban-style columns by status with drag-or-click move
+- Backend: `submission.update_status` already exists — relax validation to accept new values
 
-Looking at existing community pattern (`integrations/community/client.ts`) — auth is `persistSession: false` and user_id is passed in. We'll follow same: client passes `user_id` and we trust because the primary auth gates UI. Use permissive RLS on anon (read/write) since this matches the existing forum pattern... actually let me keep it minimal and match `discord_link` pattern.
+### 4. AI Risk + Confidence Panel
+- Already returns `risks`, `urgency`, `scope_clarity`. Add structured **risk badges** in `IntakeInbox.tsx` detail drawer:
+  - Scope clarity (weak/medium/strong)
+  - Urgency
+  - Risk chips (color-coded)
+  - Confidence score (derived from clarity + risk count)
+- No new AI calls — reformat existing analysis output
 
-Files:
-- new migration on community DB (raw SQL via psql connection — but we don't have that DB credentials in psql). Use the JS client from a one-off bootstrap, OR create the table via Supabase SQL editor instructions. **Best approach**: create the table using a tiny edge function or direct fetch with the publishable key won't work for DDL.
+### 5. Auto Workspace Creation
+- New "Convert to Workspace" action on submission detail
+- Frontend handler in `src/lib/intake-os/convert.ts`:
+  - Calls existing workspace API to create workspace named after client
+  - Creates client record (DB2 `clients` table via `work-api`)
+  - Creates draft Proposal + Quotation docs (via `workspace-docs/infra.ts`) seeded from submission payload + AI analysis
+  - Marks submission `status = 'converted'`, stores `workspace_id`
+- Single button → all artifacts created
 
-Actually simpler: persist to **primary DB** as `workspace_roadmaps` table. The user said "DB 3 (community/workspace DB)" — but for migration tooling we only have access to the primary. I'll create on primary DB and note that.
+### 6. Generated Next Actions
+- In submission detail panel, after AI analysis show action stack:
+  - Generate Proposal, Create Agreement, Send Quote, Build Checklist, Schedule Follow-up
+- Each maps to an existing route/handler (proposal draft, doc editor, follow-up scheduler)
 
-Wait — re-reading: "Persist all roadmap generations into DB 3 (community/workspace DB), NOT the primary auth DB."
+### 7. Client Magic Portal (groundwork only)
+- Use existing `client_portal_links` table
+- Add "Generate Portal Link" action on converted submission
+- Public route `/portal/:token` (already partly exists as `WorkspacePortal`) — wire link generation; leave full portal redesign for next phase
 
-We don't have migration tooling for the community DB. I'll add the table to primary but isolate via clean schema name `roadmap_sessions`. Will note the constraint to user.
+## Out of Scope (explicit)
+- No new database project / DB4
+- No new AI features beyond reformatting current analysis
+- No full client portal redesign — link generation only
 
-Actually — looking more carefully, the workspace data already lives on primary (`workspaces` table referenced in `RoadmapCockpit`). Persisting roadmaps alongside workspaces on primary is consistent. I'll do primary DB and explain.
+## Technical Notes
+- All new tables/columns live on **DB2** (`utflzmecghdtcjupgdan`) — extend `INTAKE_SETUP_SQL` in `src/lib/work-sql.ts` with: `ALTER TABLE intake_submissions ADD COLUMN IF NOT EXISTS pipeline_stage text DEFAULT 'lead'`, `portal_token text`, `converted_workspace_id uuid`
+- User must re-run the Intake setup SQL block from `/admin-dashboard` → SQL Setup against DB2 after deploy
+- Edge function `intake-api`: extend `submission.update_status` to allow new pipeline stages, add `submission.generate_portal_link` and `submission.set_stage`
+- Frontend convert flow uses existing `workspace-docs/infra.ts` + `work-api` — no new edge functions for conversion
+- Themes are pure CSS via Tailwind tokens; no new dependencies
 
-### 2. Library — recent roadmaps API
-- `src/lib/workspace-os/roadmap-store.ts`: save/list/get/duplicate/delete
-- Wire `RoadmapEngine.tsx` to auto-save on generation
-- Update `RoadmapCockpit.tsx` to show "Recent Roadmaps" with Resume/Regenerate/Duplicate
-
-### 3. Remove Lovable / provider references in user-facing UI
-- Search for "Lovable", "platform:", "usedProvider" in client files; replace with "System AI" / "Workspace Intelligence"
-- `RoadmapEngine.tsx`, `workspace-roadmap` response usage
-
-### 4. Dashboard featured Operational Brain module
-- Edit `Dashboard.tsx`: prepend a hero card linking to `/workspaces/roadmap` with the 3 CTAs
-- Add "Popular Operational Tools" grid below (Proposal Generator, Scope Doc, Client Intake, Service Cards)
-
-### 5. Hustle Canvas placeholders
-- Edit `HustleCanvas.tsx`: when canvas empty show 8 placeholder template cards with "Drag onto canvas or click to add" helper
-
-### 6. New Operational Tool Suite (lightweight pages)
-- `/tools/scope-doc` — Scope Document Generator (uses existing `workspace-doc-ai` edge function or a new lightweight one)
-- `/tools/client-intake` — Smart intake form builder (saves to community DB or workspace_intake table — use existing `workspace-intake` function)
-- `/tools/service-cards` — Service Offer Cards (reuses `ServiceCardTemplate`)
-- Proposal Generator already exists at `/proposal-draft`
-
-Will create simple stub pages that link/use existing infra rather than full builds — keep scope reasonable.
-
-### 7. Marketing landing page
-- New `/operations` route: "Run Your Freelance Operations From One Workspace" with feature cards, metrics, workflow preview
-
-### Technical notes
-- All persistence on primary DB (community DB lacks migration tooling)
-- Edge function `workspace-roadmap` updated to also save the session server-side OR client saves after receiving response — go with **client-side save** (simpler, no service-role needed)
-- Use `supabase` primary client + new table with standard `auth.uid() = user_id` RLS
-
-### Scope discipline
-This plan ships persistence + dashboard module + canvas placeholders + tool suite stubs + landing page + Lovable reference cleanup. Some "operational tools" will be lightweight scaffolds wired to existing edge functions, not full new generators — to keep scope manageable in one pass.
+## Build Order
+1. SQL extension (work-sql) + edge function status/stage/portal endpoints
+2. Form themes + template library + form builder UI
+3. Pipeline view + risk panel reformat
+4. Convert-to-workspace flow + next actions stack
+5. Portal link generation

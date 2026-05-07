@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { intakePublicGet, intakePublicSubmit, IntakeField } from "@/lib/intake-os/api";
 import { CheckCircle2, Loader2 } from "lucide-react";
 import { SEO } from "@/components/SEO";
+import { getIntakeTheme } from "@/lib/intake-os/themes";
 
 export default function IntakeSubmit() {
   const { slug } = useParams();
@@ -39,8 +40,10 @@ export default function IntakeSubmit() {
   if (loading) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="h-6 w-6 animate-spin" /></div>;
   if (err && !form) return <div className="min-h-screen flex items-center justify-center text-sm text-muted-foreground">{err}</div>;
 
+  const theme = getIntakeTheme(form?.settings?.theme);
+
   if (done) return (
-    <div className="min-h-screen flex items-center justify-center p-6">
+    <div className={`min-h-screen flex items-center justify-center p-6 ${theme.bg}`}>
       <div className="max-w-md text-center space-y-4">
         <CheckCircle2 className="h-14 w-14 text-emerald-500 mx-auto" />
         <h1 className="text-2xl font-semibold">Submission received</h1>
@@ -53,15 +56,15 @@ export default function IntakeSubmit() {
   const fields = (form?.fields || []) as IntakeField[];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 py-12 px-4">
+    <div className={`min-h-screen ${theme.bg} py-12 px-4`}>
       <SEO title={`${form.title} | Intake`} description={form.description || "Project intake"} path="" noindex />
       <div className="max-w-2xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-semibold tracking-tight">{form.title}</h1>
+          <h1 className={theme.heading}>{form.title}</h1>
           {form.description && <p className="text-muted-foreground mt-2">{form.description}</p>}
         </div>
 
-        <form onSubmit={submit} className="space-y-5 bg-card border border-border rounded-2xl p-6 shadow-lg">
+        <form onSubmit={submit} className={`space-y-5 p-6 ${theme.card}`}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div><label className="text-xs font-medium">Your name *</label>
               <Input required value={client.name} onChange={e => setClient({ ...client, name: e.target.value })} /></div>
@@ -92,7 +95,7 @@ export default function IntakeSubmit() {
           </div>
 
           {err && <p className="text-sm text-destructive">{err}</p>}
-          <Button type="submit" disabled={submitting} className="w-full">
+          <Button type="submit" disabled={submitting} className={`w-full ${theme.accent}`}>
             {submitting ? "Submitting..." : "Submit"}
           </Button>
         </form>
