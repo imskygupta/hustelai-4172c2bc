@@ -97,7 +97,13 @@ export function ClerkGate({ children }: { children: ReactNode }) {
 
   return (
     <ConsoleErrorBoundary key={retryKey}>
-      <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY}>
+      <ClerkProvider
+        publishableKey={CLERK_PUBLISHABLE_KEY}
+        signInUrl="/console/login"
+        signUpUrl="/console/signup"
+        afterSignInUrl="/console/dashboard"
+        afterSignUpUrl="/console/dashboard"
+      >
         {state === "booting" ? <ConsoleLoadingScreen /> : null}
         <div style={{ display: state === "ready" ? "block" : "none" }}>
           {children}
