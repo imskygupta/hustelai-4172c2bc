@@ -281,9 +281,9 @@ export default function DocEditor() {
         {/* Live preview */}
         <motion.div
           initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-          className="overflow-auto rounded-2xl border border-border bg-muted/30 p-6 max-h-[80vh]"
+          className="overflow-auto rounded-2xl border border-border bg-muted/30 p-3 sm:p-6 max-h-[80vh]"
         >
-          <div className="origin-top-left scale-[0.6] sm:scale-[0.75]">
+          <div className="origin-top-left scale-[0.4] sm:scale-[0.6] lg:scale-[0.75]">
             <DocPreview type={docType} data={data} themeId={themeId} watermark={watermark} refEl={el => (previewRef.current = el)} />
           </div>
         </motion.div>

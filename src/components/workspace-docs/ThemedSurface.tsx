@@ -17,15 +17,21 @@ export function ThemedSurface({
     card: { width: 600, height: 360 },          // ~3.5x2.1 inch
     square: { width: 720, height: 720 },
   };
+  // Reserve bottom padding so absolutely-positioned footer/watermark badge
+  // never overlaps the last paragraph or table row.
+  const padBottom = format === "a4" ? 96 : format === "card" ? 28 : 56;
   const style: CSSProperties = {
     background: t.bg,
     color: t.text,
     fontFamily: t.font,
     padding: format === "a4" ? 56 : format === "card" ? 28 : 40,
+    paddingBottom: padBottom,
     position: "relative",
     boxShadow: "0 30px 80px -20px rgba(0,0,0,0.4)",
     borderRadius: format === "a4" ? 6 : 18,
     overflow: "hidden",
+    wordBreak: "break-word",
+    overflowWrap: "anywhere",
     ...dims[format],
   };
   return (

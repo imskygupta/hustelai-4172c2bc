@@ -5,9 +5,9 @@ import { ThemedSurface } from "../ThemedSurface";
 export function AgreementTemplate({ data, themeId, watermark }: { data: AgreementData; themeId: ThemeId; watermark?: boolean }) {
   const t = THEMES[themeId];
   const Section = ({ title, body }: { title: string; body: string }) => (
-    <div style={{ marginTop: 18 }}>
+    <div data-pdf-break style={{ marginTop: 18 }}>
       <h3 style={{ fontFamily: t.display, fontSize: 14, color: t.accent, margin: "0 0 6px", textTransform: "uppercase", letterSpacing: 2 }}>{title}</h3>
-      <p style={{ fontSize: 12, lineHeight: 1.65, color: t.text, margin: 0 }}>{body}</p>
+      <p style={{ fontSize: 12, lineHeight: 1.65, color: t.text, margin: 0, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{body}</p>
     </div>
   );
   return (
@@ -27,7 +27,7 @@ export function AgreementTemplate({ data, themeId, watermark }: { data: Agreemen
       <Section title="6. IP ownership" body={data.ipOwnership} />
       {data.jurisdiction && <Section title="7. Jurisdiction" body={data.jurisdiction} />}
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, marginTop: 48 }}>
+      <div data-pdf-break style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, marginTop: 48 }}>
         <SignatureBlock t={t} label="Service provider" name={data.brand.name} signatureUrl={(data as any).brand?.signature} />
         <SignatureBlock t={t} label="Client" name={data.client.name} />
       </div>

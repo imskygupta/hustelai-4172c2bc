@@ -45,7 +45,13 @@ export function InvoiceTemplate({ data, themeId, watermark }: { data: InvoiceDat
         </div>
       </section>
 
-      <table style={{ width: "100%", borderCollapse: "collapse", marginTop: 28, fontSize: 13 }}>
+      <table style={{ width: "100%", borderCollapse: "collapse", marginTop: 28, fontSize: 13, tableLayout: "fixed" }}>
+        <colgroup>
+          <col style={{ width: "55%" }} />
+          <col style={{ width: "10%" }} />
+          <col style={{ width: "15%" }} />
+          <col style={{ width: "20%" }} />
+        </colgroup>
         <thead>
           <tr style={{ borderBottom: `2px solid ${t.divider}` }}>
             <th style={{ textAlign: "left", padding: "10px 0", color: t.muted, fontSize: 11, fontWeight: 500, textTransform: "uppercase", letterSpacing: 1 }}>Description</th>
@@ -57,10 +63,10 @@ export function InvoiceTemplate({ data, themeId, watermark }: { data: InvoiceDat
         <tbody>
           {data.items.map((it, i) => (
             <tr key={i} data-pdf-break style={{ borderBottom: `1px solid ${t.divider}` }}>
-              <td style={{ padding: "12px 0", color: t.text }}>{it.title}</td>
+              <td style={{ padding: "12px 8px 12px 0", color: t.text, wordBreak: "break-word", overflowWrap: "anywhere" }}>{it.title}</td>
               <td style={{ textAlign: "right", padding: "12px 0", color: t.text }}>{it.qty}</td>
-              <td style={{ textAlign: "right", padding: "12px 0", color: t.text }}>{cur} {it.rate.toLocaleString()}</td>
-              <td style={{ textAlign: "right", padding: "12px 0", color: t.text, fontWeight: 600 }}>{cur} {(it.qty * it.rate).toLocaleString()}</td>
+              <td style={{ textAlign: "right", padding: "12px 0", color: t.text, whiteSpace: "nowrap" }}>{cur} {it.rate.toLocaleString()}</td>
+              <td style={{ textAlign: "right", padding: "12px 0", color: t.text, fontWeight: 600, whiteSpace: "nowrap" }}>{cur} {(it.qty * it.rate).toLocaleString()}</td>
             </tr>
           ))}
         </tbody>
