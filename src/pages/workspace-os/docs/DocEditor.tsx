@@ -261,6 +261,7 @@ export default function DocEditor() {
           <DocForm
             type={docType} data={data} setData={setData}
             aiBusy={aiBusy} aiAssist={aiAssist}
+            blocks={blocks}
           />
         </div>
 
@@ -311,7 +312,27 @@ function AIBtn({ busy, onClick, label }: any) {
   );
 }
 
-function DocForm({ type, data, setData, aiBusy, aiAssist }: any) {
+function BlockPicker({ blocks, kind, onPick }: { blocks: any[]; kind: string; onPick: (text: string) => void }) {
+  const filtered = (blocks || []).filter(b => b.kind === kind);
+  if (filtered.length === 0) return null;
+  return (
+    <select
+      onChange={e => {
+        const b = filtered.find(x => x.id === e.target.value);
+        if (b) onPick(b.body);
+        e.target.value = "";
+      }}
+      defaultValue=""
+      className="text-[10px] rounded border border-border bg-transparent px-1.5 py-0.5 text-muted-foreground"
+      title="Insert reusable block"
+    >
+      <option value="" disabled>+ Block</option>
+      {filtered.map(b => <option key={b.id} value={b.id}>{b.title}</option>)}
+    </select>
+  );
+}
+
+function DocForm({ type, data, setData, aiBusy, aiAssist, blocks }: any) {
   const update = (path: string, value: any) => {
     setData((d: any) => {
       const next = structuredClone(d);
@@ -350,7 +371,10 @@ function DocForm({ type, data, setData, aiBusy, aiAssist }: any) {
             </div>
             <div className="flex items-center justify-between">
               <label className="text-xs font-medium text-muted-foreground">Payment structure</label>
-              <AIBtn busy={aiBusy === "payment_structure"} label="Suggest" onClick={() => aiAssist("payment_structure", { apply: (r: any) => update("paymentStructure", r.structure || data.paymentStructure) })} />
+              <div className="flex items-center gap-2">
+                <BlockPicker blocks={blocks} kind="payment_terms" onPick={t => update("paymentStructure", t)} />
+                <AIBtn busy={aiBusy === "payment_structure"} label="Suggest" onClick={() => aiAssist("payment_structure", { apply: (r: any) => update("paymentStructure", r.structure || data.paymentStructure) })} />
+              </div>
             </div>
             <Input value={data.paymentStructure} onChange={e => update("paymentStructure", e.target.value)} />
           </Section>
@@ -377,11 +401,18 @@ function DocForm({ type, data, setData, aiBusy, aiAssist }: any) {
             <div key={k}>
               <div className="flex items-center justify-between">
                 <label className="text-xs font-medium text-muted-foreground capitalize">{k.replace(/([A-Z])/g, " $1")}</label>
-                <AIBtn
-                  busy={aiBusy === "draft_agreement_clause" + k}
-                  label="Draft"
-                  onClick={() => aiAssist("draft_agreement_clause", { section: k, apply: (r: any) => update(k, r.text || data[k]) })}
-                />
+                <div className="flex items-center gap-2">
+                  <BlockPicker
+                    blocks={blocks}
+                    kind={k === "paymentTerms" ? "payment_terms" : k === "ipOwnership" ? "ip" : k}
+                    onPick={t => update(k, t)}
+                  />
+                  <AIBtn
+                    busy={aiBusy === "draft_agreement_clause" + k}
+                    label="Draft"
+                    onClick={() => aiAssist("draft_agreement_clause", { section: k, apply: (r: any) => update(k, r.text || data[k]) })}
+                  />
+                </div>
               </div>
               <Textarea rows={2} value={data[k] || ""} onChange={e => update(k, e.target.value)} />
             </div>
