@@ -10,16 +10,19 @@ export function ConsoleSubdomainRedirect() {
   const { pathname, search, hash } = useLocation();
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    const host = window.location.hostname;
-    if (!host.startsWith("console.api.")) return;
-    if (pathname.startsWith("/console")) return;
-
-    const target =
-      pathname === "/" || pathname === ""
-        ? "/console"
-        : `/console${pathname.startsWith("/") ? "" : "/"}${pathname}`;
-    navigate(`${target}${search}${hash}`, { replace: true });
+    try {
+      if (typeof window === "undefined") return;
+      const host = window.location.hostname || "";
+      if (!/^console\.api\./i.test(host)) return;
+      if (pathname.startsWith("/console")) return;
+      const target =
+        pathname === "/" || pathname === ""
+          ? "/console"
+          : `/console${pathname.startsWith("/") ? "" : "/"}${pathname}`;
+      navigate(`${target}${search}${hash}`, { replace: true });
+    } catch (err) {
+      console.warn("[ConsoleSubdomainRedirect] safe-fallback:", err);
+    }
   }, [pathname, search, hash, navigate]);
 
   return null;
