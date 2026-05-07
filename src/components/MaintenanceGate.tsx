@@ -1,22 +1,8 @@
 import { Activity, Wrench } from "lucide-react";
+import { isMaintenanceMode } from "@/config/runtime";
 
-/**
- * Branded full-screen maintenance page.
- * Toggle by setting VITE_MAINTENANCE_MODE=true at build time, or by
- * passing ?maintenance=1 to any URL (admin emergency preview).
- * status.* subdomain is ALWAYS allowed through so users can see status.
- */
-export function isMaintenance(): boolean {
-  try {
-    if (typeof window === "undefined") return false;
-    const host = window.location.hostname || "";
-    if (/^status\./i.test(host)) return false; // status page must always render
-    if (window.location.search.includes("maintenance=1")) return true;
-    return String(import.meta.env.VITE_MAINTENANCE_MODE || "").toLowerCase() === "true";
-  } catch {
-    return false;
-  }
-}
+/** Re-export for back-compat with existing imports. */
+export const isMaintenance = isMaintenanceMode;
 
 export function MaintenancePage() {
   return (
