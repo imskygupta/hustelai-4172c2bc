@@ -313,7 +313,12 @@ export default function AdminRuntime() {
 
         {/* AI providers */}
         <section>
-          <h2 className="text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-3">AI provider chain</h2>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-[11px] uppercase tracking-[0.18em] text-zinc-500">AI provider chain</h2>
+            <Button size="sm" variant="outline" onClick={() => navigate("/admin/runtime/providers")} className="border-white/10 text-zinc-300 text-xs">
+              Open provider health →
+            </Button>
+          </div>
           <div className="flex flex-wrap items-center gap-2">
             {snap.aiProviders.map((p, i) => (
               <div key={p} className="flex items-center gap-2">
