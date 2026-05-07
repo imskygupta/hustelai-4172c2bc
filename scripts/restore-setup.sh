@@ -40,7 +40,9 @@ HustleAI restore checklist  (read top → bottom)
                       work_clients, work_time_entries, work_files,
                       work_notes, work_expenses, work_comm_logs,
                       work_deadlines, work_portals, workspace_clients,
-                      canvas_notes
+                      canvas_notes, intake_forms, intake_submissions,
+                      workspace_assets, client_portal_links
+   Storage buckets:   intake-uploads (private)
    Setup SQL:         src/lib/work-sql.ts (WORK_SETUP_SQL, CANVAS_SETUP_SQL,
                       WORKSPACES_SETUP_SQL) — already exposed in
                       /admin-dashboard → SQL Setup tab (copy + paste in
