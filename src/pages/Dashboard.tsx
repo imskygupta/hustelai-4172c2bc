@@ -700,3 +700,44 @@ function CockpitGroup({
     </div>
   );
 }
+
+function BrightToolGrid({
+  title, subtitle, tools, onNavigate, rightSlot, cols = 4,
+}: {
+  title: string; subtitle?: string;
+  tools: { icon: any; label: string; desc: string; path: string; color: string }[];
+  onNavigate: (p: string) => void;
+  rightSlot?: React.ReactNode;
+  cols?: 4 | 5;
+}) {
+  const gridCls = cols === 5
+    ? "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3"
+    : "grid grid-cols-2 md:grid-cols-4 gap-3";
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-gradient-to-br from-white to-slate-50/60 p-5 shadow-sm">
+      <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
+        <div>
+          <h3 className="font-display font-semibold text-slate-900">{title}</h3>
+          {subtitle && <p className="text-xs text-slate-500 mt-0.5">{subtitle}</p>}
+        </div>
+        {rightSlot}
+      </div>
+      <div className={gridCls}>
+        {tools.map(t => (
+          <button
+            key={t.label}
+            onClick={() => onNavigate(t.path)}
+            className="text-left rounded-xl border border-slate-200 bg-white hover:border-emerald-300 hover:shadow-md hover:-translate-y-0.5 transition-all p-3.5 group relative overflow-hidden"
+          >
+            <div className={`absolute -top-6 -right-6 w-16 h-16 rounded-full bg-gradient-to-br ${t.color} opacity-10 group-hover:opacity-20 transition-opacity`} />
+            <div className={`relative w-9 h-9 rounded-lg bg-gradient-to-br ${t.color} flex items-center justify-center mb-2.5 shadow-sm`}>
+              <t.icon className="w-4 h-4 text-white" />
+            </div>
+            <p className="text-sm font-semibold text-slate-900 leading-tight">{t.label}</p>
+            <p className="text-[11px] text-slate-500 mt-0.5 leading-snug">{t.desc}</p>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
