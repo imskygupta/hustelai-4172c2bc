@@ -231,31 +231,51 @@ export default function Dashboard() {
         </div>
 
         {/* Popular Operational Tools */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-5">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 className="font-display font-semibold text-slate-900">Popular operational tools</h3>
-              <p className="text-xs text-slate-500 mt-0.5">Built for freelancers — start faster with the systems clients pay for</p>
-            </div>
-            <Link to="/operations" className="text-xs text-violet-700 hover:underline inline-flex items-center gap-1">Tour the OS <ArrowUpRight className="w-3 h-3" /></Link>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-            {[
-              { icon: FileText, label: "Proposal Generator", desc: "Tailored client pitches", path: "/proposal-draft", color: "from-emerald-500 to-teal-500" },
-              { icon: ClipboardList, label: "Scope Document", desc: "Deliverables & milestones", path: "/workspaces", color: "from-violet-500 to-fuchsia-500" },
-              { icon: Users, label: "Smart Client Intake", desc: "Onboarding questionnaires", path: "/workspaces/new", color: "from-sky-500 to-indigo-500" },
-              { icon: Layers, label: "Service Offer Cards", desc: "Premium service decks", path: "/workspaces", color: "from-amber-500 to-orange-500" },
-            ].map(t => (
-              <button key={t.label} onClick={() => navigate(t.path)} className="text-left rounded-xl border border-slate-200 hover:border-slate-300 bg-white hover:shadow-sm transition-all p-3 group">
-                <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${t.color} flex items-center justify-center mb-2`}>
-                  <t.icon className="w-4 h-4 text-white" />
-                </div>
-                <p className="text-sm font-medium text-slate-900">{t.label}</p>
-                <p className="text-[11px] text-slate-500 mt-0.5">{t.desc}</p>
-              </button>
-            ))}
-          </div>
-        </div>
+        <BrightToolGrid
+          title="Popular operational tools"
+          subtitle="Built for freelancers — start faster with the systems clients pay for"
+          rightSlot={<Link to="/operations" className="text-xs text-violet-700 hover:underline inline-flex items-center gap-1">Tour the OS <ArrowUpRight className="w-3 h-3" /></Link>}
+          tools={[
+            { icon: FileText, label: "Proposal Generator", desc: "Tailored client pitches", path: "/proposal-draft", color: "from-emerald-500 to-teal-500" },
+            { icon: ClipboardList, label: "Scope Document", desc: "Deliverables & milestones", path: "/workspaces/blocks", color: "from-violet-500 to-fuchsia-500" },
+            { icon: Users, label: "Smart Client Intake", desc: "Onboarding questionnaires", path: "/workspaces/intake", color: "from-sky-500 to-indigo-500" },
+            { icon: Layers, label: "Service Offer Cards", desc: "Premium service decks", path: "/workspaces/blocks", color: "from-amber-500 to-orange-500" },
+          ]}
+          onNavigate={navigate}
+        />
+
+        {/* Document Infrastructure */}
+        <BrightToolGrid
+          title="Document Infrastructure"
+          subtitle="The reusable foundation behind every client deliverable"
+          tools={[
+            { icon: Sparkles, label: "Brand Kit", desc: "Logo, colors & fonts", path: "/workspaces/brand-kit", color: "from-fuchsia-500 to-pink-500" },
+            { icon: Users, label: "Client Profiles", desc: "Reusable client records", path: "/workspaces/clients", color: "from-sky-500 to-blue-500" },
+            { icon: Layers, label: "Reusable Blocks", desc: "Snippets you drop into docs", path: "/workspaces/blocks", color: "from-violet-500 to-indigo-500" },
+            { icon: ClipboardList, label: "Intake OS", desc: "Branded client intake forms", path: "/workspaces/intake", color: "from-emerald-500 to-teal-500" },
+          ]}
+          onNavigate={navigate}
+        />
+
+        {/* Daily Tools */}
+        <BrightToolGrid
+          title="Daily tools"
+          subtitle="The everyday surface of your freelance operating system"
+          cols={5}
+          tools={[
+            { icon: Hammer,        label: "Work Hub",       desc: "Your daily cockpit",      path: "/work",           color: "from-emerald-500 to-teal-500" },
+            { icon: Users,         label: "Clients (CRM)",  desc: "All clients in one place", path: "/work/clients",   color: "from-violet-500 to-fuchsia-500" },
+            { icon: Receipt,       label: "Invoices",       desc: "Create & track invoices", path: "/work/invoices",  color: "from-amber-500 to-orange-500" },
+            { icon: Clock,         label: "Time Tracker",   desc: "Auto-bill hours",         path: "/work/time",      color: "from-sky-500 to-indigo-500" },
+            { icon: ClipboardList, label: "Checklists",     desc: "Project templates",       path: "/work/checklists",color: "from-teal-500 to-emerald-500" },
+            { icon: FolderOpen,    label: "Files",          desc: "Delivery & versions",     path: "/work/files",     color: "from-amber-600 to-yellow-500" },
+            { icon: AlarmClock,    label: "Deadlines",      desc: "Color-coded countdowns",  path: "/work/deadlines", color: "from-rose-500 to-red-500" },
+            { icon: Wallet,        label: "Expenses",       desc: "Tools & subscriptions",   path: "/work/expenses",  color: "from-pink-500 to-rose-500" },
+            { icon: Mail,          label: "Comm Log",       desc: "Calls & messages",        path: "/work/comm",      color: "from-blue-500 to-cyan-500" },
+            { icon: Globe,         label: "Client Portals", desc: "Public client links",     path: "/work/portals",   color: "from-indigo-500 to-violet-500" },
+          ]}
+          onNavigate={navigate}
+        />
 
         {/* Live ticker / market strip */}
         {feed?.stocks && (
@@ -304,6 +324,9 @@ export default function Dashboard() {
             </TabsTrigger>
             <TabsTrigger value="affiliate" className="data-[state=active]:bg-white data-[state=active]:text-slate-900 text-xs">
               <Share2 className="w-3.5 h-3.5 mr-1.5" /> Affiliate
+            </TabsTrigger>
+            <TabsTrigger value="webinars" className="data-[state=active]:bg-white data-[state=active]:text-slate-900 text-xs">
+              <Video className="w-3.5 h-3.5 mr-1.5" /> Webinars
             </TabsTrigger>
           </TabsList>
 
@@ -468,14 +491,18 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Webinars */}
-            {accessibleWebinars.length > 0 && (
-              <div className="rounded-xl border border-slate-200 bg-white p-5">
-                <h3 className="font-display font-semibold text-slate-900 flex items-center gap-2 mb-4">
-                  <Video className="w-4 h-4 text-emerald-600" /> Live webinars
-                </h3>
+          </TabsContent>
+
+          {/* WEBINARS — moved to lowest priority, accessible from sidebar footer */}
+          <TabsContent value="webinars" className="mt-5">
+            <div className="rounded-xl border border-slate-200 bg-white p-5">
+              <h3 className="font-display font-semibold text-slate-900 flex items-center gap-2 mb-1">
+                <Video className="w-4 h-4 text-emerald-600" /> Live webinars
+              </h3>
+              <p className="text-xs text-slate-500 mb-4">Optional learning sessions — your daily work doesn't depend on these.</p>
+              {accessibleWebinars.length > 0 ? (
                 <div className="grid md:grid-cols-2 gap-3">
-                  {accessibleWebinars.slice(0, 4).map(w => (
+                  {accessibleWebinars.map(w => (
                     <div key={w.id} className="rounded-lg border border-slate-200 p-4 hover:border-emerald-300 transition-all">
                       <div className="flex items-center gap-2 mb-2">
                         <Badge className={w.status === "live" ? "bg-rose-100 text-rose-700 border-rose-200" : "bg-emerald-50 text-emerald-700 border-emerald-200"} variant="outline">
@@ -497,8 +524,10 @@ export default function Dashboard() {
                     </div>
                   ))}
                 </div>
-              </div>
-            )}
+              ) : (
+                <div className="text-center py-10 text-sm text-slate-400">No webinars scheduled right now.</div>
+              )}
+            </div>
           </TabsContent>
 
           {/* AI TOOLS */}
@@ -665,6 +694,47 @@ function CockpitGroup({
             className={`group flex items-center gap-1.5 px-2 py-1.5 rounded-md border border-slate-200 bg-white text-left transition-all ${map.hover}`}>
             <t.icon className="w-3.5 h-3.5 text-slate-500 shrink-0" />
             <span className="text-[11px] font-medium text-slate-700 truncate">{t.label}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function BrightToolGrid({
+  title, subtitle, tools, onNavigate, rightSlot, cols = 4,
+}: {
+  title: string; subtitle?: string;
+  tools: { icon: any; label: string; desc: string; path: string; color: string }[];
+  onNavigate: (p: string) => void;
+  rightSlot?: React.ReactNode;
+  cols?: 4 | 5;
+}) {
+  const gridCls = cols === 5
+    ? "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3"
+    : "grid grid-cols-2 md:grid-cols-4 gap-3";
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-gradient-to-br from-white to-slate-50/60 p-5 shadow-sm">
+      <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
+        <div>
+          <h3 className="font-display font-semibold text-slate-900">{title}</h3>
+          {subtitle && <p className="text-xs text-slate-500 mt-0.5">{subtitle}</p>}
+        </div>
+        {rightSlot}
+      </div>
+      <div className={gridCls}>
+        {tools.map(t => (
+          <button
+            key={t.label}
+            onClick={() => onNavigate(t.path)}
+            className="text-left rounded-xl border border-slate-200 bg-white hover:border-emerald-300 hover:shadow-md hover:-translate-y-0.5 transition-all p-3.5 group relative overflow-hidden"
+          >
+            <div className={`absolute -top-6 -right-6 w-16 h-16 rounded-full bg-gradient-to-br ${t.color} opacity-10 group-hover:opacity-20 transition-opacity`} />
+            <div className={`relative w-9 h-9 rounded-lg bg-gradient-to-br ${t.color} flex items-center justify-center mb-2.5 shadow-sm`}>
+              <t.icon className="w-4 h-4 text-white" />
+            </div>
+            <p className="text-sm font-semibold text-slate-900 leading-tight">{t.label}</p>
+            <p className="text-[11px] text-slate-500 mt-0.5 leading-snug">{t.desc}</p>
           </button>
         ))}
       </div>

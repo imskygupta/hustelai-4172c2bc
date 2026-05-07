@@ -6,7 +6,7 @@ import {
 import {
   LayoutDashboard, Search, Users, User, Crown, Wrench, Target, Store, BookOpen,
   FileText, Brain, Zap, TrendingUp, Briefcase, MessageCircle, Trophy, Bookmark,
-  CreditCard, Settings, LogOut, Sparkles, Film, ShieldAlert, DollarSign, Rocket, Bot, Building2, LayoutGrid, Hammer,
+  CreditCard, Settings, LogOut, Sparkles, Film, ShieldAlert, DollarSign, Rocket, Bot, Building2, LayoutGrid, Hammer, Video,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Badge } from "@/components/ui/badge";
@@ -202,6 +202,13 @@ export function AppSidebar() {
 
       {!collapsed && (
         <SidebarFooter className="border-t border-slate-200/80 p-3 bg-sidebar">
+          <button
+            onClick={() => navigate("/dashboard?tab=webinars")}
+            className="w-full mb-2 flex items-center gap-2 rounded-md px-2 py-1.5 text-xs text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors"
+          >
+            <Video className="h-3.5 w-3.5" />
+            <span>Live webinars</span>
+          </button>
           <div className="rounded-lg bg-gradient-to-br from-emerald-50 to-white border border-emerald-100 p-3">
             <div className="flex items-center gap-2 mb-1">
               <Crown className="w-3.5 h-3.5 text-emerald-600" />
