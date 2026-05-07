@@ -11,7 +11,7 @@ export function ProposalTemplate({ data, themeId, watermark }: { data: ProposalD
     </section>
   );
   return (
-    <ThemedSurface themeId={themeId} watermark={watermark}>
+    <ThemedSurface themeId={themeId} watermark={watermark} footerText={(data as any).brand?.footer}>
       <header style={{ paddingBottom: 22, borderBottom: `1px solid ${t.divider}` }}>
         <p style={{ fontSize: 11, letterSpacing: 4, color: t.muted, margin: 0, textTransform: "uppercase" }}>Proposal · {data.brand.name}</p>
         <h1 style={{ fontFamily: t.display, fontSize: 34, margin: "10px 0 6px", color: t.text, lineHeight: 1.15 }}>{data.title}</h1>

@@ -7,7 +7,7 @@ export function QuotationTemplate({ data, themeId, watermark }: { data: Quotatio
   const subtotal = data.items.reduce((s, i) => s + i.qty * i.rate, 0);
   const cur = data.currency || "INR";
   return (
-    <ThemedSurface themeId={themeId} watermark={watermark}>
+    <ThemedSurface themeId={themeId} watermark={watermark} footerText={(data as any).brand?.footer}>
       <header style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", paddingBottom: 24, borderBottom: `1px solid ${t.divider}` }}>
         <div>
           <p style={{ fontSize: 11, letterSpacing: 3, textTransform: "uppercase", color: t.muted, margin: 0 }}>Quotation</p>

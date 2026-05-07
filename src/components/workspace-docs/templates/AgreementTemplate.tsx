@@ -11,7 +11,7 @@ export function AgreementTemplate({ data, themeId, watermark }: { data: Agreemen
     </div>
   );
   return (
-    <ThemedSurface themeId={themeId} watermark={watermark}>
+    <ThemedSurface themeId={themeId} watermark={watermark} footerText={(data as any).brand?.footer}>
       <header style={{ textAlign: "center", paddingBottom: 24, borderBottom: `1px solid ${t.divider}` }}>
         <p style={{ fontSize: 11, letterSpacing: 4, color: t.muted, margin: 0 }}>SERVICE AGREEMENT</p>
         <h1 style={{ fontFamily: t.display, fontSize: 28, margin: "8px 0 4px" }}>{data.brand.name} × {data.client.name}</h1>

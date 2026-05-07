@@ -10,7 +10,7 @@ export function InvoiceTemplate({ data, themeId, watermark }: { data: InvoiceDat
   const cur = data.currency || "INR";
 
   return (
-    <ThemedSurface themeId={themeId} watermark={watermark}>
+    <ThemedSurface themeId={themeId} watermark={watermark} footerText={(data as any).brand?.footer}>
       <header style={{ display: "flex", justifyContent: "space-between" }}>
         <div>
           <p style={{ fontSize: 11, letterSpacing: 3, color: t.muted, margin: 0, textTransform: "uppercase" }}>Invoice</p>
