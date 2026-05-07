@@ -52,7 +52,7 @@ export default function RoadmapCockpit() {
         </p>
       </motion.section>
 
-      <RoadmapEngine />
+      <RoadmapEngine key={resumeInput || "fresh"} defaultInput={resumeInput} />
 
       {/* Recent roadmap sessions — persistent operational memory */}
       {sessions.length > 0 && (
