@@ -149,6 +149,114 @@ export type Database = {
         }
         Relationships: []
       }
+      api_provider_fallback_logs: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          feature: string | null
+          id: string
+          latency_ms: number | null
+          original_provider: string
+          reason: string
+          replacement_provider: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          feature?: string | null
+          id?: string
+          latency_ms?: number | null
+          original_provider: string
+          reason: string
+          replacement_provider?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          feature?: string | null
+          id?: string
+          latency_ms?: number | null
+          original_provider?: string
+          reason?: string
+          replacement_provider?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      api_provider_health: {
+        Row: {
+          consecutive_failures: number
+          consecutive_successes: number
+          cost_rank: number
+          created_at: string
+          disabled_until: string | null
+          estimated_cost_usd: number
+          id: string
+          last_check_at: string | null
+          last_error: string | null
+          latency_ms: number | null
+          manually_disabled: boolean
+          notes: string | null
+          provider: string
+          reliability_rank: number
+          speed_rank: number
+          status: string
+          success_rate: number | null
+          tokens_used_24h: number
+          total_checks: number
+          total_failures: number
+          updated_at: string
+        }
+        Insert: {
+          consecutive_failures?: number
+          consecutive_successes?: number
+          cost_rank?: number
+          created_at?: string
+          disabled_until?: string | null
+          estimated_cost_usd?: number
+          id?: string
+          last_check_at?: string | null
+          last_error?: string | null
+          latency_ms?: number | null
+          manually_disabled?: boolean
+          notes?: string | null
+          provider: string
+          reliability_rank?: number
+          speed_rank?: number
+          status?: string
+          success_rate?: number | null
+          tokens_used_24h?: number
+          total_checks?: number
+          total_failures?: number
+          updated_at?: string
+        }
+        Update: {
+          consecutive_failures?: number
+          consecutive_successes?: number
+          cost_rank?: number
+          created_at?: string
+          disabled_until?: string | null
+          estimated_cost_usd?: number
+          id?: string
+          last_check_at?: string | null
+          last_error?: string | null
+          latency_ms?: number | null
+          manually_disabled?: boolean
+          notes?: string | null
+          provider?: string
+          reliability_rank?: number
+          speed_rank?: number
+          status?: string
+          success_rate?: number | null
+          tokens_used_24h?: number
+          total_checks?: number
+          total_failures?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       api_runtime_audit_logs: {
         Row: {
           action: string
