@@ -422,6 +422,12 @@ create index if not exists idx_intake_subs_owner on public.intake_submissions(ow
 create index if not exists idx_intake_subs_form  on public.intake_submissions(form_id);
 create index if not exists idx_intake_subs_status on public.intake_submissions(status);
 
+-- Acquisition pipeline columns (idempotent)
+alter table public.intake_submissions add column if not exists pipeline_stage text default 'lead';
+alter table public.intake_submissions add column if not exists portal_token text;
+alter table public.intake_submissions add column if not exists converted_workspace_id uuid;
+create index if not exists idx_intake_subs_stage on public.intake_submissions(pipeline_stage);
+
 create table if not exists public.workspace_assets (
   id uuid primary key default gen_random_uuid(),
   owner_id uuid not null,
