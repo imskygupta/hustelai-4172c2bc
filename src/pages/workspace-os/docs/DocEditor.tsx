@@ -21,6 +21,7 @@ import {
   CONVERSION_TARGETS, DOC_STATUSES, STATUS_LABELS, STATUS_TONE,
   type ClientProfile, type DocBlock, type DocStatus,
 } from "@/lib/workspace-docs/infra";
+import { BigScreenHint } from "@/components/BigScreenHint";
 
 const PAID_TIERS = ["pro", "elite", "infinity"];
 
@@ -184,6 +185,7 @@ export default function DocEditor() {
 
   return (
     <div className="space-y-5">
+      <BigScreenHint pageKey="doc-editor" label="PDFs render best on desktop" />
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <button onClick={() => nav(`/workspaces/${id}/docs`)} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="h-4 w-4" /> All documents

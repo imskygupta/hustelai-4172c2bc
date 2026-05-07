@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import {
-  LayoutDashboard, Sparkles, Users, User as UserIcon, X,
+  LayoutDashboard, Sparkles, Users, User as UserIcon, X, ArrowLeft, Building2,
   DollarSign, Film, ShieldAlert, Briefcase, Lightbulb, FileText, Search, Wrench, Compass, BarChart3, Wallet
 } from "lucide-react";
 import { Drawer, DrawerContent, DrawerTrigger, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
@@ -59,7 +59,17 @@ export function MobileBottomNav() {
 
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 glass border-t border-border/50 backdrop-blur-xl">
         <div className="flex items-stretch h-16 max-w-md mx-auto px-1">
+          <Item
+            icon={ArrowLeft}
+            label="Back"
+            active={false}
+            onClick={() => {
+              if (window.history.length > 1) navigate(-1);
+              else navigate("/dashboard");
+            }}
+          />
           <Item icon={LayoutDashboard} label="Dashboard" active={isActive("/dashboard")} onClick={() => go("/dashboard")} />
+          <Item icon={Building2} label="Workspace" active={location.pathname.startsWith("/workspaces") || location.pathname.startsWith("/work")} onClick={() => go("/workspaces")} />
 
           <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
             <DrawerTrigger asChild>
@@ -102,7 +112,6 @@ export function MobileBottomNav() {
             </DrawerContent>
           </Drawer>
 
-          <Item icon={Users} label="Community" active={isActive("/community")} onClick={() => go("/community")} />
           <Item icon={UserIcon} label="Profile" active={isActive("/profile")} onClick={() => go("/profile")} />
         </div>
       </nav>

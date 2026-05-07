@@ -1,8 +1,11 @@
 import { NavLink, Outlet, useLocation } from "react-router-dom";
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { Briefcase, Plus, Sparkles, KeyRound, FileText, Receipt, Users, Kanban, TrendingUp, Hammer, Clock, ClipboardList, AlarmClock, Globe, Wallet, FolderOpen, Mail, Brain, Palette, Blocks, Inbox } from "lucide-react";
+import { Briefcase, Plus, Sparkles, KeyRound, FileText, Receipt, Users, Kanban, TrendingUp, Hammer, Clock, ClipboardList, AlarmClock, Globe, Wallet, FolderOpen, Mail, Brain, Palette, Blocks, Inbox, Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
 import NotificationCenter from "@/components/workspace-os/NotificationCenter";
+import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { BigScreenHint } from "@/components/BigScreenHint";
 
 import { SEO } from "@/components/SEO";
 
@@ -43,9 +46,50 @@ const SOON = [
 
 export default function WorkspaceOS() {
   const { pathname } = useLocation();
+  const [navOpen, setNavOpen] = useState(false);
+
+  const Nav = ({ onPick }: { onPick?: () => void }) => (
+    <>
+      {NAV.map(item => (
+        <NavLink key={item.to} to={item.to} end={item.end} onClick={onPick}
+          className={({ isActive }) => cn(
+            "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all",
+            isActive ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+          )}>
+          <item.icon className="h-4 w-4" />{item.label}
+        </NavLink>
+      ))}
+      <div className="pt-6">
+        <p className="px-3 text-[10px] uppercase tracking-wider text-muted-foreground/70 mb-2">Document Infrastructure</p>
+        {DOC_INFRA.map(t => (
+          <NavLink key={t.to} to={t.to} onClick={onPick}
+            className={({ isActive }) => cn(
+              "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all",
+              isActive ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+            )}>
+            <t.icon className="h-4 w-4" />{t.label}
+          </NavLink>
+        ))}
+      </div>
+      <div className="pt-6">
+        <p className="px-3 text-[10px] uppercase tracking-wider text-muted-foreground/70 mb-2">Daily tools</p>
+        {TOOLS.map(t => (
+          <NavLink key={t.to} to={t.to} onClick={onPick}
+            className={({ isActive }) => cn(
+              "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all",
+              isActive ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+            )}>
+            <t.icon className="h-4 w-4" />{t.label}
+          </NavLink>
+        ))}
+      </div>
+    </>
+  );
+
   return (
     <div className="min-h-[calc(100vh-3rem)] bg-gradient-to-br from-background via-background to-primary/5">
       <SEO title="Workspaces | HustleAI Workspace OS" description="HustleAI Workspace OS — internal page." path="" noindex />
+      <BigScreenHint pageKey="workspace-os" label="Workspace OS is built for desktop" />
       {/* Cinematic header */}
       <motion.header
         initial={{ opacity: 0, y: -8 }}
@@ -54,6 +98,17 @@ export default function WorkspaceOS() {
       >
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
+            <Sheet open={navOpen} onOpenChange={setNavOpen}>
+              <SheetTrigger asChild>
+                <button className="lg:hidden h-9 w-9 rounded-lg bg-muted/60 flex items-center justify-center" aria-label="Open workspace menu">
+                  <Menu className="h-4 w-4" />
+                </button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-72 overflow-y-auto">
+                <SheetHeader><SheetTitle>Workspace OS</SheetTitle></SheetHeader>
+                <div className="mt-4 space-y-1"><Nav onPick={() => setNavOpen(false)} /></div>
+              </SheetContent>
+            </Sheet>
             <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-primary to-primary/40 flex items-center justify-center shadow-lg shadow-primary/20">
               <Sparkles className="h-4 w-4 text-primary-foreground" />
             </div>
@@ -74,64 +129,10 @@ export default function WorkspaceOS() {
         </div>
       </motion.header>
 
-      <div className="max-w-7xl mx-auto px-6 py-8 grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-8">
-        {/* Side rail */}
-        <aside className="space-y-1">
-          {NAV.map(item => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              end={item.end}
-              className={({ isActive }) => cn(
-                "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all",
-                isActive
-                  ? "bg-primary/10 text-primary font-medium"
-                  : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
-              )}
-            >
-              <item.icon className="h-4 w-4" />
-              {item.label}
-            </NavLink>
-          ))}
-
-          <div className="pt-6">
-            <p className="px-3 text-[10px] uppercase tracking-wider text-muted-foreground/70 mb-2">Document Infrastructure</p>
-            {DOC_INFRA.map(t => (
-              <NavLink
-                key={t.to}
-                to={t.to}
-                className={({ isActive }) => cn(
-                  "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all",
-                  isActive
-                    ? "bg-primary/10 text-primary font-medium"
-                    : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
-                )}
-              >
-                <t.icon className="h-4 w-4" />
-                {t.label}
-              </NavLink>
-            ))}
-          </div>
-
-          <div className="pt-6">
-            <p className="px-3 text-[10px] uppercase tracking-wider text-muted-foreground/70 mb-2">Daily tools</p>
-            {TOOLS.map(t => (
-              <NavLink
-                key={t.to}
-                to={t.to}
-                className={({ isActive }) => cn(
-                  "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all",
-                  isActive
-                    ? "bg-primary/10 text-primary font-medium"
-                    : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
-                )}
-              >
-                <t.icon className="h-4 w-4" />
-                {t.label}
-              </NavLink>
-            ))}
-          </div>
-
+      <div className="max-w-7xl mx-auto px-4 lg:px-6 py-6 lg:py-8 grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-8">
+        {/* Side rail — desktop only; mobile uses the Sheet in the header */}
+        <aside className="hidden lg:block space-y-1">
+          <Nav />
           <div className="pt-6">
             <p className="px-3 text-[10px] uppercase tracking-wider text-muted-foreground/70 mb-2">Coming next</p>
             {SOON.map(s => (
