@@ -392,43 +392,54 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Recent activity */}
+            {/* COCKPIT — Workspace OS modules at a glance */}
             <div className="rounded-xl border border-slate-200 bg-white p-5">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-display font-semibold text-slate-900 flex items-center gap-2">
-                  <History className="w-4 h-4 text-emerald-600" /> Recent activity
-                </h3>
-                <Button variant="ghost" size="sm" className="text-emerald-600 hover:text-emerald-700 h-7" onClick={() => navigate("/saved-hustles")}>
-                  View all
-                </Button>
-              </div>
-              {recentActivity.length > 0 ? (
-                <div className="space-y-1">
-                  {recentActivity.map((a, i) => (
-                    <div key={i} className="flex items-center gap-3 py-2.5 border-b border-slate-100 last:border-0">
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
-                        a.type === "hustle" ? "bg-emerald-50 text-emerald-600" : "bg-violet-50 text-violet-600"
-                      }`}>
-                        {a.type === "hustle" ? <BookOpen className="w-4 h-4" /> : <MessageCircle className="w-4 h-4" />}
+              {/* AI Fuel — premium hero band, sits ABOVE cockpit modules */}
+              <div className="mb-5 relative overflow-hidden rounded-2xl p-[1.5px] bg-gradient-to-r from-emerald-400 via-violet-500 to-fuchsia-500 shadow-[0_0_22px_rgba(16,185,129,0.25)]">
+                <div className="relative rounded-[14px] bg-gradient-to-br from-slate-900 via-slate-900 to-emerald-950 p-5 sm:p-6 overflow-hidden">
+                  <div className="absolute -top-16 -right-12 w-56 h-56 rounded-full bg-emerald-400/20 blur-3xl pointer-events-none" />
+                  <div className="absolute -bottom-20 -left-10 w-56 h-56 rounded-full bg-fuchsia-500/20 blur-3xl pointer-events-none" />
+                  <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div className="flex items-start gap-3 min-w-0">
+                      <div className="relative shrink-0">
+                        <div className="absolute inset-0 rounded-xl bg-emerald-400/30 blur-md animate-pulse" />
+                        <div className="relative w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white shadow-lg">
+                          <KeyRound className="w-6 h-6" />
+                        </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm text-slate-900 truncate">{a.title}</p>
-                        <p className="text-[11px] text-slate-500">
-                          {a.type === "hustle" ? `Saved hustle · ${a.status}` : "AI chat"} · {new Date(a.time).toLocaleDateString()}
+                      <div className="min-w-0">
+                        <span className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.2em] font-semibold text-emerald-300/90 mb-1">
+                          <Sparkles className="w-3 h-3" /> AI Fuel · Cockpit power
+                        </span>
+                        <p className="text-base sm:text-lg font-display font-semibold text-white">
+                          Add AI fuel to your cockpit
+                        </p>
+                        <p className="text-xs text-slate-300 mt-0.5 max-w-md">
+                          Connect Gemini, OpenAI or your own key — power proposals, replies & doc intelligence across every module.
                         </p>
                       </div>
                     </div>
-                  ))}
+                    <div className="flex items-center gap-2 shrink-0">
+                      <Button
+                        size="sm"
+                        className="bg-white text-slate-900 hover:bg-emerald-50 font-semibold shadow-lg"
+                        onClick={() => navigate("/workspaces/ai-settings")}
+                      >
+                        <Zap className="w-3.5 h-3.5 mr-1.5 text-emerald-600" /> Connect AI
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-emerald-200 hover:text-white hover:bg-white/10"
+                        onClick={() => navigate("/plans")}
+                      >
+                        Get free credits
+                      </Button>
+                    </div>
+                  </div>
                 </div>
-              ) : (
-                <div className="text-center py-8 text-sm text-slate-400">
-                  No activity yet. Start by searching for a hustle 🚀
-                </div>
-              )}
-            </div>
+              </div>
 
-            {/* COCKPIT — Workspace OS modules at a glance */}
-            <div className="rounded-xl border border-slate-200 bg-white p-5">
               <div className="flex items-center justify-between mb-1">
                 <h3 className="font-display font-semibold text-slate-900 flex items-center gap-2">
                   <Layers className="w-4 h-4 text-emerald-600" /> Your cockpit
@@ -474,37 +485,20 @@ export default function Dashboard() {
                   ]}
                 />
               </div>
-
-              {/* AI Fuel band */}
-              <div className="mt-4 rounded-xl border border-emerald-200 bg-gradient-to-r from-emerald-50/80 via-white to-emerald-50/40 p-4 flex items-center justify-between gap-4">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0">
-                    <KeyRound className="w-5 h-5 text-emerald-600" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold text-slate-900">Add AI fuel to your cockpit</p>
-                    <p className="text-xs text-slate-500 truncate">
-                      Connect Gemini, OpenAI or your own key — power proposals, replies & doc intelligence across every module.
-                    </p>
-                  </div>
-                </div>
-                <Button size="sm" className="bg-emerald-500 hover:bg-emerald-600 text-white shrink-0" onClick={() => navigate("/workspaces/ai-settings")}>
-                  Connect AI
-                </Button>
-              </div>
             </div>
 
           </TabsContent>
 
           {/* WEBINARS — moved to lowest priority, accessible from sidebar footer */}
           <TabsContent value="webinars" className="mt-5">
-            <div className="rounded-xl border border-slate-200 bg-white p-5">
+            <div className="grid lg:grid-cols-3 gap-4">
+            <div className="lg:col-span-2 rounded-xl border border-slate-200 bg-white p-5">
               <h3 className="font-display font-semibold text-slate-900 flex items-center gap-2 mb-1">
                 <Video className="w-4 h-4 text-emerald-600" /> Live webinars
               </h3>
               <p className="text-xs text-slate-500 mb-4">Optional learning sessions — your daily work doesn't depend on these.</p>
               {accessibleWebinars.length > 0 ? (
-                <div className="grid md:grid-cols-2 gap-3">
+                <div className="grid sm:grid-cols-2 gap-3">
                   {accessibleWebinars.map(w => (
                     <div key={w.id} className="rounded-lg border border-slate-200 p-4 hover:border-emerald-300 transition-all">
                       <div className="flex items-center gap-2 mb-2">
@@ -530,6 +524,42 @@ export default function Dashboard() {
               ) : (
                 <div className="text-center py-10 text-sm text-slate-400">No webinars scheduled right now.</div>
               )}
+            </div>
+
+            {/* Recent activity — sits beside webinars */}
+            <div className="rounded-xl border border-slate-200 bg-white p-5">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-display font-semibold text-slate-900 flex items-center gap-2">
+                  <History className="w-4 h-4 text-emerald-600" /> Recent activity
+                </h3>
+                <Button variant="ghost" size="sm" className="text-emerald-600 hover:text-emerald-700 h-7" onClick={() => navigate("/saved-hustles")}>
+                  View all
+                </Button>
+              </div>
+              {recentActivity.length > 0 ? (
+                <div className="space-y-1">
+                  {recentActivity.map((a, i) => (
+                    <div key={i} className="flex items-center gap-3 py-2.5 border-b border-slate-100 last:border-0">
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                        a.type === "hustle" ? "bg-emerald-50 text-emerald-600" : "bg-violet-50 text-violet-600"
+                      }`}>
+                        {a.type === "hustle" ? <BookOpen className="w-4 h-4" /> : <MessageCircle className="w-4 h-4" />}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-slate-900 truncate">{a.title}</p>
+                        <p className="text-[11px] text-slate-500">
+                          {a.type === "hustle" ? `Saved hustle · ${a.status}` : "AI chat"} · {new Date(a.time).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-sm text-slate-400">
+                  No activity yet. Start by searching for a hustle 🚀
+                </div>
+              )}
+            </div>
             </div>
           </TabsContent>
 
