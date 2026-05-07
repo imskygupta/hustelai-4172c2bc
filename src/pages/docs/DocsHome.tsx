@@ -21,11 +21,10 @@ export default function DocsHome() {
           docs.hustlaiapp.in
         </div>
         <h1 className="text-3xl lg:text-5xl font-bold tracking-tight mb-3">
-          HustleAI Workspace OS Docs
+          HustleAI Docs
         </h1>
         <p className="text-muted-foreground max-w-2xl text-base lg:text-lg">
-          Everything you need to operate your freelance business with HustleAI —
-          from your first invoice to bringing your own AI keys.
+          Guides, workflows and operational systems for freelancers.
         </p>
       </section>
 
