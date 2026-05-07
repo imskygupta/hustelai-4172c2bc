@@ -140,7 +140,7 @@ export default function NewWorkspace() {
               <button onClick={() => setStep("intake")} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
                 <ArrowLeft className="h-4 w-4" /> Edit input
               </button>
-              {provider && <span className="text-[10px] uppercase tracking-wider text-muted-foreground">via {provider}</span>}
+              {provider && <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Workspace Intelligence</span>}
             </div>
 
             <div className="rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/5 to-background p-6 space-y-5">
