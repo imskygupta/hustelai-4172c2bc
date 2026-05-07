@@ -15,6 +15,7 @@ import { SignupCTADialog } from "@/components/SignupCTADialog";
 import { useRequireVerifiedEmail } from "@/components/VerifyEmailGate";
 import { CategoryGrid, type CategoryDef } from "@/components/explore/CategoryGrid";
 import { ActionStack } from "@/components/explore/ActionStack";
+import { OperationalTools, ExecutionPipeline } from "@/components/explore/OperationalTools";
 
 const categories = ["All", "Tech", "Creative", "Freelance", "Marketing", "Education", "Service", "E-Commerce", "Finance", "Gig Economy", "Gaming", "Admin"];
 const difficulties = ["All", "Beginner", "Intermediate", "Advanced"];
@@ -22,15 +23,15 @@ const types = ["All", "Online", "In-Person", "Hybrid"];
 
 const popularTemplates = [
   "AI automation agency for SMBs",
-  "Productized design services for startups",
-  "Notion templates as a digital product",
-  "Content systems for personal brands",
-  "Freelance SEO retainer for ecommerce",
-  "Faceless YouTube operations",
-  "Cold outreach service for B2B SaaS",
-  "Micro SaaS ideas for indie founders",
-  "Done-for-you LinkedIn ghostwriting",
-  "n8n automation workflows for agencies",
+  "Productized design service operations",
+  "Notion systems as a digital product line",
+  "Content engines for founder brands",
+  "Freelance SEO retainer operations",
+  "Faceless YouTube operations stack",
+  "Cold outreach systems for B2B SaaS",
+  "Micro SaaS operating models",
+  "Done-for-you LinkedIn ghostwriting ops",
+  "n8n automation pipelines for agencies",
 ];
 
 export default function Explore() {
@@ -229,23 +230,27 @@ export default function Explore() {
             className="text-center max-w-3xl mx-auto space-y-4"
           >
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-primary/30 bg-primary/5 text-xs font-medium text-primary">
-              <Compass className="w-3.5 h-3.5" /> Opportunity Discovery Engine
+              <Compass className="w-3.5 h-3.5" /> Discovery → Execution Engine
             </div>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold tracking-tight">
-              Discover your next <span className="text-gradient">income system</span>
+              Discover opportunities you can <span className="text-gradient">actually execute</span>
             </h1>
             <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto">
-              AI-powered opportunity engine for freelancers, operators and creators. Find, validate and launch — then operationalize it inside Workspace OS.
+              The intelligence layer of Workspace OS. Find digital income systems, then run the entire client engagement — proposals, agreements, intake, invoices and CRM — in one place.
             </p>
 
             <div className="pt-4">
               <SearchBar onSearch={handleSearch} isLoading={isLoading} size="lg" />
             </div>
 
-            <div className="flex items-center justify-center gap-4 pt-2 text-xs text-muted-foreground">
+            <div className="flex items-center justify-center gap-4 pt-2 text-xs text-muted-foreground flex-wrap">
               <span className="flex items-center gap-1"><Activity className="w-3.5 h-3.5 text-emerald-500" /> Live demand signals</span>
-              <span className="flex items-center gap-1"><Sparkles className="w-3.5 h-3.5 text-violet-500" /> AI-classified</span>
-              <span className="hidden md:flex items-center gap-1"><Rocket className="w-3.5 h-3.5 text-cyan-500" /> Workspace-ready</span>
+              <span className="flex items-center gap-1"><Sparkles className="w-3.5 h-3.5 text-violet-500" /> AI-classified niches</span>
+              <span className="flex items-center gap-1"><Rocket className="w-3.5 h-3.5 text-cyan-500" /> Operationally ready</span>
+            </div>
+
+            <div className="pt-4">
+              <ExecutionPipeline />
             </div>
           </motion.div>
         </div>
@@ -286,10 +291,10 @@ export default function Explore() {
                 <div className="flex items-end justify-between gap-4 flex-wrap">
                   <div>
                     <div className="flex items-center gap-2 text-primary text-xs font-semibold uppercase tracking-wider">
-                      <Compass className="w-3.5 h-3.5" /> Opportunity Categories
+                      <Compass className="w-3.5 h-3.5" /> Opportunity Systems
                     </div>
-                    <h2 className="text-2xl md:text-3xl font-display font-bold mt-1">Browse the operating systems</h2>
-                    <p className="text-sm text-muted-foreground mt-1">Pick a category to load curated opportunities and an execution stack.</p>
+                    <h2 className="text-2xl md:text-3xl font-display font-bold mt-1">Browse digital income systems</h2>
+                    <p className="text-sm text-muted-foreground mt-1">Pick a category to load curated opportunities and a ready-to-run execution stack.</p>
                   </div>
                 </div>
                 <CategoryGrid onPick={(c: CategoryDef) => handleSearch(c.query)} />
@@ -297,6 +302,9 @@ export default function Explore() {
 
               {/* Action stack — discovery → execution moat */}
               <ActionStack />
+
+              {/* Operational tooling — moat vs. proposal-only competitors */}
+              <OperationalTools />
 
               {/* Trending opportunities */}
               {trendingCards.length > 0 && (
