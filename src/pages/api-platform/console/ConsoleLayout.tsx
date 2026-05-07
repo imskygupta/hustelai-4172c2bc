@@ -82,6 +82,14 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
         ))}
       </nav>
       <div className="mt-auto pt-4 border-t border-white/[0.06] px-3">
+        <a
+          href="https://docs.hustlaiapp.in"
+          target="_blank"
+          rel="noreferrer"
+          className="flex items-center gap-2.5 px-0 py-2 text-[12.5px] text-zinc-400 hover:text-zinc-100"
+        >
+          <BookOpen className="h-4 w-4" /> Docs ↗
+        </a>
         <a href="https://api.hustlaiapp.in" className="text-[11px] text-zinc-500 hover:text-zinc-300">
           ← Back to api.hustlaiapp.in
         </a>
