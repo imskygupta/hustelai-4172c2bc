@@ -123,7 +123,14 @@ export function Navbar() {
                     >
                       {l.children.map((child) => (
                         <button key={child.href}
-                          onClick={() => { navigate(child.href); setMoreOpen(false); }}
+                          onClick={() => {
+                            setMoreOpen(false);
+                            if ((child as any).external) {
+                              window.location.href = child.href;
+                            } else {
+                              navigate(child.href);
+                            }
+                          }}
                           className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
                             isActive(child.href)
                               ? isHome ? "bg-emerald-50 text-emerald-700" : "bg-primary/10 text-primary"
@@ -138,7 +145,10 @@ export function Navbar() {
               </div>
             ) : (
               <Button key={l.href} variant="ghost" size="sm"
-                onClick={() => navigate(l.href!)}
+                onClick={() => {
+                  if ((l as any).external) window.location.href = l.href!;
+                  else navigate(l.href!);
+                }}
                 className={`transition-all ${
                   isActive(l.href!)
                     ? isHome ? "text-emerald-700 bg-emerald-50" : "text-primary bg-primary/10"
