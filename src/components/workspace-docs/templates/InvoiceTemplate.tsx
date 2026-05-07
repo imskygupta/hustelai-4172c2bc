@@ -10,11 +10,14 @@ export function InvoiceTemplate({ data, themeId, watermark }: { data: InvoiceDat
   const cur = data.currency || "INR";
 
   return (
-    <ThemedSurface themeId={themeId} watermark={watermark}>
+    <ThemedSurface themeId={themeId} watermark={watermark} footerText={(data as any).brand?.footer}>
       <header style={{ display: "flex", justifyContent: "space-between" }}>
-        <div>
+        <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
+          {data.brand.logo && <img src={data.brand.logo} alt="" style={{ width: 56, height: 56, objectFit: "contain", borderRadius: 8 }} />}
+          <div>
           <p style={{ fontSize: 11, letterSpacing: 3, color: t.muted, margin: 0, textTransform: "uppercase" }}>Invoice</p>
           <h1 style={{ fontFamily: t.display, fontSize: 36, margin: "6px 0 0" }}>{data.brand.name}</h1>
+          </div>
         </div>
         <div style={{ textAlign: "right" }}>
           <div style={{ display: "inline-block", padding: "6px 12px", background: t.badgeBg, color: t.badgeText, borderRadius: 999, fontSize: 11, fontWeight: 600, letterSpacing: 1, textTransform: "uppercase" }}>

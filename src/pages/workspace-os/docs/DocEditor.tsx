@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Download, Loader2, Save, Sparkles, Wand2 } from "lucide-react";
+import { ArrowLeft, Download, Loader2, Save, Sparkles, Wand2, Users, ArrowRight, Library } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -15,6 +15,12 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import UpgradePrompt from "@/components/workspace-os/UpgradePrompt";
 import type { EntitlementKey } from "@/lib/workspace-os/entitlements";
+import {
+  applyBrandToDoc, applyClientToDoc, getBrandKit,
+  listBlocks, listClients, setDocStatus, convertDocument,
+  CONVERSION_TARGETS, DOC_STATUSES, STATUS_LABELS, STATUS_TONE,
+  type ClientProfile, type DocBlock, type DocStatus,
+} from "@/lib/workspace-docs/infra";
 
 const PAID_TIERS = ["pro", "elite", "infinity"];
 
@@ -33,6 +39,10 @@ export default function DocEditor() {
   const [aiBusy, setAiBusy] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [upsell, setUpsell] = useState<EntitlementKey | null>(null);
+  const [status, setStatus] = useState<DocStatus>("draft");
+  const [clients, setClients] = useState<ClientProfile[]>([]);
+  const [blocks, setBlocks] = useState<DocBlock[]>([]);
+  const [converting, setConverting] = useState(false);
   const previewRef = useRef<HTMLDivElement | null>(null);
 
   const tier = (profile as any)?.subscription_tier || "free";
@@ -42,6 +52,9 @@ export default function DocEditor() {
     if (!user || !id) return;
     (async () => {
       const { data: ws } = await (supabase as any).from("workspaces").select("*").eq("id", id).maybeSingle();
+      const kit = await getBrandKit(user.id);
+      const [cs, bs] = await Promise.all([listClients(user.id), listBlocks(user.id)]);
+      setClients(cs); setBlocks(bs);
       if (docId && docId !== "new") {
         const { data: row } = await (supabase as any).from("workspace_documents").select("*").eq("id", docId).maybeSingle();
         if (row) {
@@ -50,12 +63,15 @@ export default function DocEditor() {
           setData(row.data);
           setThemeId(row.theme as ThemeId);
           setTitle(row.title);
+          setStatus((row.status || "draft") as DocStatus);
         }
       } else if (typeParam) {
         const t = typeParam as DocType;
         setDocType(t);
-        const d = defaultDoc(t, profile, ws);
-        setData(d);
+        const base = defaultDoc(t, profile, ws);
+        const withBrand = applyBrandToDoc(base, kit);
+        setData(withBrand);
+        if (kit?.default_theme) setThemeId(kit.default_theme as ThemeId);
         setTitle(`${DOC_META[t].label.slice(0, -1)} for ${ws?.client_name || "client"}`);
       }
       setLoaded(true);
@@ -74,6 +90,8 @@ export default function DocEditor() {
       theme: themeId,
       doc_number: data.number || null,
       due_at: data.dueDate ? new Date(data.dueDate).toISOString() : null,
+      status,
+      client_profile_id: data.client_profile_id || null,
     };
     let res;
     if (docRow) {
@@ -86,6 +104,30 @@ export default function DocEditor() {
     setDocRow(res.data);
     toast.success("Saved");
     if (!docRow) nav(`/workspaces/${id}/docs/${res.data.id}`, { replace: true });
+  }
+
+  async function changeStatus(s: DocStatus) {
+    setStatus(s);
+    if (docRow?.id) {
+      try { await setDocStatus(docRow.id, s); toast.success(`Marked as ${STATUS_LABELS[s]}`); }
+      catch (e: any) { toast.error(e?.message || "Status update failed"); }
+    }
+  }
+
+  function pickClient(c: ClientProfile) {
+    setData((d: any) => applyClientToDoc(d, c));
+    toast.success(`Loaded ${c.name}`);
+  }
+
+  async function doConvert(target: DocType) {
+    if (!docRow?.id) { toast.error("Save the document first"); return; }
+    setConverting(true);
+    try {
+      const row = await convertDocument(docRow.id, target);
+      toast.success(`Converted to ${target}`);
+      nav(`/workspaces/${id}/docs/${row.id}`);
+    } catch (e: any) { toast.error(e?.message || "Conversion failed"); }
+    finally { setConverting(false); }
   }
 
   async function exportPdf() {
@@ -146,6 +188,32 @@ export default function DocEditor() {
           <ArrowLeft className="h-4 w-4" /> All documents
         </button>
         <div className="flex items-center gap-2">
+          {/* Status */}
+          <select
+            value={status}
+            onChange={e => changeStatus(e.target.value as DocStatus)}
+            className={`text-xs uppercase tracking-wider rounded-full px-3 py-1.5 border-0 cursor-pointer ${STATUS_TONE[status]}`}
+          >
+            {DOC_STATUSES.map(s => <option key={s} value={s}>{STATUS_LABELS[s]}</option>)}
+          </select>
+
+          {/* Convert */}
+          {(CONVERSION_TARGETS[docType] || []).length > 0 && docRow && (
+            <div className="relative group">
+              <button disabled={converting} className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs hover:bg-muted disabled:opacity-50">
+                {converting ? <Loader2 className="h-3 w-3 animate-spin" /> : <ArrowRight className="h-3 w-3" />} Convert
+              </button>
+              <div className="absolute right-0 top-full mt-1 hidden group-hover:block bg-popover border border-border rounded-lg shadow-xl py-1 min-w-[160px] z-10">
+                {CONVERSION_TARGETS[docType].map(t => (
+                  <button key={t} onClick={() => doConvert(t)}
+                    className="block w-full text-left px-3 py-1.5 text-xs hover:bg-muted capitalize">
+                    → {t}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           <button onClick={save} disabled={saving} className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm hover:bg-muted disabled:opacity-50">
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Save
           </button>
@@ -164,6 +232,23 @@ export default function DocEditor() {
             <ThemePicker value={themeId} onChange={setThemeId} />
           </Section>
 
+          {clients.length > 0 && (
+            <Section title="Load client">
+              <select
+                onChange={e => {
+                  const c = clients.find(x => x.id === e.target.value);
+                  if (c) pickClient(c);
+                  e.target.value = "";
+                }}
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+                defaultValue=""
+              >
+                <option value="" disabled>Pick a saved client…</option>
+                {clients.map(c => <option key={c.id} value={c.id}>{c.name}{c.company ? ` · ${c.company}` : ""}</option>)}
+              </select>
+            </Section>
+          )}
+
           {watermark && (
             <button
               onClick={() => setUpsell("remove_watermark")}
@@ -176,6 +261,7 @@ export default function DocEditor() {
           <DocForm
             type={docType} data={data} setData={setData}
             aiBusy={aiBusy} aiAssist={aiAssist}
+            blocks={blocks}
           />
         </div>
 
@@ -226,7 +312,27 @@ function AIBtn({ busy, onClick, label }: any) {
   );
 }
 
-function DocForm({ type, data, setData, aiBusy, aiAssist }: any) {
+function BlockPicker({ blocks, kind, onPick }: { blocks: any[]; kind: string; onPick: (text: string) => void }) {
+  const filtered = (blocks || []).filter(b => b.kind === kind);
+  if (filtered.length === 0) return null;
+  return (
+    <select
+      onChange={e => {
+        const b = filtered.find(x => x.id === e.target.value);
+        if (b) onPick(b.body);
+        e.target.value = "";
+      }}
+      defaultValue=""
+      className="text-[10px] rounded border border-border bg-transparent px-1.5 py-0.5 text-muted-foreground"
+      title="Insert reusable block"
+    >
+      <option value="" disabled>+ Block</option>
+      {filtered.map(b => <option key={b.id} value={b.id}>{b.title}</option>)}
+    </select>
+  );
+}
+
+function DocForm({ type, data, setData, aiBusy, aiAssist, blocks }: any) {
   const update = (path: string, value: any) => {
     setData((d: any) => {
       const next = structuredClone(d);
@@ -265,7 +371,10 @@ function DocForm({ type, data, setData, aiBusy, aiAssist }: any) {
             </div>
             <div className="flex items-center justify-between">
               <label className="text-xs font-medium text-muted-foreground">Payment structure</label>
-              <AIBtn busy={aiBusy === "payment_structure"} label="Suggest" onClick={() => aiAssist("payment_structure", { apply: (r: any) => update("paymentStructure", r.structure || data.paymentStructure) })} />
+              <div className="flex items-center gap-2">
+                <BlockPicker blocks={blocks} kind="payment_terms" onPick={t => update("paymentStructure", t)} />
+                <AIBtn busy={aiBusy === "payment_structure"} label="Suggest" onClick={() => aiAssist("payment_structure", { apply: (r: any) => update("paymentStructure", r.structure || data.paymentStructure) })} />
+              </div>
             </div>
             <Input value={data.paymentStructure} onChange={e => update("paymentStructure", e.target.value)} />
           </Section>
@@ -292,11 +401,18 @@ function DocForm({ type, data, setData, aiBusy, aiAssist }: any) {
             <div key={k}>
               <div className="flex items-center justify-between">
                 <label className="text-xs font-medium text-muted-foreground capitalize">{k.replace(/([A-Z])/g, " $1")}</label>
-                <AIBtn
-                  busy={aiBusy === "draft_agreement_clause" + k}
-                  label="Draft"
-                  onClick={() => aiAssist("draft_agreement_clause", { section: k, apply: (r: any) => update(k, r.text || data[k]) })}
-                />
+                <div className="flex items-center gap-2">
+                  <BlockPicker
+                    blocks={blocks}
+                    kind={k === "paymentTerms" ? "payment_terms" : k === "ipOwnership" ? "ip" : k}
+                    onPick={t => update(k, t)}
+                  />
+                  <AIBtn
+                    busy={aiBusy === "draft_agreement_clause" + k}
+                    label="Draft"
+                    onClick={() => aiAssist("draft_agreement_clause", { section: k, apply: (r: any) => update(k, r.text || data[k]) })}
+                  />
+                </div>
               </div>
               <Textarea rows={2} value={data[k] || ""} onChange={e => update(k, e.target.value)} />
             </div>

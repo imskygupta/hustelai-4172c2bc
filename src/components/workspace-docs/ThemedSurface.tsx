@@ -3,12 +3,13 @@ import { THEMES } from "@/lib/workspace-docs/themes";
 import type { ThemeId } from "@/lib/workspace-docs/types";
 
 export function ThemedSurface({
-  themeId, format = "a4", children, watermark,
+  themeId, format = "a4", children, watermark, footerText,
 }: {
   themeId: ThemeId;
   format?: "a4" | "card" | "square";
   children: ReactNode;
   watermark?: boolean;
+  footerText?: string;
 }) {
   const t = THEMES[themeId];
   const dims: Record<string, CSSProperties> = {
@@ -39,6 +40,13 @@ export function ThemedSurface({
         }}>
           HUSTLAI
         </div>
+      )}
+      {footerText && (
+        <div style={{
+          position: "absolute", bottom: 28, left: 0, right: 0,
+          textAlign: "center", fontSize: 10, color: t.muted, letterSpacing: 0.5,
+          padding: "0 56px",
+        }}>{footerText}</div>
       )}
       {watermark && (
         <div style={{
