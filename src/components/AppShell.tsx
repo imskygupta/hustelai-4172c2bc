@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import { ReactNode, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
-import { Search, Bell, Crown, Sparkles, Rocket, Star, ChevronRight } from "lucide-react";
+import { Search, Bell, Crown, Sparkles, Rocket, Star, ChevronRight, ArrowRight, Command } from "lucide-react";
 import { VerifyEmailGate } from "@/components/VerifyEmailGate";
 import { Chatbot } from "@/components/Chatbot";
 
@@ -21,6 +21,64 @@ export function AppShell({ children, title, breadcrumbs, actions }: AppShellProp
   const { profile } = useAuth();
   const navigate = useNavigate();
   const tier = (profile?.subscription_tier as string) || "free";
+
+  // ---- In-app Tool Finder (distinct from hustle search) ----
+  const TOOL_INDEX: { label: string; desc: string; path: string; group: string }[] = [
+    { label: "Dashboard", desc: "Your cockpit overview", path: "/dashboard", group: "Workspace" },
+    { label: "Workspaces", desc: "All client workspaces", path: "/workspaces", group: "Workspace" },
+    { label: "Work Hub", desc: "Daily freelancer cockpit", path: "/work", group: "Workspace" },
+    { label: "Clients (CRM)", desc: "All clients", path: "/work/clients", group: "Workspace" },
+    { label: "Invoices", desc: "Create & track invoices", path: "/work/invoices", group: "Money" },
+    { label: "Time Tracker", desc: "Log billable hours", path: "/work/time", group: "Money" },
+    { label: "Expenses", desc: "Tools & subscriptions", path: "/work/expenses", group: "Money" },
+    { label: "Revenue", desc: "Earnings dashboard", path: "/workspaces/revenue", group: "Money" },
+    { label: "Pipeline", desc: "Deals kanban", path: "/workspaces/pipeline", group: "Money" },
+    { label: "Proposal Generator", desc: "AI-drafted proposals", path: "/proposal-draft", group: "Documents" },
+    { label: "Quotation Generator", desc: "Premium project quotes", path: "/workspaces?intent=quotation", group: "Documents" },
+    { label: "Invoice Generator", desc: "Branded invoices", path: "/workspaces?intent=invoice", group: "Documents" },
+    { label: "Agreement / Contract", desc: "Protect engagements", path: "/workspaces?intent=agreement", group: "Documents" },
+    { label: "Service Offer Card", desc: "Shareable service deck", path: "/workspaces?intent=service_card", group: "Documents" },
+    { label: "Business Card", desc: "Modern brand identity", path: "/workspaces?intent=business_card", group: "Documents" },
+    { label: "Brand Kit", desc: "Logo, colors, fonts", path: "/workspaces/brand-kit", group: "Documents" },
+    { label: "Snippet Library", desc: "Reusable doc blocks", path: "/workspaces/blocks", group: "Documents" },
+    { label: "Smart Client Intake", desc: "Branded intake forms", path: "/workspaces/intake", group: "Documents" },
+    { label: "Hustle Blueprint", desc: "7-day action plan", path: "/hustle-blueprint", group: "AI" },
+    { label: "Resume Optimizer", desc: "Tailored CV", path: "/resume-optimizer", group: "AI" },
+    { label: "Red-Flag Scanner", desc: "Spot bad clients", path: "/red-flag-scanner", group: "AI" },
+    { label: "Gig Price Calc", desc: "3-tier pricing", path: "/gig-price-calculator", group: "AI" },
+    { label: "Faceless Content", desc: "Viral storyboards", path: "/faceless-content", group: "AI" },
+    { label: "AI Tool Bench", desc: "Compare AI tools", path: "/ai-tools", group: "AI" },
+    { label: "Knowledge Hub", desc: "Save & automate prompts", path: "/knowledge-hub", group: "AI" },
+    { label: "Skill Gap Analyzer", desc: "Learning roadmap", path: "/skill-gap", group: "AI" },
+    { label: "Lead Finder", desc: "Social-media lead radar", path: "/problem-leads", group: "AI" },
+    { label: "HustleBot (AI Mentor)", desc: "Personal AI mentor", path: "/hustlebot", group: "AI" },
+    { label: "Explore Hustles", desc: "AI hustle search", path: "/explore", group: "Discover" },
+    { label: "Saved Hustles", desc: "Your bookmarks", path: "/saved-hustles", group: "Discover" },
+    { label: "Community", desc: "Forum & chat", path: "/community", group: "Discover" },
+    { label: "Leaderboard", desc: "Top earners", path: "/leaderboard", group: "Discover" },
+    { label: "Affiliates", desc: "Earn commissions", path: "/affiliates", group: "Discover" },
+    { label: "Plans & Billing", desc: "Subscription", path: "/plans", group: "Account" },
+    { label: "Profile", desc: "Your account", path: "/profile", group: "Account" },
+    { label: "AI Fuel (BYO key)", desc: "Connect your own AI key", path: "/workspaces/ai-settings", group: "Account" },
+  ];
+  const [q, setQ] = useState("");
+  const [openFinder, setOpenFinder] = useState(false);
+  const [activeIdx, setActiveIdx] = useState(0);
+  const finderRef = useRef<HTMLDivElement | null>(null);
+
+  const matches = useMemo(() => {
+    const term = q.trim().toLowerCase();
+    if (!term) return [] as typeof TOOL_INDEX;
+    return TOOL_INDEX
+      .filter(t => t.label.toLowerCase().includes(term) || t.desc.toLowerCase().includes(term) || t.group.toLowerCase().includes(term))
+      .slice(0, 8);
+  }, [q]);
+
+  function go(path: string) {
+    setOpenFinder(false);
+    setQ("");
+    navigate(path);
+  }
 
   const TierBadge = () => {
     const map: Record<string, { icon: typeof Crown; cls: string }> = {
@@ -67,18 +125,66 @@ export function AppShell({ children, title, breadcrumbs, actions }: AppShellProp
               </nav>
             )}
 
-            <div className="flex-1 max-w-md ml-auto md:ml-4 hidden md:block">
+            <div className="flex-1 max-w-md ml-auto md:ml-4 hidden md:block" ref={finderRef}>
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Command className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-violet-500" />
                 <Input
-                  placeholder="Search hustles, tools, prompts…"
-                  className="pl-9 h-9 bg-slate-50 border-slate-200 focus:bg-white focus:border-emerald-300 text-sm"
+                  value={q}
+                  onChange={(e) => { setQ(e.target.value); setOpenFinder(true); setActiveIdx(0); }}
+                  onFocus={() => q && setOpenFinder(true)}
+                  onBlur={() => setTimeout(() => setOpenFinder(false), 150)}
+                  placeholder="Find a tool, doc or page in the app…"
+                  className="pl-9 pr-16 h-9 bg-violet-50/40 border-violet-200/70 focus:bg-white focus:border-violet-400 text-sm placeholder:text-slate-400"
                   onKeyDown={(e) => {
-                    if (e.key === "Enter" && (e.target as HTMLInputElement).value) {
-                      navigate(`/explore?q=${encodeURIComponent((e.target as HTMLInputElement).value)}`);
-                    }
+                    if (e.key === "ArrowDown") { e.preventDefault(); setActiveIdx(i => Math.min(i + 1, matches.length - 1)); }
+                    else if (e.key === "ArrowUp") { e.preventDefault(); setActiveIdx(i => Math.max(i - 1, 0)); }
+                    else if (e.key === "Enter") {
+                      e.preventDefault();
+                      if (matches[activeIdx]) go(matches[activeIdx].path);
+                      else if (q.trim()) navigate(`/explore?q=${encodeURIComponent(q)}`);
+                    } else if (e.key === "Escape") setOpenFinder(false);
                   }}
                 />
+                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-mono text-slate-400 bg-white border border-slate-200 rounded px-1.5 py-0.5 hidden lg:inline">⌘K</span>
+
+                {openFinder && q && (
+                  <div className="absolute left-0 right-0 mt-1.5 rounded-xl border border-slate-200 bg-white shadow-xl overflow-hidden z-50">
+                    {matches.length > 0 ? (
+                      <ul className="py-1 max-h-80 overflow-auto">
+                        {matches.map((m, i) => (
+                          <li key={m.path}>
+                            <button
+                              onMouseDown={(e) => { e.preventDefault(); go(m.path); }}
+                              onMouseEnter={() => setActiveIdx(i)}
+                              className={`w-full flex items-center justify-between gap-3 px-3 py-2 text-left ${i === activeIdx ? "bg-violet-50" : "hover:bg-slate-50"}`}
+                            >
+                              <div className="min-w-0">
+                                <div className="text-sm font-medium text-slate-900 truncate">{m.label}</div>
+                                <div className="text-[11px] text-slate-500 truncate">{m.desc}</div>
+                              </div>
+                              <span className="text-[9px] uppercase tracking-wider font-semibold text-violet-600 bg-violet-50 border border-violet-100 rounded px-1.5 py-0.5 shrink-0">{m.group}</span>
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <button
+                        onMouseDown={(e) => { e.preventDefault(); navigate(`/explore?q=${encodeURIComponent(q)}`); setOpenFinder(false); }}
+                        className="w-full flex items-center justify-between gap-3 px-3 py-3 text-left hover:bg-emerald-50"
+                      >
+                        <div className="min-w-0">
+                          <div className="text-sm font-medium text-slate-900">No tool match — search hustles for "{q}"</div>
+                          <div className="text-[11px] text-slate-500">Run an AI hustle search instead</div>
+                        </div>
+                        <ArrowRight className="w-4 h-4 text-emerald-600 shrink-0" />
+                      </button>
+                    )}
+                    <div className="border-t border-slate-100 px-3 py-1.5 text-[10px] text-slate-400 flex items-center justify-between bg-slate-50/50">
+                      <span>Tool Finder · jumps in-app</span>
+                      <span>↵ open · ↑↓ navigate · esc close</span>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
