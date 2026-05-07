@@ -378,9 +378,104 @@ select * from (values
 where not exists (select 1 from public.community_groups);
 `;
 
+// =========================================================
+// Intake OS (DB2 — workspace project utflzmecghdtcjupgdan)
+// Public client-facing intake forms + submissions + assets + portal links.
+// =========================================================
+export const INTAKE_SETUP_SQL = `-- =========================================================
+-- HustleAI · Intake OS — run in workspace DB (utflzmecghdtcjupgdan)
+-- =========================================================
+
+create table if not exists public.intake_forms (
+  id uuid primary key default gen_random_uuid(),
+  owner_id uuid not null,
+  workspace_id uuid,
+  title text not null,
+  description text,
+  slug text not null unique,
+  is_active boolean not null default true,
+  fields jsonb not null default '[]'::jsonb,        -- [{key,label,type,required,options}]
+  settings jsonb not null default '{}'::jsonb,      -- branding, redirect, max files
+  submission_count int not null default 0,
+  created_at timestamptz not null default now()
+);
+create index if not exists idx_intake_forms_owner on public.intake_forms(owner_id);
+create index if not exists idx_intake_forms_slug  on public.intake_forms(slug);
+
+create table if not exists public.intake_submissions (
+  id uuid primary key default gen_random_uuid(),
+  form_id uuid not null,
+  owner_id uuid not null,
+  workspace_id uuid,
+  client_name text,
+  client_email text,
+  client_company text,
+  payload jsonb not null default '{}'::jsonb,
+  files jsonb not null default '[]'::jsonb,         -- [{name,path,size,mime}]
+  ai_analysis jsonb,                                -- detected scope, risks, next actions
+  status text not null default 'new',               -- new | reviewed | converted | archived
+  ip_hash text,
+  user_agent text,
+  created_at timestamptz not null default now()
+);
+create index if not exists idx_intake_subs_owner on public.intake_submissions(owner_id);
+create index if not exists idx_intake_subs_form  on public.intake_submissions(form_id);
+create index if not exists idx_intake_subs_status on public.intake_submissions(status);
+
+create table if not exists public.workspace_assets (
+  id uuid primary key default gen_random_uuid(),
+  owner_id uuid not null,
+  workspace_id uuid,
+  submission_id uuid,
+  type text not null default 'file',                -- file | logo | brief | screenshot | reference
+  name text not null,
+  storage_path text not null,
+  size_bytes int,
+  mime_type text,
+  metadata jsonb default '{}'::jsonb,
+  created_at timestamptz not null default now()
+);
+create index if not exists idx_ws_assets_owner on public.workspace_assets(owner_id);
+create index if not exists idx_ws_assets_workspace on public.workspace_assets(workspace_id);
+
+create table if not exists public.client_portal_links (
+  id uuid primary key default gen_random_uuid(),
+  owner_id uuid not null,
+  workspace_id uuid,
+  submission_id uuid,
+  token text not null unique,
+  expires_at timestamptz,
+  views int not null default 0,
+  last_viewed_at timestamptz,
+  created_at timestamptz not null default now()
+);
+create index if not exists idx_portal_links_token on public.client_portal_links(token);
+
+alter table public.intake_forms        enable row level security;
+alter table public.intake_submissions  enable row level security;
+alter table public.workspace_assets    enable row level security;
+alter table public.client_portal_links enable row level security;
+
+-- Anon-readable; owner_id scoping enforced server-side via edge functions
+do $$ begin create policy "anon_all_intake_forms"        on public.intake_forms        for all using (true) with check (true);
+exception when duplicate_object then null; end $$;
+do $$ begin create policy "anon_all_intake_submissions"  on public.intake_submissions  for all using (true) with check (true);
+exception when duplicate_object then null; end $$;
+do $$ begin create policy "anon_all_workspace_assets"    on public.workspace_assets    for all using (true) with check (true);
+exception when duplicate_object then null; end $$;
+do $$ begin create policy "anon_all_client_portal_links" on public.client_portal_links for all using (true) with check (true);
+exception when duplicate_object then null; end $$;
+
+-- Storage bucket for intake uploads (run separately in Storage UI if it errors):
+insert into storage.buckets (id, name, public)
+values ('intake-uploads', 'intake-uploads', false)
+on conflict (id) do nothing;
+`;
+
 export const SQL_BLOCKS = [
   { id: "work", label: "Workspace Core (Work tab) — invoices, time, clients, expenses, etc.", sql: WORK_SETUP_SQL },
   { id: "canvas", label: "Hustle Canvas — sticky notes board", sql: CANVAS_SETUP_SQL },
   { id: "workspaces", label: "Workspaces — client list & action bar", sql: WORKSPACES_SETUP_SQL },
+  { id: "intake", label: "Intake OS — public forms, submissions, assets, portal links (DB2)", sql: INTAKE_SETUP_SQL },
   { id: "community", label: "Community / Forum + Discord links — 3rd backend (qeswhaytgvosfzzgraef)", sql: COMMUNITY_SETUP_SQL },
 ];

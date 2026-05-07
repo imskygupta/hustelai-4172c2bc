@@ -1,6 +1,6 @@
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Briefcase, Plus, Sparkles, KeyRound, FileText, Receipt, Users, Kanban, TrendingUp, Hammer, Clock, ClipboardList, AlarmClock, Globe, Wallet, FolderOpen, Mail, Brain, Palette, Blocks } from "lucide-react";
+import { Briefcase, Plus, Sparkles, KeyRound, FileText, Receipt, Users, Kanban, TrendingUp, Hammer, Clock, ClipboardList, AlarmClock, Globe, Wallet, FolderOpen, Mail, Brain, Palette, Blocks, Inbox } from "lucide-react";
 import { cn } from "@/lib/utils";
 import NotificationCenter from "@/components/workspace-os/NotificationCenter";
 
@@ -19,6 +19,7 @@ const DOC_INFRA = [
   { to: "/workspaces/brand-kit", label: "Brand Kit", icon: Palette },
   { to: "/workspaces/clients", label: "Client Profiles", icon: Users },
   { to: "/workspaces/blocks", label: "Reusable Blocks", icon: Blocks },
+  { to: "/workspaces/intake", label: "Intake OS", icon: Inbox },
 ];
 
 const TOOLS = [
