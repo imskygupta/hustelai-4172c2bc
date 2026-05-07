@@ -111,6 +111,8 @@ import { ScrollToTop } from "@/components/ScrollToTop";
 import { AppRouteShell } from "@/components/AppRouteShell";
 import { RequireAuth } from "@/components/RequireAuth";
 import { DocsSubdomainRedirect } from "@/components/DocsSubdomainRedirect";
+import { ApiSubdomainRedirect } from "@/components/ApiSubdomainRedirect";
+import ApiPlatform from "./pages/api-platform/ApiPlatform";
 
 // Helper to wrap an in-app page in the SaaS sidebar shell.
 // All shelled routes require auth — guests are redirected to /signup so they
@@ -134,6 +136,7 @@ const App = () => (
         <BrowserRouter>
           <ScrollToTop />
           <DocsSubdomainRedirect />
+          <ApiSubdomainRedirect />
           <Routes>
             <Route path="/" element={<Index />} />
             {/* SEO landing pages (public) */}
@@ -239,6 +242,7 @@ const App = () => (
               <Route index element={<DocsHome />} />
               <Route path=":slug" element={<DocsArticle />} />
             </Route>
+            <Route path="/api-platform" element={<ApiPlatform />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <MobileBottomNav />
