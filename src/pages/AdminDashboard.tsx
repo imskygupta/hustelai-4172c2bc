@@ -28,6 +28,7 @@ import { FeatureFlagsManager } from "@/components/admin/FeatureFlagsManager";
 import { UsageAnalyticsManager } from "@/components/admin/UsageAnalyticsManager";
 import { SeoLandingManager } from "@/components/admin/SeoLandingManager";
 import { SeoBlogManager } from "@/components/admin/SeoBlogManager";
+import { SystemHealth } from "@/components/admin/SystemHealth";
 
 import { SEO } from "@/components/SEO";
 
@@ -118,7 +119,7 @@ type AdminSection =
   | "overview" | "users" | "roles" | "notifications" | "webinars"
   | "expert" | "chatbot" | "blogs" | "analytics" | "config"
   | "verification" | "payments" | "forum" | "community" | "trending" | "newsletter" | "email-settings" | "ai-providers" | "send-email" | "orders"
-  | "payment-logs" | "bonus-kits" | "social-links" | "sql-setup" | "feature-flags";
+  | "payment-logs" | "bonus-kits" | "social-links" | "sql-setup" | "feature-flags" | "system-health";
 type AdminSectionExt = AdminSection | "seo-pages" | "seo-blog" | "usage-analytics";
 
 const sidebarItems: { id: AdminSection; label: string; icon: any }[] = [
@@ -147,6 +148,7 @@ const sidebarItems: { id: AdminSection; label: string; icon: any }[] = [
   { id: "config", label: "Config & Keys", icon: Settings },
   { id: "sql-setup", label: "SQL Setup", icon: Database },
   { id: "feature-flags", label: "Feature Flags", icon: Flag },
+  { id: "system-health", label: "System Health", icon: Activity },
   { id: "seo-pages" as AdminSection, label: "SEO Pages", icon: Globe },
   { id: "seo-blog" as AdminSection, label: "Insights / Blog", icon: BookOpen },
   { id: "usage-analytics" as AdminSection, label: "Usage Analytics", icon: BarChart3 },
@@ -2303,7 +2305,7 @@ export default function AdminDashboard() {
               {/* Backend connections reference */}
               <div className="grid md:grid-cols-2 gap-3">
                 {[
-                  { label: "Workspace DB (hustl-production)", ref: "uvejxrhrxpcmgrfxfynx", url: "https://uvejxrhrxpcmgrfxfynx.supabase.co", purpose: "Work hub, canvas, workspace clients" },
+                  { label: "Workspace DB (Work Hub / Canvas)", ref: "utflzmecghdtcjupgdan", url: "https://utflzmecghdtcjupgdan.supabase.co", purpose: "Work hub, canvas, workspace clients, files" },
                   { label: "Community DB (hustl discord-workspace-production)", ref: "qeswhaytgvosfzzgraef", url: "https://qeswhaytgvosfzzgraef.supabase.co", purpose: "Forum posts/votes, memberships, Discord links, mod queue" },
                 ].map(b => (
                   <div key={b.ref} className="glass rounded-xl p-4 space-y-1.5 border-primary/10">
@@ -2378,6 +2380,7 @@ export default function AdminDashboard() {
           {section === "feature-flags" && (
             <FeatureFlagsManager />
           )}
+          {section === "system-health" && <SystemHealth />}
           {(section as AdminSectionExt) === "seo-pages" && <SeoLandingManager />}
           {(section as AdminSectionExt) === "seo-blog" && <SeoBlogManager />}
           {(section as AdminSectionExt) === "usage-analytics" && <UsageAnalyticsManager />}

@@ -46,7 +46,14 @@ HustleAI restore checklist  (read top → bottom)
                       /admin-dashboard → SQL Setup tab (copy + paste in
                       hustl-production SQL editor).
 
-4) RUNTIME SECRETS  (re-add via Lovable → Connectors → Secrets)
+4) TERTIARY SUPABASE  (community + forum + Discord links)
+   Project URL:       https://qeswhaytgvosfzzgraef.supabase.co
+   Anon key:          hard-coded in src/integrations/community/client.ts
+   Tables required:   forum_posts, forum_votes, community_groups,
+                      community_memberships, discord_links, mod_queue
+   Used by edge fns:  discord-oauth, discord-sync-role
+
+5) RUNTIME SECRETS  (re-add via Lovable → Connectors → Secrets)
    Already configured (do NOT delete on transfer):
      - LOVABLE_API_KEY              (managed)
      - SUPABASE_SERVICE_ROLE_KEY    (primary)
@@ -58,14 +65,19 @@ HustleAI restore checklist  (read top → bottom)
      - CASHFREE_APP_ID     / CASHFREE_SECRET_KEY
      - ADZUNA_APP_ID       / ADZUNA_API_KEY
      - LONGCAT_API_KEY     / ZHIPU_API_KEY
+     - DISCORD_BOT_TOKEN   / DISCORD_CLIENT_SECRET / DISCORD_GUILD_ID
+     - INNGEST_API_KEY     / INNGEST_SIGNING_KEY  (managed)
+     - SENTRY_DSN
    Storage buckets: resumes, kyc-documents, payment-proofs, payment-qr
+                    workspace-files
 
-5) VERIFY AFTER TRANSFER
-   • git remote -v        → should still point to imskyguptas-projects/hustelai
-   • Visit hustlaiapp.in  → Vercel rebuilds within ~2 min of next push
-   • /work                → KPI card loads (proves secondary DB reachable)
-   • /admin-dashboard     → SQL Setup tab visible
-   • /hustlebot           → proves LOVABLE_API_KEY wired
+6) VERIFY AFTER TRANSFER
+   • Visit hustlaiapp.in           → Vercel rebuilds within ~2 min of next push
+   • /admin-dashboard → System Health → "Run all checks" — all rows green
+   • /work                          → KPI card loads (DB #2 reachable)
+   • /community                     → forum loads     (DB #3 reachable)
+   • /hustlebot                     → AI replies      (LOVABLE_API_KEY wired)
+   • ₹1 test on /plans              → Cashfree end-to-end
 ==========================================================
 NOTE
 
