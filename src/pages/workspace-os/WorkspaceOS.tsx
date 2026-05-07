@@ -1,6 +1,6 @@
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Briefcase, Plus, Sparkles, KeyRound, FileText, Receipt, Users, Kanban, TrendingUp, Hammer, Clock, ClipboardList, AlarmClock, Globe, Wallet, FolderOpen, Mail, Brain } from "lucide-react";
+import { Briefcase, Plus, Sparkles, KeyRound, FileText, Receipt, Users, Kanban, TrendingUp, Hammer, Clock, ClipboardList, AlarmClock, Globe, Wallet, FolderOpen, Mail, Brain, Palette, Blocks } from "lucide-react";
 import { cn } from "@/lib/utils";
 import NotificationCenter from "@/components/workspace-os/NotificationCenter";
 
@@ -13,6 +13,12 @@ const NAV = [
   { to: "/workspaces/revenue", label: "Revenue", icon: TrendingUp, end: false },
   { to: "/workspaces/new", label: "New Workspace", icon: Plus, end: false },
   { to: "/workspaces/ai-settings", label: "Connect AI Fuel", icon: KeyRound, end: false },
+];
+
+const DOC_INFRA = [
+  { to: "/workspaces/brand-kit", label: "Brand Kit", icon: Palette },
+  { to: "/workspaces/clients", label: "Client Profiles", icon: Users },
+  { to: "/workspaces/blocks", label: "Reusable Blocks", icon: Blocks },
 ];
 
 const TOOLS = [
@@ -86,6 +92,25 @@ export default function WorkspaceOS() {
               {item.label}
             </NavLink>
           ))}
+
+          <div className="pt-6">
+            <p className="px-3 text-[10px] uppercase tracking-wider text-muted-foreground/70 mb-2">Document Infrastructure</p>
+            {DOC_INFRA.map(t => (
+              <NavLink
+                key={t.to}
+                to={t.to}
+                className={({ isActive }) => cn(
+                  "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all",
+                  isActive
+                    ? "bg-primary/10 text-primary font-medium"
+                    : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+                )}
+              >
+                <t.icon className="h-4 w-4" />
+                {t.label}
+              </NavLink>
+            ))}
+          </div>
 
           <div className="pt-6">
             <p className="px-3 text-[10px] uppercase tracking-wider text-muted-foreground/70 mb-2">Daily tools</p>

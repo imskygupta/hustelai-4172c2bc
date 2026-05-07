@@ -72,6 +72,9 @@ import Revenue from "./pages/workspace-os/Revenue";
 import WorkspacePortal from "./pages/WorkspacePortal";
 import DocsList from "./pages/workspace-os/docs/DocsList";
 import DocEditor from "./pages/workspace-os/docs/DocEditor";
+import BrandKitPage from "./pages/workspace-os/BrandKit";
+import BlocksPage from "./pages/workspace-os/Blocks";
+import ClientsPage from "./pages/workspace-os/Clients";
 import Work from "./pages/Work";
 import WorkTool from "./pages/WorkTool";
 import ClientPortal from "./pages/ClientPortal";
@@ -207,6 +210,9 @@ const App = () => (
               <Route path="ai-settings" element={<AISettings />} />
               <Route path="pipeline" element={<Pipeline />} />
               <Route path="revenue" element={<Revenue />} />
+              <Route path="brand-kit" element={<BrandKitPage />} />
+              <Route path="blocks" element={<BlocksPage />} />
+              <Route path="clients" element={<ClientsPage />} />
               <Route path=":id" element={<WorkspaceDetail />} />
               <Route path=":id/docs" element={<DocsList />} />
               <Route path=":id/docs/new/:type" element={<DocEditor />} />
