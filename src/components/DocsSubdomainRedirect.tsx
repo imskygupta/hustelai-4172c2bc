@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { detectSurface, isEnabled } from "@/config/runtime";
 
 /**
  * If the user lands on docs.hustlaiapp.in/<anything that isn't /docs>,
@@ -16,9 +17,8 @@ export function DocsSubdomainRedirect() {
   useEffect(() => {
     try {
       if (typeof window === "undefined") return;
-      const host = window.location.hostname || "";
-      // Strict match: only docs.* (not docs-foo., not foo.docs.)
-      if (!/^docs\./i.test(host)) return;
+      if (!isEnabled("ENABLE_SUBDOMAIN_ROUTING") || !isEnabled("ENABLE_DOCS")) return;
+      if (detectSurface() !== "docs") return;
       if (pathname.startsWith("/docs")) return;
       const target =
         pathname === "/" || pathname === ""
