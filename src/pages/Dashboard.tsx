@@ -237,24 +237,41 @@ export default function Dashboard() {
           rightSlot={<Link to="/operations" className="text-xs text-violet-700 hover:underline inline-flex items-center gap-1">Tour the OS <ArrowUpRight className="w-3 h-3" /></Link>}
           userTier={(profile?.subscription_tier as any) || "free"}
           tools={[
-            { icon: FileText, label: "Proposal Generator", desc: "Tailored client pitches", path: "/proposal-draft", color: "from-emerald-500 to-teal-500" },
-            { icon: ClipboardList, label: "Scope Document", desc: "Deliverables & milestones", path: "/workspaces/blocks", color: "from-violet-500 to-fuchsia-500", minTier: "pro" },
-            { icon: Users, label: "Smart Client Intake", desc: "Onboarding questionnaires", path: "/workspaces/intake", color: "from-sky-500 to-indigo-500" },
-            { icon: Layers, label: "Service Offer Cards", desc: "Premium service decks", path: "/workspaces/blocks", color: "from-amber-500 to-orange-500", minTier: "pro" },
+            { icon: FileText,      label: "Proposal Generator",  desc: "AI-drafted client pitches",         path: "/proposal-draft",                        color: "from-emerald-500 to-teal-500" },
+            { icon: ClipboardList, label: "Scope Document",      desc: "Deliverables & milestones doc",     path: "/workspaces?intent=quotation",           color: "from-violet-500 to-fuchsia-500", minTier: "pro" },
+            { icon: Users,         label: "Smart Client Intake", desc: "Branded onboarding questionnaires", path: "/workspaces/intake",                     color: "from-sky-500 to-indigo-500" },
+            { icon: Layers,        label: "Service Offer Cards", desc: "Premium shareable service decks",   path: "/workspaces?intent=service_card",        color: "from-amber-500 to-orange-500", minTier: "pro" },
           ]}
           onNavigate={navigate}
         />
 
-        {/* Document Infrastructure */}
+        {/* Document Studio — actual generators */}
         <BrightToolGrid
-          title="Document Infrastructure"
-          subtitle="The reusable foundation behind every client deliverable"
+          title="Document Studio"
+          subtitle="Generate every client-facing document — branded, themed, PDF-ready"
+          cols={5}
           userTier={(profile?.subscription_tier as any) || "free"}
           tools={[
-            { icon: Sparkles, label: "Brand Kit", desc: "Logo, colors & fonts", path: "/workspaces/brand-kit", color: "from-fuchsia-500 to-pink-500", minTier: "pro" },
-            { icon: Users, label: "Client Profiles", desc: "Reusable client records", path: "/workspaces/clients", color: "from-sky-500 to-blue-500" },
-            { icon: Layers, label: "Reusable Blocks", desc: "Snippets you drop into docs", path: "/workspaces/blocks", color: "from-violet-500 to-indigo-500", minTier: "pro" },
-            { icon: ClipboardList, label: "Intake OS", desc: "Branded client intake forms", path: "/workspaces/intake", color: "from-emerald-500 to-teal-500" },
+            { icon: FileText,      label: "Proposal",       desc: "Win the project",          path: "/proposal-draft",                  color: "from-emerald-500 to-teal-500" },
+            { icon: Receipt,       label: "Invoice",        desc: "Get paid on time",         path: "/workspaces?intent=invoice",       color: "from-amber-500 to-orange-500" },
+            { icon: ClipboardList, label: "Quotation",      desc: "Premium project quotes",   path: "/workspaces?intent=quotation",     color: "from-violet-500 to-fuchsia-500" },
+            { icon: ShieldAlert,   label: "Agreement",      desc: "Protect engagements",      path: "/workspaces?intent=agreement",     color: "from-rose-500 to-red-500", minTier: "pro" },
+            { icon: Layers,        label: "Service Card",   desc: "Shareable offer deck",     path: "/workspaces?intent=service_card",  color: "from-sky-500 to-indigo-500", minTier: "pro" },
+            { icon: Sparkles,      label: "Business Card",  desc: "Modern brand identity",    path: "/workspaces?intent=business_card", color: "from-fuchsia-500 to-pink-500", minTier: "pro" },
+          ]}
+          onNavigate={navigate}
+        />
+
+        {/* Document Infrastructure — the reusable foundation (not generators) */}
+        <BrightToolGrid
+          title="Document Infrastructure"
+          subtitle="Foundation pieces reused across every generated document — set up once, drop in anywhere"
+          userTier={(profile?.subscription_tier as any) || "free"}
+          tools={[
+            { icon: Sparkles,      label: "Brand Kit",        desc: "Logo, colors & fonts shared by every doc", path: "/workspaces/brand-kit", color: "from-fuchsia-500 to-pink-500", minTier: "pro" },
+            { icon: Users,         label: "Client Profiles",  desc: "Reusable client records (auto-fill docs)", path: "/workspaces/clients",   color: "from-sky-500 to-blue-500" },
+            { icon: Layers,        label: "Snippet Library",  desc: "Reusable text blocks (terms, scope, FAQs)", path: "/workspaces/blocks",   color: "from-slate-500 to-slate-700", minTier: "pro" },
+            { icon: ClipboardList, label: "Intake OS",        desc: "Branded client intake forms",              path: "/workspaces/intake",   color: "from-emerald-500 to-teal-500" },
           ]}
           onNavigate={navigate}
         />
