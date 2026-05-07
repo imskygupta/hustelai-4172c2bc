@@ -113,6 +113,11 @@ import { RequireAuth } from "@/components/RequireAuth";
 import { DocsSubdomainRedirect } from "@/components/DocsSubdomainRedirect";
 import { ApiSubdomainRedirect } from "@/components/ApiSubdomainRedirect";
 import { ConsoleSubdomainRedirect } from "@/components/ConsoleSubdomainRedirect";
+import { StatusSubdomainRedirect } from "@/components/StatusSubdomainRedirect";
+import { isMaintenance, MaintenancePage } from "@/components/MaintenanceGate";
+import { RootErrorFallback } from "@/components/RootErrorFallback";
+import Status from "./pages/Status";
+import Health from "./pages/Health";
 import ApiPlatform from "./pages/api-platform/ApiPlatform";
 import { ClerkProvider } from "@clerk/clerk-react";
 import ConsoleLayout from "./pages/api-platform/console/ConsoleLayout";
@@ -147,18 +152,20 @@ const Shelled = (el: React.ReactNode) => (
 const queryClient = new QueryClient();
 
 const App = () => (
-  <Sentry.ErrorBoundary fallback={<div style={{ padding: 24 }}>Something went wrong. Please refresh.</div>}>
+  <Sentry.ErrorBoundary fallback={<RootErrorFallback />}>
   <HelmetProvider>
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <TooltipProvider>
         <Toaster />
         <Sonner />
+        {isMaintenance() ? <MaintenancePage /> : (
         <BrowserRouter>
           <ScrollToTop />
           <DocsSubdomainRedirect />
           <ApiSubdomainRedirect />
           <ConsoleSubdomainRedirect />
+          <StatusSubdomainRedirect />
           <Routes>
             <Route path="/" element={<Index />} />
             {/* SEO landing pages (public) */}
@@ -275,10 +282,15 @@ const App = () => (
               <Route path="billing" element={<ConsoleBilling />} />
               <Route path="settings" element={<ConsoleSettings />} />
             </Route>
+            <Route path="/status" element={<Status />} />
+            <Route path="/api/health" element={<Health kind="health" />} />
+            <Route path="/api/status" element={<Health kind="status" />} />
+            <Route path="/api/version" element={<Health kind="version" />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <MobileBottomNav />
         </BrowserRouter>
+        )}
       </TooltipProvider>
     </AuthProvider>
   </QueryClientProvider>
