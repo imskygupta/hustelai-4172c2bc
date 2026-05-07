@@ -15,11 +15,11 @@ import { Helmet } from "react-helmet-async";
 import { RequireConsoleAuth } from "./RequireConsoleAuth";
 
 const NAV: { to: string; label: string; icon: any }[] = [
-  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/keys", label: "API keys", icon: Key },
-  { to: "/usage", label: "Usage", icon: Gauge },
-  { to: "/billing", label: "Billing", icon: CreditCard },
-  { to: "/settings", label: "Settings", icon: Settings2 },
+  { to: "/console/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/console/keys", label: "API keys", icon: Key },
+  { to: "/console/usage", label: "Usage", icon: Gauge },
+  { to: "/console/billing", label: "Billing", icon: CreditCard },
+  { to: "/console/settings", label: "Settings", icon: Settings2 },
 ];
 
 function envLabel() {
@@ -49,7 +49,7 @@ function EnvBadge() {
 function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   return (
     <aside className="flex w-60 shrink-0 flex-col border-r border-white/[0.06] bg-[#070a0f] px-3 py-5 h-full">
-      <Link to="/dashboard" onClick={onNavigate} className="px-3 py-2 mb-4 flex items-center gap-2">
+      <Link to="/console/dashboard" onClick={onNavigate} className="px-3 py-2 mb-4 flex items-center gap-2">
         <div className="h-7 w-7 rounded-md bg-emerald-500/15 border border-emerald-400/30 grid place-items-center text-emerald-300 font-mono text-[11px]">H</div>
         <div>
           <div className="text-[13px] font-semibold text-zinc-100 leading-tight">HustleAI</div>
@@ -61,7 +61,7 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
           <NavLink
             key={to}
             to={to}
-            end={to === "/dashboard"}
+            end={to === "/console/dashboard"}
             onClick={onNavigate}
             className={({ isActive }) =>
               `flex items-center gap-2.5 px-3 py-2 rounded-md text-[13px] transition-colors ${
