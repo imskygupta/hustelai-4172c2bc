@@ -325,6 +325,9 @@ export default function Dashboard() {
             <TabsTrigger value="affiliate" className="data-[state=active]:bg-white data-[state=active]:text-slate-900 text-xs">
               <Share2 className="w-3.5 h-3.5 mr-1.5" /> Affiliate
             </TabsTrigger>
+            <TabsTrigger value="webinars" className="data-[state=active]:bg-white data-[state=active]:text-slate-900 text-xs">
+              <Video className="w-3.5 h-3.5 mr-1.5" /> Webinars
+            </TabsTrigger>
           </TabsList>
 
           {/* OVERVIEW */}
