@@ -11,12 +11,15 @@ const navLinks = [
   { label: "Workspaces", href: "/workspaces" },
   { label: "Resources", href: "/explore" },
   { label: "Pricing", href: "/plans" },
+  { label: "Developers", href: "https://api.hustlaiapp.in", external: true },
   { label: "Integrations", href: "/marketplace" },
   { label: "Blog", href: "/blog" },
   {
     label: "More",
     children: [
-      { label: "B2B APIs", href: "/products" },
+      { label: "B2B APIs", href: "https://api.hustlaiapp.in", external: true },
+      { label: "API Console", href: "https://console.api.hustlaiapp.in", external: true },
+      { label: "API Docs", href: "https://docs.hustlaiapp.in", external: true },
       { label: "About", href: "/about" },
       { label: "Company", href: "/company" },
       { label: "Careers", href: "/career" },
