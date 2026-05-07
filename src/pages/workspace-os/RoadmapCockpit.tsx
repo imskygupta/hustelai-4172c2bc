@@ -6,12 +6,22 @@ import { useAuth } from "@/hooks/useAuth";
 import { Sparkles, Briefcase, ArrowRight, Hammer, Bell, Plus } from "lucide-react";
 import RoadmapEngine from "@/components/workspace-os/RoadmapEngine";
 import { Skeleton } from "@/components/ui/skeleton";
+import { listRoadmapSessions, duplicateRoadmapSession, deleteRoadmapSession, type RoadmapSession } from "@/lib/workspace-os/roadmap-store";
+import { toast } from "sonner";
+import { Copy, Trash2, RotateCcw, Play } from "lucide-react";
 
 export default function RoadmapCockpit() {
   const { user } = useAuth();
   const [recent, setRecent] = useState<any[]>([]);
   const [activity, setActivity] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sessions, setSessions] = useState<RoadmapSession[]>([]);
+  const [resumeInput, setResumeInput] = useState<string>("");
+
+  async function loadSessions() {
+    if (!user) return;
+    setSessions(await listRoadmapSessions(user.id, 8));
+  }
 
   useEffect(() => {
     if (!user) return;
@@ -25,6 +35,7 @@ export default function RoadmapCockpit() {
       setRecent(ws || []);
       setActivity(act || []);
       setLoading(false);
+      loadSessions();
     })();
   }, [user]);
 
@@ -42,6 +53,57 @@ export default function RoadmapCockpit() {
       </motion.section>
 
       <RoadmapEngine />
+
+      {/* Recent roadmap sessions — persistent operational memory */}
+      {sessions.length > 0 && (
+        <section>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-semibold flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-primary" /> Recent roadmaps
+            </h3>
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Operational memory</span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {sessions.map(s => (
+              <div key={s.id} className="rounded-xl border border-border/60 bg-card p-4 group hover:border-primary/40 transition-all">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium truncate">{s.title}</p>
+                    <p className="text-[11px] text-muted-foreground capitalize mt-0.5">
+                      {s.classification?.project_type?.replace("_"," ") || "workflow"} · {s.workflow_stage} · {new Date(s.updated_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-1.5 mt-3">
+                  <button
+                    onClick={() => { setResumeInput(s.input_text); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                    className="inline-flex items-center gap-1 text-[11px] rounded-full bg-primary/10 text-primary px-2.5 py-1 hover:bg-primary/20"
+                  >
+                    <Play className="h-3 w-3" /> Resume
+                  </button>
+                  {s.workspace_id && (
+                    <Link to={`/workspaces/${s.workspace_id}?tab=roadmap`} className="inline-flex items-center gap-1 text-[11px] rounded-full bg-muted px-2.5 py-1 hover:bg-muted/70">
+                      <Briefcase className="h-3 w-3" /> Open workspace
+                    </Link>
+                  )}
+                  <button
+                    onClick={async () => { if (!user) return; const d = await duplicateRoadmapSession(s.id, user.id); if (d) { toast.success("Duplicated"); loadSessions(); } }}
+                    className="inline-flex items-center gap-1 text-[11px] rounded-full bg-muted px-2.5 py-1 hover:bg-muted/70"
+                  >
+                    <Copy className="h-3 w-3" /> Duplicate
+                  </button>
+                  <button
+                    onClick={async () => { await deleteRoadmapSession(s.id); toast.success("Removed"); loadSessions(); }}
+                    className="inline-flex items-center gap-1 text-[11px] rounded-full bg-muted px-2.5 py-1 hover:bg-muted/70 text-destructive"
+                  >
+                    <Trash2 className="h-3 w-3" /> Delete
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Recent workspaces */}
       <section>
