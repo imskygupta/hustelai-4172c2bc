@@ -75,6 +75,9 @@ import DocEditor from "./pages/workspace-os/docs/DocEditor";
 import BrandKitPage from "./pages/workspace-os/BrandKit";
 import BlocksPage from "./pages/workspace-os/Blocks";
 import ClientsPage from "./pages/workspace-os/Clients";
+import IntakeForms from "./pages/workspace-os/IntakeForms";
+import IntakeInbox from "./pages/workspace-os/IntakeInbox";
+import IntakeSubmit from "./pages/IntakeSubmit";
 import Work from "./pages/Work";
 import WorkTool from "./pages/WorkTool";
 import ClientPortal from "./pages/ClientPortal";
@@ -213,6 +216,8 @@ const App = () => (
               <Route path="brand-kit" element={<BrandKitPage />} />
               <Route path="blocks" element={<BlocksPage />} />
               <Route path="clients" element={<ClientsPage />} />
+              <Route path="intake" element={<IntakeForms />} />
+              <Route path="intake/:id" element={<IntakeInbox />} />
               <Route path=":id" element={<WorkspaceDetail />} />
               <Route path=":id/docs" element={<DocsList />} />
               <Route path=":id/docs/new/:type" element={<DocEditor />} />
@@ -224,6 +229,7 @@ const App = () => (
             <Route path="/work/:slug" element={Shelled(<WorkTool />)} />
             <Route path="/portal/:token" element={<ClientPortal />} />
             <Route path="/p/:token" element={<WorkspacePortal />} />
+            <Route path="/intake/:slug" element={<IntakeSubmit />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <MobileBottomNav />
