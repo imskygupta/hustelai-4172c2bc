@@ -269,6 +269,78 @@ export type Database = {
         }
         Relationships: []
       }
+      brand_kits: {
+        Row: {
+          accent_color: string | null
+          address: string | null
+          brand_color: string | null
+          business_name: string | null
+          created_at: string
+          default_currency: string | null
+          default_payment_terms: string | null
+          default_theme: string | null
+          email: string | null
+          footer_text: string | null
+          id: string
+          logo_url: string | null
+          phone: string | null
+          signature_url: string | null
+          stamp_url: string | null
+          tagline: string | null
+          tax_id: string | null
+          tax_label: string | null
+          updated_at: string
+          user_id: string
+          website: string | null
+        }
+        Insert: {
+          accent_color?: string | null
+          address?: string | null
+          brand_color?: string | null
+          business_name?: string | null
+          created_at?: string
+          default_currency?: string | null
+          default_payment_terms?: string | null
+          default_theme?: string | null
+          email?: string | null
+          footer_text?: string | null
+          id?: string
+          logo_url?: string | null
+          phone?: string | null
+          signature_url?: string | null
+          stamp_url?: string | null
+          tagline?: string | null
+          tax_id?: string | null
+          tax_label?: string | null
+          updated_at?: string
+          user_id: string
+          website?: string | null
+        }
+        Update: {
+          accent_color?: string | null
+          address?: string | null
+          brand_color?: string | null
+          business_name?: string | null
+          created_at?: string
+          default_currency?: string | null
+          default_payment_terms?: string | null
+          default_theme?: string | null
+          email?: string | null
+          footer_text?: string | null
+          id?: string
+          logo_url?: string | null
+          phone?: string | null
+          signature_url?: string | null
+          stamp_url?: string | null
+          tagline?: string | null
+          tax_id?: string | null
+          tax_label?: string | null
+          updated_at?: string
+          user_id?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
       category_requests: {
         Row: {
           category_name: string
@@ -322,6 +394,57 @@ export type Database = {
           id?: string
           is_admin_reply?: boolean
           role?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      client_profiles: {
+        Row: {
+          address: string | null
+          company: string | null
+          created_at: string
+          currency: string | null
+          default_payment_terms: string | null
+          email: string | null
+          id: string
+          last_used_at: string | null
+          name: string
+          notes: string | null
+          phone: string | null
+          timezone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address?: string | null
+          company?: string | null
+          created_at?: string
+          currency?: string | null
+          default_payment_terms?: string | null
+          email?: string | null
+          id?: string
+          last_used_at?: string | null
+          name: string
+          notes?: string | null
+          phone?: string | null
+          timezone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address?: string | null
+          company?: string | null
+          created_at?: string
+          currency?: string | null
+          default_payment_terms?: string | null
+          email?: string | null
+          id?: string
+          last_used_at?: string | null
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          timezone?: string | null
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
@@ -493,6 +616,39 @@ export type Database = {
           thumbnail_url?: string | null
           title?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      doc_blocks: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          is_default: boolean
+          kind: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          kind: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          kind?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -2973,6 +3129,8 @@ export type Database = {
       }
       workspace_documents: {
         Row: {
+          approved_at: string | null
+          client_profile_id: string | null
           created_at: string
           data: Json
           doc_number: string | null
@@ -2980,13 +3138,18 @@ export type Database = {
           due_at: string | null
           id: string
           owner_id: string
+          paid_at: string | null
+          parent_doc_id: string | null
           status: string
           theme: string
           title: string
           updated_at: string
+          viewed_at: string | null
           workspace_id: string | null
         }
         Insert: {
+          approved_at?: string | null
+          client_profile_id?: string | null
           created_at?: string
           data?: Json
           doc_number?: string | null
@@ -2994,13 +3157,18 @@ export type Database = {
           due_at?: string | null
           id?: string
           owner_id: string
+          paid_at?: string | null
+          parent_doc_id?: string | null
           status?: string
           theme?: string
           title?: string
           updated_at?: string
+          viewed_at?: string | null
           workspace_id?: string | null
         }
         Update: {
+          approved_at?: string | null
+          client_profile_id?: string | null
           created_at?: string
           data?: Json
           doc_number?: string | null
@@ -3008,13 +3176,30 @@ export type Database = {
           due_at?: string | null
           id?: string
           owner_id?: string
+          paid_at?: string | null
+          parent_doc_id?: string | null
           status?: string
           theme?: string
           title?: string
           updated_at?: string
+          viewed_at?: string | null
           workspace_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "workspace_documents_client_profile_id_fkey"
+            columns: ["client_profile_id"]
+            isOneToOne: false
+            referencedRelation: "client_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workspace_documents_parent_doc_id_fkey"
+            columns: ["parent_doc_id"]
+            isOneToOne: false
+            referencedRelation: "workspace_documents"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "workspace_documents_workspace_id_fkey"
             columns: ["workspace_id"]
