@@ -11,6 +11,7 @@ import {
 import { Sparkles, Flame, Lightbulb, Briefcase, CheckCircle2, Loader2, Plus, Trash2, Wand2, ZoomIn, ZoomOut, Move, Copy } from "lucide-react";
 import { toast } from "sonner";
 import { enforceLimit } from "@/lib/tool-limits";
+import { BigScreenHint } from "@/components/BigScreenHint";
 
 type Color = CanvasNote["color"];
 
@@ -186,6 +187,7 @@ export default function HustleCanvas() {
 
   return (
     <div className="h-[calc(100vh-4rem)] flex flex-col bg-slate-50">
+      <BigScreenHint pageKey="hustle-canvas" label="The Canvas needs room — try desktop" />
       {/* Toolbar */}
       <div className="px-4 py-2 border-b bg-white flex items-center gap-2 flex-wrap">
         <h1 className="font-display font-bold text-lg text-slate-900 mr-2">Hustle Canvas</h1>
