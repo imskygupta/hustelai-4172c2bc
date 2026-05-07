@@ -26,6 +26,8 @@ async function waitForReady(root: HTMLElement) {
           }),
     ),
   );
+  // Give the browser one paint so layout/fonts settle before capture.
+  await new Promise<void>(res => requestAnimationFrame(() => requestAnimationFrame(() => res())));
 }
 
 /**
