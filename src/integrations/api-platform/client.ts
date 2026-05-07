@@ -7,8 +7,7 @@ import { createClient } from "@supabase/supabase-js";
 const URL = "https://larncwugkdclkhayfjle.supabase.co";
 // Anon key is publishable. Real writes happen server-side via the
 // api-platform edge function using SERVICE_ROLE.
-const ANON_KEY =
-  "sb_publishable_REPLACE_WITH_API_PLATFORM_ANON";
+const ANON_KEY = "sb_publishable_tElNsLaOmH75DPVBy1qS7g_ZrHj1_en";
 
 export const apiPlatformDb = createClient(URL, ANON_KEY, {
   auth: {
