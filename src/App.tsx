@@ -110,6 +110,7 @@ import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { AppRouteShell } from "@/components/AppRouteShell";
 import { RequireAuth } from "@/components/RequireAuth";
+import { DocsSubdomainRedirect } from "@/components/DocsSubdomainRedirect";
 
 // Helper to wrap an in-app page in the SaaS sidebar shell.
 // All shelled routes require auth — guests are redirected to /signup so they
