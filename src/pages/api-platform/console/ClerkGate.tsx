@@ -1,15 +1,10 @@
 import { ReactNode, useEffect, useState } from "react";
 import { ClerkProvider } from "@clerk/clerk-react";
 import { ConsoleErrorBoundary } from "./ConsoleErrorBoundary";
-import { Loader2, AlertTriangle } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 
-const CLERK_PUBLISHABLE_KEY = "pk_live_Y2xlcmsuYXBwLmh1c3RsYWlhcHAuaW4k";
-// NOTE: real key (pk_live_Y2xlcmsuYXBpLmh1c3RsYWlhcHAuaW4k) points at
-// clerk.api.hustlaiapp.in which currently returns ERR_CONNECTION_CLOSED.
-// We keep the canonical key but wrap it in a timeout fallback so the page
-// never goes blank.
-const REAL_KEY = "pk_live_Y2xlcmsuYXBpLmh1c3RsYWlhcHAuaW4k";
-const LOAD_TIMEOUT_MS = 8000;
+const CLERK_PUBLISHABLE_KEY = "pk_live_Y2xlcmsuYXBpLmh1c3RsYWlhcHAuaW4k";
+const LOAD_TIMEOUT_MS = 9000;
 
 function ConsoleLoadingScreen() {
   return (
