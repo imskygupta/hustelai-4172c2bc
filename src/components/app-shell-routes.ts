@@ -16,7 +16,7 @@ export const APP_SHELL_PATHS = new Set<string>([
   "/payment",
   "/payment-status",
   "/marketplace",
-  "/integrations",
+  // "/integrations" — now a public marketing page (handles its own Navbar/Footer)
   "/infinity-zone",
   "/affiliates",
   "/knowledge-hub",
