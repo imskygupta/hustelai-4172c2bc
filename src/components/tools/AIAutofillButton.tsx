@@ -1,11 +1,14 @@
 import { Sparkles, Wand2, Lock, ArrowRight, PenLine, X, Crown, Check, KeyRound, Infinity as InfinityIcon } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { getMaxUses, getUsage, type Tier } from "@/lib/tool-limits";
+import { consumeDailyAI } from "@/lib/ai-usage";
+import { CreditsExhaustedDialog } from "@/components/tools/CreditsExhaustedDialog";
+import { toast } from "sonner";
 
 const PAID_TIERS = new Set(["pro", "elite", "infinity"]);
 
