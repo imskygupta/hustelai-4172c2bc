@@ -183,7 +183,7 @@ export default function InfinityZone() {
 
   const goTool = (t: typeof exclusiveTools[number]) => {
     if (!t.href) return;
-    if (t.external) window.open(t.href, "_blank", "noopener");
+    if ((t as any).external) window.open(t.href, "_blank", "noopener");
     else navigate(t.href);
   };
 
