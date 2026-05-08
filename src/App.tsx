@@ -230,7 +230,7 @@ const App = () => (
             <Route path="/career" element={<Career />} />
             <Route path="/affiliates" element={Shelled(<Affiliates />)} />
             <Route path="/company" element={<Company />} />
-            <Route path="/relax" element={Shelled(<Relax />)} />
+            <Route path="/relax" element={<Relax />} />
             <Route path="/hustle/:id" element={Shelled(<HustleDetail />)} />
             <Route path="/roadmap/:id" element={Shelled(<RoadmapViewer />)} />
             <Route path="/infinity-zone" element={Shelled(<InfinityZone />)} />
