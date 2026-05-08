@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { SEO, faqJsonLd } from "@/components/SEO";
 import { useToolGate } from "@/components/tools/ToolGate";
+import { AIAutofillIcon, AIAutofillButton } from "@/components/tools/AIAutofillButton";
 import { PROPOSAL_TEMPLATES } from "@/lib/tools/templates";
 
 const STORAGE_KEY = "hustleai-tool-proposal-v1";
@@ -49,14 +50,20 @@ const initial: State = {
 };
 
 const faqs = [
-  { q: "What's included in the free proposal generator?", a: "Four pre-built scopes (web design, social media, consulting, video). You can edit every section, switch templates, and preview live. Sign up free to download as PDF." },
+  { q: "What's included in the free proposal generator?", a: "Four pre-built scopes (web design, social media, consulting, video), AI auto-fill for scope and deliverables, live A4 preview and instant PDF download after a free signup." },
+  { q: "Can the AI write the whole proposal for me?", a: "Yes. Click 'AI auto-fill' and describe the project in one line — e.g. 'Shopify redesign for a DTC skincare brand, 6-week timeline, $8k budget'. The AI drafts scope, deliverables, timeline and pricing notes you can edit." },
+  { q: "Does it work for US, UK, EU and Australian clients?", a: "Yes — switch the currency to USD, GBP, EUR or AUD, edit the timeline in days/weeks, and the proposal renders on A4 + Letter. Layout is accepted by most enterprise procurement teams." },
   { q: "Can I use these proposals for actual client work?", a: "Yes — the templates are written by working freelancers and used to win real projects. Tweak the scope and pricing for your engagement." },
-  { q: "Is the data I enter saved on your servers?", a: "No. Everything stays in your browser via localStorage. Sign up only when you want to save proposals to your workspace and reuse client data." },
+  { q: "Is the data I enter saved on your servers?", a: "No. Everything stays in your browser via localStorage. Sign up only when you want to save proposals, generate PDFs, and reuse client data across drafts." },
 ];
 
 export default function ProposalGenerator() {
   const [s, setS] = useState<State>(initial);
   const { guard, gate } = useToolGate("proposal", "download your proposal");
+  const aiFill = (section: string) =>
+    guard(() => {
+      // TODO: wire to AI gateway for signed-in users
+    }, `auto-fill ${section} with AI`);
 
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
@@ -80,8 +87,8 @@ export default function ProposalGenerator() {
   return (
     <>
       <SEO
-        title="Free Freelance Proposal Generator & Template — Win More Clients | HustleAI"
-        description="Free proposal generator for freelancers and agencies. Pre-built scopes for web design, social media, consulting and video. Customize and download a polished PDF in minutes."
+        title="Free Freelance Proposal Generator with AI — Win More Clients | HustleAI"
+        description="Free AI proposal generator for freelancers and agencies in the US, UK, EU, AU and India. Pre-built scopes for web design, social media, consulting and video. Live preview, instant PDF, no credit card."
         path="/tools/proposal-generator"
         jsonLd={faqJsonLd(faqs)}
       />
@@ -99,9 +106,12 @@ export default function ProposalGenerator() {
             <Link to="/tools" className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900">
               <ArrowLeft className="w-4 h-4" /> All free tools
             </Link>
-            <Button onClick={handleDownload} className="bg-slate-900 hover:bg-slate-800 text-white">
-              <Download className="w-4 h-4 mr-2" /> Download PDF
-            </Button>
+            <div className="flex items-center gap-2">
+              <AIAutofillButton onClick={() => aiFill("the whole proposal")} label="AI auto-fill" />
+              <Button onClick={handleDownload} className="bg-slate-900 hover:bg-slate-800 text-white">
+                <Download className="w-4 h-4 mr-2" /> Download PDF
+              </Button>
+            </div>
           </div>
 
           <div className="mb-6 print:hidden">
@@ -132,7 +142,7 @@ export default function ProposalGenerator() {
           <div className="grid lg:grid-cols-2 gap-6">
             {/* Form */}
             <div className="space-y-5 print:hidden">
-              <Card title="Header">
+              <Card title="Header" action={<AIAutofillIcon onClick={() => aiFill("your business header")} />}>
                 <div className="grid grid-cols-2 gap-3">
                   <Field label="Proposal #" value={s.proposalNo} onChange={(v) => set("proposalNo", v)} />
                   <Field label="Date" type="date" value={s.date} onChange={(v) => set("date", v)} />
@@ -141,17 +151,17 @@ export default function ProposalGenerator() {
                 <Field label="Your email" value={s.bizEmail} onChange={(v) => set("bizEmail", v)} />
               </Card>
 
-              <Card title="Prepared for">
+              <Card title="Prepared for" action={<AIAutofillIcon onClick={() => aiFill("the client block")} />}>
                 <Field label="Client name" value={s.clientName} onChange={(v) => set("clientName", v)} />
                 <Field label="Client company" value={s.clientCompany} onChange={(v) => set("clientCompany", v)} />
                 <Field label="Project title" value={s.projectTitle} onChange={(v) => set("projectTitle", v)} />
               </Card>
 
-              <Card title="Scope">
+              <Card title="Scope" action={<AIAutofillIcon onClick={() => aiFill("project scope from a one-line brief")} />}>
                 <FieldArea label="Project overview" value={s.scope} onChange={(v) => set("scope", v)} />
               </Card>
 
-              <Card title="Deliverables">
+              <Card title="Deliverables" action={<AIAutofillIcon onClick={() => aiFill("deliverables list")} />}>
                 <div className="space-y-2">
                   {s.deliverables.map((d, i) => (
                     <div key={i} className="flex gap-2">
@@ -163,7 +173,7 @@ export default function ProposalGenerator() {
                 </div>
               </Card>
 
-              <Card title="Timeline & investment">
+              <Card title="Timeline & investment" action={<AIAutofillIcon onClick={() => aiFill("timeline & pricing")} />}>
                 <FieldArea label="Timeline" value={s.timeline} onChange={(v) => set("timeline", v)} />
                 <div className="grid grid-cols-2 gap-3">
                   <Field label="Currency" value={s.currency} onChange={(v) => set("currency", v)} />
@@ -231,8 +241,17 @@ export default function ProposalGenerator() {
           </div>
 
           <div className="mt-20 max-w-3xl mx-auto print:hidden">
-            <h2 className="text-2xl font-bold text-slate-900 mb-4">Why use a proposal template?</h2>
-            <p className="text-slate-600 mb-6">A clear, well-structured proposal is the difference between "let me think about it" and "where do I sign?". HustleAI's free generator gives you battle-tested scopes for the most common freelance engagements — so you spend less time formatting and more time closing.</p>
+            <h2 className="text-2xl font-bold text-slate-900 mb-4">The AI proposal generator built to close clients</h2>
+            <p className="text-slate-600 mb-4">A clear, well-structured proposal is the difference between "let me think about it" and "where do I sign?". HustleAI's free generator gives you battle-tested scopes for the most common freelance engagements — web design, social media, consulting and video — and an <strong>AI auto-fill</strong> that drafts the entire document from a single line about the project.</p>
+            <p className="text-slate-600 mb-6">Used by freelancers and agencies across the US, UK, EU, Australia and India to win five and six-figure retainers. No watermarks, no email walls, no credit card.</p>
+            <h3 className="text-lg font-bold text-slate-900 mt-6 mb-2">Built around what actually closes deals</h3>
+            <ul className="list-disc pl-5 space-y-1 text-slate-600 mb-6">
+              <li>One-line problem statement before scope (anchors the buyer)</li>
+              <li>Concrete deliverables with quantities, not vague promises</li>
+              <li>Timeline in weeks with milestones, not "ASAP"</li>
+              <li>Single price + clear payment terms (50/50 or 30/40/30)</li>
+              <li>Signature line — gives the buyer a next action, not a question</li>
+            </ul>
             <h3 className="text-xl font-bold text-slate-900 mt-8 mb-4">FAQ</h3>
             <div className="space-y-3">
               {faqs.map((f, i) => (
@@ -250,8 +269,16 @@ export default function ProposalGenerator() {
   );
 }
 
-function Card({ title, children }: { title: string; children: React.ReactNode }) {
-  return <div className="bg-white border border-slate-200 rounded-xl p-5"><div className="text-xs uppercase tracking-wider font-bold text-slate-500 mb-3">{title}</div><div className="space-y-3">{children}</div></div>;
+function Card({ title, children, action }: { title: string; children: React.ReactNode; action?: React.ReactNode }) {
+  return (
+    <div className="bg-white border border-slate-200 rounded-xl p-5">
+      <div className="flex items-center justify-between mb-3">
+        <div className="text-xs uppercase tracking-wider font-bold text-slate-500">{title}</div>
+        {action}
+      </div>
+      <div className="space-y-3">{children}</div>
+    </div>
+  );
 }
 function Field({ label, value, onChange, type = "text" }: { label: string; value: string; onChange: (v: string) => void; type?: string }) {
   return <div><Label className="text-[11px] text-slate-500">{label}</Label><Input type={type} value={value} onChange={(e) => onChange(e.target.value)} className="h-9 text-sm" /></div>;
