@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Plus, Trash2, Download, ArrowLeft, Receipt, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { SEO, faqJsonLd } from "@/components/SEO";
 import { useToolGate } from "@/components/tools/ToolGate";
 import { AIAutofillIcon, AIAutofillButton } from "@/components/tools/AIAutofillButton";
 import { DashboardReminderBanner } from "@/components/tools/DashboardReminderBanner";
+import { DashboardToolAIPanel } from "@/components/tools/DashboardToolAIPanel";
 
 interface LineItem { id: string; desc: string; qty: number; rate: number; }
 
@@ -49,6 +50,8 @@ const faqs = [
 export default function InvoiceGenerator() {
   const [state, setState] = useState(defaultState);
   const { guard, gate } = useToolGate("invoice", "download your invoice");
+  const { pathname } = useLocation();
+  const inDashboard = pathname.startsWith("/dashboard/tools");
   const aiFill = (section: string) =>
     guard(() => {
       // TODO: wire to AI gateway for signed-in users
@@ -61,6 +64,8 @@ export default function InvoiceGenerator() {
   useEffect(() => { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }, [state]);
 
   const update = (k: keyof typeof state, v: any) => setState((s) => ({ ...s, [k]: v }));
+  const patchState = (patch: Partial<typeof state>) =>
+    setState((s) => ({ ...s, ...patch, items: patch.items && patch.items.length ? patch.items.map((it: any, i: number) => ({ id: it.id || String(Date.now() + i), desc: String(it.desc || ""), qty: Number(it.qty || 1), rate: Number(it.rate || 0) })) : s.items }));
   const updateItem = (id: string, k: keyof LineItem, v: any) =>
     setState((s) => ({ ...s, items: s.items.map((i) => i.id === id ? { ...i, [k]: v } : i) }));
   const addItem = () => setState((s) => ({ ...s, items: [...s.items, { id: Date.now().toString(), desc: "", qty: 1, rate: 0 }] }));
@@ -93,13 +98,23 @@ export default function InvoiceGenerator() {
         <div className="max-w-7xl mx-auto print:max-w-none">
           {/* Toolbar (hidden in print) */}
           <DashboardReminderBanner />
+          {inDashboard && (
+            <DashboardToolAIPanel
+              kind="invoice"
+              state={state}
+              onPatch={patchState}
+              featureKey="invoice"
+            />
+          )}
           <div className="mb-6 flex items-center justify-between print:hidden">
             <Link to="/tools" className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900">
               <ArrowLeft className="w-4 h-4" /> All free tools
             </Link>
             <div className="flex items-center gap-2">
               <span className="text-xs text-slate-500 hidden sm:inline">Auto-saved to your browser</span>
-              <AIAutofillButton storageKey="hustleai-tool-invoice-v1" onClick={() => aiFill("the whole invoice")} label="AI auto-fill" />
+              {!inDashboard && (
+                <AIAutofillButton storageKey="hustleai-tool-invoice-v1" onClick={() => aiFill("the whole invoice")} label="AI auto-fill" />
+              )}
               <Button onClick={handleDownload} className="bg-slate-900 hover:bg-slate-800 text-white">
                 <Download className="w-4 h-4 mr-2" /> Download PDF
               </Button>
@@ -118,14 +133,14 @@ export default function InvoiceGenerator() {
           <div className="grid lg:grid-cols-2 gap-6 print:block">
             {/* Form */}
             <div className="space-y-5 print:hidden">
-              <Card title="Your business" action={<AIAutofillIcon storageKey="hustleai-tool-invoice-v1" sectionName="your business profile" onClick={() => aiFill("your business profile")} />}>
+              <Card title="Your business" action={inDashboard ? null : <AIAutofillIcon storageKey="hustleai-tool-invoice-v1" sectionName="your business profile" onClick={() => aiFill("your business profile")} />}>
                 <Field label="Business name" value={state.bizName} onChange={(v) => update("bizName", v)} />
                 <Field label="Email" value={state.bizEmail} onChange={(v) => update("bizEmail", v)} />
                 <FieldArea label="Address" value={state.bizAddress} onChange={(v) => update("bizAddress", v)} />
                 <Field label="GSTIN (optional)" value={state.bizGstin} onChange={(v) => update("bizGstin", v)} />
               </Card>
 
-              <Card title="Bill to" action={<AIAutofillIcon storageKey="hustleai-tool-invoice-v1" sectionName="the client details" onClick={() => aiFill("the client details")} />}>
+              <Card title="Bill to" action={inDashboard ? null : <AIAutofillIcon storageKey="hustleai-tool-invoice-v1" sectionName="the client details" onClick={() => aiFill("the client details")} />}>
                 <Field label="Client name" value={state.clientName} onChange={(v) => update("clientName", v)} />
                 <Field label="Client email" value={state.clientEmail} onChange={(v) => update("clientEmail", v)} />
                 <FieldArea label="Client address" value={state.clientAddress} onChange={(v) => update("clientAddress", v)} />
@@ -143,7 +158,7 @@ export default function InvoiceGenerator() {
                 </div>
               </Card>
 
-              <Card title="Line items" action={<AIAutofillIcon storageKey="hustleai-tool-invoice-v1" sectionName="line items from a project description" onClick={() => aiFill("line items from a project description")} />}>
+              <Card title="Line items" action={inDashboard ? null : <AIAutofillIcon storageKey="hustleai-tool-invoice-v1" sectionName="line items from a project description" onClick={() => aiFill("line items from a project description")} />}>
                 <div className="space-y-2">
                   {state.items.map((it) => (
                     <div key={it.id} className="grid grid-cols-12 gap-2 items-end">
@@ -172,7 +187,7 @@ export default function InvoiceGenerator() {
                 </div>
               </Card>
 
-              <Card title="Notes & terms" action={<AIAutofillIcon storageKey="hustleai-tool-invoice-v1" sectionName="payment notes & terms" onClick={() => aiFill("payment notes & terms")} />}>
+              <Card title="Notes & terms" action={inDashboard ? null : <AIAutofillIcon storageKey="hustleai-tool-invoice-v1" sectionName="payment notes & terms" onClick={() => aiFill("payment notes & terms")} />}>
                 <FieldArea label="Notes (visible to client)" value={state.notes} onChange={(v) => update("notes", v)} />
                 <FieldArea label="Terms" value={state.terms} onChange={(v) => update("terms", v)} />
               </Card>
