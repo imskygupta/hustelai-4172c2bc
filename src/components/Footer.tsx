@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Zap, Send, Mail, MapPin, ArrowUpRight } from "lucide-react";
+import { Zap, Send, Mail, MapPin, ArrowUpRight, Instagram, Youtube, Twitter, Linkedin, Facebook, MessageCircle, Globe } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Link, useLocation } from "react-router-dom";
@@ -27,14 +27,16 @@ const companyLinks = [
   { label: "Contact", href: "/contact" },
 ];
 
-const platformIcons: Record<string, string> = {
-  instagram: "📸",
-  youtube: "▶️",
-  twitter: "🐦",
-  linkedin: "💼",
-  facebook: "📘",
-  telegram: "✈️",
-  discord: "🎮",
+const platformIcons: Record<string, any> = {
+  instagram: Instagram,
+  youtube: Youtube,
+  twitter: Twitter,
+  x: Twitter,
+  linkedin: Linkedin,
+  facebook: Facebook,
+  telegram: Send,
+  discord: MessageCircle,
+  whatsapp: MessageCircle,
 };
 
 export function Footer() {
@@ -79,8 +81,12 @@ export function Footer() {
   };
 
   return (
-    <footer className="border-t border-border/50 pt-16 pb-8 px-4">
-      <div className="container mx-auto max-w-6xl">
+    <footer className="relative border-t border-border/50 pt-16 pb-8 px-4 overflow-hidden">
+      {/* Subtle gradient background */}
+      <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-transparent via-emerald-50/30 to-emerald-50/60 dark:via-primary/[0.03] dark:to-primary/[0.06]" />
+      <div className="absolute -top-32 left-1/3 w-[500px] h-[300px] bg-emerald-200/20 dark:bg-primary/10 blur-3xl rounded-full pointer-events-none" />
+      <div className="absolute -bottom-32 right-1/4 w-[420px] h-[260px] bg-teal-200/20 dark:bg-accent/10 blur-3xl rounded-full pointer-events-none" />
+      <div className="container mx-auto max-w-6xl relative">
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
           {/* Brand */}
           <div className="space-y-4 lg:col-span-1">
@@ -103,13 +109,22 @@ export function Footer() {
             {/* Social Links */}
             {socialLinks.length > 0 && (
               <div className="flex flex-wrap gap-2 pt-2">
-                {socialLinks.map((link: any) => (
-                  <a key={link.id} href={link.url} target="_blank" rel="noopener noreferrer"
-                    className="w-9 h-9 rounded-lg bg-muted/50 flex items-center justify-center hover:bg-primary/10 hover:text-primary transition-all text-base"
-                    title={link.platform}>
-                    {link.icon || platformIcons[link.platform?.toLowerCase()] || "🔗"}
-                  </a>
-                ))}
+                {socialLinks.map((link: any) => {
+                  const Icon = platformIcons[link.platform?.toLowerCase()] || Globe;
+                  return (
+                    <a
+                      key={link.id}
+                      href={link.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-9 h-9 rounded-lg bg-muted/60 flex items-center justify-center text-muted-foreground hover:bg-primary hover:text-primary-foreground hover:scale-110 hover:-translate-y-0.5 transition-all duration-300"
+                      title={link.platform}
+                      aria-label={link.platform}
+                    >
+                      <Icon className="w-4 h-4" />
+                    </a>
+                  );
+                })}
               </div>
             )}
           </div>
