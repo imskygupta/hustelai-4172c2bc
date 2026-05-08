@@ -7,7 +7,7 @@ import {
   LayoutDashboard, Search, Users, User, Crown, Wrench, Target, Store, BookOpen,
   FileText, Brain, Zap, TrendingUp, Briefcase, MessageCircle, Trophy, Bookmark,
   CreditCard, Settings, LogOut, Sparkles, Film, ShieldAlert, DollarSign, Rocket, Bot, Building2, LayoutGrid, Hammer, Video,
-  Flame, Plug,
+  Flame, Plug, Receipt, FileSignature, FileEdit,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +20,13 @@ const workspaceOsItems = [
   { title: "Clients (CRM)", url: "/work/clients", icon: Users },
   { title: "Documents", url: "/workspaces/blocks", icon: FileText },
   { title: "Hustle Canvas", url: "/canvas", icon: LayoutGrid },
+];
+
+// Doc Tools — quick branded doc generators (also linked from /tools)
+const docToolsItems = [
+  { title: "Invoice Generator", url: "/tools/invoice-generator", icon: Receipt },
+  { title: "Proposal Generator", url: "/tools/proposal-generator", icon: FileEdit },
+  { title: "Contract Generator", url: "/tools/contract-generator", icon: FileSignature },
 ];
 
 // AI Systems — high-leverage AI tools
