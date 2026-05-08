@@ -39,8 +39,36 @@ export default function TermsConditions() {
               </section>
             ))}
 
+            <section className="space-y-3 pt-4 border-t border-border">
+              <h2 className="text-base md:text-lg font-display font-semibold text-foreground">11. Scope of Service & Disclaimer</h2>
+              <p>{BRAND.name} is a B2B Software-as-a-Service (SaaS) platform. To keep our payments, compliance and support obligations clear, the following scope applies:</p>
+              <div className="grid md:grid-cols-2 gap-4 pt-2">
+                <div className="rounded-xl border border-border bg-muted/30 p-4">
+                  <p className="text-xs uppercase tracking-wider text-emerald-600 font-semibold mb-2">Supported use cases</p>
+                  <ul className="list-disc pl-5 space-y-1 text-sm">
+                    <li>SaaS &amp; AI products</li>
+                    <li>Digital products and downloads</li>
+                    <li>Online courses &amp; learning material</li>
+                    <li>Templates, plugins and digital assets</li>
+                    <li>Freelancer / agency client operations</li>
+                  </ul>
+                </div>
+                <div className="rounded-xl border border-border bg-muted/30 p-4">
+                  <p className="text-xs uppercase tracking-wider text-destructive font-semibold mb-2">Unsupported use cases</p>
+                  <ul className="list-disc pl-5 space-y-1 text-sm">
+                    <li>Physical goods or shipped products</li>
+                    <li>In-person services and labour</li>
+                    <li>Gaming, gambling or wagering</li>
+                    <li>Anything in our prohibited-categories list</li>
+                    <li>Merchants from restricted geographies</li>
+                  </ul>
+                </div>
+              </div>
+              <p className="text-xs">We reserve the right to suspend accounts that fall outside these supported use cases. For clarification, contact <a href={`mailto:${SUPPORT_EMAIL}`} className="text-primary hover:underline">{SUPPORT_EMAIL}</a>.</p>
+            </section>
+
             <section className="space-y-2 pt-4 border-t border-border">
-              <h2 className="text-base md:text-lg font-display font-semibold text-foreground">11. Contact</h2>
+              <h2 className="text-base md:text-lg font-display font-semibold text-foreground">12. Contact</h2>
               <p>For questions about these terms, contact <a href={`mailto:${SUPPORT_EMAIL}`} className="text-primary hover:underline font-medium">{SUPPORT_EMAIL}</a>.</p>
               <p className="text-xs">{BRAND.name} · Prayagraj, Uttar Pradesh, India</p>
             </section>
