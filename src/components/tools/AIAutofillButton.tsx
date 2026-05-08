@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
 /**
@@ -15,11 +16,17 @@ export function AIAutofillIcon({
   label = "Auto-fill with AI",
   className,
   sectionName,
+  dashboardPath,
+  storageKey,
 }: {
   onClick?: () => void;
   label?: string;
   className?: string;
   sectionName?: string;
+  /** Path to the in-dashboard AI version of this tool. If set, signed-in clicks redirect there. */
+  dashboardPath?: string;
+  /** localStorage key holding current public-tool draft so dashboard can hydrate it. */
+  storageKey?: string;
 }) {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -27,12 +34,32 @@ export function AIAutofillIcon({
   const [open, setOpen] = useState(false);
   const next = encodeURIComponent(pathname + search);
 
-  // Signed in: just trigger (TODO: wire to AI gateway). Guest: show small popover.
+  const goToDashboardAI = () => {
+    if (dashboardPath) {
+      // Hand the current draft to the dashboard tool so AI fill is in-context.
+      try {
+        const draft = storageKey ? localStorage.getItem(storageKey) : null;
+        if (draft) sessionStorage.setItem("hustleai-ai-prefill", draft);
+        sessionStorage.setItem("hustleai-ai-section", sectionName || "all");
+      } catch {}
+      toast.success("Opening AI version in your dashboard", {
+        description: "Free plan: 3 AI fills/day · Pro: 5 · Elite: 10 · Infinity: 20",
+      });
+      navigate(`${dashboardPath}?ai=${encodeURIComponent(sectionName || "all")}`);
+    } else {
+      toast.info("AI auto-fill is rolling out for this tool soon", {
+        description: "Try the AI Invoice or Proposal Generator inside your dashboard.",
+      });
+      onClick?.();
+    }
+  };
+
+  // Signed in: redirect to dashboard AI tool (with quota) or fall back to inline.
   if (user) {
     return (
       <button
         type="button"
-        onClick={() => onClick?.()}
+        onClick={goToDashboardAI}
         title={label}
         className={cn(
           "group inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-1 rounded-md",
@@ -112,15 +139,45 @@ export function AIAutofillButton({
   onClick,
   label = "Auto-fill with AI",
   className,
+  dashboardPath,
+  storageKey,
+  sectionName,
 }: {
   onClick: () => void;
   label?: string;
   className?: string;
+  dashboardPath?: string;
+  storageKey?: string;
+  sectionName?: string;
 }) {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  const handleClick = () => {
+    if (user && dashboardPath) {
+      try {
+        const draft = storageKey ? localStorage.getItem(storageKey) : null;
+        if (draft) sessionStorage.setItem("hustleai-ai-prefill", draft);
+        sessionStorage.setItem("hustleai-ai-section", sectionName || "all");
+      } catch {}
+      toast.success("Opening AI version in your dashboard", {
+        description: "Free plan: 3 AI fills/day · Pro: 5 · Elite: 10 · Infinity: 20",
+      });
+      navigate(`${dashboardPath}?ai=all`);
+      return;
+    }
+    if (user && !dashboardPath) {
+      toast.info("AI auto-fill is rolling out for this tool soon", {
+        description: "Try the AI Invoice or Proposal Generator inside your dashboard.",
+      });
+    }
+    onClick();
+  };
+
   return (
     <button
       type="button"
-      onClick={onClick}
+      onClick={handleClick}
       className={cn(
         "inline-flex items-center gap-2 px-3 h-9 rounded-md text-sm font-semibold",
         "text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500",
