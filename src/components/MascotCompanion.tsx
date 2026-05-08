@@ -254,7 +254,7 @@ export default function MascotCompanion() {
       let start = 0;
       try { start = Number(sessionStorage.getItem(SESSION_START_KEY) || Date.now()); } catch {}
       const elapsed = Date.now() - start;
-      const wait = Math.max(60_000, 75 * 60_1000 - elapsed); // first fire ≥75min in
+      const wait = Math.max(60_000, 75 * 60_000 - elapsed); // first fire ≥75min in
       longSessionTimerRef.current = window.setTimeout(() => {
         // Drift to roughly the opposite quadrant of the viewport.
         const w = window.innerWidth; const h = window.innerHeight;
@@ -266,10 +266,10 @@ export default function MascotCompanion() {
         say(pickFrom(LONG_SESSION_LINES), 9000);
         try { localStorage.setItem(POS_KEY, JSON.stringify({ x: targetX, y: targetY })); } catch {}
         // re-arm
-        longSessionTimerRef.current = window.setTimeout(schedule, 60 * 60_1000);
+        longSessionTimerRef.current = window.setTimeout(schedule, 60 * 60_000);
       }, wait) as unknown as number;
     };
-    // Note: 60_1000 above is intentional? No — fix typo.
+    // Note: 60_000 above is intentional? No — fix typo.
     schedule();
     return () => { if (longSessionTimerRef.current) window.clearTimeout(longSessionTimerRef.current); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
