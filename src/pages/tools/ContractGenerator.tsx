@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Download, ArrowLeft, ScrollText, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { SEO, faqJsonLd } from "@/components/SEO";
 import { useToolGate } from "@/components/tools/ToolGate";
 import { AIAutofillIcon, AIAutofillButton } from "@/components/tools/AIAutofillButton";
 import { DashboardReminderBanner } from "@/components/tools/DashboardReminderBanner";
+import { DashboardToolAIPanel } from "@/components/tools/DashboardToolAIPanel";
 import { CONTRACT_TEMPLATES } from "@/lib/tools/templates";
 
 const STORAGE_KEY = "hustleai-tool-contract-v1";
@@ -58,6 +59,8 @@ const faqs = [
 export default function ContractGenerator() {
   const [s, setS] = useState<State>(initial);
   const { guard, gate } = useToolGate("contract", "download your contract");
+  const { pathname } = useLocation();
+  const inDashboard = pathname.startsWith("/dashboard/tools");
   const aiFill = (section: string) =>
     guard(() => {
       // TODO: wire to AI gateway for signed-in users
@@ -70,6 +73,14 @@ export default function ContractGenerator() {
   useEffect(() => { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); }, [s]);
 
   const set = (k: keyof State, v: any) => setS((x) => ({ ...x, [k]: v }));
+  const patchState = (patch: Partial<State>) =>
+    setS((x) => ({
+      ...x,
+      ...patch,
+      clauses: Array.isArray(patch.clauses) && patch.clauses.length
+        ? patch.clauses.map((c: any) => ({ title: String(c.title || ""), body: String(c.body || "") }))
+        : x.clauses,
+    }));
   const updateClause = (i: number, k: "title" | "body", v: string) =>
     setS((x) => ({ ...x, clauses: x.clauses.map((c, j) => j === i ? { ...c, [k]: v } : c) }));
 
@@ -100,12 +111,25 @@ export default function ContractGenerator() {
       <div className="min-h-screen bg-slate-50 pt-20 pb-16 px-4">
         <div className="max-w-7xl mx-auto">
           <DashboardReminderBanner />
+          {inDashboard && (
+            <DashboardToolAIPanel
+              kind="contract"
+              state={s}
+              onPatch={patchState}
+              templates={CONTRACT_TEMPLATES.map((t) => ({ id: t.id, label: t.label }))}
+              currentTemplateId={s.templateId}
+              onTemplateChange={applyTemplate}
+              featureKey="contract"
+            />
+          )}
           <div className="mb-6 flex items-center justify-between print:hidden">
             <Link to="/tools" className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900">
               <ArrowLeft className="w-4 h-4" /> All free tools
             </Link>
             <div className="flex items-center gap-2">
-              <AIAutofillButton storageKey="hustleai-tool-contract-v1" onClick={() => aiFill("the whole contract")} label="AI auto-fill" />
+              {!inDashboard && (
+                <AIAutofillButton storageKey="hustleai-tool-contract-v1" onClick={() => aiFill("the whole contract")} label="AI auto-fill" />
+              )}
               <Button onClick={handleDownload} className="bg-slate-900 hover:bg-slate-800 text-white">
                 <Download className="w-4 h-4 mr-2" /> Download PDF
               </Button>
@@ -132,7 +156,7 @@ export default function ContractGenerator() {
           <div className="grid lg:grid-cols-2 gap-6">
             {/* Form */}
             <div className="space-y-5 print:hidden">
-              <Card title="Parties" action={<AIAutofillIcon storageKey="hustleai-tool-contract-v1" sectionName="both parties" onClick={() => aiFill("both parties")} />}>
+              <Card title="Parties" action={inDashboard ? null : <AIAutofillIcon storageKey="hustleai-tool-contract-v1" sectionName="both parties" onClick={() => aiFill("both parties")} />}>
                 <Field label="Effective date" type="date" value={s.effectiveDate} onChange={(v) => set("effectiveDate", v)} />
                 <div className="grid grid-cols-1 gap-3">
                   <div className="border-l-2 border-emerald-500 pl-3 space-y-2">
@@ -150,7 +174,7 @@ export default function ContractGenerator() {
                 </div>
               </Card>
 
-              <Card title="Engagement details" action={<AIAutofillIcon storageKey="hustleai-tool-contract-v1" sectionName="scope of work & fee" onClick={() => aiFill("scope of work & fee")} />}>
+              <Card title="Engagement details" action={inDashboard ? null : <AIAutofillIcon storageKey="hustleai-tool-contract-v1" sectionName="scope of work & fee" onClick={() => aiFill("scope of work & fee")} />}>
                 <FieldArea label="Scope of work" value={s.scope} onChange={(v) => set("scope", v)} />
                 <div className="grid grid-cols-2 gap-3">
                   <Field label="Currency" value={s.currency} onChange={(v) => set("currency", v)} />
@@ -158,7 +182,7 @@ export default function ContractGenerator() {
                 </div>
               </Card>
 
-              <Card title="Clauses" action={<AIAutofillIcon storageKey="hustleai-tool-contract-v1" sectionName="the clause set for this engagement" onClick={() => aiFill("the clause set for this engagement")} />}>
+              <Card title="Clauses" action={inDashboard ? null : <AIAutofillIcon storageKey="hustleai-tool-contract-v1" sectionName="the clause set for this engagement" onClick={() => aiFill("the clause set for this engagement")} />}>
                 <FieldArea label="Introduction" value={s.intro} onChange={(v) => set("intro", v)} />
                 <div className="space-y-3 mt-2">
                   {s.clauses.map((c, i) => (
