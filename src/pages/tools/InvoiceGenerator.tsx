@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { SEO, faqJsonLd } from "@/components/SEO";
 import { useToolGate } from "@/components/tools/ToolGate";
 import { AIAutofillIcon, AIAutofillButton } from "@/components/tools/AIAutofillButton";
+import { DashboardReminderBanner } from "@/components/tools/DashboardReminderBanner";
 
 interface LineItem { id: string; desc: string; qty: number; rate: number; }
 
@@ -91,6 +92,7 @@ export default function InvoiceGenerator() {
       <div className="min-h-screen bg-slate-50 pt-20 pb-16 px-4 print:p-0 print:bg-white">
         <div className="max-w-7xl mx-auto print:max-w-none">
           {/* Toolbar (hidden in print) */}
+          <DashboardReminderBanner />
           <div className="mb-6 flex items-center justify-between print:hidden">
             <Link to="/tools" className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900">
               <ArrowLeft className="w-4 h-4" /> All free tools

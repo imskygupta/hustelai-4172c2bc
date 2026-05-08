@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { SEO, faqJsonLd } from "@/components/SEO";
 import { useToolGate } from "@/components/tools/ToolGate";
 import { AIAutofillIcon, AIAutofillButton } from "@/components/tools/AIAutofillButton";
+import { DashboardReminderBanner } from "@/components/tools/DashboardReminderBanner";
 import { CONTRACT_TEMPLATES } from "@/lib/tools/templates";
 
 const STORAGE_KEY = "hustleai-tool-contract-v1";
@@ -98,6 +99,7 @@ export default function ContractGenerator() {
       `}</style>
       <div className="min-h-screen bg-slate-50 pt-20 pb-16 px-4">
         <div className="max-w-7xl mx-auto">
+          <DashboardReminderBanner />
           <div className="mb-6 flex items-center justify-between print:hidden">
             <Link to="/tools" className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900">
               <ArrowLeft className="w-4 h-4" /> All free tools
