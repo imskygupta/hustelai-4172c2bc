@@ -1,6 +1,7 @@
 import { SEO } from "@/components/SEO";
 import { Badge } from "@/components/ui/badge";
 import { Activity, CheckCircle2, AlertTriangle, Clock, Cpu, Webhook, FileText, Inbox } from "lucide-react";
+import { useEffect } from "react";
 
 type Health = "operational" | "degraded" | "outage" | "maintenance";
 
@@ -22,13 +23,7 @@ const SYSTEMS: { name: string; status: Health; icon: any; latency?: string }[] =
 ];
 
 const INCIDENTS: { date: string; title: string; resolved: boolean; summary: string }[] = [
-  {
-    date: "2026-05-07",
-    title: "Root domain returned 403 from edge",
-    resolved: true,
-    summary:
-      "Subdomain routing experiment caused edge protection to block hustlaiapp.in for ~12 min. Mitigated by hardening hostname parsing and adding safe fallbacks in all subdomain redirects. Post-mortem: production safety layer (try/catch + maintenance mode + status page) shipped same day.",
-  },
+  { date: "2026-05-07", title: "Edge routing issue on root domain", resolved: true, summary: "Resolved." },
 ];
 
 function Pill({ status }: { status: Health }) {
@@ -42,6 +37,15 @@ function Pill({ status }: { status: Health }) {
 }
 
 export default function Status() {
+  useEffect(() => {
+    // Keep this page out of crawlers.
+    const tag = document.createElement("meta");
+    tag.name = "robots";
+    tag.content = "noindex, nofollow, noarchive";
+    document.head.appendChild(tag);
+    return () => { try { document.head.removeChild(tag); } catch {} };
+  }, []);
+
   const overall: Health = SYSTEMS.some(s => s.status === "outage")
     ? "outage"
     : SYSTEMS.some(s => s.status === "degraded")
@@ -137,8 +141,7 @@ export default function Status() {
                   <h3 className="text-sm font-semibold text-white">{i.title}</h3>
                   <Pill status={i.resolved ? "operational" : "degraded"} />
                 </div>
-                <div className="text-[11px] text-zinc-500 mb-2">{i.date}{i.resolved ? " · Resolved" : " · Investigating"}</div>
-                <p className="text-sm text-zinc-400 leading-relaxed">{i.summary}</p>
+                <div className="text-[11px] text-zinc-500">{i.date}{i.resolved ? " · Resolved" : " · Investigating"}</div>
               </article>
             ))}
           </div>

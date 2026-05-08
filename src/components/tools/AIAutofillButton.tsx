@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { getMaxUses, getUsage, type Tier } from "@/lib/tool-limits";
 import { consumeDailyAI } from "@/lib/ai-usage";
 import { CreditsExhaustedDialog } from "@/components/tools/CreditsExhaustedDialog";
+import { emitAIFill } from "@/lib/ai-fill-bus";
 
 const PAID_TIERS = new Set(["pro", "elite", "infinity"]);
 
@@ -262,9 +263,25 @@ export function AIAutofillIcon({
   const featureKey = toolKey.includes("invoice") ? "invoice" : toolKey.includes("proposal") ? "proposal" : toolKey.includes("contract") ? "contract" : "doc_autofill";
 
   const runWithQuota = async () => {
-    const r = await consumeDailyAI(featureKey);
-    if (!r.allowed) { setExhaustedOpen(true); return; }
-    onClick?.();
+    emitAIFill({ status: "writing", section: sectionName });
+    try {
+      const r = await consumeDailyAI(featureKey);
+      if (!r.allowed) {
+        emitAIFill({ status: "exhausted", section: sectionName });
+        setExhaustedOpen(true);
+        return;
+      }
+      const result: any = onClick?.();
+      if (result && typeof result.then === "function") {
+        await result;
+      } else {
+        // No async hook wired yet — keep "writing" visible briefly so users get feedback.
+        await new Promise((res) => setTimeout(res, 1400));
+      }
+      emitAIFill({ status: "done", section: sectionName });
+    } catch (err: any) {
+      emitAIFill({ status: "error", section: sectionName, message: err?.message || String(err) });
+    }
   };
 
   const handleDashboardClick = () => {

@@ -10,6 +10,7 @@ import { Search, Crown, Sparkles, Rocket, Star, ChevronRight, ArrowRight, Comman
 import { VerifyEmailGate } from "@/components/VerifyEmailGate";
 import { Chatbot } from "@/components/Chatbot";
 import NotificationCenter from "@/components/workspace-os/NotificationCenter";
+import AIFillStatusBanner from "@/components/tools/AIFillStatusBanner";
 
 interface AppShellProps {
   children: ReactNode;
@@ -223,6 +224,7 @@ export function AppShell({ children, title, breadcrumbs, actions }: AppShellProp
           </main>
         </div>
         <Chatbot />
+        <AIFillStatusBanner />
       </div>
     </SidebarProvider>
   );

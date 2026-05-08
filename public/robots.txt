@@ -26,5 +26,6 @@ Disallow: /portal/
 Disallow: /p/
 Disallow: /hustle/
 Disallow: /roadmap/
+Disallow: /status
 
 Sitemap: https://hustlaiapp.in/sitemap.xml
