@@ -9,17 +9,19 @@ import { isAppShellRoute } from "@/components/app-shell-routes";
 
 const navLinks = [
   { label: "Workspaces", href: "/workspaces" },
-  { label: "Resources", href: "/explore" },
-  { label: "Pricing", href: "/plans" },
-  { label: "Developers", href: "https://api.hustlaiapp.in", external: true },
+  { label: "Explore", href: "/explore" },
   { label: "Integrations", href: "/integrations" },
+  { label: "Pricing", href: "/pricing" },
+  { label: "Relax", href: "/relax" },
   { label: "Blog", href: "/blog" },
+  { label: "Developers", href: "https://api.hustlaiapp.in", external: true },
   {
     label: "More",
     children: [
       { label: "B2B APIs", href: "https://api.hustlaiapp.in", external: true },
       { label: "API Console", href: "https://console.api.hustlaiapp.in", external: true },
       { label: "API Docs", href: "https://docs.hustlaiapp.in", external: true },
+      { label: "Compare plans", href: "/plans" },
       { label: "About", href: "/about" },
       { label: "Company", href: "/company" },
       { label: "Careers", href: "/career" },
@@ -27,7 +29,6 @@ const navLinks = [
       { label: "Reviews", href: "/reviews" },
       { label: "Contact", href: "/contact" },
       { label: "Leaderboard", href: "/leaderboard" },
-      { label: "Relax", href: "/relax" },
     ],
   },
 ];
@@ -144,18 +145,28 @@ export function Navbar() {
                 </AnimatePresence>
               </div>
             ) : (
-              <Button key={l.href} variant="ghost" size="sm"
+              <button
+                key={l.href}
                 onClick={() => {
                   if ((l as any).external) window.location.href = l.href!;
                   else navigate(l.href!);
                 }}
-                className={`transition-all ${
+                className={`group relative px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
                   isActive(l.href!)
-                    ? isHome ? "text-emerald-700 bg-emerald-50" : "text-primary bg-primary/10"
-                    : isHome ? "text-slate-600 hover:text-slate-900 hover:bg-slate-100" : "text-muted-foreground hover:text-foreground"
-                }`}>
-                {l.label}
-              </Button>
+                    ? isHome ? "text-emerald-700" : "text-primary"
+                    : isHome ? "text-slate-600 hover:text-slate-900" : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <span className="relative z-10">{l.label}</span>
+                <span
+                  className={`absolute left-2 right-2 -bottom-0.5 h-px origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ${
+                    isHome ? "bg-emerald-500" : "bg-primary"
+                  } ${isActive(l.href!) ? "scale-x-100" : ""}`}
+                />
+                <span className={`absolute inset-0 rounded-md scale-95 opacity-0 group-hover:scale-100 group-hover:opacity-100 transition-all duration-300 ${
+                  isHome ? "bg-emerald-50/70" : "bg-secondary/40"
+                }`} />
+              </button>
             )
           )}
         </div>
