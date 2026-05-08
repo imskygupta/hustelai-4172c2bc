@@ -12,6 +12,9 @@ import { AIAutofillIcon, AIAutofillButton } from "@/components/tools/AIAutofillB
 import { DashboardReminderBanner } from "@/components/tools/DashboardReminderBanner";
 import { DashboardToolAIPanel } from "@/components/tools/DashboardToolAIPanel";
 import { PROPOSAL_TEMPLATES } from "@/lib/tools/templates";
+import { useAuth } from "@/hooks/useAuth";
+import { printWithMeta, watermarkModeForTier } from "@/lib/tools/print-meta";
+import { emitDelight, pickDelight, bumpDelightCount } from "@/lib/delight-bus";
 
 const STORAGE_KEY = "hustleai-tool-proposal-v1";
 
@@ -63,6 +66,9 @@ export default function ProposalGenerator() {
   const [s, setS] = useState<State>(initial);
   const { guard, gate } = useToolGate("proposal", "download your proposal");
   const { pathname } = useLocation();
+  const { profile } = useAuth();
+  const tier = (profile?.subscription_tier as string) || "free";
+  const wm = watermarkModeForTier(tier);
   const inDashboard = pathname.startsWith("/dashboard/tools");
   const aiFill = (section: string) =>
     guard(() => {
@@ -92,7 +98,16 @@ export default function ProposalGenerator() {
     setS((x) => ({ ...x, templateId: id, scope: t.scope, deliverables: [...t.deliverables], timeline: t.timeline, pricingNote: t.pricingNote }));
   };
 
-  const handleDownload = () => guard(() => window.print());
+  const handleDownload = () =>
+    guard(() =>
+      printWithMeta({
+        docTitle: `Proposal ${s.proposalNo} — ${s.projectTitle}`,
+        afterPrint: () => {
+          bumpDelightCount();
+          emitDelight(pickDelight("proposal_pdf"));
+        },
+      }),
+    );
 
   return (
     <>
@@ -256,7 +271,13 @@ export default function ProposalGenerator() {
                   </div>
                 </div>
 
-                <div className="mt-6 text-center text-[10px] text-slate-400">Generated free with HustleAI · hustlaiapp.in</div>
+                {wm !== "none" && (
+                  <div className="mt-6 text-center text-[10px] text-slate-400">
+                    {wm === "full"
+                      ? "Generated free with HustleAI · hustlaiapp.in"
+                      : `Generated ${new Date().toLocaleString()}`}
+                  </div>
+                )}
               </motion.div>
               <div className="mt-4 flex items-center justify-center gap-2 text-xs text-slate-500 print:hidden">
                 <Sparkles className="w-3 h-3 text-violet-600" /> Auto-saved · switches templates instantly
