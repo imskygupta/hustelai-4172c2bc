@@ -25,6 +25,7 @@ import Profile from "./pages/Profile";
 import Payment from "./pages/Payment";
 import PaymentStatus from "./pages/PaymentStatus";
 import Plans from "./pages/Plans";
+import PricingPage from "./pages/PricingPage";
 import Leaderboard from "./pages/Leaderboard";
 import SavedHustles from "./pages/SavedHustles";
 import Career from "./pages/Career";
@@ -223,17 +224,18 @@ const App = () => (
             <Route path="/payment" element={Shelled(<Payment />)} />
             <Route path="/payment-status" element={Shelled(<PaymentStatus />)} />
             <Route path="/plans" element={<Plans />} />
+            <Route path="/pricing" element={<PricingPage />} />
             <Route path="/leaderboard" element={Shelled(<Leaderboard />)} />
             <Route path="/saved-hustles" element={Shelled(<SavedHustles />)} />
             <Route path="/career" element={<Career />} />
             <Route path="/affiliates" element={Shelled(<Affiliates />)} />
             <Route path="/company" element={<Company />} />
-            <Route path="/relax" element={Shelled(<Relax />)} />
+            <Route path="/relax" element={<Relax />} />
             <Route path="/hustle/:id" element={Shelled(<HustleDetail />)} />
             <Route path="/roadmap/:id" element={Shelled(<RoadmapViewer />)} />
             <Route path="/infinity-zone" element={Shelled(<InfinityZone />)} />
             {/* Marketplace was rebranded to Integrations. Old URLs redirect for safety. */}
-            <Route path="/integrations" element={Shelled(<Marketplace />)} />
+            <Route path="/integrations" element={<Marketplace />} />
             <Route path="/marketplace" element={<Navigate to="/integrations" replace />} />
             <Route path="/marketplace/:id" element={<Navigate to="/integrations" replace />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
