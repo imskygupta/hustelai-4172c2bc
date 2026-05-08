@@ -8,11 +8,11 @@ import { cn } from "@/lib/utils";
 
 /** Map a public /tools/* page to its richer in-dashboard equivalent. */
 function dashboardEquivalent(pathname: string): { href: string; label: string } {
-  if (pathname.includes("invoice")) return { href: "/workspaces?intent=invoice", label: "Invoice Generator" };
-  if (pathname.includes("proposal")) return { href: "/proposal-draft", label: "Proposal AI" };
+  if (pathname.includes("invoice")) return { href: "/dashboard/tools/invoice-generator", label: "Invoice Generator" };
+  if (pathname.includes("proposal")) return { href: "/dashboard/tools/proposal-generator", label: "Proposal Generator" };
   if (pathname.includes("contract") || pathname.includes("agreement"))
-    return { href: "/workspaces?intent=agreement", label: "Agreement Builder" };
-  return { href: "/dashboard", label: "Dashboard" };
+    return { href: "/dashboard/tools/contract-generator", label: "Contract Generator" };
+  return { href: "/dashboard/tools", label: "Doc Tools" };
 }
 
 function UseInDashboardDialog({
