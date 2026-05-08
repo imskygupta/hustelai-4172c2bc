@@ -56,6 +56,10 @@ import RedFlagScanner from "./pages/RedFlagScanner";
 import SureHitJobs from "./pages/SureHitJobs";
 import Onboarding from "./pages/Onboarding";
 import NotFound from "./pages/NotFound";
+import ToolsHub from "./pages/tools/ToolsHub";
+import InvoiceGeneratorTool from "./pages/tools/InvoiceGenerator";
+import ProposalGeneratorTool from "./pages/tools/ProposalGenerator";
+import ContractGeneratorTool from "./pages/tools/ContractGenerator";
 import Products from "./pages/Products";
 import ProductDetail from "./pages/ProductDetail";
 import HustleBot from "./pages/HustleBot";
@@ -231,6 +235,11 @@ const App = () => (
             <Route path="/affiliates" element={Shelled(<Affiliates />)} />
             <Route path="/company" element={<Company />} />
             <Route path="/relax" element={<Relax />} />
+            {/* Free public tools (SEO + PLG funnel) */}
+            <Route path="/tools" element={<ToolsHub />} />
+            <Route path="/tools/invoice-generator" element={<InvoiceGeneratorTool />} />
+            <Route path="/tools/proposal-generator" element={<ProposalGeneratorTool />} />
+            <Route path="/tools/contract-generator" element={<ContractGeneratorTool />} />
             <Route path="/hustle/:id" element={Shelled(<HustleDetail />)} />
             <Route path="/roadmap/:id" element={Shelled(<RoadmapViewer />)} />
             <Route path="/infinity-zone" element={Shelled(<InfinityZone />)} />
