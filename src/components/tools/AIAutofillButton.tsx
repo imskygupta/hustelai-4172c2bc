@@ -252,6 +252,7 @@ export function AIAutofillIcon({
   const [popOpen, setPopOpen] = useState(false);
   const [dashOpen, setDashOpen] = useState(false);
   const [byokOpen, setByokOpen] = useState(false);
+  const [exhaustedOpen, setExhaustedOpen] = useState(false);
   const next = encodeURIComponent(pathname + search);
   const inDashboardTool = pathname.startsWith("/dashboard/tools");
   const tier = (profile?.subscription_tier as Tier) || "free";
@@ -259,9 +260,17 @@ export function AIAutofillIcon({
   const toolKey = toolKeyFromPath(pathname);
   const used = getUsage(toolKey, user?.id);
 
+  const featureKey = toolKey.includes("invoice") ? "invoice" : toolKey.includes("proposal") ? "proposal" : toolKey.includes("contract") ? "contract" : "doc_autofill";
+
+  const runWithQuota = async () => {
+    const r = await consumeDailyAI(featureKey);
+    if (!r.allowed) { setExhaustedOpen(true); return; }
+    onClick?.();
+  };
+
   const handleDashboardClick = () => {
     if (PAID_TIERS.has(tier)) {
-      onClick?.();
+      runWithQuota();
       return;
     }
     setByokOpen(true);
@@ -286,11 +295,16 @@ export function AIAutofillIcon({
         <ByokDialog
           open={byokOpen}
           onClose={() => setByokOpen(false)}
-          onUseFree={() => onClick?.()}
+          onUseFree={runWithQuota}
           used={used}
           max={max}
           toolName={toolNameFromPath(pathname)}
           outOfQuota={used >= max}
+        />
+        <CreditsExhaustedDialog
+          open={exhaustedOpen}
+          onClose={() => setExhaustedOpen(false)}
+          toolName={toolNameFromPath(pathname)}
         />
       </>
     );
