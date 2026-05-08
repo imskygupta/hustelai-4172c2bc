@@ -13,9 +13,9 @@ interface Props {
 }
 
 const perks = [
-  "Unlimited downloads — PDF, share links, branded exports",
-  "Save unlimited drafts and re-edit anytime",
-  "Auto-fill from your saved business profile",
+  "AI auto-fill — generate scope, terms & line items in one click",
+  "Unlimited PDF downloads, branded exports & share links",
+  "Save unlimited drafts, reuse client & business profiles",
   "Sync with HustleAI Workspace OS — clients, invoices, proposals",
 ];
 
@@ -90,12 +90,16 @@ export function ToolGateDialog({ open, onClose, toolName, action }: Props) {
 export function useToolGate(toolName: string, action: string) {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
+  const [currentAction, setCurrentAction] = useState(action);
 
-  const guard = (fn: () => void) => {
+  const guard = (fn: () => void, actionOverride?: string) => {
     if (user) fn();
-    else setOpen(true);
+    else {
+      setCurrentAction(actionOverride || action);
+      setOpen(true);
+    }
   };
 
-  const gate = <ToolGateDialog open={open} onClose={() => setOpen(false)} toolName={toolName} action={action} />;
+  const gate = <ToolGateDialog open={open} onClose={() => setOpen(false)} toolName={toolName} action={currentAction} />;
   return { guard, gate, isAuthed: !!user };
 }

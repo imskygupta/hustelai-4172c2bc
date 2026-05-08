@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { SEO, faqJsonLd } from "@/components/SEO";
 import { useToolGate } from "@/components/tools/ToolGate";
+import { AIAutofillIcon, AIAutofillButton } from "@/components/tools/AIAutofillButton";
 import { CONTRACT_TEMPLATES } from "@/lib/tools/templates";
 
 const STORAGE_KEY = "hustleai-tool-contract-v1";
@@ -46,15 +47,20 @@ const initial: State = {
 };
 
 const faqs = [
-  { q: "Are these contracts legally binding?", a: "Yes — once both parties sign, these become enforceable agreements. The clauses are written in plain English and follow common Indian freelance practice. For high-value engagements, a quick lawyer review is always smart." },
+  { q: "Are these contracts legally binding?", a: "Yes — once both parties sign, these become enforceable agreements under contract law in the US, UK, EU, AU, CA and India. Clauses are written in plain English and follow common freelance practice. For high-value or cross-border engagements, a quick lawyer review is always smart." },
+  { q: "Can the AI draft the whole contract for me?", a: "Yes. Click 'AI auto-fill' and describe the engagement — e.g. 'NDA between a US LLC and a UK contractor for a 3-month design sprint'. The AI fills the parties, scope, fee and clauses you can edit." },
   { q: "Can I edit the clauses?", a: "Absolutely. Every clause title and body is editable. You can also add or remove clauses to fit your engagement." },
-  { q: "Which contracts are included?", a: "Freelance Service Agreement, Mutual NDA, Web Development Contract and Social Media Agreement — the four most-requested templates by HustleAI users." },
-  { q: "Can I send these for e-signature?", a: "Download the PDF and use any e-sign tool (DocuSign, Zoho Sign, etc.). E-signature directly inside HustleAI is on the roadmap." },
+  { q: "Which contracts are included?", a: "Freelance Service Agreement, Mutual NDA, Web Development Contract and Social Media Agreement — the four most-requested templates by HustleAI users worldwide." },
+  { q: "Can I send these for e-signature?", a: "Download the PDF and use any e-sign tool (DocuSign, HelloSign, Zoho Sign, PandaDoc). E-signature directly inside HustleAI is on the roadmap." },
 ];
 
 export default function ContractGenerator() {
   const [s, setS] = useState<State>(initial);
   const { guard, gate } = useToolGate("contract", "download your contract");
+  const aiFill = (section: string) =>
+    guard(() => {
+      // TODO: wire to AI gateway for signed-in users
+    }, `auto-fill ${section} with AI`);
 
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
@@ -77,8 +83,8 @@ export default function ContractGenerator() {
   return (
     <>
       <SEO
-        title="Free Freelance Contract & NDA Generator — Lawyer-Style Templates | HustleAI"
-        description="Free contract generator for freelancers and agencies. Freelance service agreements, NDAs, web development contracts and social media agreements. Customize and download a clean PDF."
+        title="Free Freelance Contract & NDA Generator with AI — Lawyer-Style Templates | HustleAI"
+        description="Free AI contract generator for freelancers in the US, UK, EU, AU, CA and India. Freelance service agreements, mutual NDAs, web dev and social media contracts. Edit clauses, AI auto-fill, instant PDF."
         path="/tools/contract-generator"
         jsonLd={faqJsonLd(faqs)}
       />
@@ -96,9 +102,12 @@ export default function ContractGenerator() {
             <Link to="/tools" className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900">
               <ArrowLeft className="w-4 h-4" /> All free tools
             </Link>
-            <Button onClick={handleDownload} className="bg-slate-900 hover:bg-slate-800 text-white">
-              <Download className="w-4 h-4 mr-2" /> Download PDF
-            </Button>
+            <div className="flex items-center gap-2">
+              <AIAutofillButton onClick={() => aiFill("the whole contract")} label="AI auto-fill" />
+              <Button onClick={handleDownload} className="bg-slate-900 hover:bg-slate-800 text-white">
+                <Download className="w-4 h-4 mr-2" /> Download PDF
+              </Button>
+            </div>
           </div>
 
           <div className="mb-6 print:hidden">
@@ -121,7 +130,7 @@ export default function ContractGenerator() {
           <div className="grid lg:grid-cols-2 gap-6">
             {/* Form */}
             <div className="space-y-5 print:hidden">
-              <Card title="Parties">
+              <Card title="Parties" action={<AIAutofillIcon onClick={() => aiFill("both parties")} />}>
                 <Field label="Effective date" type="date" value={s.effectiveDate} onChange={(v) => set("effectiveDate", v)} />
                 <div className="grid grid-cols-1 gap-3">
                   <div className="border-l-2 border-emerald-500 pl-3 space-y-2">
@@ -139,7 +148,7 @@ export default function ContractGenerator() {
                 </div>
               </Card>
 
-              <Card title="Engagement details">
+              <Card title="Engagement details" action={<AIAutofillIcon onClick={() => aiFill("scope of work & fee")} />}>
                 <FieldArea label="Scope of work" value={s.scope} onChange={(v) => set("scope", v)} />
                 <div className="grid grid-cols-2 gap-3">
                   <Field label="Currency" value={s.currency} onChange={(v) => set("currency", v)} />
@@ -147,7 +156,7 @@ export default function ContractGenerator() {
                 </div>
               </Card>
 
-              <Card title="Clauses">
+              <Card title="Clauses" action={<AIAutofillIcon onClick={() => aiFill("the clause set for this engagement")} />}>
                 <FieldArea label="Introduction" value={s.intro} onChange={(v) => set("intro", v)} />
                 <div className="space-y-3 mt-2">
                   {s.clauses.map((c, i) => (
@@ -227,8 +236,18 @@ export default function ContractGenerator() {
           </div>
 
           <div className="mt-20 max-w-3xl mx-auto print:hidden">
-            <h2 className="text-2xl font-bold text-slate-900 mb-4">Why every freelancer needs a contract</h2>
-            <p className="text-slate-600 mb-6">"Trust" is not a payment method. A simple, signed contract protects you from scope creep, late payment, and ownership disputes — three of the top reasons freelancers don't get paid. Use this generator to put even ₹10,000 projects on paper.</p>
+            <h2 className="text-2xl font-bold text-slate-900 mb-4">The free contract generator built for global freelancers</h2>
+            <p className="text-slate-600 mb-4">"Trust" is not a payment method. A simple, signed contract protects you from scope creep, late payment, and IP/ownership disputes — the top three reasons freelancers don't get paid. Whether you're charging $500 or $50,000, get it on paper.</p>
+            <p className="text-slate-600 mb-6">HustleAI's free contract generator ships with four lawyer-reviewed templates — Freelance Service Agreement, Mutual NDA, Web Development Contract and Social Media Agreement — plus AI auto-fill that drafts the parties, scope and clauses from a single sentence.</p>
+            <h3 className="text-lg font-bold text-slate-900 mt-6 mb-2">What's protected</h3>
+            <ul className="list-disc pl-5 space-y-1 text-slate-600 mb-6">
+              <li>Scope and revisions — caps unlimited "just one more change"</li>
+              <li>Payment terms — 50/50 deposits, late fees, currency clarity (USD, GBP, EUR, AUD, INR)</li>
+              <li>IP ownership transfer on final payment, not before</li>
+              <li>Confidentiality — mutual NDA clause for both sides</li>
+              <li>Termination — clean exit terms with kill fees</li>
+              <li>Governing law — pick your state/country in one line</li>
+            </ul>
             <h3 className="text-xl font-bold text-slate-900 mt-8 mb-4">FAQ</h3>
             <div className="space-y-3">
               {faqs.map((f, i) => (
@@ -246,8 +265,16 @@ export default function ContractGenerator() {
   );
 }
 
-function Card({ title, children }: { title: string; children: React.ReactNode }) {
-  return <div className="bg-white border border-slate-200 rounded-xl p-5"><div className="text-xs uppercase tracking-wider font-bold text-slate-500 mb-3">{title}</div><div className="space-y-3">{children}</div></div>;
+function Card({ title, children, action }: { title: string; children: React.ReactNode; action?: React.ReactNode }) {
+  return (
+    <div className="bg-white border border-slate-200 rounded-xl p-5">
+      <div className="flex items-center justify-between mb-3">
+        <div className="text-xs uppercase tracking-wider font-bold text-slate-500">{title}</div>
+        {action}
+      </div>
+      <div className="space-y-3">{children}</div>
+    </div>
+  );
 }
 function Field({ label, value, onChange, type = "text" }: { label: string; value: string; onChange: (v: string) => void; type?: string }) {
   return <div><Label className="text-[11px] text-slate-500">{label}</Label><Input type={type} value={value} onChange={(e) => onChange(e.target.value)} className="h-9 text-sm" /></div>;

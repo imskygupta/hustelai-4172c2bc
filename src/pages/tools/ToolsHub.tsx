@@ -41,8 +41,8 @@ export default function ToolsHub() {
   return (
     <>
       <SEO
-        title="Free Tools for Freelancers & Agencies — Invoice, Proposal & Contract Generator | HustleAI"
-        description="Free, browser-based tools for freelancers and agencies. Generate GST invoices, client proposals, and freelance contracts in minutes. No signup needed to try."
+        title="Free AI Tools for Freelancers & Agencies — Invoice, Proposal & Contract Generator | HustleAI"
+        description="Free AI-powered tools for freelancers and agencies in the US, UK, EU, AU, CA and India. Generate invoices (USD/GBP/EUR/INR), client proposals, and freelance contracts in minutes. No signup to try."
         path="/tools"
         jsonLd={faqJsonLd(faqs)}
       />
@@ -51,13 +51,13 @@ export default function ToolsHub() {
           {/* Hero */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-14">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-100 text-emerald-700 text-xs font-semibold mb-5">
-              <Sparkles className="w-3.5 h-3.5" /> 100% free · No signup to try
+              <Sparkles className="w-3.5 h-3.5" /> 100% free · AI auto-fill · No signup to try
             </div>
             <h1 className="text-4xl md:text-5xl font-display font-bold text-slate-900 mb-4 tracking-tight">
               Free tools for the <span className="text-gradient bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">work you already do</span>
             </h1>
             <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-              Stop juggling spreadsheets and Word docs. Generate invoices, proposals and contracts in your browser — free forever.
+              Stop juggling spreadsheets and Word docs. Generate invoices, proposals and contracts in your browser — with one-click AI auto-fill. Used by freelancers in the US, UK, EU, Australia and India.
             </p>
           </motion.div>
 
