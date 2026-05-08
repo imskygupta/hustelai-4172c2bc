@@ -45,9 +45,8 @@ const exclusiveTools = [
     icon: Key,
     title: "API access",
     desc: "Programmatic access to your workspace, clients, invoices and AI endpoints.",
-    status: "live",
-    href: "https://console.api.hustlaiapp.in",
-    external: true,
+    status: "soon",
+    href: "/contact",
   },
   {
     icon: Palette,
