@@ -12,7 +12,7 @@ const navLinks = [
   { label: "Resources", href: "/explore" },
   { label: "Pricing", href: "/plans" },
   { label: "Developers", href: "https://api.hustlaiapp.in", external: true },
-  { label: "Integrations", href: "/marketplace" },
+  { label: "Integrations", href: "/integrations" },
   { label: "Blog", href: "/blog" },
   {
     label: "More",
