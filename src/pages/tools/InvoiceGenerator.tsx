@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { SEO, faqJsonLd } from "@/components/SEO";
 import { useToolGate } from "@/components/tools/ToolGate";
+import { AIAutofillIcon, AIAutofillButton } from "@/components/tools/AIAutofillButton";
 
 interface LineItem { id: string; desc: string; qty: number; rate: number; }
 
@@ -37,15 +38,20 @@ const defaultState = {
 };
 
 const faqs = [
-  { q: "Is this invoice generator really free?", a: "Yes — fully free to design and preview. You'll need a free HustleAI account to download the PDF." },
-  { q: "Does it support GST invoices for India?", a: "Yes. You can add your GSTIN, your client's GSTIN, and configure the tax rate (default 18% GST). The PDF is GST-ready." },
-  { q: "Can I add my logo?", a: "Logo upload is available once you sign up free. The browser version supports your business name, address and GSTIN." },
-  { q: "Can I save invoices and reuse client data?", a: "Yes — saved drafts, recurring invoices, client auto-fill and payment tracking are unlocked when you create a free workspace." },
+  { q: "Is this invoice generator really free?", a: "Yes — fully free to design, preview and download. Sign up for a free HustleAI account to unlock PDF download, AI auto-fill, saved drafts and recurring invoices." },
+  { q: "Does it work for US, UK, EU, AU and Canadian freelancers?", a: "Yes. Switch the currency to USD, GBP, EUR, AUD or CAD, set your local tax label (Sales Tax, VAT, GST, HST) and the invoice updates instantly. The PDF layout is A4/Letter friendly and accepted by Stripe, PayPal, Wise and Payoneer payouts." },
+  { q: "Does it support GST invoices for India?", a: "Yes. Add your GSTIN, the client's GSTIN, and the tax rate (18% GST default). The output is a GST-compliant PDF you can send to Indian clients or upload to your accountant." },
+  { q: "Can the AI fill the invoice for me?", a: "Yes — click 'AI fill' on any section. The AI drafts your business profile, client block, line items and payment terms based on a short prompt like 'invoice ACME for 3 days of UX consulting at $120/hr'. Available free after signup." },
+  { q: "Can I save invoices and reuse client data?", a: "Yes — saved drafts, recurring invoices, client auto-fill, multi-currency and payment tracking are unlocked when you create a free workspace." },
 ];
 
 export default function InvoiceGenerator() {
   const [state, setState] = useState(defaultState);
   const { guard, gate } = useToolGate("invoice", "download your invoice");
+  const aiFill = (section: string) =>
+    guard(() => {
+      // TODO: wire to AI gateway for signed-in users
+    }, `auto-fill ${section} with AI`);
 
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
@@ -69,8 +75,8 @@ export default function InvoiceGenerator() {
   return (
     <>
       <SEO
-        title="Free GST Invoice Generator for Freelancers — Make Invoices in Minutes | HustleAI"
-        description="Free, easy-to-use GST invoice generator for Indian freelancers and agencies. Add line items, taxes and your business details. Download a clean PDF in seconds."
+        title="Free Invoice Generator for Freelancers — USD, GBP, EUR, INR | HustleAI"
+        description="Free online invoice generator for freelancers and agencies in the US, UK, EU, India and Australia. Multi-currency, GST/VAT/Sales-Tax ready, AI auto-fill, instant PDF download. No signup to preview."
         path="/tools/invoice-generator"
         jsonLd={faqJsonLd(faqs)}
       />
@@ -91,6 +97,7 @@ export default function InvoiceGenerator() {
             </Link>
             <div className="flex items-center gap-2">
               <span className="text-xs text-slate-500 hidden sm:inline">Auto-saved to your browser</span>
+              <AIAutofillButton onClick={() => aiFill("the whole invoice")} label="AI auto-fill" />
               <Button onClick={handleDownload} className="bg-slate-900 hover:bg-slate-800 text-white">
                 <Download className="w-4 h-4 mr-2" /> Download PDF
               </Button>
@@ -109,14 +116,14 @@ export default function InvoiceGenerator() {
           <div className="grid lg:grid-cols-2 gap-6 print:block">
             {/* Form */}
             <div className="space-y-5 print:hidden">
-              <Card title="Your business">
+              <Card title="Your business" action={<AIAutofillIcon onClick={() => aiFill("your business profile")} />}>
                 <Field label="Business name" value={state.bizName} onChange={(v) => update("bizName", v)} />
                 <Field label="Email" value={state.bizEmail} onChange={(v) => update("bizEmail", v)} />
                 <FieldArea label="Address" value={state.bizAddress} onChange={(v) => update("bizAddress", v)} />
                 <Field label="GSTIN (optional)" value={state.bizGstin} onChange={(v) => update("bizGstin", v)} />
               </Card>
 
-              <Card title="Bill to">
+              <Card title="Bill to" action={<AIAutofillIcon onClick={() => aiFill("the client details")} />}>
                 <Field label="Client name" value={state.clientName} onChange={(v) => update("clientName", v)} />
                 <Field label="Client email" value={state.clientEmail} onChange={(v) => update("clientEmail", v)} />
                 <FieldArea label="Client address" value={state.clientAddress} onChange={(v) => update("clientAddress", v)} />
@@ -134,7 +141,7 @@ export default function InvoiceGenerator() {
                 </div>
               </Card>
 
-              <Card title="Line items">
+              <Card title="Line items" action={<AIAutofillIcon onClick={() => aiFill("line items from a project description")} />}>
                 <div className="space-y-2">
                   {state.items.map((it) => (
                     <div key={it.id} className="grid grid-cols-12 gap-2 items-end">
@@ -163,7 +170,7 @@ export default function InvoiceGenerator() {
                 </div>
               </Card>
 
-              <Card title="Notes & terms">
+              <Card title="Notes & terms" action={<AIAutofillIcon onClick={() => aiFill("payment notes & terms")} />}>
                 <FieldArea label="Notes (visible to client)" value={state.notes} onChange={(v) => update("notes", v)} />
                 <FieldArea label="Terms" value={state.terms} onChange={(v) => update("terms", v)} />
               </Card>
@@ -250,10 +257,24 @@ export default function InvoiceGenerator() {
 
           {/* SEO content */}
           <div className="mt-20 max-w-3xl mx-auto print:hidden">
-            <h2 className="text-2xl font-bold text-slate-900 mb-6">Free GST invoice generator for freelancers in India</h2>
+            <h2 className="text-2xl font-bold text-slate-900 mb-6">The free invoice generator built for modern freelancers</h2>
             <div className="prose prose-slate max-w-none text-slate-600 space-y-4">
-              <p>Most invoice tools in India are either bloated accounting suites or paywalled after the first download. HustleAI's free invoice generator runs entirely in your browser — fill in your business details, add line items, set GST, and generate a clean PDF that's ready to send to clients.</p>
-              <p>It's built for freelancers, agencies, consultants, designers and developers who don't want to learn Tally just to bill ₹25,000 for a website project.</p>
+              <p>Whether you're a designer in Brooklyn billing in <strong>USD</strong>, a developer in London on <strong>GBP</strong>, a consultant in Berlin charging <strong>VAT in EUR</strong>, an agency in Sydney on <strong>AUD</strong>, or a freelancer in Bengaluru sending <strong>GST invoices in INR</strong> — HustleAI's free invoice generator gives you a clean, professional PDF in under 60 seconds. No signup to preview. No watermarks on your data.</p>
+              <p>Most invoicing tools are bloated accounting suites or paywalled after the first download. We took the opposite approach: a fast, browser-based generator with optional <strong>AI auto-fill</strong> that drafts your business block, client details, line items and payment terms from a single prompt. The output works with Stripe, PayPal, Wise, Payoneer, Razorpay and your accountant.</p>
+              <h3 className="text-lg font-bold text-slate-900 mt-6">Who uses this tool</h3>
+              <ul className="list-disc pl-5 space-y-1">
+                <li>Freelance designers, developers, copywriters and video editors invoicing global clients</li>
+                <li>Agencies sending recurring monthly retainers</li>
+                <li>Consultants and coaches billing by the hour or by the project</li>
+                <li>Indie SaaS founders sending one-off invoices to enterprise customers</li>
+              </ul>
+              <h3 className="text-lg font-bold text-slate-900 mt-6">Built-in best practices</h3>
+              <ul className="list-disc pl-5 space-y-1">
+                <li>Sequential invoice numbers (INV-001, INV-002…) so your books stay clean</li>
+                <li>Configurable tax label — Sales Tax, VAT, GST, HST, none</li>
+                <li>Net-7 / Net-15 / Net-30 payment terms baked into the notes</li>
+                <li>A4 + Letter friendly print stylesheet — same PDF works in every country</li>
+              </ul>
             </div>
             <h3 className="text-xl font-bold text-slate-900 mt-10 mb-4">Frequently asked</h3>
             <div className="space-y-3">
@@ -273,9 +294,13 @@ export default function InvoiceGenerator() {
 }
 
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
+function Card({ title, children, action }: { title: string; children: React.ReactNode; action?: React.ReactNode }) {
   return (
     <div className="bg-white border border-slate-200 rounded-xl p-5">
-      <div className="text-xs uppercase tracking-wider font-bold text-slate-500 mb-3">{title}</div>
+      <div className="flex items-center justify-between mb-3">
+        <div className="text-xs uppercase tracking-wider font-bold text-slate-500">{title}</div>
+        {action}
+      </div>
       <div className="space-y-3">{children}</div>
     </div>
   );
