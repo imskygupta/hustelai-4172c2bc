@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { Sparkles, Briefcase, ArrowRight, Hammer, Bell, Plus } from "lucide-react";
+import { Sparkles, Briefcase, ArrowRight, Hammer, Bell, Plus, Receipt, FileEdit, FileSignature, IdCard, Diamond, FileText } from "lucide-react";
 import RoadmapEngine from "@/components/workspace-os/RoadmapEngine";
 import { Skeleton } from "@/components/ui/skeleton";
 import { listRoadmapSessions, duplicateRoadmapSession, deleteRoadmapSession, type RoadmapSession } from "@/lib/workspace-os/roadmap-store";
@@ -53,6 +53,39 @@ export default function RoadmapCockpit() {
       </motion.section>
 
       <RoadmapEngine key={resumeInput || "fresh"} defaultInput={resumeInput} />
+
+      {/* Hidden-gem doc tools — surface them right after the engine so users discover them early */}
+      <section className="rounded-2xl border border-border bg-gradient-to-br from-violet-500/5 via-card to-emerald-500/5 p-5">
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <h3 className="text-sm font-semibold flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-primary" /> Branded Doc Tools
+            </h3>
+            <p className="text-[11px] text-muted-foreground mt-0.5">One-click invoices, proposals, contracts & more — AI-fillable.</p>
+          </div>
+          <Link to="/tools" className="text-[11px] text-primary hover:underline inline-flex items-center gap-1">
+            View all <ArrowRight className="h-3 w-3" />
+          </Link>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
+          {[
+            { to: "/tools/invoice-generator", label: "Invoice", desc: "Get paid", icon: Receipt, tone: "from-emerald-500/15 to-emerald-500/5 text-emerald-600" },
+            { to: "/tools/proposal-generator", label: "Proposal", desc: "Win project", icon: FileEdit, tone: "from-violet-500/15 to-violet-500/5 text-violet-600" },
+            { to: "/tools/contract-generator", label: "Contract", desc: "Protect deal", icon: FileSignature, tone: "from-amber-500/15 to-amber-500/5 text-amber-600" },
+            { to: "/workspaces?intent=quotation", label: "Quotation", desc: "Premium quote", icon: FileText, tone: "from-sky-500/15 to-sky-500/5 text-sky-600" },
+            { to: "/workspaces?intent=service_card", label: "Service Card", desc: "Shareable", icon: Diamond, tone: "from-pink-500/15 to-pink-500/5 text-pink-600" },
+            { to: "/workspaces?intent=business_card", label: "Biz Card", desc: "Brand id", icon: IdCard, tone: "from-cyan-500/15 to-cyan-500/5 text-cyan-600" },
+          ].map(t => (
+            <Link key={t.to} to={t.to}
+              className={`group relative rounded-xl border border-border/60 bg-gradient-to-br ${t.tone} hover:border-primary/40 transition-all p-3 overflow-hidden`}>
+              <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-primary/0 via-primary/60 to-primary/0 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <t.icon className="h-5 w-5 mb-2" />
+              <p className="text-xs font-semibold text-foreground">{t.label}</p>
+              <p className="text-[10px] text-muted-foreground">{t.desc}</p>
+            </Link>
+          ))}
+        </div>
+      </section>
 
       {/* Recent roadmap sessions — persistent operational memory */}
       {sessions.length > 0 && (
