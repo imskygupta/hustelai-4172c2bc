@@ -45,9 +45,8 @@ const exclusiveTools = [
     icon: Key,
     title: "API access",
     desc: "Programmatic access to your workspace, clients, invoices and AI endpoints.",
-    status: "live",
-    href: "https://console.api.hustlaiapp.in",
-    external: true,
+    status: "soon",
+    href: "/contact",
   },
   {
     icon: Palette,
@@ -184,7 +183,7 @@ export default function InfinityZone() {
 
   const goTool = (t: typeof exclusiveTools[number]) => {
     if (!t.href) return;
-    if (t.external) window.open(t.href, "_blank", "noopener");
+    if ((t as any).external) window.open(t.href, "_blank", "noopener");
     else navigate(t.href);
   };
 

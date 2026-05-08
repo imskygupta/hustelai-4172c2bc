@@ -116,8 +116,6 @@ import { ScrollToTop } from "@/components/ScrollToTop";
 import { AppRouteShell } from "@/components/AppRouteShell";
 import { RequireAuth } from "@/components/RequireAuth";
 import { DocsSubdomainRedirect } from "@/components/DocsSubdomainRedirect";
-import { ApiSubdomainRedirect } from "@/components/ApiSubdomainRedirect";
-import { ConsoleSubdomainRedirect } from "@/components/ConsoleSubdomainRedirect";
 import { StatusSubdomainRedirect } from "@/components/StatusSubdomainRedirect";
 import { isMaintenance, MaintenancePage } from "@/components/MaintenanceGate";
 import { RootErrorFallback } from "@/components/RootErrorFallback";
@@ -125,40 +123,7 @@ import Status from "./pages/Status";
 import Health from "./pages/Health";
 import AdminRuntime from "./pages/admin/Runtime";
 import RuntimeProviders from "./pages/admin/RuntimeProviders";
-import ApiPlatform from "./pages/api-platform/ApiPlatform";
-import ConsoleLayout from "./pages/api-platform/console/ConsoleLayout";
-import ConsoleDashboard from "./pages/api-platform/console/Dashboard";
-import ConsoleApiKeys from "./pages/api-platform/console/ApiKeys";
-import ConsoleUsage from "./pages/api-platform/console/Usage";
-import ConsoleBilling from "./pages/api-platform/console/Billing";
-import ConsoleSettings from "./pages/api-platform/console/Settings";
-import ConsoleLogin from "./pages/api-platform/console/Login";
-import ConsoleSignup from "./pages/api-platform/console/Signup";
-import ConsoleLogs from "./pages/api-platform/console/Logs";
-import ConsolePlayground from "./pages/api-platform/console/Playground";
-import { ClerkGate } from "./pages/api-platform/console/ClerkGate";
 import { Navigate } from "react-router-dom";
-
-/** All /console/* routes share one Clerk instance + error boundary +
- * timeout fallback so the console subdomain NEVER renders a blank screen. */
-const ConsoleTree = () => (
-  <ClerkGate>
-    <Routes>
-      <Route path="login/*" element={<ConsoleLogin />} />
-      <Route path="signup/*" element={<ConsoleSignup />} />
-      <Route element={<ConsoleLayout />}>
-        <Route index element={<Navigate to="dashboard" replace />} />
-        <Route path="dashboard" element={<ConsoleDashboard />} />
-        <Route path="keys" element={<ConsoleApiKeys />} />
-        <Route path="usage" element={<ConsoleUsage />} />
-        <Route path="billing" element={<ConsoleBilling />} />
-        <Route path="playground" element={<ConsolePlayground />} />
-        <Route path="logs" element={<ConsoleLogs />} />
-        <Route path="settings" element={<ConsoleSettings />} />
-      </Route>
-    </Routes>
-  </ClerkGate>
-);
 
 // Helper to wrap an in-app page in the SaaS sidebar shell.
 // All shelled routes require auth — guests are redirected to /signup so they
@@ -183,8 +148,6 @@ const App = () => (
         <BrowserRouter>
           <ScrollToTop />
           <DocsSubdomainRedirect />
-          <ApiSubdomainRedirect />
-          <ConsoleSubdomainRedirect />
           <StatusSubdomainRedirect />
           <Routes>
             <Route path="/" element={<Index />} />
@@ -306,8 +269,6 @@ const App = () => (
               <Route index element={<DocsHome />} />
               <Route path=":slug" element={<DocsArticle />} />
             </Route>
-            <Route path="/api-platform" element={<ApiPlatform />} />
-            <Route path="/console/*" element={<ConsoleTree />} />
             <Route path="/status" element={<Status />} />
             <Route path="/api/health" element={<Health kind="health" />} />
             <Route path="/api/status" element={<Health kind="status" />} />
