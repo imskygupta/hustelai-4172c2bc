@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, ArrowRight, Sparkles } from "lucide-react";
+import { LayoutDashboard, ArrowRight, Sparkles, KeyRound, Infinity as InfinityIcon } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
 /** Map a public /tools/* page to its richer in-dashboard equivalent. */
@@ -16,11 +16,45 @@ function dashboardEquivalent(pathname: string): { href: string; label: string } 
  * "you can use this tool inside your dashboard with full AI." Hidden for guests.
  */
 export function DashboardReminderBanner() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { pathname } = useLocation();
   if (!user) return null;
-  // Already inside the dashboard version of the tool — no need to nag.
-  if (pathname.startsWith("/dashboard/tools")) return null;
+
+  // Inside the dashboard version of the tool: show a BYOK upsell instead of
+  // the "open in dashboard" reminder. Hidden for paid tiers.
+  if (pathname.startsWith("/dashboard/tools")) {
+    const tier = profile?.subscription_tier || "free";
+    if (tier !== "free") return null;
+    return (
+      <div className="mb-4 print:hidden">
+        <Link
+          to="/workspaces/ai-settings"
+          className="group flex items-center gap-3 rounded-xl border border-violet-200/70 bg-gradient-to-r from-violet-50 via-white to-fuchsia-50 px-4 py-3 shadow-sm hover:shadow-md hover:border-violet-300 transition"
+        >
+          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-600 flex items-center justify-center text-white shadow-sm shrink-0">
+            <KeyRound className="w-5 h-5" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10px] uppercase tracking-wider font-bold text-violet-700">Bring your own keys</span>
+              <InfinityIcon className="w-3 h-3 text-violet-600" />
+            </div>
+            <div className="text-sm font-semibold text-slate-900 truncate">
+              Use this tool with your own AI keys — unlimited fills
+            </div>
+            <div className="text-[11px] text-slate-500 truncate">
+              Free plan gets 3 AI fills/mo. Plug in Gemini / OpenAI / OpenRouter once for unlimited at provider cost.
+            </div>
+          </div>
+          <span className="hidden sm:inline-flex items-center gap-1.5 px-3 h-9 rounded-md bg-slate-900 text-white text-xs font-semibold group-hover:bg-slate-800 transition shrink-0">
+            Connect a key
+            <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+          </span>
+        </Link>
+      </div>
+    );
+  }
+
   const dest = dashboardEquivalent(pathname);
 
   return (
