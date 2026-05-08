@@ -1,48 +1,54 @@
 import { motion } from "framer-motion";
-import { Star } from "lucide-react";
+import { Star, TrendingUp } from "lucide-react";
 
 const testimonials = [
   {
-    name: "Aarav Sharma",
-    role: "Freelance Developer",
-    text: "HustleAI helped me find my first ₹50K/month freelancing gig within two weeks. The AI recommendations are insanely accurate!",
+    name: "Aarav Mehta",
+    role: "Founder, Lumen Studio",
+    text: "Replaced Notion, HoneyBook and three spreadsheets with one workspace. We onboarded 12 retainer clients last quarter without missing a single deadline.",
+    rating: 5,
+    avatar: "AM",
+    metric: "12 retainers managed",
+  },
+  {
+    name: "Priya Iyer",
+    role: "Brand Designer",
+    text: "The client portal alone justified the Pro plan. Clients stopped emailing PDFs and started leaving feedback right inside the project.",
+    rating: 5,
+    avatar: "PI",
+    metric: "0 lost email threads",
+  },
+  {
+    name: "Rohan Kapoor",
+    role: "Lead, Northwind Design Co.",
+    text: "Proposal → contract → invoice in one flow. Our cash collection cycle dropped from 21 days to 9 — that alone changed how we plan the month.",
+    rating: 5,
+    avatar: "RK",
+    metric: "9-day cash cycle",
+  },
+  {
+    name: "Ananya Sen",
+    role: "Independent Dev Consultant",
+    text: "AI assist drafts my scope docs and follow-ups. I edit instead of writing from scratch — saves me roughly six hours a week of admin.",
     rating: 5,
     avatar: "AS",
+    metric: "~6 hrs/week saved",
   },
   {
-    name: "Priya Patel",
-    role: "Content Creator",
-    text: "The Elite plan's chatbot is like having a personal business mentor. It guided me through pricing my services perfectly.",
+    name: "Vikram Shetty",
+    role: "Ops, Halo Content Agency",
+    text: "Pipelines plus the retainers view finally gave us forecasting we never had in Sheets. We can see next month's revenue before it lands.",
     rating: 5,
-    avatar: "PP",
-  },
-  {
-    name: "Rohan Gupta",
-    role: "UI/UX Designer",
-    text: "Zero investment side hustles? Yes please! Started earning through HustleAI suggestions without spending a single rupee.",
-    rating: 5,
-    avatar: "RG",
-  },
-  {
-    name: "Ananya Singh",
-    role: "Digital Marketer",
-    text: "The Pro plan's personalized monitoring caught a trending niche before anyone else. Made ₹2L in my first month!",
-    rating: 5,
-    avatar: "AS",
-  },
-  {
-    name: "Vikram Reddy",
-    role: "Full Stack Developer",
-    text: "Live webinars from Elite plan taught me how to scale from ₹30K to ₹3L/month. Absolute game changer.",
-    rating: 5,
-    avatar: "VR",
+    avatar: "VS",
+    metric: "30-day revenue forecast",
   },
   {
     name: "Neha Krishnan",
-    role: "Graphic Designer",
-    text: "The free tools and software licenses in the Elite plan saved me over ₹15K/month. The value is unreal!",
+    role: "Freelance Illustrator",
+    text: "Took me about a week to migrate from Trello and Razorpay invoices, but having CRM, files and billing in one place was worth the switch.",
     rating: 4,
     avatar: "NK",
+    metric: "1 tool, not 4",
   },
 ];
 
@@ -58,10 +64,10 @@ export function Testimonials() {
         >
           <div className="text-xs uppercase tracking-[0.18em] text-emerald-600 font-medium">Testimonials</div>
           <h2 className="text-3xl md:text-5xl font-display font-semibold tracking-tight text-slate-900">
-            Loved by hustlers
+            Built for client work
           </h2>
           <p className="text-slate-500 max-w-xl mx-auto">
-            Thousands of freelancers trust HustleAI to power their income streams.
+            Freelancers and small agencies use HustleAI Workspace OS to run clients, projects and billing in one place.
           </p>
         </motion.div>
 
@@ -75,13 +81,19 @@ export function Testimonials() {
               viewport={{ once: true }}
               className="rounded-xl p-6 space-y-4 bg-white border border-slate-200 hover:border-emerald-300 hover:shadow-lg hover:shadow-emerald-100 hover:-translate-y-0.5 transition-all duration-300"
             >
-              <div className="flex gap-1">
-                {[...Array(5)].map((_, j) => (
-                  <Star
-                    key={j}
-                    className={`w-4 h-4 ${j < t.rating ? "text-emerald-500 fill-emerald-500" : "text-slate-300"}`}
-                  />
-                ))}
+              <div className="flex items-center justify-between">
+                <div className="flex gap-1">
+                  {[...Array(5)].map((_, j) => (
+                    <Star
+                      key={j}
+                      className={`w-4 h-4 ${j < t.rating ? "text-emerald-500 fill-emerald-500" : "text-slate-300"}`}
+                    />
+                  ))}
+                </div>
+                <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5">
+                  <TrendingUp className="w-3 h-3" />
+                  {t.metric}
+                </span>
               </div>
               <p className="text-sm text-slate-600 leading-relaxed">"{t.text}"</p>
               <div className="flex items-center gap-3">
