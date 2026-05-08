@@ -16,6 +16,13 @@ const TASKS: Record<string, string> = {
   scope_summary: `Summarize this scope in 1 sentence, crisp. Context: {{context}}. Return JSON: { "summary": string }`,
   draft_proposal_section: `Draft a concise, persuasive proposal section (3-5 sentences) for: "{{section}}". Project context: {{context}}. Return JSON: { "text": string }`,
   proposal_full: `Generate a full freelancer proposal from this context: {{context}}. Premium, confident, outcome-focused. Return JSON: { "title": string, "summary": string, "problem": string, "approach": string, "deliverables": string[] (4-6 short items), "timeline": string, "investment": string, "whyUs": string, "cta": string (5 words max) }`,
+  // === Tool-page generators (dashboard /tools/*) ===
+  // Each takes a `currentState` JSON snapshot + a free-form `prompt` and returns
+  // a partial patch object whose keys merge into the page state.
+  tool_invoice_full: `You are filling a freelancer invoice. Current state JSON: {{state}}. User prompt: "{{prompt}}". Generate ONLY the fields the user implied. Keep currency & taxLabel sensible for the geography. Return JSON exactly matching this shape (omit keys you don't want to change): { "bizName": string, "bizEmail": string, "bizAddress": string, "bizGstin": string, "clientName": string, "clientEmail": string, "clientAddress": string, "clientGstin": string, "invoiceNo": string, "currency": string, "taxLabel": string, "taxRate": number, "notes": string, "terms": string, "items": [{ "id": string, "desc": string, "qty": number, "rate": number }] }`,
+  tool_proposal_full: `You are drafting a freelancer proposal. Current state JSON: {{state}}. User prompt: "{{prompt}}". Outcome-focused, confident, specific numbers. Return JSON (omit keys to keep): { "bizName": string, "bizEmail": string, "clientName": string, "clientCompany": string, "projectTitle": string, "scope": string (3-5 sentences), "deliverables": string[] (4-6 items), "timeline": string, "pricing": string (number only), "pricingNote": string, "currency": string, "notes": string }`,
+  tool_contract_full: `You are drafting a freelancer contract / NDA. Current state JSON: {{state}}. User prompt: "{{prompt}}". Plain English, lawyer-style, jurisdiction-neutral. Return JSON (omit keys to keep): { "providerName": string, "providerAddress": string, "providerEmail": string, "clientName": string, "clientAddress": string, "clientEmail": string, "scope": string, "fee": string, "currency": string, "intro": string (1 paragraph), "clauses": [{ "title": string, "body": string (2-4 sentences) }] }`,
+  tool_polish_full: `Polish & strengthen every text field of this document state without changing meaning. Make it 30% sharper, more professional, more persuasive. Keep numbers, dates, IDs and currencies UNCHANGED. Document type: {{section}}. Current state JSON: {{state}}. Return JSON with the SAME schema as the input — only string fields rewritten.`,
 };
 
 async function callUserKey(provider: string, apiKey: string, model: string | null, messages: any[]) {
@@ -60,11 +67,17 @@ Deno.serve(async (req) => {
     const user = userData?.user;
     if (!user) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
-    const { task, context = "", section = "", input = "" } = await req.json();
+    const { task, context = "", section = "", input = "", prompt = "", state = null } = await req.json();
     const tpl = TASKS[task];
     if (!tpl) return new Response(JSON.stringify({ error: "Unknown task" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
-    const userMsg = tpl.replace("{{context}}", String(context).slice(0, 1500)).replace("{{section}}", section) + (input ? `\n\nText:\n"""${String(input).slice(0, 1500)}"""` : "");
+    const stateJson = state ? JSON.stringify(state).slice(0, 4000) : "{}";
+    const userMsg = tpl
+      .replace("{{context}}", String(context).slice(0, 1500))
+      .replace("{{section}}", section)
+      .replace("{{prompt}}", String(prompt).slice(0, 1500))
+      .replace("{{state}}", stateJson)
+      + (input ? `\n\nText:\n"""${String(input).slice(0, 1500)}"""` : "");
     const messages = [
       { role: "system", content: "You output ONLY valid JSON. No prose, no markdown." },
       { role: "user", content: userMsg },
