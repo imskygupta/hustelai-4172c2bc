@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { TIER_LIMITS } from "@/lib/tool-limits";
+import { PETS, PetKey, setMascotPet } from "@/components/MascotCompanion";
 
 import { SEO } from "@/components/SEO";
 
@@ -22,7 +23,8 @@ interface Message {
 const ONBOARDING_QUESTIONS = [
   "First, what's your **core skill** right now? (e.g. coding, design, writing, video editing, none yet)",
   "Cool. What's your **monthly income goal** in ₹? (rough number is fine)",
-  "Last one — how many **hours a week** can you actually put in?",
+  "How many **hours a week** can you actually put in?",
+  "Last one — pick your **pet PA**: type **cat**, **dog**, **fox** or **bunny**. (Free plan stays on cat — upgrade later to switch.)",
 ];
 
 // Per-tier monthly chat-message budget. Free is locked entirely.
@@ -91,7 +93,7 @@ export default function HustleBot() {
         setOnboardingStep(1);
         setMessages([{
           role: "assistant",
-          content: `Hey ${name}! 👋✨ I'm **HustleBot** — your personal AI mentor (think custom Gemini Gem, tuned to *you*).\n\nGimme 3 quick answers and every reply will be personalised.\n\n**Q1/3 —** ${ONBOARDING_QUESTIONS[0]}`,
+          content: `Hey ${name}! 👋✨ I'm **HustleBot** — your personal AI mentor (think custom Gemini Gem, tuned to *you*).\n\nGimme 4 quick answers and every reply will be personalised.\n\n**Q1/4 —** ${ONBOARDING_QUESTIONS[0]}`,
         }]);
       } else {
         setMessages([{
@@ -106,27 +108,34 @@ export default function HustleBot() {
     if (!input.trim() || loading) return;
 
     // Onboarding flow — no AI, no quota usage
-    if (onboardingStep > 0 && onboardingStep <= 3) {
+    if (onboardingStep > 0 && onboardingStep <= 4) {
       const userMsg: Message = { role: "user", content: input.trim() };
       const updated = [...messages, userMsg];
       setMessages(updated);
       const ans = [...onboardingAnswers, input.trim()];
       setOnboardingAnswers(ans);
       setInput("");
-      if (onboardingStep < 3) {
+      if (onboardingStep < 4) {
         setMessages([...updated, {
           role: "assistant",
-          content: `Got it 🔥\n\n**Q${onboardingStep + 1}/3 —** ${ONBOARDING_QUESTIONS[onboardingStep]}`,
+          content: `Got it 🔥\n\n**Q${onboardingStep + 1}/4 —** ${ONBOARDING_QUESTIONS[onboardingStep]}`,
         }]);
         setOnboardingStep(onboardingStep + 1);
       } else {
-        const summary = `Skill: ${ans[0]} | Income goal: ${ans[1]} | Weekly hours: ${ans[2]}`;
+        const raw = (ans[3] || "").toLowerCase().trim();
+        const requested = (["cat","dog","fox","bunny"] as PetKey[]).find(k => raw.includes(k)) || "cat";
+        const finalPet: PetKey = isFree ? "cat" : requested;
+        try { setMascotPet(finalPet); } catch {}
+        const summary = `Skill: ${ans[0]} | Income goal: ${ans[1]} | Weekly hours: ${ans[2]} | Pet PA: ${finalPet}`;
         try {
           if (user) await supabase.from("profiles").update({ bio: summary } as any).eq("user_id", user.id);
         } catch {}
+        const petNote = isFree && requested !== "cat"
+          ? `\n\n_(Free plan is locked to the **Cat** ${PETS.cat.emoji} — upgrade to Pro to switch to **${PETS[requested].label}** ${PETS[requested].emoji}.)_`
+          : `\n\nYour pet PA: **${PETS[finalPet].label}** ${PETS[finalPet].emoji} — drag it anywhere on screen.`;
         setMessages([...updated, {
           role: "assistant",
-          content: `Locked in 🚀\n\n• Skill → **${ans[0]}**\n• Goal → **₹${ans[1]}**\n• Hours → **${ans[2]}/wk**\n\nNow ask me anything — gigs, pricing, scripts, scaling. I'll always answer with *your* situation in mind.`,
+          content: `Locked in 🚀\n\n• Skill → **${ans[0]}**\n• Goal → **₹${ans[1]}**\n• Hours → **${ans[2]}/wk**${petNote}\n\nNow ask me anything — gigs, pricing, scripts, scaling. I'll always answer with *your* situation in mind.`,
         }]);
         setOnboardingStep(0);
       }
