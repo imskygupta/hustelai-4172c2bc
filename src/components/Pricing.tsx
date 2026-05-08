@@ -1,16 +1,19 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Check, Crown, Rocket, Sparkles, Star } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Check, Crown, Rocket, Sparkles, Star, Building2, ArrowRight, Flame } from "lucide-react";
 
 const plans = [
   {
     name: "Free",
     priceUSD: "$0",
     priceINR: "₹0",
+    strikeINR: "",
     period: "forever",
     tagline: "Perfect for getting started",
     icon: Sparkles,
+    badge: null as string | null,
     features: [
       "1 Workspace",
       "3 AI assists / day",
@@ -29,10 +32,12 @@ const plans = [
     name: "Pro",
     priceUSD: "$5",
     priceINR: "₹450",
+    strikeINR: "₹999",
     period: "/month",
     tagline: "For active freelancers",
     icon: Rocket,
     popular: true,
+    badge: "Most popular",
     features: [
       "5 Workspaces",
       "5 AI assists / day",
@@ -53,9 +58,11 @@ const plans = [
     name: "Elite",
     priceUSD: "$10",
     priceINR: "₹900",
+    strikeINR: "₹1,999",
     period: "/month",
     tagline: "For growing freelance businesses",
     icon: Crown,
+    badge: "Save 55%",
     features: [
       "Unlimited workspaces",
       "10 AI assists / day",
@@ -75,10 +82,12 @@ const plans = [
     name: "Infinity",
     priceUSD: "$25",
     priceINR: "₹2,250",
+    strikeINR: "₹4,999",
     period: "/month",
     tagline: "For agencies & power users",
     icon: Star,
     infinity: true,
+    badge: "Ultimate",
     features: [
       "Everything in Elite",
       "Unlimited AI assists",
@@ -108,7 +117,9 @@ export function Pricing() {
           viewport={{ once: true }}
           className="text-center mb-16 space-y-4"
         >
-          <div className="text-xs uppercase tracking-[0.18em] text-emerald-600 font-medium">Pricing</div>
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-emerald-200 bg-emerald-50 text-emerald-700 text-xs font-medium">
+            <Flame className="w-3.5 h-3.5" /> Limited launch pricing — up to 60% off
+          </div>
           <h2 className="text-3xl md:text-5xl font-display font-semibold tracking-tight text-slate-900">
             Pricing built for client work.
           </h2>
@@ -133,14 +144,11 @@ export function Pricing() {
                   : "border-slate-200 hover:border-emerald-300 hover:shadow-lg hover:shadow-emerald-100"
               }`}
             >
-              {plan.popular && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-emerald-500 text-white text-[11px] font-semibold tracking-wide shadow-sm">
-                  Most Popular
-                </div>
-              )}
-              {plan.infinity && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-amber-400 text-slate-900 text-[11px] font-semibold tracking-wide shadow-sm">
-                  ♾️ Ultimate
+              {plan.badge && (
+                <div className={`absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-[11px] font-semibold tracking-wide shadow-sm ${
+                  plan.popular ? "bg-emerald-500 text-white" : plan.infinity ? "bg-amber-400 text-slate-900" : "bg-slate-900 text-white"
+                }`}>
+                  {plan.badge}
                 </div>
               )}
 
@@ -159,11 +167,17 @@ export function Pricing() {
                 <h3 className="font-display font-semibold text-lg text-slate-900">{plan.name}</h3>
                 <p className="text-xs text-slate-500 -mt-1">{plan.tagline}</p>
                 <div>
-                  <div className="flex items-baseline gap-1">
+                  <div className="flex items-baseline gap-2">
                     <span className="text-3xl font-display font-semibold text-slate-900">{plan.priceINR}</span>
                     <span className="text-slate-500 text-xs">{plan.period}</span>
                   </div>
-                  <span className="text-xs text-slate-400">({plan.priceUSD} USD)</span>
+                  {plan.strikeINR && (
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-xs text-slate-400 line-through">{plan.strikeINR}</span>
+                      <Badge className="bg-rose-50 text-rose-600 border border-rose-200 hover:bg-rose-50 text-[10px] px-1.5 py-0">Launch deal</Badge>
+                    </div>
+                  )}
+                  <span className="text-xs text-slate-400 block mt-1">({plan.priceUSD} USD)</span>
                 </div>
               </div>
 
@@ -191,6 +205,40 @@ export function Pricing() {
             </motion.div>
           ))}
         </div>
+
+        {/* Enterprise band */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="mt-10 relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#0F172A] via-[#1E1B4B] to-[#312E81] text-white p-8 md:p-10"
+        >
+          <div className="absolute -top-32 -right-32 w-96 h-96 bg-fuchsia-500/30 blur-3xl rounded-full pointer-events-none" />
+          <div className="absolute -bottom-32 -left-32 w-96 h-96 bg-cyan-500/20 blur-3xl rounded-full pointer-events-none" />
+          <div className="relative grid md:grid-cols-[1.4fr_1fr] gap-6 items-center">
+            <div className="space-y-3">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur border border-white/20 text-xs">
+                <Building2 className="w-3.5 h-3.5" /> Enterprise
+              </div>
+              <h3 className="text-2xl md:text-3xl font-display font-semibold tracking-tight">
+                Need something custom for your agency or studio?
+              </h3>
+              <p className="text-slate-300 max-w-xl text-sm">
+                Volume seats, SSO, custom integrations, dedicated success manager and SLA-backed uptime. We'll shape it around your workflow.
+              </p>
+              <div className="flex flex-wrap gap-2 pt-1">
+                {["SSO / SAML", "Custom contracts", "Dedicated CSM", "99.99% SLA"].map((t) => (
+                  <span key={t} className="text-[11px] px-2.5 py-1 rounded-full bg-white/10 border border-white/15">{t}</span>
+                ))}
+              </div>
+            </div>
+            <div className="flex md:justify-end">
+              <Button size="lg" className="bg-white text-slate-900 hover:bg-slate-100 h-12 px-6 font-semibold" onClick={() => navigate("/contact?topic=enterprise")}>
+                Contact sales <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </div>
+          </div>
+        </motion.div>
 
         {/* Pay-As-You-Go Card */}
         <motion.div
