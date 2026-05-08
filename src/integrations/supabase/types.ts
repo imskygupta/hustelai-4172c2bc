@@ -3811,6 +3811,18 @@ export type Database = {
       }
     }
     Views: {
+      admin_daily_usage_summary: {
+        Row: {
+          ai_max_today: number | null
+          ai_used_today: number | null
+          email: string | null
+          has_byo_key: boolean | null
+          last_use_at: string | null
+          subscription_tier: string | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
       admin_usage_summary: {
         Row: {
           ai_calls_30d: number | null
