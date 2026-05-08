@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Download, ArrowLeft, FileText, Sparkles, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { SEO, faqJsonLd } from "@/components/SEO";
 import { useToolGate } from "@/components/tools/ToolGate";
 import { AIAutofillIcon, AIAutofillButton } from "@/components/tools/AIAutofillButton";
 import { DashboardReminderBanner } from "@/components/tools/DashboardReminderBanner";
+import { DashboardToolAIPanel } from "@/components/tools/DashboardToolAIPanel";
 import { PROPOSAL_TEMPLATES } from "@/lib/tools/templates";
 
 const STORAGE_KEY = "hustleai-tool-proposal-v1";
@@ -61,6 +62,8 @@ const faqs = [
 export default function ProposalGenerator() {
   const [s, setS] = useState<State>(initial);
   const { guard, gate } = useToolGate("proposal", "download your proposal");
+  const { pathname } = useLocation();
+  const inDashboard = pathname.startsWith("/dashboard/tools");
   const aiFill = (section: string) =>
     guard(() => {
       // TODO: wire to AI gateway for signed-in users
@@ -73,6 +76,12 @@ export default function ProposalGenerator() {
   useEffect(() => { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); }, [s]);
 
   const set = (k: keyof State, v: any) => setS((x) => ({ ...x, [k]: v }));
+  const patchState = (patch: Partial<State>) =>
+    setS((x) => ({
+      ...x,
+      ...patch,
+      deliverables: Array.isArray(patch.deliverables) && patch.deliverables.length ? patch.deliverables.map(String) : x.deliverables,
+    }));
   const setDel = (i: number, v: string) => setS((x) => ({ ...x, deliverables: x.deliverables.map((d, j) => j === i ? v : d) }));
   const addDel = () => setS((x) => ({ ...x, deliverables: [...x.deliverables, "New deliverable"] }));
   const removeDel = (i: number) => setS((x) => ({ ...x, deliverables: x.deliverables.filter((_, j) => j !== i) }));
@@ -104,12 +113,25 @@ export default function ProposalGenerator() {
       <div className="min-h-screen bg-slate-50 pt-20 pb-16 px-4">
         <div className="max-w-7xl mx-auto">
           <DashboardReminderBanner />
+          {inDashboard && (
+            <DashboardToolAIPanel
+              kind="proposal"
+              state={s}
+              onPatch={patchState}
+              templates={PROPOSAL_TEMPLATES.map((t) => ({ id: t.id, label: t.label }))}
+              currentTemplateId={s.templateId}
+              onTemplateChange={applyTemplate}
+              featureKey="proposal"
+            />
+          )}
           <div className="mb-6 flex items-center justify-between print:hidden">
             <Link to="/tools" className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900">
               <ArrowLeft className="w-4 h-4" /> All free tools
             </Link>
             <div className="flex items-center gap-2">
-              <AIAutofillButton storageKey="hustleai-tool-proposal-v1" onClick={() => aiFill("the whole proposal")} label="AI auto-fill" />
+              {!inDashboard && (
+                <AIAutofillButton storageKey="hustleai-tool-proposal-v1" onClick={() => aiFill("the whole proposal")} label="AI auto-fill" />
+              )}
               <Button onClick={handleDownload} className="bg-slate-900 hover:bg-slate-800 text-white">
                 <Download className="w-4 h-4 mr-2" /> Download PDF
               </Button>
@@ -144,7 +166,7 @@ export default function ProposalGenerator() {
           <div className="grid lg:grid-cols-2 gap-6">
             {/* Form */}
             <div className="space-y-5 print:hidden">
-              <Card title="Header" action={<AIAutofillIcon storageKey="hustleai-tool-proposal-v1" sectionName="your business header" onClick={() => aiFill("your business header")} />}>
+              <Card title="Header" action={inDashboard ? null : <AIAutofillIcon storageKey="hustleai-tool-proposal-v1" sectionName="your business header" onClick={() => aiFill("your business header")} />}>
                 <div className="grid grid-cols-2 gap-3">
                   <Field label="Proposal #" value={s.proposalNo} onChange={(v) => set("proposalNo", v)} />
                   <Field label="Date" type="date" value={s.date} onChange={(v) => set("date", v)} />
@@ -153,17 +175,17 @@ export default function ProposalGenerator() {
                 <Field label="Your email" value={s.bizEmail} onChange={(v) => set("bizEmail", v)} />
               </Card>
 
-              <Card title="Prepared for" action={<AIAutofillIcon storageKey="hustleai-tool-proposal-v1" sectionName="the client block" onClick={() => aiFill("the client block")} />}>
+              <Card title="Prepared for" action={inDashboard ? null : <AIAutofillIcon storageKey="hustleai-tool-proposal-v1" sectionName="the client block" onClick={() => aiFill("the client block")} />}>
                 <Field label="Client name" value={s.clientName} onChange={(v) => set("clientName", v)} />
                 <Field label="Client company" value={s.clientCompany} onChange={(v) => set("clientCompany", v)} />
                 <Field label="Project title" value={s.projectTitle} onChange={(v) => set("projectTitle", v)} />
               </Card>
 
-              <Card title="Scope" action={<AIAutofillIcon storageKey="hustleai-tool-proposal-v1" sectionName="project scope from a one-line brief" onClick={() => aiFill("project scope from a one-line brief")} />}>
+              <Card title="Scope" action={inDashboard ? null : <AIAutofillIcon storageKey="hustleai-tool-proposal-v1" sectionName="project scope from a one-line brief" onClick={() => aiFill("project scope from a one-line brief")} />}>
                 <FieldArea label="Project overview" value={s.scope} onChange={(v) => set("scope", v)} />
               </Card>
 
-              <Card title="Deliverables" action={<AIAutofillIcon storageKey="hustleai-tool-proposal-v1" sectionName="deliverables list" onClick={() => aiFill("deliverables list")} />}>
+              <Card title="Deliverables" action={inDashboard ? null : <AIAutofillIcon storageKey="hustleai-tool-proposal-v1" sectionName="deliverables list" onClick={() => aiFill("deliverables list")} />}>
                 <div className="space-y-2">
                   {s.deliverables.map((d, i) => (
                     <div key={i} className="flex gap-2">
@@ -175,7 +197,7 @@ export default function ProposalGenerator() {
                 </div>
               </Card>
 
-              <Card title="Timeline & investment" action={<AIAutofillIcon storageKey="hustleai-tool-proposal-v1" sectionName="timeline & pricing" onClick={() => aiFill("timeline & pricing")} />}>
+              <Card title="Timeline & investment" action={inDashboard ? null : <AIAutofillIcon storageKey="hustleai-tool-proposal-v1" sectionName="timeline & pricing" onClick={() => aiFill("timeline & pricing")} />}>
                 <FieldArea label="Timeline" value={s.timeline} onChange={(v) => set("timeline", v)} />
                 <div className="grid grid-cols-2 gap-3">
                   <Field label="Currency" value={s.currency} onChange={(v) => set("currency", v)} />
