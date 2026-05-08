@@ -5,7 +5,7 @@ import { Navbar } from "@/components/Navbar";
 import { Pricing } from "@/components/Pricing";
 import { Testimonials } from "@/components/Testimonials";
 import { Footer } from "@/components/Footer";
-import { ArrowRight, Zap, Brain, Target, TrendingUp, Shield, Globe, Check, X, BadgeCheck, Sparkles, Activity, Code2, Building2, FileText, Users, Workflow, Receipt, Bot, Layers } from "lucide-react";
+import { ArrowRight, Zap, Brain, Target, TrendingUp, Shield, Globe, Check, X, BadgeCheck, Sparkles, Activity, FileText, Users, Workflow, Receipt, Bot, Layers } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
