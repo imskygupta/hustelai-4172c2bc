@@ -5,6 +5,8 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { isMascotEnabled, setMascotEnabled } from "@/components/MascotCompanion";
+import { isDelightMuted, setDelightMuted } from "@/lib/delight-bus";
 
 const FIELDS: { key: string; label: string; desc: string }[] = [
   { key: "email_enabled", label: "Email notifications", desc: "Master switch — turn off all non-critical emails." },
@@ -20,6 +22,13 @@ export default function NotificationPreferences() {
   const [prefs, setPrefs] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [mascot, setMascot] = useState<boolean>(true);
+  const [delight, setDelight] = useState<boolean>(true);
+
+  useEffect(() => {
+    setMascot(isMascotEnabled());
+    setDelight(!isDelightMuted());
+  }, []);
 
   useEffect(() => { (async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -57,6 +66,26 @@ export default function NotificationPreferences() {
             </div>
           ))}
           <div className="pt-2"><Button onClick={save} disabled={saving}>{saving ? "Saving…" : "Save preferences"}</Button></div>
+        </CardContent>
+      </Card>
+
+      <Card className="mt-6">
+        <CardHeader><CardTitle className="text-base">In-app delight</CardTitle></CardHeader>
+        <CardContent className="space-y-5">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <Label className="text-sm font-medium">Companion mascot 🐱</Label>
+              <p className="text-xs text-muted-foreground mt-0.5">Tiny animated cat that greets you and drops the occasional tip.</p>
+            </div>
+            <Switch checked={mascot} onCheckedChange={(v) => { setMascot(v); setMascotEnabled(v); }} />
+          </div>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <Label className="text-sm font-medium">Action toasts</Label>
+              <p className="text-xs text-muted-foreground mt-0.5">Celebratory popups after generating PDFs and other wins.</p>
+            </div>
+            <Switch checked={delight} onCheckedChange={(v) => { setDelight(v); setDelightMuted(!v); }} />
+          </div>
         </CardContent>
       </Card>
     </div>
