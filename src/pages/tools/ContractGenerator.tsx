@@ -12,6 +12,9 @@ import { AIAutofillIcon, AIAutofillButton } from "@/components/tools/AIAutofillB
 import { DashboardReminderBanner } from "@/components/tools/DashboardReminderBanner";
 import { DashboardToolAIPanel } from "@/components/tools/DashboardToolAIPanel";
 import { CONTRACT_TEMPLATES } from "@/lib/tools/templates";
+import { useAuth } from "@/hooks/useAuth";
+import { printWithMeta, watermarkModeForTier } from "@/lib/tools/print-meta";
+import { emitDelight, pickDelight, bumpDelightCount } from "@/lib/delight-bus";
 
 const STORAGE_KEY = "hustleai-tool-contract-v1";
 
@@ -60,6 +63,9 @@ export default function ContractGenerator() {
   const [s, setS] = useState<State>(initial);
   const { guard, gate } = useToolGate("contract", "download your contract");
   const { pathname } = useLocation();
+  const { profile } = useAuth();
+  const tier = (profile?.subscription_tier as string) || "free";
+  const wm = watermarkModeForTier(tier);
   const inDashboard = pathname.startsWith("/dashboard/tools");
   const aiFill = (section: string) =>
     guard(() => {
@@ -90,7 +96,16 @@ export default function ContractGenerator() {
     setS((x) => ({ ...x, templateId: id, intro: t.intro, clauses: t.clauses.map((c) => ({ ...c })) }));
   };
 
-  const handleDownload = () => guard(() => window.print());
+  const handleDownload = () =>
+    guard(() =>
+      printWithMeta({
+        docTitle: `Contract — ${s.providerName} & ${s.clientName}`,
+        afterPrint: () => {
+          bumpDelightCount();
+          emitDelight(pickDelight("contract_pdf"));
+        },
+      }),
+    );
 
   return (
     <>
