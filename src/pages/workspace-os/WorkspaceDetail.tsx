@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { ArrowLeft, Briefcase, Sparkles, FileText } from "lucide-react";
+import { useSidebar } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import CRMPanel from "@/components/workspace-os/CRMPanel";
@@ -25,6 +26,13 @@ export default function WorkspaceDetail() {
   const [loading, setLoading] = useState(true);
   const [params, setParams] = useSearchParams();
   const tab = params.get("tab") || "overview";
+  // Auto-fold the global sidebar to icon-only mode while inside a workspace
+  // — gives the cockpit more horizontal room for the rich tabs and rail.
+  const { setOpen } = useSidebar();
+  useEffect(() => {
+    setOpen(false);
+    return () => setOpen(true);
+  }, [setOpen]);
 
   useEffect(() => {
     if (!user || !id) return;
@@ -44,47 +52,60 @@ export default function WorkspaceDetail() {
         <ArrowLeft className="h-4 w-4" /> All workspaces
       </Link>
 
+      {/* Header — gradient bar + condensed identity strip */}
       <motion.header initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-        className="rounded-2xl border border-border bg-gradient-to-br from-primary/10 via-card to-background p-6">
-        <div className="flex items-start gap-4">
-          <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-primary/30 to-primary/5 flex items-center justify-center overflow-hidden">
-            {w.logo_url ? <img src={w.logo_url} alt="" className="h-full w-full object-cover" /> : <Briefcase className="h-7 w-7 text-primary" />}
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <h2 className="text-2xl font-semibold tracking-tight">{w.client_name}</h2>
-              <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-primary/10 text-primary">{w.status?.replace("_", " ")}</span>
-              {w.source && <span className="text-[10px] text-muted-foreground">via {w.source}</span>}
+        className="relative overflow-hidden rounded-2xl border border-border bg-card">
+        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary via-violet-500 to-emerald-500" />
+        <div className="p-5 md:p-6 bg-gradient-to-br from-primary/[0.06] via-transparent to-transparent">
+          <div className="flex items-start gap-4">
+            <div className="h-14 w-14 shrink-0 rounded-2xl bg-gradient-to-br from-primary/30 to-primary/5 flex items-center justify-center overflow-hidden ring-1 ring-primary/20">
+              {w.logo_url ? <img src={w.logo_url} alt="" className="h-full w-full object-cover" /> : <Briefcase className="h-7 w-7 text-primary" />}
             </div>
-            {w.company_name && <p className="text-sm text-muted-foreground mt-0.5">{w.company_name}</p>}
-            {w.ai_summary && (
-              <p className="text-sm mt-3 text-foreground/80 italic flex gap-2">
-                <Sparkles className="h-4 w-4 text-primary mt-0.5 shrink-0" />{w.ai_summary}
-              </p>
-            )}
-          </div>
-          <div className="text-right space-y-1">
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Lifetime value</p>
-            <p className="text-lg font-semibold">₹{Number(w.total_paid || 0).toLocaleString()}</p>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h2 className="text-xl md:text-2xl font-semibold tracking-tight truncate">{w.client_name}</h2>
+                <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">{w.status?.replace("_", " ")}</span>
+                {w.source && <span className="text-[10px] text-muted-foreground">via {w.source}</span>}
+              </div>
+              {w.company_name && <p className="text-sm text-muted-foreground mt-0.5">{w.company_name}</p>}
+              {w.ai_summary && (
+                <p className="text-sm mt-2 text-foreground/80 flex gap-2 line-clamp-2">
+                  <Sparkles className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                  <span className="italic">{w.ai_summary}</span>
+                </p>
+              )}
+            </div>
+            <div className="text-right space-y-1 shrink-0 hidden sm:block">
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Lifetime value</p>
+              <p className="text-lg font-semibold">₹{Number(w.total_paid || 0).toLocaleString()}</p>
+            </div>
           </div>
         </div>
       </motion.header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6">
-        <Tabs value={tab} onValueChange={(v) => setParams({ tab: v })} className="space-y-4">
-          <TabsList className="bg-muted/40">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="roadmap">Roadmap</TabsTrigger>
-            <TabsTrigger value="crm">CRM</TabsTrigger>
-            <TabsTrigger value="tasks">Tasks</TabsTrigger>
-            <TabsTrigger value="payments">Payments</TabsTrigger>
-            <TabsTrigger value="collab">Collab</TabsTrigger>
-            <TabsTrigger value="portal">Portal</TabsTrigger>
-            <TabsTrigger value="files">Files</TabsTrigger>
-            <TabsTrigger value="retainer">Retainer</TabsTrigger>
-            <TabsTrigger value="activity">Activity</TabsTrigger>
-            <TabsTrigger value="docs" asChild><Link to={`/workspaces/${w.id}/docs`}>Docs</Link></TabsTrigger>
-          </TabsList>
+      <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_300px] gap-6">
+        <Tabs value={tab} onValueChange={(v) => setParams({ tab: v })} className="space-y-4 min-w-0">
+          {/* Sticky scrollable tab rail with gradient underline */}
+          <div className="sticky top-14 z-20 -mx-1 px-1 bg-background/85 backdrop-blur-md border-b border-border/60">
+            <div className="overflow-x-auto no-scrollbar">
+              <TabsList className="bg-transparent p-0 h-auto gap-1 inline-flex">
+                {[
+                  ["overview","Overview"],["roadmap","Roadmap"],["crm","CRM"],["tasks","Tasks"],
+                  ["payments","Payments"],["collab","Collab"],["portal","Portal"],["files","Files"],
+                  ["retainer","Retainer"],["activity","Activity"],
+                ].map(([v,l]) => (
+                  <TabsTrigger
+                    key={v} value={v}
+                    className="relative px-3 py-2 rounded-none data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none after:absolute after:inset-x-2 after:-bottom-px after:h-0.5 after:rounded-full after:bg-gradient-to-r after:from-primary after:to-violet-500 after:opacity-0 data-[state=active]:after:opacity-100 transition-colors text-muted-foreground hover:text-foreground"
+                  >{l}</TabsTrigger>
+                ))}
+                <Link
+                  to={`/workspaces/${w.id}/docs`}
+                  className="px-3 py-2 text-sm text-muted-foreground hover:text-foreground inline-flex items-center"
+                >Docs</Link>
+              </TabsList>
+            </div>
+          </div>
 
           <TabsContent value="overview" className="space-y-4">
             {w.project_scope && (
@@ -123,7 +144,9 @@ export default function WorkspaceDetail() {
           </TabsContent>
         </Tabs>
 
-        <aside><HustleBotRail workspaceId={w.id} /></aside>
+        <aside className="min-w-0 xl:sticky xl:top-20 xl:self-start xl:max-h-[calc(100vh-6rem)] xl:overflow-y-auto">
+          <HustleBotRail workspaceId={w.id} />
+        </aside>
       </div>
     </div>
   );
