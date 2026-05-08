@@ -1,68 +1,66 @@
-# Client Acquisition Engine — Intake OS Polish
+## Goal
+Build a free-tools SEO/PLG funnel for HustleAI — browser-only utilities (zero AI/API cost) that rank for high-intent freelancer queries and convert visitors into signups.
 
-Transform the existing Intake OS (DB2) into a connected acquisition pipeline. Build in a focused order so each layer compounds value.
+## Phase 1 — Ship 3 tools (this round)
 
-## Scope
+Public marketing pages, no login required to *use*. Signup gate triggers on **Export PDF / Save / Share** actions. Existing `SignupCTADialog` pattern reused.
 
-### 1. Form Themes (visual polish)
-- Add 5 themes to `IntakeSubmit.tsx`: `minimal`, `cinematic`, `startup`, `corporate`, `luxury`, `agency`
-- Theme stored in `intake_forms.settings.theme`
-- Theme picker on `IntakeForms.tsx` create/edit
-- Themes use existing semantic tokens — no hardcoded colors
+### Routes (all public, indexable)
+- `/tools` — hub/landing page listing all free tools (SEO pillar page)
+- `/tools/invoice-generator` — GST-ready invoice builder, live PDF preview
+- `/tools/proposal-generator` — freelance/agency proposal builder with templates
+- `/tools/contract-generator` — freelance contract / NDA / web-dev agreement
 
-### 2. Smart Field Templates (1-click form creation)
-- Add `INTAKE_TEMPLATES` library in `src/lib/intake-os/templates.ts`:
-  - Website project, Video editing, Branding, SaaS MVP, Automation setup, Ghostwriting
-- Template picker on `IntakeForms.tsx` — "Start from template" dropdown
-- Each template = title + description + curated fields
+### Tool UX (shared pattern)
+1. Left = form fields, Right = live A4 preview (uses existing `ThemedSurface` + template architecture from `workspace-docs`)
+2. Local state only (`useState` + `localStorage` for draft persistence)
+3. **Free actions:** edit, preview, switch template, print preview (browser print)
+4. **Gated actions:** Download PDF, Save to workspace, Share link → opens `SignupCTADialog` with contextual copy ("Sign up free to download your invoice")
+5. After signup, redirect back to tool with draft restored from `localStorage`
 
-### 3. Client Status Pipeline (CRM lane)
-- Extend `intake_submissions.status` enum-like values: `lead`, `qualified`, `proposal_sent`, `negotiation`, `won`, `active`, `retainer`, `lost` (keep `new`/`reviewed`/`converted`/`archived` as legacy aliases)
-- New `Pipeline` view on `IntakeInbox.tsx`: kanban-style columns by status with drag-or-click move
-- Backend: `submission.update_status` already exists — relax validation to accept new values
+### Reuse existing infra
+- PDF export: `src/lib/workspace-docs/export-pdf.ts`
+- Templates: `InvoiceTemplate`, `ProposalTemplate`, `AgreementTemplate` (already in `src/components/workspace-docs/templates/`)
+- Theme picker: `ThemePicker` for visual variants
+- Signup dialog: `SignupCTADialog` (extend with `action` prop for context-aware copy)
 
-### 4. AI Risk + Confidence Panel
-- Already returns `risks`, `urgency`, `scope_clarity`. Add structured **risk badges** in `IntakeInbox.tsx` detail drawer:
-  - Scope clarity (weak/medium/strong)
-  - Urgency
-  - Risk chips (color-coded)
-  - Confidence score (derived from clarity + risk count)
-- No new AI calls — reformat existing analysis output
+### SEO
+- `<SEO>` component on each page with intent keywords:
+  - Invoice: "Free GST Invoice Generator for Freelancers — HustleAI"
+  - Proposal: "Free Freelance Proposal Generator & Template — HustleAI"
+  - Contract: "Free Freelance Contract & NDA Generator — HustleAI"
+- JSON-LD `SoftwareApplication` schema per tool
+- Single H1, FAQ section (use existing `FaqSection`), breadcrumbs
+- Add all 4 routes to `public/sitemap.xml`
 
-### 5. Auto Workspace Creation
-- New "Convert to Workspace" action on submission detail
-- Frontend handler in `src/lib/intake-os/convert.ts`:
-  - Calls existing workspace API to create workspace named after client
-  - Creates client record (DB2 `clients` table via `work-api`)
-  - Creates draft Proposal + Quotation docs (via `workspace-docs/infra.ts`) seeded from submission payload + AI analysis
-  - Marks submission `status = 'converted'`, stores `workspace_id`
-- Single button → all artifacts created
+### Navbar / Footer
+- Add **Free Tools** dropdown to public Navbar (Invoice / Proposal / Contract / View all)
+- Add **Free Tools** column to Footer
 
-### 6. Generated Next Actions
-- In submission detail panel, after AI analysis show action stack:
-  - Generate Proposal, Create Agreement, Send Quote, Build Checklist, Schedule Follow-up
-- Each maps to an existing route/handler (proposal draft, doc editor, follow-up scheduler)
+## Phase 2 — (queued, not built now)
+Pricing Calculator, Bio Generator, Onboarding Form Builder, Pomodoro widget, Content Calendar.
 
-### 7. Client Magic Portal (groundwork only)
-- Use existing `client_portal_links` table
-- Add "Generate Portal Link" action on converted submission
-- Public route `/portal/:token` (already partly exists as `WorkspacePortal`) — wire link generation; leave full portal redesign for next phase
+## Files to create
+```
+src/pages/tools/ToolsHub.tsx
+src/pages/tools/InvoiceGenerator.tsx
+src/pages/tools/ProposalGenerator.tsx
+src/pages/tools/ContractGenerator.tsx
+src/lib/tools/contract-templates.ts   (3-4 boilerplate contracts)
+src/lib/tools/proposal-templates.ts   (3-4 proposal scaffolds)
+src/components/tools/ToolGateButton.tsx  (wraps gated actions → SignupCTADialog)
+src/components/tools/ToolPageShell.tsx   (shared header/footer/SEO wrapper)
+```
 
-## Out of Scope (explicit)
-- No new database project / DB4
-- No new AI features beyond reformatting current analysis
-- No full client portal redesign — link generation only
+## Files to edit
+- `src/App.tsx` — register 4 routes (public, outside AppShell)
+- `src/components/Navbar.tsx` — add "Free Tools" dropdown
+- `src/components/Footer.tsx` — add Free Tools column
+- `src/components/SignupCTADialog.tsx` — accept `action`/`title`/`subtitle` props for context
+- `public/sitemap.xml` — add new URLs
+- `mem://index.md` + new `mem://features/free-tools-funnel.md` — record the strategy
 
-## Technical Notes
-- All new tables/columns live on **DB2** (`utflzmecghdtcjupgdan`) — extend `INTAKE_SETUP_SQL` in `src/lib/work-sql.ts` with: `ALTER TABLE intake_submissions ADD COLUMN IF NOT EXISTS pipeline_stage text DEFAULT 'lead'`, `portal_token text`, `converted_workspace_id uuid`
-- User must re-run the Intake setup SQL block from `/admin-dashboard` → SQL Setup against DB2 after deploy
-- Edge function `intake-api`: extend `submission.update_status` to allow new pipeline stages, add `submission.generate_portal_link` and `submission.set_stage`
-- Frontend convert flow uses existing `workspace-docs/infra.ts` + `work-api` — no new edge functions for conversion
-- Themes are pure CSS via Tailwind tokens; no new dependencies
-
-## Build Order
-1. SQL extension (work-sql) + edge function status/stage/portal endpoints
-2. Form themes + template library + form builder UI
-3. Pipeline view + risk panel reformat
-4. Convert-to-workspace flow + next actions stack
-5. Portal link generation
+## Out of scope (intentionally)
+- No backend tables (everything client-side until signup)
+- No AI calls on public pages — strictly template + form logic
+- No "Save to cloud" feature on public route — that's the signup hook
