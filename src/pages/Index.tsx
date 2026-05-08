@@ -321,69 +321,6 @@ export default function Index() {
         </div>
       </section>
 
-      {/* B2B / API CTA — for businesses & developers */}
-      <section className="py-20 px-4 bg-gradient-to-b from-white to-slate-50 border-t border-slate-100">
-        <div className="container mx-auto max-w-5xl">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="relative rounded-3xl overflow-hidden p-8 md:p-14 bg-gradient-to-br from-[#0F172A] via-[#1E1B4B] to-[#312E81] text-white"
-          >
-            <div className="absolute -top-32 -right-32 w-96 h-96 bg-fuchsia-500/30 blur-3xl rounded-full pointer-events-none" />
-            <div className="absolute -bottom-32 -left-32 w-96 h-96 bg-cyan-500/20 blur-3xl rounded-full pointer-events-none" />
-
-            <div className="relative grid md:grid-cols-[1.4fr_1fr] gap-10 items-center">
-              <div className="space-y-5">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur border border-white/20 text-xs">
-                  <Building2 className="w-3.5 h-3.5" /> Are you a business?
-                </div>
-                <h2 className="text-3xl md:text-5xl font-display font-semibold tracking-tight leading-[1.05]">
-                  Plug HustleAI into <span className="bg-gradient-to-r from-fuchsia-300 to-amber-200 bg-clip-text text-transparent">your product.</span>
-                </h2>
-                <p className="text-slate-300 text-base md:text-lg max-w-xl">
-                  Embed our 20+ AI & Work tools — Invoices, Time tracker, Clients CRM, Resume Optimizer, Proposal Drafter, Gig Pricer, Red-Flag Scanner & more — into your platform via clean REST APIs. Volume pricing, enterprise SLA, dedicated support.
-                </p>
-                <div className="flex flex-wrap gap-3 pt-2">
-                  <Button
-                    size="lg"
-                    className="bg-white text-slate-900 hover:bg-slate-100 h-12 px-6 font-semibold"
-                    onClick={() => navigate("/products")}
-                  >
-                    Browse B2B APIs <ArrowRight className="w-4 h-4 ml-2" />
-                  </Button>
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    className="h-12 px-6 border-white text-white bg-white/10 hover:bg-white/20 hover:text-white font-semibold"
-                    onClick={() => navigate("/contact")}
-                  >
-                    Talk to sales
-                  </Button>
-                </div>
-              </div>
-
-              <div className="relative rounded-2xl bg-black/40 backdrop-blur border border-white/10 p-5 font-mono text-[12px] leading-relaxed shadow-2xl">
-                <div className="flex items-center gap-1.5 mb-3">
-                  <span className="w-2.5 h-2.5 rounded-full bg-red-400/80" />
-                  <span className="w-2.5 h-2.5 rounded-full bg-amber-400/80" />
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-400/80" />
-                  <Code2 className="w-3.5 h-3.5 ml-auto text-slate-400" />
-                </div>
-                <pre className="text-slate-300 whitespace-pre-wrap">
-<span className="text-fuchsia-300">POST</span> https://api.hustlaiapp.in/v1/<span className="text-amber-200">resume-optimize</span>
-
-{`{`}
-  <span className="text-cyan-300">"resume"</span>: <span className="text-emerald-300">"..."</span>,
-  <span className="text-cyan-300">"target_role"</span>: <span className="text-emerald-300">"Frontend Eng"</span>
-{`}`}
-                </pre>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
       <div className="bg-white">
         <Footer />
       </div>
