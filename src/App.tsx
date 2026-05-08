@@ -240,6 +240,12 @@ const App = () => (
             <Route path="/tools/invoice-generator" element={<InvoiceGeneratorTool />} />
             <Route path="/tools/proposal-generator" element={<ProposalGeneratorTool />} />
             <Route path="/tools/contract-generator" element={<ContractGeneratorTool />} />
+            {/* Same tools rendered INSIDE the dashboard shell for signed-in users.
+                Banner/dialog from public /tools/* pages routes here. */}
+            <Route path="/dashboard/tools" element={Shelled(<ToolsHub />)} />
+            <Route path="/dashboard/tools/invoice-generator" element={Shelled(<InvoiceGeneratorTool />)} />
+            <Route path="/dashboard/tools/proposal-generator" element={Shelled(<ProposalGeneratorTool />)} />
+            <Route path="/dashboard/tools/contract-generator" element={Shelled(<ContractGeneratorTool />)} />
             <Route path="/hustle/:id" element={Shelled(<HustleDetail />)} />
             <Route path="/roadmap/:id" element={Shelled(<RoadmapViewer />)} />
             <Route path="/infinity-zone" element={Shelled(<InfinityZone />)} />
