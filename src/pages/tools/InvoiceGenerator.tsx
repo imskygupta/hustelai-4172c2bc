@@ -293,7 +293,6 @@ export default function InvoiceGenerator() {
   );
 }
 
-function Card({ title, children }: { title: string; children: React.ReactNode }) {
 function Card({ title, children, action }: { title: string; children: React.ReactNode; action?: React.ReactNode }) {
   return (
     <div className="bg-white border border-slate-200 rounded-xl p-5">
