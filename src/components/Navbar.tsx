@@ -14,11 +14,11 @@ const navLinks = [
   { label: "Integrations", href: "/integrations" },
   { label: "Pricing", href: "/pricing" },
   { label: "Relax", href: "/relax" },
-  { label: "Blog", href: "/blog" },
-  { label: "Developers", href: "https://api.hustlaiapp.in", external: true },
   {
     label: "More",
     children: [
+      { label: "Blog", href: "/blog" },
+      { label: "Developers", href: "https://api.hustlaiapp.in", external: true },
       { label: "B2B APIs", href: "https://api.hustlaiapp.in", external: true },
       { label: "API Console", href: "https://console.api.hustlaiapp.in", external: true },
       { label: "API Docs", href: "https://docs.hustlaiapp.in", external: true },
