@@ -170,17 +170,8 @@ export function Chatbot() {
 
   return (
     <>
-      <AnimatePresence>
-        {!open && (
-          <motion.button
-            initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}
-            onClick={() => navigate("/hustlebot")}
-            className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-gradient-to-br from-violet-500 via-fuchsia-500 to-amber-400 text-white flex items-center justify-center shadow-[0_0_30px_rgba(168,85,247,0.55)] hover:scale-110 transition-transform animate-pulse"
-          >
-            <Sparkles className="w-6 h-6" />
-          </motion.button>
-        )}
-      </AnimatePresence>
+      {/* Floating launcher removed — the Mascot Companion now occupies this
+          spot and acts as the primary HustleBot launcher. */}
 
       <AnimatePresence>
         {open && (
