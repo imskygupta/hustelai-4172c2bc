@@ -18,9 +18,6 @@ const navLinks = [
     label: "More",
     children: [
       { label: "Blog", href: "/blog" },
-      { label: "Developers", href: "https://api.hustlaiapp.in", external: true },
-      { label: "B2B APIs", href: "https://api.hustlaiapp.in", external: true },
-      { label: "API Console", href: "https://console.api.hustlaiapp.in", external: true },
       { label: "API Docs", href: "https://docs.hustlaiapp.in", external: true },
       { label: "Compare plans", href: "/plans" },
       { label: "About", href: "/about" },
