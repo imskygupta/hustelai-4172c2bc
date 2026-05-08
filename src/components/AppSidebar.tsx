@@ -39,11 +39,10 @@ const aiSystems = [
   { title: "Gig Arbitrage", url: "/gig-arbitrage", icon: TrendingUp, tier: "pro" },
 ];
 
-// Growth — community + visibility
+// Growth — discovery + visibility
 const growthItems = [
   { title: "Explore Hustles", url: "/explore", icon: Search },
   { title: "Saved", url: "/saved-hustles", icon: Bookmark },
-  { title: "Community", url: "/community", icon: Users },
   { title: "Leaderboard", url: "/leaderboard", icon: Trophy },
   { title: "Affiliates", url: "/affiliates", icon: Crown },
 ];
@@ -51,7 +50,7 @@ const growthItems = [
 // Settings — billing, integrations, profile
 const settingsItems = [
   { title: "Plans & Billing", url: "/plans", icon: CreditCard },
-  { title: "Integrations", url: "/marketplace", icon: Plug },
+  { title: "Integrations", url: "/integrations", icon: Plug },
   { title: "AI Fuel (BYO key)", url: "/workspaces/ai-settings", icon: Flame },
   { title: "Infinity Zone", url: "/infinity-zone", icon: Sparkles },
   { title: "Profile", url: "/profile", icon: User },

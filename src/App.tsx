@@ -217,7 +217,8 @@ const App = () => (
             <Route path="/contact" element={<Contact />} />
             <Route path="/blog" element={<Blog />} />
             <Route path="/reviews" element={<Reviews />} />
-            <Route path="/community" element={Shelled(<Community />)} />
+            {/* Community removed (Nov 2026 pivot to pure SaaS / CRM). Redirect to dashboard. */}
+            <Route path="/community" element={<Navigate to="/dashboard" replace />} />
             <Route path="/profile" element={Shelled(<Profile />)} />
             <Route path="/payment" element={Shelled(<Payment />)} />
             <Route path="/payment-status" element={Shelled(<PaymentStatus />)} />
@@ -231,8 +232,10 @@ const App = () => (
             <Route path="/hustle/:id" element={Shelled(<HustleDetail />)} />
             <Route path="/roadmap/:id" element={Shelled(<RoadmapViewer />)} />
             <Route path="/infinity-zone" element={Shelled(<InfinityZone />)} />
-            <Route path="/marketplace" element={Shelled(<Marketplace />)} />
-            <Route path="/marketplace/:id" element={Shelled(<MarketplaceItem />)} />
+            {/* Marketplace was rebranded to Integrations. Old URLs redirect for safety. */}
+            <Route path="/integrations" element={Shelled(<Marketplace />)} />
+            <Route path="/marketplace" element={<Navigate to="/integrations" replace />} />
+            <Route path="/marketplace/:id" element={<Navigate to="/integrations" replace />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/terms-conditions" element={<TermsConditions />} />
             <Route path="/refund-policy" element={<RefundPolicy />} />

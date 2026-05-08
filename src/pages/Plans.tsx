@@ -60,9 +60,10 @@ const featureGrid: FeatureRow[] = [
   {
     category: "Automation & Integrations",
     features: [
+      { name: "Integrations (Gmail, Calendar, Meet, BYOK AI, …)", icon: Layers, values: ["3", "10", "25", "Unlimited", "Pay per use"] },
       { name: "Automation workflows", icon: Workflow, values: [false, false, true, true, false] },
       { name: "Advanced automations", icon: Workflow, values: [false, false, false, true, false] },
-      { name: "Advanced integrations", icon: Layers, values: [false, false, false, true, false] },
+      { name: "Custom webhooks & advanced connectors", icon: Layers, values: [false, false, false, true, false] },
       { name: "API access", icon: Key, values: [false, false, false, true, false] },
       { name: "White-label branding", icon: Palette, values: [false, false, false, true, false] },
       { name: "Custom branding on documents", icon: Palette, values: [false, true, true, true, false] },
@@ -79,9 +80,8 @@ const featureGrid: FeatureRow[] = [
     ],
   },
   {
-    category: "Support & Community",
+    category: "Support",
     features: [
-      { name: "Community access", icon: Users, values: [true, "Pro forums", "Elite groups", "Infinity lounge", false] },
       { name: "Priority support", icon: Compass, values: [false, true, true, true, false] },
       { name: "Strategy sessions", icon: Video, values: [false, false, true, "Priority", false] },
       { name: "Priority onboarding", icon: Upload, values: [false, false, false, true, false] },
@@ -231,7 +231,7 @@ export default function Plans() {
             <Button size="lg" onClick={() => navigate("/payment")} className="bg-gradient-primary text-primary-foreground px-8">
               Upgrade plan <ArrowRight className="w-4 h-4 ml-1" />
             </Button>
-            <p className="text-xs text-muted-foreground">No revenue sharing. No marketplace fees. Cancel anytime.</p>
+            <p className="text-xs text-muted-foreground">No revenue sharing. No platform fees. Cancel anytime.</p>
           </div>
         </div>
       </div>
