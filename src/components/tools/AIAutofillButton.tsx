@@ -331,7 +331,7 @@ export function AIAutofillIcon({
       <>
         <button
           type="button"
-          onClick={() => setDashOpen(true)}
+          onClick={() => navigate(dashboardEquivalent(pathname).href)}
           title={label}
           className={cn(
             "group inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-1 rounded-md",
@@ -425,6 +425,7 @@ export function AIAutofillButton({
   storageKey?: string;
 }) {
   const { user, profile } = useAuth();
+  const navigate = useNavigate();
   const { pathname } = useLocation();
   const [dashOpen, setDashOpen] = useState(false);
   const [byokOpen, setByokOpen] = useState(false);
@@ -450,7 +451,7 @@ export function AIAutofillButton({
       return;
     }
     if (user) {
-      setDashOpen(true);
+      navigate(dashboardEquivalent(pathname).href);
       return;
     }
     onClick();
