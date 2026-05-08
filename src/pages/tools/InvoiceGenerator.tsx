@@ -11,6 +11,9 @@ import { useToolGate } from "@/components/tools/ToolGate";
 import { AIAutofillIcon, AIAutofillButton } from "@/components/tools/AIAutofillButton";
 import { DashboardReminderBanner } from "@/components/tools/DashboardReminderBanner";
 import { DashboardToolAIPanel } from "@/components/tools/DashboardToolAIPanel";
+import { useAuth } from "@/hooks/useAuth";
+import { printWithMeta, watermarkModeForTier } from "@/lib/tools/print-meta";
+import { emitDelight, pickDelight, bumpDelightCount } from "@/lib/delight-bus";
 
 interface LineItem { id: string; desc: string; qty: number; rate: number; }
 
@@ -51,6 +54,9 @@ export default function InvoiceGenerator() {
   const [state, setState] = useState(defaultState);
   const { guard, gate } = useToolGate("invoice", "download your invoice");
   const { pathname } = useLocation();
+  const { profile } = useAuth();
+  const tier = (profile?.subscription_tier as string) || "free";
+  const wm = watermarkModeForTier(tier);
   const inDashboard = pathname.startsWith("/dashboard/tools");
   const aiFill = (section: string) =>
     guard(() => {
@@ -76,7 +82,16 @@ export default function InvoiceGenerator() {
   const total = subtotal + tax;
   const fmt = (n: number) => `${state.currency}${n.toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
 
-  const handleDownload = () => guard(() => window.print());
+  const handleDownload = () =>
+    guard(() =>
+      printWithMeta({
+        docTitle: `Invoice ${state.invoiceNo} — ${state.bizName}`,
+        afterPrint: () => {
+          bumpDelightCount();
+          emitDelight(pickDelight("invoice_pdf"));
+        },
+      }),
+    );
 
   return (
     <>
@@ -261,9 +276,13 @@ export default function InvoiceGenerator() {
                   </div>
                 )}
 
-                <div className="mt-8 pt-4 border-t border-slate-100 text-center text-[10px] text-slate-400 print:text-slate-300">
-                  Generated free with HustleAI · hustlaiapp.in
-                </div>
+                {wm !== "none" && (
+                  <div className="mt-8 pt-4 border-t border-slate-100 text-center text-[10px] text-slate-400 print:text-slate-300">
+                    {wm === "full"
+                      ? "Generated free with HustleAI · hustlaiapp.in"
+                      : `Generated ${new Date().toLocaleString()}`}
+                  </div>
+                )}
               </motion.div>
 
               <div className="mt-4 flex items-center justify-center gap-2 text-xs text-slate-500 print:hidden">
