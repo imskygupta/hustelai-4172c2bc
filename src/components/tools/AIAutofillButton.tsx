@@ -425,6 +425,7 @@ export function AIAutofillButton({
   storageKey?: string;
 }) {
   const { user, profile } = useAuth();
+  const navigate = useNavigate();
   const { pathname } = useLocation();
   const [dashOpen, setDashOpen] = useState(false);
   const [byokOpen, setByokOpen] = useState(false);
@@ -450,7 +451,7 @@ export function AIAutofillButton({
       return;
     }
     if (user) {
-      setDashOpen(true);
+      navigate(dashboardEquivalent(pathname).href);
       return;
     }
     onClick();
