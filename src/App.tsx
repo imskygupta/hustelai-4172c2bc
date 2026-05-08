@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { AuthProvider } from "@/hooks/useAuth";
 import { Sentry } from "@/lib/sentry";
+import DelightToast from "@/components/tools/DelightToast";
 import Index from "./pages/Index";
 import Explore from "./pages/Explore";
 import Login from "./pages/Login";
@@ -147,6 +148,7 @@ const App = () => (
         {isMaintenance() ? <MaintenancePage /> : (
         <BrowserRouter>
           <ScrollToTop />
+          <DelightToast />
           <DocsSubdomainRedirect />
           <StatusSubdomainRedirect />
           <Routes>
