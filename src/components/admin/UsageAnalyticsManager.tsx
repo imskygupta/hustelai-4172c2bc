@@ -1,25 +1,39 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
-import { BarChart3, KeyRound, Users, FileDown, Sparkles } from "lucide-react";
+import { BarChart3, KeyRound, Users, FileDown, Sparkles, AlarmClock, Send } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { SendUserNotificationDialog } from "@/components/admin/SendUserNotificationDialog";
+import { formatDistanceToNow } from "date-fns";
 
 type Row = {
   user_id: string; email: string; subscription_tier: string;
   workspace_count: number; exports_30d: number; ai_calls_30d: number; has_byo_key: boolean;
 };
 
+type DailyRow = {
+  user_id: string; email: string; subscription_tier: string;
+  ai_used_today: number; ai_max_today: number; last_use_at: string | null; has_byo_key: boolean;
+};
+
 export function UsageAnalyticsManager() {
   const [rows, setRows] = useState<Row[]>([]);
+  const [daily, setDaily] = useState<DailyRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selected, setSelected] = useState<Record<string, DailyRow>>({});
+  const [sendOpen, setSendOpen] = useState(false);
+  const [sendTargets, setSendTargets] = useState<DailyRow[]>([]);
 
   useEffect(() => {
     (async () => {
-      const { data } = await (supabase as any)
-        .from("admin_usage_summary")
-        .select("*")
-        .order("ai_calls_30d", { ascending: false })
-        .limit(200);
-      setRows((data as Row[]) || []);
+      const [r1, r2] = await Promise.all([
+        (supabase as any).from("admin_usage_summary").select("*").order("ai_calls_30d", { ascending: false }).limit(200),
+        (supabase as any).from("admin_daily_usage_summary").select("*").order("last_use_at", { ascending: false, nullsFirst: false }).limit(500),
+      ]);
+      setRows((r1.data as Row[]) || []);
+      setDaily((r2.data as DailyRow[]) || []);
       setLoading(false);
     })();
   }, []);
@@ -31,6 +45,19 @@ export function UsageAnalyticsManager() {
     ai: acc.ai + (r.ai_calls_30d || 0),
     byo: acc.byo + (r.has_byo_key ? 1 : 0),
   }), { users: 0, workspaces: 0, exports: 0, ai: 0, byo: 0 });
+
+  const exhaustedToday = daily.filter((d) => d.ai_used_today > 0 && d.ai_used_today >= d.ai_max_today);
+
+  const toggle = (r: DailyRow) => {
+    setSelected((prev) => {
+      const next = { ...prev };
+      if (next[r.user_id]) delete next[r.user_id]; else next[r.user_id] = r;
+      return next;
+    });
+  };
+  const selectedList = Object.values(selected);
+  const openSendOne = (r: DailyRow) => { setSendTargets([r]); setSendOpen(true); };
+  const openSendBulk = () => { setSendTargets(selectedList); setSendOpen(true); };
 
   if (loading) return <Skeleton className="h-64 rounded-2xl" />;
 
@@ -44,7 +71,71 @@ export function UsageAnalyticsManager() {
         <Stat icon={KeyRound} label="BYO key users" value={totals.byo} />
       </div>
 
-      <div className="rounded-2xl border border-border bg-card overflow-hidden">
+      <Tabs defaultValue="exhausted">
+        <TabsList>
+          <TabsTrigger value="exhausted">
+            <AlarmClock className="h-3.5 w-3.5 mr-1.5" />
+            Exhausted today ({exhaustedToday.length})
+          </TabsTrigger>
+          <TabsTrigger value="all">All users (30d)</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="exhausted" className="mt-4 space-y-3">
+          {selectedList.length > 0 && (
+            <div className="flex items-center justify-between rounded-lg border border-primary/30 bg-primary/5 px-3 py-2">
+              <span className="text-sm">{selectedList.length} selected</span>
+              <Button size="sm" onClick={openSendBulk}>
+                <Send className="w-3.5 h-3.5 mr-1" /> Send notification to selected
+              </Button>
+            </div>
+          )}
+          <div className="rounded-2xl border border-border bg-card overflow-hidden">
+            <table className="w-full text-sm">
+              <thead className="bg-muted/40 text-xs uppercase tracking-wider text-muted-foreground">
+                <tr>
+                  <th className="px-3 py-2 w-8"></th>
+                  <th className="text-left px-4 py-2">Email</th>
+                  <th className="text-left px-4 py-2">Tier</th>
+                  <th className="text-right px-4 py-2">Used today</th>
+                  <th className="text-left px-4 py-2">Last use</th>
+                  <th className="text-center px-4 py-2">BYO</th>
+                  <th className="px-4 py-2"></th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border/50">
+                {exhaustedToday.length === 0 && (
+                  <tr><td colSpan={7} className="px-4 py-8 text-center text-sm text-muted-foreground">
+                    No users have exhausted today's AI quota yet.
+                  </td></tr>
+                )}
+                {exhaustedToday.map((r) => (
+                  <tr key={r.user_id} className="hover:bg-muted/30">
+                    <td className="px-3 py-2">
+                      <Checkbox checked={!!selected[r.user_id]} onCheckedChange={() => toggle(r)} />
+                    </td>
+                    <td className="px-4 py-2 truncate max-w-[260px]">{r.email}</td>
+                    <td className="px-4 py-2 capitalize">{r.subscription_tier}</td>
+                    <td className="px-4 py-2 text-right font-semibold text-amber-600">
+                      {r.ai_used_today}/{r.ai_max_today}
+                    </td>
+                    <td className="px-4 py-2 text-xs text-muted-foreground">
+                      {r.last_use_at ? formatDistanceToNow(new Date(r.last_use_at), { addSuffix: true }) : "—"}
+                    </td>
+                    <td className="px-4 py-2 text-center">{r.has_byo_key ? "✓" : ""}</td>
+                    <td className="px-4 py-2 text-right">
+                      <Button size="sm" variant="outline" onClick={() => openSendOne(r)}>
+                        <Send className="w-3 h-3 mr-1" /> Notify
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="all" className="mt-4">
+          <div className="rounded-2xl border border-border bg-card overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-muted/40 text-xs uppercase tracking-wider text-muted-foreground">
             <tr>
@@ -69,7 +160,15 @@ export function UsageAnalyticsManager() {
             ))}
           </tbody>
         </table>
-      </div>
+          </div>
+        </TabsContent>
+      </Tabs>
+
+      <SendUserNotificationDialog
+        open={sendOpen}
+        onClose={() => { setSendOpen(false); setSelected({}); }}
+        targets={sendTargets}
+      />
     </div>
   );
 }
