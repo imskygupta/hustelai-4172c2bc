@@ -1,6 +1,6 @@
 import { SEO } from "@/components/SEO";
 import { Badge } from "@/components/ui/badge";
-import { Activity, CheckCircle2, AlertTriangle, Clock, Zap, Database, Cpu, Webhook, FileText, Inbox } from "lucide-react";
+import { Activity, CheckCircle2, AlertTriangle, Clock, Cpu, Webhook, FileText, Inbox } from "lucide-react";
 
 type Health = "operational" | "degraded" | "outage" | "maintenance";
 
@@ -14,8 +14,6 @@ const STATUS_STYLES: Record<Health, { label: string; dot: string; text: string; 
 const SYSTEMS: { name: string; status: Health; icon: any; latency?: string }[] = [
   { name: "hustlaiapp.in (Marketing)",        status: "operational", icon: Activity, latency: "98 ms" },
   { name: "Workspace OS Dashboard",            status: "operational", icon: Cpu,      latency: "142 ms" },
-  { name: "api.hustlaiapp.in",                 status: "operational", icon: Zap,      latency: "189 ms" },
-  { name: "console.api.hustlaiapp.in",         status: "operational", icon: Database, latency: "121 ms" },
   { name: "docs.hustlaiapp.in",                status: "operational", icon: FileText, latency: "76 ms"  },
   { name: "AI Model Router (hustle-fast/logic)", status: "operational", icon: Cpu,    latency: "1.2 s" },
   { name: "Export Engine (PDF / DOCX)",        status: "operational", icon: FileText, latency: "880 ms" },
@@ -58,7 +56,7 @@ export default function Status() {
     <div className="min-h-screen bg-[#07090d] text-zinc-200 antialiased">
       <SEO
         title="HustleAI Status — Platform Uptime & Incidents"
-        description="Real-time status of HustleAI marketing site, Workspace OS, api.hustlaiapp.in, console, docs, AI router, exports, and intake OS."
+        description="Real-time status of HustleAI marketing site, Workspace OS, docs, AI router, exports, and intake OS."
       />
 
       {/* Header */}
