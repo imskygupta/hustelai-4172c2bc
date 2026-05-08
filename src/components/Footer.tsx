@@ -18,6 +18,13 @@ const productLinks = [
   { label: "Blog", href: "/blog" },
 ];
 
+const freeToolLinks = [
+  { label: "All Free Tools", href: "/tools" },
+  { label: "Invoice Generator", href: "/tools/invoice-generator" },
+  { label: "Proposal Generator", href: "/tools/proposal-generator" },
+  { label: "Contract & NDA Generator", href: "/tools/contract-generator" },
+];
+
 const companyLinks = [
   { label: "About", href: "/about" },
   { label: "Company", href: "/company" },
@@ -87,7 +94,7 @@ export function Footer() {
       <div className="absolute -top-32 left-1/3 w-[500px] h-[300px] bg-emerald-200/20 dark:bg-primary/10 blur-3xl rounded-full pointer-events-none" />
       <div className="absolute -bottom-32 right-1/4 w-[420px] h-[260px] bg-teal-200/20 dark:bg-accent/10 blur-3xl rounded-full pointer-events-none" />
       <div className="container mx-auto max-w-6xl relative">
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
+        <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-10 mb-12">
           {/* Brand */}
           <div className="space-y-4 lg:col-span-1">
             <div className="flex items-center gap-2">
@@ -134,6 +141,18 @@ export function Footer() {
             <h4 className="font-display font-semibold text-sm">Product</h4>
             <div className="space-y-2.5">
               {productLinks.map(l => (
+                <Link key={l.href} to={l.href} className="block text-sm text-muted-foreground hover:text-primary transition-colors group">
+                  {l.label} <ArrowUpRight className="w-3 h-3 inline opacity-0 group-hover:opacity-100 transition-opacity" />
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {/* Free Tools */}
+          <div className="space-y-4">
+            <h4 className="font-display font-semibold text-sm">Free Tools</h4>
+            <div className="space-y-2.5">
+              {freeToolLinks.map(l => (
                 <Link key={l.href} to={l.href} className="block text-sm text-muted-foreground hover:text-primary transition-colors group">
                   {l.label} <ArrowUpRight className="w-3 h-3 inline opacity-0 group-hover:opacity-100 transition-opacity" />
                 </Link>

@@ -1,0 +1,1 @@
+- [Free Tools Funnel](mem://features/free-tools-funnel) — Public /tools/* utilities (Invoice/Proposal/Contract) as SEO + PLG signup funnel, no API calls

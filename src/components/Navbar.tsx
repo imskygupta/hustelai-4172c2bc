@@ -10,6 +10,7 @@ import { isAppShellRoute } from "@/components/app-shell-routes";
 const navLinks = [
   { label: "Workspaces", href: "/workspaces" },
   { label: "Explore", href: "/explore" },
+  { label: "Free Tools", href: "/tools" },
   { label: "Integrations", href: "/integrations" },
   { label: "Pricing", href: "/pricing" },
   { label: "Relax", href: "/relax" },
