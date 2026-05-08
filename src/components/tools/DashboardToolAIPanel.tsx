@@ -37,7 +37,7 @@ interface Props<S> {
   featureKey?: string;
 }
 
-export function DashboardToolAIPanel<S extends object>({
+export function DashboardToolAIPanel<S extends object,>({
   kind, state, onPatch, templates, currentTemplateId, onTemplateChange, featureKey,
 }: Props<S>) {
   const { user, profile } = useAuth();
