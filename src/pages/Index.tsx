@@ -5,7 +5,7 @@ import { Navbar } from "@/components/Navbar";
 import { Pricing } from "@/components/Pricing";
 import { Testimonials } from "@/components/Testimonials";
 import { Footer } from "@/components/Footer";
-import { ArrowRight, Zap, Brain, Target, TrendingUp, Shield, Globe, Check, X, BadgeCheck, Sparkles, Activity, Code2, Building2 } from "lucide-react";
+import { ArrowRight, Zap, Brain, Target, TrendingUp, Shield, Globe, Check, X, BadgeCheck, Sparkles, Activity, Code2, Building2, FileText, Users, Workflow, Receipt, Bot, Layers } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
@@ -16,12 +16,12 @@ import { SEO, softwareJsonLd, orgJsonLd } from "@/components/SEO";
 gsap.registerPlugin(ScrollTrigger);
 
 const features = [
-  { icon: Brain, title: "AI Match Engine", desc: "Tailored to your skills, budget, and goals — not generic listings." },
-  { icon: BadgeCheck, title: "Verified by AI", desc: "Every opportunity is scored and validated. No scams, no dead ends." },
-  { icon: TrendingUp, title: "Live Trend Pulse", desc: "Real-time trending gigs powered by continuous market analysis." },
-  { icon: Activity, title: "Roadmap, Not a Link", desc: "Get a 3-step plan for each hustle — start today, scale tomorrow." },
-  { icon: Globe, title: "Global + Indian Gigs", desc: "From Mercor & Outlier to local UPI side hustles." },
-  { icon: Zap, title: "Seconds, Not Hours", desc: "Stop scrolling job boards. Get an answer in one prompt." },
+  { icon: Users, title: "Clients CRM, done right", desc: "Every client, lead, deal and conversation in one calm timeline — no spreadsheets, no scattered DMs.", accent: "from-emerald-500/20 to-teal-500/20" },
+  { icon: Receipt, title: "Invoices that get paid", desc: "Branded invoices, quotations and agreements generated in seconds. Track payments and chase quietly.", accent: "from-blue-500/20 to-cyan-500/20" },
+  { icon: Bot, title: "AI workspace assistant", desc: "Drafts proposals, summarises threads, replies to clients and turns briefs into project plans — on demand.", accent: "from-violet-500/20 to-fuchsia-500/20" },
+  { icon: Workflow, title: "Pipelines & automations", desc: "Visual Kanban for deals, recurring reminders and workflows that quietly run your business in the background.", accent: "from-amber-500/20 to-orange-500/20" },
+  { icon: FileText, title: "Branded client portals", desc: "Share project status, files, invoices and approvals on a portal that wears your brand — not ours.", accent: "from-rose-500/20 to-pink-500/20" },
+  { icon: Layers, title: "Plays nice with your stack", desc: "Gmail, Calendar, Meet, Slack, Stripe, OpenAI, Gemini — bring the tools you already use into one workspace.", accent: "from-indigo-500/20 to-sky-500/20" },
 ];
 
 const stats = [
@@ -173,12 +173,12 @@ export default function Index() {
             viewport={{ once: true }}
             className="text-center mb-16 space-y-4"
           >
-            <div className="text-xs uppercase tracking-[0.18em] text-emerald-600 font-medium">Built for hustlers</div>
+            <div className="text-xs uppercase tracking-[0.18em] text-emerald-600 font-medium">The freelancer operating system</div>
             <h2 className="text-3xl md:text-5xl font-display font-semibold tracking-tight text-slate-900">
-              Everything you need.<br/>Nothing you don't.
+              One workspace.<br/>Every part of client work.
             </h2>
             <p className="text-slate-500 max-w-xl mx-auto">
-              Six AI-native primitives that turn "what should I do?" into income.
+              CRM, invoices, proposals, portals and AI assistance — wired together so you spend time on the craft, not the admin.
             </p>
           </motion.div>
 
@@ -190,13 +190,22 @@ export default function Index() {
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.08 }}
                 viewport={{ once: true }}
-                className="bg-white border border-slate-200 rounded-xl p-6 hover:border-slate-300 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 group"
+                className="relative bg-white border border-slate-200 rounded-2xl p-6 hover:border-emerald-300 hover:shadow-2xl hover:shadow-emerald-100/60 hover:-translate-y-1 transition-all duration-500 group overflow-hidden"
               >
-                <div className="w-10 h-10 rounded-lg bg-slate-900 flex items-center justify-center mb-4 group-hover:bg-emerald-500 transition-colors">
-                  <f.icon className="w-5 h-5 text-white" />
+                {/* Animated gradient orb */}
+                <div className={`absolute -top-16 -right-16 w-48 h-48 rounded-full bg-gradient-to-br ${f.accent} blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none`} />
+                {/* Top accent line */}
+                <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-emerald-400/0 to-transparent group-hover:via-emerald-400/70 transition-all duration-500" />
+                <div className="relative">
+                  <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-slate-900 to-slate-700 flex items-center justify-center mb-4 group-hover:from-emerald-500 group-hover:to-emerald-600 group-hover:rotate-6 group-hover:scale-110 transition-all duration-500 shadow-md">
+                    <f.icon className="w-5 h-5 text-white" />
+                  </div>
+                  <h3 className="font-display font-semibold text-lg mb-2 text-slate-900 group-hover:text-emerald-700 transition-colors">{f.title}</h3>
+                  <p className="text-sm text-slate-500 leading-relaxed">{f.desc}</p>
+                  <div className="mt-4 flex items-center gap-1 text-xs font-medium text-emerald-600 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-500">
+                    Learn more <ArrowRight className="w-3 h-3" />
+                  </div>
                 </div>
-                <h3 className="font-display font-semibold text-lg mb-2 text-slate-900">{f.title}</h3>
-                <p className="text-sm text-slate-500 leading-relaxed">{f.desc}</p>
               </motion.div>
             ))}
           </div>
