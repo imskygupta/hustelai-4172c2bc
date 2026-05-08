@@ -48,7 +48,7 @@ export default function ToolsHub() {
         jsonLd={faqJsonLd(faqs)}
       />
       <div className="min-h-screen bg-gradient-to-b from-white via-emerald-50/30 to-white pt-24 pb-20 px-4">
-        <div className="max-w-6xl mx-auto">
+        <div className="max-w-6xl mx-auto"><DashboardReminderBanner />
           {/* Hero */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-14">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-100 text-emerald-700 text-xs font-semibold mb-5">
