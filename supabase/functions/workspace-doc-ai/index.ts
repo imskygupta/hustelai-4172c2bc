@@ -67,16 +67,17 @@ Deno.serve(async (req) => {
     const user = userData?.user;
     if (!user) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
-    const { task, context = "", section = "", input = "" } = await req.json();
+    const { task, context = "", section = "", input = "", prompt = "", state = null } = await req.json();
     const tpl = TASKS[task];
     if (!tpl) return new Response(JSON.stringify({ error: "Unknown task" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
-    const body = await Promise.resolve(); // (placeholder no-op)
+    const stateJson = state ? JSON.stringify(state).slice(0, 4000) : "{}";
     const userMsg = tpl
       .replace("{{context}}", String(context).slice(0, 1500))
       .replace("{{section}}", section)
-      .replace("{{prompt}}", String((arguments as any) ? "" : "")) // keep replace key safe
-      .replace("{{state}}", "");
+      .replace("{{prompt}}", String(prompt).slice(0, 1500))
+      .replace("{{state}}", stateJson)
+      + (input ? `\n\nText:\n"""${String(input).slice(0, 1500)}"""` : "");
     const messages = [
       { role: "system", content: "You output ONLY valid JSON. No prose, no markdown." },
       { role: "user", content: userMsg },
