@@ -6,9 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
-import { Search, Bell, Crown, Sparkles, Rocket, Star, ChevronRight, ArrowRight, Command } from "lucide-react";
+import { Search, Crown, Sparkles, Rocket, Star, ChevronRight, ArrowRight, Command } from "lucide-react";
 import { VerifyEmailGate } from "@/components/VerifyEmailGate";
 import { Chatbot } from "@/components/Chatbot";
+import NotificationCenter from "@/components/workspace-os/NotificationCenter";
 
 interface AppShellProps {
   children: ReactNode;
@@ -202,9 +203,7 @@ export function AppShell({ children, title, breadcrumbs, actions }: AppShellProp
                   Upgrade
                 </Button>
               )}
-              <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-600">
-                <Bell className="w-4 h-4" />
-              </Button>
+              <NotificationCenter />
             </div>
           </header>
 
