@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { FileText, Receipt, ScrollText, ArrowRight, Sparkles, Lock, Zap } from "lucide-react";
 import { SEO, faqJsonLd } from "@/components/SEO";
+import { DashboardReminderBanner } from "@/components/tools/DashboardReminderBanner";
 
 const tools = [
   {
