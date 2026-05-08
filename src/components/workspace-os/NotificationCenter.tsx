@@ -6,9 +6,12 @@ import { Bell, Check } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { formatDistanceToNow } from "date-fns";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 export default function NotificationCenter() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [items, setItems] = useState<any[]>([]);
   const [open, setOpen] = useState(false);
 
@@ -23,7 +26,16 @@ export default function NotificationCenter() {
     if (!user) return;
     const channel = supabase.channel(`notifs-${user.id}`)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "workspace_notifications", filter: `user_id=eq.${user.id}` },
-        () => load())
+        (payload: any) => {
+          load();
+          const n = payload?.new;
+          if (n?.title) {
+            toast(n.title, {
+              description: n.body || undefined,
+              action: n.link ? { label: "View", onClick: () => navigate(n.link) } : undefined,
+            });
+          }
+        })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [user?.id]);
