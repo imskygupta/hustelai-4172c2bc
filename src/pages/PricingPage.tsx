@@ -87,9 +87,9 @@ export default function PricingPage() {
             One workspace for clients, projects, invoices, portals and AI assistance. Cancel anytime. No revenue share. No platform fees.
           </p>
           <div className="flex flex-wrap justify-center gap-4 text-xs text-slate-500 pt-2">
-            <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5 text-emerald-500" /> 14-day money-back</span>
+            <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5 text-emerald-500" /> Free forever plan</span>
             <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5 text-emerald-500" /> No credit card to start</span>
-            <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5 text-emerald-500" /> GST invoices on request</span>
+            <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5 text-emerald-500" /> Cancel anytime</span>
           </div>
         </div>
       </section>
@@ -224,10 +224,10 @@ export default function PricingPage() {
           {/* Trust strip */}
           <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
             {[
-              { v: "14-day", l: "money back" },
-              { v: "100%", l: "your data, exportable" },
+              { v: "Free", l: "forever plan" },
+              { v: "Instant", l: "workspace setup" },
               { v: "0%", l: "revenue share" },
-              { v: "24/7", l: "AI on-call" },
+              { v: "99.9%", l: "uptime SLA" },
             ].map((t) => (
               <div key={t.l}>
                 <div className="text-2xl font-display font-semibold text-slate-900">{t.v}</div>
