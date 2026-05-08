@@ -144,12 +144,6 @@ export function AppSidebar() {
           <SidebarGroupLabel className="text-[10px] uppercase tracking-wider text-slate-400">AI Systems</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-        {/* placeholder removed */}
-          <SidebarGroupContent>
-            <SidebarMenu>
               {aiSystems.map((item) => {
                 const locked = tierRank(item.tier) > rank;
                 return (
