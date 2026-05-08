@@ -7,6 +7,7 @@ import { HelmetProvider } from "react-helmet-async";
 import { AuthProvider } from "@/hooks/useAuth";
 import { Sentry } from "@/lib/sentry";
 import DelightToast from "@/components/tools/DelightToast";
+import MascotCompanion from "@/components/MascotCompanion";
 import Index from "./pages/Index";
 import Explore from "./pages/Explore";
 import Login from "./pages/Login";
@@ -149,6 +150,7 @@ const App = () => (
         <BrowserRouter>
           <ScrollToTop />
           <DelightToast />
+          <MascotCompanion />
           <DocsSubdomainRedirect />
           <StatusSubdomainRedirect />
           <Routes>
