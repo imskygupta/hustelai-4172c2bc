@@ -268,7 +268,13 @@ export default function ContractGenerator() {
                   </div>
                 </div>
 
-                <div className="mt-8 text-center text-[10px] text-slate-400">Generated free with HustleAI · hustlaiapp.in</div>
+                {wm !== "none" && (
+                  <div className="mt-8 text-center text-[10px] text-slate-400">
+                    {wm === "full"
+                      ? "Generated free with HustleAI · hustlaiapp.in"
+                      : `Generated ${new Date().toLocaleString()}`}
+                  </div>
+                )}
               </motion.div>
               <div className="mt-4 flex items-center justify-center gap-2 text-xs text-slate-500 print:hidden">
                 <Sparkles className="w-3 h-3 text-amber-600" /> Edit any clause · auto-saved in your browser
