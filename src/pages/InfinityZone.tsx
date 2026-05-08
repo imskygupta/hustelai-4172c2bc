@@ -12,12 +12,13 @@ import { toast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  GraduationCap, Store, Users, Plus, Star, Lock,
-  BookOpen, Package, ArrowRight, Trash2, Eye, EyeOff,
-  IndianRupee, Tag, Pencil, X, ChevronDown, Sparkles
+  GraduationCap, Plus, Star, Lock, BookOpen, Trash2, Eye, EyeOff,
+  IndianRupee, X, Sparkles, Zap, Bot, Globe, Workflow, Crown,
+  Headphones, Rocket, Palette, Key, Infinity as InfinityIcon, ShieldCheck,
+  Calendar, ArrowRight,
 } from "lucide-react";
 
-type Tab = "courses" | "marketplace" | "communities";
+type Tab = "tools" | "perks" | "courses";
 
 interface Course {
   id: string;
@@ -32,28 +33,81 @@ interface Course {
   created_at: string;
 }
 
-interface MarketplaceItem {
-  id: string;
-  seller_id: string;
-  title: string;
-  description: string | null;
-  price: number;
-  category: string | null;
-  item_type: string;
-  is_published: boolean;
-  sales_count: number;
-  created_at: string;
-}
+const exclusiveTools = [
+  {
+    icon: InfinityIcon,
+    title: "Unlimited AI assists",
+    desc: "No daily caps. Drafts, replies, summaries, doc intel — fire as much as you want.",
+    status: "live",
+    href: "/ai-tools",
+  },
+  {
+    icon: Key,
+    title: "API access",
+    desc: "Programmatic access to your workspace, clients, invoices and AI endpoints.",
+    status: "live",
+    href: "https://console.api.hustlaiapp.in",
+    external: true,
+  },
+  {
+    icon: Palette,
+    title: "White-label branding",
+    desc: "Your logo, your colors, your domain on every client portal and document.",
+    status: "live",
+    href: "/workspaces",
+  },
+  {
+    icon: Workflow,
+    title: "Advanced automations",
+    desc: "Multi-step workflows, conditional triggers and webhook chains.",
+    status: "live",
+    href: "/workspaces",
+  },
+  {
+    icon: Bot,
+    title: "Premium AI routing",
+    desc: "Auto-route to the best model (GPT-5, Gemini Pro, Claude) per task type.",
+    status: "live",
+    href: "/workspaces/ai-settings",
+  },
+  {
+    icon: Globe,
+    title: "Custom domain portals",
+    desc: "Host client portals on portal.yourbrand.com with one DNS record.",
+    status: "live",
+    href: "/workspaces",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Team permissions & roles",
+    desc: "Granular access control — owner, admin, member, viewer.",
+    status: "live",
+    href: "/workspaces",
+  },
+  {
+    icon: Zap,
+    title: "Priority compute",
+    desc: "Your AI requests jump the queue. ~2-3× faster than standard tier.",
+    status: "live",
+  },
+];
+
+const vipPerks = [
+  { icon: Headphones, title: "1:1 strategy session", desc: "30-min monthly call with the founding team to scale your practice." },
+  { icon: Rocket, title: "Early access to beta", desc: "Try every new feature 4-6 weeks before public release." },
+  { icon: Crown, title: "Founder's lounge", desc: "Private Slack with the team and other Infinity members." },
+  { icon: Calendar, title: "Priority onboarding", desc: "White-glove migration from Notion, Trello, HoneyBook or Dubsado." },
+  { icon: Sparkles, title: "Custom AI prompts library", desc: "Curated prompt packs for proposals, sales calls and client emails." },
+  { icon: ShieldCheck, title: "SLA-backed uptime", desc: "99.9% guaranteed uptime with credit-back if we miss it." },
+];
 
 export default function InfinityZone() {
   const { user, profile, loading } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [tab, setTab] = useState<Tab>((searchParams.get("tab") as Tab) || "courses");
+  const [tab, setTab] = useState<Tab>((searchParams.get("tab") as Tab) || "tools");
   const [courses, setCourses] = useState<Course[]>([]);
   const [myCourses, setMyCourses] = useState<Course[]>([]);
-  const [items, setItems] = useState<MarketplaceItem[]>([]);
-  const [myItems, setMyItems] = useState<MarketplaceItem[]>([]);
   const [showCreate, setShowCreate] = useState(false);
 
   // Course form
@@ -63,13 +117,6 @@ export default function InfinityZone() {
   const [coursePrice, setCoursePrice] = useState("");
   const [courseCategory, setCourseCategory] = useState("Freelancing");
 
-  // Marketplace form
-  const [itemTitle, setItemTitle] = useState("");
-  const [itemDesc, setItemDesc] = useState("");
-  const [itemPrice, setItemPrice] = useState("");
-  const [itemCategory, setItemCategory] = useState("Template");
-  const [itemType, setItemType] = useState("tool");
-
   const isInfinity = profile?.subscription_tier === "infinity";
 
   useEffect(() => {
@@ -77,25 +124,16 @@ export default function InfinityZone() {
   }, [loading, user]);
 
   useEffect(() => {
-    if (user) loadData();
+    if (user && tab === "courses") loadCourses();
   }, [user, tab]);
 
-  const loadData = async () => {
-    if (tab === "courses") {
-      const [allRes, myRes] = await Promise.all([
-        supabase.from("courses").select("*").eq("is_published", true).order("created_at", { ascending: false }),
-        isInfinity ? supabase.from("courses").select("*").eq("creator_id", user!.id).order("created_at", { ascending: false }) : Promise.resolve({ data: [] }),
-      ]);
-      if (allRes.data) setCourses(allRes.data as Course[]);
-      if (myRes.data) setMyCourses(myRes.data as Course[]);
-    } else if (tab === "marketplace") {
-      const [allRes, myRes] = await Promise.all([
-        supabase.from("marketplace_items").select("*").eq("is_published", true).order("created_at", { ascending: false }),
-        isInfinity ? supabase.from("marketplace_items").select("*").eq("seller_id", user!.id).order("created_at", { ascending: false }) : Promise.resolve({ data: [] }),
-      ]);
-      if (allRes.data) setItems(allRes.data as MarketplaceItem[]);
-      if (myRes.data) setMyItems(myRes.data as MarketplaceItem[]);
-    }
+  const loadCourses = async () => {
+    const [allRes, myRes] = await Promise.all([
+      supabase.from("courses").select("*").eq("is_published", true).order("created_at", { ascending: false }),
+      isInfinity ? supabase.from("courses").select("*").eq("creator_id", user!.id).order("created_at", { ascending: false }) : Promise.resolve({ data: [] }),
+    ]);
+    if (allRes.data) setCourses(allRes.data as Course[]);
+    if (myRes.data) setMyCourses(myRes.data as Course[]);
   };
 
   const createCourse = async () => {
@@ -115,28 +153,7 @@ export default function InfinityZone() {
       toast({ title: "Course Created! 🎓" });
       setCourseTitle(""); setCourseDesc(""); setCourseContent(""); setCoursePrice("");
       setShowCreate(false);
-      loadData();
-    }
-  };
-
-  const createItem = async () => {
-    if (!itemTitle || !itemDesc) return;
-    const { error } = await supabase.from("marketplace_items").insert({
-      seller_id: user!.id,
-      title: itemTitle,
-      description: itemDesc,
-      price: parseFloat(itemPrice) || 0,
-      category: itemCategory,
-      item_type: itemType,
-      is_published: true,
-    } as any);
-    if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: "Item Listed! 🏪" });
-      setItemTitle(""); setItemDesc(""); setItemPrice("");
-      setShowCreate(false);
-      loadData();
+      loadCourses();
     }
   };
 
@@ -146,20 +163,9 @@ export default function InfinityZone() {
     toast({ title: "Course deleted" });
   };
 
-  const deleteItem = async (id: string) => {
-    await supabase.from("marketplace_items").delete().eq("id", id);
-    setMyItems(myItems.filter(i => i.id !== id));
-    toast({ title: "Item removed" });
-  };
-
   const toggleCoursePublish = async (id: string, current: boolean) => {
     await supabase.from("courses").update({ is_published: !current } as any).eq("id", id);
     setMyCourses(myCourses.map(c => c.id === id ? { ...c, is_published: !current } : c));
-  };
-
-  const toggleItemPublish = async (id: string, current: boolean) => {
-    await supabase.from("marketplace_items").update({ is_published: !current } as any).eq("id", id);
-    setMyItems(myItems.map(i => i.id === id ? { ...i, is_published: !current } : i));
   };
 
   if (loading) {
@@ -171,10 +177,16 @@ export default function InfinityZone() {
   if (!user || !profile) return null;
 
   const tabs: { id: Tab; label: string; icon: any; emoji: string }[] = [
+    { id: "tools", label: "Exclusive Tools", icon: Sparkles, emoji: "✨" },
+    { id: "perks", label: "VIP Perks", icon: Crown, emoji: "👑" },
     { id: "courses", label: "Courses", icon: GraduationCap, emoji: "🎓" },
-    { id: "marketplace", label: "Marketplace", icon: Store, emoji: "🏪" },
-    { id: "communities", label: "Communities", icon: Users, emoji: "👥" },
   ];
+
+  const goTool = (t: typeof exclusiveTools[number]) => {
+    if (!t.href) return;
+    if (t.external) window.open(t.href, "_blank", "noopener");
+    else navigate(t.href);
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -191,8 +203,9 @@ export default function InfinityZone() {
               </h1>
               <Badge className="bg-yellow-500 text-black text-sm px-3">♾️</Badge>
             </div>
-            <p className="text-muted-foreground max-w-lg mx-auto">
-              Create, sell, and build your empire. Exclusive to Infinity members.
+            <p className="text-muted-foreground max-w-xl mx-auto">
+              The unfair advantage layer for power users — exclusive tools, VIP perks
+              and white-glove access reserved for Infinity members.
             </p>
           </motion.div>
 
@@ -202,10 +215,11 @@ export default function InfinityZone() {
               <Lock className="w-12 h-12 text-yellow-500 mx-auto" />
               <h2 className="text-xl font-display font-bold">Infinity Access Required</h2>
               <p className="text-muted-foreground text-sm max-w-md mx-auto">
-                Upgrade to Infinity to create courses, sell tools, and build communities.
+                Unlock unlimited AI, white-label portals, API access, advanced automations
+                and direct line to the founding team.
               </p>
-              <Button className="bg-yellow-500 text-black hover:bg-yellow-400" onClick={() => navigate("/#pricing")}>
-                Upgrade to Infinity — ₹2,250
+              <Button className="bg-yellow-500 text-black hover:bg-yellow-400" onClick={() => navigate("/plans")}>
+                Upgrade to Infinity — ₹2,250/mo
               </Button>
             </motion.div>
           )}
@@ -225,6 +239,108 @@ export default function InfinityZone() {
             ))}
           </div>
 
+          {/* EXCLUSIVE TOOLS TAB */}
+          {tab === "tools" && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-display font-bold flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-yellow-500" /> Exclusive tools
+                </h2>
+                <Badge variant="outline" className="border-yellow-500/30 text-yellow-500 text-[10px]">
+                  {exclusiveTools.length} unlocked
+                </Badge>
+              </div>
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {exclusiveTools.map((t, i) => {
+                  const Icon = t.icon;
+                  const locked = !isInfinity;
+                  return (
+                    <motion.button
+                      key={t.title}
+                      initial={{ opacity: 0, y: 12 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.04 }}
+                      onClick={() => !locked && goTool(t)}
+                      disabled={locked}
+                      className={`text-left glass rounded-xl p-5 space-y-3 border transition-all ${
+                        locked
+                          ? "border-border/40 opacity-60 cursor-not-allowed"
+                          : "border-yellow-500/20 hover:border-yellow-500/50 hover:shadow-glow hover:-translate-y-0.5"
+                      }`}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="w-10 h-10 rounded-lg bg-yellow-500/10 flex items-center justify-center">
+                          <Icon className="w-5 h-5 text-yellow-500" />
+                        </div>
+                        {locked ? (
+                          <Lock className="w-3.5 h-3.5 text-muted-foreground" />
+                        ) : (
+                          <Badge variant="outline" className="text-[10px] border-emerald-500/40 text-emerald-500 bg-emerald-500/10">
+                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 mr-1.5 inline-block" /> Live
+                          </Badge>
+                        )}
+                      </div>
+                      <div>
+                        <h3 className="font-display font-semibold text-sm">{t.title}</h3>
+                        <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{t.desc}</p>
+                      </div>
+                      {!locked && t.href && (
+                        <div className="text-[11px] text-yellow-500 font-medium flex items-center gap-1">
+                          Open <ArrowRight className="w-3 h-3" />
+                        </div>
+                      )}
+                    </motion.button>
+                  );
+                })}
+              </div>
+            </motion.div>
+          )}
+
+          {/* VIP PERKS TAB */}
+          {tab === "perks" && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-display font-bold flex items-center gap-2">
+                  <Crown className="w-5 h-5 text-yellow-500" /> VIP perks
+                </h2>
+                {isInfinity && (
+                  <Button size="sm" variant="outline" className="border-yellow-500/30 text-yellow-500 hover:bg-yellow-500/10"
+                    onClick={() => navigate("/contact")}>
+                    <Headphones className="w-3.5 h-3.5 mr-1.5" /> Book session
+                  </Button>
+                )}
+              </div>
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {vipPerks.map((p, i) => {
+                  const Icon = p.icon;
+                  const locked = !isInfinity;
+                  return (
+                    <motion.div
+                      key={p.title}
+                      initial={{ opacity: 0, y: 12 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.04 }}
+                      className={`glass rounded-xl p-5 space-y-3 border ${
+                        locked ? "border-border/40 opacity-60" : "border-yellow-500/20"
+                      }`}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="w-10 h-10 rounded-lg bg-yellow-500/10 flex items-center justify-center">
+                          <Icon className="w-5 h-5 text-yellow-500" />
+                        </div>
+                        {locked && <Lock className="w-3.5 h-3.5 text-muted-foreground" />}
+                      </div>
+                      <div>
+                        <h3 className="font-display font-semibold text-sm">{p.title}</h3>
+                        <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{p.desc}</p>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </motion.div>
+          )}
+
           {/* COURSES TAB */}
           {tab === "courses" && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
@@ -241,7 +357,7 @@ export default function InfinityZone() {
               )}
 
               <AnimatePresence>
-                {showCreate && tab === "courses" && (
+                {showCreate && (
                   <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }}
                     exit={{ opacity: 0, height: 0 }} className="glass rounded-xl p-6 space-y-4 border-yellow-500/20">
                     <div className="flex items-center justify-between">
@@ -341,193 +457,6 @@ export default function InfinityZone() {
                     ))}
                   </div>
                 )}
-              </div>
-            </motion.div>
-          )}
-
-          {/* MARKETPLACE TAB */}
-          {tab === "marketplace" && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
-              {isInfinity && (
-                <div className="flex justify-between items-center">
-                  <h2 className="text-xl font-display font-bold flex items-center gap-2">
-                    <Store className="w-5 h-5 text-yellow-500" /> Your Listings
-                  </h2>
-                  <Button onClick={() => setShowCreate(!showCreate)}
-                    className="bg-yellow-500 text-black hover:bg-yellow-400" size="sm">
-                    <Plus className="w-4 h-4 mr-1" /> List Item
-                  </Button>
-                </div>
-              )}
-
-              <AnimatePresence>
-                {showCreate && tab === "marketplace" && (
-                  <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }} className="glass rounded-xl p-6 space-y-4 border-yellow-500/20">
-                    <div className="flex items-center justify-between">
-                      <h3 className="font-display font-semibold">New Listing</h3>
-                      <button onClick={() => setShowCreate(false)}><X className="w-4 h-4" /></button>
-                    </div>
-                    <div className="grid md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label>Item Title</Label>
-                        <Input value={itemTitle} onChange={e => setItemTitle(e.target.value)} placeholder="e.g. Notion Freelancer Dashboard" />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Price (₹)</Label>
-                        <Input value={itemPrice} onChange={e => setItemPrice(e.target.value)} type="number" placeholder="299" />
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Description</Label>
-                      <Textarea value={itemDesc} onChange={e => setItemDesc(e.target.value)} placeholder="What does this tool/template do?" rows={3} />
-                    </div>
-                    <div className="grid md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label>Type</Label>
-                        <Select value={itemType} onValueChange={setItemType}>
-                          <SelectTrigger><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="tool">Tool</SelectItem>
-                            <SelectItem value="template">Template</SelectItem>
-                            <SelectItem value="ebook">E-Book</SelectItem>
-                            <SelectItem value="resource">Resource Pack</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Category</Label>
-                        <Select value={itemCategory} onValueChange={setItemCategory}>
-                          <SelectTrigger><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            {["Template", "Productivity", "Design", "Marketing", "AI Tools", "Other"].map(c => (
-                              <SelectItem key={c} value={c}>{c}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                    <Button onClick={createItem} className="bg-yellow-500 text-black hover:bg-yellow-400 w-full">
-                      <Package className="w-4 h-4 mr-1" /> Publish Listing
-                    </Button>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* My items */}
-              {isInfinity && myItems.length > 0 && (
-                <div className="grid md:grid-cols-2 gap-4">
-                  {myItems.map(item => (
-                    <div key={item.id} className="glass rounded-xl p-5 space-y-3 border-yellow-500/10">
-                      <div className="flex items-center justify-between">
-                        <div className="flex gap-2">
-                          <Badge className={item.is_published ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"}>
-                            {item.is_published ? "Live" : "Hidden"}
-                          </Badge>
-                          <Badge variant="outline" className="text-[10px]">{item.item_type}</Badge>
-                        </div>
-                        <div className="flex gap-1">
-                          <button onClick={() => toggleItemPublish(item.id, item.is_published)} className="p-1.5 rounded-md hover:bg-muted">
-                            {item.is_published ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                          </button>
-                          <button onClick={() => deleteItem(item.id)} className="p-1.5 rounded-md hover:bg-destructive/20 text-destructive">
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </div>
-                      <h3 className="font-display font-semibold">{item.title}</h3>
-                      <p className="text-xs text-muted-foreground">{item.description?.slice(0, 100)}...</p>
-                      <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <span className="flex items-center gap-1"><IndianRupee className="w-3 h-3" />{item.price}</span>
-                        <span>{item.sales_count} sales</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* All published items */}
-              <div className="space-y-4">
-                <h2 className="text-lg font-display font-bold flex items-center gap-2">
-                  <Package className="w-5 h-5 text-primary" /> Browse Marketplace
-                </h2>
-                {items.length === 0 ? (
-                  <div className="glass rounded-xl p-8 text-center text-muted-foreground">
-                    <Store className="w-12 h-12 mx-auto mb-3 opacity-30" />
-                    <p className="text-sm">Marketplace is empty. List your first tool or template!</p>
-                  </div>
-                ) : (
-                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {items.map(item => (
-                      <motion.div key={item.id} whileHover={{ y: -4 }}
-                        className="glass rounded-xl p-5 space-y-3 hover:border-yellow-500/30 hover:shadow-glow transition-all cursor-pointer">
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline" className="text-[10px]">{item.item_type}</Badge>
-                          <Badge variant="outline" className="text-[10px]">{item.category}</Badge>
-                        </div>
-                        <h3 className="font-display font-semibold">{item.title}</h3>
-                        <p className="text-xs text-muted-foreground line-clamp-2">{item.description}</p>
-                        <div className="flex items-center justify-between pt-2 border-t border-border/50">
-                          <span className="font-semibold text-sm flex items-center text-yellow-500">
-                            <IndianRupee className="w-3.5 h-3.5" />{item.price}
-                          </span>
-                          <span className="text-[10px] text-muted-foreground">{item.sales_count} sold</span>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </motion.div>
-          )}
-
-          {/* COMMUNITIES TAB */}
-          {tab === "communities" && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
-              <div className="flex justify-between items-center">
-                <h2 className="text-xl font-display font-bold flex items-center gap-2">
-                  <Users className="w-5 h-5 text-yellow-500" /> Community Builder
-                </h2>
-                {isInfinity && (
-                  <Button onClick={() => navigate("/community")}
-                    className="bg-yellow-500 text-black hover:bg-yellow-400" size="sm">
-                    <Plus className="w-4 h-4 mr-1" /> Manage Groups
-                  </Button>
-                )}
-              </div>
-
-              <div className="glass rounded-2xl p-8 space-y-6 border-yellow-500/10">
-                <div className="text-center space-y-3">
-                  <div className="w-20 h-20 rounded-full bg-yellow-500/10 flex items-center justify-center mx-auto">
-                    <Users className="w-10 h-10 text-yellow-500" />
-                  </div>
-                  <h3 className="text-lg font-display font-bold">Build Your Community</h3>
-                  <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                    As an Infinity member, you can create and manage community groups, moderate discussions,
-                    and build your own tribe of hustlers.
-                  </p>
-                </div>
-
-                <div className="grid md:grid-cols-3 gap-4">
-                  {[
-                    { icon: "🎯", title: "Create Groups", desc: "Launch topic-specific discussion groups" },
-                    { icon: "🛡️", title: "Moderate", desc: "Approve posts, manage members" },
-                    { icon: "📊", title: "Grow", desc: "Track engagement & build your brand" },
-                  ].map(f => (
-                    <div key={f.title} className="glass rounded-xl p-4 text-center space-y-2 border-yellow-500/10">
-                      <span className="text-2xl">{f.icon}</span>
-                      <h4 className="font-display font-semibold text-sm">{f.title}</h4>
-                      <p className="text-[11px] text-muted-foreground">{f.desc}</p>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="text-center">
-                  <Button variant="outline" onClick={() => navigate("/community")}
-                    className="border-yellow-500/30 text-yellow-500 hover:bg-yellow-500/10">
-                    <ArrowRight className="w-4 h-4 mr-1" /> Go to Community Hub
-                  </Button>
-                </div>
               </div>
             </motion.div>
           )}
