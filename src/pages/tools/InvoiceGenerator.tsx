@@ -116,14 +116,14 @@ export default function InvoiceGenerator() {
           <div className="grid lg:grid-cols-2 gap-6 print:block">
             {/* Form */}
             <div className="space-y-5 print:hidden">
-              <Card title="Your business" action={<AIAutofillIcon onClick={() => aiFill("your business profile")} />}>
+              <Card title="Your business" action={<AIAutofillIcon sectionName="your business profile" onClick={() => aiFill("your business profile")} />}>
                 <Field label="Business name" value={state.bizName} onChange={(v) => update("bizName", v)} />
                 <Field label="Email" value={state.bizEmail} onChange={(v) => update("bizEmail", v)} />
                 <FieldArea label="Address" value={state.bizAddress} onChange={(v) => update("bizAddress", v)} />
                 <Field label="GSTIN (optional)" value={state.bizGstin} onChange={(v) => update("bizGstin", v)} />
               </Card>
 
-              <Card title="Bill to" action={<AIAutofillIcon onClick={() => aiFill("the client details")} />}>
+              <Card title="Bill to" action={<AIAutofillIcon sectionName="the client details" onClick={() => aiFill("the client details")} />}>
                 <Field label="Client name" value={state.clientName} onChange={(v) => update("clientName", v)} />
                 <Field label="Client email" value={state.clientEmail} onChange={(v) => update("clientEmail", v)} />
                 <FieldArea label="Client address" value={state.clientAddress} onChange={(v) => update("clientAddress", v)} />
@@ -141,7 +141,7 @@ export default function InvoiceGenerator() {
                 </div>
               </Card>
 
-              <Card title="Line items" action={<AIAutofillIcon onClick={() => aiFill("line items from a project description")} />}>
+              <Card title="Line items" action={<AIAutofillIcon sectionName="line items from a project description" onClick={() => aiFill("line items from a project description")} />}>
                 <div className="space-y-2">
                   {state.items.map((it) => (
                     <div key={it.id} className="grid grid-cols-12 gap-2 items-end">
@@ -170,7 +170,7 @@ export default function InvoiceGenerator() {
                 </div>
               </Card>
 
-              <Card title="Notes & terms" action={<AIAutofillIcon onClick={() => aiFill("payment notes & terms")} />}>
+              <Card title="Notes & terms" action={<AIAutofillIcon sectionName="payment notes & terms" onClick={() => aiFill("payment notes & terms")} />}>
                 <FieldArea label="Notes (visible to client)" value={state.notes} onChange={(v) => update("notes", v)} />
                 <FieldArea label="Terms" value={state.terms} onChange={(v) => update("terms", v)} />
               </Card>

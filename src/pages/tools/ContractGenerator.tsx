@@ -130,7 +130,7 @@ export default function ContractGenerator() {
           <div className="grid lg:grid-cols-2 gap-6">
             {/* Form */}
             <div className="space-y-5 print:hidden">
-              <Card title="Parties" action={<AIAutofillIcon onClick={() => aiFill("both parties")} />}>
+              <Card title="Parties" action={<AIAutofillIcon sectionName="both parties" onClick={() => aiFill("both parties")} />}>
                 <Field label="Effective date" type="date" value={s.effectiveDate} onChange={(v) => set("effectiveDate", v)} />
                 <div className="grid grid-cols-1 gap-3">
                   <div className="border-l-2 border-emerald-500 pl-3 space-y-2">
@@ -148,7 +148,7 @@ export default function ContractGenerator() {
                 </div>
               </Card>
 
-              <Card title="Engagement details" action={<AIAutofillIcon onClick={() => aiFill("scope of work & fee")} />}>
+              <Card title="Engagement details" action={<AIAutofillIcon sectionName="scope of work & fee" onClick={() => aiFill("scope of work & fee")} />}>
                 <FieldArea label="Scope of work" value={s.scope} onChange={(v) => set("scope", v)} />
                 <div className="grid grid-cols-2 gap-3">
                   <Field label="Currency" value={s.currency} onChange={(v) => set("currency", v)} />
@@ -156,7 +156,7 @@ export default function ContractGenerator() {
                 </div>
               </Card>
 
-              <Card title="Clauses" action={<AIAutofillIcon onClick={() => aiFill("the clause set for this engagement")} />}>
+              <Card title="Clauses" action={<AIAutofillIcon sectionName="the clause set for this engagement" onClick={() => aiFill("the clause set for this engagement")} />}>
                 <FieldArea label="Introduction" value={s.intro} onChange={(v) => set("intro", v)} />
                 <div className="space-y-3 mt-2">
                   {s.clauses.map((c, i) => (
