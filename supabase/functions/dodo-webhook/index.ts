@@ -324,6 +324,32 @@ serve(async (req) => {
       // Just log — admins handle reversal manually for now
     }
 
+    // ===== EXPLICIT FAILURE EVENTS =====
+    if (eventType === "payment.failed" || eventType === "subscription.payment_failed") {
+      const amountInr = (data.total_amount ?? data.amount ?? 0) / 100;
+      await supabase.from("payments").insert({
+        user_id: userId,
+        order_id: data.payment_id || data.id || `dodo_${eventId}`,
+        amount: amountInr,
+        currency: data.currency || "INR",
+        plan: metadata.internal_key || "unknown",
+        status: "failed",
+        cf_payment_id: data.payment_id || null,
+      }).then(() => {}).catch(() => {});
+      // Defensive: if a tier was prematurely granted, revoke it back to free
+      // when the matching subscription_id has no successful payment on record.
+      if (userId && data.subscription_id) {
+        const { data: paid } = await supabase.from("payments")
+          .select("id").eq("user_id", userId).eq("status", "paid")
+          .ilike("cf_payment_id", "%").limit(1);
+        if (!paid || paid.length === 0) {
+          await supabase.from("profiles").update({
+            subscription_tier: "free",
+          } as any).eq("user_id", userId).eq("dodo_subscription_id", data.subscription_id);
+        }
+      }
+    }
+
     if (logged) {
       await supabase.from("dodo_events").update({ status: "processed" }).eq("id", logged.id);
     }
