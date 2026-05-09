@@ -1,76 +1,87 @@
-# Dodo standardization + Core SaaS Infra Rollout
+# Polish Phase: Payment, Settings, Admin, Users, Design System
 
-This is a large, multi-phase effort. Shipping it as one mega-PR is risky. I'm proposing a phased plan so each phase is testable, reversible, and goes live cleanly.
+5 large workstreams. I'll ship them in this order so each phase is reviewable and the next one builds on the previous design language.
 
-## Phase 0 — Cashfree → Dodo cutover (today, ship first)
+## Phase A — Design System Consistency Pass (foundation, ship first)
 
-**Production removal**
-- Pull Cashfree CTAs/components off `Pricing`, `Upgrade`, `Wallet`, `Billing`, `Payment`, `PaymentStatus` pages.
-- Remove Cashfree status polling and subscription/invoice sync from active flows.
-- Repoint wallet credit verification to the Dodo webhook (already webhook-confirmed via `dodo-webhook`).
-- Strip Cashfree env vars from runtime usage (keep secrets in vault until Phase 0 verified live).
+This belongs **before** Payment/Settings/Admin so all three inherit it.
 
-**Archival (not deletion)**
-- Move Cashfree code to `src/legacy/cashfree/` and `supabase/functions/_legacy/cashfree-*`.
-- Wrap any compatibility shim behind `ENABLE_CASHFREE_LEGACY` (default `false`).
-- Mark `cashfree_*` DB tables as legacy via comment + `is_legacy` flag — do NOT drop (historical invoices).
+- Audit `index.css` + `tailwind.config.ts` for tokens: spacing scale, radii (`--radius-sm/md/lg/xl`), shadow tiers (`--shadow-sm/md/lg/glow`), elevation, typography ramp.
+- Standardize: button hierarchy (primary/secondary/ghost/destructive + size scale), card surfaces, input styles, focus rings, hover states.
+- Unify: skeleton loaders (single `<Skeleton>` variant + shimmer), empty states (single `<EmptyState>` component with icon/title/desc/CTA), modal/sheet padding, toast patterns (sonner only — kill remaining `useToast` mixed usage).
+- Icon sizing: standardize `w-4 h-4` (inline), `w-5 h-5` (button), `w-8 h-8` (feature) — codify in lint comment.
+- Typography: 1 display font + 1 body font, ramp `text-xs → text-4xl` with line-height tokens.
+- Output: `src/components/ui/empty-state.tsx`, `src/components/ui/section-header.tsx`, refresh of `Skeleton` patterns, doc in `src/lib/design-tokens.ts`.
 
-**Audit & verify**
-- Grep for `cashfree-payment.verify_payment` and any `supabase.functions.invoke('cashfree-…')` — replace or remove.
-- Confirm no entitlement-granting path reads from Cashfree tables.
-- Remove duplicate billing cron jobs (keep only Dodo-driven ones + abandoned-checkout-recovery).
+## Phase B — Payment Page Premium Refresh (`/payment`)
 
-## Phase 1 — Billing State Machine (this week, after Phase 0 lives)
+Visual target: Linear / Vercel / Stripe Billing. **Not** generic indie SaaS.
 
-New table `subscription_states` with status enum:
-`trialing | active | grace_period | on_hold | cancelled | expired | refunded`
+Layout:
+```
+┌─────────────────────────────────────────────────────┐
+│  Hero: "Pick your hustle plan"  + monthly/yearly    │
+│  Trust strip: 🔒 Secure · 🧾 GST · ⚡ Instant       │
+├─────────────────────────────────────────────────────┤
+│  3 plan cards · "Most Popular" on Elite             │
+│  Annual: -20% badge, "Best Value" ribbon            │
+│  Inline savings calculator under yearly             │
+├─────────────────────────────────────────────────────┤
+│  Wallet pay-as-you-go strip (4 packs, horizontal)   │
+│  Tooltip: "1 credit = 1 AI search"                  │
+├─────────────────────────────────────────────────────┤
+│  [Compare features] → opens Sheet drawer            │
+│  Payment methods strip: Visa MC UPI Netbanking      │
+│  FAQ accordion (refunds, cancel, trial, GST)        │
+└─────────────────────────────────────────────────────┘
+```
 
-- `entitlement_map` view → resolves tier+status → feature flags
-- Downgrade timing: cancellations stay `active` until `current_period_end`, then → `expired`
-- Grace period: failed renewal → `grace_period` for 3 days, then `on_hold` (read-only), then `expired`
-- UI: status badges on Billing page; feature gates check `entitlement_map` not raw `subscription_tier`
+States: skeleton on initial load, optimistic CTA spinner, success → existing celebration modal, error → inline alert with retry.
 
-## Phase 2 — Central Event Bus
+## Phase C — User Settings Expansion (`/profile?tab=settings` or new `/settings`)
 
-`automation_events` table: `id, event_type, actor_user_id, payload jsonb, status, attempts, created_at, processed_at, error`
+Tabbed shell with sticky left nav (mobile: top tabs):
+- **Account** — avatar, display name, username, timezone, language, bio, social links (uses existing `social_links` infra)
+- **Billing** — pulls active sub from `dodo_subscriptions`, invoices from `payments`, wallet from `user_wallets`, coupon history from `dodo_events`. Single "Manage in portal" CTA → `dodo-portal`.
+- **Notifications** — `notification_preferences` table (new): email_receipts, newsletter, ai_digest, marketing, payment_alerts, product_updates
+- **Security** — sessions list (best-effort from auth), login history (new `login_events` table, opt-in), password reset link, Google connection status, 2FA section (placeholder card "Coming soon")
+- **AI Preferences** — provider preference, tone (concise/balanced/detailed), creativity (low/med/high), auto-save toggle, AI memory toggle. Stored in `user_ai_preferences` table (new).
+- **Workspace Preferences** — default dashboard route, compact mode, animations toggle, accent color picker. Stored in `user_ui_preferences` table (new).
 
-Emitters: Dodo webhook, signup, credit grant, affiliate reward, email send, Discord sync.
-Consumers: retry worker (cron), analytics aggregator, debugger panel in admin.
+## Phase D — Admin Panel Operational Polish
 
-## Phase 3 — Usage Metering
+Restructure `AdminDashboard.tsx` (currently 2340 lines, single page) into:
+- `src/pages/admin/` route shell with sidebar groups: **Overview, Users, Billing, Content, Communications, Infrastructure, Settings**
+- Searchable sidebar (cmd-K command palette via `cmdk`)
+- Pinned sections (localStorage)
+- Activity feed widget on Overview (reads `dodo_events` + future `audit_logs`)
+- Metrics cards: MRR, active subs, wallet revenue, churn 30d, signups 7d, failed payments
+- Quick actions row: "Grant credits", "Issue coupon", "Resend invoice", "Send broadcast"
+- Provider health monitor (already partial in SystemHealth — promote to Overview card)
+- Email queue + failed webhook viewers (read `dodo_events` where status=failed; retry button calls webhook replay)
+- Coupon analytics (redemptions over time per code from `dodo_coupons.times_redeemed` + events)
 
-`usage_events` (raw) + `usage_rollups_daily` (aggregate) per `user_id` × `metric` (ai_run, tokens, export, storage_mb, automation_run, api_call).
-`quota_engine` RPC replaces scattered `consume_*_quota` functions.
+## Phase E — Advanced Users View (admin)
 
-## Phase 4 — Feature Flags expansion
+New `/admin/users` route. Stripe/Clerk-style:
+- Top: search bar (email/name/id/dodo_customer_id), saved filters
+- Filter chips: tier, status, trialing, cancelled, has_wallet>0, is_affiliate, email_verified, signup_source, last_active range, ai_usage_bucket, country, payment_status, churn_risk, referral_count
+- Sort: revenue (sum of payments), activity (last_seen), signup date, MRR
+- Row click → right-side **user drawer** with tabs: Overview, Subscriptions, Payments, AI usage, Emails, Referrals, Notes, Audit
+- Admin actions: subscription override (set tier + period_end), grant credits, assign role, add internal tag, send email, export profile JSON
+- Bulk actions: tag, email, export CSV
+- Audit trail: every admin write logged to `admin_audit_logs` (new table)
+- Safe impersonation: read-only "preview as user" (existing impersonation flow already exists per memory)
 
-Extend existing `feature_flags` with: `rollout_percent`, `allowed_user_ids[]`, `allowed_tiers[]`, `experiment_key`. Admin panel UI for toggling.
+## Recommended order
 
-## Phase 5 — Internal AI Ops Dashboard
+A → B → C → E → D. (E before D because the Users view is the biggest single deliverable and benefits from being built standalone before wiring into the admin shell restructure.)
 
-Admin route `/admin/ops` with: top features, failed emails (last 24h), payment failures, churn risk (no login 14d + paying), inactive users, upgrade funnel (visited /pricing → checkout → success).
+## Questions before I start
 
-## Phase 6 — AI Content Automation Engine
+1. **Aesthetic anchor for Payment page** — should I lean Linear (dark, precise, monospace accents), Stripe (clean white-on-warm, soft shadows), or your existing dark+gradient `glass` look — just polished?
+2. **Settings location** — promote to top-level `/settings` route, or keep nested under `/profile?tab=...`?
+3. **Admin restructure** — okay to break the 2340-line `AdminDashboard.tsx` into `src/pages/admin/*` sub-routes (cleaner, but bigger diff), or keep single-page with internal section state?
+4. **New tables** I'll need: `notification_preferences`, `user_ai_preferences`, `user_ui_preferences`, `admin_audit_logs`, `login_events` — green-light all in one migration, or want to skip any?
 
-Cron-driven orchestrator that uses `email_templates` + Lovable AI to draft newsletters, re-engagement, launch announcements, creator digests. Admin approval queue before send.
-
-## Phase 7 — Status + Incident system
-
-`status.hustlaiapp.in` (or `/status` route initially): provider health (Dodo, Brevo, MailerSend, Lovable AI, Discord), webhook health, cron health, incidents log. `provider_health_checks` table fed by 5-min cron.
-
-## Phase 8 — Audit Logs
-
-`audit_logs` table: `actor_user_id, action, target_type, target_id, before jsonb, after jsonb, ip, user_agent, created_at`.
-Hook into: admin actions, plan changes, coupon creation, credit grants, provider toggles, template edits, feature flag changes.
-
-## Recommendation
-
-**Approve Phase 0 to ship today** (matches your "live today" goal). Phases 1–8 are each 1–2 day chunks; I'll ship them in order, asking for approval between phases so each one is reviewable and won't snowball into one giant unreviewable change.
-
-## Questions before I start Phase 0
-
-1. **Cashfree historical data**: keep `cashfree_*` tables visible in admin Billing (read-only "Legacy" tab) or hide entirely?
-2. **ENABLE_CASHFREE_LEGACY**: build secret default `false` — confirm OK to hardcode `false` for now (no toggle UI yet)?
-3. **Wallet purchases in flight**: any active Cashfree wallet orders right now we need to honor, or safe to hard-cut?
-
-Once you answer those, I'll execute Phase 0 immediately.
+Once you answer, I'll start with **Phase A (Design System pass)** since both B and the admin work depend on it.
