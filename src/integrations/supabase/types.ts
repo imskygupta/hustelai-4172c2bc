@@ -569,6 +569,69 @@ export type Database = {
         }
         Relationships: []
       }
+      checkout_sessions: {
+        Row: {
+          amount_cents: number | null
+          billing_interval: string | null
+          completed_at: string | null
+          created_at: string
+          currency: string | null
+          dodo_session_id: string | null
+          email: string
+          id: string
+          metadata: Json | null
+          opened_at: string
+          plan_id: string
+          plan_label: string | null
+          recovery_email_sent_at: string | null
+          resume_url: string | null
+          status: string
+          tier: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          amount_cents?: number | null
+          billing_interval?: string | null
+          completed_at?: string | null
+          created_at?: string
+          currency?: string | null
+          dodo_session_id?: string | null
+          email: string
+          id?: string
+          metadata?: Json | null
+          opened_at?: string
+          plan_id: string
+          plan_label?: string | null
+          recovery_email_sent_at?: string | null
+          resume_url?: string | null
+          status?: string
+          tier?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          amount_cents?: number | null
+          billing_interval?: string | null
+          completed_at?: string | null
+          created_at?: string
+          currency?: string | null
+          dodo_session_id?: string | null
+          email?: string
+          id?: string
+          metadata?: Json | null
+          opened_at?: string
+          plan_id?: string
+          plan_label?: string | null
+          recovery_email_sent_at?: string | null
+          resume_url?: string | null
+          status?: string
+          tier?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       client_profiles: {
         Row: {
           address: string | null
@@ -1165,6 +1228,51 @@ export type Database = {
           smtp_email?: string | null
           smtp_password?: string | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      email_templates: {
+        Row: {
+          category: string
+          created_at: string
+          html: string
+          id: string
+          is_active: boolean
+          name: string
+          preferred_provider: string | null
+          preview_text: string | null
+          slug: string
+          subject: string
+          updated_at: string
+          variables: Json | null
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          html: string
+          id?: string
+          is_active?: boolean
+          name: string
+          preferred_provider?: string | null
+          preview_text?: string | null
+          slug: string
+          subject: string
+          updated_at?: string
+          variables?: Json | null
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          html?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          preferred_provider?: string | null
+          preview_text?: string | null
+          slug?: string
+          subject?: string
+          updated_at?: string
+          variables?: Json | null
         }
         Relationships: []
       }
@@ -1782,6 +1890,42 @@ export type Database = {
           total_posts_analyzed?: number | null
           trend_data?: Json
           user_id?: string
+        }
+        Relationships: []
+      }
+      mailing_provider_config: {
+        Row: {
+          brevo_enabled: boolean
+          default_provider: string
+          fallback_provider: string | null
+          from_email: string
+          from_name: string
+          id: number
+          mailersend_enabled: boolean
+          reply_to: string | null
+          updated_at: string
+        }
+        Insert: {
+          brevo_enabled?: boolean
+          default_provider?: string
+          fallback_provider?: string | null
+          from_email?: string
+          from_name?: string
+          id?: number
+          mailersend_enabled?: boolean
+          reply_to?: string | null
+          updated_at?: string
+        }
+        Update: {
+          brevo_enabled?: boolean
+          default_provider?: string
+          fallback_provider?: string | null
+          from_email?: string
+          from_name?: string
+          id?: number
+          mailersend_enabled?: boolean
+          reply_to?: string | null
+          updated_at?: string
         }
         Relationships: []
       }

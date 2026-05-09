@@ -10,6 +10,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Check, Loader2, XCircle, Clock, CreditCard, Rocket, Gift, ArrowRight, PartyPopper, Wallet } from "lucide-react";
 
 import { SEO } from "@/components/SEO";
+import { UpgradeCelebrationModal } from "@/components/UpgradeCelebrationModal";
+import { toast as sonnerToast } from "sonner";
 
 const STATUS_STAGES = [
   { key: "initiated", label: "Payment Initiated", icon: CreditCard },
@@ -30,6 +32,8 @@ export default function PaymentStatus() {
   const [isWallet, setIsWallet] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [bonusKits, setBonusKits] = useState<any[]>([]);
+  const [celebrationOpen, setCelebrationOpen] = useState(false);
+  const [walletCredits, setWalletCredits] = useState<number | undefined>(undefined);
 
   const orderId = searchParams.get("order_id");
   const type = searchParams.get("type") || "subscription";
@@ -73,6 +77,18 @@ export default function PaymentStatus() {
         setShowConfetti(true);
         refreshProfile();
 
+        // Webhook-confirmed celebration UX
+        const tierKey = (data.is_wallet ? "wallet" : (data.plan || "pro").toLowerCase().replace(/_yearly$/, "")) as any;
+        if (data.is_wallet) {
+          const credits = Number(data.credits || data.wallet_credits || 0) || undefined;
+          setWalletCredits(credits);
+        }
+        sonnerToast.success(
+          data.is_wallet ? "Wallet topped up 💰" : `${(data.plan || "Premium").toUpperCase()} unlocked 🎉`,
+          { description: data.is_wallet ? "Credits added instantly." : "All premium features are live." },
+        );
+        setTimeout(() => setCelebrationOpen(true), 600);
+
         // Load bonus kits
         const { data: kits } = await supabase.from("bonus_kits" as any).select("*").eq("is_active", true);
         if (kits) setBonusKits(kits as any);
@@ -95,6 +111,12 @@ export default function PaymentStatus() {
     <div className="min-h-screen bg-background">
       <SEO title="Payment status | HustleAI Workspace OS" description="HustleAI Workspace OS — internal page." path="" noindex />
       <Navbar />
+      <UpgradeCelebrationModal
+        open={celebrationOpen}
+        onClose={() => setCelebrationOpen(false)}
+        tier={(isWallet ? "wallet" : (plan || "pro").toLowerCase().replace(/_yearly$/, "")) as any}
+        credits={walletCredits}
+      />
 
       {/* Confetti */}
       <AnimatePresence>

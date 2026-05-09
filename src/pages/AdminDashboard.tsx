@@ -27,6 +27,8 @@ import { PaymentMethodsManager } from "@/components/admin/PaymentMethodsManager"
 import { DodoAdminPanel } from "@/components/admin/DodoAdminPanel";
 import { DodoCouponsPanel } from "@/components/admin/DodoCouponsPanel";
 import { BrevoNewsletterPanel } from "@/components/admin/BrevoNewsletterPanel";
+import { EmailTemplatesPanel } from "@/components/admin/EmailTemplatesPanel";
+import { MailingProvidersPanel } from "@/components/admin/MailingProvidersPanel";
 import { SQL_BLOCKS } from "@/lib/work-sql";
 import { FeatureFlagsManager } from "@/components/admin/FeatureFlagsManager";
 import { UsageAnalyticsManager } from "@/components/admin/UsageAnalyticsManager";
@@ -123,7 +125,8 @@ type AdminSection =
   | "overview" | "users" | "roles" | "notifications" | "webinars"
   | "expert" | "chatbot" | "blogs" | "analytics" | "config"
   | "verification" | "payments" | "forum" | "community" | "trending" | "newsletter" | "email-settings" | "ai-providers" | "send-email" | "orders"
-  | "payment-logs" | "bonus-kits" | "social-links" | "sql-setup" | "feature-flags" | "system-health" | "dodo-payments";
+  | "payment-logs" | "bonus-kits" | "social-links" | "sql-setup" | "feature-flags" | "system-health" | "dodo-payments"
+  | "email-templates" | "mailing-providers";
 type AdminSectionExt = AdminSection | "seo-pages" | "seo-blog" | "usage-analytics";
 
 const sidebarItems: { id: AdminSection; label: string; icon: any }[] = [
@@ -147,6 +150,8 @@ const sidebarItems: { id: AdminSection; label: string; icon: any }[] = [
   { id: "blogs", label: "Blog Manager", icon: BookOpen },
   { id: "trending", label: "Trending Links", icon: ExternalLink },
   { id: "newsletter", label: "Newsletter", icon: Mail },
+  { id: "email-templates", label: "Email Templates", icon: Mail },
+  { id: "mailing-providers", label: "Mailing Providers", icon: Settings },
   { id: "email-settings", label: "Email Settings", icon: Settings },
   { id: "ai-providers", label: "AI Providers", icon: Zap },
   { id: "analytics", label: "Analytics", icon: Activity },
@@ -1716,6 +1721,8 @@ export default function AdminDashboard() {
           {section === "newsletter" && (
             <BrevoNewsletterPanel />
           )}
+          {section === "email-templates" && <EmailTemplatesPanel />}
+          {section === "mailing-providers" && <MailingProvidersPanel />}
           {/* ===== EMAIL SETTINGS ===== */}
           {section === "email-settings" && (
             <div className="space-y-6">
