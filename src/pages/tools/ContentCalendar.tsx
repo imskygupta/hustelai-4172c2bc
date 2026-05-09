@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { ToolPageLayout } from "@/components/tools/ToolPageLayout";
+import { TemplatePicker } from "@/components/tools/TemplatePicker";
 import { useToolGate } from "@/components/tools/ToolGate";
 import { SignupCTADialog } from "@/components/SignupCTADialog";
 import { useAuth } from "@/hooks/useAuth";
@@ -152,6 +153,7 @@ export default function ContentCalendar() {
       back={{ href: "/tools", label: "All tools" }}
       faqs={faqs}
     >
+      <TemplatePicker toolKey="content-calendar" />
       <Card className="p-5 mb-4 border-rose-200 bg-gradient-to-br from-rose-50/60 via-white to-pink-50/40">
         <div className="flex items-start gap-3">
           <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center shrink-0 shadow-sm">
