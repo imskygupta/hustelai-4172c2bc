@@ -6,10 +6,16 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ToolPageLayout } from "@/components/tools/ToolPageLayout";
-import { TierLockOverlay } from "@/components/tools/TierLockOverlay";
-import { useAuth } from "@/hooks/useAuth";
-import type { Tier } from "@/lib/feature-flags";
+import { useToolGate } from "@/components/tools/ToolGate";
 import { toast } from "sonner";
+
+const faqs = [
+  { q: "Is the form builder really free?", a: "Yes. You can pick a template, edit fields, preview and copy a share-link in your browser — no signup. Sign up free to publish a real public form, collect replies, and route them into your HustleAI workspace inbox." },
+  { q: "What templates are included?", a: "Three battle-tested intake templates used by US, UK, EU, AU and Indian freelancers — Design Project Intake, Video Editor Intake and Consulting Discovery. Edit any field or add your own." },
+  { q: "Can clients fill the form on mobile?", a: "Yes. The published form is mobile-first, accessible (WCAG-aligned), and works on every browser including iOS Safari and Android Chrome." },
+  { q: "Where do replies go?", a: "Once you sign up and publish, replies land in your HustleAI Workspace → Intake Inbox. From there you can convert any reply into a CRM contact, proposal or invoice in one click." },
+  { q: "Is the form GDPR / DPDP friendly?", a: "Yes. We don't sell or share data, store replies in your private workspace, and export-on-demand is one click — meeting GDPR (EU/UK) and India's DPDP requirements." },
+];
 
 /**
  * Client Onboarding Form Builder — browser-only, template-driven.
@@ -58,8 +64,7 @@ const TEMPLATES: Template[] = [
 ];
 
 export default function OnboardingFormBuilder() {
-  const { profile } = useAuth();
-  const tier = ((profile?.subscription_tier as Tier) || "free");
+  const { guard, gate } = useToolGate("intake-form", "publish your intake form");
   const [tpl, setTpl] = useState<Template>(TEMPLATES[0]);
 
   const updateField = (id: string, patch: Partial<Field>) =>
@@ -79,11 +84,14 @@ export default function OnboardingFormBuilder() {
   return (
     <ToolPageLayout
       title="Client Onboarding Form Builder"
+      metaTitle="Free Client Onboarding Form Builder for Freelancers | HustleAI"
+      metaDescription="Free client intake form builder for freelancers and agencies in the US, UK, EU, AU and India. 3 templates, drag-edit fields, share a public link, manage replies inside HustleAI."
       subtitle="Build a branded intake form, share a public link, manage replies inside HustleAI."
       icon={ClipboardList}
       path="/tools/onboarding-form"
       accent="from-emerald-500 to-teal-600"
       back={{ href: "/tools", label: "All tools" }}
+      faqs={faqs}
     >
       <div className="grid lg:grid-cols-12 gap-5">
         <Card className="p-4 lg:col-span-3 h-fit">
@@ -103,7 +111,6 @@ export default function OnboardingFormBuilder() {
         </Card>
 
         <div className="lg:col-span-9 space-y-4">
-          <TierLockOverlay toolName="Form Builder" requiredTier="pro" userTier={tier}>
             <Card className="p-5">
               <div className="flex items-center justify-between gap-3 mb-4">
                 <Input value={tpl.name} onChange={(e) => setTpl({ ...tpl, name: e.target.value })} className="text-base font-semibold" />
@@ -150,7 +157,7 @@ export default function OnboardingFormBuilder() {
                   <div className="text-[10px] uppercase tracking-wider font-bold text-emerald-700">Share link (preview)</div>
                   <div className="text-xs text-slate-700 truncate">{shareLink}</div>
                 </div>
-                <Button size="sm" variant="outline" onClick={() => { navigator.clipboard.writeText(shareLink); toast.success("Link copied"); }}>
+                <Button size="sm" variant="outline" onClick={() => guard(() => { navigator.clipboard.writeText(shareLink); toast.success("Link copied"); }, "publish & share your intake form")}>
                   <Copy className="w-3.5 h-3.5 mr-1" /> Copy
                 </Button>
               </div>
@@ -159,9 +166,9 @@ export default function OnboardingFormBuilder() {
                 Manage all replies inside <Badge variant="outline" className="ml-1">HustleAI Workspace</Badge> → Intake Inbox.
               </p>
             </Card>
-          </TierLockOverlay>
         </div>
       </div>
+      {gate}
     </ToolPageLayout>
   );
 }

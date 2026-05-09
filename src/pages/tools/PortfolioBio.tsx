@@ -9,6 +9,14 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ToolPageLayout } from "@/components/tools/ToolPageLayout";
 import { toast } from "sonner";
 
+const faqs = [
+  { q: "Is this bio generator really free?", a: "Yes — generate, shuffle and copy unlimited bios in your browser, free, no signup. Sign up free if you want to save bios across devices and personalise with AI." },
+  { q: "Where can I use these bios?", a: "Anywhere — LinkedIn About, Twitter/X bio, Instagram bio, your portfolio site, agency homepage, freelance platform profile (Upwork, Fiverr, Toptal, Contra) and email signatures." },
+  { q: "Are these bios localized?", a: "The templates are written in neutral global English that works across the US, UK, EU, Canada, Australia, Singapore and India. Tweak the wording for your region — output is fully editable." },
+  { q: "How many variants do I get?", a: "Three to four variants per style (LinkedIn, Agency, Creator, Tagline). Hit Shuffle for fresh phrasing — combinations are virtually unlimited." },
+  { q: "Can I add my own templates?", a: "Sign up to save your favourite phrasings as reusable snippets in your HustleAI Brand Kit so they auto-suggest the next time you write a bio." },
+];
+
 /**
  * Portfolio Bio Generator — pure-template, no AI cost.
  * 4 styles: LinkedIn / Agency / Creator / Freelancer tagline.
@@ -68,11 +76,14 @@ export default function PortfolioBio() {
   return (
     <ToolPageLayout
       title="Portfolio Bio Generator"
+      metaTitle="Free LinkedIn, Agency & Creator Bio Generator | HustleAI"
+      metaDescription="Free portfolio bio generator for freelancers, agencies and creators in the US, UK, EU, AU and India. LinkedIn, agency, creator and tagline styles — copy in one click."
       subtitle="LinkedIn, agency, creator and freelancer taglines — pick a style, tweak details, copy."
       icon={UserCircle2}
       path="/tools/portfolio-bio"
       accent="from-sky-500 to-indigo-600"
       back={{ href: "/tools", label: "All tools" }}
+      faqs={faqs}
     >
       <div className="grid lg:grid-cols-5 gap-5">
         <Card className="p-5 lg:col-span-2 space-y-3">
