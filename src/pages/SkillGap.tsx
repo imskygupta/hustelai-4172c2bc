@@ -15,8 +15,9 @@ import { useToast } from "@/hooks/use-toast";
 import { getMaxUses, getUsage, bumpUsage, awardXP } from "@/lib/tool-limits";
 import {
   Brain, Loader2, TrendingUp, Target, BookOpen, Zap,
-  Plus, X, ArrowRight, Sparkles, Clock, DollarSign
+  Plus, X, ArrowRight, Sparkles, Clock, DollarSign, ListChecks, Map, Rocket
 } from "lucide-react";
+import { AIToolHero } from "@/components/tools/AIToolHero";
 
 interface SkillGap {
   skill: string;
@@ -127,18 +128,26 @@ export default function SkillGap() {
         <Navbar />
         <div className="pt-28 pb-16 px-4">
           <div className="container mx-auto max-w-4xl space-y-8">
-            {/* Header */}
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center space-y-3">
-              <Badge variant="outline" className="border-primary/30 text-primary">
-                <Brain className="w-3.5 h-3.5 mr-1" /> AI Career Consultant
-              </Badge>
-              <h1 className="text-4xl md:text-5xl font-display font-bold">
-                Skill Gap <span className="text-gradient">Analyzer</span>
-              </h1>
-              <p className="text-muted-foreground max-w-xl mx-auto">
-                Discover the next high-paying skills to learn based on market trends and your current expertise.
-              </p>
-            </motion.div>
+            <AIToolHero
+              eyebrow="AI Career Consultant"
+              title={<>Find the next <span className="text-gradient">high-paying skill</span> to learn.</>}
+              subtitle="Tell us what you already know — we'll map the gaps, project your earning lift, and lay out a phase-by-phase roadmap that gets you there."
+              Icon={Brain}
+              accent="from-violet-500 via-purple-500 to-fuchsia-500"
+              requires="Pro+"
+              tier={tier.toUpperCase()}
+              usage={{ used: usageCount, max: maxUses }}
+              steps={[
+                { icon: ListChecks, label: "List your skills", sub: "Add what you ship today, plus an optional goal." },
+                { icon: Map, label: "AI maps the gaps", sub: "Trending combos + difficulty + earning boost per skill." },
+                { icon: Rocket, label: "Follow the roadmap", sub: "Phase-by-phase plan with milestones & resources." },
+              ]}
+              stats={[
+                { value: "Trend-aware", label: "Market signal" },
+                { value: "Phased", label: "Roadmap" },
+                { value: "₹ projection", label: "Earning lift" },
+              ]}
+            />
 
             {/* Input */}
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
