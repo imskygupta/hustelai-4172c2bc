@@ -336,8 +336,22 @@ export default function AdminDashboard() {
     const { data: socialData } = await supabase.from("social_links" as any).select("*").order("display_order");
     if (socialData) setSocialLinks(socialData as any);
     try {
-      const { data: logsData } = await supabase.functions.invoke("cashfree-payment", { body: { action: "get_payment_logs" } });
-      if (logsData?.logs) setPaymentLogs(logsData.logs);
+      const { data: logsData } = await supabase
+        .from("dodo_events")
+        .select("id, event_type, status, user_id, created_at, error")
+        .order("created_at", { ascending: false })
+        .limit(100);
+      if (logsData) {
+        setPaymentLogs(
+          logsData.map((e: any) => ({
+            id: e.id,
+            user_id: e.user_id,
+            status: e.status,
+            message: e.error || e.event_type,
+            created_at: e.created_at,
+          })) as any,
+        );
+      }
     } catch {}
     if (chatRes.data) {
       const userMap = new Map<string, ChatUser>();
@@ -2046,8 +2060,22 @@ export default function AdminDashboard() {
                 <h3 className="font-display font-bold">Payment Lifecycle Logs ({paymentLogs.length})</h3>
                 <Button variant="outline" size="sm" onClick={async () => {
                   try {
-                    const { data } = await supabase.functions.invoke("cashfree-payment", { body: { action: "get_payment_logs" } });
-                    if (data?.logs) setPaymentLogs(data.logs);
+                    const { data } = await supabase
+                      .from("dodo_events")
+                      .select("id, event_type, status, user_id, created_at, error")
+                      .order("created_at", { ascending: false })
+                      .limit(100);
+                    if (data) {
+                      setPaymentLogs(
+                        data.map((e: any) => ({
+                          id: e.id,
+                          user_id: e.user_id,
+                          status: e.status,
+                          message: e.error || e.event_type,
+                          created_at: e.created_at,
+                        })) as any,
+                      );
+                    }
                     toast({ title: "Refreshed" });
                   } catch {}
                 }}><RefreshCw className="w-4 h-4 mr-1" /> Refresh</Button>
