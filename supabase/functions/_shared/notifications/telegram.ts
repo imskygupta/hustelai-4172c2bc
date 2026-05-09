@@ -27,6 +27,7 @@ export async function sendTelegram(chatId: string, msg: NotificationMessage): Pr
         text: fmt(msg),
         parse_mode: "HTML",
         disable_web_page_preview: true,
+        ...(msg as any).reply_markup ? { reply_markup: (msg as any).reply_markup } : {},
       }),
     });
     const j = await r.json().catch(() => ({}));
@@ -35,6 +36,17 @@ export async function sendTelegram(chatId: string, msg: NotificationMessage): Pr
   } catch (e: any) {
     return { ok: false, error: String(e?.message || e) };
   }
+}
+
+export async function answerCallbackQuery(callbackId: string, text?: string) {
+  if (!TG_TOKEN) return;
+  try {
+    await fetch(`https://api.telegram.org/bot${TG_TOKEN}/answerCallbackQuery`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ callback_query_id: callbackId, text: text || "" }),
+    });
+  } catch { /* ignore */ }
 }
 
 export async function getBotInfo(): Promise<{ username: string; first_name: string } | null> {

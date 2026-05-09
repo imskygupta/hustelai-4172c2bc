@@ -1354,6 +1354,104 @@ export type Database = {
         }
         Relationships: []
       }
+      export_access_logs: {
+        Row: {
+          created_at: string
+          export_id: string
+          id: string
+          ip: string | null
+          outcome: string
+          token_id: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          export_id: string
+          id?: string
+          ip?: string | null
+          outcome: string
+          token_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          export_id?: string
+          id?: string
+          ip?: string | null
+          outcome?: string
+          token_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "export_access_logs_export_id_fkey"
+            columns: ["export_id"]
+            isOneToOne: false
+            referencedRelation: "generated_exports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "export_access_logs_token_id_fkey"
+            columns: ["token_id"]
+            isOneToOne: false
+            referencedRelation: "export_download_tokens"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      export_download_tokens: {
+        Row: {
+          created_at: string
+          expires_at: string
+          export_id: string
+          id: string
+          max_uses: number
+          otp_hash: string | null
+          requires_otp: boolean
+          revoked_at: string | null
+          token: string
+          use_count: number
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          expires_at: string
+          export_id: string
+          id?: string
+          max_uses?: number
+          otp_hash?: string | null
+          requires_otp?: boolean
+          revoked_at?: string | null
+          token: string
+          use_count?: number
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          export_id?: string
+          id?: string
+          max_uses?: number
+          otp_hash?: string | null
+          requires_otp?: boolean
+          revoked_at?: string | null
+          token?: string
+          use_count?: number
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "export_download_tokens_export_id_fkey"
+            columns: ["export_id"]
+            isOneToOne: false
+            referencedRelation: "generated_exports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       feature_flags: {
         Row: {
           category: string
@@ -1511,6 +1609,69 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      generated_exports: {
+        Row: {
+          created_at: string
+          delivered_at: string | null
+          expires_at: string | null
+          export_type: string
+          id: string
+          metadata: Json
+          mime_type: string
+          size_bytes: number
+          status: Database["public"]["Enums"]["export_status"]
+          storage_bucket: string
+          storage_path: string | null
+          telegram_chat_id: string | null
+          telegram_message_id: string | null
+          tier_at_creation: string
+          title: string
+          updated_at: string
+          user_id: string
+          visibility: Database["public"]["Enums"]["export_visibility"]
+        }
+        Insert: {
+          created_at?: string
+          delivered_at?: string | null
+          expires_at?: string | null
+          export_type: string
+          id?: string
+          metadata?: Json
+          mime_type?: string
+          size_bytes?: number
+          status?: Database["public"]["Enums"]["export_status"]
+          storage_bucket?: string
+          storage_path?: string | null
+          telegram_chat_id?: string | null
+          telegram_message_id?: string | null
+          tier_at_creation?: string
+          title: string
+          updated_at?: string
+          user_id: string
+          visibility?: Database["public"]["Enums"]["export_visibility"]
+        }
+        Update: {
+          created_at?: string
+          delivered_at?: string | null
+          expires_at?: string | null
+          export_type?: string
+          id?: string
+          metadata?: Json
+          mime_type?: string
+          size_bytes?: number
+          status?: Database["public"]["Enums"]["export_status"]
+          storage_bucket?: string
+          storage_path?: string | null
+          telegram_chat_id?: string | null
+          telegram_message_id?: string | null
+          tier_at_creation?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+          visibility?: Database["public"]["Enums"]["export_visibility"]
+        }
+        Relationships: []
       }
       hustle_roadmaps: {
         Row: {
@@ -4502,9 +4663,18 @@ export type Database = {
         }
         Returns: boolean
       }
+      mark_expired_exports: { Args: never; Returns: number }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
+      export_status:
+        | "pending"
+        | "ready"
+        | "delivered"
+        | "expired"
+        | "revoked"
+        | "failed"
+      export_visibility: "private" | "unlisted" | "team"
       seo_status: "draft" | "published" | "archived"
       subscription_tier: "free" | "pro" | "elite" | "infinity"
     }
@@ -4635,6 +4805,15 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "moderator", "user"],
+      export_status: [
+        "pending",
+        "ready",
+        "delivered",
+        "expired",
+        "revoked",
+        "failed",
+      ],
+      export_visibility: ["private", "unlisted", "team"],
       seo_status: ["draft", "published", "archived"],
       subscription_tier: ["free", "pro", "elite", "infinity"],
     },

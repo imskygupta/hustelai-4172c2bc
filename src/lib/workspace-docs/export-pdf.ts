@@ -1,4 +1,5 @@
 import jsPDF from "jspdf";
+import { createExport, blobToBase64 } from "@/lib/exports/api";
 import html2canvas from "html2canvas";
 
 export type PageFormat = "a4" | "card" | "square";
@@ -130,6 +131,7 @@ export async function exportNodeToPdf(node: HTMLElement, filename: string, forma
     if (renderH > pageH) { renderH = pageH; renderW = pageH * ratio; }
     pdf.addImage(img, "PNG", (pageW - renderW) / 2, (pageH - renderH) / 2, renderW, renderH);
     pdf.save(filename);
+    void archiveExport(pdf, filename, format);
     return;
   }
 
@@ -186,6 +188,26 @@ export async function exportNodeToPdf(node: HTMLElement, filename: string, forma
   }
 
   pdf.save(filename);
+  void archiveExport(pdf, filename, format);
+}
+
+// Fire-and-forget: also save the PDF to the user's Export Center so they can
+// re-download it later or push it to Telegram. Free-tier exports auto-expire.
+async function archiveExport(pdf: jsPDF, filename: string, format: PageFormat) {
+  try {
+    const blob = pdf.output("blob");
+    const b64 = await blobToBase64(blob);
+    await createExport({
+      export_type: "workspace_doc",
+      title: filename,
+      mime_type: "application/pdf",
+      file_b64: b64,
+      metadata: { format },
+    });
+  } catch (e) {
+    // never block the user's download flow
+    console.warn("archive export failed", e);
+  }
 }
 
 export function nextDocNumber(prefix: string): string {
