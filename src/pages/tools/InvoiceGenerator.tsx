@@ -12,6 +12,8 @@ import { AIAutofillIcon, AIAutofillButton } from "@/components/tools/AIAutofillB
 import { DashboardReminderBanner } from "@/components/tools/DashboardReminderBanner";
 import { DashboardToolAIPanel } from "@/components/tools/DashboardToolAIPanel";
 import { ToolTrustBar } from "@/components/tools/ToolTrustBar";
+import { ToolDashboardShell } from "@/components/tools/ToolDashboardShell";
+import { SharedLinkPromo } from "@/components/tools/SharedLinkPromo";
 import { RelatedToolsRail } from "@/components/tools/RelatedToolsRail";
 import { GuestSignupBar } from "@/components/tools/GuestSignupBar";
 import { useAuth } from "@/hooks/useAuth";
