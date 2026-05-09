@@ -1721,6 +1721,8 @@ export default function AdminDashboard() {
           {section === "newsletter" && (
             <BrevoNewsletterPanel />
           )}
+          {section === "email-templates" && <EmailTemplatesPanel />}
+          {section === "mailing-providers" && <MailingProvidersPanel />}
           {/* ===== EMAIL SETTINGS ===== */}
           {section === "email-settings" && (
             <div className="space-y-6">
