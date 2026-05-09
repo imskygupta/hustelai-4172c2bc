@@ -193,6 +193,7 @@ const App = () => (
             <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
+            <Route path="/unsubscribe" element={<Unsubscribe />} />
             <Route path="/blog" element={<Blog />} />
             <Route path="/reviews" element={<Reviews />} />
             {/* Community removed (Nov 2026 pivot to pure SaaS / CRM). Redirect to dashboard. */}
