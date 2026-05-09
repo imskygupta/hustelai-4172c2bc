@@ -3,6 +3,8 @@ import { motion } from "framer-motion";
 import { FileText, Receipt, ScrollText, ArrowRight, Sparkles, Lock, Zap, Calculator, UserCircle2, ClipboardList, CalendarRange, Timer, IdCard } from "lucide-react";
 import { SEO, faqJsonLd } from "@/components/SEO";
 import { DashboardReminderBanner } from "@/components/tools/DashboardReminderBanner";
+import { TrustStrip } from "@/components/TrustStrip";
+import { Send } from "lucide-react";
 
 const tools = [
   {
@@ -103,11 +105,14 @@ export default function ToolsHub() {
               <Sparkles className="w-3.5 h-3.5" /> 100% free · AI auto-fill · No signup to try
             </div>
             <h1 className="text-4xl md:text-5xl font-display font-bold text-slate-900 mb-4 tracking-tight">
-              Free tools for the <span className="text-gradient bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">work you already do</span>
+              Free tools that plug into your <span className="text-gradient bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">AI workspace</span>
             </h1>
             <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-              Stop juggling spreadsheets and Word docs. Generate invoices, proposals and contracts in your browser — with one-click AI auto-fill. Used by freelancers in the US, UK, EU, Australia and India.
+              Generate invoices, proposals and contracts in your browser — with one-click AI auto-fill. Save to your workspace, deliver via Telegram, share with secure links. Used by freelancers in the US, UK, EU, Australia and India.
             </p>
+            <div className="mt-5 inline-flex items-center gap-2 text-xs text-slate-500">
+              <Send className="w-3.5 h-3.5 text-sky-600" /> Every export is Telegram-ready and Workspace-saveable
+            </div>
           </motion.div>
 
           {/* Tool cards */}
@@ -133,14 +138,21 @@ export default function ToolsHub() {
                     </div>
                     <h3 className="text-lg font-bold text-slate-900 mb-2 group-hover:text-emerald-700 transition">{t.label}</h3>
                     <p className="text-sm text-slate-600 leading-relaxed mb-4">{t.desc}</p>
-                    <div className="flex items-center gap-1 text-sm font-semibold text-emerald-700">
-                      Open tool <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1 text-sm font-semibold text-emerald-700">
+                        Open tool <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                      </div>
+                      <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-sky-700 bg-sky-50 px-2 py-1 rounded-full">
+                        <Send className="w-3 h-3" /> Telegram-ready
+                      </span>
                     </div>
                   </Link>
                 </motion.div>
               );
             })}
           </div>
+
+          <TrustStrip className="mb-16 rounded-2xl !border" />
 
           {/* How it works */}
           <div className="bg-white rounded-3xl border border-slate-200 p-8 md:p-12 mb-16">

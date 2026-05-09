@@ -6,25 +6,25 @@ const SECTIONS = [
   {
     label: "Account",
     items: [
-      { to: "/settings/profile", label: "Profile", icon: User },
-      { to: "/settings/account", label: "Account", icon: SettingsIcon },
-      { to: "/settings/security", label: "Security", icon: Shield },
-      { to: "/settings/notifications", label: "Notifications", icon: Bell },
+      { to: "/settings/profile", label: "Profile", icon: User, status: "" },
+      { to: "/settings/account", label: "Account", icon: SettingsIcon, status: "" },
+      { to: "/settings/security", label: "Security", icon: Shield, status: "ok" },
+      { to: "/settings/notifications", label: "Notifications", icon: Bell, status: "" },
     ],
   },
   {
     label: "Workspace",
     items: [
-      { to: "/settings/workspace", label: "AI Workspace", icon: Cpu },
-      { to: "/settings/exports", label: "Exports", icon: FileDown },
+      { to: "/settings/workspace", label: "AI Workspace", icon: Cpu, status: "" },
+      { to: "/settings/exports", label: "Exports", icon: FileDown, status: "ok" },
     ],
   },
   {
     label: "Platform",
     items: [
-      { to: "/settings/integrations", label: "Integrations", icon: Plug },
-      { to: "/settings/billing", label: "Billing", icon: CreditCard },
-      { to: "/settings/api", label: "API Keys", icon: Key },
+      { to: "/settings/integrations", label: "Integrations", icon: Plug, status: "ok" },
+      { to: "/settings/billing", label: "Billing", icon: CreditCard, status: "ok" },
+      { to: "/settings/api", label: "API Keys", icon: Key, status: "soon" },
     ],
   },
 ];
@@ -65,7 +65,7 @@ export default function SettingsLayout() {
                             to={item.to}
                             className={({ isActive }) =>
                               cn(
-                                "flex items-center gap-2.5 px-3 py-2 rounded-md text-sm transition-colors",
+                                "flex items-center gap-2.5 px-3 py-2 rounded-md text-sm transition-colors group",
                                 isActive
                                   ? "bg-accent text-accent-foreground font-medium"
                                   : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
@@ -73,7 +73,13 @@ export default function SettingsLayout() {
                             }
                           >
                             <Icon className="h-4 w-4 shrink-0" />
-                            <span>{item.label}</span>
+                            <span className="flex-1">{item.label}</span>
+                            {item.status === "ok" && (
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" title="Active" />
+                            )}
+                            {item.status === "soon" && (
+                              <span className="text-[9px] uppercase tracking-wider font-bold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded">Soon</span>
+                            )}
                           </NavLink>
                         </li>
                       );
