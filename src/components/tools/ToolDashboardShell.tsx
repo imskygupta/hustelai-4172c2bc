@@ -35,10 +35,18 @@ const LOCKED_NAV = [
  * Signed-in users see the same shell here too (since /tools/* sits outside
  * AppShell route map) — safe & consistent.
  */
-export function ToolDashboardShell({ children }: { children: ReactNode }) {
+export function ToolDashboardShell({ children, toolKey }: { children: ReactNode; toolKey?: string }) {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { pathname } = useLocation();
+
+  // Map our internal toolKey → the dashboard route slug (they're identical
+  // for every tool except "intake-form" which lives at /dashboard/tools/onboarding-form).
+  const dashSlugFor: Record<string, string> = {
+    "intake-form": "onboarding-form",
+  };
+  const dashSlug = toolKey ? (dashSlugFor[toolKey] || toolKey) : "";
+  const openInDashboard = () => navigate(toolKey ? `/dashboard/tools/${dashSlug}` : "/dashboard");
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -59,8 +67,8 @@ export function ToolDashboardShell({ children }: { children: ReactNode }) {
         </div>
         <div className="ml-auto flex items-center gap-2">
           {user ? (
-            <Button size="sm" variant="outline" onClick={() => navigate("/dashboard")} className="text-xs h-8">
-              Open dashboard <ChevronRight className="w-3 h-3 ml-1" />
+            <Button size="sm" onClick={openInDashboard} className="text-xs h-8 bg-slate-900 hover:bg-slate-800 text-white">
+              {toolKey ? "Open in Dashboard" : "Open Dashboard"} <ChevronRight className="w-3 h-3 ml-1" />
             </Button>
           ) : (
             <>
@@ -124,11 +132,18 @@ export function ToolDashboardShell({ children }: { children: ReactNode }) {
 
         {/* Canvas */}
         <main className="flex-1 min-w-0">
-          {!user && (
+          {!user ? (
             <div className="bg-amber-50 border-b border-amber-200 text-amber-900 text-[11px] px-4 py-1.5 text-center">
               You're using the free preview — <Link to="/signup" className="font-semibold underline">sign up</Link> to save, sync, and unlock AI.
             </div>
-          )}
+          ) : toolKey ? (
+            <div className="bg-slate-900 text-white text-[11px] px-4 py-1.5 flex items-center justify-center gap-3">
+              <span>You're signed in — open this tool in your dashboard for autosave, AI assists & history.</span>
+              <button onClick={openInDashboard} className="font-semibold underline hover:no-underline">
+                Open in Dashboard →
+              </button>
+            </div>
+          ) : null}
           {children}
         </main>
       </div>

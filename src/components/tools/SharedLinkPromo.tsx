@@ -17,12 +17,12 @@ const BASE = "https://hustlaiapp.in";
  * Renders on every public/shared output produced by a free user — turns
  * shared artifacts into a top-of-funnel surface back to HustleAI.
  */
-export function SharedLinkPromo({ ref = "share", compact = false }: { ref?: string; compact?: boolean }) {
+export function SharedLinkPromo({ referrer = "share", compact = false }: { referrer?: string; compact?: boolean }) {
   if (compact) {
     return (
       <div className="text-[10px] text-slate-500 text-center py-2 border-t border-slate-200">
         Made with{" "}
-        <a href={`${BASE}/tools?ref=${ref}`} className="text-slate-900 font-semibold hover:underline">HustleAI</a>
+        <a href={`${BASE}/tools?ref=${referrer}`} className="text-slate-900 font-semibold hover:underline">HustleAI</a>
         {" "}· 8 free freelancer tools at hustlaiapp.in
       </div>
     );
@@ -35,7 +35,7 @@ export function SharedLinkPromo({ ref = "share", compact = false }: { ref?: stri
           <div className="text-sm font-bold text-slate-900">8 free freelancer tools — no signup to try.</div>
         </div>
         <a
-          href={`${BASE}/tools?ref=${ref}`}
+          href={`${BASE}/tools?ref=${referrer}`}
           target="_blank" rel="noopener noreferrer"
           className="inline-flex items-center gap-1 text-xs font-semibold bg-slate-900 text-white px-3 py-1.5 rounded-full hover:bg-slate-700 transition"
         >
@@ -46,7 +46,7 @@ export function SharedLinkPromo({ ref = "share", compact = false }: { ref?: stri
         {TOOLS.map((t) => (
           <a
             key={t.slug}
-            href={`${BASE}/tools/${t.slug}?ref=${ref}`}
+            href={`${BASE}/tools/${t.slug}?ref=${referrer}`}
             target="_blank" rel="noopener noreferrer"
             className="text-[10px] text-center px-2 py-1.5 rounded-md border border-slate-200 bg-white text-slate-700 hover:border-slate-900 hover:text-slate-900 transition truncate"
           >
