@@ -71,11 +71,12 @@ export default function ProfileSettings() {
   const save = async () => {
     if (!user) return;
     setSaving(true);
+    const { avatar_url, ...rest } = form;
     const { error } = await supabase.from("profiles").update({
-      ...form,
+      ...rest,
       social_links: social as any,
       portfolio_links: portfolio as any,
-    }).eq("user_id", user.id);
+    } as any).eq("user_id", user.id);
     setSaving(false);
     if (error) return toast.error(error.message);
     toast.success("Profile saved");
