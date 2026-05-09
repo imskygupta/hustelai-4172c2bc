@@ -1,5 +1,15 @@
 // Unified mailer: Brevo (default) + MailerSend (fallback). Renders DB templates.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { safeAnalyticsInsert } from "./clients.ts";
+
+// Fire-and-forget dual write: keep primary email_logs (admin UI reads it)
+// while also mirroring to ANALYTICS so the table can be cut over later
+// without redeploying the mailer. Both paths swallow errors — sends MUST NOT
+// fail because logging failed.
+async function logEmail(sb: ReturnType<typeof createClient>, row: Record<string, unknown>) {
+  try { await sb.from("email_logs").insert(row as any); } catch (_) {}
+  void safeAnalyticsInsert("email_logs", { ...row, source: "mailer" });
+}
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -73,12 +83,12 @@ export async function sendTemplated(opts: {
     try {
       if (provider === "brevo" && cfg?.brevo_enabled !== false && BREVO_API_KEY) {
         const r = await sendBrevo({ to: opts.to, subject, html, from, fromName, replyTo });
-        await sb.from("email_logs").insert({ recipient: opts.to, template: tpl.slug, subject, status: "sent", provider_id: r.id, metadata: { provider: "brevo" } });
+        await logEmail(sb, { recipient: opts.to, template: tpl.slug, subject, status: "sent", provider_id: r.id, metadata: { provider: "brevo" } });
         return r;
       }
       if (provider === "mailersend" && cfg?.mailersend_enabled !== false && MAILERSEND_API_KEY) {
         const r = await sendMailerSend({ to: opts.to, subject, html, from, fromName, replyTo });
-        await sb.from("email_logs").insert({ recipient: opts.to, template: tpl.slug, subject, status: "sent", provider_id: r.id, metadata: { provider: "mailersend" } });
+        await logEmail(sb, { recipient: opts.to, template: tpl.slug, subject, status: "sent", provider_id: r.id, metadata: { provider: "mailersend" } });
         return r;
       }
     } catch (e) {
@@ -86,6 +96,6 @@ export async function sendTemplated(opts: {
       console.error(`mailer:${provider} failed`, e);
     }
   }
-  await sb.from("email_logs").insert({ recipient: opts.to, template: tpl.slug, subject, status: "failed", error: String(lastErr?.message || lastErr) });
+  await logEmail(sb, { recipient: opts.to, template: tpl.slug, subject, status: "failed", error: String(lastErr?.message || lastErr) });
   throw lastErr || new Error("no_provider_available");
 }
