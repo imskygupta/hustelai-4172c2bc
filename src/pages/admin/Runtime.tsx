@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { logEvent } from "@/integrations/analytics/client";
 import {
   getRuntimeSnapshot,
   setKillSwitches,
@@ -95,6 +96,14 @@ export default function AdminRuntime() {
         old_value: old ?? null,
         new_value: next,
         action: "update",
+      });
+
+      // Mirror to analytics audit stream (fire-and-forget).
+      logEvent("audit", "runtime_config_updated", {
+        config_key: key,
+        old_value: old ?? null,
+        new_value: next,
+        admin_user_id: user?.id,
       });
 
       const nextServer = { ...server, [key]: next };
