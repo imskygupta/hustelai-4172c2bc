@@ -137,7 +137,7 @@ export default function ProfileSettings() {
             label="Phone number"
             hint={canPhoneNumber(tier) ? "Used for account recovery and 2FA." : (
               <span className="inline-flex items-center gap-1 text-amber-500"><Lock className="h-3 w-3" /> Available on Pro and above. <Link to="/payment" className="underline">Upgrade</Link></span>
-            ) as any}
+            )}
           >
             <Input
               type="tel"

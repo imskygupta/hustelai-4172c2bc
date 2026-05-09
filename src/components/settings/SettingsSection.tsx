@@ -42,7 +42,7 @@ export function SettingsField({
   htmlFor,
 }: {
   label: string;
-  hint?: string;
+  hint?: ReactNode;
   children: ReactNode;
   htmlFor?: string;
 }) {
