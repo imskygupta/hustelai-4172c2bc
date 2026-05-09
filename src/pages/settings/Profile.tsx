@@ -133,8 +133,19 @@ export default function ProfileSettings() {
           <SettingsField label="Timezone">
             <Input value={form.timezone} onChange={(e) => setForm({ ...form, timezone: e.target.value })} placeholder="Asia/Kolkata" />
           </SettingsField>
-          <SettingsField label="Phone number" hint="Used for account recovery and 2FA later.">
-            <Input type="tel" value={form.phone_number} onChange={(e) => setForm({ ...form, phone_number: e.target.value })} placeholder="+91 98765 43210" />
+          <SettingsField
+            label="Phone number"
+            hint={canPhoneNumber(tier) ? "Used for account recovery and 2FA." : (
+              <span className="inline-flex items-center gap-1 text-amber-500"><Lock className="h-3 w-3" /> Available on Pro and above. <Link to="/payment" className="underline">Upgrade</Link></span>
+            ) as any}
+          >
+            <Input
+              type="tel"
+              value={form.phone_number}
+              disabled={!canPhoneNumber(tier)}
+              onChange={(e) => setForm({ ...form, phone_number: e.target.value })}
+              placeholder={canPhoneNumber(tier) ? "+91 98765 43210" : "Upgrade to add phone"}
+            />
           </SettingsField>
         </div>
         <div className="mt-4">
