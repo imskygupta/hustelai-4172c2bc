@@ -128,7 +128,9 @@ export default function ContractGenerator() {
           @page { size: A4; margin: 18mm; }
         }
       `}</style>
-      <div className="min-h-screen bg-slate-50 pt-20 pb-16 px-4">
+      {(() => {
+      const Inner = (
+      <div className="min-h-screen bg-slate-50 pt-8 pb-16 px-4">
         <div className="max-w-7xl mx-auto">
           <DashboardReminderBanner />
           {inDashboard && (
@@ -316,6 +318,9 @@ export default function ContractGenerator() {
         {gate}
         {!inDashboard && <GuestSignupBar toolName="Contract Generator" />}
       </div>
+      );
+      return inDashboard ? Inner : <ToolDashboardShell toolKey="contract">{Inner}{!inDashboard && <SharedLinkPromo referrer="contract" />}</ToolDashboardShell>;
+      })()}
     </>
   );
 }
