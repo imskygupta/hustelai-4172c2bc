@@ -17,11 +17,14 @@ export default function SecuritySettings() {
   useEffect(() => {
     if (!user) return;
     (async () => {
-      const [{ data: integ }, { data: logs }, { data: sess }] = await Promise.all([
-        supabase.from("user_integrations").select("*").eq("user_id", user.id).eq("provider", "telegram").maybeSingle(),
-        (supabase.from("export_access_logs" as any).select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(10) as any),
+      const [integRes, logsRes, sessRes] = await Promise.all([
+        (supabase as any).from("user_integrations").select("*").eq("user_id", user.id).eq("provider", "telegram").maybeSingle(),
+        (supabase as any).from("export_access_logs").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(10),
         supabase.auth.getSession(),
       ]);
+      const integ = integRes?.data;
+      const logs = logsRes?.data;
+      const sess = sessRes?.data;
       setTelegram(integ);
       setAccessLogs(Array.isArray(logs) ? logs : []);
       const s = sess?.session;
