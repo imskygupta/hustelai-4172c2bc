@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { PaymentMethodsManager } from "@/components/admin/PaymentMethodsManager";
 import { DodoAdminPanel } from "@/components/admin/DodoAdminPanel";
+import { BrevoNewsletterPanel } from "@/components/admin/BrevoNewsletterPanel";
 import { SQL_BLOCKS } from "@/lib/work-sql";
 import { FeatureFlagsManager } from "@/components/admin/FeatureFlagsManager";
 import { UsageAnalyticsManager } from "@/components/admin/UsageAnalyticsManager";
@@ -1712,77 +1713,7 @@ export default function AdminDashboard() {
 
           {/* ===== NEWSLETTER ===== */}
           {section === "newsletter" && (
-            <div className="space-y-6">
-              <div className="glass rounded-xl p-6 space-y-4">
-                <h3 className="font-display font-bold flex items-center gap-2">
-                  <Send className="w-5 h-5 text-primary" /> Send Newsletter (Bulk Email)
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  Send emails to all <strong>{newsletterCount}</strong> newsletter subscribers.
-                </p>
-                <div className="grid md:grid-cols-2 gap-4">
-                  <Input placeholder="Email Subject" value={nlSubject} onChange={e => setNlSubject(e.target.value)} />
-                  <Select value={nlFromAccount} onValueChange={setNlFromAccount}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {emailSettings.filter((es: any) => es.is_active).map((es: any) => (
-                        <SelectItem key={es.category} value={es.category}>From: {es.smtp_email || es.label}</SelectItem>
-                      ))}
-                      <SelectItem value="contact">From: hustlaiapp@zohomail.in (default)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <Textarea
-                  placeholder="Email body (HTML supported)..."
-                  value={nlBody}
-                  onChange={e => setNlBody(e.target.value)}
-                  className="min-h-[200px]"
-                />
-                <div className="flex gap-3">
-                  <Button
-                    onClick={async () => {
-                      if (!nlSubject || !nlBody) {
-                        toast({ title: "Required", description: "Enter subject and body.", variant: "destructive" });
-                        return;
-                      }
-                      setNlSending(true);
-                      try {
-                        const { data, error } = await supabase.functions.invoke("send-email", {
-                          body: { action: "send_newsletter", subject: nlSubject, body: nlBody, category: nlFromAccount, from_account: nlFromAccount },
-                        });
-                        if (error) throw error;
-                        toast({ title: "Newsletter Sent! ✉️", description: `Sent to ${data?.sent || 0} of ${data?.total || 0} subscribers.` });
-                        setNlSubject(""); setNlBody("");
-                      } catch (err: any) {
-                        toast({ title: "Error", description: err.message, variant: "destructive" });
-                      }
-                      setNlSending(false);
-                    }}
-                    disabled={nlSending}
-                    className="bg-gradient-primary text-primary-foreground"
-                  >
-                    <Send className="w-4 h-4 mr-1" /> {nlSending ? "Sending..." : "Send to All Subscribers"}
-                  </Button>
-                </div>
-              </div>
-
-              {/* Subscribers List */}
-              <div className="glass rounded-xl p-6 space-y-4">
-                <h3 className="font-display font-bold">Subscribers ({subscribers.length})</h3>
-                <div className="max-h-[400px] overflow-y-auto space-y-2">
-                  {subscribers.map((s: any) => (
-                    <div key={s.id} className="flex items-center justify-between p-2 rounded-lg bg-muted/20">
-                      <div className="flex items-center gap-2">
-                        <Mail className="w-4 h-4 text-primary/60" />
-                        <span className="text-sm">{s.email}</span>
-                      </div>
-                      <span className="text-xs text-muted-foreground">{new Date(s.subscribed_at).toLocaleDateString()}</span>
-                    </div>
-                  ))}
-                  {subscribers.length === 0 && <p className="text-sm text-muted-foreground">No subscribers yet.</p>}
-                </div>
-              </div>
-            </div>
+            <BrevoNewsletterPanel />
           )}
           {/* ===== EMAIL SETTINGS ===== */}
           {section === "email-settings" && (

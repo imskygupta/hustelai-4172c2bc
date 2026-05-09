@@ -966,13 +966,21 @@ export type Database = {
       }
       email_campaigns: {
         Row: {
+          ai_generated: boolean
           audience: string
           audience_filter: Json | null
           body_html: string
+          brevo_message_id: string | null
           created_at: string
           created_by: string
+          error_message: string | null
           failed_count: number
+          from_email: string | null
+          from_name: string | null
           id: string
+          preview_text: string | null
+          provider: string
+          scheduled_at: string | null
           sent_at: string | null
           sent_count: number
           status: string
@@ -980,13 +988,21 @@ export type Database = {
           title: string
         }
         Insert: {
+          ai_generated?: boolean
           audience?: string
           audience_filter?: Json | null
           body_html: string
+          brevo_message_id?: string | null
           created_at?: string
           created_by: string
+          error_message?: string | null
           failed_count?: number
+          from_email?: string | null
+          from_name?: string | null
           id?: string
+          preview_text?: string | null
+          provider?: string
+          scheduled_at?: string | null
           sent_at?: string | null
           sent_count?: number
           status?: string
@@ -994,13 +1010,21 @@ export type Database = {
           title: string
         }
         Update: {
+          ai_generated?: boolean
           audience?: string
           audience_filter?: Json | null
           body_html?: string
+          brevo_message_id?: string | null
           created_at?: string
           created_by?: string
+          error_message?: string | null
           failed_count?: number
+          from_email?: string | null
+          from_name?: string | null
           id?: string
+          preview_text?: string | null
+          provider?: string
+          scheduled_at?: string | null
           sent_at?: string | null
           sent_count?: number
           status?: string
@@ -1812,21 +1836,84 @@ export type Database = {
         }
         Relationships: []
       }
+      newsletter_schedules: {
+        Row: {
+          ai_prompt: string
+          created_at: string
+          enabled: boolean
+          frequency: string
+          from_email: string | null
+          from_name: string | null
+          id: string
+          last_run_at: string | null
+          next_run_at: string | null
+          send_day: number | null
+          send_hour: number
+          updated_at: string
+        }
+        Insert: {
+          ai_prompt?: string
+          created_at?: string
+          enabled?: boolean
+          frequency?: string
+          from_email?: string | null
+          from_name?: string | null
+          id?: string
+          last_run_at?: string | null
+          next_run_at?: string | null
+          send_day?: number | null
+          send_hour?: number
+          updated_at?: string
+        }
+        Update: {
+          ai_prompt?: string
+          created_at?: string
+          enabled?: boolean
+          frequency?: string
+          from_email?: string | null
+          from_name?: string | null
+          id?: string
+          last_run_at?: string | null
+          next_run_at?: string | null
+          send_day?: number | null
+          send_hour?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       newsletter_subscribers: {
         Row: {
           email: string
           id: string
+          is_active: boolean
+          name: string | null
+          source: string | null
           subscribed_at: string
+          tags: string[] | null
+          unsubscribe_token: string | null
+          unsubscribed_at: string | null
         }
         Insert: {
           email: string
           id?: string
+          is_active?: boolean
+          name?: string | null
+          source?: string | null
           subscribed_at?: string
+          tags?: string[] | null
+          unsubscribe_token?: string | null
+          unsubscribed_at?: string | null
         }
         Update: {
           email?: string
           id?: string
+          is_active?: boolean
+          name?: string | null
+          source?: string | null
           subscribed_at?: string
+          tags?: string[] | null
+          unsubscribe_token?: string | null
+          unsubscribed_at?: string | null
         }
         Relationships: []
       }

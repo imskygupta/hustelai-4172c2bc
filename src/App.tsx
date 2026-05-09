@@ -15,6 +15,7 @@ import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
+import Unsubscribe from "./pages/Unsubscribe";
 import Blog from "./pages/Blog";
 import Reviews from "./pages/Reviews";
 import AdminLogin from "./pages/AdminLogin";
@@ -193,6 +194,7 @@ const App = () => (
             <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
+            <Route path="/unsubscribe" element={<Unsubscribe />} />
             <Route path="/blog" element={<Blog />} />
             <Route path="/reviews" element={<Reviews />} />
             {/* Community removed (Nov 2026 pivot to pure SaaS / CRM). Redirect to dashboard. */}

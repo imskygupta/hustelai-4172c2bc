@@ -107,3 +107,6 @@ verify_jwt = false
 
 [functions.dodo-portal]
 verify_jwt = false
+
+[functions.brevo-newsletter]
+verify_jwt = false
