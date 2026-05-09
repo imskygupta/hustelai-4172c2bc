@@ -63,9 +63,9 @@ export default function ContentCalendar() {
         const seed = w * 7 + d * 13;
         const tpl = pick(PROMPTS[pillar], seed);
         const idea = tpl
-          .replaceAll("{topic}", niche)
-          .replaceAll("{audience}", audience)
-          .replaceAll("{brand}", brand);
+          .split("{topic}").join(niche)
+          .split("{audience}").join(audience)
+          .split("{brand}").join(brand);
         out.push({ week: w, day: days[d], pillar, idea });
       }
     }
@@ -73,7 +73,7 @@ export default function ContentCalendar() {
   }, [niche, audience, brand]);
 
   const exportCsv = () => {
-    const rows = ["Week,Day,Pillar,Idea", ...calendar.map(r => `${r.week},${r.day},"${r.pillar}","${r.idea.replaceAll('"', '""')}"`)];
+    const rows = ["Week,Day,Pillar,Idea", ...calendar.map(r => `${r.week},${r.day},"${r.pillar}","${r.idea.split('"').join('""')}"`)];
     const blob = new Blob([rows.join("\n")], { type: "text/csv" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
