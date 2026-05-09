@@ -81,7 +81,7 @@ export const AIInvoiceGeneratorPage = () => (
     faqs={[
       { q: "Is the invoice generator free?", a: "Free tier includes 5 invoices/month. Pro removes limits and adds custom branding." },
       { q: "Do I get GST-compliant invoices?", a: "Yes — Indian GST formats with CGST/SGST/IGST and HSN/SAC codes." },
-      { q: "Can I get paid through the invoice?", a: "Yes — UPI, Razorpay and Cashfree links can be embedded." },
+      { q: "Can I get paid through the invoice?", a: "Yes — UPI and Dodo Payments links can be embedded." },
     ]}
     related={related("/ai-invoice-generator")}
   />
@@ -275,7 +275,7 @@ export const ClientPortalSoftwarePage = () => (
     ]}
     faqs={[
       { q: "Are portals secure?", a: "Yes — token-based access with optional password and expiry." },
-      { q: "Can clients pay invoices in the portal?", a: "Yes — UPI, Razorpay and Cashfree links are embedded." },
+      { q: "Can clients pay invoices in the portal?", a: "Yes — UPI and Dodo Payments links are embedded." },
     ]}
     related={related("/client-portal-software")}
   />
