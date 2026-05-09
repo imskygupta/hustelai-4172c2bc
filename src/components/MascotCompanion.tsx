@@ -165,6 +165,17 @@ export default function MascotCompanion() {
   const isFree = tier === "free";
   const name = (profile?.display_name?.split(" ")[0]) || "friend";
 
+  // ── Guest mode ──────────────────────────────────────────────────
+  // For logged-out visitors we show a *single* gentle welcome bubble
+  // with a friendly CTA — no Pro nudges, no idle/route/long-session
+  // chatter. We don't want first-time visitors to feel paywalled.
+  const isGuest = !user;
+  const GUEST_LINES = [
+    "Hey 👋 welcome to HustleAI — peek around, the tools are free to try.",
+    "Hi there! New here? Sign up free and try Invoice, Proposal & 8+ more tools.",
+    "Welcome 🌱 — sign up to unlock Invoice Generator, Pricing Calc & Bio Maker.",
+  ];
+
   // Force the cat for free users; pro+ keeps their selection.
   const effectivePet: PetKey = isFree ? "cat" : pet;
 
@@ -205,6 +216,15 @@ export default function MascotCompanion() {
   // Greet once per part-of-day. If they were sleeping last session → "missed me".
   useEffect(() => {
     if (!enabled) return;
+    // Guests get a single welcome bubble per browser session — no recurring greetings.
+    if (isGuest) {
+      try {
+        if (sessionStorage.getItem("hustleai_mascot_guest_greeted") === "1") return;
+        sessionStorage.setItem("hustleai_mascot_guest_greeted", "1");
+      } catch {}
+      window.setTimeout(() => say(pickFrom(GUEST_LINES), 9000), 1600);
+      return;
+    }
     const stamp = `${new Date().toDateString()}|${partOfDay()}`;
     let last: string | null = null;
     let wasSleeping = false;
@@ -218,21 +238,21 @@ export default function MascotCompanion() {
     }
     // Mark a fresh session start (used by long-session drift trigger).
     try { sessionStorage.setItem(SESSION_START_KEY, String(Date.now())); } catch {}
-  }, [enabled, name]);
+  }, [enabled, name, isGuest]);
 
   // Route-change context lines (skip first render).
   useEffect(() => {
-    if (!enabled || sleeping) return;
+    if (!enabled || sleeping || isGuest) return;
     if (lastRouteRef.current && lastRouteRef.current !== pathname) {
       const hit = ROUTE_LINES.find((r) => r.match.test(pathname));
       if (hit && Math.random() < 0.55) say(pickFrom(hit.lines), 6000);
     }
     lastRouteRef.current = pathname;
-  }, [pathname, enabled, sleeping]);
+  }, [pathname, enabled, sleeping, isGuest]);
 
   // Idle: nudge after 90s of no activity.
   useEffect(() => {
-    if (!enabled || sleeping) return;
+    if (!enabled || sleeping || isGuest) return;
     const reset = () => {
       if (idleTimerRef.current) window.clearTimeout(idleTimerRef.current);
       idleTimerRef.current = window.setTimeout(() => say(pickFrom(RANDOM_LINES), 7000), 90_000);
@@ -244,12 +264,12 @@ export default function MascotCompanion() {
       evts.forEach((e) => window.removeEventListener(e, reset));
       if (idleTimerRef.current) window.clearTimeout(idleTimerRef.current);
     };
-  }, [enabled, sleeping]);
+  }, [enabled, sleeping, isGuest]);
 
   // Long-session drift: after ~75min of active session, float to opposite
   // corner and complain. Repeats every ~60min while still active.
   useEffect(() => {
-    if (!enabled || sleeping) return;
+    if (!enabled || sleeping || isGuest) return;
     const schedule = () => {
       let start = 0;
       try { start = Number(sessionStorage.getItem(SESSION_START_KEY) || Date.now()); } catch {}
@@ -289,6 +309,10 @@ export default function MascotCompanion() {
 
   const handleClick = () => {
     if (bubbleOpen) { setBubbleOpen(false); return; }
+    if (isGuest) {
+      say("Sign up free to unlock the full toolkit — invoices, proposals, pricing calc & more ✨", 8000);
+      return;
+    }
     if (isFree) {
       say("Pls free me 🙏 — upgrade to Pro to unlock pet companions and pick your own!", 7000);
       return;
@@ -347,13 +371,23 @@ export default function MascotCompanion() {
                 <X className="w-3 h-3" />
               </button>
               <div className="mt-1.5 flex items-center gap-3">
-                <button
-                  onClick={(e) => { e.stopPropagation(); setBubbleOpen(false); navigate("/hustlebot"); }}
-                  className="inline-flex items-center gap-1 text-[10px] text-fuchsia-600 hover:text-fuchsia-700 transition font-medium"
-                  title="Open HustleBot"
-                >
-                  <MessageCircle className="w-2.5 h-2.5" /> open HustleBot
-                </button>
+                {isGuest ? (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setBubbleOpen(false); navigate("/signup"); }}
+                    className="inline-flex items-center gap-1 text-[10px] text-emerald-600 hover:text-emerald-700 transition font-medium"
+                    title="Sign up free"
+                  >
+                    <Sparkles className="w-2.5 h-2.5" /> sign up free
+                  </button>
+                ) : (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setBubbleOpen(false); navigate("/hustlebot"); }}
+                    className="inline-flex items-center gap-1 text-[10px] text-fuchsia-600 hover:text-fuchsia-700 transition font-medium"
+                    title="Open HustleBot"
+                  >
+                    <MessageCircle className="w-2.5 h-2.5" /> open HustleBot
+                  </button>
+                )}
                 <button
                   onClick={(e) => { e.stopPropagation(); handleHide(); }}
                   className="inline-flex items-center gap-1 text-[10px] text-slate-400 hover:text-slate-700 transition"
