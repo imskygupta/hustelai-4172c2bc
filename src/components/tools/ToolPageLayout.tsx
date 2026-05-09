@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { SEO, faqJsonLd } from "@/components/SEO";
 import { ToolTrustBar } from "./ToolTrustBar";
@@ -32,6 +32,8 @@ interface Props {
 export function ToolPageLayout({
   title, metaTitle, metaDescription, path, subtitle, icon: Icon, accent = "from-emerald-500 to-teal-600", children, back, faqs, longCopy, toolKey, eyebrow = "Free · No signup to try",
 }: Props) {
+  const { pathname } = useLocation();
+  const insideAppShell = pathname.startsWith("/dashboard/tools");
   const body = (
     <>
       <SEO
@@ -89,12 +91,12 @@ export function ToolPageLayout({
           )}
 
           <RelatedToolsRail currentKey={toolKey} />
-          {toolKey && <SharedLinkPromo ref={toolKey} />}
+          {toolKey && !insideAppShell && <SharedLinkPromo referrer={toolKey} />}
         </div>
       </div>
-      {toolKey && <GuestSignupBar toolName={title} />}
+      {toolKey && !insideAppShell && <GuestSignupBar toolName={title} />}
     </>
   );
-  if (!toolKey) return body;
-  return <ToolDashboardShell>{body}</ToolDashboardShell>;
+  if (!toolKey || insideAppShell) return body;
+  return <ToolDashboardShell toolKey={toolKey}>{body}</ToolDashboardShell>;
 }
