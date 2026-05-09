@@ -34,7 +34,7 @@ export const APP_SHELL_PATHS = new Set<string>([
   "/relax",
 ]);
 
-export const APP_SHELL_PREFIXES = ["/marketplace/", "/integrations/", "/hustle/", "/roadmap/", "/dashboard/tools"];
+export const APP_SHELL_PREFIXES = ["/marketplace/", "/integrations/", "/hustle/", "/roadmap/", "/dashboard/tools", "/settings"];
 
 export function isAppShellRoute(pathname: string): boolean {
   if (APP_SHELL_PATHS.has(pathname)) return true;

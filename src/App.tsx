@@ -24,6 +24,13 @@ import AdminCommunications from "./pages/admin/Communications";
 import NotificationPreferences from "./pages/settings/NotificationPreferences";
 import Integrations from "./pages/settings/Integrations";
 import Exports from "./pages/settings/Exports";
+import SettingsLayout from "./components/settings/SettingsLayout";
+import ProfileSettings from "./pages/settings/Profile";
+import AccountSettings from "./pages/settings/Account";
+import SecuritySettings from "./pages/settings/Security";
+import WorkspaceSettings from "./pages/settings/Workspace";
+import BillingSettings from "./pages/settings/Billing";
+import ApiKeysSettings from "./pages/settings/ApiKeys";
 import Download from "./pages/Download";
 import AdminBlock from "./pages/AdminBlock";
 import Community from "./pages/Community";
@@ -253,14 +260,19 @@ const App = () => (
             <Route path="/imskygupta-admin" element={<AdminLogin />} />
             <Route path="/admin-dashboard" element={<AdminDashboard />} />
             <Route path="/admin/communications" element={<AdminCommunications />} />
-            <Route path="/settings/notifications" element={Shelled(<NotificationPreferences />)} />
-            <Route path="/settings/integrations" element={Shelled(<Integrations />)} />
-            <Route path="/settings/exports" element={Shelled(<Exports />)} />
             <Route path="/d/:token" element={<Download />} />
-            <Route path="/settings" element={<Navigate to="/profile?tab=general" replace />} />
-            <Route path="/settings/billing" element={<Navigate to="/profile?tab=billing" replace />} />
-            <Route path="/settings/account" element={<Navigate to="/profile?tab=account" replace />} />
-            <Route path="/settings/security" element={<Navigate to="/profile?tab=security" replace />} />
+            <Route path="/settings" element={Shelled(<SettingsLayout />)}>
+              <Route index element={<Navigate to="/settings/profile" replace />} />
+              <Route path="profile" element={<ProfileSettings />} />
+              <Route path="account" element={<AccountSettings />} />
+              <Route path="security" element={<SecuritySettings />} />
+              <Route path="notifications" element={<NotificationPreferences />} />
+              <Route path="integrations" element={<Integrations />} />
+              <Route path="exports" element={<Exports />} />
+              <Route path="workspace" element={<WorkspaceSettings />} />
+              <Route path="billing" element={<BillingSettings />} />
+              <Route path="api" element={<ApiKeysSettings />} />
+            </Route>
             <Route path="/problem-leads" element={Shelled(<ProblemLeads />)} />
             <Route path="/proposal-draft" element={Shelled(<ProposalDraft />)} />
             <Route path="/skill-gap" element={Shelled(<SkillGap />)} />

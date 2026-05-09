@@ -2736,6 +2736,33 @@ export type Database = {
         }
         Relationships: []
       }
+      pinned_items: {
+        Row: {
+          created_at: string
+          id: string
+          label: string | null
+          ref_id: string
+          ref_type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          label?: string | null
+          ref_id: string
+          ref_type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          label?: string | null
+          ref_id?: string
+          ref_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       problem_leads: {
         Row: {
           author: string | null
@@ -2811,25 +2838,32 @@ export type Database = {
           affiliate_commission: number | null
           affiliate_earnings: number
           bio: string | null
+          company: string | null
           created_at: string
           display_name: string | null
           dodo_customer_id: string | null
           dodo_subscription_id: string | null
           email: string | null
+          freelancer_category: string | null
+          headline: string | null
           id: string
           is_verified: boolean
           onboarding: Json | null
           onboarding_completed: boolean
           phone: string | null
+          portfolio_links: Json | null
           referral_code: string | null
           referral_credits: number
           referred_by: string | null
           resume_url: string | null
           search_count: number
+          social_links: Json | null
           subscription_tier: Database["public"]["Enums"]["subscription_tier"]
+          timezone: string | null
           updated_at: string
           user_id: string
           username: string | null
+          website: string | null
           xp_points: number
         }
         Insert: {
@@ -2837,25 +2871,32 @@ export type Database = {
           affiliate_commission?: number | null
           affiliate_earnings?: number
           bio?: string | null
+          company?: string | null
           created_at?: string
           display_name?: string | null
           dodo_customer_id?: string | null
           dodo_subscription_id?: string | null
           email?: string | null
+          freelancer_category?: string | null
+          headline?: string | null
           id?: string
           is_verified?: boolean
           onboarding?: Json | null
           onboarding_completed?: boolean
           phone?: string | null
+          portfolio_links?: Json | null
           referral_code?: string | null
           referral_credits?: number
           referred_by?: string | null
           resume_url?: string | null
           search_count?: number
+          social_links?: Json | null
           subscription_tier?: Database["public"]["Enums"]["subscription_tier"]
+          timezone?: string | null
           updated_at?: string
           user_id: string
           username?: string | null
+          website?: string | null
           xp_points?: number
         }
         Update: {
@@ -2863,25 +2904,32 @@ export type Database = {
           affiliate_commission?: number | null
           affiliate_earnings?: number
           bio?: string | null
+          company?: string | null
           created_at?: string
           display_name?: string | null
           dodo_customer_id?: string | null
           dodo_subscription_id?: string | null
           email?: string | null
+          freelancer_category?: string | null
+          headline?: string | null
           id?: string
           is_verified?: boolean
           onboarding?: Json | null
           onboarding_completed?: boolean
           phone?: string | null
+          portfolio_links?: Json | null
           referral_code?: string | null
           referral_credits?: number
           referred_by?: string | null
           resume_url?: string | null
           search_count?: number
+          social_links?: Json | null
           subscription_tier?: Database["public"]["Enums"]["subscription_tier"]
+          timezone?: string | null
           updated_at?: string
           user_id?: string
           username?: string | null
+          website?: string | null
           xp_points?: number
         }
         Relationships: []
@@ -3013,6 +3061,72 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      saved_prompts: {
+        Row: {
+          created_at: string
+          id: string
+          pinned: boolean
+          prompt: string
+          tags: string[] | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          pinned?: boolean
+          prompt: string
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          pinned?: boolean
+          prompt?: string
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      saved_workflows: {
+        Row: {
+          created_at: string
+          definition: Json
+          description: string | null
+          id: string
+          pinned: boolean
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          definition?: Json
+          description?: string | null
+          id?: string
+          pinned?: boolean
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          definition?: Json
+          description?: string | null
+          id?: string
+          pinned?: boolean
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       seo_authors: {
         Row: {
