@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ToolPageLayout } from "@/components/tools/ToolPageLayout";
+import { TemplatePicker } from "@/components/tools/TemplatePicker";
 import { useToolGate } from "@/components/tools/ToolGate";
 import { SignupCTADialog } from "@/components/SignupCTADialog";
 import { useAuth } from "@/hooks/useAuth";
@@ -147,6 +148,7 @@ export default function OnboardingFormBuilder() {
       back={{ href: "/tools", label: "All tools" }}
       faqs={faqs}
     >
+      <TemplatePicker toolKey="intake-form" activeId={tpl.id} onSelect={(id) => { const t = TEMPLATES.find(x => x.id === id); if (t) setTpl(t); }} />
       <Card className="p-5 mb-4 border-emerald-200 bg-gradient-to-br from-emerald-50/60 via-white to-teal-50/40">
         <div className="flex items-start gap-3">
           <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shrink-0 shadow-sm">
