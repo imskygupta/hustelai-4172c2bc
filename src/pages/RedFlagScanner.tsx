@@ -9,7 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
-import { ShieldAlert, Loader2, Zap, AlertTriangle, CheckCircle, MessageCircle, Copy, HelpCircle, Lock } from "lucide-react";
+import { ShieldAlert, Loader2, Zap, AlertTriangle, CheckCircle, MessageCircle, Copy, HelpCircle, Lock, ClipboardPaste, Eye, MessageSquareReply } from "lucide-react";
+import { AIToolHero } from "@/components/tools/AIToolHero";
 import { getMaxUses, getUsage, bumpUsage, awardXP } from "@/lib/tool-limits";
 import { useEffect } from "react";
 
@@ -79,15 +80,25 @@ export default function RedFlagScanner() {
     <div className="min-h-screen bg-background">
       <Navbar />
       <main className="container mx-auto px-4 pt-24 pb-16 max-w-5xl">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-10">
-          <div className="inline-flex items-center gap-3 mb-4 px-5 py-2 rounded-full bg-gradient-to-r from-red-500/20 via-yellow-500/20 to-emerald-500/20 border border-yellow-500/30">
-            <ShieldAlert className="w-5 h-5 text-yellow-500" />
-            <span className="text-xs font-bold uppercase tracking-wider text-yellow-500">Client Red-Flag Scanner</span>
-          </div>
-          <h1 className="text-4xl md:text-5xl font-display font-bold text-gradient mb-3">Spot bad clients. Keep good ones.</h1>
-          <p className="text-muted-foreground max-w-2xl mx-auto">Paste a client message or job post — get a stoplight risk report (Red / Yellow / Green) with smart questions and a suggested reply.</p>
-          <Badge className="mt-3 bg-yellow-500/10 text-yellow-500 border-yellow-500/30">{usageCount}/{maxUses} uses · {tier.toUpperCase()} tier</Badge>
-        </motion.div>
+        <AIToolHero
+          eyebrow="Client Red-Flag Scanner"
+          title={<>Spot <span className="text-gradient">bad clients</span> before they cost you.</>}
+          subtitle="Paste a client message or job post — get a stoplight risk report (Red / Yellow / Green) with smart questions and a copy-paste reply that protects your terms."
+          Icon={ShieldAlert}
+          accent="from-rose-500 via-amber-500 to-emerald-500"
+          tier={tier.toUpperCase()}
+          usage={{ used: usageCount, max: maxUses }}
+          steps={[
+            { icon: ClipboardPaste, label: "Paste the message", sub: "DM, email, or job post — we read the whole thing." },
+            { icon: Eye, label: "AI scans for traps", sub: "Scope creep, payment risk, vague briefs, ego signals." },
+            { icon: MessageSquareReply, label: "Get a safe reply", sub: "Smart questions + a reply you can copy in one click." },
+          ]}
+          stats={[
+            { value: "27+", label: "Risk patterns" },
+            { value: "<6s", label: "Avg scan time" },
+            { value: "3-color", label: "Verdict system" },
+          ]}
+        />
 
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass rounded-2xl p-6 space-y-4 mb-6">
           <h2 className="font-display font-bold">Paste the client communication</h2>

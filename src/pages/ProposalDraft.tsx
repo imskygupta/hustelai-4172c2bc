@@ -12,9 +12,10 @@ import { toast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
 import {
   FileText, Loader2, Copy, RefreshCw, Rocket, Crown, Star,
-  Sparkles, CheckCircle, Zap, Lock,
+  Sparkles, CheckCircle, Zap, Lock, ClipboardPaste, Wand2, Send,
 } from "lucide-react";
 import { getMaxUses, getUsage, bumpUsage, awardXP } from "@/lib/tool-limits";
+import { AIToolHero } from "@/components/tools/AIToolHero";
 
 const tones = [
   { value: "Professional", label: "Professional", icon: "💼" },
@@ -106,34 +107,26 @@ export default function ProposalDraft() {
     <div className="min-h-screen bg-background">
       <Navbar />
       <main className="container mx-auto px-4 pt-24 pb-16 max-w-4xl">
-        {/* Hero */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-10"
-        >
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <FileText className="w-8 h-8 text-primary" />
-            <h1 className="text-3xl md:text-4xl font-display font-bold">
-              AI Proposal Generator
-            </h1>
-          </div>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
-            Paste a job description and get a personalized, winning proposal in seconds. 
-            Proven to increase response rates by up to 34%.
-          </p>
-          <div className="flex items-center justify-center gap-2 mt-3">
-            <Badge className="bg-primary/20 text-primary">
-              <Rocket className="w-3 h-3 mr-1" /> Pro
-            </Badge>
-            <Badge className="bg-accent/20 text-accent-foreground">
-              <Crown className="w-3 h-3 mr-1" /> Elite
-            </Badge>
-            <Badge className="bg-yellow-500/20 text-yellow-400">
-              <Star className="w-3 h-3 mr-1" /> Infinity
-            </Badge>
-          </div>
-        </motion.div>
+        <AIToolHero
+          eyebrow="AI Proposal Generator"
+          title={<>Win the gig with a <span className="text-gradient">personalized pitch.</span></>}
+          subtitle="Paste a job description and we'll craft a tailored proposal in seconds — using your profile, the client's tone and a focus angle proven to lift response rates by ~34%."
+          Icon={FileText}
+          accent="from-indigo-500 via-blue-500 to-sky-500"
+          requires="Pro+"
+          tier={tier.toUpperCase()}
+          usage={{ used: usageCount, max: maxUses }}
+          steps={[
+            { icon: ClipboardPaste, label: "Paste the job", sub: "Upwork, LinkedIn, email — paste the brief verbatim." },
+            { icon: Wand2, label: "Pick tone & angle", sub: "Professional, friendly, bold — and a focus that converts." },
+            { icon: Send, label: "Send within minutes", sub: "Edit, copy, hit send. Be the first quality reply in the inbox." },
+          ]}
+          stats={[
+            { value: "~34%", label: "Response lift" },
+            { value: "<300", label: "Words / proposal" },
+            { value: "4 tones", label: "5 focus angles" },
+          ]}
+        />
 
         {!isEligible ? (
           <motion.div
