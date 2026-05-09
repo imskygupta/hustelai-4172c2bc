@@ -15,6 +15,10 @@ async function verifyStandardWebhook(rawBody: string, headers: Headers): Promise
   const sigHeader = headers.get("webhook-signature") || "";
   if (!id || !timestamp || !sigHeader) return false;
 
+  // Replay protection: reject events older than 5 minutes
+  const tsSec = parseInt(timestamp, 10);
+  if (!Number.isFinite(tsSec) || Math.abs(Date.now() / 1000 - tsSec) > 300) return false;
+
   const secretRaw = DODO_WEBHOOK_SECRET.replace(/^whsec_/, "");
   const keyBytes = Uint8Array.from(atob(secretRaw), (c) => c.charCodeAt(0));
   const enc = new TextEncoder();
@@ -28,6 +32,11 @@ async function verifyStandardWebhook(rawBody: string, headers: Headers): Promise
 }
 
 const TIER_KEYS = new Set(["pro", "elite", "infinity"]);
+const AFFILIATE_RATE: Record<string, number> = { pro: 0.05, elite: 0.06, infinity: 0.10 };
+
+async function fireAndForget(promise: Promise<unknown>) {
+  try { await promise; } catch (_) { /* ignore */ }
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -83,7 +92,9 @@ serve(async (req) => {
     // ===== SUBSCRIPTION EVENTS =====
     if (eventType.startsWith("subscription.")) {
       const dodoSubId = data.subscription_id || data.id;
-      const internalKey = metadata.internal_key || data.product?.internal_key;
+      const internalKeyRaw: string | undefined = metadata.internal_key || data.product?.internal_key;
+      // Yearly variants (pro_yearly etc.) still grant the base tier.
+      const internalKey = internalKeyRaw?.replace(/_yearly$/, "");
       const status = data.status || (eventType.endsWith(".cancelled") ? "cancelled"
         : eventType.endsWith(".expired") ? "expired"
         : eventType.endsWith(".failed") ? "failed"
@@ -118,6 +129,20 @@ serve(async (req) => {
             subscription_tier: internalKey,
             dodo_subscription_id: dodoSubId,
           } as any).eq("user_id", userId);
+
+          // In-app notification
+          fireAndForget(supabase.from("notifications").insert({
+            user_id: userId,
+            type: "upgrade",
+            title: `Welcome to HustleAI ${internalKey.charAt(0).toUpperCase() + internalKey.slice(1)}`,
+            body: "Your plan is active. New tools, higher limits, and priority access are unlocked.",
+            metadata: { internal_key: internalKey, source: "dodo" },
+          } as any));
+
+          // Discord role sync
+          fireAndForget(supabase.functions.invoke("discord-sync-role", {
+            body: { user_id: userId, tier: internalKey, source: "dodo" },
+          }));
         } else if (["cancelled", "expired", "failed"].includes(status)) {
           // Only downgrade if the active sub is gone
           await supabase.from("profiles").update({
@@ -131,12 +156,14 @@ serve(async (req) => {
     if (eventType === "payment.succeeded") {
       const isSubscription = !!data.subscription_id || metadata.kind === "subscription";
       const credits = parseInt(metadata.credits || "0", 10);
+      const amountInr = (data.total_amount ?? data.amount ?? 0) / 100;
+      const couponCode = metadata.coupon_code || null;
 
       // Always log a payment record
       await supabase.from("payments").insert({
         user_id: userId,
         order_id: data.payment_id || data.id || `dodo_${eventId}`,
-        amount: (data.total_amount ?? data.amount ?? 0) / 100,
+        amount: amountInr,
         currency: data.currency || "INR",
         plan: metadata.internal_key || "unknown",
         status: "paid",
@@ -156,6 +183,90 @@ serve(async (req) => {
             user_id: userId, balance: credits,
           } as any);
         }
+      }
+
+      // Increment coupon redemption count
+      if (couponCode) {
+        fireAndForget((async () => {
+          const { data: c } = await supabase.from("dodo_coupons")
+            .select("times_redeemed").eq("code", couponCode).maybeSingle();
+          if (c) {
+            await supabase.from("dodo_coupons")
+              .update({ times_redeemed: (c.times_redeemed || 0) + 1 } as any)
+              .eq("code", couponCode);
+          }
+        })());
+      }
+
+      // ===== Affiliate auto-credit =====
+      if (userId && amountInr > 0) {
+        fireAndForget((async () => {
+          const { data: buyerProfile } = await supabase.from("profiles")
+            .select("referred_by").eq("user_id", userId).maybeSingle();
+          const referrerId = (buyerProfile as any)?.referred_by;
+          if (!referrerId) return;
+          const { data: refProfile } = await supabase.from("profiles")
+            .select("subscription_tier").eq("user_id", referrerId).maybeSingle();
+          const tier = (refProfile as any)?.subscription_tier || "free";
+          const rate = AFFILIATE_RATE[tier] ?? 0.05;
+          const commission = Math.round(amountInr * rate * 100) / 100;
+          if (commission <= 0) return;
+          await supabase.from("affiliate_earnings").insert({
+            affiliate_id: referrerId,
+            source_user_id: userId,
+            amount: commission,
+            type: "payment_commission",
+            description: `Commission ${(rate * 100).toFixed(0)}% on ₹${amountInr} (${metadata.internal_key || "purchase"})`,
+          } as any);
+        })());
+      }
+
+      // ===== Welcome / receipt email via existing send-invoice + workspace-email =====
+      if (userId) {
+        fireAndForget((async () => {
+          const { data: prof } = await supabase.from("profiles")
+            .select("email, display_name").eq("user_id", userId).maybeSingle();
+          if (!prof?.email) return;
+
+          const itemLabel = isSubscription
+            ? `${(metadata.internal_key || "").toUpperCase()} Plan`
+            : `${credits} Wallet Credits`;
+
+          // Branded invoice (existing path)
+          await supabase.functions.invoke("send-invoice", {
+            body: {
+              user_id: userId,
+              user_email: prof.email,
+              user_name: prof.display_name,
+              amount: amountInr,
+              payment_method: "Dodo Payments",
+              payment_reference: data.payment_id || eventId,
+              item_type: isSubscription ? "plan" : "wallet",
+              item_label: itemLabel,
+              metadata: { coupon_code: couponCode, dodo_event: eventId },
+            },
+          });
+
+          // Onboarding "welcome to paid" via Brevo wrapper
+          await supabase.functions.invoke("workspace-email", {
+            body: {
+              to: prof.email,
+              template: isSubscription ? "subscription-updated" : "generic",
+              subject: isSubscription
+                ? `You're in — welcome to HustleAI ${(metadata.internal_key || "").toUpperCase()}`
+                : `${credits} credits added to your HustleAI wallet`,
+              data: {
+                name: prof.display_name || "there",
+                plan: metadata.internal_key,
+                amount: amountInr,
+                credits,
+                coupon: couponCode,
+              },
+              user_id: userId,
+              bypass_prefs: true,
+            },
+          });
+        })());
       }
     }
 
