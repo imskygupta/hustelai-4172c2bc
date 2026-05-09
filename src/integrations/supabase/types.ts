@@ -823,6 +823,147 @@ export type Database = {
         }
         Relationships: []
       }
+      dodo_events: {
+        Row: {
+          created_at: string
+          error: string | null
+          event_id: string | null
+          event_type: string
+          id: string
+          mode: string | null
+          payload: Json
+          status: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          error?: string | null
+          event_id?: string | null
+          event_type: string
+          id?: string
+          mode?: string | null
+          payload: Json
+          status?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          error?: string | null
+          event_id?: string | null
+          event_type?: string
+          id?: string
+          mode?: string | null
+          payload?: Json
+          status?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      dodo_products: {
+        Row: {
+          amount_inr: number
+          created_at: string
+          credits: number | null
+          dodo_product_id: string
+          id: string
+          internal_key: string
+          is_active: boolean
+          kind: string
+          metadata: Json
+          mode: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          amount_inr?: number
+          created_at?: string
+          credits?: number | null
+          dodo_product_id: string
+          id?: string
+          internal_key: string
+          is_active?: boolean
+          kind: string
+          metadata?: Json
+          mode: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          amount_inr?: number
+          created_at?: string
+          credits?: number | null
+          dodo_product_id?: string
+          id?: string
+          internal_key?: string
+          is_active?: boolean
+          kind?: string
+          metadata?: Json
+          mode?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      dodo_subscriptions: {
+        Row: {
+          amount: number | null
+          cancel_at_period_end: boolean | null
+          cancelled_at: string | null
+          created_at: string
+          currency: string | null
+          current_period_end: string | null
+          current_period_start: string | null
+          dodo_customer_id: string | null
+          dodo_product_id: string | null
+          dodo_subscription_id: string
+          id: string
+          internal_key: string | null
+          mode: string
+          raw: Json
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number | null
+          cancel_at_period_end?: boolean | null
+          cancelled_at?: string | null
+          created_at?: string
+          currency?: string | null
+          current_period_end?: string | null
+          current_period_start?: string | null
+          dodo_customer_id?: string | null
+          dodo_product_id?: string | null
+          dodo_subscription_id: string
+          id?: string
+          internal_key?: string | null
+          mode: string
+          raw?: Json
+          status: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number | null
+          cancel_at_period_end?: boolean | null
+          cancelled_at?: string | null
+          created_at?: string
+          currency?: string | null
+          current_period_end?: string | null
+          current_period_start?: string | null
+          dodo_customer_id?: string | null
+          dodo_product_id?: string | null
+          dodo_subscription_id?: string
+          id?: string
+          internal_key?: string | null
+          mode?: string
+          raw?: Json
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       email_campaigns: {
         Row: {
           audience: string
@@ -2029,6 +2170,8 @@ export type Database = {
           bio: string | null
           created_at: string
           display_name: string | null
+          dodo_customer_id: string | null
+          dodo_subscription_id: string | null
           email: string | null
           id: string
           is_verified: boolean
@@ -2053,6 +2196,8 @@ export type Database = {
           bio?: string | null
           created_at?: string
           display_name?: string | null
+          dodo_customer_id?: string | null
+          dodo_subscription_id?: string | null
           email?: string | null
           id?: string
           is_verified?: boolean
@@ -2077,6 +2222,8 @@ export type Database = {
           bio?: string | null
           created_at?: string
           display_name?: string | null
+          dodo_customer_id?: string | null
+          dodo_subscription_id?: string | null
           email?: string | null
           id?: string
           is_verified?: boolean
