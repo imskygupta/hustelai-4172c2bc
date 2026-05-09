@@ -26,6 +26,21 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // ============================================================
+  // LEGACY: Cashfree has been replaced by Dodo Payments.
+  // This function is archived and only runs when
+  // ENABLE_CASHFREE_LEGACY=true (for historical reconciliation).
+  // ============================================================
+  if (Deno.env.get("ENABLE_CASHFREE_LEGACY") !== "true") {
+    return new Response(
+      JSON.stringify({
+        error: "Cashfree integration is retired. All payments are processed via Dodo.",
+        legacy: true,
+      }),
+      { status: 410, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
+  }
+
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
