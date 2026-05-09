@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { FileText, Receipt, ScrollText, ArrowRight, Sparkles, Lock, Zap } from "lucide-react";
+import { FileText, Receipt, ScrollText, ArrowRight, Sparkles, Lock, Zap, Calculator, UserCircle2, ClipboardList, CalendarRange, Timer, IdCard } from "lucide-react";
 import { SEO, faqJsonLd } from "@/components/SEO";
 import { DashboardReminderBanner } from "@/components/tools/DashboardReminderBanner";
 
@@ -18,7 +18,7 @@ const tools = [
     icon: FileText,
     label: "Proposal Generator",
     desc: "Win more clients with polished proposals. 4 pre-built scopes — web, social, consulting, video.",
-    tag: "New",
+    tag: "Popular",
     color: "from-violet-500 to-purple-600",
   },
   {
@@ -28,6 +28,54 @@ const tools = [
     desc: "Freelance agreements, NDAs, web-dev contracts. Lawyer-style clauses, ready to sign.",
     tag: "Free",
     color: "from-amber-500 to-orange-600",
+  },
+  {
+    href: "/tools/pricing-calculator",
+    icon: Calculator,
+    label: "AI Pricing Calculator",
+    desc: "Freelancer hourly, agency rate, profit margin & SaaS price — 4 calculators in one.",
+    tag: "New",
+    color: "from-violet-500 to-fuchsia-600",
+  },
+  {
+    href: "/tools/portfolio-bio",
+    icon: UserCircle2,
+    label: "Portfolio Bio Generator",
+    desc: "LinkedIn, agency, creator and freelancer taglines — variants you can copy in one click.",
+    tag: "New",
+    color: "from-sky-500 to-indigo-600",
+  },
+  {
+    href: "/tools/onboarding-form",
+    icon: ClipboardList,
+    label: "Client Onboarding Form Builder",
+    desc: "Build a branded intake form, share a public link — manage replies inside HustleAI.",
+    tag: "New",
+    color: "from-emerald-500 to-teal-600",
+  },
+  {
+    href: "/tools/content-calendar",
+    icon: CalendarRange,
+    label: "Social Content Calendar",
+    desc: "Generate a 4-week, 5-posts-per-week plan in seconds. Export as CSV.",
+    tag: "New",
+    color: "from-rose-500 to-pink-600",
+  },
+  {
+    href: "/tools/pomodoro",
+    icon: Timer,
+    label: "Pomodoro · Workspace Widgets",
+    desc: "Focus timer + hour & earnings tracker. Sit on top of any client work.",
+    tag: "New",
+    color: "from-orange-500 to-rose-600",
+  },
+  {
+    href: "/tools/business-card",
+    icon: IdCard,
+    label: "Business Card Generator",
+    desc: "Standalone — no AI input required. 4 themes, vCard download.",
+    tag: "New",
+    color: "from-fuchsia-500 to-pink-600",
   },
 ];
 
@@ -63,7 +111,7 @@ export default function ToolsHub() {
           </motion.div>
 
           {/* Tool cards */}
-          <div className="grid md:grid-cols-3 gap-6 mb-20">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-20">
             {tools.map((t, i) => {
               const Icon = t.icon;
               return (
