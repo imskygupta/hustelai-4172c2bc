@@ -5,10 +5,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { ToolPageLayout } from "@/components/tools/ToolPageLayout";
-import { TierLockOverlay } from "@/components/tools/TierLockOverlay";
-import { useAuth } from "@/hooks/useAuth";
-import type { Tier } from "@/lib/feature-flags";
+import { useToolGate } from "@/components/tools/ToolGate";
 import { toast } from "sonner";
+
+const faqs = [
+  { q: "Is this content calendar generator really free?", a: "Yes. Every plan is generated in your browser, free, with no signup needed. Sign up only when you want to download the CSV or save calendars to your workspace." },
+  { q: "Who is this content calendar built for?", a: "Solo creators, freelancers and small agencies posting on LinkedIn, Twitter/X, Instagram, YouTube Shorts and TikTok in the US, UK, Canada, Australia, EU and India. The 5-pillar framework works across every platform." },
+  { q: "What are the 5 content pillars?", a: "Authority/how-to, personal story, hot take/opinion, resource/list, and behind-the-scenes — the five proven pillars used by top creator-economy operators to ship a balanced 4-week feed." },
+  { q: "Can I export the calendar?", a: "Yes — one click downloads a CSV you can paste into Notion, Airtable, Google Sheets, Buffer, Hypefury or Hootsuite." },
+  { q: "Will the calendar work in my niche?", a: "Yes. The prompts include placeholders for your niche, audience and brand — every cell adapts. Used daily by designers, devs, coaches, copywriters and marketers." },
+];
 
 /**
  * Social Media Content Calendar Generator — pure-template, no AI cost.
@@ -48,8 +54,7 @@ const PROMPTS: Record<string, string[]> = {
 function pick<T>(arr: T[], seed: number) { return arr[Math.abs(seed) % arr.length]; }
 
 export default function ContentCalendar() {
-  const { profile } = useAuth();
-  const tier = ((profile?.subscription_tier as Tier) || "free");
+  const { guard, gate } = useToolGate("content-calendar", "download your calendar");
   const [niche, setNiche] = useState("freelance design");
   const [audience, setAudience] = useState("solo founders");
   const [brand, setBrand] = useState("HustleAI");
@@ -72,7 +77,7 @@ export default function ContentCalendar() {
     return out;
   }, [niche, audience, brand]);
 
-  const exportCsv = () => {
+  const exportCsv = () => guard(() => {
     const rows = ["Week,Day,Pillar,Idea", ...calendar.map(r => `${r.week},${r.day},"${r.pillar}","${r.idea.split('"').join('""')}"`)];
     const blob = new Blob([rows.join("\n")], { type: "text/csv" });
     const a = document.createElement("a");
@@ -80,16 +85,19 @@ export default function ContentCalendar() {
     a.download = `content-calendar-${niche.replace(/\s+/g, "-")}.csv`;
     a.click();
     toast.success("CSV downloaded");
-  };
+  });
 
   return (
     <ToolPageLayout
       title="Social Content Calendar Generator"
+      metaTitle="Free Social Media Content Calendar Generator (4-week plan) | HustleAI"
+      metaDescription="Free content calendar generator for creators, freelancers and agencies. Get a 4-week, 5-posts-per-week plan in seconds. CSV export. Used worldwide — US, UK, EU, AU, IN."
       subtitle="Generate a 4-week, 5-posts-per-week content plan in seconds. Export as CSV."
       icon={CalendarRange}
       path="/tools/content-calendar"
       accent="from-rose-500 to-pink-600"
       back={{ href: "/tools", label: "All tools" }}
+      faqs={faqs}
     >
       <Card className="p-5 mb-5 grid sm:grid-cols-3 gap-3">
         <div><Label className="text-xs">Topic / niche</Label><Input value={niche} onChange={e => setNiche(e.target.value)} className="mt-1" /></div>
@@ -97,7 +105,6 @@ export default function ContentCalendar() {
         <div><Label className="text-xs">Brand name</Label><Input value={brand} onChange={e => setBrand(e.target.value)} className="mt-1" /></div>
       </Card>
 
-      <TierLockOverlay toolName="Content Calendar export" requiredTier="pro" userTier={tier}>
         <Card className="p-0 overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 bg-slate-50">
             <div className="text-xs font-semibold text-slate-700">4-week plan · {calendar.length} ideas</div>
@@ -125,7 +132,7 @@ export default function ContentCalendar() {
             ))}
           </div>
         </Card>
-      </TierLockOverlay>
+      {gate}
     </ToolPageLayout>
   );
 }

@@ -5,9 +5,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ToolPageLayout } from "@/components/tools/ToolPageLayout";
-import { TierLockOverlay } from "@/components/tools/TierLockOverlay";
-import { useAuth } from "@/hooks/useAuth";
-import type { Tier } from "@/lib/feature-flags";
+
+const faqs = [
+  { q: "Is the AI Pricing Calculator really free?", a: "Yes. Every calculator — freelancer hourly, agency rate, profit margin and SaaS — is 100% free in the browser. No signup needed to use it. Sign up only when you want to save scenarios or sync to your HustleAI workspace." },
+  { q: "Which currencies does it support?", a: "The math is currency-agnostic — type any number. The labels default to ₹ (INR), but the same formulas work for USD, GBP, EUR, AUD, CAD, AED and SGD. Freelancers in the US, UK, EU, Canada, Australia, Singapore and the UAE use it daily." },
+  { q: "How is the freelance hourly rate calculated?", a: "We start from your desired monthly take-home, add tools/overhead, divide by billable hours, then gross-up by your tax + buffer percentage. The output is the minimum hourly you must charge to hit your target after taxes." },
+  { q: "Is the SaaS price calculator based on real benchmarks?", a: "Yes. We use the standard LTV = ARPU × (1/churn) formula with a configurable LTV:CAC ratio (3x is the SaaS industry default). Tweak the inputs to model your own funnel." },
+  { q: "Can I save my pricing scenarios?", a: "Sign up free to save unlimited pricing scenarios, share read-only links with co-founders, and convert them straight into a HustleAI proposal or invoice." },
+];
 
 /**
  * AI Pricing Calculator — pure-algo (no AI cost). 4 calculators in one tool:
@@ -15,23 +20,22 @@ import type { Tier } from "@/lib/feature-flags";
  *   2. Agency hourly      →  team cost + overhead + margin → billable rate
  *   3. Profit margin      →  revenue & costs → margin & markup
  *   4. SaaS pricing       →  CAC, churn, target LTV → price suggestion
- * Free users get a view-only preview.
+ * Free for everyone — sign up to save scenarios.
  */
 export default function PricingCalculator() {
-  const { profile } = useAuth();
-  const tier = ((profile?.subscription_tier as Tier) || "free");
-
   return (
     <ToolPageLayout
       title="AI Pricing Calculator"
+      metaTitle="Free Freelance & Agency Pricing Calculator (USD, GBP, EUR, INR) | HustleAI"
+      metaDescription="Free pricing calculator for freelancers, agencies and SaaS founders in the US, UK, EU, AU and India. Find your hourly rate, agency billable rate, profit margin & SaaS price in seconds."
       subtitle="Freelancer · Agency · Profit margin · SaaS — find the price you should be charging."
       icon={Calculator}
       path="/tools/pricing-calculator"
       accent="from-violet-500 to-fuchsia-600"
       back={{ href: "/tools", label: "All tools" }}
+      faqs={faqs}
     >
-      <TierLockOverlay toolName="AI Pricing Calculator" requiredTier="pro" userTier={tier}>
-        <Card className="p-5">
+      <Card className="p-5">
           <Tabs defaultValue="freelancer">
             <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="freelancer">Freelancer</TabsTrigger>
@@ -44,8 +48,7 @@ export default function PricingCalculator() {
             <TabsContent value="margin" className="mt-5"><MarginCalc /></TabsContent>
             <TabsContent value="saas" className="mt-5"><SaasCalc /></TabsContent>
           </Tabs>
-        </Card>
-      </TierLockOverlay>
+      </Card>
     </ToolPageLayout>
   );
 }

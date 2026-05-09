@@ -8,6 +8,14 @@ import { Progress } from "@/components/ui/progress";
 import { ToolPageLayout } from "@/components/tools/ToolPageLayout";
 import { toast } from "sonner";
 
+const faqs = [
+  { q: "Is the Pomodoro timer really free?", a: "Yes — focus timer, hour tracker and earnings tracker are 100% free in your browser. Sign up free if you want sessions saved across devices and synced to your HustleAI Time Tracker." },
+  { q: "How does the earnings tracker work?", a: "Set your hourly rate (₹, $, £, €, A$ — any currency), and every completed focus block adds tracked hours × rate to today's earnings. Resets on refresh unless you sign in." },
+  { q: "Can I change focus and break durations?", a: "Yes — set focus length anywhere from 5 to 120 minutes and break length from 1 to 60 minutes. Default is the classic 25/5 Pomodoro split." },
+  { q: "Will it work offline?", a: "Yes — once loaded, the timer runs entirely in your browser. No internet needed. Notifications use the Web Audio API for a friendly chime." },
+  { q: "Can I track multiple projects?", a: "The free widget tracks one session at a time. Sign up free to use the full HustleAI Time Tracker — multi-project, billable hours, automatic invoice line items." },
+];
+
 /**
  * Pomodoro + Freelancer Workspace Widgets — pure-client widgets:
  *   - Focus timer (25/5 default, configurable)
@@ -80,11 +88,14 @@ export default function PomodoroWidget() {
   return (
     <ToolPageLayout
       title="Pomodoro · Workspace Widgets"
+      metaTitle="Free Pomodoro Timer + Hour & Earnings Tracker for Freelancers | HustleAI"
+      metaDescription="Free Pomodoro focus timer with built-in hour & earnings tracker. Loved by freelancers and remote workers worldwide — US, UK, EU, AU, IN. No signup to start."
       subtitle="Focus timer + hour & earnings tracker. Sit on top of any client work."
       icon={Timer}
       path="/tools/pomodoro"
       accent="from-orange-500 to-rose-600"
       back={{ href: "/tools", label: "All tools" }}
+      faqs={faqs}
     >
       <div className="grid lg:grid-cols-3 gap-5">
         <Card className="p-6 lg:col-span-2 bg-gradient-to-br from-slate-900 to-slate-800 text-white relative overflow-hidden">
