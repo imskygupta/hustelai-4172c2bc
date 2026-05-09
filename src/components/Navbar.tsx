@@ -6,6 +6,7 @@ import { Zap, ArrowRight, Menu, X, LogOut, User, ChevronDown, Shield } from "luc
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { isAppShellRoute } from "@/components/app-shell-routes";
+import { NotificationCenter } from "@/components/NotificationCenter";
 
 const navLinks = [
   { label: "Workspaces", href: "/workspaces" },
