@@ -321,6 +321,35 @@ export default function Payment() {
       <Navbar />
       <div className="pt-24 pb-16 px-4">
         <div className="container mx-auto max-w-6xl space-y-10">
+          {/* Payment lock / maintenance banner */}
+          {(paymentLock.payments_locked || paymentLock.subscription_checkout_locked || paymentLock.wallet_topup_locked) && (
+            <div className="rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4 flex items-start gap-3">
+              <Lock className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+              <div className="flex-1 text-sm">
+                <p className="font-semibold text-amber-600 dark:text-amber-400">
+                  {paymentLock.payments_locked
+                    ? "Payments are temporarily paused"
+                    : paymentLock.subscription_checkout_locked
+                      ? "Subscription checkout is paused"
+                      : "Wallet top-ups are paused"}
+                </p>
+                <p className="text-muted-foreground mt-0.5">
+                  {paymentLock.payment_maintenance_message
+                    || "We're performing maintenance on our payment provider. Existing subscriptions are unaffected. Please check back shortly."}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Mode badge — only shown when non-live */}
+          {paymentMode === "test" && (
+            <div className="flex justify-center">
+              <Badge variant="outline" className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/40">
+                ⚠ TEST MODE — payments are not real
+              </Badge>
+            </div>
+          )}
+
           {/* Hero */}
           <motion.div
             initial={{ opacity: 0, y: 16 }}
