@@ -2121,6 +2121,48 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_broadcasts: {
+        Row: {
+          body: string
+          category: string
+          channels: string[]
+          created_at: string
+          created_by: string | null
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          link: string | null
+          target_tier: string
+          title: string
+        }
+        Insert: {
+          body: string
+          category?: string
+          channels?: string[]
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          link?: string | null
+          target_tier?: string
+          title: string
+        }
+        Update: {
+          body?: string
+          category?: string
+          channels?: string[]
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          link?: string | null
+          target_tier?: string
+          title?: string
+        }
+        Relationships: []
+      }
       notification_deliveries: {
         Row: {
           attempt_count: number
@@ -2178,7 +2220,9 @@ export type Database = {
           created_at: string
           event_key: string
           id: string
+          link: string | null
           payload: Json
+          read_at: string | null
           source: string | null
           title: string | null
           user_id: string | null
@@ -2189,7 +2233,9 @@ export type Database = {
           created_at?: string
           event_key: string
           id?: string
+          link?: string | null
           payload?: Json
+          read_at?: string | null
           source?: string | null
           title?: string | null
           user_id?: string | null
@@ -2200,7 +2246,9 @@ export type Database = {
           created_at?: string
           event_key?: string
           id?: string
+          link?: string | null
           payload?: Json
+          read_at?: string | null
           source?: string | null
           title?: string | null
           user_id?: string | null
@@ -2266,6 +2314,7 @@ export type Database = {
           email_enabled: boolean
           invoice_reminders: boolean
           payment_alerts: boolean
+          preset: string
           product_announcements: boolean
           updated_at: string
           user_id: string
@@ -2278,6 +2327,7 @@ export type Database = {
           email_enabled?: boolean
           invoice_reminders?: boolean
           payment_alerts?: boolean
+          preset?: string
           product_announcements?: boolean
           updated_at?: string
           user_id: string
@@ -2290,6 +2340,7 @@ export type Database = {
           email_enabled?: boolean
           invoice_reminders?: boolean
           payment_alerts?: boolean
+          preset?: string
           product_announcements?: boolean
           updated_at?: string
           user_id?: string
