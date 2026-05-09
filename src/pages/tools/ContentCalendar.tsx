@@ -1,11 +1,16 @@
 import { useMemo, useState } from "react";
-import { CalendarRange, Copy, Download } from "lucide-react";
+import { CalendarRange, Copy, Download, Sparkles, Loader2, Lock } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { ToolPageLayout } from "@/components/tools/ToolPageLayout";
 import { useToolGate } from "@/components/tools/ToolGate";
+import { SignupCTADialog } from "@/components/SignupCTADialog";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 const faqs = [
@@ -55,11 +60,17 @@ function pick<T>(arr: T[], seed: number) { return arr[Math.abs(seed) % arr.lengt
 
 export default function ContentCalendar() {
   const { guard, gate } = useToolGate("content-calendar", "download your calendar");
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [niche, setNiche] = useState("freelance design");
   const [audience, setAudience] = useState("solo founders");
   const [brand, setBrand] = useState("HustleAI");
+  const [aiPrompt, setAiPrompt] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiIdeas, setAiIdeas] = useState<{ week: number; day: string; pillar: string; idea: string }[] | null>(null);
+  const [signupOpen, setSignupOpen] = useState(false);
 
-  const calendar = useMemo(() => {
+  const generated = useMemo(() => {
     const out: { week: number; day: string; pillar: string; idea: string }[] = [];
     const days = ["Mon", "Tue", "Wed", "Thu", "Fri"];
     for (let w = 1; w <= 4; w++) {
@@ -76,6 +87,47 @@ export default function ContentCalendar() {
     }
     return out;
   }, [niche, audience, brand]);
+  const calendar = aiIdeas ?? generated;
+
+  const runAI = async () => {
+    if (aiPrompt.trim().length < 10) {
+      toast.error("Tell us a bit more about your business (10+ characters).");
+      return;
+    }
+    if (!user) { setSignupOpen(true); return; }
+    setAiLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("workspace-doc-ai", {
+        body: { task: "tool_content_calendar", prompt: aiPrompt },
+      });
+      if (error) {
+        const msg = (error as any)?.context?.responseText || error.message || "";
+        if (msg.includes("quota") || msg.includes("limit")) {
+          toast("AI quota reached", {
+            description: "Upgrade to Pro for more daily AI generations.",
+            action: { label: "Upgrade", onClick: () => navigate("/plans") },
+          });
+        } else toast.error("AI generation failed.");
+        return;
+      }
+      const r = data?.result;
+      if (!r?.ideas?.length) { toast.error("AI returned no ideas."); return; }
+      if (r.niche) setNiche(r.niche);
+      if (r.audience) setAudience(r.audience);
+      if (r.brand) setBrand(r.brand);
+      setAiIdeas(r.ideas.slice(0, 20).map((i: any) => ({
+        week: Number(i.week) || 1,
+        day: String(i.day || "Mon"),
+        pillar: String(i.pillar || PILLARS[0]),
+        idea: String(i.idea || ""),
+      })));
+      toast.success("AI calendar ready");
+    } catch (e: any) {
+      toast.error(e?.message || "Something went wrong");
+    } finally {
+      setAiLoading(false);
+    }
+  };
 
   const exportCsv = () => guard(() => {
     const rows = ["Week,Day,Pillar,Idea", ...calendar.map(r => `${r.week},${r.day},"${r.pillar}","${r.idea.split('"').join('""')}"`)];
@@ -100,6 +152,35 @@ export default function ContentCalendar() {
       back={{ href: "/tools", label: "All tools" }}
       faqs={faqs}
     >
+      <Card className="p-5 mb-4 border-rose-200 bg-gradient-to-br from-rose-50/60 via-white to-pink-50/40">
+        <div className="flex items-start gap-3">
+          <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center shrink-0 shadow-sm">
+            <Sparkles className="w-4 h-4 text-white" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-sm font-bold text-slate-900">Let AI plan your 4 weeks</div>
+            <div className="text-xs text-slate-600">Describe your niche & audience — we'll generate 20 hyper-specific post ideas.</div>
+          </div>
+        </div>
+        <div className="mt-3 space-y-2">
+          <Textarea
+            value={aiPrompt}
+            onChange={(e) => setAiPrompt(e.target.value)}
+            placeholder="e.g. I'm a Notion consultant for D2C founders in India. I sell templates + 1:1 setup calls. Audience: bootstrapped founders making 10–50L/yr."
+            className="min-h-[80px] bg-white"
+          />
+          <div className="flex items-center justify-between gap-2">
+            <div className="text-[11px] text-slate-500">
+              {user ? "Uses your daily AI quota." : "Free preview — sign up to generate with AI."}
+            </div>
+            <Button onClick={runAI} disabled={aiLoading} className="bg-slate-900 hover:bg-slate-800 text-white">
+              {aiLoading ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : user ? <Sparkles className="w-3.5 h-3.5 mr-1" /> : <Lock className="w-3.5 h-3.5 mr-1" />}
+              {user ? "Generate calendar with AI" : "Sign up to generate"}
+            </Button>
+          </div>
+        </div>
+      </Card>
+
       <Card className="p-5 mb-5 grid sm:grid-cols-3 gap-3">
         <div><Label className="text-xs">Topic / niche</Label><Input value={niche} onChange={e => setNiche(e.target.value)} className="mt-1" /></div>
         <div><Label className="text-xs">Audience</Label><Input value={audience} onChange={e => setAudience(e.target.value)} className="mt-1" /></div>
@@ -134,6 +215,7 @@ export default function ContentCalendar() {
           </div>
         </Card>
       {gate}
+      <SignupCTADialog open={signupOpen} onClose={() => setSignupOpen(false)} query={aiPrompt} />
     </ToolPageLayout>
   );
 }
