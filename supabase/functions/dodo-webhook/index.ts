@@ -130,15 +130,6 @@ serve(async (req) => {
             dodo_subscription_id: dodoSubId,
           } as any).eq("user_id", userId);
 
-          // In-app notification
-          fireAndForget(supabase.from("notifications").insert({
-            user_id: userId,
-            type: "upgrade",
-            title: `Welcome to HustleAI ${internalKey.charAt(0).toUpperCase() + internalKey.slice(1)}`,
-            body: "Your plan is active. New tools, higher limits, and priority access are unlocked.",
-            metadata: { internal_key: internalKey, source: "dodo" },
-          } as any));
-
           // Discord role sync
           fireAndForget(supabase.functions.invoke("discord-sync-role", {
             body: { user_id: userId, tier: internalKey, source: "dodo" },
