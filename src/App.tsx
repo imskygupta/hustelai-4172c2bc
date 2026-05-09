@@ -144,6 +144,8 @@ import AdminRuntime from "./pages/admin/Runtime";
 import RuntimeProviders from "./pages/admin/RuntimeProviders";
 import PaymentsReview from "./pages/admin/PaymentsReview";
 import AdminNotifications from "./pages/admin/Notifications";
+import TelegramOps from "./pages/admin/TelegramOps";
+import TelegramLanding from "./pages/marketing/TelegramLanding";
 import { Navigate } from "react-router-dom";
 
 // Helper to wrap an in-app page in the SaaS sidebar shell.
@@ -260,6 +262,8 @@ const App = () => (
             <Route path="/imskygupta-admin" element={<AdminLogin />} />
             <Route path="/admin-dashboard" element={<AdminDashboard />} />
             <Route path="/admin/communications" element={<AdminCommunications />} />
+            <Route path="/admin/telegram" element={<TelegramOps />} />
+            <Route path="/integrations/telegram" element={<TelegramLanding />} />
             <Route path="/d/:token" element={<Download />} />
             <Route path="/settings" element={Shelled(<SettingsLayout />)}>
               <Route index element={<Navigate to="/settings/profile" replace />} />
