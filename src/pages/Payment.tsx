@@ -709,5 +709,6 @@ export default function Payment() {
         </DialogContent>
       </Dialog>
     </div>
+    </TooltipProvider>
   );
 }
