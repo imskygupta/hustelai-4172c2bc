@@ -1,11 +1,13 @@
-import { useState } from "react";
-import { IdCard, Download } from "lucide-react";
+import { useRef, useState } from "react";
+import { IdCard, Download, Lock, Upload, Crown } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { ToolPageLayout } from "@/components/tools/ToolPageLayout";
 import { useToolGate } from "@/components/tools/ToolGate";
+import { useAuth } from "@/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 const faqs = [
@@ -31,6 +33,12 @@ const THEMES = [
 
 export default function BusinessCardGenerator() {
   const { guard, gate } = useToolGate("business-card", "download your contact card");
+  const { profile } = useAuth();
+  const navigate = useNavigate();
+  const tier = profile?.subscription_tier || "free";
+  const canUseLogo = tier === "pro" || tier === "elite" || tier === "infinity";
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [logo, setLogo] = useState<string | null>(null);
   const [name, setName] = useState("Aarav Mehta");
   const [role, setRole] = useState("Brand Designer");
   const [company, setCompany] = useState("Studio North");
@@ -38,6 +46,29 @@ export default function BusinessCardGenerator() {
   const [phone, setPhone] = useState("+91 98765 43210");
   const [site, setSite] = useState("studionorth.in");
   const [theme, setTheme] = useState(THEMES[0]);
+
+  const handleLogoClick = () => {
+    if (!canUseLogo) {
+      toast("Logo upload is a Pro feature", {
+        description: "Upgrade to add your brand logo to business cards.",
+        action: { label: "Upgrade", onClick: () => navigate("/plans") },
+      });
+      return;
+    }
+    fileRef.current?.click();
+  };
+
+  const onLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 1024 * 1024) {
+      toast.error("Logo must be under 1MB");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => setLogo(reader.result as string);
+    reader.readAsDataURL(file);
+  };
 
   const vcard = `BEGIN:VCARD
 VERSION:3.0
@@ -91,6 +122,38 @@ END:VCARD`;
               ))}
             </div>
           </div>
+          <div>
+            <div className="flex items-center justify-between">
+              <Label className="text-xs">Brand logo</Label>
+              {!canUseLogo && (
+                <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider font-bold text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">
+                  <Crown className="w-2.5 h-2.5" /> Pro
+                </span>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={handleLogoClick}
+              className={`mt-1 w-full flex items-center gap-2 px-3 py-2 rounded-md border text-xs transition ${
+                canUseLogo
+                  ? "border-slate-300 hover:bg-slate-50 text-slate-700"
+                  : "border-dashed border-amber-300 bg-amber-50/40 text-amber-800 hover:bg-amber-50"
+              }`}
+              aria-label={canUseLogo ? "Upload logo" : "Upgrade to upload logo"}
+            >
+              {canUseLogo ? <Upload className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
+              <span className="flex-1 text-left truncate">
+                {logo ? "Logo added — click to replace" : canUseLogo ? "Upload PNG/SVG (max 1MB)" : "Unlock logo upload with Pro"}
+              </span>
+              {logo && canUseLogo && (
+                <span
+                  className="text-slate-400 hover:text-slate-700"
+                  onClick={(e) => { e.stopPropagation(); setLogo(null); }}
+                >×</span>
+              )}
+            </button>
+            <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/svg+xml" className="hidden" onChange={onLogoChange} />
+          </div>
           <div className="flex gap-2 pt-2">
             <Button onClick={downloadVcard} className="bg-slate-900 hover:bg-slate-800 text-white"><Download className="w-3.5 h-3.5 mr-1" /> Save vCard</Button>
             <Button variant="outline" asChild><a href="/workspaces?intent=business_card">Open branded studio →</a></Button>
@@ -100,7 +163,12 @@ END:VCARD`;
         <div className="flex items-center justify-center">
           <div className={`w-[340px] aspect-[1.6/1] rounded-xl shadow-2xl ${theme.bg} ${theme.fg} p-6 flex flex-col justify-between`}>
             <div>
-              <div className={`text-[10px] uppercase tracking-[0.3em] ${theme.accent} font-bold`}>{company}</div>
+              <div className="flex items-start justify-between gap-3">
+                <div className={`text-[10px] uppercase tracking-[0.3em] ${theme.accent} font-bold`}>{company}</div>
+                {logo && canUseLogo && (
+                  <img src={logo} alt="logo" className="h-8 w-8 object-contain rounded bg-white/10 p-0.5" />
+                )}
+              </div>
               <div className="text-xl font-bold mt-2">{name}</div>
               <div className="text-xs opacity-80">{role}</div>
             </div>
