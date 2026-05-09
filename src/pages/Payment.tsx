@@ -640,7 +640,7 @@ export default function Payment() {
                       <div className="space-y-2 mt-auto">
                         <Button
                           onClick={() => initWalletTopup(pack.id)}
-                          disabled={!!processing}
+                         disabled={!!processing || paymentLock.payments_locked || paymentLock.wallet_topup_locked}
                           className={`w-full text-xs ${isPopularPack ? "bg-emerald-600 hover:bg-emerald-700 text-white" : ""}`}
                           variant={isPopularPack ? "default" : "outline"}
                           size="sm"
