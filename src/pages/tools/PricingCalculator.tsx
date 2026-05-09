@@ -1,10 +1,17 @@
 import { useMemo, useState } from "react";
-import { Calculator } from "lucide-react";
+import { Calculator, Sparkles, Loader2, Lock } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ToolPageLayout } from "@/components/tools/ToolPageLayout";
+import { SignupCTADialog } from "@/components/SignupCTADialog";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 const faqs = [
   { q: "Is the AI Pricing Calculator really free?", a: "Yes. Every calculator — freelancer hourly, agency rate, profit margin and SaaS — is 100% free in the browser. No signup needed to use it. Sign up only when you want to save scenarios or sync to your HustleAI workspace." },
@@ -36,6 +43,7 @@ export default function PricingCalculator() {
       back={{ href: "/tools", label: "All tools" }}
       faqs={faqs}
     >
+      <AiPricingPrompt />
       <Card className="p-5">
           <Tabs defaultValue="freelancer">
             <TabsList className="grid w-full grid-cols-4">
@@ -51,6 +59,120 @@ export default function PricingCalculator() {
           </Tabs>
       </Card>
     </ToolPageLayout>
+  );
+}
+
+type AiTier = { name: string; price: number; delivery_days: number; what_you_get: string[]; best_for: string };
+type AiResult = { currency: string; tiers: AiTier[]; rationale: string; psych_tip: string };
+
+function AiPricingPrompt() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [desc, setDesc] = useState("");
+  const [level, setLevel] = useState("intermediate");
+  const [market, setMarket] = useState("Indian freelance market");
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<AiResult | null>(null);
+  const [signupOpen, setSignupOpen] = useState(false);
+
+  const run = async () => {
+    if (desc.trim().length < 10) {
+      toast.error("Tell us a bit more about your business (10+ characters).");
+      return;
+    }
+    if (!user) {
+      setSignupOpen(true);
+      return;
+    }
+    setLoading(true);
+    setResult(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("gig-price-calculator", {
+        body: { service_description: desc, experience_level: level, target_market: market },
+      });
+      if (error) {
+        const msg = (error as any)?.context?.responseText || error.message || "";
+        if (msg.includes("limit") || msg.includes("Free tier")) {
+          toast("AI quota reached", {
+            description: "Upgrade to Pro for unlimited AI pricing suggestions.",
+            action: { label: "Upgrade", onClick: () => navigate("/plans") },
+          });
+        } else {
+          toast.error("AI pricing failed. Please try again.");
+        }
+        return;
+      }
+      if (data?.result) setResult(data.result);
+    } catch (e: any) {
+      toast.error(e?.message || "Something went wrong");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <>
+      <Card className="p-5 mb-4 border-violet-200 bg-gradient-to-br from-violet-50/60 via-white to-fuchsia-50/40">
+        <div className="flex items-start gap-3">
+          <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-600 flex items-center justify-center shrink-0 shadow-sm">
+            <Sparkles className="w-4 h-4 text-white" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-sm font-bold text-slate-900">Let AI price your business</div>
+            <div className="text-xs text-slate-600">Describe what you sell — we'll suggest 3 tier prices, deliverables and a positioning tip.</div>
+          </div>
+        </div>
+        <div className="mt-3 space-y-2">
+          <Textarea
+            value={desc}
+            onChange={(e) => setDesc(e.target.value)}
+            placeholder="e.g. I design Shopify stores for D2C skincare brands in India. 2 years experience, mostly small founders."
+            className="min-h-[88px] bg-white"
+          />
+          <div className="grid grid-cols-2 gap-2">
+            <Input value={level} onChange={(e) => setLevel(e.target.value)} placeholder="Experience (junior / intermediate / senior)" className="bg-white text-xs" />
+            <Input value={market} onChange={(e) => setMarket(e.target.value)} placeholder="Target market (India, US, UK…)" className="bg-white text-xs" />
+          </div>
+          <div className="flex items-center justify-between gap-2 pt-1">
+            <div className="text-[11px] text-slate-500">
+              {user ? "AI runs against your plan's monthly quota." : "Free preview — sign up to run AI pricing."}
+            </div>
+            <Button onClick={run} disabled={loading} className="bg-slate-900 hover:bg-slate-800 text-white">
+              {loading ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : user ? <Sparkles className="w-3.5 h-3.5 mr-1" /> : <Lock className="w-3.5 h-3.5 mr-1" />}
+              {user ? "Suggest pricing with AI" : "Sign up to run AI"}
+            </Button>
+          </div>
+        </div>
+
+        {result && (
+          <div className="mt-4 space-y-3">
+            <div className="grid md:grid-cols-3 gap-3">
+              {result.tiers.map((t) => (
+                <div key={t.name} className="rounded-xl border border-slate-200 bg-white p-3">
+                  <div className="text-[10px] uppercase tracking-wider font-bold text-violet-700">{t.name}</div>
+                  <div className="text-2xl font-bold text-slate-900 mt-0.5">{result.currency === "INR" ? "₹" : ""}{t.price.toLocaleString()}</div>
+                  <div className="text-[11px] text-slate-500">{t.delivery_days} days · {t.best_for}</div>
+                  <ul className="mt-2 space-y-0.5 text-xs text-slate-700 list-disc pl-4">
+                    {t.what_you_get.map((w, i) => <li key={i}>{w}</li>)}
+                  </ul>
+                </div>
+              ))}
+            </div>
+            <div className="grid sm:grid-cols-2 gap-3">
+              <div className="rounded-lg border border-slate-200 bg-white p-3 text-xs text-slate-700">
+                <div className="text-[10px] uppercase tracking-wider text-slate-500 font-bold mb-1">Why this pricing</div>
+                {result.rationale}
+              </div>
+              <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-900">
+                <div className="text-[10px] uppercase tracking-wider text-emerald-700 font-bold mb-1">Positioning tip</div>
+                {result.psych_tip}
+              </div>
+            </div>
+          </div>
+        )}
+      </Card>
+      <SignupCTADialog open={signupOpen} onClose={() => setSignupOpen(false)} query={desc} />
+    </>
   );
 }
 
