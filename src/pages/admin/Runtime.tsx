@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Activity, Power, RefreshCw, ShieldAlert, ShieldCheck, Lock, History } from "lucide-react";
+import { Activity, Power, RefreshCw, ShieldAlert, ShieldCheck, Lock, History, CreditCard, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
@@ -123,6 +123,24 @@ export default function AdminRuntime() {
   const exitSafeMode = () => persist("safe_mode", false);
   const toggleReadOnly = () => persist("readonly_mode", !server.readonly_mode);
   const toggleMaintenance = () => persist("maintenance_mode", !server.maintenance_mode);
+
+  const persistString = async (key: string, next: string) => {
+    setBusy(key);
+    try {
+      const { error: upErr } = await (supabase as any)
+        .from("api_runtime_config")
+        .upsert({ key, value: next, updated_by: user?.id }, { onConflict: "key" });
+      if (upErr) throw upErr;
+      const nextServer = { ...server, [key]: next };
+      setServer(nextServer);
+      setServerConfigInMemory(nextServer);
+      toast({ title: `${key} updated` });
+    } catch (e: any) {
+      toast({ title: "Update failed", description: e?.message ?? String(e), variant: "destructive" });
+    } finally {
+      setBusy(null);
+    }
+  };
 
   const toggleLocal = (k: string) => {
     const next = new Set(active);
