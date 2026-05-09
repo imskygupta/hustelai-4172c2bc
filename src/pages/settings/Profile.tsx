@@ -31,6 +31,7 @@ export default function ProfileSettings() {
     timezone: "",
     freelancer_category: "",
     avatar_url: "",
+    phone_number: "",
   });
   const [social, setSocial] = useState<Record<SocialKey, string>>({
     twitter: "", linkedin: "", github: "", instagram: "", youtube: "",
@@ -52,6 +53,7 @@ export default function ProfileSettings() {
           timezone: (data as any).timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone,
           freelancer_category: (data as any).freelancer_category ?? "",
           avatar_url: (data as any).avatar_url ?? "",
+          phone_number: (data as any).phone_number ?? "",
         });
         const sl = ((data as any).social_links ?? {}) as Record<string, string>;
         setSocial({
@@ -126,6 +128,9 @@ export default function ProfileSettings() {
           </SettingsField>
           <SettingsField label="Timezone">
             <Input value={form.timezone} onChange={(e) => setForm({ ...form, timezone: e.target.value })} placeholder="Asia/Kolkata" />
+          </SettingsField>
+          <SettingsField label="Phone number" hint="Used for account recovery and 2FA later.">
+            <Input type="tel" value={form.phone_number} onChange={(e) => setForm({ ...form, phone_number: e.target.value })} placeholder="+91 98765 43210" />
           </SettingsField>
         </div>
         <div className="mt-4">
