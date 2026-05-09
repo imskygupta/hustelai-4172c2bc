@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { notifyOps } from "../_shared/notify-ops.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -60,6 +61,17 @@ serve(async (req) => {
         status: "pending",
       }).select().single();
       if (error) throw error;
+
+      // Fire-and-forget ops alert
+      notifyOps("upi_submitted", {
+        user_email: user.email,
+        amount,
+        currency: "INR",
+        plan: plan || wallet_pack,
+        payment_id: data?.id,
+        note: `UTR ${utr_number}`,
+        review_url: `https://hustlaiapp.in/admin/payments-review`,
+      });
 
       return new Response(JSON.stringify({ success: true, submission: data }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -155,6 +167,24 @@ serve(async (req) => {
             },
           });
         }
+        notifyOps("upi_approved", {
+          user_email: profile?.email,
+          amount: sub.amount,
+          currency: sub.currency,
+          plan: sub.plan || sub.wallet_pack,
+          payment_id: sub.id,
+        });
+      } else if (decision === "rejected") {
+        const { data: profile } = await supabase.from("profiles")
+          .select("email").eq("user_id", sub.user_id).maybeSingle();
+        notifyOps("upi_rejected", {
+          user_email: profile?.email,
+          amount: sub.amount,
+          currency: sub.currency,
+          plan: sub.plan || sub.wallet_pack,
+          payment_id: sub.id,
+          note: admin_note || "",
+        });
       }
 
       return new Response(JSON.stringify({ success: true }), {

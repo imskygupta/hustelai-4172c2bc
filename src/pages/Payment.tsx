@@ -174,7 +174,7 @@ export default function Payment() {
 
       toast({
         title: "✅ Payment submitted!",
-        description: "Admin will verify within 1–4 hours. You'll get an invoice via email once approved.",
+        description: "Your payment is being verified by our team. This usually takes less than 1 minute. You'll receive an invoice via email once approved.",
       });
       setUpiDialog({ ...upiDialog, open: false });
     } catch (err: any) {
