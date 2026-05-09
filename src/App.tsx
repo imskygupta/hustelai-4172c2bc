@@ -15,6 +15,7 @@ import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
+import Unsubscribe from "./pages/Unsubscribe";
 import Blog from "./pages/Blog";
 import Reviews from "./pages/Reviews";
 import AdminLogin from "./pages/AdminLogin";
