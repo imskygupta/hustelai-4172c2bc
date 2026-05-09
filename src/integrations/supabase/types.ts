@@ -823,6 +823,60 @@ export type Database = {
         }
         Relationships: []
       }
+      dodo_coupons: {
+        Row: {
+          applies_to: string
+          code: string
+          created_at: string
+          description: string | null
+          discount_type: string
+          id: string
+          is_active: boolean
+          max_redemptions: number | null
+          metadata: Json
+          tier_filter: string[] | null
+          times_redeemed: number
+          updated_at: string
+          valid_from: string | null
+          valid_until: string | null
+          value: number
+        }
+        Insert: {
+          applies_to?: string
+          code: string
+          created_at?: string
+          description?: string | null
+          discount_type: string
+          id?: string
+          is_active?: boolean
+          max_redemptions?: number | null
+          metadata?: Json
+          tier_filter?: string[] | null
+          times_redeemed?: number
+          updated_at?: string
+          valid_from?: string | null
+          valid_until?: string | null
+          value: number
+        }
+        Update: {
+          applies_to?: string
+          code?: string
+          created_at?: string
+          description?: string | null
+          discount_type?: string
+          id?: string
+          is_active?: boolean
+          max_redemptions?: number | null
+          metadata?: Json
+          tier_filter?: string[] | null
+          times_redeemed?: number
+          updated_at?: string
+          valid_from?: string | null
+          valid_until?: string | null
+          value?: number
+        }
+        Relationships: []
+      }
       dodo_events: {
         Row: {
           created_at: string
@@ -862,6 +916,7 @@ export type Database = {
       dodo_products: {
         Row: {
           amount_inr: number
+          billing_interval: string | null
           created_at: string
           credits: number | null
           dodo_product_id: string
@@ -872,10 +927,12 @@ export type Database = {
           metadata: Json
           mode: string
           name: string
+          trial_days: number
           updated_at: string
         }
         Insert: {
           amount_inr?: number
+          billing_interval?: string | null
           created_at?: string
           credits?: number | null
           dodo_product_id: string
@@ -886,10 +943,12 @@ export type Database = {
           metadata?: Json
           mode: string
           name: string
+          trial_days?: number
           updated_at?: string
         }
         Update: {
           amount_inr?: number
+          billing_interval?: string | null
           created_at?: string
           credits?: number | null
           dodo_product_id?: string
@@ -900,6 +959,7 @@ export type Database = {
           metadata?: Json
           mode?: string
           name?: string
+          trial_days?: number
           updated_at?: string
         }
         Relationships: []
