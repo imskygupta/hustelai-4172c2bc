@@ -1,61 +1,117 @@
-# Product Maturity Phase — Settings Architecture v2
+# Telegram Delivery Layer + Exports V2
 
-Transform settings from scattered pages into a cohesive, modern SaaS settings hub that reflects HustleAI's positioning as an "AI Operating System for Freelancers."
+Evolve Telegram into a delivery/CDN layer (not primary storage) and polish the Exports + Settings experience. Supabase remains source of truth.
 
-## Scope
+## 1. Database changes (additive migration)
 
-### 1. Settings Shell (`SettingsLayout`)
-- Persistent left sidebar (collapsible on mobile) with grouped sections:
-  - **Account**: Profile, Account, Security, Notifications
-  - **Workspace**: Workspace, Exports, AI Runs (read-only feed)
-  - **Platform**: Integrations, Billing, API
-- Sticky header with breadcrumb + section title + save state indicator
-- Unsaved changes warning, toast confirmations
-- Section grouping cards with consistent spacing, typography (display font for H1, body for fields)
-- Trust signals: "Last saved", "Encrypted", connection badges
+Extend `generated_exports` with delivery/cache columns:
+- `telegram_file_id text` — Telegram's reusable file handle
+- `telegram_storage_message_id text` — message id in private storage channel
+- `telegram_storage_channel_id text` — channel where the master copy lives
+- `delivery_method text default 'supabase'` — `supabase | telegram | hybrid`
+- `download_limit int` — null = unlimited
+- `download_count int default 0`
+- `last_accessed_at timestamptz`
+- `is_favorite bool default false` (used by V2 UI)
+- `tags text[] default '{}'`
+- `watermarked bool default false`
 
-### 2. Routes (all under `/settings/*`)
-- `/settings/profile` — overhaul with avatar upload, headline, username, timezone, company, website, freelancer category, social links (Twitter/LinkedIn/GitHub/IG/YouTube), portfolio links (multi)
-- `/settings/account` — email, password change, language, timezone, delete account
-- `/settings/security` — sessions list (current device highlighted), login history, OTP logs, suspicious activity, Telegram auth state, export access log summary, 2FA toggle
-- `/settings/integrations` — existing page polished (Telegram primary, placeholder cards for Discord/Slack/WhatsApp coming soon)
-- `/settings/billing` — existing billing page reused as a settings tab
-- `/settings/workspace` — AI workspace overview: recent exports, recent AI runs, saved prompts, saved workflows, pinned items, templates, recent activity feed
-- `/settings/exports` — upgrade existing Exports page: thumbnails (mime-based icon + preview if image/pdf), tags, favorite toggle, search/filter by AI tool/type, export analytics (count by type, by week), download history
-- `/settings/notifications` — preferences (presets + per-event toggles) + analytics (delivery rate, last 7d) + grouped notification feed with dismiss/mark-read, richer cards (icon+title+meta+timestamp), event grouping
-- `/settings/api` — personal API keys (placeholder for now: list + create + revoke), webhook endpoints (placeholder)
+Free-tier rule update: `expires_at = now() + 7 days` (was 24h). Paid tiers stay null/persistent.
 
-### 3. Backend additions (lightweight)
-- `profiles` columns: `headline`, `username` (unique citext), `timezone`, `company`, `website`, `freelancer_category`, `social_links` jsonb, `portfolio_links` jsonb (additive only; nullable)
-- `user_sessions_view` — derived from existing auth signals + login_history if present (read-only); fallback to current Supabase session info if table missing
-- `saved_prompts` table (user_id, title, prompt, tags, pinned, timestamps) + RLS
-- `saved_workflows` table (user_id, title, definition jsonb, pinned) + RLS
-- `pinned_items` table (user_id, ref_type, ref_id, label) + RLS
-- `export_favorites` flag → add `is_favorite` and `tags text[]` to `generated_exports`
-- View/aggregate query for export + notification analytics done client-side from existing tables (no new tables needed for analytics)
+Extend `notification_integrations` view usage (no schema change needed) — already stores provider_chat_id, provider_username.
 
-### 4. UX polish principles
-- Tighter spacing scale, generous whitespace
-- One H1 per page, supporting eyebrow label
-- Card surfaces use `bg-card` with `border-border/50`, soft shadows
-- Section dividers via `border-t border-border/40` not heavy lines
-- Status pills for connected/disconnected/pending
-- Empty states with single CTA, no clutter
-- Dark-mode safe, semantic tokens only
+Add column to `profiles`: `phone_number text`.
 
-### 5. Out of scope (deferred)
-- Real device fingerprinting (we display Supabase session metadata only)
-- Webhook delivery system on `/settings/api` (UI shell only)
-- Discord/Slack/WhatsApp providers (cards marked "Coming soon")
-- AI runs persistence (we read from existing `ai_daily_usage` + recent exports as proxy if no runs table)
-- Notification analytics deep dashboards (basic counts only)
+New helper function `consume_export_download(_export_id, _user_id)` — increments counter, enforces `download_limit`, updates `last_accessed_at`.
 
-## Technical notes
-- New shared `SettingsLayout` component wraps all `/settings/*` routes via nested route in `App.tsx`
-- All new pages use `SettingsSection`, `SettingsField`, `SettingsRow` primitives for consistency
-- Migration is additive only — no breaking changes to existing tables
-- Existing `Integrations.tsx`, `Exports.tsx`, billing page get re-mounted inside `SettingsLayout` (light refactor of imports/wrappers)
-- File count target: ~15 new files, ~5 edits
+## 2. Telegram private storage channel
 
-## Deliverable
-A single coherent settings experience accessible from navbar dropdown ("Settings"), with all 9 routes working, profile overhaul live, workspace + security + notifications hubs functional, exports center upgraded with favorites/tags/search.
+New env: `TELEGRAM_STORAGE_CHANNEL_ID` (admin-configured group/channel where bot is admin).
+
+Edge function `export-cache-telegram`:
+- Called after `export-create` for any export with a storage_path
+- Uploads file to private storage channel via `sendDocument`
+- Saves returned `file_id`, `message_id`, `channel_id` back to `generated_exports`
+- Used as fast-path for repeat deliveries (re-send by `file_id` instead of re-uploading)
+
+`export-deliver-telegram` updated:
+- If `telegram_file_id` exists → `sendDocument` with `document: file_id` (zero re-upload)
+- Else upload from Supabase signed URL, then cache the resulting `file_id`
+- Free users: only Telegram delivery, link auto-expires in 7d, watermark flag set
+- Paid: dual mirror (link + Telegram)
+
+## 3. Deep-link auth flow
+
+`/d/:token` already exists for browser downloads. Add:
+- `export-tg-deeplink` edge function that returns `https://t.me/<bot_username>?start=dl_<token>`
+- `telegram-webhook` `/start dl_<token>` branch:
+  - Looks up token in `export_download_tokens`
+  - Verifies the bound user owns the chat (notification_integrations)
+  - Sends file via cached `file_id` or signed URL fallback
+  - Increments `download_count`, sets `last_accessed_at`
+
+## 4. Telegram bot commands (foundation)
+
+Add command handlers in `telegram-webhook` (lightweight stubs that share one dispatcher):
+- `/exports` → alias of `/files`
+- `/resume` → most recent `export_type='resume'`
+- `/history` → last 10 exports w/ status
+- `/storage` → quota summary (count, total bytes, tier limits)
+- `/verify` → echoes chat_id + username for support
+- Existing `/files /latest /security /plan /disconnect /help` retained
+
+Refactor command routing into a single `commands` map for scalability.
+
+## 5. Export Center V2 (`/settings/exports`)
+
+Rewrite UI:
+- Sticky filter bar: search, type chip filters (resume/pdf/workspace_doc/...), status, "Favorites only"
+- Card grid with: title, type icon, size, created, expiry badge (color by remaining time), delivery badges (Supabase / Telegram / Watermarked), download counter
+- Per-card actions: Download · Send to Telegram · Copy Share Link · Toggle Favorite · Expire/Revoke
+- Empty state + skeleton shimmer
+- Recent activity strip from `export_access_logs`
+
+## 6. Integrations page polish
+
+- Connect Telegram CTA with status pill, username, chat_id (masked)
+- Tier-gated panel: paid tiers show "Advanced automations" toggles (storage mirroring, deep-link auth, command access); free shows basic delivery only with upgrade nudge
+
+## 7. Settings polish
+
+- Add phone number field on Profile
+- Tier badges next to gated settings (Workspace, API Keys, Advanced integrations)
+- Integration status dots in sidebar items (Telegram connected, etc.)
+- Better card spacing, responsive 1-col on <768px
+
+## 8. Frontend API additions (`src/lib/exports/api.ts`)
+
+- `toggleFavorite(id, value)`
+- `getTelegramDeeplink(export_id)` → invokes `export-tg-deeplink`
+- Filters/search params on `listExports`
+- `recentAccessLogs(limit)`
+
+## What stays untouched
+Dodo webhook, UPI verify, admin payment lock, invoice emails, Telegram admin alerts. Strictly additive — no edits to those files.
+
+## Files (new)
+- `supabase/migrations/<ts>_exports_v2.sql`
+- `supabase/functions/export-cache-telegram/index.ts`
+- `supabase/functions/export-tg-deeplink/index.ts`
+- `src/components/settings/ExportCard.tsx`
+- `src/components/settings/IntegrationStatusPill.tsx`
+
+## Files (edited)
+- `supabase/functions/export-create/index.ts` — fire cache-telegram async
+- `supabase/functions/export-deliver-telegram/index.ts` — file_id fast path, watermark + 7d for free
+- `supabase/functions/telegram-webhook/index.ts` — deep-link branch + command map + new commands
+- `supabase/functions/_shared/exports/createExport.ts` — 7-day TTL for free
+- `src/lib/exports/api.ts` — new helpers
+- `src/pages/settings/Exports.tsx` — V2 UI
+- `src/pages/settings/Integrations.tsx` — tier-gated panel + status pill
+- `src/pages/settings/Profile.tsx` — phone field
+- `src/components/settings/SettingsLayout.tsx` — sidebar status dots
+
+## Secret needed
+`TELEGRAM_STORAGE_CHANNEL_ID` — will request after plan approval (user creates a private channel, adds bot as admin, forwards a message to @userinfobot to grab id).
+
+Approve to proceed.

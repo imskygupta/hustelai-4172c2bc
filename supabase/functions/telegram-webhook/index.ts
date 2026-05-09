@@ -65,6 +65,39 @@ serve(async (req) => {
         await sendTelegram(chatId, { title: "Hello 👋", body: "To link your HustleAI account, open Settings → Integrations and tap Connect Telegram." });
         return ok();
       }
+
+      // Deep-link export delivery: /start dl_<token>
+      if (token.startsWith("dl_")) {
+        const dlTok = token.slice(3);
+        const { data: tok } = await sb.from("export_download_tokens").select("*").eq("token", dlTok).maybeSingle();
+        if (!tok || tok.revoked_at || (tok.expires_at && new Date(tok.expires_at) < new Date()) || (tok.max_uses && tok.uses_count >= tok.max_uses)) {
+          await sendTelegram(chatId, { title: "🔒 Link unavailable", body: "This download link is invalid, expired, or already used." });
+          return ok();
+        }
+        // Verify chat owns the export
+        const { data: integ } = await sb.from("notification_integrations")
+          .select("user_id").eq("provider", "telegram").eq("provider_chat_id", chatId).maybeSingle();
+        if (!integ || integ.user_id !== tok.user_id) {
+          await sendTelegram(chatId, { title: "🚫 Forbidden", body: "This download isn't bound to your account. Connect from HustleAI → Settings → Integrations first." });
+          return ok();
+        }
+        await sb.from("export_download_tokens").update({
+          uses_count: (tok.uses_count || 0) + 1,
+          last_used_at: new Date().toISOString(),
+        }).eq("id", tok.id);
+        // Trigger telegram delivery (uses cached file_id if available)
+        await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/export-deliver-telegram`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+          },
+          body: JSON.stringify({ export_id: tok.export_id }),
+        }).catch(() => {});
+        await sb.rpc("consume_export_download" as any, { _export_id: tok.export_id, _user_id: tok.user_id }).catch(() => {});
+        return ok();
+      }
+
       // Look up pending integration
       const { data: integ } = await sb.from("notification_integrations")
         .select("*").eq("connect_token", token).maybeSingle();
@@ -115,6 +148,10 @@ serve(async (req) => {
           "/files — recent exports",
           "/latest — most recent export",
           "/exports — alias of /files",
+          "/resume — most recent resume",
+          "/history — last 10 exports",
+          "/storage — your storage usage",
+          "/verify — show your linked chat info",
           "/security — recent security events",
           "/plan — your plan & usage",
           "/disconnect — unlink this chat",
@@ -128,8 +165,8 @@ serve(async (req) => {
       return ok();
     }
 
-    if (cmd === "/files" || cmd === "/exports" || cmd === "/latest") {
-      const limit = cmd === "/latest" ? 1 : 5;
+    if (cmd === "/files" || cmd === "/exports" || cmd === "/latest" || cmd === "/history") {
+      const limit = cmd === "/latest" ? 1 : (cmd === "/history" ? 10 : 5);
       const { data: exps } = await sb.from("generated_exports")
         .select("id, title, export_type, status, created_at, size_bytes")
         .eq("user_id", userId)
@@ -148,6 +185,48 @@ serve(async (req) => {
           ]] },
         } as any);
       }
+      return ok();
+    }
+
+    if (cmd === "/resume") {
+      const { data: exps } = await sb.from("generated_exports")
+        .select("id, title, export_type, status, created_at, size_bytes")
+        .eq("user_id", userId)
+        .ilike("export_type", "%resume%")
+        .neq("status", "revoked")
+        .order("created_at", { ascending: false })
+        .limit(1);
+      if (!exps?.length) { await sendTelegram(chatId, { body: "No resume exports yet. Build one in HustleAI → Resume Optimizer." }); return ok(); }
+      const e = exps[0];
+      await sendTelegram(chatId, {
+        title: `📄 ${e.title}`,
+        body: `${e.export_type} · ${humanBytes(e.size_bytes)}\n${new Date(e.created_at).toLocaleString()}`,
+        // @ts-ignore
+        reply_markup: { inline_keyboard: [[{ text: "⬇️ Download", callback_data: `dl:${e.id}` }]] },
+      } as any);
+      return ok();
+    }
+
+    if (cmd === "/storage") {
+      const { data: rows } = await sb.from("generated_exports")
+        .select("size_bytes,status").eq("user_id", userId).neq("status", "revoked");
+      const count = rows?.length || 0;
+      const bytes = (rows || []).reduce((a, r: any) => a + (r.size_bytes || 0), 0);
+      const { data: p } = await sb.from("profiles").select("subscription_tier").eq("user_id", userId).maybeSingle();
+      const tier = (p?.subscription_tier || "free").toLowerCase();
+      const cap = tier === "free" ? "7 days TTL" : "Persistent";
+      await sendTelegram(chatId, {
+        title: "💾 Storage",
+        body: `Files: <b>${count}</b>\nUsed: <b>${humanBytes(bytes)}</b>\nTier: <b>${tier.toUpperCase()}</b>\nRetention: ${cap}`,
+      });
+      return ok();
+    }
+
+    if (cmd === "/verify") {
+      await sendTelegram(chatId, {
+        title: "🆔 Linked chat",
+        body: `chat_id: <code>${chatId}</code>\nuser_id: <code>${userId}</code>\nShare this with support if needed.`,
+      });
       return ok();
     }
 

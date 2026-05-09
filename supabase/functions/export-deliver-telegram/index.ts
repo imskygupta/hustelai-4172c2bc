@@ -30,7 +30,28 @@ serve(async (req) => {
     const link = `${siteOrigin(req)}/d/${tok}`;
 
     let messageId: string | null = null;
-    if (TG_TOKEN && exp.size_bytes > 0 && exp.size_bytes < FIFTY_MB) {
+    let cachedFileId: string | null = exp.telegram_file_id || null;
+    const caption = `<b>${escape(exp.title)}</b>\n${escape(exp.export_type)}\n🔗 ${link}`;
+
+    // Fast path: re-send by cached file_id (no re-upload)
+    if (TG_TOKEN && cachedFileId) {
+      try {
+        const r = await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendDocument`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            chat_id: integ.provider_chat_id,
+            document: cachedFileId,
+            caption, parse_mode: "HTML",
+          }),
+        });
+        const jr = await r.json().catch(() => ({}));
+        if (jr?.ok) messageId = String(jr.result?.message_id || "");
+      } catch (_e) { /* fall through */ }
+    }
+
+    // Slow path: upload from Supabase signed URL, then cache file_id
+    if (!messageId && TG_TOKEN && exp.size_bytes > 0 && exp.size_bytes < FIFTY_MB) {
       try {
         const signed = await sb.storage.from(exp.storage_bucket).createSignedUrl(exp.storage_path, 60 * 5, { download: exp.title });
         const url = signed.data?.signedUrl;
@@ -39,12 +60,15 @@ serve(async (req) => {
           const blob = await fileResp.blob();
           const fd = new FormData();
           fd.append("chat_id", integ.provider_chat_id);
-          fd.append("caption", `<b>${escape(exp.title)}</b>\n${escape(exp.export_type)}\n🔗 ${link}`);
+          fd.append("caption", caption);
           fd.append("parse_mode", "HTML");
           fd.append("document", blob, exp.title);
           const r = await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendDocument`, { method: "POST", body: fd });
           const jr = await r.json().catch(() => ({}));
-          if (jr?.ok) messageId = String(jr.result?.message_id || "");
+          if (jr?.ok) {
+            messageId = String(jr.result?.message_id || "");
+            cachedFileId = jr.result?.document?.file_id || null;
+          }
         }
       } catch (_e) { /* fall through to link-only */ }
     }
@@ -61,6 +85,8 @@ serve(async (req) => {
       status: "delivered",
       telegram_chat_id: integ.provider_chat_id,
       telegram_message_id: messageId,
+      telegram_file_id: cachedFileId || exp.telegram_file_id,
+      delivery_method: cachedFileId ? "hybrid" : "telegram",
       delivered_at: new Date().toISOString(),
     }).eq("id", exp.id);
     return j({ ok: true });
