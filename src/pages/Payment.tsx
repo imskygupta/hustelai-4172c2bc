@@ -219,21 +219,40 @@ export default function Payment() {
   const currentTier = profile?.subscription_tier || "free";
   const primaryUpi = upiMethods.find(m => m.upi_id) || null;
   const primaryQr = upiMethods.find(m => m.qr_image_url) || null;
+  const annualSavings = plans.reduce((acc, p) => acc + (p.price * 12 - Math.round(p.price * 12 * 0.8)), 0);
 
   return (
+    <TooltipProvider delayDuration={150}>
     <div className="min-h-screen bg-background">
       <SEO title="Payment | HustleAI Workspace OS" description="HustleAI Workspace OS — internal page." path="" noindex />
       <Navbar />
-      <div className="pt-24 pb-12 px-4">
-        <div className="container mx-auto max-w-5xl space-y-8">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center space-y-3">
-            <h1 className="text-3xl font-display font-bold">Upgrade Your <span className="text-gradient">Hustle Plan</span></h1>
-            <p className="text-muted-foreground">Pay via UPI (recommended) or instant card / netbanking checkout. UPI takes ~1–4 hr verification.</p>
-            <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground flex-wrap">
-              <span className="flex items-center gap-1"><Smartphone className="w-3 h-3 text-emerald-500" /> UPI · Zero fees</span>
-              <span className="flex items-center gap-1"><Shield className="w-3 h-3" /> Card / Netbanking · Instant</span>
+      <div className="pt-24 pb-16 px-4">
+        <div className="container mx-auto max-w-6xl space-y-10">
+          {/* Hero */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="text-center space-y-4 max-w-2xl mx-auto"
+          >
+            <div className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-[11px] font-medium text-primary">
+              <Sparkles className="w-3 h-3" /> Pricing
             </div>
+            <h1 className="text-4xl sm:text-5xl font-display font-bold tracking-tight">
+              Pick the plan that<br className="hidden sm:block" /> fits your <span className="text-gradient">hustle</span>
+            </h1>
+            <p className="text-muted-foreground text-base sm:text-lg leading-relaxed">
+              Cancel anytime. Instant activation. GST-compliant invoices delivered to your inbox.
+            </p>
           </motion.div>
+
+          {/* Trust strip */}
+          <div className="mx-auto flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[11px] uppercase tracking-wider text-muted-foreground/80">
+            <span className="inline-flex items-center gap-1.5"><Lock className="w-3 h-3 text-emerald-500" /> 256-bit secure checkout</span>
+            <span className="inline-flex items-center gap-1.5"><Receipt className="w-3 h-3 text-emerald-500" /> GST invoices</span>
+            <span className="inline-flex items-center gap-1.5"><Zap className="w-3 h-3 text-emerald-500" /> Instant activation</span>
+            <span className="inline-flex items-center gap-1.5"><Shield className="w-3 h-3 text-emerald-500" /> Powered by Dodo Payments</span>
+          </div>
 
           {/* Priority 1 UPI Banner */}
           {primaryUpi && (
@@ -259,114 +278,174 @@ export default function Payment() {
             </motion.div>
           )}
 
-          {/* Tab Toggle */}
-          <div className="flex justify-center gap-2">
-            <Button variant={activeTab === "plans" ? "default" : "outline"} onClick={() => setActiveTab("plans")}
-              className={activeTab === "plans" ? "bg-gradient-primary text-primary-foreground" : ""}>
-              <Sparkles className="w-4 h-4 mr-1" /> Subscription Plans
-            </Button>
-            <Button variant={activeTab === "wallet" ? "default" : "outline"} onClick={() => setActiveTab("wallet")}
-              className={activeTab === "wallet" ? "bg-emerald-600 text-white hover:bg-emerald-700" : ""}>
-              <Wallet className="w-4 h-4 mr-1" /> Pay-As-You-Go
-            </Button>
-          </div>
-
-          {/* View All Features Link */}
-          <div className="text-center">
-            <Button variant="link" onClick={() => navigate("/plans")} className="text-primary">
-              View all features & compare plans <ArrowRight className="w-3 h-3 ml-1" />
-            </Button>
-          </div>
-
-          {/* Billing cycle toggle + Coupon */}
-          {activeTab === "plans" && (
-            <div className="flex flex-col items-center gap-3">
-              <div className="inline-flex rounded-full border border-border bg-background/50 p-1">
-                <button
-                  onClick={() => setBillingCycle("month")}
-                  className={`px-4 py-1.5 text-xs font-semibold rounded-full transition ${billingCycle === "month" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}>
-                  Monthly
-                </button>
-                <button
-                  onClick={() => setBillingCycle("year")}
-                  className={`px-4 py-1.5 text-xs font-semibold rounded-full transition flex items-center gap-1 ${billingCycle === "year" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}>
-                  Yearly <Badge className="bg-emerald-500 text-white text-[9px] ml-1">-20%</Badge>
-                </button>
-              </div>
-              {billingCycle === "month" && (
-                <p className="text-[11px] text-muted-foreground flex items-center gap-1">
-                  <Gift className="w-3 h-3 text-emerald-500" /> Pro includes a 7-day free trial · cancel anytime
-                </p>
-              )}
+          {/* Tab Toggle — segmented control */}
+          <div className="flex flex-col items-center gap-4">
+            <div className="inline-flex rounded-full border border-border bg-card/50 p-1 shadow-sm">
+              <button
+                onClick={() => setActiveTab("plans")}
+                className={`px-5 py-2 text-xs font-semibold rounded-full transition-all flex items-center gap-1.5 ${activeTab === "plans" ? "bg-foreground text-background shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
+                <Sparkles className="w-3.5 h-3.5" /> Subscription
+              </button>
+              <button
+                onClick={() => setActiveTab("wallet")}
+                className={`px-5 py-2 text-xs font-semibold rounded-full transition-all flex items-center gap-1.5 ${activeTab === "wallet" ? "bg-foreground text-background shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
+                <Wallet className="w-3.5 h-3.5" /> Pay-as-you-go
+              </button>
             </div>
-          )}
 
-          <div className="max-w-md mx-auto w-full">
-            <div className="glass rounded-xl p-3 flex items-center gap-2">
-              <Tag className="w-4 h-4 text-emerald-500 shrink-0" />
-              <Input
-                value={couponInput}
-                onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
-                placeholder="Have a coupon? e.g. LAUNCH50"
-                className="border-0 bg-transparent focus-visible:ring-0 text-sm h-8 px-1"
-              />
-              {appliedCoupon ? (
-                <Badge className="bg-emerald-500 text-white">{appliedCoupon} ✓</Badge>
-              ) : (
-                <Button size="sm" variant="outline" onClick={applyCoupon} className="h-8 text-xs">Apply</Button>
-              )}
+            {/* Billing cycle toggle (subscription only) */}
+            {activeTab === "plans" && (
+              <div className="flex flex-col items-center gap-2">
+                <div className="inline-flex rounded-full border border-border bg-background p-1">
+                  <button
+                    onClick={() => setBillingCycle("month")}
+                    className={`px-4 py-1.5 text-[11px] font-semibold rounded-full transition ${billingCycle === "month" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}>
+                    Monthly
+                  </button>
+                  <button
+                    onClick={() => setBillingCycle("year")}
+                    className={`px-4 py-1.5 text-[11px] font-semibold rounded-full transition flex items-center gap-1.5 ${billingCycle === "year" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}>
+                    Yearly
+                    <span className="rounded-full bg-emerald-500/20 text-emerald-500 px-1.5 py-0.5 text-[9px] font-bold">SAVE 20%</span>
+                  </button>
+                </div>
+                {billingCycle === "year" ? (
+                  <p className="text-[11px] text-emerald-500 font-medium flex items-center gap-1">
+                    <Sparkles className="w-3 h-3" /> Save up to ₹{annualSavings.toLocaleString()}/yr across plans
+                  </p>
+                ) : (
+                  <p className="text-[11px] text-muted-foreground flex items-center gap-1">
+                    <Gift className="w-3 h-3 text-emerald-500" /> Pro includes a 7-day free trial · cancel anytime
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Coupon input — pill */}
+            <div className="w-full max-w-sm">
+              <div className="glass rounded-full p-1.5 pl-4 flex items-center gap-2">
+                <Tag className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                <Input
+                  value={couponInput}
+                  onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                  placeholder="Coupon code (e.g. LAUNCH50)"
+                  className="border-0 bg-transparent focus-visible:ring-0 text-xs h-7 px-0"
+                />
+                {appliedCoupon ? (
+                  <Badge className="bg-emerald-500 text-white rounded-full text-[10px]">{appliedCoupon} ✓</Badge>
+                ) : (
+                  <Button size="sm" variant="default" onClick={applyCoupon} className="h-7 rounded-full text-[11px] px-3">
+                    Apply
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
 
           {activeTab === "plans" ? (
-            <div className="grid md:grid-cols-3 gap-6">
+            <div className="grid md:grid-cols-3 gap-5 sm:gap-6">
               {plans.map((plan, i) => {
                 const isCurrentOrLower = ["free", ...plans.slice(0, plans.findIndex(p => p.id === currentTier) + 1).map(p => p.id)].includes(plan.id);
                 const isCurrent = plan.id === currentTier;
                 const yearlyPrice = Math.round(plan.price * 12 * 0.8);
                 const displayPrice = billingCycle === "year" ? yearlyPrice : plan.price;
                 const cycleLabel = billingCycle === "year" ? "/year" : "/month";
+                const isPopular = plan.id === "elite";
+                const isBestValue = plan.id === "infinity" && billingCycle === "year";
                 return (
-                  <motion.div key={plan.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}
-                    className={`glass rounded-2xl p-6 space-y-5 transition-all hover:border-primary/30 ${isCurrent ? "border-primary/50 shadow-glow" : ""}`}>
-                    <div className="space-y-2">
-                      <plan.icon className={`w-8 h-8 ${plan.color}`} />
-                      <h3 className="font-display font-bold text-xl">{plan.name}</h3>
-                      <div className="flex items-baseline gap-1">
-                        <span className="text-3xl font-display font-bold text-gradient">₹{displayPrice}</span>
+                  <motion.div
+                    key={plan.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.08 }}
+                    className={`relative glass rounded-2xl p-6 sm:p-7 flex flex-col gap-5 transition-all hover:-translate-y-0.5 hover:shadow-xl ${
+                      isPopular ? "border-primary/40 shadow-glow ring-1 ring-primary/20" : "hover:border-primary/30"
+                    } ${isCurrent ? "border-primary/50 shadow-glow" : ""}`}
+                  >
+                    {/* Ribbons */}
+                    {isPopular && (
+                      <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-[10px] font-bold bg-gradient-primary text-primary-foreground shadow-lg uppercase tracking-wider">
+                        Most Popular
+                      </div>
+                    )}
+                    {isBestValue && (
+                      <div className="absolute -top-3 right-4 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500 text-white shadow-lg uppercase tracking-wider">
+                        Best Value
+                      </div>
+                    )}
+
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <plan.icon className={`w-7 h-7 ${plan.color}`} />
+                        {isCurrent && (
+                          <Badge variant="outline" className="border-primary/30 text-primary text-[10px]">
+                            Current
+                          </Badge>
+                        )}
+                      </div>
+                      <div>
+                        <h3 className="font-display font-bold text-2xl">{plan.name}</h3>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {plan.id === "pro" && "For solo creators getting started"}
+                          {plan.id === "elite" && "For serious operators scaling income"}
+                          {plan.id === "infinity" && "For agencies & power-creators"}
+                        </p>
+                      </div>
+                      <div className="flex items-baseline gap-1.5 pt-1">
+                        <span className="text-4xl font-display font-bold tracking-tight">₹{displayPrice.toLocaleString()}</span>
                         <span className="text-muted-foreground text-sm">{cycleLabel}</span>
                       </div>
-                      {billingCycle === "year" && (
+                      {billingCycle === "year" ? (
                         <p className="text-[11px] text-emerald-500 font-medium">
-                          Save ₹{plan.price * 12 - yearlyPrice}/year vs monthly
+                          You save ₹{(plan.price * 12 - yearlyPrice).toLocaleString()} vs monthly
                         </p>
-                      )}
-                      {plan.id === "pro" && billingCycle === "month" && (
-                        <p className="text-[11px] text-emerald-500 font-medium">7-day free trial included</p>
+                      ) : plan.id === "pro" ? (
+                        <p className="text-[11px] text-emerald-500 font-medium flex items-center gap-1">
+                          <Gift className="w-3 h-3" /> 7-day free trial included
+                        </p>
+                      ) : (
+                        <p className="text-[11px] text-muted-foreground">Billed monthly · cancel anytime</p>
                       )}
                     </div>
-                    <ul className="space-y-2">
+
+                    <div className="h-px bg-border/50" />
+
+                    <ul className="space-y-2.5 flex-1">
                       {plan.features.map(f => (
-                        <li key={f} className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Check className="w-4 h-4 text-primary shrink-0" /> {f}
+                        <li key={f} className="flex items-start gap-2 text-sm text-foreground/80">
+                          <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                          <span>{f}</span>
                         </li>
                       ))}
                     </ul>
+
                     {isCurrent ? (
-                      <Badge className="w-full justify-center py-2 bg-primary/20 text-primary">Current Plan</Badge>
+                      <Badge className="w-full justify-center py-2.5 bg-primary/10 text-primary border border-primary/20 hover:bg-primary/10">
+                        ✓ Active Plan
+                      </Badge>
                     ) : isCurrentOrLower ? (
-                      <Button disabled className="w-full opacity-50">Already Included</Button>
+                      <Button disabled variant="outline" className="w-full opacity-60">
+                        Already Included
+                      </Button>
                     ) : (
                       <div className="space-y-2">
-                        <Button onClick={() => initPayment(plan.id)} disabled={!!processing}
-                          className="w-full bg-gradient-primary text-primary-foreground">
-                          {processing === plan.id ? <><Loader2 className="w-4 h-4 mr-1 animate-spin" /> Opening checkout…</>
-                            : <><CreditCard className="w-4 h-4 mr-1" /> Pay ₹{displayPrice} via Card / UPI / Netbanking</>}
+                        <Button
+                          onClick={() => initPayment(plan.id)}
+                          disabled={!!processing}
+                          size="lg"
+                          className={`w-full ${isPopular ? "bg-gradient-primary text-primary-foreground shadow-lg" : ""}`}
+                          variant={isPopular ? "default" : "outline"}
+                        >
+                          {processing === plan.id ? (
+                            <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Opening checkout…</>
+                          ) : (
+                            <>Upgrade to {plan.name} <ArrowRight className="w-4 h-4 ml-1.5" /></>
+                          )}
                         </Button>
                         {primaryUpi && (
                           <Button onClick={() => openUpiDialog(plan.id, "plan", displayPrice, `${plan.name} Plan`)} disabled={!!processing}
                             variant="outline" className="w-full border-emerald-500/30 hover:bg-emerald-500/10 text-emerald-600">
-                            <Smartphone className="w-4 h-4 mr-1" /> Manual UPI (1–4 hr verify)
+                            <Smartphone className="w-3.5 h-3.5 mr-1.5" /> Pay via UPI manually
                           </Button>
                         )}
                       </div>
@@ -377,48 +456,191 @@ export default function Payment() {
             </div>
           ) : (
             <div className="space-y-6">
-              {/* Wallet Balance */}
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                className="glass rounded-2xl p-6 text-center space-y-2 border-emerald-500/20">
-                <Wallet className="w-10 h-10 text-emerald-500 mx-auto" />
-                <p className="text-sm text-muted-foreground">Your Credit Balance</p>
-                <p className="text-4xl font-display font-bold text-emerald-500">{walletBalance}</p>
-                <p className="text-xs text-muted-foreground">credits remaining (₹10/search, all tools unlocked)</p>
+              {/* Wallet Balance — premium card */}
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="relative overflow-hidden rounded-2xl p-6 border border-emerald-500/20 bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-transparent"
+              >
+                <div className="absolute inset-0 opacity-30 bg-[radial-gradient(circle_at_top_right,hsl(160_84%_42%_/_0.15),transparent_60%)]" />
+                <div className="relative flex items-center justify-between gap-4 flex-wrap">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-emerald-500/15 flex items-center justify-center">
+                      <Wallet className="w-6 h-6 text-emerald-500" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <p className="text-xs text-muted-foreground uppercase tracking-wider">Credit balance</p>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button className="opacity-60 hover:opacity-100"><Info className="w-3 h-3" /></button>
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-xs">
+                            <p className="text-xs">1 credit = 1 AI search across any tool. Credits never expire.</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+                      <p className="text-3xl font-display font-bold tracking-tight mt-0.5">
+                        {walletBalance.toLocaleString()} <span className="text-base text-muted-foreground font-normal">credits</span>
+                      </p>
+                    </div>
+                  </div>
+                  <Badge variant="outline" className="border-emerald-500/30 text-emerald-500 text-[10px] uppercase tracking-wider">
+                    All tools unlocked
+                  </Badge>
+                </div>
               </motion.div>
 
               <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                {walletPacks.map((pack, i) => (
-                  <motion.div key={pack.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}
-                    className="glass rounded-xl p-5 space-y-4 hover:border-emerald-500/30 transition-all">
-                    <div className="space-y-1">
-                      <Badge variant="outline" className="text-emerald-500 border-emerald-500/30 text-xs">{pack.label}</Badge>
-                      <h3 className="font-display font-bold text-lg">{pack.credits} Credits</h3>
-                      <p className="text-2xl font-display font-bold text-emerald-500">₹{pack.price}</p>
-                      <p className="text-xs text-muted-foreground">₹{(pack.price / pack.credits).toFixed(0)}/search</p>
-                    </div>
-                    <div className="space-y-2">
-                      <Button onClick={() => initWalletTopup(pack.id)} disabled={!!processing}
-                        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs">
-                        {processing === pack.id ? <Loader2 className="w-3 h-3 animate-spin" />
-                          : <><CreditCard className="w-3 h-3 mr-1" /> Buy ₹{pack.price}</>}
-                      </Button>
-                      {primaryUpi && (
-                        <Button onClick={() => openUpiDialog(pack.id, "wallet", pack.price, `${pack.credits} Credits`)} disabled={!!processing}
-                          variant="outline" size="sm"
-                          className="w-full text-xs border-emerald-500/30">
-                          <Smartphone className="w-3 h-3 mr-1" /> Manual UPI
-                        </Button>
+                {walletPacks.map((pack, i) => {
+                  const isPopularPack = pack.id === "pack_50";
+                  return (
+                    <motion.div
+                      key={pack.id}
+                      initial={{ opacity: 0, y: 16 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.06 }}
+                      className={`relative glass rounded-2xl p-5 flex flex-col gap-4 transition-all hover:-translate-y-0.5 hover:shadow-lg ${
+                        isPopularPack ? "border-emerald-500/40 ring-1 ring-emerald-500/20" : "hover:border-emerald-500/30"
+                      }`}
+                    >
+                      {isPopularPack && (
+                        <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500 text-white uppercase tracking-wider">
+                          Best deal
+                        </div>
                       )}
-                    </div>
-                  </motion.div>
-                ))}
+                      <div className="space-y-1">
+                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{pack.label}</p>
+                        <h3 className="font-display font-bold text-2xl">{pack.credits}<span className="text-sm text-muted-foreground font-normal ml-1">credits</span></h3>
+                        <p className="text-xl font-display font-bold text-emerald-500">₹{pack.price}</p>
+                        <p className="text-[11px] text-muted-foreground">₹{(pack.price / pack.credits).toFixed(0)} per search</p>
+                      </div>
+                      <div className="space-y-2 mt-auto">
+                        <Button
+                          onClick={() => initWalletTopup(pack.id)}
+                          disabled={!!processing}
+                          className={`w-full text-xs ${isPopularPack ? "bg-emerald-600 hover:bg-emerald-700 text-white" : ""}`}
+                          variant={isPopularPack ? "default" : "outline"}
+                          size="sm"
+                        >
+                          {processing === pack.id ? <Loader2 className="w-3 h-3 animate-spin" />
+                            : <>Top up ₹{pack.price}</>}
+                        </Button>
+                        {primaryUpi && (
+                          <Button onClick={() => openUpiDialog(pack.id, "wallet", pack.price, `${pack.credits} Credits`)} disabled={!!processing}
+                            variant="ghost" size="sm"
+                            className="w-full text-[11px] text-emerald-600 hover:bg-emerald-500/10">
+                            <Smartphone className="w-3 h-3 mr-1" /> UPI
+                          </Button>
+                        )}
+                      </div>
+                    </motion.div>
+                  );
+                })}
               </div>
-
-              <p className="text-center text-xs text-muted-foreground">
-                Each credit gives you 1 AI search with all tools unlocked — no subscription required.
-              </p>
             </div>
           )}
+
+          {/* Compare drawer + payment methods strip + FAQ */}
+          <div className="space-y-8 pt-4">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-border pt-8">
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <FileText className="w-3.5 h-3.5" /> Compare features in detail
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-full sm:max-w-xl overflow-y-auto">
+                  <SheetHeader>
+                    <SheetTitle>Plan comparison</SheetTitle>
+                    <SheetDescription>Every feature side-by-side. Tap a plan above to upgrade.</SheetDescription>
+                  </SheetHeader>
+                  <div className="mt-6">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b text-xs text-muted-foreground">
+                          <th className="text-left py-2 font-medium">Feature</th>
+                          <th className="text-center font-medium">Pro</th>
+                          <th className="text-center font-medium">Elite</th>
+                          <th className="text-center font-medium">Infinity</th>
+                        </tr>
+                      </thead>
+                      <tbody className="[&>tr]:border-b [&>tr]:border-border/50 [&>tr>td]:py-3">
+                        <tr><td>AI searches/day</td><td className="text-center">5</td><td className="text-center">10</td><td className="text-center">20</td></tr>
+                        <tr><td>All AI tools</td><td className="text-center"><Check className="w-4 h-4 text-emerald-500 inline" /></td><td className="text-center"><Check className="w-4 h-4 text-emerald-500 inline" /></td><td className="text-center"><Check className="w-4 h-4 text-emerald-500 inline" /></td></tr>
+                        <tr><td>HustleBot AI Mentor</td><td className="text-center text-muted-foreground">—</td><td className="text-center"><Check className="w-4 h-4 text-emerald-500 inline" /></td><td className="text-center"><Check className="w-4 h-4 text-emerald-500 inline" /></td></tr>
+                        <tr><td>Lead Discovery</td><td className="text-center text-muted-foreground">—</td><td className="text-center"><Check className="w-4 h-4 text-emerald-500 inline" /></td><td className="text-center"><Check className="w-4 h-4 text-emerald-500 inline" /></td></tr>
+                        <tr><td>Create & sell courses</td><td className="text-center text-muted-foreground">—</td><td className="text-center text-muted-foreground">—</td><td className="text-center">5 / month</td></tr>
+                        <tr><td>API access</td><td className="text-center text-muted-foreground">—</td><td className="text-center text-muted-foreground">—</td><td className="text-center"><Check className="w-4 h-4 text-emerald-500 inline" /></td></tr>
+                        <tr><td>Affiliate commission</td><td className="text-center">5%</td><td className="text-center">6%</td><td className="text-center">10%+</td></tr>
+                        <tr><td>Priority support</td><td className="text-center text-muted-foreground">—</td><td className="text-center"><Check className="w-4 h-4 text-emerald-500 inline" /></td><td className="text-center"><Check className="w-4 h-4 text-emerald-500 inline" /></td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </SheetContent>
+              </Sheet>
+
+              {/* Payment methods strip */}
+              <div className="flex items-center gap-3 text-[10px] uppercase tracking-wider text-muted-foreground">
+                <span>We accept</span>
+                <div className="flex items-center gap-2">
+                  {["VISA", "MC", "UPI", "RuPay", "Net"].map(m => (
+                    <span key={m} className="px-2 py-1 rounded border border-border bg-card text-[10px] font-mono font-semibold text-foreground/70">
+                      {m}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* FAQ */}
+            <div className="max-w-3xl mx-auto">
+              <div className="text-center mb-6">
+                <div className="inline-flex items-center gap-1.5 text-xs uppercase tracking-wider text-muted-foreground">
+                  <HelpCircle className="w-3 h-3" /> Frequently asked
+                </div>
+                <h2 className="font-display font-bold text-2xl mt-2">Questions before you upgrade</h2>
+              </div>
+              <Accordion type="single" collapsible className="glass rounded-2xl px-6 divide-y divide-border/50">
+                <AccordionItem value="q1" className="border-0">
+                  <AccordionTrigger className="text-sm font-medium">How does the 7-day Pro free trial work?</AccordionTrigger>
+                  <AccordionContent className="text-sm text-muted-foreground">
+                    Start Pro and we won't charge for the first 7 days. Cancel any time inside Settings → Billing — no questions asked, no charge.
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="q2" className="border-0">
+                  <AccordionTrigger className="text-sm font-medium">Do I get a GST invoice?</AccordionTrigger>
+                  <AccordionContent className="text-sm text-muted-foreground">
+                    Yes. A GST-compliant invoice is auto-generated and emailed within minutes of every successful payment, and is also available under Settings → Billing → Invoices.
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="q3" className="border-0">
+                  <AccordionTrigger className="text-sm font-medium">Can I cancel or downgrade anytime?</AccordionTrigger>
+                  <AccordionContent className="text-sm text-muted-foreground">
+                    Yes. Cancellations take effect at the end of your current billing cycle — you keep access until then. Downgrades happen at renewal.
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="q4" className="border-0">
+                  <AccordionTrigger className="text-sm font-medium">What's the refund policy?</AccordionTrigger>
+                  <AccordionContent className="text-sm text-muted-foreground">
+                    Digital subscriptions and wallet credits are non-refundable once issued. The 7-day Pro trial exists so you can try risk-free. For accidental duplicate charges, write to us within 24 hours.
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="q5" className="border-0">
+                  <AccordionTrigger className="text-sm font-medium">Subscription vs wallet credits — which should I pick?</AccordionTrigger>
+                  <AccordionContent className="text-sm text-muted-foreground">
+                    Pick a subscription if you use AI tools daily. Pick wallet credits if your usage is bursty — credits never expire and unlock every tool.
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="q6" className="border-0">
+                  <AccordionTrigger className="text-sm font-medium">Is my payment secure?</AccordionTrigger>
+                  <AccordionContent className="text-sm text-muted-foreground">
+                    Payments are processed by Dodo Payments over a 256-bit TLS connection. Card details never touch our servers. Webhook-confirmed activation means your plan goes live the instant payment clears.
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            </div>
+          </div>
         </div>
       </div>
 
