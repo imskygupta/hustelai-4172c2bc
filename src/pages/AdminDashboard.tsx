@@ -1391,16 +1391,6 @@ export default function AdminDashboard() {
             <div className="space-y-4">
               <PaymentMethodsManager />
 
-          )}
-
-          {/* ===== DODO PAYMENTS ===== */}
-          {section === "dodo-payments" && (
-            <DodoAdminPanel />
-          )}
-
-          {section === "payments-legacy-stats" && (
-            <div className="space-y-4">
-
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 {[
                   { label: "Total Payments", value: payments.length },
