@@ -69,11 +69,14 @@ export default function Payment() {
   }, [user]);
 
   const loadWallet = async () => {
+    if (!user) return;
     try {
-      const { data } = await supabase.functions.invoke("cashfree-payment", {
-        body: { action: "get_wallet" },
-      });
-      if (data) setWalletBalance(data.balance || 0);
+      const { data } = await supabase
+        .from("user_wallets")
+        .select("balance")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      setWalletBalance((data as any)?.balance || 0);
     } catch {}
   };
 
@@ -89,7 +92,7 @@ export default function Payment() {
 
   const openUpiDialog = (itemId: string, itemType: "plan" | "wallet", amount: number, label: string) => {
     if (upiMethods.length === 0) {
-      toast({ title: "UPI not configured", description: "Please use Cashfree or contact admin", variant: "destructive" });
+      toast({ title: "UPI not configured", description: "Please use card checkout or contact admin", variant: "destructive" });
       return;
     }
     setUpiDialog({ open: true, itemId, itemType, amount, label });
@@ -221,10 +224,10 @@ export default function Payment() {
         <div className="container mx-auto max-w-5xl space-y-8">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center space-y-3">
             <h1 className="text-3xl font-display font-bold">Upgrade Your <span className="text-gradient">Hustle Plan</span></h1>
-            <p className="text-muted-foreground">Pay via UPI (recommended) or Cashfree. Instant for Cashfree, ~1–4 hr verification for UPI.</p>
+            <p className="text-muted-foreground">Pay via UPI (recommended) or instant card / netbanking checkout. UPI takes ~1–4 hr verification.</p>
             <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground flex-wrap">
               <span className="flex items-center gap-1"><Smartphone className="w-3 h-3 text-emerald-500" /> UPI · Zero fees</span>
-              <span className="flex items-center gap-1"><Shield className="w-3 h-3" /> Cashfree · Instant</span>
+              <span className="flex items-center gap-1"><Shield className="w-3 h-3" /> Card / Netbanking · Instant</span>
             </div>
           </motion.div>
 
