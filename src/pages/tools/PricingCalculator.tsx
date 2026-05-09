@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ToolPageLayout } from "@/components/tools/ToolPageLayout";
+import { TemplatePicker } from "@/components/tools/TemplatePicker";
 import { SignupCTADialog } from "@/components/SignupCTADialog";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -43,6 +44,7 @@ export default function PricingCalculator() {
       back={{ href: "/tools", label: "All tools" }}
       faqs={faqs}
     >
+      <TemplatePicker toolKey="pricing-calculator" />
       <AiPricingPrompt />
       <Card className="p-5">
           <Tabs defaultValue="freelancer">

@@ -37,6 +37,9 @@ export function Navbar() {
   // Hide the marketing navbar on in-app SaaS-shell routes — the sidebar +
   // topbar in AppShell replaces it. Cannot be overridden by individual pages.
   if (isAppShellRoute(pathname)) return null;
+  // Free-tool pages (/tools/*, but NOT the /tools hub) wear the
+  // dashboard-mirage shell which has its own top bar — suppress this one.
+  if (pathname.startsWith("/tools/")) return null;
   const location = useLocation();
   const { user, signOut } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);

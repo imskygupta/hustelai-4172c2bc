@@ -1,122 +1,41 @@
-## Goal
-Make daily AI assist usage visible to users, gracefully handle exhaustion with an upgrade/BYOK/credits popup, and give admins a rich targeting + messaging panel for users who burned through their daily quota.
+## Plan: Calendar AI prompt + dashboard-style tool shell + tier templates + shared-link promo
 
----
+### 1. AI prompt block on Content Calendar (parity with Pricing/Intake)
+- Add `AiCalendarPrompt` section at top of `ContentCalendar.tsx`: textarea ("Tell us about your business / niche / audience"), generate button.
+- Free → opens `SignupCTADialog`. Signed-in → calls `workspace-doc-ai` with new task `tool_content_calendar` returning `{ niche, audience, brand, ideas: [{week, day, pillar, idea}] }` (20 items). Result hydrates the calendar.
+- Add `tool_content_calendar` task to `supabase/functions/workspace-doc-ai/index.ts`. Quota: same `consume_ai_quota` flow. Quota error → toast with Upgrade.
+- Lock icon for free, Sparkles for signed-in. Same styling language as Pricing prompt (gradient card, slate text).
 
-## 1. Unified daily usage tracking (source of truth)
+### 2. "Dashboard mirage" shell on free tool pages
+Goal: every `/tools/*` page feels like it's already inside the signed-in dashboard, so when a guest signs up the experience is continuous.
+- New `src/components/tools/ToolDashboardShell.tsx`: faux sidebar (left, sticky, narrow) listing the 8 tools with active state + "More inside" disabled rows (Workspaces, HustleBot, Roadmaps, Knowledge Hub, Lead Pipeline) all linking to signup. Faux top bar with HustleAI logo, "Free workspace" pill, search affordance, and "Sign in / Get started" CTA.
+- Wrap `ToolPageLayout` content in this shell when `toolKey` is set and user is signed-out. Signed-in users keep the existing AppShell.
+- Add subtle "You're using the free preview — sign up to save & sync" ribbon top of canvas.
+- Keep current SEO/FAQ/RelatedRail blocks below the shell so SEO is unchanged.
 
-Today usage is scattered: `localStorage` (`tool-limits.ts`) for free tool autofills + a `consume_ai_quota` RPC + `ai_daily_usage` table for some flows. Users on the dashboard see nothing.
+### 3. Tier-gated template library (Elite / Infinity unlocks)
+- New `src/lib/tools/template-packs.ts`: per-tool template arrays tagged `free | pro | elite | infinity`.
+  - Invoice: Modern, Classic (free) · Minimal Studio, Agency Bold (pro) · Boutique Luxe, Stripe-clean, Investor-grade (elite) · Animated header, Multi-currency hero, Whitelabel ultra (infinity).
+  - Proposal: 2 free → +3 pro → +3 elite → +3 infinity.
+  - Contract, Pricing, Portfolio, Intake, Card, Calendar: 2 free baseline + tiered unlocks.
+- New `<TemplatePicker tool="invoice" />` rendering a horizontal scroll strip with locked cards (lock icon + tier badge). Click locked → toast "Unlock 12+ templates with Elite" with Upgrade CTA. Plug into the 3 doc tools first; same component reused on the other tools.
+- Marketing copy on `/tools` hub: "8 free templates. Unlock 40+ inside Elite & Infinity."
 
-**Switch the doc tools (Invoice, Proposal, Contract autofill) to the server-backed `consume_ai_quota` RPC** so usage is visible across devices and to admins.
+### 4. Shared-link footer promo + watermark on free outputs
+- New `src/components/tools/SharedLinkPromo.tsx`: rendered at bottom of any public-shared output (intake form public view, exported HTML preview, printable PDF footer). Shows: HustleAI logo, "Made with HustleAI · 8 free freelancer tools", icon row (Invoice, Proposal, Contract, Pricing, Portfolio, Calendar, Card, Intake) each linking back to `https://hustlaiapp.in/tools/<slug>?ref=share`, plus "Try free →" pill.
+- Watermark: extend existing `watermarkModeForTier` usage. For free tier, every print/PDF gets a diagonal "HustleAI · hustlaiapp.in" watermark; pro = small datetime footer; elite/infinity = none. Apply to Invoice, Proposal, Contract, Pricing, Portfolio, Card print paths.
+- Public intake form submission page (`/intake/...`) shows the `SharedLinkPromo` strip when the form was created on a free plan.
 
-- New helper `src/lib/ai-usage.ts`:
-  - `consumeDailyAI(feature)` → calls `consume_ai_quota` RPC, returns `{allowed, used, max, bypass}`.
-  - `getDailyUsage(userId)` → reads `ai_daily_usage` for today across all features, returns `{totalUsed, totalMax, perFeature[]}`.
-- Update `AIAutofillButton.tsx` `ByokDialog` flow:
-  - On "Use my free fill" → call `consumeDailyAI('doc_autofill')` instead of localStorage `bumpUsage`.
-  - If `allowed === false` → open new `<CreditsExhaustedDialog />` instead of running.
-- Keep `tool-limits.ts` as a thin localStorage fallback only for guests (no userId).
+### 5. Touch-points & verification
+- Update `mem/features/free-tools-funnel.md` if it exists with the new mirage-shell rule.
+- Build check: ensure `ToolDashboardShell` doesn't break existing `AppShell` route exclusion list (`src/components/app-shell-routes.ts`).
+- Quick visual smoke: open `/tools/content-calendar` signed-out → see shell + AI prompt + locked templates + share promo on export.
 
----
+### Technical notes
+- Reuse existing `useAuth`, `SignupCTADialog`, `useToolGate`, `printWithMeta`, `watermarkModeForTier`.
+- No DB migration needed; quota piggybacks on `consume_ai_quota`.
+- Keep all colors via tokens (`text-slate-*` already used across tools — fine, matches Stripe/Linear minimal direction).
+- New edge-function task is a simple addition to the `TASKS` map; no config change.
 
-## 2. Dashboard "Daily AI Usage" widget
-
-New `src/components/dashboard/DailyUsageWidget.tsx`:
-- Card on `/dashboard` showing: `Used X / Y today` with progress bar, per-tool breakdown chips (autofill, proposal, etc.), reset-time hint ("Resets at 00:00 UTC").
-- Pulls from `ai_daily_usage` for `auth.uid()` + today.
-- Realtime: subscribe to `ai_daily_usage` filtered on `user_id=eq.{uid}` so the bar updates live after each AI use.
-- Mounted in `src/pages/Dashboard.tsx` near the top.
-
----
-
-## 3. CreditsExhaustedDialog (the friendly upsell)
-
-New `src/components/tools/CreditsExhaustedDialog.tsx`:
-- Title: "You've used today's free AI assists"
-- Body: friendly copy, "Don't worry — pick what fits."
-- 3 actions:
-  1. **Add your own AI key (unlimited)** → `/workspaces/ai-settings`
-  2. **Buy credits — from ₹10** → `/payments?intent=ai_credits&amount=10` (auto-saves current draft state to `localStorage` keyed by route so user doesn't lose work)
-  3. **Maybe later** (close)
-- Triggered automatically by `AIAutofillButton` when RPC returns `allowed=false`, and reusable from any tool.
-
----
-
-## 4. Admin: per-user usage view + targeted messaging
-
-Extend `src/components/admin/UsageAnalyticsManager.tsx` (already lists users by `ai_calls_30d`):
-
-- New view: `admin_daily_usage_summary` (DB view) → per user today: `tier, ai_used_today, ai_max_today, exhausted (bool), last_use_at, has_byo_key`.
-- Tabs in the admin component:
-  - **All users** (existing 30d table)
-  - **Exhausted today** ← filter `exhausted = true AND last_use_at >= today` AND now() before midnight UTC (auto). Sortable by `last_use_at`.
-  - **Heavy users** (top 30d ai calls)
-- Row actions per user: **View details** (drawer with usage timeline + tier + BYOK status) and **Send notification** (opens `SendUserNotificationDialog`).
-
-### SendUserNotificationDialog
-- Fields: `title`, `message`, `type` (info/offer/alert), `link` (optional CTA), `expires_at` (optional).
-- "AI draft" button → calls `workspace-ai` edge function with a prompt like "Write a friendly nudge for a {tier} user who finished their daily AI credits at {time}. Suggest BYOK or ₹10 credits. ≤2 sentences." → fills the textarea.
-- Submit inserts into existing `workspace_notifications` table with `user_id` set to that user. (Already shown via `NotificationCenter.tsx` bell with realtime + unread badge — perfect.)
-
-### Bulk action
-- Select multiple users from "Exhausted today" tab → "Send to selected" → inserts one notification per user. Toast feedback.
-
----
-
-## 5. User-side notification surfacing (already mostly built — polish)
-
-`NotificationCenter.tsx` already does bell + realtime + unread count. Two small improvements:
-- On new notification INSERT (realtime), pop a `toast()` (sonner) with title + "View" action linking to `link || /dashboard`.
-- Make sure it's mounted in the AppShell topbar (verify; add if missing).
-
----
-
-## 6. Database migration
-
-```sql
--- DB view for admin
-create or replace view public.admin_daily_usage_summary as
-select
-  p.user_id,
-  p.email,
-  p.subscription_tier,
-  coalesce(sum(u.count) filter (where u.usage_date = (now() at time zone 'utc')::date), 0)::int as ai_used_today,
-  case p.subscription_tier
-    when 'pro' then 5 when 'elite' then 10 when 'infinity' then 20 else 3 end as ai_max_today,
-  max(u.updated_at) filter (where u.usage_date = (now() at time zone 'utc')::date) as last_use_at,
-  exists(select 1 from public.user_ai_keys k where k.user_id = p.user_id and k.is_active) as has_byo_key
-from public.profiles p
-left join public.ai_daily_usage u on u.user_id = p.user_id
-group by p.user_id, p.email, p.subscription_tier;
-
--- RLS: admins only (view inherits underlying RLS; add explicit policy via security definer wrapper or grant)
-```
-
-Plus a helper RPC `is_ai_exhausted_today(uid)` if needed (computed in view already, optional).
-
-No new tables — reuses `workspace_notifications`, `ai_daily_usage`, `user_ai_keys`, `profiles`.
-
----
-
-## 7. Files touched
-
-**New**
-- `src/lib/ai-usage.ts`
-- `src/components/dashboard/DailyUsageWidget.tsx`
-- `src/components/tools/CreditsExhaustedDialog.tsx`
-- `src/components/admin/SendUserNotificationDialog.tsx`
-
-**Edited**
-- `src/components/tools/AIAutofillButton.tsx` — RPC-based quota + open exhausted dialog
-- `src/components/admin/UsageAnalyticsManager.tsx` — tabs, exhausted filter, row actions
-- `src/pages/Dashboard.tsx` — mount widget
-- `src/components/workspace-os/NotificationCenter.tsx` — sonner toast on realtime insert
-- `src/pages/Payment.tsx` — accept `?intent=ai_credits&amount=10` preset (small)
-
-**Migration**: 1 file creating the view.
-
----
-
-## Out of scope (call out, do not build)
-- Actual ₹10 Cashfree SKU wiring beyond passing intent params (existing wallet/payment plumbing handles the rest; flag if missing on test).
-- Refactoring the older localStorage-based limits in non-doc tools (separate pass).
+Files to add: `ToolDashboardShell.tsx`, `TemplatePicker.tsx`, `SharedLinkPromo.tsx`, `template-packs.ts`.
+Files to edit: `ContentCalendar.tsx`, `workspace-doc-ai/index.ts`, `ToolPageLayout.tsx`, the 8 tool pages (shell wrap + template picker), print helpers in Invoice/Proposal/Contract/Card.
