@@ -2,6 +2,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { logEvent } from "@/integrations/analytics/client";
 import { Navbar } from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -77,6 +78,11 @@ export default function PaymentStatus() {
         setCurrentStage(3);
         setShowConfetti(true);
         refreshProfile();
+        logEvent("payment", data.is_wallet ? "wallet_topup_success" : "subscription_activated", {
+          plan: data.plan,
+          order_id: orderId,
+          credits: data.credits ?? data.wallet_credits ?? null,
+        });
 
         // Webhook-confirmed celebration UX
         const tierKey = (data.is_wallet ? "wallet" : (data.plan || "pro").toLowerCase().replace(/_yearly$/, "")) as any;
@@ -97,10 +103,12 @@ export default function PaymentStatus() {
         setTimeout(() => setShowConfetti(false), 5000);
       } else {
         setFailed(true);
+        logEvent("payment", "verify_unpaid", { order_id: orderId });
       }
     } catch (err: any) {
       setFailed(true);
       toast({ title: "Verification Failed", description: err.message, variant: "destructive" });
+      logEvent("payment", "verify_error", { order_id: orderId, message: err?.message });
     } finally {
       setVerifying(false);
     }
