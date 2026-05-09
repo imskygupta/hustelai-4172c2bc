@@ -23,7 +23,7 @@ const initial: Check[] = [
   { id: "db-community", label: "Community DB (Forum / Discord)", group: "Database", ref: "qeswhaytgvosfzzgraef", status: "idle" },
   { id: "fn-ai-chatbot", label: "ai-chatbot (LOVABLE_API_KEY)", group: "Edge Function", status: "idle" },
   { id: "fn-work-api", label: "work-api (writes to Workspace DB)", group: "Edge Function", status: "idle" },
-  { id: "fn-cashfree", label: "cashfree-payment (CASHFREE keys)", group: "Edge Function", status: "idle" },
+  { id: "fn-dodo-checkout", label: "dodo-checkout (Dodo Payments)", group: "Edge Function", status: "idle" },
   { id: "fn-send-email", label: "send-email (RESEND_API_KEY)", group: "Edge Function", status: "idle" },
 ];
 
@@ -71,7 +71,7 @@ export function SystemHealth() {
       pingCommunity().then(r => update("db-community", { status: r.ok ? "ok" : "fail", ms: r.ms, detail: r.detail })),
       pingFn("ai-chatbot", { messages: [{ role: "user", content: "ping" }] }).then(r => update("fn-ai-chatbot", { status: r.ok ? "ok" : "fail", ms: r.ms, detail: r.detail })),
       pingFn("work-api", { kind: "__ping" }).then(r => update("fn-work-api", { status: r.ok ? "ok" : "fail", ms: r.ms, detail: r.detail })),
-      pingFn("cashfree-payment", { ping: true }).then(r => update("fn-cashfree", { status: r.ok ? "ok" : "fail", ms: r.ms, detail: r.detail })),
+      pingFn("dodo-checkout", { ping: true }).then(r => update("fn-dodo-checkout", { status: r.ok ? "ok" : "fail", ms: r.ms, detail: r.detail })),
       pingFn("send-email", { ping: true }).then(r => update("fn-send-email", { status: r.ok ? "ok" : "fail", ms: r.ms, detail: r.detail })),
     ];
     await Promise.allSettled(tasks);
@@ -135,9 +135,9 @@ export function SystemHealth() {
       <div className="glass rounded-xl p-4 text-xs text-muted-foreground space-y-1 border-primary/10">
         <div className="flex items-center gap-2 font-semibold text-foreground"><CreditCard className="w-3.5 h-3.5" /> After transfer checklist</div>
         <div>1. Repoint Vercel → Settings → Git → Disconnect → Connect new repo → branch <code>main</code>.</div>
-        <div>2. Verify all secrets in Connectors (LOVABLE_API_KEY, SMTP, Cashfree, Resend, Discord, Inngest).</div>
+        <div>2. Verify all secrets in Connectors (LOVABLE_API_KEY, SMTP, Dodo, Resend, Discord, Inngest).</div>
         <div>3. Run all checks above — every row should be green.</div>
-        <div>4. Test ₹1 payment via <code>/plans</code> to confirm Cashfree end-to-end.</div>
+        <div>4. Test ₹1 payment via <code>/plans</code> to confirm Dodo end-to-end.</div>
       </div>
     </div>
   );

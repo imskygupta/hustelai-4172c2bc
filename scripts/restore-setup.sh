@@ -64,7 +64,8 @@ HustleAI restore checklist  (read top → bottom)
      - SMTP_SUPPORT_EMAIL  / SMTP_SUPPORT_PASSWORD
      - SMTP_CONTACT_EMAIL  / SMTP_CONTACT_PASSWORD
      - SMTP_SKYCART_EMAIL  / SMTP_SKYCART_PASSWORD
-     - CASHFREE_APP_ID     / CASHFREE_SECRET_KEY
+     - DODO_API_KEY        / DODO_WEBHOOK_SECRET / DODO_MODE
+     - (legacy, optional)  CASHFREE_APP_ID / CASHFREE_SECRET_KEY
      - ADZUNA_APP_ID       / ADZUNA_API_KEY
      - LONGCAT_API_KEY     / ZHIPU_API_KEY
      - DISCORD_BOT_TOKEN   / DISCORD_CLIENT_SECRET / DISCORD_GUILD_ID
@@ -79,7 +80,7 @@ HustleAI restore checklist  (read top → bottom)
    • /work                          → KPI card loads (DB #2 reachable)
    • /community                     → forum loads     (DB #3 reachable)
    • /hustlebot                     → AI replies      (LOVABLE_API_KEY wired)
-   • ₹1 test on /plans              → Cashfree end-to-end
+   • ₹1 test on /plans              → Dodo Payments end-to-end
 ==========================================================
 NOTE
 

@@ -66,27 +66,14 @@ export default function MarketplaceItem() {
 
     setPurchasing(true);
     try {
-      const { data, error } = await supabase.functions.invoke("cashfree-payment", {
-        body: {
-          action: "create_order",
-          plan: "marketplace",
-          user_id: user.id,
-          user_email: profile?.email,
-          user_name: profile?.display_name,
-        },
+      const { data, error } = await supabase.functions.invoke("dodo-checkout", {
+        body: { internal_key: "marketplace_" + item.id },
       });
       if (error) throw error;
-
-      const script = document.createElement("script");
-      script.src = "https://sdk.cashfree.com/js/v3/cashfree.js";
-      script.onload = () => {
-        const cashfree = (window as any).Cashfree({ mode: "production" });
-        cashfree.checkout({
-          paymentSessionId: data.payment_session_id,
-          redirectTarget: "_self",
-        });
-      };
-      document.body.appendChild(script);
+      if (data?.error) throw new Error(data.error);
+      if (!data?.checkout_url) throw new Error("No checkout URL returned");
+      const popup = window.open(data.checkout_url, "dodo_checkout", "width=480,height=720");
+      if (!popup) window.location.href = data.checkout_url;
     } catch (err: any) {
       toast({ title: "Payment Failed", description: err.message, variant: "destructive" });
       setPurchasing(false);

@@ -17,7 +17,7 @@ interface InvoicePayload {
   user_name?: string;
   amount: number;
   currency?: string;
-  payment_method: string; // "Cashfree" | "UPI Manual"
+  payment_method: string; // "Dodo Payments" | "UPI Manual"
   payment_reference?: string;
   item_type?: string; // "plan" | "wallet"
   item_label: string;

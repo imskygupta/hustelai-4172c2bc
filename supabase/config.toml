@@ -10,6 +10,10 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.cashfree-payment]
+# LEGACY (gated by ENABLE_CASHFREE_LEGACY=true) — replaced by Dodo Payments
+verify_jwt = false
+
+[functions.dodo-verify]
 verify_jwt = false
 
 [functions.hustle-roadmap]
