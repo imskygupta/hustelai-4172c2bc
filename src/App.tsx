@@ -31,6 +31,7 @@ import SecuritySettings from "./pages/settings/Security";
 import WorkspaceSettings from "./pages/settings/Workspace";
 import BillingSettings from "./pages/settings/Billing";
 import ApiKeysSettings from "./pages/settings/ApiKeys";
+import TelegramSettings from "./pages/settings/Telegram";
 import Download from "./pages/Download";
 import AdminBlock from "./pages/AdminBlock";
 import Community from "./pages/Community";
@@ -272,6 +273,7 @@ const App = () => (
               <Route path="security" element={<SecuritySettings />} />
               <Route path="notifications" element={<NotificationPreferences />} />
               <Route path="integrations" element={<Integrations />} />
+              <Route path="telegram" element={<TelegramSettings />} />
               <Route path="exports" element={<Exports />} />
               <Route path="workspace" element={<WorkspaceSettings />} />
               <Route path="billing" element={<BillingSettings />} />
