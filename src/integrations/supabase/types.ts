@@ -1614,62 +1614,92 @@ export type Database = {
         Row: {
           created_at: string
           delivered_at: string | null
+          delivery_method: string
+          download_count: number
+          download_limit: number | null
           expires_at: string | null
           export_type: string
           id: string
+          is_favorite: boolean
+          last_accessed_at: string | null
           metadata: Json
           mime_type: string
           size_bytes: number
           status: Database["public"]["Enums"]["export_status"]
           storage_bucket: string
           storage_path: string | null
+          tags: string[]
           telegram_chat_id: string | null
+          telegram_file_id: string | null
           telegram_message_id: string | null
+          telegram_storage_channel_id: string | null
+          telegram_storage_message_id: string | null
           tier_at_creation: string
           title: string
           updated_at: string
           user_id: string
           visibility: Database["public"]["Enums"]["export_visibility"]
+          watermarked: boolean
         }
         Insert: {
           created_at?: string
           delivered_at?: string | null
+          delivery_method?: string
+          download_count?: number
+          download_limit?: number | null
           expires_at?: string | null
           export_type: string
           id?: string
+          is_favorite?: boolean
+          last_accessed_at?: string | null
           metadata?: Json
           mime_type?: string
           size_bytes?: number
           status?: Database["public"]["Enums"]["export_status"]
           storage_bucket?: string
           storage_path?: string | null
+          tags?: string[]
           telegram_chat_id?: string | null
+          telegram_file_id?: string | null
           telegram_message_id?: string | null
+          telegram_storage_channel_id?: string | null
+          telegram_storage_message_id?: string | null
           tier_at_creation?: string
           title: string
           updated_at?: string
           user_id: string
           visibility?: Database["public"]["Enums"]["export_visibility"]
+          watermarked?: boolean
         }
         Update: {
           created_at?: string
           delivered_at?: string | null
+          delivery_method?: string
+          download_count?: number
+          download_limit?: number | null
           expires_at?: string | null
           export_type?: string
           id?: string
+          is_favorite?: boolean
+          last_accessed_at?: string | null
           metadata?: Json
           mime_type?: string
           size_bytes?: number
           status?: Database["public"]["Enums"]["export_status"]
           storage_bucket?: string
           storage_path?: string | null
+          tags?: string[]
           telegram_chat_id?: string | null
+          telegram_file_id?: string | null
           telegram_message_id?: string | null
+          telegram_storage_channel_id?: string | null
+          telegram_storage_message_id?: string | null
           tier_at_creation?: string
           title?: string
           updated_at?: string
           user_id?: string
           visibility?: Database["public"]["Enums"]["export_visibility"]
+          watermarked?: boolean
         }
         Relationships: []
       }
@@ -2851,6 +2881,7 @@ export type Database = {
           onboarding: Json | null
           onboarding_completed: boolean
           phone: string | null
+          phone_number: string | null
           portfolio_links: Json | null
           referral_code: string | null
           referral_credits: number
@@ -2884,6 +2915,7 @@ export type Database = {
           onboarding?: Json | null
           onboarding_completed?: boolean
           phone?: string | null
+          phone_number?: string | null
           portfolio_links?: Json | null
           referral_code?: string | null
           referral_credits?: number
@@ -2917,6 +2949,7 @@ export type Database = {
           onboarding?: Json | null
           onboarding_completed?: boolean
           phone?: string | null
+          phone_number?: string | null
           portfolio_links?: Json | null
           referral_code?: string | null
           referral_credits?: number
@@ -4767,6 +4800,10 @@ export type Database = {
     Functions: {
       consume_ai_quota: {
         Args: { _feature: string; _user_id: string }
+        Returns: Json
+      }
+      consume_export_download: {
+        Args: { _export_id: string; _user_id: string }
         Returns: Json
       }
       consume_export_quota: { Args: { _user_id: string }; Returns: Json }
