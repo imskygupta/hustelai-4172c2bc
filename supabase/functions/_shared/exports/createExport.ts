@@ -16,7 +16,7 @@ export interface CreateExportInput {
   deliver_to_telegram?: boolean;
 }
 
-const FREE_TTL_HOURS = 24;
+const FREE_TTL_HOURS = 24 * 7; // 7 days for free tier (Telegram-cached delivery)
 const PERSISTENT_TIERS = new Set(["pro", "elite", "infinity"]);
 
 export async function createExport(input: CreateExportInput) {
