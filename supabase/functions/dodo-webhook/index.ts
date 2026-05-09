@@ -257,6 +257,38 @@ serve(async (req) => {
               bypass_prefs: true,
             },
           });
+
+          // New unified mailer (Brevo→MailerSend) with editable templates
+          const tier = (metadata.internal_key || "").replace(/_yearly$/, "").toUpperCase();
+          const TIER_PERKS: Record<string, string> = {
+            PRO: "<li>5x AI runs per day</li><li>Unlimited saved hustles</li><li>Priority support</li>",
+            ELITE: "<li>10x AI runs</li><li>Elite Vault (paid software licenses)</li><li>Priority lead alerts</li>",
+            INFINITY: "<li>Unlimited AI everything</li><li>Infinity hub + exclusive courses</li><li>White-glove support</li>",
+          };
+          fireAndForget(supabase.functions.invoke("mailer-send", {
+            body: {
+              to: prof.email,
+              template: isSubscription ? "upgrade-success" : "receipt",
+              data: {
+                name: prof.display_name || "there",
+                tier,
+                perks_html: TIER_PERKS[tier] || TIER_PERKS.PRO,
+                amount: amountInr,
+                plan_label: itemLabel,
+                invoice_number: data.payment_id || eventId,
+              },
+            },
+          }));
+        })());
+      }
+
+      // Mark checkout_session as completed (stops abandoned-cart recovery)
+      if (userId) {
+        fireAndForget((async () => {
+          await supabase.from("checkout_sessions")
+            .update({ status: "completed", completed_at: new Date().toISOString() } as any)
+            .eq("user_id", userId)
+            .eq("status", "opened");
         })());
       }
     }
