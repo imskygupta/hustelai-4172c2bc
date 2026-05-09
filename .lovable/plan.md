@@ -1,41 +1,76 @@
-## Plan: Calendar AI prompt + dashboard-style tool shell + tier templates + shared-link promo
+# Dodo standardization + Core SaaS Infra Rollout
 
-### 1. AI prompt block on Content Calendar (parity with Pricing/Intake)
-- Add `AiCalendarPrompt` section at top of `ContentCalendar.tsx`: textarea ("Tell us about your business / niche / audience"), generate button.
-- Free → opens `SignupCTADialog`. Signed-in → calls `workspace-doc-ai` with new task `tool_content_calendar` returning `{ niche, audience, brand, ideas: [{week, day, pillar, idea}] }` (20 items). Result hydrates the calendar.
-- Add `tool_content_calendar` task to `supabase/functions/workspace-doc-ai/index.ts`. Quota: same `consume_ai_quota` flow. Quota error → toast with Upgrade.
-- Lock icon for free, Sparkles for signed-in. Same styling language as Pricing prompt (gradient card, slate text).
+This is a large, multi-phase effort. Shipping it as one mega-PR is risky. I'm proposing a phased plan so each phase is testable, reversible, and goes live cleanly.
 
-### 2. "Dashboard mirage" shell on free tool pages
-Goal: every `/tools/*` page feels like it's already inside the signed-in dashboard, so when a guest signs up the experience is continuous.
-- New `src/components/tools/ToolDashboardShell.tsx`: faux sidebar (left, sticky, narrow) listing the 8 tools with active state + "More inside" disabled rows (Workspaces, HustleBot, Roadmaps, Knowledge Hub, Lead Pipeline) all linking to signup. Faux top bar with HustleAI logo, "Free workspace" pill, search affordance, and "Sign in / Get started" CTA.
-- Wrap `ToolPageLayout` content in this shell when `toolKey` is set and user is signed-out. Signed-in users keep the existing AppShell.
-- Add subtle "You're using the free preview — sign up to save & sync" ribbon top of canvas.
-- Keep current SEO/FAQ/RelatedRail blocks below the shell so SEO is unchanged.
+## Phase 0 — Cashfree → Dodo cutover (today, ship first)
 
-### 3. Tier-gated template library (Elite / Infinity unlocks)
-- New `src/lib/tools/template-packs.ts`: per-tool template arrays tagged `free | pro | elite | infinity`.
-  - Invoice: Modern, Classic (free) · Minimal Studio, Agency Bold (pro) · Boutique Luxe, Stripe-clean, Investor-grade (elite) · Animated header, Multi-currency hero, Whitelabel ultra (infinity).
-  - Proposal: 2 free → +3 pro → +3 elite → +3 infinity.
-  - Contract, Pricing, Portfolio, Intake, Card, Calendar: 2 free baseline + tiered unlocks.
-- New `<TemplatePicker tool="invoice" />` rendering a horizontal scroll strip with locked cards (lock icon + tier badge). Click locked → toast "Unlock 12+ templates with Elite" with Upgrade CTA. Plug into the 3 doc tools first; same component reused on the other tools.
-- Marketing copy on `/tools` hub: "8 free templates. Unlock 40+ inside Elite & Infinity."
+**Production removal**
+- Pull Cashfree CTAs/components off `Pricing`, `Upgrade`, `Wallet`, `Billing`, `Payment`, `PaymentStatus` pages.
+- Remove Cashfree status polling and subscription/invoice sync from active flows.
+- Repoint wallet credit verification to the Dodo webhook (already webhook-confirmed via `dodo-webhook`).
+- Strip Cashfree env vars from runtime usage (keep secrets in vault until Phase 0 verified live).
 
-### 4. Shared-link footer promo + watermark on free outputs
-- New `src/components/tools/SharedLinkPromo.tsx`: rendered at bottom of any public-shared output (intake form public view, exported HTML preview, printable PDF footer). Shows: HustleAI logo, "Made with HustleAI · 8 free freelancer tools", icon row (Invoice, Proposal, Contract, Pricing, Portfolio, Calendar, Card, Intake) each linking back to `https://hustlaiapp.in/tools/<slug>?ref=share`, plus "Try free →" pill.
-- Watermark: extend existing `watermarkModeForTier` usage. For free tier, every print/PDF gets a diagonal "HustleAI · hustlaiapp.in" watermark; pro = small datetime footer; elite/infinity = none. Apply to Invoice, Proposal, Contract, Pricing, Portfolio, Card print paths.
-- Public intake form submission page (`/intake/...`) shows the `SharedLinkPromo` strip when the form was created on a free plan.
+**Archival (not deletion)**
+- Move Cashfree code to `src/legacy/cashfree/` and `supabase/functions/_legacy/cashfree-*`.
+- Wrap any compatibility shim behind `ENABLE_CASHFREE_LEGACY` (default `false`).
+- Mark `cashfree_*` DB tables as legacy via comment + `is_legacy` flag — do NOT drop (historical invoices).
 
-### 5. Touch-points & verification
-- Update `mem/features/free-tools-funnel.md` if it exists with the new mirage-shell rule.
-- Build check: ensure `ToolDashboardShell` doesn't break existing `AppShell` route exclusion list (`src/components/app-shell-routes.ts`).
-- Quick visual smoke: open `/tools/content-calendar` signed-out → see shell + AI prompt + locked templates + share promo on export.
+**Audit & verify**
+- Grep for `cashfree-payment.verify_payment` and any `supabase.functions.invoke('cashfree-…')` — replace or remove.
+- Confirm no entitlement-granting path reads from Cashfree tables.
+- Remove duplicate billing cron jobs (keep only Dodo-driven ones + abandoned-checkout-recovery).
 
-### Technical notes
-- Reuse existing `useAuth`, `SignupCTADialog`, `useToolGate`, `printWithMeta`, `watermarkModeForTier`.
-- No DB migration needed; quota piggybacks on `consume_ai_quota`.
-- Keep all colors via tokens (`text-slate-*` already used across tools — fine, matches Stripe/Linear minimal direction).
-- New edge-function task is a simple addition to the `TASKS` map; no config change.
+## Phase 1 — Billing State Machine (this week, after Phase 0 lives)
 
-Files to add: `ToolDashboardShell.tsx`, `TemplatePicker.tsx`, `SharedLinkPromo.tsx`, `template-packs.ts`.
-Files to edit: `ContentCalendar.tsx`, `workspace-doc-ai/index.ts`, `ToolPageLayout.tsx`, the 8 tool pages (shell wrap + template picker), print helpers in Invoice/Proposal/Contract/Card.
+New table `subscription_states` with status enum:
+`trialing | active | grace_period | on_hold | cancelled | expired | refunded`
+
+- `entitlement_map` view → resolves tier+status → feature flags
+- Downgrade timing: cancellations stay `active` until `current_period_end`, then → `expired`
+- Grace period: failed renewal → `grace_period` for 3 days, then `on_hold` (read-only), then `expired`
+- UI: status badges on Billing page; feature gates check `entitlement_map` not raw `subscription_tier`
+
+## Phase 2 — Central Event Bus
+
+`automation_events` table: `id, event_type, actor_user_id, payload jsonb, status, attempts, created_at, processed_at, error`
+
+Emitters: Dodo webhook, signup, credit grant, affiliate reward, email send, Discord sync.
+Consumers: retry worker (cron), analytics aggregator, debugger panel in admin.
+
+## Phase 3 — Usage Metering
+
+`usage_events` (raw) + `usage_rollups_daily` (aggregate) per `user_id` × `metric` (ai_run, tokens, export, storage_mb, automation_run, api_call).
+`quota_engine` RPC replaces scattered `consume_*_quota` functions.
+
+## Phase 4 — Feature Flags expansion
+
+Extend existing `feature_flags` with: `rollout_percent`, `allowed_user_ids[]`, `allowed_tiers[]`, `experiment_key`. Admin panel UI for toggling.
+
+## Phase 5 — Internal AI Ops Dashboard
+
+Admin route `/admin/ops` with: top features, failed emails (last 24h), payment failures, churn risk (no login 14d + paying), inactive users, upgrade funnel (visited /pricing → checkout → success).
+
+## Phase 6 — AI Content Automation Engine
+
+Cron-driven orchestrator that uses `email_templates` + Lovable AI to draft newsletters, re-engagement, launch announcements, creator digests. Admin approval queue before send.
+
+## Phase 7 — Status + Incident system
+
+`status.hustlaiapp.in` (or `/status` route initially): provider health (Dodo, Brevo, MailerSend, Lovable AI, Discord), webhook health, cron health, incidents log. `provider_health_checks` table fed by 5-min cron.
+
+## Phase 8 — Audit Logs
+
+`audit_logs` table: `actor_user_id, action, target_type, target_id, before jsonb, after jsonb, ip, user_agent, created_at`.
+Hook into: admin actions, plan changes, coupon creation, credit grants, provider toggles, template edits, feature flag changes.
+
+## Recommendation
+
+**Approve Phase 0 to ship today** (matches your "live today" goal). Phases 1–8 are each 1–2 day chunks; I'll ship them in order, asking for approval between phases so each one is reviewable and won't snowball into one giant unreviewable change.
+
+## Questions before I start Phase 0
+
+1. **Cashfree historical data**: keep `cashfree_*` tables visible in admin Billing (read-only "Legacy" tab) or hide entirely?
+2. **ENABLE_CASHFREE_LEGACY**: build secret default `false` — confirm OK to hardcode `false` for now (no toggle UI yet)?
+3. **Wallet purchases in flight**: any active Cashfree wallet orders right now we need to honor, or safe to hard-cut?
+
+Once you answer those, I'll execute Phase 0 immediately.
