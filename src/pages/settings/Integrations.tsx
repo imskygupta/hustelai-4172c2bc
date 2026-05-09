@@ -246,6 +246,18 @@ export default function Integrations() {
         {/* Preferences */}
         {tgIntegration && (
           <section>
+            <h2 className="text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-3">Automation preset</h2>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2 mb-6">
+              {PRESETS.map(p => (
+                <button key={p.id} onClick={() => applyPreset(p.id)}
+                  className={`text-left rounded-xl border p-3 transition ${
+                    preset === p.id ? "border-emerald-500/40 bg-emerald-500/[0.05]" : "border-white/[0.08] bg-white/[0.02] hover:bg-white/[0.04]"
+                  }`}>
+                  <div className="text-sm font-medium text-zinc-100">{p.label}</div>
+                  <p className="text-[11px] text-zinc-500 mt-0.5">{p.desc}</p>
+                </button>
+              ))}
+            </div>
             <h2 className="text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-3">Event preferences</h2>
             <div className="rounded-xl border border-white/[0.08] divide-y divide-white/[0.05] bg-white/[0.015]">
               {EVENT_CATEGORIES.map(ev => {
