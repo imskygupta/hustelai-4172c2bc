@@ -51,6 +51,28 @@ serve(async (req) => {
     let { internal_key, coupon_code, billing_interval } = body || {};
     if (!internal_key) throw new Error("internal_key required");
 
+    // ===== Admin payment lock checks (fail fast, before any Dodo call) =====
+    const { data: lockRows } = await supabase
+      .from("api_runtime_config")
+      .select("key, value")
+      .in("key", [
+        "payments_locked",
+        "subscription_checkout_locked",
+        "wallet_topup_locked",
+        "payment_maintenance_message",
+      ]);
+    const locks: Record<string, any> = {};
+    for (const r of lockRows || []) locks[(r as any).key] = (r as any).value;
+    const maintenanceMsg = typeof locks.payment_maintenance_message === "string"
+      ? locks.payment_maintenance_message
+      : "";
+    if (locks.payments_locked === true) {
+      return new Response(JSON.stringify({
+        error: maintenanceMsg || "Payments are temporarily disabled. Please try again shortly.",
+        locked: true, lock_scope: "global",
+      }), { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
     // If user picks yearly, auto-resolve to *_yearly variant
     if (billing_interval === "year" && !internal_key.endsWith("_yearly")) {
       const yearlyKey = `${internal_key}_yearly`;
@@ -64,6 +86,20 @@ serve(async (req) => {
       .select("*").eq("mode", DODO_MODE).eq("internal_key", internal_key)
       .eq("is_active", true).maybeSingle();
     if (pErr || !product) throw new Error(`Product '${internal_key}' not found in ${DODO_MODE} mode. Run bootstrap first.`);
+
+    // Scope-specific lock checks (post product lookup so we know kind)
+    if (product.kind === "subscription" && locks.subscription_checkout_locked === true) {
+      return new Response(JSON.stringify({
+        error: maintenanceMsg || "Subscription checkout is paused. Please try again shortly.",
+        locked: true, lock_scope: "subscription",
+      }), { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    if (product.kind === "one_time" && locks.wallet_topup_locked === true) {
+      return new Response(JSON.stringify({
+        error: maintenanceMsg || "Wallet top-ups are paused. Please try again shortly.",
+        locked: true, lock_scope: "wallet",
+      }), { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
 
     // Validate coupon (server-side authoritative)
     let coupon: any = null;
