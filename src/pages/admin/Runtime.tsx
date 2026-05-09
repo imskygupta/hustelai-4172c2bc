@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Activity, Power, RefreshCw, ShieldAlert, ShieldCheck, Lock, History } from "lucide-react";
+import { Activity, Power, RefreshCw, ShieldAlert, ShieldCheck, Lock, History, CreditCard, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
@@ -124,6 +124,24 @@ export default function AdminRuntime() {
   const toggleReadOnly = () => persist("readonly_mode", !server.readonly_mode);
   const toggleMaintenance = () => persist("maintenance_mode", !server.maintenance_mode);
 
+  const persistString = async (key: string, next: string) => {
+    setBusy(key);
+    try {
+      const { error: upErr } = await (supabase as any)
+        .from("api_runtime_config")
+        .upsert({ key, value: next, updated_by: user?.id }, { onConflict: "key" });
+      if (upErr) throw upErr;
+      const nextServer = { ...server, [key]: next };
+      setServer(nextServer);
+      setServerConfigInMemory(nextServer);
+      toast({ title: `${key} updated` });
+    } catch (e: any) {
+      toast({ title: "Update failed", description: e?.message ?? String(e), variant: "destructive" });
+    } finally {
+      setBusy(null);
+    }
+  };
+
   const toggleLocal = (k: string) => {
     const next = new Set(active);
     next.has(k) ? next.delete(k) : next.add(k);
@@ -225,6 +243,55 @@ export default function AdminRuntime() {
             <Stat label="Hostname" value={snap.hostname || "—"} />
             <Stat label="Build" value={snap.buildVersion} />
             <Stat label="Server config" value={snap.serverConfigLoaded ? "Loaded" : "Defaults"} />
+          </div>
+        </section>
+
+        {/* Payment Controls */}
+        <section>
+          <h2 className="text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-3">Payment Controls</h2>
+          <div className="rounded-xl border border-white/[0.08] divide-y divide-white/[0.05] bg-white/[0.015]">
+            {[
+              { key: "payments_locked", label: "Global payment lock", icon: Lock, desc: "Blocks ALL new payments (subscriptions + wallet). Existing subs unaffected." },
+              { key: "subscription_checkout_locked", label: "Subscription checkout lock", icon: CreditCard, desc: "Blocks new subscription checkouts only." },
+              { key: "wallet_topup_locked", label: "Wallet top-up lock", icon: Wallet, desc: "Blocks wallet credit purchases only." },
+            ].map(({ key, label, icon: Icon, desc }) => {
+              const on = server[key] === true;
+              return (
+                <div key={key} className="flex items-center justify-between px-4 py-3 text-sm">
+                  <div className="flex items-start gap-3">
+                    <Icon className={`h-4 w-4 mt-0.5 ${on ? "text-red-400" : "text-zinc-500"}`} />
+                    <div>
+                      <div className="text-zinc-200">{label}</div>
+                      <p className="text-[11px] text-zinc-500 mt-0.5">{desc}</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => persist(key, !on)}
+                    disabled={busy === key}
+                    className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-xs font-medium ring-1 transition ${
+                      on
+                        ? "bg-red-500/10 ring-red-500/40 text-red-300"
+                        : "bg-white/[0.03] ring-white/10 text-zinc-400 hover:text-zinc-200"
+                    }`}
+                  >
+                    <Power className="h-3.5 w-3.5" /> {on ? "Locked" : "Unlocked"}
+                  </button>
+                </div>
+              );
+            })}
+            <div className="px-4 py-3">
+              <label className="text-[11px] uppercase tracking-wider text-zinc-500">Maintenance message (shown to users)</label>
+              <textarea
+                defaultValue={typeof server.payment_maintenance_message === "string" ? server.payment_maintenance_message : ""}
+                onBlur={(e) => {
+                  const v = e.target.value;
+                  if (v !== (server.payment_maintenance_message || "")) persistString("payment_maintenance_message", v);
+                }}
+                rows={2}
+                placeholder="e.g. Payment provider is performing scheduled maintenance. Please retry after 6 PM IST."
+                className="mt-2 w-full rounded-md bg-black/30 border border-white/10 px-3 py-2 text-sm text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-emerald-500/40"
+              />
+            </div>
           </div>
         </section>
 

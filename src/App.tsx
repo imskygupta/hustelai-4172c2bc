@@ -249,6 +249,10 @@ const App = () => (
             <Route path="/admin-dashboard" element={<AdminDashboard />} />
             <Route path="/admin/communications" element={<AdminCommunications />} />
             <Route path="/settings/notifications" element={Shelled(<NotificationPreferences />)} />
+            <Route path="/settings" element={<Navigate to="/profile?tab=general" replace />} />
+            <Route path="/settings/billing" element={<Navigate to="/profile?tab=billing" replace />} />
+            <Route path="/settings/account" element={<Navigate to="/profile?tab=account" replace />} />
+            <Route path="/settings/security" element={<Navigate to="/profile?tab=security" replace />} />
             <Route path="/problem-leads" element={Shelled(<ProblemLeads />)} />
             <Route path="/proposal-draft" element={Shelled(<ProposalDraft />)} />
             <Route path="/skill-gap" element={Shelled(<SkillGap />)} />
