@@ -66,6 +66,7 @@ END:VCARD`;
       subtitle="Quick standalone card — no AI input needed. Pick a theme, fill 6 fields, share as vCard."
       icon={IdCard}
       path="/tools/business-card"
+      toolKey="business-card"
       accent="from-fuchsia-500 to-pink-600"
       back={{ href: "/tools", label: "All tools" }}
       faqs={faqs}
