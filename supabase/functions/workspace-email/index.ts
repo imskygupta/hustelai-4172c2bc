@@ -138,8 +138,14 @@ function render(template: Template, data: Record<string, any> = {}) {
   }
 }
 
+import { safeAnalyticsInsert } from "../_shared/clients.ts";
+
+// Dual-write: keep primary email_logs (admin reads from it) and mirror into
+// the analytics DB so we can later cut the primary write entirely. Both
+// sides swallow errors — sends must never fail because logging failed.
 async function logEmail(sb: any, row: any) {
   try { await sb.from("email_logs").insert(row); } catch (_) {}
+  void safeAnalyticsInsert("email_logs", { ...row, source: "workspace-email" });
 }
 
 function prefKeyFor(template: Template): string | null {
