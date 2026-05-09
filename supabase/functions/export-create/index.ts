@@ -26,6 +26,19 @@ serve(async (req) => {
       file_b64, storage_path,
       metadata, deliver_to_telegram: !!deliver_to_telegram,
     });
+
+    // Fire-and-forget: cache to private Telegram storage channel for fast future delivery.
+    if (row?.storage_path && Deno.env.get("TELEGRAM_STORAGE_CHANNEL_ID")) {
+      void fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/export-cache-telegram`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+        },
+        body: JSON.stringify({ export_id: row.id }),
+      }).catch(() => {});
+    }
+
     return json({ ok: true, export: row });
   } catch (e: any) {
     return json({ error: String(e?.message || e) }, 500);
