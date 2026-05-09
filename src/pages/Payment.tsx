@@ -214,7 +214,46 @@ export default function Payment() {
     toast({ title: `🎉 ${code} applied`, description: (data as any).description || "Discount will appear at checkout." });
   };
 
-  if (loading) return <div className="min-h-screen bg-background flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="pt-24 pb-12 px-4">
+          <div className="container mx-auto max-w-6xl space-y-8">
+            {/* Hero skeleton */}
+            <div className="text-center space-y-4">
+              <Skeleton className="h-10 w-3/4 max-w-xl mx-auto" />
+              <Skeleton className="h-5 w-2/3 max-w-md mx-auto" />
+              <div className="flex justify-center gap-3 pt-2">
+                <Skeleton className="h-9 w-32 rounded-full" />
+                <Skeleton className="h-9 w-32 rounded-full" />
+              </div>
+            </div>
+            {/* Plan cards skeleton */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {[0, 1, 2].map((i) => (
+                <div
+                  key={i}
+                  className="glass rounded-2xl p-6 space-y-4 border border-border/50"
+                >
+                  <Skeleton className="h-7 w-24" />
+                  <Skeleton className="h-12 w-32" />
+                  <div className="space-y-2 pt-2">
+                    {[0, 1, 2, 3, 4].map((j) => (
+                      <Skeleton key={j} className="h-4 w-full" />
+                    ))}
+                  </div>
+                  <Skeleton className="h-11 w-full rounded-xl mt-4" />
+                </div>
+              ))}
+            </div>
+            {/* Wallet strip skeleton */}
+            <Skeleton className="h-32 w-full rounded-2xl" />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const currentTier = profile?.subscription_tier || "free";
   const primaryUpi = upiMethods.find(m => m.upi_id) || null;
