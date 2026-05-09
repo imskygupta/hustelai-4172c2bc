@@ -11,6 +11,9 @@ import { useToolGate } from "@/components/tools/ToolGate";
 import { AIAutofillIcon, AIAutofillButton } from "@/components/tools/AIAutofillButton";
 import { DashboardReminderBanner } from "@/components/tools/DashboardReminderBanner";
 import { DashboardToolAIPanel } from "@/components/tools/DashboardToolAIPanel";
+import { ToolTrustBar } from "@/components/tools/ToolTrustBar";
+import { RelatedToolsRail } from "@/components/tools/RelatedToolsRail";
+import { GuestSignupBar } from "@/components/tools/GuestSignupBar";
 import { CONTRACT_TEMPLATES } from "@/lib/tools/templates";
 import { useAuth } from "@/hooks/useAuth";
 import { printWithMeta, watermarkModeForTier } from "@/lib/tools/print-meta";
@@ -157,6 +160,7 @@ export default function ContractGenerator() {
             </div>
             <h1 className="text-3xl md:text-4xl font-display font-bold text-slate-900">Freelance Contract & NDA Generator</h1>
             <p className="text-slate-600 mt-2">Pick a template, fill in your details, and download a signature-ready PDF.</p>
+            <div className="mt-5"><ToolTrustBar toolKey="contract" /></div>
           </div>
 
           <div className="flex flex-wrap gap-2 mb-6 print:hidden">
@@ -304,9 +308,11 @@ export default function ContractGenerator() {
                 </details>
               ))}
             </div>
+            <div className="print:hidden"><RelatedToolsRail currentKey="contract" /></div>
           </div>
         </div>
         {gate}
+        {!inDashboard && <GuestSignupBar toolName="Contract Generator" />}
       </div>
     </>
   );
