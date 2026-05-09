@@ -130,7 +130,9 @@ export default function ProposalGenerator() {
           @page { size: A4; margin: 16mm; }
         }
       `}</style>
-      <div className="min-h-screen bg-slate-50 pt-20 pb-16 px-4">
+      {(() => {
+      const Inner = (
+      <div className="min-h-screen bg-slate-50 pt-8 pb-16 px-4">
         <div className="max-w-7xl mx-auto">
           <DashboardReminderBanner />
           {inDashboard && (
@@ -318,6 +320,9 @@ export default function ProposalGenerator() {
         {gate}
         {!inDashboard && <GuestSignupBar toolName="Proposal Generator" />}
       </div>
+      );
+      return inDashboard ? Inner : <ToolDashboardShell toolKey="proposal">{Inner}{!inDashboard && <SharedLinkPromo referrer="proposal" />}</ToolDashboardShell>;
+      })()}
     </>
   );
 }
