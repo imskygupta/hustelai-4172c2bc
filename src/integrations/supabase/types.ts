@@ -2121,8 +2121,146 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_deliveries: {
+        Row: {
+          attempt_count: number
+          created_at: string
+          delivered_at: string | null
+          event_id: string | null
+          external_message_id: string | null
+          id: string
+          last_error: string | null
+          provider: string
+          status: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          attempt_count?: number
+          created_at?: string
+          delivered_at?: string | null
+          event_id?: string | null
+          external_message_id?: string | null
+          id?: string
+          last_error?: string | null
+          provider: string
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          attempt_count?: number
+          created_at?: string
+          delivered_at?: string | null
+          event_id?: string | null
+          external_message_id?: string | null
+          id?: string
+          last_error?: string | null
+          provider?: string
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_deliveries_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "notification_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notification_events: {
+        Row: {
+          body: string | null
+          category: string
+          created_at: string
+          event_key: string
+          id: string
+          payload: Json
+          source: string | null
+          title: string | null
+          user_id: string | null
+        }
+        Insert: {
+          body?: string | null
+          category?: string
+          created_at?: string
+          event_key: string
+          id?: string
+          payload?: Json
+          source?: string | null
+          title?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          body?: string | null
+          category?: string
+          created_at?: string
+          event_key?: string
+          id?: string
+          payload?: Json
+          source?: string | null
+          title?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      notification_integrations: {
+        Row: {
+          config: Json
+          connect_token: string | null
+          connect_token_expires_at: string | null
+          created_at: string
+          id: string
+          last_active_at: string | null
+          last_error: string | null
+          provider: string
+          provider_chat_id: string | null
+          provider_user_id: string | null
+          provider_username: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          config?: Json
+          connect_token?: string | null
+          connect_token_expires_at?: string | null
+          created_at?: string
+          id?: string
+          last_active_at?: string | null
+          last_error?: string | null
+          provider: string
+          provider_chat_id?: string | null
+          provider_user_id?: string | null
+          provider_username?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          config?: Json
+          connect_token?: string | null
+          connect_token_expires_at?: string | null
+          created_at?: string
+          id?: string
+          last_active_at?: string | null
+          last_error?: string | null
+          provider?: string
+          provider_chat_id?: string | null
+          provider_user_id?: string | null
+          provider_username?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       notification_preferences: {
         Row: {
+          channel_prefs: Json
           collaboration_alerts: boolean
           community_notifications: boolean
           email_enabled: boolean
@@ -2134,6 +2272,7 @@ export type Database = {
           workspace_updates: boolean
         }
         Insert: {
+          channel_prefs?: Json
           collaboration_alerts?: boolean
           community_notifications?: boolean
           email_enabled?: boolean
@@ -2145,6 +2284,7 @@ export type Database = {
           workspace_updates?: boolean
         }
         Update: {
+          channel_prefs?: Json
           collaboration_alerts?: boolean
           community_notifications?: boolean
           email_enabled?: boolean
