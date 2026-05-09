@@ -51,9 +51,11 @@ serve(async (req) => {
       payment = data;
     }
 
-    // 2) Fallback: latest paid payment for this user in last 15 minutes
+    // 2) Tight fallback: only the very latest paid payment in the last
+    //    3 minutes — and never an old payment. This avoids granting a
+    //    "success" view on a stale or unrelated past payment.
     if (!payment) {
-      const since = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+      const since = new Date(Date.now() - 3 * 60 * 1000).toISOString();
       const { data } = await supabase
         .from("payments")
         .select("*")
@@ -105,6 +107,7 @@ serve(async (req) => {
         credits,
         amount: payment.amount,
         order_id: payment.order_id,
+        mode: Deno.env.get("DODO_MODE") || "test",
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
