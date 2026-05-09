@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { PaymentMethodsManager } from "@/components/admin/PaymentMethodsManager";
 import { DodoAdminPanel } from "@/components/admin/DodoAdminPanel";
+import { DodoCouponsPanel } from "@/components/admin/DodoCouponsPanel";
 import { BrevoNewsletterPanel } from "@/components/admin/BrevoNewsletterPanel";
 import { SQL_BLOCKS } from "@/lib/work-sql";
 import { FeatureFlagsManager } from "@/components/admin/FeatureFlagsManager";
@@ -2025,7 +2026,12 @@ export default function AdminDashboard() {
           )}
 
           {/* ===== PAYMENT LOGS ===== */}
-          {section === "dodo-payments" && <DodoAdminPanel />}
+          {section === "dodo-payments" && (
+            <div className="space-y-8">
+              <DodoAdminPanel />
+              <DodoCouponsPanel />
+            </div>
+          )}
 
           {section === "payment-logs" && (
             <div className="space-y-6">
