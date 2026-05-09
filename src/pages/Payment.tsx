@@ -553,7 +553,7 @@ export default function Payment() {
                       <div className="space-y-2">
                         <Button
                           onClick={() => initPayment(plan.id)}
-                          disabled={!!processing}
+                         disabled={!!processing || paymentLock.payments_locked || paymentLock.subscription_checkout_locked}
                           size="lg"
                           className={`w-full ${isPopular ? "bg-gradient-primary text-primary-foreground shadow-lg" : ""}`}
                           variant={isPopular ? "default" : "outline"}
