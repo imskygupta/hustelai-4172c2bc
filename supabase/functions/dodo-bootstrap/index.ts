@@ -13,12 +13,17 @@ type PlanDef = {
   amount_inr: number;
   credits?: number;
   interval?: "Month" | "Year";
+  trial_days?: number;
+  billing_interval?: "month" | "year";
 };
 
 const PLANS: PlanDef[] = [
-  { internal_key: "pro",      kind: "subscription", name: "HustleAI Pro",      description: "5 AI searches/day, all AI tools, Pro forums.", amount_inr: 450,  interval: "Month" },
-  { internal_key: "elite",    kind: "subscription", name: "HustleAI Elite",    description: "10 AI searches/day, HustleBot mentor, lead discovery.", amount_inr: 900,  interval: "Month" },
-  { internal_key: "infinity", kind: "subscription", name: "HustleAI Infinity", description: "20 AI searches/day, sell courses, API access, priority coaching.", amount_inr: 2250, interval: "Month" },
+  { internal_key: "pro",            kind: "subscription", name: "HustleAI Pro",            description: "5 AI searches/day, all AI tools, Pro forums.",                          amount_inr: 450,   interval: "Month", billing_interval: "month", trial_days: 7 },
+  { internal_key: "elite",          kind: "subscription", name: "HustleAI Elite",          description: "10 AI searches/day, HustleBot mentor, lead discovery.",                 amount_inr: 900,   interval: "Month", billing_interval: "month" },
+  { internal_key: "infinity",       kind: "subscription", name: "HustleAI Infinity",       description: "20 AI searches/day, sell courses, API access, priority coaching.",      amount_inr: 2250,  interval: "Month", billing_interval: "month" },
+  { internal_key: "pro_yearly",     kind: "subscription", name: "HustleAI Pro · Yearly",   description: "Pro plan billed annually — 20% off.",                                    amount_inr: 4320,  interval: "Year",  billing_interval: "year" },
+  { internal_key: "elite_yearly",   kind: "subscription", name: "HustleAI Elite · Yearly", description: "Elite plan billed annually — 20% off.",                                  amount_inr: 8640,  interval: "Year",  billing_interval: "year" },
+  { internal_key: "infinity_yearly",kind: "subscription", name: "HustleAI Infinity · Yearly", description: "Infinity plan billed annually — 20% off.",                            amount_inr: 21600, interval: "Year",  billing_interval: "year" },
   { internal_key: "pack_10",  kind: "one_time", name: "Wallet · 10 Credits",  description: "10 AI search credits, no expiry.",  amount_inr: 100,  credits: 10  },
   { internal_key: "pack_20",  kind: "one_time", name: "Wallet · 20 Credits",  description: "20 AI search credits, no expiry.",  amount_inr: 200,  credits: 20  },
   { internal_key: "pack_50",  kind: "one_time", name: "Wallet · 50 Credits",  description: "50 AI search credits, no expiry.",  amount_inr: 500,  credits: 50  },
@@ -86,7 +91,7 @@ serve(async (req) => {
               payment_frequency_interval: p.interval || "Month",
               subscription_period_count: 1,
               subscription_period_interval: p.interval || "Month",
-              trial_period_days: 0,
+              trial_period_days: p.trial_days || 0,
             },
           }
         : {
@@ -114,6 +119,8 @@ serve(async (req) => {
           name: p.name,
           amount_inr: p.amount_inr,
           credits: p.credits ?? null,
+          trial_days: p.trial_days ?? 0,
+          billing_interval: p.billing_interval ?? (p.kind === "subscription" ? "month" : null),
           metadata: { description: p.description },
         });
         results.push({ key: p.internal_key, status: "created", dodo_product_id: dodoId });
