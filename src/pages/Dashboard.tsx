@@ -254,12 +254,12 @@ export default function Dashboard() {
           cols={5}
           userTier={(profile?.subscription_tier as any) || "free"}
           tools={[
-            { icon: FileText,      label: "Proposal",       desc: "Win the project",          path: "/proposal-draft",                  color: "from-emerald-500 to-teal-500" },
-            { icon: Receipt,       label: "Invoice",        desc: "Get paid on time",         path: "/workspaces?intent=invoice",       color: "from-amber-500 to-orange-500" },
-            { icon: ClipboardList, label: "Quotation",      desc: "Premium project quotes",   path: "/workspaces?intent=quotation",     color: "from-violet-500 to-fuchsia-500" },
-            { icon: ShieldAlert,   label: "Agreement",      desc: "Protect engagements",      path: "/workspaces?intent=agreement",     color: "from-rose-500 to-red-500", minTier: "pro" },
-            { icon: Layers,        label: "Service Card",   desc: "Shareable offer deck",     path: "/workspaces?intent=service_card",  color: "from-sky-500 to-indigo-500", minTier: "pro" },
-            { icon: Sparkles,      label: "Business Card",  desc: "Modern brand identity",    path: "/workspaces?intent=business_card", color: "from-fuchsia-500 to-pink-500", minTier: "pro" },
+            { icon: FileText,      label: "Proposal",       desc: "Win the project",          path: "/dashboard/tools/proposal-generator", color: "from-emerald-500 to-teal-500" },
+            { icon: Receipt,       label: "Invoice",        desc: "Get paid on time",         path: "/dashboard/tools/invoice-generator",  color: "from-amber-500 to-orange-500" },
+            { icon: ClipboardList, label: "Quotation",      desc: "Premium project quotes",   path: "/workspaces?intent=quotation",        color: "from-violet-500 to-fuchsia-500", note: "Needs workspace AI intake" },
+            { icon: ShieldAlert,   label: "Agreement",      desc: "Protect engagements",      path: "/dashboard/tools/contract-generator", color: "from-rose-500 to-red-500" },
+            { icon: Layers,        label: "Service Card",   desc: "Shareable offer deck",     path: "/workspaces?intent=service_card",     color: "from-sky-500 to-indigo-500", minTier: "pro", note: "Needs workspace AI intake" },
+            { icon: Sparkles,      label: "Business Card",  desc: "Modern brand identity",    path: "/dashboard/tools/business-card",      color: "from-fuchsia-500 to-pink-500" },
           ]}
           onNavigate={navigate}
         />
@@ -780,7 +780,7 @@ function BrightToolGrid({
   title, subtitle, tools, onNavigate, rightSlot, cols = 4, userTier = "free",
 }: {
   title: string; subtitle?: string;
-  tools: { icon: any; label: string; desc: string; path: string; color: string; minTier?: "free" | "pro" | "elite" | "infinity" }[];
+  tools: { icon: any; label: string; desc: string; path: string; color: string; minTier?: "free" | "pro" | "elite" | "infinity"; note?: string }[];
   onNavigate: (p: string) => void;
   rightSlot?: React.ReactNode;
   cols?: 4 | 5;
@@ -827,6 +827,11 @@ function BrightToolGrid({
               <p className="text-[11px] text-slate-500 mt-0.5 leading-snug">{t.desc}</p>
               {locked && (
                 <p className="text-[10px] text-amber-700 mt-1.5 font-medium">Preview now · upgrade to unlock</p>
+              )}
+              {t.note && !locked && (
+                <p className="text-[10px] text-violet-700 mt-1.5 font-medium inline-flex items-center gap-1">
+                  <Sparkles className="w-2.5 h-2.5" /> {t.note}
+                </p>
               )}
             </button>
           );
