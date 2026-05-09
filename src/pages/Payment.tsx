@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
-import { Check, Crown, Rocket, Star, Shield, Loader2, Wallet, ArrowRight, Sparkles, Smartphone, Copy, Upload, CreditCard, Zap, CheckCircle2, Clock } from "lucide-react";
+import { Check, Crown, Rocket, Star, Shield, Loader2, Wallet, ArrowRight, Sparkles, Smartphone, Copy, Upload, CreditCard, Zap, CheckCircle2, Clock, Tag, Gift } from "lucide-react";
 
 import { SEO } from "@/components/SEO";
 
@@ -53,6 +53,9 @@ export default function Payment() {
   const [screenshotFile, setScreenshotFile] = useState<File | null>(null);
   const [submittingUpi, setSubmittingUpi] = useState(false);
   const [selectedUpiId, setSelectedUpiId] = useState<string>("");
+  const [billingCycle, setBillingCycle] = useState<"month" | "year">("month");
+  const [couponInput, setCouponInput] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
 
   useEffect(() => {
     if (!loading && !user) navigate("/login");
@@ -147,28 +150,22 @@ export default function Payment() {
     if (!user || !profile) return;
     setProcessing(planId);
     try {
-      const { data, error } = await supabase.functions.invoke("cashfree-payment", {
+      const { data, error } = await supabase.functions.invoke("dodo-checkout", {
         body: {
-          action: "create_order",
-          plan: planId,
-          user_email: profile.email,
-          user_name: profile.display_name,
+          internal_key: planId,
+          billing_interval: billingCycle,
+          coupon_code: appliedCoupon || undefined,
         },
       });
       if (error) throw error;
-
-      const script = document.createElement("script");
-      script.src = "https://sdk.cashfree.com/js/v3/cashfree.js";
-      script.onload = () => {
-        const cashfree = (window as any).Cashfree({ mode: "production" });
-        cashfree.checkout({
-          paymentSessionId: data.payment_session_id,
-          redirectTarget: "_self",
-        });
-      };
-      document.body.appendChild(script);
+      if (data?.error) throw new Error(data.error);
+      if (!data?.checkout_url) throw new Error("No checkout URL returned");
+      // Try to open as overlay popup; fall back to redirect if blocked
+      const popup = window.open(data.checkout_url, "dodo_checkout", "width=480,height=720");
+      if (!popup) window.location.href = data.checkout_url;
     } catch (err: any) {
       toast({ title: "Payment Failed", description: err.message, variant: "destructive" });
+    } finally {
       setProcessing(null);
     }
   };
@@ -177,25 +174,37 @@ export default function Payment() {
     if (!user) return;
     setProcessing(packId);
     try {
-      const { data, error } = await supabase.functions.invoke("cashfree-payment", {
-        body: { action: "create_wallet_order", pack: packId },
+      const { data, error } = await supabase.functions.invoke("dodo-checkout", {
+        body: {
+          internal_key: packId,
+          coupon_code: appliedCoupon || undefined,
+        },
       });
       if (error) throw error;
-
-      const script = document.createElement("script");
-      script.src = "https://sdk.cashfree.com/js/v3/cashfree.js";
-      script.onload = () => {
-        const cashfree = (window as any).Cashfree({ mode: "production" });
-        cashfree.checkout({
-          paymentSessionId: data.payment_session_id,
-          redirectTarget: "_self",
-        });
-      };
-      document.body.appendChild(script);
+      if (data?.error) throw new Error(data.error);
+      if (!data?.checkout_url) throw new Error("No checkout URL returned");
+      const popup = window.open(data.checkout_url, "dodo_checkout", "width=480,height=720");
+      if (!popup) window.location.href = data.checkout_url;
     } catch (err: any) {
       toast({ title: "Payment Failed", description: err.message, variant: "destructive" });
+    } finally {
       setProcessing(null);
     }
+  };
+
+  const applyCoupon = async () => {
+    const code = couponInput.trim().toUpperCase();
+    if (!code) return;
+    const { data } = await supabase.from("dodo_coupons" as any)
+      .select("code,description,discount_type,value,applies_to,valid_until,is_active")
+      .eq("code", code).maybeSingle();
+    if (!data || !(data as any).is_active) {
+      toast({ title: "Invalid coupon", description: "That code doesn't exist or has expired.", variant: "destructive" });
+      setAppliedCoupon(null);
+      return;
+    }
+    setAppliedCoupon(code);
+    toast({ title: `🎉 ${code} applied`, description: (data as any).description || "Discount will appear at checkout." });
   };
 
   if (loading) return <div className="min-h-screen bg-background flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
