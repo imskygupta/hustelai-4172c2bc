@@ -23,6 +23,20 @@ serve(async (req) => {
       const cbId = cb.id;
       const data = String(cb.data || "");
       const chatId = String(cb.message?.chat?.id || "");
+
+      // Admin payment approvals (chat must be the admin chat)
+      if (data.startsWith("pay_ok:") || data.startsWith("pay_no:")) {
+        const adminChat = Deno.env.get("TELEGRAM_ADMIN_CHAT_ID") || "";
+        if (chatId !== adminChat) { await answerCallbackQuery(cbId, "Admin only"); return ok(); }
+        const approve = data.startsWith("pay_ok:");
+        const paymentId = data.split(":")[1];
+        const newStatus = approve ? "approved" : "rejected";
+        await sb.from("payments").update({ status: newStatus, reviewed_at: new Date().toISOString() } as any).eq("id", paymentId).catch(() => {});
+        await answerCallbackQuery(cbId, approve ? "Approved" : "Rejected");
+        await sendTelegram(chatId, { body: `Payment <code>${paymentId}</code> → <b>${newStatus.toUpperCase()}</b>` });
+        return ok();
+      }
+
       const [action, exportId] = data.split(":");
       const { data: exp } = await sb.from("generated_exports").select("*").eq("id", exportId).maybeSingle();
       if (!exp) { await answerCallbackQuery(cbId, "Not found"); return ok(); }
@@ -107,6 +121,13 @@ serve(async (req) => {
       }
       if (integ.connect_token_expires_at && new Date(integ.connect_token_expires_at) < new Date()) {
         await sendTelegram(chatId, { title: "⏰ Token expired", body: "Generate a new connect link from HustleAI Settings → Integrations." });
+        return ok();
+      }
+      // Enforce one-Telegram-account-per-user (and one-user-per-chat).
+      const { data: existing } = await sb.from("notification_integrations")
+        .select("id,user_id").eq("provider", "telegram").eq("provider_chat_id", chatId).neq("user_id", integ.user_id).maybeSingle();
+      if (existing) {
+        await sendTelegram(chatId, { title: "🚫 Already linked", body: "This Telegram account is connected to a different HustleAI user. Disconnect there first via /disconnect." });
         return ok();
       }
       await sb.from("notification_integrations").update({

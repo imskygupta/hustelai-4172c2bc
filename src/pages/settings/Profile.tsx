@@ -6,8 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Loader2, Plus, Trash2 } from "lucide-react";
+import { Loader2, Plus, Trash2, Lock } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { canPhoneNumber } from "@/lib/tier-gates";
+import { Link } from "react-router-dom";
 
 const CATEGORIES = [
   "Designer", "Developer", "Writer", "Marketer", "Video editor",
@@ -21,6 +23,7 @@ export default function ProfileSettings() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [tier, setTier] = useState<string>("free");
   const [form, setForm] = useState({
     display_name: "",
     username: "",
@@ -43,6 +46,7 @@ export default function ProfileSettings() {
     (async () => {
       const { data } = await supabase.from("profiles").select("*").eq("user_id", user.id).maybeSingle();
       if (data) {
+        setTier((data as any).subscription_tier || "free");
         setForm({
           display_name: data.display_name ?? "",
           username: data.username ?? "",

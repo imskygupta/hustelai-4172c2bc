@@ -74,6 +74,19 @@ export async function createExport(input: CreateExportInput) {
     }).catch(() => {});
   }
 
+  // Fire-and-forget cache to Telegram storage channel (CDN layer).
+  // No-op if TELEGRAM_STORAGE_CHANNEL_ID is not configured.
+  if (storagePath) {
+    void fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/export-cache-telegram`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+      },
+      body: JSON.stringify({ export_id: row.id }),
+    }).catch(() => {});
+  }
+
   return row;
 }
 
