@@ -19,8 +19,9 @@ import {
   UserCheck, Compass, ChevronLeft, ChevronRight, AlertTriangle,
   CheckCircle, XCircle, Mail, Phone, MapPin, Pencil, Plus,
   Clock, ExternalLink, Activity, Database, Server, Zap,
-  Wallet, Gift, Share2
-  , Flag
+  Wallet, Gift, Share2,
+  Flag,
+  CreditCard as CreditCardIcon,
 } from "lucide-react";
 import { PaymentMethodsManager } from "@/components/admin/PaymentMethodsManager";
 import { DodoAdminPanel } from "@/components/admin/DodoAdminPanel";
