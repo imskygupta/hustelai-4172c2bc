@@ -155,6 +155,29 @@ serve(async (req) => {
         .eq("user_id", userId);
     }
 
+    // Track checkout session for abandoned-cart recovery (best-effort)
+    try {
+      const recipientEmail = profile?.email || email;
+      if (recipientEmail) {
+        await supabase.from("checkout_sessions").insert({
+          user_id: userId,
+          email: recipientEmail,
+          plan_id: internal_key,
+          plan_label: product.name || internal_key,
+          tier: product.kind === "subscription" ? (internal_key.replace("_yearly", "")) : "wallet",
+          amount_cents: Math.round((product.amount_inr || 0) * 100) - discountMinor,
+          currency: "INR",
+          billing_interval: product.billing_interval || (internal_key.endsWith("_yearly") ? "year" : "month"),
+          dodo_session_id: session.subscription_id || session.payment_id || session.id || null,
+          resume_url: checkoutUrl,
+          status: "opened",
+          metadata: { coupon: coupon?.code || null },
+        });
+      }
+    } catch (e) {
+      console.error("checkout_session log failed", e);
+    }
+
     return new Response(JSON.stringify({
       checkout_url: checkoutUrl,
       mode: DODO_MODE,
