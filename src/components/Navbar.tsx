@@ -182,6 +182,7 @@ export function Navbar() {
                   <Shield className="w-4 h-4 mr-1" /> Admin Panel
                 </Button>
               )}
+              <NotificationCenter />
               <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")}
                 className={isHome ? "text-slate-600 hover:text-slate-900 hover:bg-slate-100" : ""}>
                 Dashboard
