@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { PaymentMethodsManager } from "@/components/admin/PaymentMethodsManager";
 import { DodoAdminPanel } from "@/components/admin/DodoAdminPanel";
+import { BrevoNewsletterPanel } from "@/components/admin/BrevoNewsletterPanel";
 import { SQL_BLOCKS } from "@/lib/work-sql";
 import { FeatureFlagsManager } from "@/components/admin/FeatureFlagsManager";
 import { UsageAnalyticsManager } from "@/components/admin/UsageAnalyticsManager";
