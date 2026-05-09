@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { ToolPageLayout } from "@/components/tools/ToolPageLayout";
+import { TemplatePicker } from "@/components/tools/TemplatePicker";
 import { useToolGate } from "@/components/tools/ToolGate";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
@@ -102,6 +103,7 @@ END:VCARD`;
       back={{ href: "/tools", label: "All tools" }}
       faqs={faqs}
     >
+      <TemplatePicker toolKey="business-card" />
       <div className="grid lg:grid-cols-2 gap-5">
         <Card className="p-5 space-y-3">
           <Field label="Full name" value={name} onChange={setName} />
