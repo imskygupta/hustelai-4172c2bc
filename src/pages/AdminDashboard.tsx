@@ -2095,6 +2095,8 @@ export default function AdminDashboard() {
 
           {/* ===== PAYMENT LOGS ===== */}
           {section === "payment-logs" && (
+
+          {section === "dodo-payments" && <DodoAdminPanel />}
             <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <h3 className="font-display font-bold">Payment Lifecycle Logs ({paymentLogs.length})</h3>
