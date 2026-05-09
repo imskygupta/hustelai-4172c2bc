@@ -110,3 +110,9 @@ verify_jwt = false
 
 [functions.brevo-newsletter]
 verify_jwt = false
+
+[functions.mailer-send]
+verify_jwt = false
+
+[functions.abandoned-checkout-recovery]
+verify_jwt = false
