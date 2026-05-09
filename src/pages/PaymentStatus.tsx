@@ -43,7 +43,8 @@ export default function PaymentStatus() {
   }, [loading, user]);
 
   useEffect(() => {
-    if (orderId && user) {
+    if (user) {
+      // Dodo may redirect without an order_id; verify by latest paid payment.
       verifyPayment();
     }
   }, [orderId, user]);
