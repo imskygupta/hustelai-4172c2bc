@@ -6,6 +6,7 @@ import { Zap, ArrowRight, Menu, X, LogOut, User, ChevronDown, Shield } from "luc
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { isAppShellRoute } from "@/components/app-shell-routes";
+import { NotificationCenter } from "@/components/NotificationCenter";
 
 const navLinks = [
   { label: "Workspaces", href: "/workspaces" },
@@ -182,6 +183,7 @@ export function Navbar() {
                   <Shield className="w-4 h-4 mr-1" /> Admin Panel
                 </Button>
               )}
+              <NotificationCenter />
               <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")}
                 className={isHome ? "text-slate-600 hover:text-slate-900 hover:bg-slate-100" : ""}>
                 Dashboard

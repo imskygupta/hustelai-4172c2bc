@@ -46,6 +46,7 @@ export default function Integrations() {
   const [connecting, setConnecting] = useState<string | null>(null);
   const [linkInfo, setLinkInfo] = useState<{ deep_link: string; bot_username: string; token: string } | null>(null);
   const [polling, setPolling] = useState(false);
+  const [preset, setPreset] = useState<string>("default");
 
   const allowed = ["pro", "elite", "infinity"].includes(tier.toLowerCase());
 
@@ -61,11 +62,12 @@ export default function Integrations() {
     const [{ data: profile }, { data: integ }, { data: pref }] = await Promise.all([
       supabase.from("profiles").select("subscription_tier").eq("user_id", user.id).maybeSingle(),
       supabase.from("notification_integrations" as any).select("*").eq("user_id", user.id),
-      supabase.from("notification_preferences").select("channel_prefs").eq("user_id", user.id).maybeSingle(),
+      supabase.from("notification_preferences").select("channel_prefs, preset").eq("user_id", user.id).maybeSingle(),
     ]);
     setTier(profile?.subscription_tier || "free");
     setIntegrations((integ || []) as any);
     setPrefs(((pref as any)?.channel_prefs as Record<string, string[]>) || {});
+    setPreset(((pref as any)?.preset as string) || "default");
     setLoading(false);
   };
 
@@ -126,6 +128,21 @@ export default function Integrations() {
   };
 
   const tgIntegration = integrations.find(i => i.provider === "telegram" && i.status === "connected");
+
+  const PRESETS = [
+    { id: "default",  label: "Default",         desc: "Everything you've enabled below." },
+    { id: "silent",   label: "Silent mode",     desc: "Only the most critical alerts." },
+    { id: "critical", label: "Critical only",   desc: "Payments + security only." },
+    { id: "growth",   label: "Growth mode",     desc: "Wins: payments, AI tasks, commissions." },
+    { id: "ops",      label: "Ops mode",        desc: "Everything, all the time." },
+  ];
+  const applyPreset = async (id: string) => {
+    setPreset(id);
+    await supabase.from("notification_preferences").upsert(
+      { user_id: user!.id, preset: id } as any, { onConflict: "user_id" }
+    );
+    toast({ title: "Preset updated", description: PRESETS.find(p => p.id === id)?.label });
+  };
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100">
@@ -229,6 +246,18 @@ export default function Integrations() {
         {/* Preferences */}
         {tgIntegration && (
           <section>
+            <h2 className="text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-3">Automation preset</h2>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2 mb-6">
+              {PRESETS.map(p => (
+                <button key={p.id} onClick={() => applyPreset(p.id)}
+                  className={`text-left rounded-xl border p-3 transition ${
+                    preset === p.id ? "border-emerald-500/40 bg-emerald-500/[0.05]" : "border-white/[0.08] bg-white/[0.02] hover:bg-white/[0.04]"
+                  }`}>
+                  <div className="text-sm font-medium text-zinc-100">{p.label}</div>
+                  <p className="text-[11px] text-zinc-500 mt-0.5">{p.desc}</p>
+                </button>
+              ))}
+            </div>
             <h2 className="text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-3">Event preferences</h2>
             <div className="rounded-xl border border-white/[0.08] divide-y divide-white/[0.05] bg-white/[0.015]">
               {EVENT_CATEGORIES.map(ev => {

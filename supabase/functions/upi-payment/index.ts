@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { notifyOps } from "../_shared/notify-ops.ts";
+import { emitBillingEvent } from "../_shared/notifications/emit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -71,6 +72,11 @@ serve(async (req) => {
         payment_id: data?.id,
         note: `UTR ${utr_number}`,
         review_url: `https://hustlaiapp.in/admin/payments-review`,
+      });
+      emitBillingEvent({
+        user_id: user.id, event: "upi_submitted",
+        amount, currency: "₹", plan: plan || wallet_pack,
+        link: "/profile?tab=billing", email_fallback: user.email || undefined,
       });
 
       return new Response(JSON.stringify({ success: true, submission: data }), {
@@ -174,6 +180,12 @@ serve(async (req) => {
           plan: sub.plan || sub.wallet_pack,
           payment_id: sub.id,
         });
+        emitBillingEvent({
+          user_id: sub.user_id, event: "upi_approved",
+          amount: Number(sub.amount), currency: "₹",
+          plan: sub.plan || sub.wallet_pack,
+          link: "/dashboard", email_fallback: profile?.email || undefined,
+        });
       } else if (decision === "rejected") {
         const { data: profile } = await supabase.from("profiles")
           .select("email").eq("user_id", sub.user_id).maybeSingle();
@@ -184,6 +196,12 @@ serve(async (req) => {
           plan: sub.plan || sub.wallet_pack,
           payment_id: sub.id,
           note: admin_note || "",
+        });
+        emitBillingEvent({
+          user_id: sub.user_id, event: "upi_rejected",
+          amount: Number(sub.amount), currency: "₹",
+          reason: admin_note || undefined,
+          link: "/payment", email_fallback: profile?.email || undefined,
         });
       }
 

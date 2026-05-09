@@ -134,6 +134,7 @@ import Health from "./pages/Health";
 import AdminRuntime from "./pages/admin/Runtime";
 import RuntimeProviders from "./pages/admin/RuntimeProviders";
 import PaymentsReview from "./pages/admin/PaymentsReview";
+import AdminNotifications from "./pages/admin/Notifications";
 import { Navigate } from "react-router-dom";
 
 // Helper to wrap an in-app page in the SaaS sidebar shell.
@@ -307,6 +308,7 @@ const App = () => (
             <Route path="/admin/runtime" element={<AdminRuntime />} />
             <Route path="/admin/runtime/providers" element={<RuntimeProviders />} />
             <Route path="/admin/payments-review" element={<PaymentsReview />} />
+            <Route path="/admin/notifications" element={<AdminNotifications />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <MobileBottomNav />
