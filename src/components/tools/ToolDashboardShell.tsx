@@ -132,11 +132,18 @@ export function ToolDashboardShell({ children, toolKey }: { children: ReactNode;
 
         {/* Canvas */}
         <main className="flex-1 min-w-0">
-          {!user && (
+          {!user ? (
             <div className="bg-amber-50 border-b border-amber-200 text-amber-900 text-[11px] px-4 py-1.5 text-center">
               You're using the free preview — <Link to="/signup" className="font-semibold underline">sign up</Link> to save, sync, and unlock AI.
             </div>
-          )}
+          ) : toolKey ? (
+            <div className="bg-slate-900 text-white text-[11px] px-4 py-1.5 flex items-center justify-center gap-3">
+              <span>You're signed in — open this tool in your dashboard for autosave, AI assists & history.</span>
+              <button onClick={openInDashboard} className="font-semibold underline hover:no-underline">
+                Open in Dashboard →
+              </button>
+            </div>
+          ) : null}
           {children}
         </main>
       </div>
