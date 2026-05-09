@@ -12,6 +12,8 @@ import { AIAutofillIcon, AIAutofillButton } from "@/components/tools/AIAutofillB
 import { DashboardReminderBanner } from "@/components/tools/DashboardReminderBanner";
 import { DashboardToolAIPanel } from "@/components/tools/DashboardToolAIPanel";
 import { ToolTrustBar } from "@/components/tools/ToolTrustBar";
+import { ToolDashboardShell } from "@/components/tools/ToolDashboardShell";
+import { SharedLinkPromo } from "@/components/tools/SharedLinkPromo";
 import { RelatedToolsRail } from "@/components/tools/RelatedToolsRail";
 import { GuestSignupBar } from "@/components/tools/GuestSignupBar";
 import { useAuth } from "@/hooks/useAuth";
@@ -112,7 +114,9 @@ export default function InvoiceGenerator() {
           @page { size: A4; margin: 16mm; }
         }
       `}</style>
-      <div className="min-h-screen bg-slate-50 pt-20 pb-16 px-4 print:p-0 print:bg-white">
+      {(() => {
+      const Inner = (
+      <div className="min-h-screen bg-slate-50 pt-8 pb-16 px-4 print:p-0 print:bg-white">
         <div className="max-w-7xl mx-auto print:max-w-none">
           {/* Toolbar (hidden in print) */}
           <DashboardReminderBanner />
@@ -331,6 +335,9 @@ export default function InvoiceGenerator() {
         {gate}
         {!inDashboard && <GuestSignupBar toolName="GST Invoice Generator" />}
       </div>
+      );
+      return inDashboard ? Inner : <ToolDashboardShell toolKey="invoice">{Inner}{!inDashboard && <SharedLinkPromo referrer="invoice" />}</ToolDashboardShell>;
+      })()}
     </>
   );
 }

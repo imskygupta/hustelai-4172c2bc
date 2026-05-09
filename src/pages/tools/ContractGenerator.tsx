@@ -13,6 +13,8 @@ import { DashboardReminderBanner } from "@/components/tools/DashboardReminderBan
 import { DashboardToolAIPanel } from "@/components/tools/DashboardToolAIPanel";
 import { ToolTrustBar } from "@/components/tools/ToolTrustBar";
 import { RelatedToolsRail } from "@/components/tools/RelatedToolsRail";
+import { ToolDashboardShell } from "@/components/tools/ToolDashboardShell";
+import { SharedLinkPromo } from "@/components/tools/SharedLinkPromo";
 import { GuestSignupBar } from "@/components/tools/GuestSignupBar";
 import { CONTRACT_TEMPLATES } from "@/lib/tools/templates";
 import { useAuth } from "@/hooks/useAuth";
@@ -126,7 +128,9 @@ export default function ContractGenerator() {
           @page { size: A4; margin: 18mm; }
         }
       `}</style>
-      <div className="min-h-screen bg-slate-50 pt-20 pb-16 px-4">
+      {(() => {
+      const Inner = (
+      <div className="min-h-screen bg-slate-50 pt-8 pb-16 px-4">
         <div className="max-w-7xl mx-auto">
           <DashboardReminderBanner />
           {inDashboard && (
@@ -314,6 +318,9 @@ export default function ContractGenerator() {
         {gate}
         {!inDashboard && <GuestSignupBar toolName="Contract Generator" />}
       </div>
+      );
+      return inDashboard ? Inner : <ToolDashboardShell toolKey="contract">{Inner}{!inDashboard && <SharedLinkPromo referrer="contract" />}</ToolDashboardShell>;
+      })()}
     </>
   );
 }

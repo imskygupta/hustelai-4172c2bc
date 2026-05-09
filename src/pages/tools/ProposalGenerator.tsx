@@ -13,6 +13,8 @@ import { DashboardReminderBanner } from "@/components/tools/DashboardReminderBan
 import { DashboardToolAIPanel } from "@/components/tools/DashboardToolAIPanel";
 import { ToolTrustBar } from "@/components/tools/ToolTrustBar";
 import { RelatedToolsRail } from "@/components/tools/RelatedToolsRail";
+import { ToolDashboardShell } from "@/components/tools/ToolDashboardShell";
+import { SharedLinkPromo } from "@/components/tools/SharedLinkPromo";
 import { GuestSignupBar } from "@/components/tools/GuestSignupBar";
 import { PROPOSAL_TEMPLATES } from "@/lib/tools/templates";
 import { useAuth } from "@/hooks/useAuth";
@@ -128,7 +130,9 @@ export default function ProposalGenerator() {
           @page { size: A4; margin: 16mm; }
         }
       `}</style>
-      <div className="min-h-screen bg-slate-50 pt-20 pb-16 px-4">
+      {(() => {
+      const Inner = (
+      <div className="min-h-screen bg-slate-50 pt-8 pb-16 px-4">
         <div className="max-w-7xl mx-auto">
           <DashboardReminderBanner />
           {inDashboard && (
@@ -316,6 +320,9 @@ export default function ProposalGenerator() {
         {gate}
         {!inDashboard && <GuestSignupBar toolName="Proposal Generator" />}
       </div>
+      );
+      return inDashboard ? Inner : <ToolDashboardShell toolKey="proposal">{Inner}{!inDashboard && <SharedLinkPromo referrer="proposal" />}</ToolDashboardShell>;
+      })()}
     </>
   );
 }
