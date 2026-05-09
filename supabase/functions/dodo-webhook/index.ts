@@ -122,20 +122,13 @@ serve(async (req) => {
         onConflict: "dodo_subscription_id",
       });
 
-      // Reconcile profile tier
+      // CRITICAL: Do NOT grant entitlement on subscription.active alone — Dodo
+      // emits subscription.active before the first payment is confirmed (and
+      // for failing test flows). Tier upgrades are granted ONLY by
+      // payment.succeeded for confirmed paid subscriptions (see below).
+      // Here we only handle DOWNGRADES on cancellation/expiry/failure.
       if (userId && internalKey && TIER_KEYS.has(internalKey)) {
-        if (["active"].includes(status)) {
-          await supabase.from("profiles").update({
-            subscription_tier: internalKey,
-            dodo_subscription_id: dodoSubId,
-          } as any).eq("user_id", userId);
-
-          // Discord role sync
-          fireAndForget(supabase.functions.invoke("discord-sync-role", {
-            body: { user_id: userId, tier: internalKey, source: "dodo" },
-          }));
-        } else if (["cancelled", "expired", "failed"].includes(status)) {
-          // Only downgrade if the active sub is gone
+        if (["cancelled", "expired", "failed", "on_hold"].includes(status)) {
           await supabase.from("profiles").update({
             subscription_tier: "free",
           } as any).eq("user_id", userId).eq("dodo_subscription_id", dodoSubId);
@@ -149,6 +142,11 @@ serve(async (req) => {
       const credits = parseInt(metadata.credits || "0", 10);
       const amountInr = (data.total_amount ?? data.amount ?? 0) / 100;
       const couponCode = metadata.coupon_code || null;
+      const paymentStatus: string = (data.status || "succeeded").toLowerCase();
+
+      // Hard guard: only grant anything on confirmed succeeded payments.
+      const trulyPaid = paymentStatus === "succeeded" || paymentStatus === "paid"
+        || paymentStatus === "completed";
 
       // Always log a payment record
       await supabase.from("payments").insert({
@@ -157,9 +155,37 @@ serve(async (req) => {
         amount: amountInr,
         currency: data.currency || "INR",
         plan: metadata.internal_key || "unknown",
-        status: "paid",
+        status: trulyPaid ? "paid" : "failed",
         cf_payment_id: data.payment_id || null,
       }).then(() => {}).catch(() => {});
+
+      // ===== Subscription tier grant — single source of truth =====
+      // Only NOW (confirmed paid) do we upgrade the profile tier.
+      if (trulyPaid && isSubscription && userId) {
+        const internalKeyRaw: string | undefined = metadata.internal_key
+          || data.product?.internal_key;
+        const internalKey = internalKeyRaw?.replace(/_yearly$/, "");
+        if (internalKey && TIER_KEYS.has(internalKey)) {
+          const dodoSubId = data.subscription_id;
+          await supabase.from("profiles").update({
+            subscription_tier: internalKey,
+            dodo_subscription_id: dodoSubId,
+          } as any).eq("user_id", userId);
+          fireAndForget(supabase.functions.invoke("discord-sync-role", {
+            body: { user_id: userId, tier: internalKey, source: "dodo" },
+          }));
+        }
+      }
+
+      // If payment failed, stop here — do NOT credit wallet, do NOT email.
+      if (!trulyPaid) {
+        if (logged) {
+          await supabase.from("dodo_events").update({ status: "processed" }).eq("id", logged.id);
+        }
+        return new Response(JSON.stringify({ ok: true, payment_status: paymentStatus }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
 
       // Wallet top-up: only for one_time
       if (!isSubscription && userId && credits > 0) {
