@@ -95,3 +95,15 @@ verify_jwt = false
 
 [functions.robots]
 verify_jwt = false
+
+[functions.dodo-bootstrap]
+verify_jwt = false
+
+[functions.dodo-checkout]
+verify_jwt = false
+
+[functions.dodo-webhook]
+verify_jwt = false
+
+[functions.dodo-portal]
+verify_jwt = false
