@@ -5,6 +5,8 @@ import { SEO, faqJsonLd } from "@/components/SEO";
 import { ToolTrustBar } from "./ToolTrustBar";
 import { RelatedToolsRail } from "./RelatedToolsRail";
 import { GuestSignupBar } from "./GuestSignupBar";
+import { ToolDashboardShell } from "./ToolDashboardShell";
+import { SharedLinkPromo } from "./SharedLinkPromo";
 
 export interface ToolFaq { q: string; a: string }
 
@@ -30,7 +32,7 @@ interface Props {
 export function ToolPageLayout({
   title, metaTitle, metaDescription, path, subtitle, icon: Icon, accent = "from-emerald-500 to-teal-600", children, back, faqs, longCopy, toolKey, eyebrow = "Free · No signup to try",
 }: Props) {
-  return (
+  const body = (
     <>
       <SEO
         title={metaTitle || `${title} | HustleAI`}
@@ -38,7 +40,7 @@ export function ToolPageLayout({
         path={path}
         jsonLd={faqs && faqs.length ? faqJsonLd(faqs) : undefined}
       />
-      <div className="min-h-screen bg-white pt-20 pb-32 px-4">
+      <div className="bg-white pb-32 pt-8 px-4">
         <div className="max-w-5xl mx-auto">
           {back && (
             <Link to={back.href} className="inline-flex items-center gap-1 text-xs text-slate-500 hover:text-slate-900 mb-6">
@@ -87,9 +89,12 @@ export function ToolPageLayout({
           )}
 
           <RelatedToolsRail currentKey={toolKey} />
+          {toolKey && <SharedLinkPromo ref={toolKey} />}
         </div>
       </div>
       {toolKey && <GuestSignupBar toolName={title} />}
     </>
   );
+  if (!toolKey) return body;
+  return <ToolDashboardShell>{body}</ToolDashboardShell>;
 }
