@@ -255,6 +255,7 @@ export function Navbar() {
                     )}
                     <Button variant="ghost" className="w-full justify-start" onClick={() => navigate("/saved-hustles")}>My Hustles</Button>
                     <Button variant="ghost" className="w-full justify-start" onClick={() => navigate("/profile")}>Profile</Button>
+                    <Button variant="ghost" className="w-full justify-start" onClick={() => navigate("/settings/profile")}>Settings</Button>
                     <Button variant="ghost" className="w-full justify-start" onClick={() => navigate("/dashboard")}>Dashboard</Button>
                     <Button variant="outline" className="w-full border-destructive/30 text-destructive" onClick={() => { signOut(); navigate("/"); }}>
                       <LogOut className="w-4 h-4 mr-1" /> Logout
