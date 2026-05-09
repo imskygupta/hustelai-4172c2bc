@@ -19,7 +19,7 @@ const values = [
 const milestones = [
   { year: "2024", event: "HustleAI idea born", desc: "Founded with a mission to help 10M people find freelance income." },
   { year: "2025", event: "Public beta launch", desc: "AI-powered search engine for freelance opportunities goes live." },
-  { year: "2026", event: "Community & Payments", desc: "Forums, KYC verification, Cashfree payments, and gamification launched." },
+  { year: "2026", event: "Community & Payments", desc: "Forums, KYC verification, Dodo Payments billing, and gamification launched." },
   { year: "2027", event: "Global expansion", desc: "Targeting 50+ countries with localized opportunities and multilingual AI." },
 ];
 
