@@ -23,6 +23,8 @@ import AdminDashboard from "./pages/AdminDashboard";
 import AdminCommunications from "./pages/admin/Communications";
 import NotificationPreferences from "./pages/settings/NotificationPreferences";
 import Integrations from "./pages/settings/Integrations";
+import Exports from "./pages/settings/Exports";
+import Download from "./pages/Download";
 import AdminBlock from "./pages/AdminBlock";
 import Community from "./pages/Community";
 import Profile from "./pages/Profile";
@@ -253,6 +255,8 @@ const App = () => (
             <Route path="/admin/communications" element={<AdminCommunications />} />
             <Route path="/settings/notifications" element={Shelled(<NotificationPreferences />)} />
             <Route path="/settings/integrations" element={Shelled(<Integrations />)} />
+            <Route path="/settings/exports" element={Shelled(<Exports />)} />
+            <Route path="/d/:token" element={<Download />} />
             <Route path="/settings" element={<Navigate to="/profile?tab=general" replace />} />
             <Route path="/settings/billing" element={<Navigate to="/profile?tab=billing" replace />} />
             <Route path="/settings/account" element={<Navigate to="/profile?tab=account" replace />} />
