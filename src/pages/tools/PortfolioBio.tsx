@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ToolPageLayout } from "@/components/tools/ToolPageLayout";
+import { TemplatePicker } from "@/components/tools/TemplatePicker";
 import { toast } from "sonner";
 
 const faqs = [
@@ -86,6 +87,7 @@ export default function PortfolioBio() {
       back={{ href: "/tools", label: "All tools" }}
       faqs={faqs}
     >
+      <TemplatePicker toolKey="portfolio-bio" />
       <div className="grid lg:grid-cols-5 gap-5">
         <Card className="p-5 lg:col-span-2 space-y-3">
           <Field k="name" label="Your / brand name" />
