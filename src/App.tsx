@@ -62,6 +62,12 @@ import ToolsHub from "./pages/tools/ToolsHub";
 import InvoiceGeneratorTool from "./pages/tools/InvoiceGenerator";
 import ProposalGeneratorTool from "./pages/tools/ProposalGenerator";
 import ContractGeneratorTool from "./pages/tools/ContractGenerator";
+import PricingCalculator from "./pages/tools/PricingCalculator";
+import PortfolioBio from "./pages/tools/PortfolioBio";
+import OnboardingFormBuilder from "./pages/tools/OnboardingFormBuilder";
+import ContentCalendar from "./pages/tools/ContentCalendar";
+import PomodoroWidget from "./pages/tools/PomodoroWidget";
+import BusinessCardGenerator from "./pages/tools/BusinessCardGenerator";
 import Products from "./pages/Products";
 import ProductDetail from "./pages/ProductDetail";
 import HustleBot from "./pages/HustleBot";
@@ -207,12 +213,24 @@ const App = () => (
             <Route path="/tools/invoice-generator" element={<InvoiceGeneratorTool />} />
             <Route path="/tools/proposal-generator" element={<ProposalGeneratorTool />} />
             <Route path="/tools/contract-generator" element={<ContractGeneratorTool />} />
+            <Route path="/tools/pricing-calculator" element={<PricingCalculator />} />
+            <Route path="/tools/portfolio-bio" element={<PortfolioBio />} />
+            <Route path="/tools/onboarding-form" element={<OnboardingFormBuilder />} />
+            <Route path="/tools/content-calendar" element={<ContentCalendar />} />
+            <Route path="/tools/pomodoro" element={<PomodoroWidget />} />
+            <Route path="/tools/business-card" element={<BusinessCardGenerator />} />
             {/* Same tools rendered INSIDE the dashboard shell for signed-in users.
                 Banner/dialog from public /tools/* pages routes here. */}
             <Route path="/dashboard/tools" element={Shelled(<ToolsHub />)} />
             <Route path="/dashboard/tools/invoice-generator" element={Shelled(<InvoiceGeneratorTool />)} />
             <Route path="/dashboard/tools/proposal-generator" element={Shelled(<ProposalGeneratorTool />)} />
             <Route path="/dashboard/tools/contract-generator" element={Shelled(<ContractGeneratorTool />)} />
+            <Route path="/dashboard/tools/pricing-calculator" element={Shelled(<PricingCalculator />)} />
+            <Route path="/dashboard/tools/portfolio-bio" element={Shelled(<PortfolioBio />)} />
+            <Route path="/dashboard/tools/onboarding-form" element={Shelled(<OnboardingFormBuilder />)} />
+            <Route path="/dashboard/tools/content-calendar" element={Shelled(<ContentCalendar />)} />
+            <Route path="/dashboard/tools/pomodoro" element={Shelled(<PomodoroWidget />)} />
+            <Route path="/dashboard/tools/business-card" element={Shelled(<BusinessCardGenerator />)} />
             <Route path="/hustle/:id" element={Shelled(<HustleDetail />)} />
             <Route path="/roadmap/:id" element={Shelled(<RoadmapViewer />)} />
             <Route path="/infinity-zone" element={Shelled(<InfinityZone />)} />

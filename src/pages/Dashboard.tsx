@@ -20,6 +20,7 @@ import {
   Store, Target, Brain, Zap, BarChart3, Activity, History, DollarSign, Film,
   ShieldAlert, Briefcase, Loader2, Bot, Music, Hammer, KeyRound, Receipt, Clock,
   ClipboardList, FolderOpen, Wallet, AlarmClock, Globe, Kanban, Layers, Mail,
+  Calculator, UserCircle2, CalendarRange, Timer, IdCard,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -273,6 +274,28 @@ export default function Dashboard() {
             { icon: Users,         label: "Client Profiles",  desc: "Reusable client records (auto-fill docs)", path: "/workspaces/clients",   color: "from-sky-500 to-blue-500" },
             { icon: Layers,        label: "Snippet Library",  desc: "Reusable text blocks (terms, scope, FAQs)", path: "/workspaces/blocks",   color: "from-slate-500 to-slate-700", minTier: "pro" },
             { icon: ClipboardList, label: "Intake OS",        desc: "Branded client intake forms",              path: "/workspaces/intake",   color: "from-emerald-500 to-teal-500" },
+          ]}
+          onNavigate={navigate}
+        />
+
+        {/* Quick AI tools — the public /tools/* family, surfaced to logged-in users.
+            Free users get a view-only preview when they open a Pro tool (lock overlay). */}
+        <BrightToolGrid
+          title="Quick tools"
+          subtitle="One-shot generators & calculators — open, fill, copy. Available to every plan."
+          rightSlot={<Link to="/dashboard/tools" className="text-xs text-violet-700 hover:underline inline-flex items-center gap-1">All tools <ArrowUpRight className="w-3 h-3" /></Link>}
+          cols={5}
+          userTier={(profile?.subscription_tier as any) || "free"}
+          tools={[
+            { icon: Receipt,       label: "Invoice",          desc: "Free GST-ready invoice",      path: "/dashboard/tools/invoice-generator",  color: "from-emerald-500 to-teal-500" },
+            { icon: FileText,      label: "Proposal",         desc: "Polished client proposals",   path: "/dashboard/tools/proposal-generator", color: "from-violet-500 to-purple-500" },
+            { icon: Sparkles,      label: "Contract",         desc: "Freelance agreement / NDA",   path: "/dashboard/tools/contract-generator", color: "from-amber-500 to-orange-500" },
+            { icon: Calculator,    label: "Pricing Calc",     desc: "Freelancer / agency / SaaS",  path: "/dashboard/tools/pricing-calculator", color: "from-violet-500 to-fuchsia-500", minTier: "pro" },
+            { icon: UserCircle2,   label: "Portfolio Bio",    desc: "LinkedIn / creator bios",     path: "/dashboard/tools/portfolio-bio",      color: "from-sky-500 to-indigo-500" },
+            { icon: ClipboardList, label: "Intake Form",      desc: "Build & share an intake",     path: "/dashboard/tools/onboarding-form",    color: "from-emerald-500 to-teal-500", minTier: "pro" },
+            { icon: CalendarRange, label: "Content Calendar", desc: "4-week social plan",          path: "/dashboard/tools/content-calendar",   color: "from-rose-500 to-pink-500", minTier: "pro" },
+            { icon: Timer,         label: "Pomodoro",         desc: "Focus + hours + earnings",    path: "/dashboard/tools/pomodoro",           color: "from-orange-500 to-rose-500" },
+            { icon: IdCard,        label: "Business Card",    desc: "Standalone, no AI input",     path: "/dashboard/tools/business-card",      color: "from-fuchsia-500 to-pink-500" },
           ]}
           onNavigate={navigate}
         />
