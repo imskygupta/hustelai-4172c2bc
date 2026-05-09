@@ -254,6 +254,7 @@ export default function AdminRuntime() {
               { key: "payments_locked", label: "Global payment lock", icon: Lock, desc: "Blocks ALL new payments (subscriptions + wallet). Existing subs unaffected." },
               { key: "subscription_checkout_locked", label: "Subscription checkout lock", icon: CreditCard, desc: "Blocks new subscription checkouts only." },
               { key: "wallet_topup_locked", label: "Wallet top-up lock", icon: Wallet, desc: "Blocks wallet credit purchases only." },
+              { key: "upi_manual_review_enabled", label: "UPI manual review mode", icon: Lock, desc: "TEMPORARY: All UPI payments require admin approval before entitlement is granted. Disable for fully automated flow." },
             ].map(({ key, label, icon: Icon, desc }) => {
               const on = server[key] === true;
               return (
