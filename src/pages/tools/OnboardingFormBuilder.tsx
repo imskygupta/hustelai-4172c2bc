@@ -89,6 +89,7 @@ export default function OnboardingFormBuilder() {
       subtitle="Build a branded intake form, share a public link, manage replies inside HustleAI."
       icon={ClipboardList}
       path="/tools/onboarding-form"
+      toolKey="intake-form"
       accent="from-emerald-500 to-teal-600"
       back={{ href: "/tools", label: "All tools" }}
       faqs={faqs}

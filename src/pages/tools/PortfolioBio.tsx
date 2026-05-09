@@ -81,6 +81,7 @@ export default function PortfolioBio() {
       subtitle="LinkedIn, agency, creator and freelancer taglines — pick a style, tweak details, copy."
       icon={UserCircle2}
       path="/tools/portfolio-bio"
+      toolKey="portfolio-bio"
       accent="from-sky-500 to-indigo-600"
       back={{ href: "/tools", label: "All tools" }}
       faqs={faqs}

@@ -93,6 +93,7 @@ export default function PomodoroWidget() {
       subtitle="Focus timer + hour & earnings tracker. Sit on top of any client work."
       icon={Timer}
       path="/tools/pomodoro"
+      toolKey="pomodoro"
       accent="from-orange-500 to-rose-600"
       back={{ href: "/tools", label: "All tools" }}
       faqs={faqs}

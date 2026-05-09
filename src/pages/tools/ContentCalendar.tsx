@@ -95,6 +95,7 @@ export default function ContentCalendar() {
       subtitle="Generate a 4-week, 5-posts-per-week content plan in seconds. Export as CSV."
       icon={CalendarRange}
       path="/tools/content-calendar"
+      toolKey="content-calendar"
       accent="from-rose-500 to-pink-600"
       back={{ href: "/tools", label: "All tools" }}
       faqs={faqs}

@@ -31,6 +31,7 @@ export default function PricingCalculator() {
       subtitle="Freelancer · Agency · Profit margin · SaaS — find the price you should be charging."
       icon={Calculator}
       path="/tools/pricing-calculator"
+      toolKey="pricing-calculator"
       accent="from-violet-500 to-fuchsia-600"
       back={{ href: "/tools", label: "All tools" }}
       faqs={faqs}
