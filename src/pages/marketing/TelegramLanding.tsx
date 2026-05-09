@@ -1,6 +1,6 @@
 import { SEO } from "@/components/SEO";
 import { Navbar } from "@/components/Navbar";
-import Footer from "@/components/Footer";
+import { Footer } from "@/components/Footer";
 import { Send, Zap, Shield, Bell, FileDown, Crown } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -17,7 +17,7 @@ export default function TelegramLanding() {
       <SEO
         title="Telegram Delivery for HustleAI — Real-time Workspace Alerts"
         description="Connect Telegram to HustleAI to receive payments, AI exports, lead alerts and security events directly in your chat. Premium SaaS-grade delivery infrastructure."
-        canonicalUrl="https://hustlaiapp.in/integrations/telegram"
+        path="/integrations/telegram"
       />
       <Navbar />
       <main className="max-w-5xl mx-auto px-6 py-16">
