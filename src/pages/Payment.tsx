@@ -60,6 +60,18 @@ export default function Payment() {
   const [billingCycle, setBillingCycle] = useState<"month" | "year">("month");
   const [couponInput, setCouponInput] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
+  const [paymentMode, setPaymentMode] = useState<"live" | "test" | "unknown">("unknown");
+  const [paymentLock, setPaymentLock] = useState<{
+    payments_locked: boolean;
+    subscription_checkout_locked: boolean;
+    wallet_topup_locked: boolean;
+    payment_maintenance_message: string;
+  }>({
+    payments_locked: false,
+    subscription_checkout_locked: false,
+    wallet_topup_locked: false,
+    payment_maintenance_message: "",
+  });
 
   useEffect(() => {
     if (!loading && !user) navigate("/login");
@@ -69,8 +81,32 @@ export default function Payment() {
     if (user) {
       loadWallet();
       loadUpiMethods();
+      loadPaymentControls();
     }
   }, [user]);
+
+  const loadPaymentControls = async () => {
+    try {
+      const { data } = await supabase
+        .from("api_runtime_config")
+        .select("key, value")
+        .in("key", [
+          "payments_locked",
+          "subscription_checkout_locked",
+          "wallet_topup_locked",
+          "payment_maintenance_message",
+        ]);
+      const m: any = {};
+      for (const r of data || []) m[(r as any).key] = (r as any).value;
+      setPaymentLock({
+        payments_locked: m.payments_locked === true,
+        subscription_checkout_locked: m.subscription_checkout_locked === true,
+        wallet_topup_locked: m.wallet_topup_locked === true,
+        payment_maintenance_message: typeof m.payment_maintenance_message === "string"
+          ? m.payment_maintenance_message : "",
+      });
+    } catch {}
+  };
 
   const loadWallet = async () => {
     if (!user) return;
@@ -155,6 +191,10 @@ export default function Payment() {
 
   const initPayment = async (planId: string) => {
     if (!user || !profile) return;
+    if (paymentLock.payments_locked || paymentLock.subscription_checkout_locked) {
+      toast({ title: "Payments paused", description: paymentLock.payment_maintenance_message || "Subscriptions are temporarily disabled.", variant: "destructive" });
+      return;
+    }
     setProcessing(planId);
     try {
       const { data, error } = await supabase.functions.invoke("dodo-checkout", {
@@ -167,6 +207,15 @@ export default function Payment() {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       if (!data?.checkout_url) throw new Error("No checkout URL returned");
+      if (data?.mode) setPaymentMode(data.mode);
+      // Production guardrail: warn if checkout came back as TEST on the live host.
+      if (data?.mode === "test" && typeof window !== "undefined" && window.location.hostname === "hustlaiapp.in") {
+        toast({
+          title: "⚠️ Test mode detected on production",
+          description: "Payments are still configured in TEST mode. Contact admin — do not complete real payment.",
+          variant: "destructive",
+        });
+      }
       // Try to open as overlay popup; fall back to redirect if blocked
       const popup = window.open(data.checkout_url, "dodo_checkout", "width=480,height=720");
       if (!popup) window.location.href = data.checkout_url;
@@ -179,6 +228,10 @@ export default function Payment() {
 
   const initWalletTopup = async (packId: string) => {
     if (!user) return;
+    if (paymentLock.payments_locked || paymentLock.wallet_topup_locked) {
+      toast({ title: "Wallet top-ups paused", description: paymentLock.payment_maintenance_message || "Wallet top-ups are temporarily disabled.", variant: "destructive" });
+      return;
+    }
     setProcessing(packId);
     try {
       const { data, error } = await supabase.functions.invoke("dodo-checkout", {
@@ -190,6 +243,7 @@ export default function Payment() {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       if (!data?.checkout_url) throw new Error("No checkout URL returned");
+      if (data?.mode) setPaymentMode(data.mode);
       const popup = window.open(data.checkout_url, "dodo_checkout", "width=480,height=720");
       if (!popup) window.location.href = data.checkout_url;
     } catch (err: any) {
