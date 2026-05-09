@@ -271,11 +271,54 @@ export default function Payment() {
             </Button>
           </div>
 
+          {/* Billing cycle toggle + Coupon */}
+          {activeTab === "plans" && (
+            <div className="flex flex-col items-center gap-3">
+              <div className="inline-flex rounded-full border border-border bg-background/50 p-1">
+                <button
+                  onClick={() => setBillingCycle("month")}
+                  className={`px-4 py-1.5 text-xs font-semibold rounded-full transition ${billingCycle === "month" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}>
+                  Monthly
+                </button>
+                <button
+                  onClick={() => setBillingCycle("year")}
+                  className={`px-4 py-1.5 text-xs font-semibold rounded-full transition flex items-center gap-1 ${billingCycle === "year" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}>
+                  Yearly <Badge className="bg-emerald-500 text-white text-[9px] ml-1">-20%</Badge>
+                </button>
+              </div>
+              {billingCycle === "month" && (
+                <p className="text-[11px] text-muted-foreground flex items-center gap-1">
+                  <Gift className="w-3 h-3 text-emerald-500" /> Pro includes a 7-day free trial · cancel anytime
+                </p>
+              )}
+            </div>
+          )}
+
+          <div className="max-w-md mx-auto w-full">
+            <div className="glass rounded-xl p-3 flex items-center gap-2">
+              <Tag className="w-4 h-4 text-emerald-500 shrink-0" />
+              <Input
+                value={couponInput}
+                onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                placeholder="Have a coupon? e.g. LAUNCH50"
+                className="border-0 bg-transparent focus-visible:ring-0 text-sm h-8 px-1"
+              />
+              {appliedCoupon ? (
+                <Badge className="bg-emerald-500 text-white">{appliedCoupon} ✓</Badge>
+              ) : (
+                <Button size="sm" variant="outline" onClick={applyCoupon} className="h-8 text-xs">Apply</Button>
+              )}
+            </div>
+          </div>
+
           {activeTab === "plans" ? (
             <div className="grid md:grid-cols-3 gap-6">
               {plans.map((plan, i) => {
                 const isCurrentOrLower = ["free", ...plans.slice(0, plans.findIndex(p => p.id === currentTier) + 1).map(p => p.id)].includes(plan.id);
                 const isCurrent = plan.id === currentTier;
+                const yearlyPrice = Math.round(plan.price * 12 * 0.8);
+                const displayPrice = billingCycle === "year" ? yearlyPrice : plan.price;
+                const cycleLabel = billingCycle === "year" ? "/year" : "/month";
                 return (
                   <motion.div key={plan.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}
                     className={`glass rounded-2xl p-6 space-y-5 transition-all hover:border-primary/30 ${isCurrent ? "border-primary/50 shadow-glow" : ""}`}>
@@ -283,9 +326,17 @@ export default function Payment() {
                       <plan.icon className={`w-8 h-8 ${plan.color}`} />
                       <h3 className="font-display font-bold text-xl">{plan.name}</h3>
                       <div className="flex items-baseline gap-1">
-                        <span className="text-3xl font-display font-bold text-gradient">₹{plan.price}</span>
-                        <span className="text-muted-foreground text-sm">/month</span>
+                        <span className="text-3xl font-display font-bold text-gradient">₹{displayPrice}</span>
+                        <span className="text-muted-foreground text-sm">{cycleLabel}</span>
                       </div>
+                      {billingCycle === "year" && (
+                        <p className="text-[11px] text-emerald-500 font-medium">
+                          Save ₹{plan.price * 12 - yearlyPrice}/year vs monthly
+                        </p>
+                      )}
+                      {plan.id === "pro" && billingCycle === "month" && (
+                        <p className="text-[11px] text-emerald-500 font-medium">7-day free trial included</p>
+                      )}
                     </div>
                     <ul className="space-y-2">
                       {plan.features.map(f => (
@@ -300,17 +351,17 @@ export default function Payment() {
                       <Button disabled className="w-full opacity-50">Already Included</Button>
                     ) : (
                       <div className="space-y-2">
+                        <Button onClick={() => initPayment(plan.id)} disabled={!!processing}
+                          className="w-full bg-gradient-primary text-primary-foreground">
+                          {processing === plan.id ? <><Loader2 className="w-4 h-4 mr-1 animate-spin" /> Opening checkout…</>
+                            : <><CreditCard className="w-4 h-4 mr-1" /> Pay ₹{displayPrice} via Card / UPI / Netbanking</>}
+                        </Button>
                         {primaryUpi && (
-                          <Button onClick={() => openUpiDialog(plan.id, "plan", plan.price, `${plan.name} Plan`)} disabled={!!processing}
-                            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white">
-                            <Smartphone className="w-4 h-4 mr-1" /> Pay via UPI ₹{plan.price}
+                          <Button onClick={() => openUpiDialog(plan.id, "plan", displayPrice, `${plan.name} Plan`)} disabled={!!processing}
+                            variant="outline" className="w-full border-emerald-500/30 hover:bg-emerald-500/10 text-emerald-600">
+                            <Smartphone className="w-4 h-4 mr-1" /> Manual UPI (1–4 hr verify)
                           </Button>
                         )}
-                        <Button onClick={() => initPayment(plan.id)} disabled={!!processing} variant="outline"
-                          className="w-full border-primary/30 hover:bg-primary/10">
-                          {processing === plan.id ? <><Loader2 className="w-4 h-4 mr-1 animate-spin" /> Processing...</>
-                            : <><CreditCard className="w-4 h-4 mr-1" /> Cashfree Instead</>}
-                        </Button>
                       </div>
                     )}
                   </motion.div>
@@ -339,16 +390,18 @@ export default function Payment() {
                       <p className="text-xs text-muted-foreground">₹{(pack.price / pack.credits).toFixed(0)}/search</p>
                     </div>
                     <div className="space-y-2">
+                      <Button onClick={() => initWalletTopup(pack.id)} disabled={!!processing}
+                        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs">
+                        {processing === pack.id ? <Loader2 className="w-3 h-3 animate-spin" />
+                          : <><CreditCard className="w-3 h-3 mr-1" /> Buy ₹{pack.price}</>}
+                      </Button>
                       {primaryUpi && (
                         <Button onClick={() => openUpiDialog(pack.id, "wallet", pack.price, `${pack.credits} Credits`)} disabled={!!processing}
-                          className="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs">
-                          <Smartphone className="w-3 h-3 mr-1" /> UPI ₹{pack.price}
+                          variant="outline" size="sm"
+                          className="w-full text-xs border-emerald-500/30">
+                          <Smartphone className="w-3 h-3 mr-1" /> Manual UPI
                         </Button>
                       )}
-                      <Button onClick={() => initWalletTopup(pack.id)} disabled={!!processing} variant="outline" size="sm"
-                        className="w-full text-xs">
-                        {processing === pack.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <><CreditCard className="w-3 h-3 mr-1" /> Cashfree</>}
-                      </Button>
                     </div>
                   </motion.div>
                 ))}
