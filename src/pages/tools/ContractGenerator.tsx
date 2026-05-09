@@ -13,6 +13,8 @@ import { DashboardReminderBanner } from "@/components/tools/DashboardReminderBan
 import { DashboardToolAIPanel } from "@/components/tools/DashboardToolAIPanel";
 import { ToolTrustBar } from "@/components/tools/ToolTrustBar";
 import { RelatedToolsRail } from "@/components/tools/RelatedToolsRail";
+import { ToolDashboardShell } from "@/components/tools/ToolDashboardShell";
+import { SharedLinkPromo } from "@/components/tools/SharedLinkPromo";
 import { GuestSignupBar } from "@/components/tools/GuestSignupBar";
 import { CONTRACT_TEMPLATES } from "@/lib/tools/templates";
 import { useAuth } from "@/hooks/useAuth";
