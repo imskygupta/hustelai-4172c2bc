@@ -13,6 +13,14 @@ export interface ExportRow {
   delivered_at: string | null;
   created_at: string;
   metadata: any;
+  telegram_file_id?: string | null;
+  delivery_method?: string;
+  download_count?: number;
+  download_limit?: number | null;
+  last_accessed_at?: string | null;
+  is_favorite?: boolean;
+  tags?: string[];
+  watermarked?: boolean;
 }
 
 export async function listExports(opts: { search?: string; type?: string; status?: string; limit?: number } = {}) {
