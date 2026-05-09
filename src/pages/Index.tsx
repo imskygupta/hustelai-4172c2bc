@@ -12,6 +12,8 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 import { SEO, softwareJsonLd, orgJsonLd } from "@/components/SEO";
+import { TrustStrip } from "@/components/TrustStrip";
+import { AIWorkspaceSection, TelegramDeliverySection, ExportCenterSection, PaymentsAutomationSection, FreeToolsStrip } from "@/components/home/InfrastructureSections";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -114,15 +116,15 @@ export default function Index() {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
               </span>
-              HustleAI Workspace OS — Live for freelancers & agencies
+              The AI Operating System for Freelancers · v2 live
             </div>
             <h1 className="gsap-fade text-5xl md:text-7xl font-display font-semibold leading-[1.05] tracking-tight text-slate-900">
-              Manage clients, projects &amp;
+              The AI operating system
               <br />
-              invoices in one <span className="text-emerald-600">AI workspace.</span>
+              built for <span className="text-emerald-600">freelancers.</span>
             </h1>
             <p className="gsap-fade text-base md:text-lg text-slate-500 max-w-2xl mx-auto leading-relaxed">
-              The freelancer operating system. Run your client work, agreements, payments and workflows from a single AI-powered workspace — built for freelancers, creators, consultants and modern agencies.
+              CRM, invoices, proposals, client portals, AI workspace memory, Telegram-delivered exports and payment automations — one infrastructure layer for the way you actually work.
             </p>
           </div>
 
@@ -138,10 +140,13 @@ export default function Index() {
           <div className="gsap-fade flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-slate-500 pt-2">
             <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5 text-emerald-500" /> No credit card</span>
             <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5 text-emerald-500" /> Free forever tier</span>
-            <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5 text-emerald-500" /> Indian + global gigs</span>
+            <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5 text-emerald-500" /> Telegram delivery built-in</span>
+            <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5 text-emerald-500" /> Encrypted exports</span>
           </div>
         </div>
       </section>
+
+      <TrustStrip />
 
       {/* Stats */}
       <section className="py-12 border-y border-slate-200 bg-white">
@@ -163,6 +168,21 @@ export default function Index() {
           </div>
         </div>
       </section>
+
+      {/* AI Workspace positioning */}
+      <AIWorkspaceSection />
+
+      {/* Telegram delivery layer */}
+      <TelegramDeliverySection />
+
+      {/* Export center */}
+      <ExportCenterSection />
+
+      {/* Payments & wallet */}
+      <PaymentsAutomationSection />
+
+      {/* Free tools strip */}
+      <FreeToolsStrip />
 
       {/* Features */}
       <section className="py-24 px-4 bg-slate-50/50">
