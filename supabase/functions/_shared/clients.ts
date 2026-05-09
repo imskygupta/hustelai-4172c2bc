@@ -57,3 +57,37 @@ export function getWorkspace(): SupabaseClient {
   }
   return createClient(url, key, { auth: { persistSession: false } });
 }
+
+/**
+ * Fire-and-forget insert into the analytics DB. Never throws — analytics
+ * writes must never break a primary-path operation. Returns true on success.
+ *
+ * If ANALYTICS_SUPABASE_SERVICE_ROLE_KEY is not configured yet, the write is
+ * silently skipped so existing edge functions keep working during the
+ * progressive migration.
+ */
+export async function safeAnalyticsInsert(
+  table: string,
+  row: Record<string, unknown>,
+): Promise<boolean> {
+  try {
+    const url =
+      Deno.env.get("ANALYTICS_SUPABASE_URL") ??
+      "https://qeswhaytgvosfzzgraef.supabase.co";
+    const key =
+      Deno.env.get("ANALYTICS_SUPABASE_SERVICE_ROLE_KEY") ??
+      Deno.env.get("API_PLATFORM_SUPABASE_SERVICE_ROLE_KEY") ??
+      "";
+    if (!key) return false;
+    const sb = createClient(url, key, { auth: { persistSession: false } });
+    const { error } = await sb.from(table).insert(row);
+    if (error) {
+      console.warn(`safeAnalyticsInsert ${table}:`, error.message);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.warn(`safeAnalyticsInsert ${table} threw:`, (err as Error).message);
+    return false;
+  }
+}
