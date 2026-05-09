@@ -23,6 +23,7 @@ import {
   , Flag
 } from "lucide-react";
 import { PaymentMethodsManager } from "@/components/admin/PaymentMethodsManager";
+import { DodoAdminPanel } from "@/components/admin/DodoAdminPanel";
 import { SQL_BLOCKS } from "@/lib/work-sql";
 import { FeatureFlagsManager } from "@/components/admin/FeatureFlagsManager";
 import { UsageAnalyticsManager } from "@/components/admin/UsageAnalyticsManager";
@@ -119,7 +120,7 @@ type AdminSection =
   | "overview" | "users" | "roles" | "notifications" | "webinars"
   | "expert" | "chatbot" | "blogs" | "analytics" | "config"
   | "verification" | "payments" | "forum" | "community" | "trending" | "newsletter" | "email-settings" | "ai-providers" | "send-email" | "orders"
-  | "payment-logs" | "bonus-kits" | "social-links" | "sql-setup" | "feature-flags" | "system-health";
+  | "payment-logs" | "bonus-kits" | "social-links" | "sql-setup" | "feature-flags" | "system-health" | "dodo-payments";
 type AdminSectionExt = AdminSection | "seo-pages" | "seo-blog" | "usage-analytics";
 
 const sidebarItems: { id: AdminSection; label: string; icon: any }[] = [
@@ -128,6 +129,7 @@ const sidebarItems: { id: AdminSection; label: string; icon: any }[] = [
   { id: "roles", label: "Role Manager", icon: Shield },
   { id: "verification", label: "Verification", icon: UserCheck },
   { id: "payments", label: "Payments", icon: Zap },
+  { id: "dodo-payments", label: "Dodo Payments", icon: CreditCardIcon },
   { id: "payment-logs", label: "Payment Logs", icon: Clock },
   { id: "orders", label: "Orders", icon: FileText },
   { id: "bonus-kits", label: "Bonus Kits", icon: Gift },
