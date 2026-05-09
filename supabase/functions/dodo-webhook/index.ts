@@ -7,6 +7,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { DODO_MODE, DODO_WEBHOOK_SECRET, corsHeaders } from "../_shared/dodo.ts";
+import { emitBillingEvent } from "../_shared/notifications/emit.ts";
 
 async function verifyStandardWebhook(rawBody: string, headers: Headers): Promise<boolean> {
   if (!DODO_WEBHOOK_SECRET) return false;
@@ -200,6 +201,26 @@ serve(async (req) => {
             user_id: userId, balance: credits,
           } as any);
         }
+        emitBillingEvent({
+          user_id: userId, event: "wallet_topup",
+          amount: credits, currency: "credits",
+          link: "/dashboard",
+        });
+      }
+
+      if (trulyPaid && isSubscription && userId) {
+        const tierLabel = (metadata.internal_key || "").toUpperCase();
+        emitBillingEvent({
+          user_id: userId, event: "subscription_upgraded",
+          amount: amountInr, currency: "₹", plan: tierLabel,
+          link: "/dashboard",
+        });
+      } else if (trulyPaid && userId) {
+        emitBillingEvent({
+          user_id: userId, event: "payment_succeeded",
+          amount: amountInr, currency: "₹",
+          link: "/profile?tab=billing",
+        });
       }
 
       // Increment coupon redemption count
@@ -336,6 +357,14 @@ serve(async (req) => {
         status: "failed",
         cf_payment_id: data.payment_id || null,
       }).then(() => {}).catch(() => {});
+      if (userId) {
+        emitBillingEvent({
+          user_id: userId, event: "payment_failed",
+          amount: amountInr, currency: "₹",
+          reason: data.failure_reason || data.error_code,
+          link: "/payment",
+        });
+      }
       // Defensive: if a tier was prematurely granted, revoke it back to free
       // when the matching subscription_id has no successful payment on record.
       if (userId && data.subscription_id) {
