@@ -60,8 +60,8 @@ export default function PaymentStatus() {
       // Stage 2: Processing
       await new Promise(r => setTimeout(r, 600));
 
-      const { data, error } = await supabase.functions.invoke("cashfree-payment", {
-        body: { action: "verify_payment", order_id: orderId },
+      const { data, error } = await supabase.functions.invoke("dodo-verify", {
+        body: { dodo_session_id: orderId },
       });
 
       if (error) throw error;
