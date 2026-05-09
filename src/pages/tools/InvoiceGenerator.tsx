@@ -11,6 +11,9 @@ import { useToolGate } from "@/components/tools/ToolGate";
 import { AIAutofillIcon, AIAutofillButton } from "@/components/tools/AIAutofillButton";
 import { DashboardReminderBanner } from "@/components/tools/DashboardReminderBanner";
 import { DashboardToolAIPanel } from "@/components/tools/DashboardToolAIPanel";
+import { ToolTrustBar } from "@/components/tools/ToolTrustBar";
+import { RelatedToolsRail } from "@/components/tools/RelatedToolsRail";
+import { GuestSignupBar } from "@/components/tools/GuestSignupBar";
 import { useAuth } from "@/hooks/useAuth";
 import { printWithMeta, watermarkModeForTier } from "@/lib/tools/print-meta";
 import { emitDelight, pickDelight, bumpDelightCount } from "@/lib/delight-bus";
@@ -143,6 +146,7 @@ export default function InvoiceGenerator() {
             </div>
             <h1 className="text-3xl md:text-4xl font-display font-bold text-slate-900">GST Invoice Generator</h1>
             <p className="text-slate-600 mt-2">Fill the form on the left — your invoice updates live on the right.</p>
+            <div className="mt-5 print:hidden"><ToolTrustBar toolKey="invoice" /></div>
           </div>
 
           <div className="grid lg:grid-cols-2 gap-6 print:block">
@@ -321,9 +325,11 @@ export default function InvoiceGenerator() {
                 </details>
               ))}
             </div>
+            <div className="print:hidden"><RelatedToolsRail currentKey="invoice" /></div>
           </div>
         </div>
         {gate}
+        {!inDashboard && <GuestSignupBar toolName="GST Invoice Generator" />}
       </div>
     </>
   );
