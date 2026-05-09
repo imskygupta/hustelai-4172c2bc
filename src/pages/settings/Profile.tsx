@@ -6,8 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Loader2, Plus, Trash2 } from "lucide-react";
+import { Loader2, Plus, Trash2, Lock } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { canPhoneNumber } from "@/lib/tier-gates";
+import { Link } from "react-router-dom";
 
 const CATEGORIES = [
   "Designer", "Developer", "Writer", "Marketer", "Video editor",
@@ -21,6 +23,7 @@ export default function ProfileSettings() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [tier, setTier] = useState<string>("free");
   const [form, setForm] = useState({
     display_name: "",
     username: "",
@@ -43,6 +46,7 @@ export default function ProfileSettings() {
     (async () => {
       const { data } = await supabase.from("profiles").select("*").eq("user_id", user.id).maybeSingle();
       if (data) {
+        setTier((data as any).subscription_tier || "free");
         setForm({
           display_name: data.display_name ?? "",
           username: data.username ?? "",
@@ -129,8 +133,19 @@ export default function ProfileSettings() {
           <SettingsField label="Timezone">
             <Input value={form.timezone} onChange={(e) => setForm({ ...form, timezone: e.target.value })} placeholder="Asia/Kolkata" />
           </SettingsField>
-          <SettingsField label="Phone number" hint="Used for account recovery and 2FA later.">
-            <Input type="tel" value={form.phone_number} onChange={(e) => setForm({ ...form, phone_number: e.target.value })} placeholder="+91 98765 43210" />
+          <SettingsField
+            label="Phone number"
+            hint={canPhoneNumber(tier) ? "Used for account recovery and 2FA." : (
+              <span className="inline-flex items-center gap-1 text-amber-500"><Lock className="h-3 w-3" /> Available on Pro and above. <Link to="/payment" className="underline">Upgrade</Link></span>
+            )}
+          >
+            <Input
+              type="tel"
+              value={form.phone_number}
+              disabled={!canPhoneNumber(tier)}
+              onChange={(e) => setForm({ ...form, phone_number: e.target.value })}
+              placeholder={canPhoneNumber(tier) ? "+91 98765 43210" : "Upgrade to add phone"}
+            />
           </SettingsField>
         </div>
         <div className="mt-4">

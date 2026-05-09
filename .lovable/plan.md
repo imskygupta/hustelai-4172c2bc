@@ -1,94 +1,49 @@
-## HustleAI Platform Modernization Pass
+## Telegram Delivery + Notification Infrastructure — Phase 2
 
-Goal: align the public surface of the product with the infrastructure already shipped (Telegram delivery, Export Center, AI workspace, Dodo billing). No backend changes — pure UI/positioning/copy refresh.
+Most backend pieces from the previous pass are already in place (`export-cache-telegram`, `export-deliver-telegram`, `export-tg-deeplink`, `notifications-connect`, `generated_exports` schema with `telegram_file_id`/`delivery_method`/`download_count`). With `TELEGRAM_STORAGE_CHANNEL_ID` now set, this phase wires the cache path end-to-end, adds admin tooling + UPI alerts, and ships the SaaS UX polish across Profile/Integrations/Settings.
 
----
+### 1. Storage cache wiring (backend)
+- `_shared/exports/createExport.ts`: after a row is inserted with a `storage_path`, fire-and-forget invoke `export-cache-telegram` so every new export gets cached to the storage channel automatically.
+- `export-deliver-telegram`: already has fast-path via `telegram_file_id`; add a small "ensure cached" step after slow-path upload (already partly done — verify and tighten).
+- New edge function `export-storage-cleanup` (cron-ready): deletes Supabase storage objects for rows where `telegram_file_id IS NOT NULL` AND tier is `free` AND `expires_at < now()`. Keeps DB row + Telegram file as the durable copy. (Cron wiring left for a follow-up insert; function is ready to call manually.)
 
-### 1. Homepage repositioning (`src/pages/Index.tsx` + components)
+### 2. Telegram binding security
+- `notifications-connect` already issues a one-time `connect_token` with 15-min TTL → deep link to bot.
+- `telegram-webhook` `/start <token>` handler: enforce single-account-per-user (reject if `provider_chat_id` already linked to a different user), set `status=connected`, send verification confirmation.
+- Add `/disconnect` and `/status` bot commands.
 
-- Rewrite hero: from "AI tools" → **"The AI Operating System for Freelancers"**, sub-copy referencing workspaces, exports, Telegram delivery, automations.
-- New section: **AI Workspace** (CRM, docs, pipelines, brand kit).
-- New section: **Telegram Delivery** (instant export delivery, secure share links, OTP).
-- New section: **Export Center** (persistent history, watermarking, expiring links).
-- New section: **Notifications & Automation**.
-- New section: **Payments & Wallet** (Dodo, UPI, invoices).
-- Refresh feature grid + trust strip (encrypted exports, verified payments, delivery tracking).
+### 3. UPI / manual payment admin alerts
+- New edge function `payment-admin-notify` invoked from existing UPI/manual review submission flow:
+  - Sends Telegram message to `TELEGRAM_ADMIN_CHAT_ID` with user email, amount, plan, payment ref, and inline keyboard buttons `Approve` / `Reject`.
+  - Callback queries handled in `telegram-webhook` → updates payment row status, notifies user via their own Telegram (if linked) or email.
+- Frontend: payment status page already says "under verification" — add a subtle Telegram-routing trust line.
 
-### 2. Pricing refresh (`src/components/Pricing.tsx`, `src/pages/Plans.tsx`, `src/pages/PricingPage.tsx`)
+### 4. Admin panel upgrades
+- New page `src/pages/admin/TelegramOps.tsx` (linked from AdminDashboard):
+  - Feature toggle (writes to existing `feature_flags`).
+  - Delivery monitoring table (recent `generated_exports` with delivery_method, status, retry button → re-invoke `export-deliver-telegram`).
+  - Failed delivery retry, manual cleanup trigger, export + notification analytics counts.
 
-Re-shape feature lists per current architecture:
+### 5. Profile / Settings / Integrations UX polish
+- `src/pages/settings/Integrations.tsx`: redesign Telegram card — connection state pill, deep-link CTA, last verified, delivery preferences toggles (exports / payments / workspace / AI completions), disconnect button.
+- `src/pages/settings/Profile.tsx`: phone number field gated for free tier (disabled with "Upgrade to Pro" hint).
+- `src/pages/settings/Exports.tsx`: surface "Cached on Telegram" badge + "Resend instantly" action (already wired to `export-deliver-telegram` fast path).
+- `src/components/settings/SettingsLayout.tsx`: tighten spacing, add status dots already in place — refine.
+- Empty states + skeleton loaders across Exports / Integrations / Notifications.
 
-- **Free** — Telegram delivery, 7-day expiring exports, watermarked, basic notifications, limited workspace memory.
-- **Pro** — persistent exports, OTP share links, export history, AI memory, Telegram integrations, cloud workspace.
-- **Elite** — branded exports, advanced automations, priority generations, analytics, collaboration infra.
-- **Infinity** — unlimited exports, premium automations, full infra access, future API.
+### 6. Tier gating
+Centralized in `src/lib/tier-gates.ts` (new): `canPersistentExports`, `canPriorityDelivery`, `canPhoneNumber`, `canAdvancedRouting`. Used in UI for badges + disabled controls. Backend continues to enforce via existing `consume_export_quota`/`PERSISTENT_TIERS` set.
 
-Add: comparison table on `/plans`, trust badges row, mobile spacing pass, "Pay-as-you-go credits" repositioned.
+### 7. Marketing sync
+Already done in last pass (`InfrastructureSections`, `TrustStrip`, Pricing rewrite). This phase adds a dedicated `/integrations/telegram` marketing landing pulling from the same components, so SEO + footer link land on a clear page.
 
-### 3. Tools & templates pass (`src/pages/tools/ToolsHub.tsx` + tool pages)
+### Out of scope (untouched)
+- Dodo webhook handler internals
+- Auth / signup / OTP flow
+- Existing payment-state machine
 
-- Add **Export badges** (Telegram-ready / Workspace-saved / Premium) on tool cards.
-- Inline upgrade nudge component referencing branded exports + Telegram delivery.
-- Reorder hub copy: "Free tools that plug into your AI workspace".
+### Files
+**New**: `supabase/functions/export-storage-cleanup/index.ts`, `supabase/functions/payment-admin-notify/index.ts`, `src/pages/admin/TelegramOps.tsx`, `src/lib/tier-gates.ts`, `src/pages/marketing/TelegramLanding.tsx`
+**Edit**: `supabase/functions/_shared/exports/createExport.ts`, `supabase/functions/telegram-webhook/index.ts`, `supabase/functions/export-deliver-telegram/index.ts`, `src/pages/settings/Integrations.tsx`, `src/pages/settings/Profile.tsx`, `src/pages/settings/Exports.tsx`, `src/components/settings/SettingsLayout.tsx`, `src/pages/AdminDashboard.tsx`, `src/App.tsx`
 
-### 4. Settings polish (`src/components/settings/SettingsLayout.tsx`, settings pages)
-
-- Sidebar: integration status dots (Telegram / Email / Payments).
-- Profile: surface phone number prominently with verified badge slot.
-- Cards: tighter spacing, stronger typography, better mobile stacking.
-- Add **Workspace Identity** summary card on Profile.
-- Exports page: surface Telegram-cached badge prominently (already partly done, add stat strip).
-
-### 5. Telegram positioning
-
-- New `src/components/home/TelegramDeliverySection.tsx` for homepage.
-- Settings/Integrations: clearer "Connected via Telegram" state, gated automation rows for paid tiers with lock chip.
-
-### 6. Billing/Payment UX (`src/pages/Payment.tsx`, `src/pages/PaymentStatus.tsx`, `src/pages/settings/Billing.tsx`)
-
-- Remove any stale Cashfree-only copy; standardize on **Dodo + UPI** wording.
-- Add trust strip: "Secure checkout · 256-bit · Verified merchant".
-- Improve UPI pending-review state copy + iconography.
-- Invoice list: cleaner status pills, structured invoice numbers (already there) — ensure visible.
-
-### 7. Trust indicators (global)
-
-- Reusable `TrustStrip` component (encrypted exports, verified payments, delivery tracking, activity logs).
-- Drop into homepage, pricing, billing, exports pages.
-
-### 8. UI/UX refinement (global tokens / components)
-
-- Tighten card padding scale, unify empty states via existing `EmptyState`.
-- Add shimmer skeletons where lists currently flash.
-- Hover states harmonized to emerald accent (per existing brand).
-
----
-
-### Files touched (new)
-
-- `src/components/home/AIWorkspaceSection.tsx`
-- `src/components/home/TelegramDeliverySection.tsx`
-- `src/components/home/ExportCenterSection.tsx`
-- `src/components/home/PaymentsAutomationSection.tsx`
-- `src/components/TrustStrip.tsx`
-
-### Files touched (edited)
-
-- `src/pages/Index.tsx`
-- `src/components/Pricing.tsx`
-- `src/pages/Plans.tsx` / `src/pages/PricingPage.tsx`
-- `src/pages/tools/ToolsHub.tsx`
-- `src/components/settings/SettingsLayout.tsx`
-- `src/pages/settings/Profile.tsx`, `Billing.tsx`, `Exports.tsx`, `Integrations.tsx`
-- `src/pages/Payment.tsx`, `src/pages/PaymentStatus.tsx`
-
-### Out of scope (untouched, per request)
-
-- Dodo webhook + payment hardening
-- Telegram infra edge functions
-- DB distribution / migrations
-- Export pipeline backend code
-
-### Approach
-
-Pure presentation layer. No DB migrations, no edge function changes, no business logic. Roll out section-by-section, verify build after each batch.
+No DB schema changes required — the previous migration already added all needed columns.
