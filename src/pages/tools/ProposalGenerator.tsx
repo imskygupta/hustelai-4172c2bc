@@ -11,6 +11,9 @@ import { useToolGate } from "@/components/tools/ToolGate";
 import { AIAutofillIcon, AIAutofillButton } from "@/components/tools/AIAutofillButton";
 import { DashboardReminderBanner } from "@/components/tools/DashboardReminderBanner";
 import { DashboardToolAIPanel } from "@/components/tools/DashboardToolAIPanel";
+import { ToolTrustBar } from "@/components/tools/ToolTrustBar";
+import { RelatedToolsRail } from "@/components/tools/RelatedToolsRail";
+import { GuestSignupBar } from "@/components/tools/GuestSignupBar";
 import { PROPOSAL_TEMPLATES } from "@/lib/tools/templates";
 import { useAuth } from "@/hooks/useAuth";
 import { printWithMeta, watermarkModeForTier } from "@/lib/tools/print-meta";
@@ -159,6 +162,7 @@ export default function ProposalGenerator() {
             </div>
             <h1 className="text-3xl md:text-4xl font-display font-bold text-slate-900">Freelance Proposal Generator</h1>
             <p className="text-slate-600 mt-2">Pick a template, customize, and download a client-ready proposal.</p>
+            <div className="mt-5"><ToolTrustBar toolKey="proposal" /></div>
           </div>
 
           {/* Template chips */}
@@ -306,9 +310,11 @@ export default function ProposalGenerator() {
                 </details>
               ))}
             </div>
+            <div className="print:hidden"><RelatedToolsRail currentKey="proposal" /></div>
           </div>
         </div>
         {gate}
+        {!inDashboard && <GuestSignupBar toolName="Proposal Generator" />}
       </div>
     </>
   );
