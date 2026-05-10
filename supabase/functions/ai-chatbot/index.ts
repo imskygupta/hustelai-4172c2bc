@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { flagGuard } from "../_shared/flags/resolve.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -35,6 +36,9 @@ serve(async (req) => {
 
     const userId = claimsData.claims.sub as string;
     // === END AUTH CHECK ===
+
+    const blocked = await flagGuard(userId, "ai_tools.chatbot", corsHeaders, { endpoint: "ai-chatbot" });
+    if (blocked) return blocked;
 
     const { messages } = await req.json();
     if (!messages || !Array.isArray(messages)) {
