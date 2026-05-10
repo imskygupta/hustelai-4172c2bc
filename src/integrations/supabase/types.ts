@@ -1452,6 +1452,30 @@ export type Database = {
           },
         ]
       }
+      feature_access: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          feature_key: string
+          id: string
+          tier: string
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          feature_key: string
+          id?: string
+          tier: string
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          feature_key?: string
+          id?: string
+          tier?: string
+        }
+        Relationships: []
+      }
       feature_flags: {
         Row: {
           category: string
@@ -3006,6 +3030,39 @@ export type Database = {
         }
         Relationships: []
       }
+      retention_policies: {
+        Row: {
+          action: string
+          created_at: string
+          enabled: boolean
+          id: string
+          notes: string | null
+          resource: string
+          retention_days: number
+          updated_at: string
+        }
+        Insert: {
+          action?: string
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          notes?: string | null
+          resource: string
+          retention_days: number
+          updated_at?: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          notes?: string | null
+          resource?: string
+          retention_days?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       roadmap_sessions: {
         Row: {
           classification: Json
@@ -3731,6 +3788,39 @@ export type Database = {
         }
         Relationships: []
       }
+      tier_limits: {
+        Row: {
+          created_at: string
+          feature: string
+          id: string
+          max_value: number
+          meter: string
+          period: string
+          tier: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          feature?: string
+          id?: string
+          max_value: number
+          meter: string
+          period?: string
+          tier: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          feature?: string
+          id?: string
+          max_value?: number
+          meter?: string
+          period?: string
+          tier?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       trending_links: {
         Row: {
           category: string | null
@@ -3767,6 +3857,45 @@ export type Database = {
           sort_order?: number | null
           title?: string
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      usage_overrides: {
+        Row: {
+          bonus_units: number
+          created_at: string
+          expires_at: string | null
+          feature: string
+          granted_by: string | null
+          id: string
+          max_override: number | null
+          meter: string
+          reason: string | null
+          user_id: string
+        }
+        Insert: {
+          bonus_units?: number
+          created_at?: string
+          expires_at?: string | null
+          feature?: string
+          granted_by?: string | null
+          id?: string
+          max_override?: number | null
+          meter: string
+          reason?: string | null
+          user_id: string
+        }
+        Update: {
+          bonus_units?: number
+          created_at?: string
+          expires_at?: string | null
+          feature?: string
+          granted_by?: string | null
+          id?: string
+          max_override?: number | null
+          meter?: string
+          reason?: string | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -4807,6 +4936,25 @@ export type Database = {
         Returns: Json
       }
       consume_export_quota: { Args: { _user_id: string }; Returns: Json }
+      consume_usage: {
+        Args: {
+          _feature: string
+          _meter: string
+          _units?: number
+          _user: string
+        }
+        Returns: Json
+      }
+      grant_bonus_credits: {
+        Args: {
+          _amount: number
+          _expires_at?: string
+          _meter: string
+          _reason?: string
+          _user: string
+        }
+        Returns: string
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -4815,6 +4963,7 @@ export type Database = {
         Returns: boolean
       }
       mark_expired_exports: { Args: never; Returns: number }
+      resolve_user_limits: { Args: { _user: string }; Returns: Json }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
