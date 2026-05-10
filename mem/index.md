@@ -4,3 +4,4 @@
 - [Workflow Event Producers](mem://features/workflow-event-producers) — Real producers (payments/exports/telegram) wired into workflow engine; templates + ops RPCs
 - [AI Job Queue](mem://tech/ai-job-queue) — Async AI execution layer with cron worker, retries, provider failover, admin console
 - [Multi-bot Telegram](mem://admin/multi-bot-architecture) — HustleAI user bot + SkyMedia admin bot, allowlist + audit + webhook health
+- [Usage Governance](mem://features/usage-governance) — Capability registry, quota guards, admin governance UI
