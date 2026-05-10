@@ -6,6 +6,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { sendTelegram, answerCallbackQuery } from "../_shared/notifications/telegram.ts";
 import { randomToken } from "../_shared/exports/createExport.ts";
 import { isFeatureEnabledServer } from "../_shared/flags/resolve.ts";
+import { emitWorkflowEvent } from "../_shared/workflows/emit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -153,14 +154,25 @@ serve(async (req) => {
         title: "✅ Connected!",
         body: "Your HustleAI account is now linked. You'll receive real-time alerts here for payments, AI tasks, security events, and more. Manage preferences in Settings → Integrations.",
       });
+      void emitWorkflowEvent(sb, "telegram.connected", {
+        user_id: integ.user_id, chat_id: chatId, username: fromUsername,
+        provider_user_id: String(msg?.from?.id || ""),
+      }, { user_id: integ.user_id, dedupe_key: `tg_connect:${integ.user_id}:${chatId}`, source: "telegram-webhook" });
       return ok();
     }
 
     if (text === "/stop" || text === "/disconnect") {
+      const { data: existingLink } = await sb.from("notification_integrations")
+        .select("user_id").eq("provider", "telegram").eq("provider_chat_id", chatId).maybeSingle();
       await sb.from("notification_integrations").update({
         status: "revoked", provider_chat_id: null,
       }).eq("provider", "telegram").eq("provider_chat_id", chatId);
       await sendTelegram(chatId, { title: "Disconnected", body: "You will no longer receive HustleAI notifications here." });
+      if (existingLink?.user_id) {
+        void emitWorkflowEvent(sb, "telegram.disconnected", {
+          user_id: existingLink.user_id, chat_id: chatId, source: "user_command",
+        }, { user_id: existingLink.user_id, dedupe_key: `tg_disc:${existingLink.user_id}:${Date.now()}`, source: "telegram-webhook" });
+      }
       return ok();
     }
 

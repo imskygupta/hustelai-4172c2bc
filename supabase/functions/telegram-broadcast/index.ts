@@ -3,6 +3,7 @@
 // Designed to be safe to re-run (idempotent on per-recipient send).
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.74.0";
 import { flagGuard } from "../_shared/flags/resolve.ts";
+import { emitWorkflowEvent } from "../_shared/workflows/emit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -95,6 +96,17 @@ Deno.serve(async (req) => {
       sent_count: sent, failed_count: failed,
       finished_at: new Date().toISOString(),
     } as any).eq("id", (job as any).id);
+
+    void emitWorkflowEvent(sb, "telegram.broadcast_sent", {
+      job_id: (job as any).id, audience, channel, title,
+      sent, failed, total: list.length,
+      created_by: user.id,
+    }, { user_id: user.id, dedupe_key: `tg_bcast:${(job as any).id}`, source: "telegram-broadcast" });
+    if (failed > 0) {
+      void emitWorkflowEvent(sb, "telegram.delivery_failed", {
+        job_id: (job as any).id, channel, failed, total: list.length, audience,
+      }, { user_id: user.id, dedupe_key: `tg_bcast_fail:${(job as any).id}`, source: "telegram-broadcast" });
+    }
 
     return new Response(JSON.stringify({ ok: true, job_id: (job as any).id, sent, failed, total: list.length }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

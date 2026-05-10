@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { createExport } from "../_shared/exports/createExport.ts";
 import { flagGuard } from "../_shared/flags/resolve.ts";
+import { emitWorkflowEvent } from "../_shared/workflows/emit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -37,6 +38,14 @@ serve(async (req) => {
       file_b64, storage_path,
       metadata, deliver_to_telegram: !!deliver_to_telegram,
     });
+
+    if (row?.id) {
+      void emitWorkflowEvent(sb, "export.generated", {
+        user_id: u.user.id, export_id: row.id, export_type, title,
+        mime_type, size_bytes: (row as any).size_bytes ?? null,
+        deliver_to_telegram: !!deliver_to_telegram,
+      }, { user_id: u.user.id, dedupe_key: `export:${row.id}`, source: "export-create" });
+    }
 
     // Fire-and-forget: cache to private Telegram storage channel for fast future delivery.
     if (row?.storage_path && Deno.env.get("TELEGRAM_STORAGE_CHANNEL_ID")) {
