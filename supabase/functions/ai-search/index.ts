@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { flagGuard } from "../_shared/flags/resolve.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -33,6 +34,10 @@ serve(async (req) => {
       });
     }
     // === END AUTH CHECK ===
+
+    const userId = (claimsData.claims as any).sub as string;
+    const blocked = await flagGuard(userId, "ai_tools.search", corsHeaders, { endpoint: "ai-search" });
+    if (blocked) return blocked;
 
     const { query, limit } = await req.json();
     if (!query) {
