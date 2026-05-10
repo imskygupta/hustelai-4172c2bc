@@ -1,3 +1,4 @@
+import { Suspense, lazy } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -18,9 +19,10 @@ import Contact from "./pages/Contact";
 import Unsubscribe from "./pages/Unsubscribe";
 import Blog from "./pages/Blog";
 import Reviews from "./pages/Reviews";
-import AdminLogin from "./pages/AdminLogin";
-import AdminDashboard from "./pages/AdminDashboard";
-import AdminCommunications from "./pages/admin/Communications";
+// Admin pages are lazy-loaded — they sit off the user critical path
+const AdminLogin = lazy(() => import("./pages/AdminLogin"));
+const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
+const AdminCommunications = lazy(() => import("./pages/admin/Communications"));
 import NotificationPreferences from "./pages/settings/NotificationPreferences";
 import Integrations from "./pages/settings/Integrations";
 import Exports from "./pages/settings/Exports";
@@ -141,17 +143,17 @@ import { isMaintenance, MaintenancePage } from "@/components/MaintenanceGate";
 import { RootErrorFallback } from "@/components/RootErrorFallback";
 import Status from "./pages/Status";
 import Health from "./pages/Health";
-import AdminRuntime from "./pages/admin/Runtime";
-import RuntimeProviders from "./pages/admin/RuntimeProviders";
-import PaymentsReview from "./pages/admin/PaymentsReview";
-import AdminNotifications from "./pages/admin/Notifications";
-import TelegramOps from "./pages/admin/TelegramOps";
-import TelegramControl from "./pages/admin/TelegramControl";
-import TelegramOpsCenter from "./pages/admin/TelegramOpsCenter";
-import AdminAiJobs from "./pages/admin/AiJobs";
-import AdminFeatureFlags from "./pages/admin/FeatureFlags";
-import RuntimeAnalytics from "./pages/admin/RuntimeAnalytics";
-import Automations from "./pages/admin/Automations";
+const AdminRuntime = lazy(() => import("./pages/admin/Runtime"));
+const RuntimeProviders = lazy(() => import("./pages/admin/RuntimeProviders"));
+const PaymentsReview = lazy(() => import("./pages/admin/PaymentsReview"));
+const AdminNotifications = lazy(() => import("./pages/admin/Notifications"));
+const TelegramOps = lazy(() => import("./pages/admin/TelegramOps"));
+const TelegramControl = lazy(() => import("./pages/admin/TelegramControl"));
+const TelegramOpsCenter = lazy(() => import("./pages/admin/TelegramOpsCenter"));
+const AdminAiJobs = lazy(() => import("./pages/admin/AiJobs"));
+const AdminFeatureFlags = lazy(() => import("./pages/admin/FeatureFlags"));
+const RuntimeAnalytics = lazy(() => import("./pages/admin/RuntimeAnalytics"));
+const Automations = lazy(() => import("./pages/admin/Automations"));
 import { MaintenanceBanner } from "./components/flags/FeatureGate";
 import TelegramLanding from "./pages/marketing/TelegramLanding";
 import { Navigate } from "react-router-dom";
@@ -183,6 +185,11 @@ const App = () => (
           <MascotCompanion />
           <DocsSubdomainRedirect />
           <StatusSubdomainRedirect />
+          <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center bg-background">
+              <div className="h-8 w-8 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
+            </div>
+          }>
           <Routes>
             <Route path="/" element={<Index />} />
             {/* SEO landing pages (public) */}
@@ -347,6 +354,7 @@ const App = () => (
             <Route path="/admin/notifications" element={<AdminNotifications />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
+          </Suspense>
           <MobileBottomNav />
         </BrowserRouter>
         )}
