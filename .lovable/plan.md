@@ -1,49 +1,168 @@
-## Telegram Delivery + Notification Infrastructure — Phase 2
+# Platform Architecture Phases — Resumption Plan
 
-Most backend pieces from the previous pass are already in place (`export-cache-telegram`, `export-deliver-telegram`, `export-tg-deeplink`, `notifications-connect`, `generated_exports` schema with `telegram_file_id`/`delivery_method`/`download_count`). With `TELEGRAM_STORAGE_CHANNEL_ID` now set, this phase wires the cache path end-to-end, adds admin tooling + UPI alerts, and ships the SaaS UX polish across Profile/Integrations/Settings.
+Resuming the paused multi-phase platform work now that Telegram delivery is stable. Goal: turn HustleAI from "feature stack" into a real **operations-grade SaaS platform** with a unified event spine, metered state, feature flags, ops visibility, audit logs, and an automation engine — while keeping primary Supabase lightweight.
 
-### 1. Storage cache wiring (backend)
-- `_shared/exports/createExport.ts`: after a row is inserted with a `storage_path`, fire-and-forget invoke `export-cache-telegram` so every new export gets cached to the storage channel automatically.
-- `export-deliver-telegram`: already has fast-path via `telegram_file_id`; add a small "ensure cached" step after slow-path upload (already partly done — verify and tighten).
-- New edge function `export-storage-cleanup` (cron-ready): deletes Supabase storage objects for rows where `telegram_file_id IS NOT NULL` AND tier is `free` AND `expires_at < now()`. Keeps DB row + Telegram file as the durable copy. (Cron wiring left for a follow-up insert; function is ready to call manually.)
+## Architectural Constraint (governs everything below)
 
-### 2. Telegram binding security
-- `notifications-connect` already issues a one-time `connect_token` with 15-min TTL → deep link to bot.
-- `telegram-webhook` `/start <token>` handler: enforce single-account-per-user (reject if `provider_chat_id` already linked to a different user), set `status=connected`, send verification confirmation.
-- Add `/disconnect` and `/status` bot commands.
+```text
+PRIMARY DB (lightweight, hot path)
+  └─ auth, profiles, subscriptions, payments, wallets,
+     entitlements, current-day quotas, feature_flags
 
-### 3. UPI / manual payment admin alerts
-- New edge function `payment-admin-notify` invoked from existing UPI/manual review submission flow:
-  - Sends Telegram message to `TELEGRAM_ADMIN_CHAT_ID` with user email, amount, plan, payment ref, and inline keyboard buttons `Approve` / `Reject`.
-  - Callback queries handled in `telegram-webhook` → updates payment row status, notifies user via their own Telegram (if linked) or email.
-- Frontend: payment status page already says "under verification" — add a subtle Telegram-routing trust line.
+ANALYTICS DB (append-only, heavy)
+  └─ event_log, audit_log, usage_ledger, automation_runs,
+     export_history, email_logs, provider_metrics
 
-### 4. Admin panel upgrades
-- New page `src/pages/admin/TelegramOps.tsx` (linked from AdminDashboard):
-  - Feature toggle (writes to existing `feature_flags`).
-  - Delivery monitoring table (recent `generated_exports` with delivery_method, status, retry button → re-invoke `export-deliver-telegram`).
-  - Failed delivery retry, manual cleanup trigger, export + notification analytics counts.
+WORKSPACE DB → unchanged (Work Hub, intake)
+COMMUNITY DB → unchanged (forums, discord)
+TELEGRAM    → CDN/delivery layer (no changes this phase)
+```
 
-### 5. Profile / Settings / Integrations UX polish
-- `src/pages/settings/Integrations.tsx`: redesign Telegram card — connection state pill, deep-link CTA, last verified, delivery preferences toggles (exports / payments / workspace / AI completions), disconnect button.
-- `src/pages/settings/Profile.tsx`: phone number field gated for free tier (disabled with "Upgrade to Pro" hint).
-- `src/pages/settings/Exports.tsx`: surface "Cached on Telegram" badge + "Resend instantly" action (already wired to `export-deliver-telegram` fast path).
-- `src/components/settings/SettingsLayout.tsx`: tighten spacing, add status dots already in place — refine.
-- Empty states + skeleton loaders across Exports / Integrations / Notifications.
+Frontend NEVER writes analytics directly — always through `log-event` / new dispatcher edge functions.
 
-### 6. Tier gating
-Centralized in `src/lib/tier-gates.ts` (new): `canPersistentExports`, `canPriorityDelivery`, `canPhoneNumber`, `canAdvancedRouting`. Used in UI for badges + disabled controls. Backend continues to enforce via existing `consume_export_quota`/`PERSISTENT_TIERS` set.
+---
 
-### 7. Marketing sync
-Already done in last pass (`InfrastructureSections`, `TrustStrip`, Pricing rewrite). This phase adds a dedicated `/integrations/telegram` marketing landing pulling from the same components, so SEO + footer link land on a clear page.
+## Phase 1 — Event + Activity Pipeline (foundation)
 
-### Out of scope (untouched)
-- Dodo webhook handler internals
-- Auth / signup / OTP flow
-- Existing payment-state machine
+The single spine that Telegram, email, audit, automation, notifications all subscribe to.
 
-### Files
-**New**: `supabase/functions/export-storage-cleanup/index.ts`, `supabase/functions/payment-admin-notify/index.ts`, `src/pages/admin/TelegramOps.tsx`, `src/lib/tier-gates.ts`, `src/pages/marketing/TelegramLanding.tsx`
-**Edit**: `supabase/functions/_shared/exports/createExport.ts`, `supabase/functions/telegram-webhook/index.ts`, `supabase/functions/export-deliver-telegram/index.ts`, `src/pages/settings/Integrations.tsx`, `src/pages/settings/Profile.tsx`, `src/pages/settings/Exports.tsx`, `src/components/settings/SettingsLayout.tsx`, `src/pages/AdminDashboard.tsx`, `src/App.tsx`
+**New analytics tables (DB2)**
+- `event_log` — already partly used; formalize columns: `id, ts, user_id, category, action, severity, source, payload, dedupe_key, replay_of`
+- `event_subscriptions` — `id, category, action_pattern, channel (telegram|email|webhook|automation), config, enabled`
+- `event_failures` — failed delivery rows for replay
+- Indexes: `(category, ts desc)`, `(user_id, ts desc)`, `(severity, ts desc)`, unique `(dedupe_key)` partial
 
-No DB schema changes required — the previous migration already added all needed columns.
+**Typed schema (frontend + edge shared)**
+- `src/lib/events/types.ts` — discriminated union of `EventName` → payload shape. Categories: `payment | export | ai | affiliate | security | workspace | admin | system`. Severity: `info | warn | error | critical`.
+- `src/lib/events/dispatch.ts` — `emit(event)` wrapper around `log-event` with dedupe key + idempotency.
+- `supabase/functions/_shared/events/` — same types mirrored for edge functions; `emitServer()` writes directly to analytics with service role.
+
+**Dispatcher edge function** (`event-dispatcher`)
+- Triggered via Postgres `pg_net` from analytics `event_log` insert OR called inline from emitters.
+- Reads `event_subscriptions`, fans out: Telegram (`notify-ops`), email, webhook, automation queue.
+- Records success/failure into `event_failures`; supports manual replay from admin.
+
+**Migrate existing emitters** to `emit()`:
+- payment webhooks, export creation, AI quota consume, affiliate signup, KYC actions, admin actions.
+
+---
+
+## Phase 2 — Metered State / Usage Ledger
+
+Replace scattered counters (`ai_daily_usage`, localStorage, `tool_uses_*`) with a unified ledger.
+
+**Analytics tables**
+- `usage_ledger` — `id, user_id, meter (ai|export|search|storage|...), feature, units, ts, period_key, source_event_id, metadata`
+- `usage_rollups_daily` — pre-aggregated `(user_id, meter, feature, day, total)` materialized via cron.
+
+**Primary DB stays hot**
+- `quota_today` materialized view OR keep `ai_daily_usage` as fast cache; reconcile from ledger nightly.
+- `entitlements` table already exists — extend to include `byok_active`, `retention_days`, `export_quota_override`.
+
+**Helpers**
+- `src/lib/usage/meter.ts` — `consume(meter, feature, units)` → calls RPC, returns `{allowed, used, max, bypass}`.
+- Server RPC `consume_usage(_user, _meter, _feature, _units)` replaces 3 ad-hoc consume functions.
+- BYOK detection unified — single source of truth (`user_ai_keys` active row).
+
+**Migrations**
+- Update `consume_ai_quota`, `consume_export_quota` to also append to `usage_ledger` (via edge fn write-through).
+- Deprecate localStorage tool counters in `tool-limits.ts` (keep as fallback for guests).
+
+---
+
+## Phase 3 — Feature Flag System (extend existing)
+
+`feature_flags` table + `FeatureFlagsManager` already exist. Add:
+
+- **Scopes**: `global | tier | user | percentage_rollout`
+- New columns: `scope, target_user_ids uuid[], rollout_percent int, variant text, schedule_start, schedule_end`
+- New table `feature_flag_overrides (user_id, feature_key, enabled, expires_at)` for per-user toggles.
+- **Maintenance overlay** flag: when `system.maintenance` enabled → `MaintenanceGate` shows banner; when `payments.lock` enabled → checkout blocked with friendly modal.
+- **Hook** `useFeature(key)` returns `{enabled, variant, reason}` — replaces ad-hoc checks.
+- Admin UI: add scope selector, percentage slider, schedule pickers, per-user override panel.
+
+---
+
+## Phase 4 — Ops Dashboard (`/admin/ops`)
+
+Single operations command center. Pulls from analytics DB only (read-only).
+
+**Panels**
+- **Payment Health**: last 24h success/fail count, failed webhooks (replayable), Dodo + Cashfree status pings.
+- **Event Queue**: pending events, failures, replay buttons.
+- **Export Queue**: pending/failed exports, Telegram delivery health (cached file_id %, re-deliver).
+- **Provider Health**: AI providers (Gemini/Zhipu/LongCat) latency + error rate, email providers (Brevo/Resend/MailerSend), Telegram bot reachability.
+- **Rate Limits**: top consumers per meter today.
+- **Quick Actions**: replay event, pause provider, toggle maintenance flag.
+
+UI: consistent card grid, skeleton loaders, severity badges, time-range tabs (1h/24h/7d).
+
+---
+
+## Phase 5 — Audit Logs (`/admin/audit`)
+
+Searchable UI on top of `event_log` filtered to `category in (admin, security, payment, billing)`.
+
+- Filters: actor, target user, category, severity, date range, free-text payload search.
+- Row drawer: full payload JSON, related events (same `correlation_id`), replay button (admins only, security events).
+- Export CSV. Saved searches.
+
+Emit audit events from: admin role grant/revoke, billing tier change, integration connect/disconnect, export delivery, KYC decision, login lockouts.
+
+---
+
+## Phase 6 — Content + Automation Engine
+
+Future-ready, minimal v1 in this pass.
+
+**Tables (analytics DB)**
+- `automations` — `id, name, trigger_event, conditions jsonb, actions jsonb[], enabled, created_by`
+- `automation_runs` — `id, automation_id, event_id, status, started_at, finished_at, error`
+- `campaigns` — `id, name, audience_query, template_id, schedule_at, status, stats`
+- `audience_segments` — saved queries (`tier=pro AND last_export>30d`)
+
+**Engine**
+- `automation-runner` edge fn: subscribes via `event_subscriptions(channel='automation')`, evaluates conditions, executes action steps (send email, send telegram, set entitlement, add wallet credit, add tag).
+- Reuses existing email/telegram primitives — no new delivery code.
+
+**Admin UI** (v1 scaffold only)
+- `/admin/automations` — list, enable/disable, dry-run.
+- `/admin/campaigns` — compose newsletter, pick segment, schedule.
+- Onboarding sequence: pre-seed 3 default automations (welcome, day-3 nudge, upgrade prompt).
+
+---
+
+## Cross-cutting UX/UI Polish (continuous)
+
+Applied to every page touched in phases 4–6, plus a sweep of existing surfaces:
+
+- **Skeleton loaders** in: ops dashboard, audit log, automations, exports list, billing.
+- **Empty states** with illustration + primary CTA on every list view.
+- **Mobile responsiveness audit** of `/settings/*`, `/profile`, `/admin/*` (already started — finish remaining tabs).
+- **Consistent design tokens**: ensure ops/audit/automations use the same card surface, badge palette, table style as Telegram Ops.
+- **Subtle motion**: framer-motion fade-up on card grids (respecting `prefers-reduced-motion`).
+- Loading + success + error + expired + locked states standardized via shared `<StateView>` component.
+
+---
+
+## Execution Order (one phase per agent loop)
+
+1. **Phase 1** — events tables + types + dispatcher edge fn + migrate ~6 emitters. Most critical, unblocks everything.
+2. **Phase 2** — usage ledger + unified `consume_usage` RPC + meter helpers.
+3. **Phase 3** — extend feature flags (scopes, overrides, maintenance) + `useFeature` hook.
+4. **Phase 4** — `/admin/ops` dashboard.
+5. **Phase 5** — `/admin/audit` UI.
+6. **Phase 6** — automation engine v1 scaffold.
+
+UX polish folded into each phase's surfaces.
+
+## Out of Scope (this resumption)
+
+- Rebuilding Telegram delivery (stable).
+- Dodo/payment changes beyond emitting events.
+- New AI features.
+- Splitting analytics to a dedicated Supabase project (will swap URL+key when provisioned).
+
+## Approval Question
+
+This is a 6-phase plan. Confirm and I'll start with **Phase 1 (Event Pipeline)** in the next loop — that single phase touches: 1 migration (analytics DB), 2 new edge functions, ~6 emitter call-site updates, and shared event types. Subsequent phases each ship as their own loop so you can review between.
