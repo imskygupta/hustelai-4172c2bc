@@ -115,11 +115,11 @@ export function Pricing() {
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-emerald-200 bg-emerald-50 text-emerald-700 text-xs font-medium">
             <Flame className="w-3.5 h-3.5" /> Limited launch pricing — up to 60% off
           </div>
-          <h2 className="text-3xl md:text-5xl font-display font-semibold tracking-tight text-slate-900">
-            Pricing built for client work.
+          <h2 className="text-3xl md:text-5xl font-display font-semibold tracking-tight text-slate-900 leading-[1.1]">
+            Pricing that scales<br className="hidden md:block" /> with your workflow.
           </h2>
-          <p className="text-slate-500 max-w-xl mx-auto">
-            Workspaces, CRM, invoices, portals and AI assistance — one operating layer for freelancers and agencies.
+          <p className="text-slate-500 max-w-xl mx-auto text-sm md:text-base">
+            A generous free workspace, scalable plans for active operators, and small top-ups when you need a temporary boost. Upgrade only when your workflow grows.
           </p>
         </motion.div>
 
