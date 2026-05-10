@@ -28,6 +28,8 @@ function rawHint(e: unknown): string {
 }
 
 const RULES: Array<{ test: (s: string) => boolean; build: () => Omit<HumanError, "rawHint"> }> = [
+  { test: (s) => /quota_unlockable|unlockable/i.test(s),
+    build: () => ({ title: "You've used today's free generations", message: "Come back tomorrow or unlock more instantly — unused unlocks roll over.", action: "upgrade", code: "quota_unlockable", reportToAdmin: false }) },
   { test: (s) => /quota|exceeded.*limit|tier_locked|max_value|consume_usage/i.test(s),
     build: () => ({ title: "You've hit your plan limit", message: "Upgrade your plan to keep generating, or wait for the next reset.", action: "upgrade", code: "quota", reportToAdmin: false }) },
   { test: (s) => /no_telegram|not connected.*telegram|telegram.*chat|provider_chat_id/i.test(s),
