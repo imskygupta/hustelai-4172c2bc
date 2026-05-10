@@ -390,6 +390,72 @@ Markdown allowed: paragraphs, [text](url), and "- " bullet lists. No HTML. Keep 
       return new Response(JSON.stringify({ ok: true, campaignId: camp.id, sent, failed }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
+    // -------- Sunday auto-draft (cron-callable, NO auto-send) --------
+    // Generates an approval-ready issue and pings admins via Telegram.
+    if (action === "weekly_cron") {
+      const cronSecret = Deno.env.get("CRON_SECRET");
+      const provided = req.headers.get("x-cron-secret");
+      if (cronSecret && provided !== cronSecret) {
+        return new Response(JSON.stringify({ error: "forbidden" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+
+      const focus = body.focus || "weekly digest for Indian creators and freelancers";
+      const system = `You write the HustleAI weekly digest for Indian creators and freelancers.
+Output ONLY valid JSON of shape:
+{"subject":"...","preheader":"...","sections":[
+  {"id":"ai_trends","title":"AI Trends","body_md":"..."},
+  {"id":"creator_economy","title":"Creator Economy","body_md":"..."},
+  {"id":"freelancing","title":"Freelancing","body_md":"..."},
+  {"id":"automation","title":"Automation Workflows","body_md":"..."},
+  {"id":"hustleai","title":"HustleAI Updates","body_md":"..."},
+  {"id":"tools","title":"Tool Picks","body_md":"..."},
+  {"id":"opportunities","title":"Opportunities","body_md":"..."}
+]}
+Markdown allowed: paragraphs, [text](url), and "- " bullet lists. No HTML. Keep each section under 120 words. Indian context.`;
+      const raw = await callAI(`Focus: ${focus}. Generate this week's digest.`, system);
+      const cleaned = raw.replace(/```json\n?/gi, "").replace(/```/g, "").trim();
+      let parsed: any;
+      try { parsed = JSON.parse(cleaned); }
+      catch { return new Response(JSON.stringify({ error: "ai_parse_failed", raw }), { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }); }
+
+      const { data: issue, error } = await sb.from("newsletter_issues").insert({
+        subject: parsed.subject,
+        preheader: parsed.preheader || null,
+        sections: parsed.sections || [],
+        status: "ready",
+        provider: "brevo",
+        channel: "email",
+        model: "google/gemini-2.5-flash",
+        metadata: { focus, source: "weekly_cron" },
+      }).select().single();
+      if (error) throw error;
+
+      // Emit workflow event for downstream consumers (admin notify, etc.)
+      try {
+        await sb.rpc("enqueue_workflow_runs", {
+          _event_name: "newsletter.draft_ready",
+          _payload: { issue_id: issue.id, subject: issue.subject } as any,
+          _source: "newsletter_cron",
+          _dedupe_key: `newsletter_draft:${issue.id}`,
+        } as any);
+      } catch (e) { console.warn("workflow enqueue failed", e); }
+
+      // Telegram admin alert (best-effort)
+      const tgToken = Deno.env.get("TELEGRAM_BOT_TOKEN");
+      const tgChat = Deno.env.get("TELEGRAM_ADMIN_CHAT_ID");
+      if (tgToken && tgChat) {
+        try {
+          const text = `📰 *Weekly digest draft ready*\n\n*${issue.subject}*\n${issue.preheader || ""}\n\nSections: ${(issue.sections || []).length}\n\nReview: https://hustlaiapp.in/admin/communications/newsletter`;
+          await fetch(`https://api.telegram.org/bot${tgToken}/sendMessage`, {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ chat_id: tgChat, text, parse_mode: "Markdown", disable_web_page_preview: true }),
+          });
+        } catch (e) { console.warn("telegram notify failed", e); }
+      }
+
+      return new Response(JSON.stringify({ ok: true, issue_id: issue.id, subject: issue.subject }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
     return new Response(JSON.stringify({ error: "unknown action" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (err: any) {
     console.error("brevo-newsletter error", err);
