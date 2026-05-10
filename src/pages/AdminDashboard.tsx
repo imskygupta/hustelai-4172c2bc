@@ -23,6 +23,7 @@ import {
   Flag,
   CreditCard as CreditCardIcon,
   Radio, Bot, Workflow, ListChecks, Megaphone,
+  Search as SearchIcon, ChevronDown, Wrench, Layers, Cpu, Inbox,
 } from "lucide-react";
 import { PaymentMethodsManager } from "@/components/admin/PaymentMethodsManager";
 import { DodoAdminPanel } from "@/components/admin/DodoAdminPanel";
@@ -165,25 +166,92 @@ const sidebarItems: { id: AdminSection; label: string; icon: any }[] = [
   { id: "usage-analytics" as AdminSection, label: "Usage Analytics", icon: BarChart3 },
 ];
 
-// External admin routes (rendered as navigation links, not in-page sections)
-const externalNavGroups: { label: string; items: { label: string; href: string; icon: any }[] }[] = [
+// Unified grouped admin navigation. Items are either an in-page `section`
+// or an `href` route. This drives the sidebar, the title bar lookup, and
+// the topbar quick-search.
+type NavItem =
+  | { kind: "section"; id: AdminSection; label: string; icon: any; keywords?: string }
+  | { kind: "route"; href: string; label: string; icon: any; keywords?: string };
+
+const NAV_GROUPS: { label: string; defaultOpen?: boolean; items: NavItem[] }[] = [
   {
-    label: "Communications",
+    label: "Operations",
+    defaultOpen: true,
     items: [
-      { label: "Telegram Ops", href: "/admin/communications/telegram", icon: Radio },
-      { label: "Broadcast Center", href: "/admin/communications", icon: Megaphone },
-      { label: "Bot Management", href: "/admin/telegram-control", icon: Bot },
+      { kind: "section", id: "overview", label: "Overview", icon: BarChart3 },
+      { kind: "route", href: "/admin/runtime", label: "Runtime Controls", icon: Activity, keywords: "runtime kill switch" },
+      { kind: "route", href: "/admin/automations", label: "Workflow Engine", icon: Workflow, keywords: "automation workflow" },
+      { kind: "route", href: "/admin/ai-jobs", label: "AI Job Queue", icon: ListChecks, keywords: "queue jobs compute" },
+      { kind: "section", id: "system-health", label: "System Health", icon: Activity },
+      { kind: "route", href: "/admin/communications/telegram", label: "Telegram Ops", icon: Radio, keywords: "telegram bot delivery" },
     ],
   },
   {
-    label: "Infrastructure",
+    label: "Communications",
+    defaultOpen: true,
     items: [
-      { label: "Runtime Controls", href: "/admin/runtime", icon: Activity },
-      { label: "Workflow Engine", href: "/admin/automations", icon: Workflow },
-      { label: "AI Job Queue", href: "/admin/ai-jobs", icon: ListChecks },
+      { kind: "route", href: "/admin/communications", label: "Broadcast Center", icon: Megaphone },
+      { kind: "section", id: "newsletter", label: "Newsletter", icon: Mail },
+      { kind: "section", id: "email-templates", label: "Email Templates", icon: Mail },
+      { kind: "section", id: "mailing-providers", label: "Mailing Providers", icon: Settings },
+      { kind: "section", id: "send-email", label: "Send Email", icon: Send },
+      { kind: "section", id: "notifications", label: "Notifications", icon: Bell },
+      { kind: "route", href: "/admin/telegram-control", label: "Bot Management", icon: Bot },
+    ],
+  },
+  {
+    label: "Revenue",
+    items: [
+      { kind: "section", id: "dodo-payments", label: "Dodo Payments", icon: CreditCardIcon },
+      { kind: "section", id: "orders", label: "Orders", icon: FileText },
+      { kind: "section", id: "payment-logs", label: "Payment Logs", icon: Clock },
+      { kind: "section", id: "payments", label: "Payments", icon: Zap },
+    ],
+  },
+  {
+    label: "Users",
+    items: [
+      { kind: "section", id: "users", label: "Users", icon: Users },
+      { kind: "section", id: "roles", label: "Role Manager", icon: Shield },
+      { kind: "section", id: "verification", label: "Verification", icon: UserCheck },
+      { kind: "section", id: "community", label: "Community", icon: Globe },
+      { kind: "section", id: "forum", label: "Forum Posts", icon: MessageSquare },
+      { kind: "section", id: "chatbot", label: "Personal Chatbot", icon: MessageSquare },
+      { kind: "section", id: "expert", label: "Expert Guidance", icon: Compass },
+    ],
+  },
+  {
+    label: "AI Infrastructure",
+    items: [
+      { kind: "section", id: "ai-providers", label: "AI Providers", icon: Cpu },
+      { kind: "section", id: "usage-analytics" as AdminSection, label: "Usage Analytics", icon: BarChart3 },
+      { kind: "section", id: "feature-flags", label: "Feature Flags", icon: Flag },
+      { kind: "section", id: "config", label: "Config & Keys", icon: Key },
+    ],
+  },
+  {
+    label: "Content & Growth",
+    items: [
+      { kind: "section", id: "blogs", label: "Blog Manager", icon: BookOpen },
+      { kind: "section", id: "seo-pages" as AdminSection, label: "SEO Pages", icon: Globe },
+      { kind: "section", id: "seo-blog" as AdminSection, label: "Insights / Blog", icon: BookOpen },
+      { kind: "section", id: "trending", label: "Trending Links", icon: ExternalLink },
+      { kind: "section", id: "bonus-kits", label: "Bonus Kits", icon: Gift },
+      { kind: "section", id: "social-links", label: "Social Links", icon: Share2 },
+      { kind: "section", id: "webinars", label: "Live Webinars", icon: Video },
+    ],
+  },
+  {
+    label: "Platform",
+    items: [
+      { kind: "section", id: "analytics", label: "Analytics", icon: Activity },
+      { kind: "section", id: "sql-setup", label: "SQL Setup", icon: Database },
+      { kind: "section", id: "email-settings", label: "Email Settings", icon: Settings },
     ],
   },
 ];
+
+const ALL_NAV_ITEMS: NavItem[] = NAV_GROUPS.flatMap((g) => g.items);
 
 export default function AdminDashboard() {
   const { user, profile, loading, signOut } = useAuth();
