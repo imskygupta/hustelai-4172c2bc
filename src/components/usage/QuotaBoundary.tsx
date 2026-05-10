@@ -3,6 +3,7 @@ import React from "react";
 import { QuotaError } from "@/lib/usage/guards";
 import { UpgradeSheet } from "./UpgradeSheet";
 import { UnlockSheet } from "./UnlockSheet";
+import { track, EVENTS } from "@/lib/intelligence";
 
 type State = { err: QuotaError | null };
 
@@ -19,6 +20,15 @@ export class QuotaBoundary extends React.Component<{ children: React.ReactNode }
   onRejection = (ev: PromiseRejectionEvent) => {
     if (ev.reason instanceof QuotaError) {
       ev.preventDefault();
+      track(EVENTS.QUOTA_HIT, {
+        capability: ev.reason.capability?.key,
+        meter: ev.reason.capability?.meter as string | undefined,
+        feature: ev.reason.capability?.feature,
+        metadata: { used: ev.reason.used, max: ev.reason.max, unlockable: !!ev.reason.unlockable },
+      });
+      if (ev.reason.unlockable) {
+        track(EVENTS.UNLOCK_PROMPT_SEEN, { capability: ev.reason.capability?.key });
+      }
       this.setState({ err: ev.reason });
     }
   };

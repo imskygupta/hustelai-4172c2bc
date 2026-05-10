@@ -9,6 +9,7 @@ import { purchaseUnlockPack, hoursUntilDailyReset } from "@/lib/unlocks/api";
 import { toast } from "sonner";
 import type { Capability } from "@/lib/usage/capabilities";
 import type { Tier } from "@/lib/usage/types";
+import { track, EVENTS } from "@/lib/intelligence";
 
 interface Props {
   open: boolean;
@@ -35,6 +36,11 @@ export function UnlockSheet({ open, onOpenChange, capability, used = 0, max = 0,
 
   async function handleBuy(packKey: string) {
     setBusy(packKey);
+    track(EVENTS.UNLOCK_PURCHASED, {
+      capability: capability?.key,
+      surface: "unlock_sheet",
+      metadata: { pack: packKey, stage: "checkout_started" },
+    });
     const r = await purchaseUnlockPack(packKey);
     setBusy(null);
     if (r?.checkout_url) {
