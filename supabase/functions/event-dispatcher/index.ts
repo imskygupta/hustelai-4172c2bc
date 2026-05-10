@@ -11,7 +11,7 @@
 // Never throws — failures are logged into `event_failures` (best-effort).
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.74.0";
 import { notifyOps, OpsEvent } from "../_shared/notify-ops.ts";
-import { safeAnalyticsInsert } from "../_shared/clients.ts";
+import { safeAnalyticsInsert, getPrimaryService } from "../_shared/clients.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -27,8 +27,8 @@ type Subscription = {
 
 const SEVERITY_RANK = { info: 0, warn: 1, error: 2, critical: 3 } as const;
 
-// Default subscriptions — admins can later override via DB.
-const SUBSCRIPTIONS: Subscription[] = [
+// Fallback subscriptions used when notification_routes is empty/unavailable.
+const FALLBACK_SUBSCRIPTIONS: Subscription[] = [
   // Telegram ops alerts for anything warn+ in payments/security/system
   { match: { category: "payment", severity_min: "warn" }, channel: "telegram" },
   { match: { category: "security", severity_min: "warn" }, channel: "telegram" },
@@ -46,6 +46,28 @@ function matches(sub: Subscription, evt: { category: string; action: string; sev
     if (cur < min) return false;
   }
   return true;
+}
+
+/** Match a wildcard event_pattern like "payment.*" or "export.failed". */
+function patternMatches(pattern: string, action: string, category: string) {
+  if (pattern === action) return true;
+  if (pattern.endsWith(".*")) {
+    const prefix = pattern.slice(0, -2);
+    return category === prefix || action.startsWith(prefix + ".");
+  }
+  return false;
+}
+
+async function loadDbSubscriptions(): Promise<Subscription[]> {
+  try {
+    const sb = getPrimaryService();
+    const { data } = await sb.from("notification_routes").select("*").eq("enabled", true);
+    return ((data as any[]) || []).map(r => ({
+      match: { action: r.event_pattern, severity_min: r.severity_min } as any,
+      channel: r.channel as Channel,
+      config: { target_bot_id: r.target_bot_id, target_email: r.target_email, _pattern: r.event_pattern },
+    }));
+  } catch { return []; }
 }
 
 function toOpsEvent(action: string): OpsEvent {
@@ -76,8 +98,20 @@ Deno.serve(async (req) => {
 
     const dispatched: { channel: Channel; ok: boolean; error?: string }[] = [];
 
-    for (const sub of SUBSCRIPTIONS) {
-      if (!matches(sub, { category, action, severity })) continue;
+    const dbSubs = await loadDbSubscriptions();
+    const subs = dbSubs.length > 0 ? dbSubs : FALLBACK_SUBSCRIPTIONS;
+
+    for (const sub of subs) {
+      const pattern = (sub.config as any)?._pattern as string | undefined;
+      if (pattern) {
+        if (!patternMatches(pattern, action, category)) continue;
+        if (sub.match.severity_min) {
+          const min = SEVERITY_RANK[sub.match.severity_min];
+          const cur = SEVERITY_RANK[(severity as keyof typeof SEVERITY_RANK) ?? "info"];
+          if (cur < min) continue;
+        }
+      } else if (!matches(sub, { category, action, severity })) continue;
+
       try {
         if (sub.channel === "telegram") {
           await notifyOps(toOpsEvent(action), {
