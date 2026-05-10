@@ -6,3 +6,4 @@
 - [Multi-bot Telegram](mem://admin/multi-bot-architecture) — HustleAI user bot + SkyMedia admin bot, allowlist + audit + webhook health
 - [Usage Governance](mem://features/usage-governance) — Capability registry, quota guards, admin governance UI
 - [Tool Unlocks](mem://features/tool-unlocks) — Consumable unlock packs for lightweight tools, exports, storage. AI is never boostable.
+- [Usage Intelligence](mem://features/usage-intelligence) — Standardized event tracking, funnel/heatmap, rage detection, anomaly alerts, cost ledger
