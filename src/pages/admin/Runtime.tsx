@@ -175,6 +175,7 @@ export default function AdminRuntime() {
       </header>
 
       <main className="mx-auto max-w-5xl px-6 py-10 space-y-10">
+        <FlagQuickControls />
         {/* Emergency actions */}
         <section>
           <h2 className="text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-3">Emergency</h2>
