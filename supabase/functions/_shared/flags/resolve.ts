@@ -79,6 +79,8 @@ export async function flagGuard(
       endpoint: opts.endpoint ?? null,
       source: f?.source ?? "unknown",
       reason: f?.reason ?? (f ? "disabled" : "missing"),
+      environment: env,
+      status_code: f?.maintenance ? 503 : 423,
     });
   }
   const status = f?.maintenance ? 503 : 423;
@@ -95,15 +97,19 @@ export async function flagGuard(
 
 async function logFlagBlock(payload: {
   user_id: string | null; flag_key: string; endpoint: string | null;
-  source: string; reason: string;
+  source: string; reason: string; environment: string; status_code: number;
 }) {
   try {
-    await client().functions.invoke("log-event", {
-      body: {
-        type: "flag_blocked", category: "runtime", severity: "info",
-        source: "flag_guard", payload,
-        dedupe_key: `${payload.user_id ?? "anon"}:${payload.flag_key}:${payload.endpoint ?? ""}`,
-      },
+    // Direct insert into the primary-DB analytics table powering the admin
+    // runtime dashboard. Service role bypasses RLS.
+    await client().from("feature_flag_blocks" as any).insert({
+      user_id: payload.user_id,
+      flag_key: payload.flag_key,
+      endpoint: payload.endpoint,
+      source: payload.source,
+      reason: payload.reason,
+      environment: payload.environment,
+      status_code: payload.status_code,
     });
   } catch { /* never throw from a logger */ }
 }
