@@ -1,5 +1,8 @@
+// Backward-compatible shim. The canonical flag system now lives in src/lib/flags/.
+// New code should import from "@/lib/flags".
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { resolveFlags, clearFlagCache } from "@/lib/flags/resolver";
 
 export type Tier = "free" | "pro" | "elite" | "infinity";
 const TIER_RANK: Record<Tier, number> = { free: 0, pro: 1, elite: 2, infinity: 3 };
@@ -9,19 +12,31 @@ export type FeatureFlag = {
   feature_key: string;
   label: string;
   description: string | null;
-  enabled: boolean;
+  enabled: boolean;            // resolved (post rollout/tier/etc.)
   min_tier: Tier | null;
   category: string;
 };
 
-let cache: { at: number; rows: FeatureFlag[] } | null = null;
+let rowCache: { at: number; rows: FeatureFlag[] } | null = null;
 const TTL = 60_000;
 
 export async function loadFlags(force = false): Promise<FeatureFlag[]> {
-  if (!force && cache && Date.now() - cache.at < TTL) return cache.rows;
-  const { data } = await supabase.from("feature_flags" as any).select("*");
-  const rows = ((data || []) as unknown) as FeatureFlag[];
-  cache = { at: Date.now(), rows };
+  if (!force && rowCache && Date.now() - rowCache.at < TTL) return rowCache.rows;
+  if (force) clearFlagCache();
+  const [{ data: raw }, resolved] = await Promise.all([
+    supabase.from("feature_flags" as any).select("id,feature_key,label,description,min_tier,category"),
+    resolveFlags(force),
+  ]);
+  const rows: FeatureFlag[] = ((raw || []) as any[]).map((r) => ({
+    id: r.id,
+    feature_key: r.feature_key,
+    label: r.label,
+    description: r.description,
+    min_tier: r.min_tier as Tier | null,
+    category: r.category,
+    enabled: resolved[r.feature_key]?.enabled ?? false,
+  }));
+  rowCache = { at: Date.now(), rows };
   return rows;
 }
 
@@ -35,8 +50,8 @@ export function flagAccess(flag: FeatureFlag | undefined, userTier: Tier | undef
 }
 
 export function useFeatureFlags() {
-  const [flags, setFlags] = useState<FeatureFlag[]>(cache?.rows || []);
-  const [loading, setLoading] = useState(!cache);
+  const [flags, setFlags] = useState<FeatureFlag[]>(rowCache?.rows || []);
+  const [loading, setLoading] = useState(!rowCache);
   useEffect(() => {
     let alive = true;
     loadFlags().then(rows => { if (alive) { setFlags(rows); setLoading(false); } });
