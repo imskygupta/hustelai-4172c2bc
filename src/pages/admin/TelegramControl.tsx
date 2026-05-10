@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 
 type TgBot = { id: string; name: string; username: string; purpose: string | null; environment: string; enabled: boolean; status: string; webhook_url: string | null; last_ping_at: string | null; delivery_count_24h: number; failure_count_24h: number; token_secret_name: string | null; notes: string | null };
-type Route = { id: string; event_pattern: string; channel: string; target_bot_id: string | null; target_email: string | null; severity_min: string; enabled: boolean };
+type Route = { id: string; event_pattern: string; channel: string; target_bot_id: string | null; target_email: string | null; target_url?: string | null; severity_min: string; enabled: boolean };
 type Cmd = { id: string; bot_id: string | null; command: string; description: string | null; enabled: boolean; min_tier: string; admin_only: boolean; beta_only: boolean; rate_limit_per_min: number };
 type Broadcast = { id: string; title: string; message: string; channel: string; audience: string; status: string; sent_count: number; failed_count: number; created_at: string };
 
