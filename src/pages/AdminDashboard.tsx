@@ -803,14 +803,66 @@ export default function AdminDashboard() {
       {/* Main Content */}
       <main className={`flex-1 transition-all duration-300 ${sidebarCollapsed ? "ml-16" : "ml-60"}`}>
         {/* Top bar */}
-        <header className="sticky top-0 z-40 h-14 glass border-b border-border flex items-center justify-between px-6">
-          <div className="flex items-center gap-2">
-            <h1 className="font-display font-bold text-lg">{sidebarItems.find(s => s.id === section)?.label}</h1>
-            <Badge className="bg-destructive/20 text-destructive text-[10px]">SUPER ADMIN</Badge>
+        <header className="sticky top-0 z-40 h-14 glass border-b border-border flex items-center justify-between gap-4 px-6">
+          <div className="flex items-center gap-2 min-w-0">
+            <h1 className="font-display font-bold text-lg truncate">
+              {ALL_NAV_ITEMS.find((i) => i.kind === "section" && i.id === section)?.label || "Admin"}
+            </h1>
+            <Badge className="bg-destructive/20 text-destructive text-[10px] shrink-0">SUPER ADMIN</Badge>
           </div>
-          <div className="flex items-center gap-2">
+          {/* Quick search */}
+          <div className="relative flex-1 max-w-md hidden md:block">
+            <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+            <input
+              value={navQuery}
+              onChange={(e) => { setNavQuery(e.target.value); setNavOpen(true); }}
+              onFocus={() => setNavOpen(true)}
+              onBlur={() => setTimeout(() => setNavOpen(false), 150)}
+              placeholder="Search admin tools, pages, settings…"
+              className="w-full bg-muted/40 border border-border rounded-md pl-9 pr-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+            />
+            {navOpen && navQuery.trim() && (
+              <div className="absolute top-full mt-1 left-0 right-0 bg-popover border border-border rounded-md shadow-lg overflow-hidden z-50 max-h-80 overflow-y-auto">
+                {ALL_NAV_ITEMS
+                  .filter((i) => {
+                    const q = navQuery.toLowerCase();
+                    return i.label.toLowerCase().includes(q) || (i.keywords || "").toLowerCase().includes(q);
+                  })
+                  .slice(0, 12)
+                  .map((item) => {
+                    const key = item.kind === "section" ? `qs:${item.id}` : `qr:${item.href}`;
+                    return (
+                      <button
+                        key={key}
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => {
+                          if (item.kind === "section") setSection(item.id);
+                          else navigate(item.href);
+                          setNavQuery("");
+                          setNavOpen(false);
+                        }}
+                        className="w-full flex items-center gap-2 px-3 py-2 text-sm text-left hover:bg-muted"
+                      >
+                        <item.icon className="w-4 h-4 text-muted-foreground" />
+                        <span className="truncate">{item.label}</span>
+                        <span className="ml-auto text-[10px] uppercase tracking-wider text-muted-foreground/70">
+                          {item.kind === "route" ? "page" : "section"}
+                        </span>
+                      </button>
+                    );
+                  })}
+                {ALL_NAV_ITEMS.filter((i) => {
+                  const q = navQuery.toLowerCase();
+                  return i.label.toLowerCase().includes(q) || (i.keywords || "").toLowerCase().includes(q);
+                }).length === 0 && (
+                  <div className="px-3 py-3 text-xs text-muted-foreground">No matches</div>
+                )}
+              </div>
+            )}
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
             <Button variant="ghost" size="sm" onClick={loadAllData}><RefreshCw className="w-4 h-4" /></Button>
-            <span className="text-xs text-muted-foreground">{profile?.email}</span>
+            <span className="text-xs text-muted-foreground hidden lg:inline">{profile?.email}</span>
           </div>
         </header>
 
