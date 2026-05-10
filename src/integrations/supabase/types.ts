@@ -4318,6 +4318,100 @@ export type Database = {
         }
         Relationships: []
       }
+      telegram_admin_audit: {
+        Row: {
+          allowed: boolean
+          args: string | null
+          bot_id: string | null
+          command: string
+          created_at: string
+          id: string
+          reason: string | null
+          result: Json | null
+          telegram_chat_id: string
+          telegram_username: string | null
+        }
+        Insert: {
+          allowed: boolean
+          args?: string | null
+          bot_id?: string | null
+          command: string
+          created_at?: string
+          id?: string
+          reason?: string | null
+          result?: Json | null
+          telegram_chat_id: string
+          telegram_username?: string | null
+        }
+        Update: {
+          allowed?: boolean
+          args?: string | null
+          bot_id?: string | null
+          command?: string
+          created_at?: string
+          id?: string
+          reason?: string | null
+          result?: Json | null
+          telegram_chat_id?: string
+          telegram_username?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "telegram_admin_audit_bot_id_fkey"
+            columns: ["bot_id"]
+            isOneToOne: false
+            referencedRelation: "telegram_bots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      telegram_admin_users: {
+        Row: {
+          bot_id: string | null
+          created_at: string
+          created_by: string | null
+          display_name: string | null
+          enabled: boolean
+          id: string
+          notes: string | null
+          telegram_chat_id: string
+          telegram_username: string | null
+          user_id: string | null
+        }
+        Insert: {
+          bot_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          display_name?: string | null
+          enabled?: boolean
+          id?: string
+          notes?: string | null
+          telegram_chat_id: string
+          telegram_username?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          bot_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          display_name?: string | null
+          enabled?: boolean
+          id?: string
+          notes?: string | null
+          telegram_chat_id?: string
+          telegram_username?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "telegram_admin_users_bot_id_fkey"
+            columns: ["bot_id"]
+            isOneToOne: false
+            referencedRelation: "telegram_bots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       telegram_bots: {
         Row: {
           created_at: string
@@ -4326,14 +4420,22 @@ export type Database = {
           environment: string
           failure_count_24h: number
           id: string
+          last_command: string | null
+          last_command_at: string | null
           last_ping_at: string | null
+          last_response: Json | null
           name: string
           notes: string | null
+          pending_update_count: number
           purpose: string | null
+          role: string
+          runtime_enabled: boolean
           status: string
           token_secret_name: string | null
           updated_at: string
           username: string
+          webhook_info: Json | null
+          webhook_last_checked_at: string | null
           webhook_secret_name: string | null
           webhook_url: string | null
         }
@@ -4344,14 +4446,22 @@ export type Database = {
           environment?: string
           failure_count_24h?: number
           id?: string
+          last_command?: string | null
+          last_command_at?: string | null
           last_ping_at?: string | null
+          last_response?: Json | null
           name: string
           notes?: string | null
+          pending_update_count?: number
           purpose?: string | null
+          role?: string
+          runtime_enabled?: boolean
           status?: string
           token_secret_name?: string | null
           updated_at?: string
           username: string
+          webhook_info?: Json | null
+          webhook_last_checked_at?: string | null
           webhook_secret_name?: string | null
           webhook_url?: string | null
         }
@@ -4362,14 +4472,22 @@ export type Database = {
           environment?: string
           failure_count_24h?: number
           id?: string
+          last_command?: string | null
+          last_command_at?: string | null
           last_ping_at?: string | null
+          last_response?: Json | null
           name?: string
           notes?: string | null
+          pending_update_count?: number
           purpose?: string | null
+          role?: string
+          runtime_enabled?: boolean
           status?: string
           token_secret_name?: string | null
           updated_at?: string
           username?: string
+          webhook_info?: Json | null
+          webhook_last_checked_at?: string | null
           webhook_secret_name?: string | null
           webhook_url?: string | null
         }
