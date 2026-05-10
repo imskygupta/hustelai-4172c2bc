@@ -382,6 +382,7 @@ export default function Dashboard() {
             <div className="grid md:grid-cols-2 gap-5">
               <DailyUsageWidget />
               <OperationalUsageWidget />
+              <UnlockBalanceWidget />
             </div>
             <ActivityCard />
             <div className="grid lg:grid-cols-3 gap-4">
