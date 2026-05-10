@@ -5914,6 +5914,24 @@ export type Database = {
         Returns: Json
       }
       resolve_user_limits: { Args: { _user: string }; Returns: Json }
+      telegram_delivery_timeline: {
+        Args: { _bucket?: string; _since?: string }
+        Returns: {
+          bucket: string
+          failed: number
+          queued: number
+          sent: number
+        }[]
+      }
+      telegram_ops_overview: { Args: { _since?: string }; Returns: Json }
+      telegram_top_failures: {
+        Args: { _since?: string }
+        Returns: {
+          count: number
+          last_at: string
+          reason: string
+        }[]
+      }
       workflow_event_throughput: {
         Args: { _bucket?: string; _since?: string }
         Returns: {
