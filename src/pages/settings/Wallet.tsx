@@ -65,7 +65,6 @@ export default function Wallet() {
   return (
     <div className="space-y-6">
       <SettingsSection
-        icon={WalletIcon}
         title="Wallet & unlocks"
         description="Boost packs run alongside your subscription. Unused units roll over."
       >
@@ -156,7 +155,6 @@ export default function Wallet() {
       </SettingsSection>
 
       <SettingsSection
-        icon={Sparkles}
         title="Unlock packs"
         description="One-time purchases. Unused units roll over to next day."
       >
@@ -196,7 +194,6 @@ export default function Wallet() {
       </SettingsSection>
 
       <SettingsSection
-        icon={Clock}
         title="Recent activity"
         description="Last 30 ledger entries — purchases, usage, grants."
       >
