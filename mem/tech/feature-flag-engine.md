@@ -52,6 +52,14 @@ Edge functions wired with `flagGuard()`:
 ## Admin quick controls
 `/admin/runtime` includes a "Feature flag quick controls" section with one-click kill switches for the 9 highest-impact flags (payments, exports, telegram, signups, onboarding, banner). Full editor remains at `/admin/feature-flags`.
 
+## Operational analytics (Phase 3.6)
+- `feature_flag_blocks` (primary DB, admin-read, service-role insert) — every guard denial is recorded with `flag_key, endpoint, source, reason, environment, status_code, user_id`.
+- `feature_flag_incidents` — auto-populated by `trg_feature_flags_incidents` when an admin flips `kill_switch`, `maintenance`, or disables a flag. Toggling the switch back **resolves** the matching open row.
+- RPCs: `flag_block_summary(_since)` (top-blocked breakdown) and `flag_block_timeline(_since, _bucket)` (bucketed for charts). Both `SECURITY DEFINER`, gated to authenticated admins.
+- `flagGuard()` writes blocks **directly** into `feature_flag_blocks` via service role (replaces the prior `log-event` round-trip — `log-event` rejected category=`runtime`).
+- New page: `/admin/runtime/analytics` (RuntimeAnalytics.tsx) — KPI strip, hover-bar timeline, top-blocked list with reason chips, live incident feed (open/resolved). Window selector: 1h / 24h / 7d / 30d with adaptive bucket size.
+- `FlagQuickControls` extended with `telegram.notifications`, `telegram.commands`, `telegram.auth`, `ai_tools.{chatbot,search,exports}`.
+
 ## Seeded flag catalog
 38 flags across `payments`, `telegram`, `exports`, `ai_tools`, `system`. All default to enabled @ 100%, except `system.maintenance_banner` (off).
 New telegram keys: `telegram.auth`, `telegram.notifications`, `telegram.broadcasts`, `telegram.storage`, `telegram.admin_ops`, `telegram.commands`.

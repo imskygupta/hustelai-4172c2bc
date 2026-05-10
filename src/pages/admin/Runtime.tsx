@@ -169,9 +169,16 @@ export default function AdminRuntime() {
             </span>
             Runtime Diagnostics
           </div>
-          <Button size="sm" variant="outline" onClick={refresh} className="border-white/10 text-zinc-300">
-            <RefreshCw className="h-3.5 w-3.5 mr-1.5" /> Refresh
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button size="sm" variant="outline"
+              onClick={() => navigate("/admin/runtime/analytics")}
+              className="border-white/10 text-zinc-300">
+              <Activity className="h-3.5 w-3.5 mr-1.5" /> Runtime analytics
+            </Button>
+            <Button size="sm" variant="outline" onClick={refresh} className="border-white/10 text-zinc-300">
+              <RefreshCw className="h-3.5 w-3.5 mr-1.5" /> Refresh
+            </Button>
+          </div>
         </div>
       </header>
 
