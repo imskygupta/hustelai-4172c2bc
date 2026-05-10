@@ -11,6 +11,7 @@ import { VerifyEmailGate } from "@/components/VerifyEmailGate";
 import { Chatbot } from "@/components/Chatbot";
 import NotificationCenter from "@/components/workspace-os/NotificationCenter";
 import AIFillStatusBanner from "@/components/tools/AIFillStatusBanner";
+import { AsyncActivityIndicator } from "@/components/async/AsyncActivityIndicator";
 
 interface AppShellProps {
   children: ReactNode;
@@ -214,6 +215,7 @@ export function AppShell({ children, title, breadcrumbs, actions }: AppShellProp
                   Upgrade
                 </Button>
               )}
+              <AsyncActivityIndicator />
               <NotificationCenter />
             </div>
           </header>

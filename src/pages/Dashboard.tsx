@@ -6,6 +6,7 @@ import { NotificationPopup } from "@/components/NotificationPopup";
 import { AffiliateTab } from "@/components/AffiliateTab";
 import { EmailVerificationBanner } from "@/components/EmailVerificationBanner";
 import { DailyUsageWidget } from "@/components/dashboard/DailyUsageWidget";
+import { ActivityCard } from "@/components/async/ActivityCard";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -377,6 +378,7 @@ export default function Dashboard() {
           {/* OVERVIEW */}
           <TabsContent value="overview" className="mt-5 space-y-5">
             <DailyUsageWidget />
+            <ActivityCard />
             <div className="grid lg:grid-cols-3 gap-4">
               {/* Quick start */}
               <div className="lg:col-span-2 rounded-xl border border-slate-200 bg-white p-5">
