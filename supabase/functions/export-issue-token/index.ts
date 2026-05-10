@@ -17,7 +17,7 @@ serve(async (req) => {
     const { data: u } = await sb.auth.getUser(jwt);
     if (!u?.user) return json({ error: "unauthorized" }, 401);
 
-    const { export_id, expires_in_minutes = 60, requires_otp = false, max_uses = 1, recipient_user_id = null } =
+    const { export_id, expires_in_minutes = 60, requires_otp = false, max_uses = 1, recipient_user_id = null, mode = "private" } =
       await req.json().catch(() => ({}));
     if (!export_id) return json({ error: "export_id required" }, 400);
 
@@ -33,6 +33,7 @@ serve(async (req) => {
     const safeRequiresOtp = isPersistent ? !!requires_otp : false;
     const safeMinutes = isPersistent ? Math.max(5, Math.min(60 * 24 * 7, expires_in_minutes)) : 60;
 
+    const isPublic = mode === "public";
     const token = randomToken(24);
     let otp_hash: string | null = null;
     let otp_clear: string | null = null;
@@ -43,16 +44,19 @@ serve(async (req) => {
 
     const { error, data: tokRow } = await sb.from("export_download_tokens").insert({
       export_id, token,
-      user_id: recipient_user_id,
+      // Public links are NOT bound to a user — anyone with the URL can fetch.
+      user_id: isPublic ? null : (recipient_user_id || u.user.id),
       expires_at: new Date(Date.now() + safeMinutes * 60_000).toISOString(),
       max_uses: safeMaxUses,
       requires_otp: safeRequiresOtp,
       otp_hash,
+      is_public: isPublic,
+      created_via: isPublic ? "share" : "private",
     }).select("*").single();
     if (error) return json({ error: error.message }, 500);
 
     const url = `${siteOrigin(req)}/d/${token}`;
-    return json({ ok: true, token: tokRow.token, url, otp: otp_clear, expires_at: tokRow.expires_at });
+    return json({ ok: true, token: tokRow.token, url, otp: otp_clear, expires_at: tokRow.expires_at, is_public: isPublic });
   } catch (e: any) {
     return json({ error: String(e?.message || e) }, 500);
   }

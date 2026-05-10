@@ -4,7 +4,7 @@ import { AsyncJobChip } from "./AsyncJobChip";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { isRetryable, retryItem } from "@/lib/async-activity/actions";
-import { toast } from "@/hooks/use-toast";
+import { notifyError, notifySuccess } from "@/lib/errors/toast";
 import { useState } from "react";
 
 /**
@@ -24,10 +24,10 @@ export function ActivityCard({ className }: { className?: string }) {
     setRetrying(it.id);
     try {
       await retryItem(it);
-      toast({ title: "Retry queued", description: `${it.label} requeued.` });
+      notifySuccess("Retry queued", `${it.label} requeued.`);
       await refresh();
     } catch (e: any) {
-      toast({ title: "Retry failed", description: e?.message || "Try again later", variant: "destructive" as any });
+      notifyError(e, { context: "activity.retry" });
     } finally { setRetrying(null); }
   };
 

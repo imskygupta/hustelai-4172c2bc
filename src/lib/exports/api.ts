@@ -56,11 +56,11 @@ export async function recentAccessLogs(limit = 10) {
   return data || [];
 }
 
-export async function issueShareLink(input: { export_id: string; expires_in_minutes?: number; requires_otp?: boolean; max_uses?: number }) {
+export async function issueShareLink(input: { export_id: string; expires_in_minutes?: number; requires_otp?: boolean; max_uses?: number; mode?: "private" | "public" }) {
   const { data, error } = await supabase.functions.invoke("export-issue-token", { body: input });
   if (error) throw error;
   if ((data as any)?.error) throw new Error((data as any).message || (data as any).error);
-  return data as { ok: true; token: string; url: string; otp?: string | null; expires_at: string };
+  return data as { ok: true; token: string; url: string; otp?: string | null; expires_at: string; is_public?: boolean };
 }
 
 export async function deliverToTelegram(export_id: string) {
