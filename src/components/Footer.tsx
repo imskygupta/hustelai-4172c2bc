@@ -69,7 +69,38 @@ export function Footer() {
       <div className="absolute -top-32 left-1/3 w-[500px] h-[300px] bg-emerald-200/20 dark:bg-primary/10 blur-3xl rounded-full pointer-events-none" />
       <div className="absolute -bottom-32 right-1/4 w-[420px] h-[260px] bg-teal-200/20 dark:bg-accent/10 blur-3xl rounded-full pointer-events-none" />
       <div className="container mx-auto max-w-6xl relative">
-        <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-10 mb-12">
+        {/* Newsletter — premium hero band above footer columns */}
+        <div className="mb-14 rounded-3xl border border-slate-200 bg-gradient-to-br from-white via-white to-emerald-50/40 p-6 md:p-10 relative overflow-hidden">
+          <div className="absolute -top-24 -right-24 w-[420px] h-[280px] bg-emerald-200/30 blur-3xl rounded-full pointer-events-none" />
+          <div className="grid md:grid-cols-5 gap-8 items-center relative">
+            <div className="md:col-span-2 space-y-2">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-slate-200 text-[10px] uppercase tracking-[0.18em] text-emerald-700 font-semibold">
+                <span className="relative flex h-1.5 w-1.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
+                </span>
+                Operator brief
+              </div>
+              <h3 className="font-display font-semibold text-2xl md:text-3xl text-slate-900 tracking-tight leading-tight">
+                Weekly AI workflows,<br className="hidden md:block" /> tools and operator insights.
+              </h3>
+              <p className="text-sm text-slate-500 leading-relaxed pt-1">
+                No spam. Only practical systems, workflows and HustleAI updates — straight to your inbox each Sunday.
+              </p>
+            </div>
+            <div className="md:col-span-3">
+              <NewsletterCapture
+                variant="inline"
+                surface="footer"
+                headline="Join 10,000+ operators"
+                description="One concise email each Sunday. Unsubscribe with one click."
+                className="bg-white/80 backdrop-blur"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
           {/* Brand */}
           <div className="space-y-4 lg:col-span-1">
             <div className="flex items-center gap-2">
@@ -145,16 +176,6 @@ export function Footer() {
                 </Link>
               ))}
             </div>
-          </div>
-
-          {/* Newsletter */}
-          <div className="space-y-4">
-            <NewsletterCapture
-              variant="inline"
-              surface="footer"
-              headline="Weekly AI freelance & creator brief"
-              description="One concise email each Sunday. No spam, unsubscribe anytime."
-            />
           </div>
         </div>
 
