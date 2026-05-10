@@ -414,42 +414,98 @@ export function FlexibleUsageSection() {
 export function FreeToolsStrip() {
   const navigate = useNavigate();
   const tools = [
-    { icon: Receipt, label: "Invoice" },
-    { icon: FileText, label: "Proposal" },
-    { icon: ScrollText, label: "Contract" },
-    { icon: Calculator, label: "Pricing" },
-    { icon: CalendarRange, label: "Content cal." },
-    { icon: IdCard, label: "Business card" },
-    { icon: Timer, label: "Pomodoro" },
-    { icon: FileSignature, label: "Intake forms" },
+    { icon: Receipt, label: "Invoice", path: "/tools/invoice-generator", uses: "12.4k", badge: "Popular", color: "emerald" as const },
+    { icon: FileText, label: "Proposal", path: "/tools/proposal-generator", uses: "8.1k", badge: "Trending", color: "violet" as const },
+    { icon: ScrollText, label: "Contract", path: "/tools/contract-generator", uses: "6.7k", badge: null, color: "sky" as const },
+    { icon: Calculator, label: "Pricing", path: "/tools/pricing-calculator", uses: "4.2k", badge: null, color: "amber" as const },
+    { icon: CalendarRange, label: "Content calendar", path: "/tools/content-calendar", uses: "3.8k", badge: null, color: "emerald" as const },
+    { icon: IdCard, label: "Business card", path: "/tools/business-card-generator", uses: "2.9k", badge: null, color: "sky" as const },
+    { icon: Timer, label: "Pomodoro", path: "/tools/pomodoro", uses: "2.4k", badge: null, color: "violet" as const },
+    { icon: FileSignature, label: "Intake forms", path: "/tools/onboarding-form-builder", uses: "1.9k", badge: "New", color: "amber" as const },
   ];
+  // Featured (first one)
+  const featured = tools[0];
   return (
-    <section className="py-16 md:py-20 px-4 bg-white">
-      <div className="container mx-auto max-w-6xl">
-        <div className="flex items-end justify-between flex-wrap gap-4 mb-6 md:mb-8">
+    <section className="py-20 md:py-24 px-4 bg-gradient-to-b from-slate-50/40 to-white relative overflow-hidden">
+      <div className="pointer-events-none absolute -top-20 right-1/4 w-[420px] h-[260px] bg-emerald-100/40 blur-3xl rounded-full" />
+      <div className="container mx-auto max-w-6xl relative">
+        <div className="flex items-end justify-between flex-wrap gap-4 mb-8 md:mb-10">
           <div>
-            <div className="text-[11px] uppercase tracking-[0.18em] text-emerald-600 font-medium mb-2">Free utilities</div>
-            <h2 className="text-2xl md:text-3xl font-display font-semibold tracking-tight text-slate-900 leading-tight">
-              Quick utilities that plug into the workspace.
+            <div className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-emerald-600 font-medium mb-2">
+              <LivePulse /> Free utilities · live
+            </div>
+            <h2 className="text-2xl md:text-4xl font-display font-semibold tracking-tight text-slate-900 leading-tight">
+              Lightweight tools that plug<br className="hidden md:block" /> into your workspace.
             </h2>
           </div>
-          <Button variant="link" onClick={() => navigate("/tools")} className="text-emerald-600 hover:text-emerald-700">
-            Browse all <ArrowRight className="w-4 h-4 ml-1" />
+          <Button variant="link" onClick={() => navigate("/tools")} className="text-emerald-700 hover:text-emerald-800 group">
+            Browse all tools <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-0.5 transition-transform" />
           </Button>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 md:gap-3">
-          {tools.map((t) => (
-            <button
-              key={t.label}
-              onClick={() => navigate("/tools")}
-              className="group flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-3.5 py-3 hover:border-emerald-300 hover:shadow-sm transition text-left"
-            >
-              <div className="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition">
-                <t.icon className="w-4 h-4" />
-              </div>
-              <span className="text-sm font-medium text-slate-700 group-hover:text-emerald-700 truncate">{t.label}</span>
-            </button>
-          ))}
+
+        <div className="grid lg:grid-cols-3 gap-3 md:gap-4">
+          {/* Featured spotlight */}
+          <motion.button
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            onClick={() => navigate(featured.path)}
+            className="group relative lg:row-span-2 rounded-2xl p-6 text-left bg-slate-900 text-white overflow-hidden border border-slate-800 hover:border-emerald-400/40 transition-all duration-300"
+          >
+            <div className="absolute -top-20 -right-20 w-72 h-72 bg-emerald-500/20 blur-3xl rounded-full group-hover:bg-emerald-500/30 transition-colors duration-500" />
+            <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-emerald-400/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className="relative flex items-center justify-between mb-4">
+              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-400/30 text-[10px] font-bold uppercase tracking-wider text-emerald-300">
+                <Flame className="w-3 h-3" /> Most used
+              </span>
+              <span className="inline-flex items-center gap-1 text-[11px] text-white/60">
+                <Activity className="w-3 h-3" /> {featured.uses} this month
+              </span>
+            </div>
+            <div className="relative w-14 h-14 rounded-2xl bg-white/10 border border-white/15 flex items-center justify-center mb-4 group-hover:scale-105 transition-transform duration-300">
+              <featured.icon className="w-6 h-6 text-emerald-300" />
+            </div>
+            <div className="relative font-display text-2xl md:text-3xl font-semibold mb-2">{featured.label} generator</div>
+            <p className="relative text-sm text-white/60 leading-relaxed mb-5">
+              Create branded, GST-ready invoices in under a minute. Export, share or send straight from your workspace.
+            </p>
+            <span className="relative inline-flex items-center gap-1.5 text-sm font-medium text-emerald-300 group-hover:text-emerald-200">
+              Run it now <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+            </span>
+          </motion.button>
+
+          {/* Other tools */}
+          <div className="lg:col-span-2 grid grid-cols-2 sm:grid-cols-3 gap-2.5 md:gap-3">
+            {tools.slice(1).map((t, i) => (
+              <motion.button
+                key={t.label}
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.05 * i }}
+                viewport={{ once: true }}
+                onClick={() => navigate(t.path)}
+                className="group relative flex flex-col rounded-xl border border-slate-200 bg-white px-3.5 py-3.5 hover:border-emerald-300 hover:-translate-y-0.5 hover:shadow-[0_12px_24px_-16px_rgba(15,23,42,0.25)] transition-all duration-300 text-left overflow-hidden"
+              >
+                <CornerAccents />
+                <div className="flex items-center justify-between mb-2">
+                  <div className="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                    <t.icon className="w-4 h-4" />
+                  </div>
+                  {t.badge && (
+                    <span className="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                      {t.badge === "Popular" && <TrendingUp className="w-2.5 h-2.5" />}
+                      {t.badge === "Trending" && <Flame className="w-2.5 h-2.5" />}
+                      {t.badge}
+                    </span>
+                  )}
+                </div>
+                <span className="text-sm font-medium text-slate-800 group-hover:text-emerald-700 transition-colors truncate">{t.label}</span>
+                <span className="text-[10px] text-slate-400 mt-0.5 inline-flex items-center gap-1">
+                  <LivePulse color={t.color} /> {t.uses} runs
+                </span>
+              </motion.button>
+            ))}
+          </div>
         </div>
       </div>
     </section>
