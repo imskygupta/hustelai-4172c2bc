@@ -12,6 +12,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 import { SEO, softwareJsonLd, orgJsonLd } from "@/components/SEO";
 import { TrustStrip } from "@/components/TrustStrip";
+import { WorkflowLoop, LOOPS } from "@/components/media/WorkflowLoop";
 import {
   UnifiedWorkspaceSection,
   AsyncOperationsSection,
@@ -121,6 +122,18 @@ export default function Index() {
             <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5 text-emerald-500" /> Free forever tier</span>
             <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5 text-emerald-500" /> Branded deliverables</span>
             <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5 text-emerald-500" /> Async &amp; cloud-native</span>
+          </div>
+
+          {/* Ambient hero workflow loop — calm placeholder until assets land */}
+          <div className="gsap-fade pt-6 md:pt-10 max-w-5xl mx-auto">
+            <WorkflowLoop
+              srcMp4={LOOPS.hero.srcMp4}
+              srcWebm={LOOPS.hero.srcWebm}
+              poster={LOOPS.hero.poster}
+              aspect="16/9"
+              label="HustleAI Workspace OS — async workflow in motion"
+              className="border border-slate-200/70"
+            />
           </div>
         </div>
       </section>
