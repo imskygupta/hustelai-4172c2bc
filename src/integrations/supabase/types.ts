@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_alerts: {
+        Row: {
+          acknowledged_at: string | null
+          acknowledged_by: string | null
+          created_at: string
+          feature: string | null
+          id: string
+          kind: string
+          message: string
+          meta: Json
+          severity: string
+          source: string | null
+          telegram_sent: boolean
+          user_id: string | null
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          created_at?: string
+          feature?: string | null
+          id?: string
+          kind: string
+          message: string
+          meta?: Json
+          severity?: string
+          source?: string | null
+          telegram_sent?: boolean
+          user_id?: string | null
+        }
+        Update: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          created_at?: string
+          feature?: string | null
+          id?: string
+          kind?: string
+          message?: string
+          meta?: Json
+          severity?: string
+          source?: string | null
+          telegram_sent?: boolean
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       affiliate_earnings: {
         Row: {
           affiliate_id: string
@@ -1609,9 +1654,11 @@ export type Database = {
       export_download_tokens: {
         Row: {
           created_at: string
+          created_via: string
           expires_at: string
           export_id: string
           id: string
+          is_public: boolean
           max_uses: number
           otp_hash: string | null
           requires_otp: boolean
@@ -1622,9 +1669,11 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          created_via?: string
           expires_at: string
           export_id: string
           id?: string
+          is_public?: boolean
           max_uses?: number
           otp_hash?: string | null
           requires_otp?: boolean
@@ -1635,9 +1684,11 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          created_via?: string
           expires_at?: string
           export_id?: string
           id?: string
+          is_public?: boolean
           max_uses?: number
           otp_hash?: string | null
           requires_otp?: boolean

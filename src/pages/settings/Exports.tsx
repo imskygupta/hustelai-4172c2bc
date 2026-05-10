@@ -10,8 +10,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import {
   FileDown, Send, Link2, Trash2, Crown, Search, Copy, Clock, Lock,
-  Star, StarOff, Droplet, Database, MessageSquare, ExternalLink, History,
+  Star, StarOff, Droplet, Database, MessageSquare, ExternalLink, History, Globe, Eye,
 } from "lucide-react";
+import { CapabilityAction } from "@/components/usage/CapabilityAction";
+import { notifyError, notifySuccess } from "@/lib/errors/toast";
 
 const TYPE_FILTERS: Array<{ value: string; label: string }> = [
   { value: "", label: "All" },
@@ -68,7 +70,7 @@ export default function Exports() {
     return { total, bytes, favorites, tgCached };
   }, [rows]);
 
-  const onShare = async (exp: ExportRow, opts: { otp?: boolean; multi?: boolean; minutes: number }) => {
+  const onShare = async (exp: ExportRow, opts: { otp?: boolean; multi?: boolean; minutes: number; mode: "private" | "public" }) => {
     try {
       setShare(null);
       const r = await issueShareLink({
@@ -76,10 +78,11 @@ export default function Exports() {
         expires_in_minutes: opts.minutes,
         requires_otp: !!opts.otp && isPersistent,
         max_uses: opts.multi && isPersistent ? 10 : 1,
+        mode: opts.mode,
       });
       setShare({ url: r.url, otp: r.otp, expires_at: r.expires_at });
     } catch (e: any) {
-      toast({ title: "Could not create link", description: e.message, variant: "destructive" });
+      notifyError(e, { context: "exports.share" });
     }
   };
 
@@ -87,23 +90,19 @@ export default function Exports() {
     try {
       const r: any = await deliverToTelegram(exp.id);
       if (r?.reason === "no_telegram") {
-        toast({ title: "Telegram not connected", description: "Connect it in Integrations first.", variant: "destructive" });
+        notifyError("no_telegram", { context: "exports.telegram" });
       } else {
-        toast({ title: "📤 Sent to Telegram", description: exp.title });
+        notifySuccess("📤 Sent to Telegram", exp.title);
         load();
       }
-    } catch (e: any) {
-      toast({ title: "Telegram delivery failed", description: e.message, variant: "destructive" });
-    }
+    } catch (e: any) { notifyError(e, { context: "exports.telegram", feature: "telegram_export" }); }
   };
 
   const onDeepLink = async (exp: ExportRow) => {
     try {
       const r = await getTelegramDeeplink(exp.id);
       window.open(r.deep_link, "_blank", "noreferrer");
-    } catch (e: any) {
-      toast({ title: "Failed", description: e.message, variant: "destructive" });
-    }
+    } catch (e: any) { notifyError(e, { context: "exports.deeplink", feature: "telegram_export" }); }
   };
 
   const onRevoke = async (exp: ExportRow) => {
@@ -276,8 +275,27 @@ function ExportCard({ exp, onShare, onTelegram, onDeepLink, onRevoke, onFav }: {
 
       <div className="flex flex-wrap gap-1">
         <CardBtn onClick={onShare} disabled={stale} icon={Link2} label="Share" />
-        <CardBtn onClick={onTelegram} disabled={stale} icon={Send} label="Telegram" />
-        <CardBtn onClick={onDeepLink} disabled={stale} icon={ExternalLink} label="Deep link" />
+        <CapabilityAction
+          capabilityKey="telegram_export"
+          flag="telegram.notifications"
+          requiresTelegram
+          onClick={onTelegram}
+          disabled={stale}
+          icon={<Send className="h-3 w-3" />}
+          lockedLabel="Telegram delivery requires Pro + a connected Telegram account"
+        >
+          Telegram
+        </CapabilityAction>
+        <CapabilityAction
+          capabilityKey="telegram_export"
+          flag="telegram.notifications"
+          requiresTelegram
+          onClick={onDeepLink}
+          disabled={stale}
+          icon={<ExternalLink className="h-3 w-3" />}
+        >
+          Deep link
+        </CapabilityAction>
         <CardBtn onClick={onRevoke} disabled={stale} icon={Trash2} label="Revoke" tone="danger" />
       </div>
     </div>
@@ -312,19 +330,32 @@ function CardBtn({ onClick, disabled, icon: Icon, label, tone }: { onClick: () =
 
 function ShareDialog({ exp, isPersistent, onClose, onIssue, share }: {
   exp: ExportRow; isPersistent: boolean; onClose: () => void;
-  onIssue: (o: { otp?: boolean; multi?: boolean; minutes: number }) => void;
+  onIssue: (o: { otp?: boolean; multi?: boolean; minutes: number; mode: "private" | "public" }) => void;
   share: { url: string; otp?: string | null; expires_at: string } | null;
 }) {
   const [otp, setOtp] = useState(false);
   const [multi, setMulti] = useState(false);
   const [minutes, setMinutes] = useState(60);
+  const [mode, setMode] = useState<"private" | "public">("public");
   return (
     <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4" onClick={onClose}>
       <div className="max-w-md w-full rounded-2xl border border-border bg-card p-5" onClick={(e) => e.stopPropagation()}>
         <h3 className="text-sm font-semibold mb-1 flex items-center gap-2"><Link2 className="h-4 w-4 text-primary" />Share "{exp.title}"</h3>
-        <p className="text-[11px] text-muted-foreground mb-4">Generates a secure download link. Logs every access.</p>
+        <p className="text-[11px] text-muted-foreground mb-4">Generates a secure download link. Every access is logged.</p>
         {!share ? (
           <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-2">
+              <button type="button" onClick={() => setMode("public")}
+                className={`text-left rounded-lg ring-1 px-3 py-2.5 transition ${mode === "public" ? "bg-primary/10 ring-primary/40" : "bg-muted/40 ring-border hover:ring-primary/20"}`}>
+                <div className="text-[12px] font-medium flex items-center gap-1.5">Public link</div>
+                <div className="text-[10px] text-muted-foreground mt-0.5">Anyone with the URL can open. Works in incognito.</div>
+              </button>
+              <button type="button" onClick={() => setMode("private")}
+                className={`text-left rounded-lg ring-1 px-3 py-2.5 transition ${mode === "private" ? "bg-primary/10 ring-primary/40" : "bg-muted/40 ring-border hover:ring-primary/20"}`}>
+                <div className="text-[12px] font-medium flex items-center gap-1.5">Private link</div>
+                <div className="text-[10px] text-muted-foreground mt-0.5">Sign-in required. For your own devices only.</div>
+              </button>
+            </div>
             <div>
               <label className="text-[11px] text-muted-foreground">Expires in</label>
               <select value={minutes} onChange={(e) => setMinutes(+e.target.value)}
@@ -346,7 +377,7 @@ function ShareDialog({ exp, isPersistent, onClose, onIssue, share }: {
             {!isPersistent && <p className="text-[11px] text-amber-400">OTP & multi-use require Pro.</p>}
             <div className="flex justify-end gap-2 pt-2">
               <button onClick={onClose} className="text-xs px-3 py-2 rounded-md bg-muted/40 ring-1 ring-border">Cancel</button>
-              <button onClick={() => onIssue({ otp, multi, minutes })}
+              <button onClick={() => onIssue({ otp, multi, minutes, mode })}
                 className="text-xs px-3 py-2 rounded-md bg-primary/15 ring-1 ring-primary/40 text-primary">Create link</button>
             </div>
           </div>

@@ -36,7 +36,9 @@ serve(async (req) => {
     if (h !== tok.otp_hash) return log(sb, exp.id, tok.id, null, ip, ua, "bad_otp", j({ error: "bad otp" }, 401));
   }
 
-  if (tok.user_id) {
+  // Public share links are intentionally accessible without auth.
+  // Only enforce JWT match when the token was issued as a private link.
+  if (tok.user_id && !tok.is_public) {
     const jwt = (req.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "");
     const { data: who } = await sb.auth.getUser(jwt);
     if (!who?.user || who.user.id !== tok.user_id)

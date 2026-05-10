@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { Loader2, Lock, Download as DownloadIcon, ShieldAlert, FileDown } from "lucide-react";
+import { Loader2, Lock, Download as DownloadIcon, FileDown } from "lucide-react";
+import PublicLinkUnavailable, { type LinkUnavailableReason } from "./PublicLinkUnavailable";
 
 const FN_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/export-download`;
 
@@ -10,10 +11,11 @@ export default function Download() {
   const [needOtp, setNeedOtp] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [reason, setReason] = useState<LinkUnavailableReason | null>(null);
   const [info, setInfo] = useState<{ url: string; title: string; mime_type: string; size_bytes: number } | null>(null);
 
   const attempt = async (otpVal?: string) => {
-    setLoading(true); setError(null);
+    setLoading(true); setError(null); setReason(null);
     try {
       const u = new URL(FN_URL);
       u.searchParams.set("token", token);
@@ -21,14 +23,32 @@ export default function Download() {
       const r = await fetch(u.toString(), { headers: { apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY } });
       const j = await r.json().catch(() => ({}));
       if (j?.otp_required) { setNeedOtp(true); setLoading(false); return; }
-      if (!r.ok) { setError(j?.error || `Error ${r.status}`); setLoading(false); return; }
+      if (!r.ok) {
+        const errText = String(j?.error || "").toLowerCase();
+        let mapped: LinkUnavailableReason = "unknown";
+        if (r.status === 404 || errText.includes("not found") || errText.includes("invalid")) mapped = "not_found";
+        else if (errText.includes("expired")) mapped = "expired";
+        else if (errText.includes("revoked")) mapped = "revoked";
+        else if (errText.includes("link used") || errText.includes("limit")) mapped = "limit_reached";
+        else if (errText.includes("otp")) mapped = "otp_required";
+        else if (r.status === 401 || r.status === 403) mapped = "unauthorized";
+        setReason(mapped);
+        setError(j?.error || `Error ${r.status}`);
+        setLoading(false); return;
+      }
       setInfo(j);
     } catch (e: any) {
+      setReason("unknown");
       setError(e.message);
     } finally { setLoading(false); }
   };
 
   useEffect(() => { attempt(); /* eslint-disable-next-line */ }, [token]);
+
+  // For terminal failures, show branded growth-funnel fallback page.
+  if (!loading && reason && !info && !needOtp) {
+    return <PublicLinkUnavailable reason={reason} />;
+  }
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 flex items-center justify-center p-4">
@@ -65,9 +85,7 @@ export default function Download() {
             </div>
           )}
 
-          {!loading && error && !needOtp && (
-            <div className="text-sm text-red-300 flex items-center justify-center gap-2"><ShieldAlert className="h-4 w-4" /> {error}</div>
-          )}
+          {/* Terminal errors handled by PublicLinkUnavailable above. */}
         </div>
       </div>
     </div>
