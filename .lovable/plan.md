@@ -1,194 +1,118 @@
-## UX + Delivery Reliability Cleanup Pass
+## Tool Unlocks & Boosts — Independent Consumable Economy
 
-A focused, architecture-aligned cleanup integrating with the existing capability engine, feature flags, quota system, async infra, and Telegram admin ops. No ad-hoc logic.
+A second monetization layer running in parallel with the core tier system. Tiers continue to govern AI credits, premium models, and infra-heavy workflows. Unlocks govern lightweight tools, exports, and storage only.
 
----
+### 1. Capability Classification (metadata layer)
 
-### 1. Capability-Aware Action Rendering (Telegram + others)
+Extend `src/lib/usage/capabilities.ts` with two fields:
+- `cost_type: "ai_heavy" | "lightweight" | "export" | "storage"`
+- `boostable: boolean` (only true for `lightweight | export | storage`)
 
-**New**: `src/components/usage/CapabilityAction.tsx`
-- Wraps any button/action.
-- Resolves capability via `useCapability(key)` + `useFeatureFlag(flag?)`.
-- Three states: `available`, `locked` (tier), `unavailable` (flag/integration missing).
-- Renders disabled button + tier badge + tooltip + opens `<UpgradeSheet>` on click when locked.
-- Variants: `button | menu-item | icon`.
+Update existing keys:
+- `lightweight`: `invoice`, `business_card`, `proposal_lite`, `contract_lite`, `portfolio_bio`, `pricing_calc`, `content_calendar`, `pomodoro` (boostable)
+- `export`: `export_pdf`, `export_docx` (boostable)
+- `storage`: new `storage_mb` (boostable)
+- `ai_heavy`: all `ai/*`, `roadmap`, `blueprint`, `hustlebot`, `resume_ai` (NOT boostable — tier-gated only)
 
-**New hook**: `useTelegramConnection()` → `{ connected, loading }` from `notification_integrations` (provider=telegram, status=connected).
+Add `getCostType(key)` and `isBoostable(key)` helpers. `useCapability` hook returns these flags.
 
-**Wire into**:
-- `src/pages/settings/Exports.tsx` Telegram-related buttons
-- `ActivityCard` Telegram delivery action
-- Anywhere "Send to Telegram" / "Deep link" appears (search `export-tg-deeplink`, `deliverToTelegram`).
+### 2. Database (new migration)
 
-Behavior:
-- Free tier → disabled "Telegram Delivery · Pro" badge, click → upgrade sheet.
-- Pro+ but Telegram not connected → "Connect Telegram" CTA → routes to `/settings/telegram`.
-- Connected + allowed → real action.
-- Flag killed/maintenance → disabled "Temporarily unavailable" tooltip.
+```sql
+-- Daily lightweight tool limits (per tier)
+INSERT INTO tier_limits (tier, meter, feature, max_value, period) VALUES
+  ('free','lightweight','invoice',3,'day'),
+  ('pro','lightweight','invoice',20,'day'),
+  ('elite','lightweight','invoice',100,'day'),
+  ('infinity','lightweight','invoice',-1,'day'),
+  -- repeat for business_card, proposal_lite, contract_lite, portfolio_bio
+  -- storage in MB
+  ('free','storage','*',1024,'lifetime'),
+  ('pro','storage','*',2048,'lifetime'),
+  ('elite','storage','*',3072,'lifetime'),
+  ('infinity','storage','*',10240,'lifetime');
 
----
+-- Unlock balances (rollover ledger)
+CREATE TABLE unlock_balances (
+  id uuid PK, user_id uuid, meter text, feature text DEFAULT '*',
+  remaining bigint DEFAULT 0, lifetime_purchased bigint DEFAULT 0,
+  expires_at timestamptz NULL, created_at, updated_at,
+  UNIQUE(user_id, meter, feature)
+);
 
-### 2. Public Share Link Architecture
+-- Ledger (audit trail)
+CREATE TABLE unlock_ledger (
+  id uuid PK, user_id uuid, meter text, feature text,
+  delta bigint, balance_after bigint,
+  reason text, -- 'purchase' | 'consume' | 'grant' | 'expire' | 'rollover'
+  source_id uuid NULL, -- payment id / promo id
+  metadata jsonb, created_at
+);
 
-Two distinct link types — currently `export-issue-token` requires user_id binding via JWT for private, but UI mixed semantics.
-
-**Schema** (`generated_exports` and `export_download_tokens` already exist; we add):
-- `export_download_tokens.is_public boolean default false`
-- `export_download_tokens.created_via text` ('private' | 'share')
-
-**Edge function changes**:
-- `export-issue-token`: accept `mode: 'private' | 'public'`. 
-  - `private` → binds `user_id = caller`, requires auth on download.
-  - `public` → `user_id = null`, `is_public = true`, max_uses & expiry tier-gated, optional OTP.
-- `export-download`: when `tok.is_public`, skip JWT user check entirely. Keep OTP, expiry, use_count, revocation.
-- `export-tg-deeplink`: unchanged — always private bot-bound.
-
-**Frontend** (`src/lib/exports/api.ts`):
-- `issueShareLink({ mode })` → public URL works in incognito.
-- UI: split "Share" into `Private link (auth required)` and `Public link (anyone with link)`.
-
----
-
-### 3. Branded Public Recovery Page
-
-Replace raw "Forbidden / failed to fetch" on invalid public links.
-
-**New**: `src/pages/PublicLinkUnavailable.tsx`
-- Branded HustleAI hero
-- Reason chip: `expired | revoked | not_found | limit_reached | otp_required`
-- Sample tools grid (3-4 cards linking to `/tools/*`)
-- "Create your own" CTA → `/signup`
-- SEO-friendly (indexable noindex, canonical to /)
-
-**New**: `src/pages/Download.tsx` already exists — refactor to:
-- Detect token from URL
-- Call `export-download` (no JSON-only mode)
-- On error → render `<PublicLinkUnavailable reason={...} />`
-- On OTP required → render OTP form
-- On success → trigger download + thank-you state with growth CTAs
-
-Wire route `/d/:token` → `Download`.
-
----
-
-### 4. Error Sanitization Layer
-
-**New**: `src/lib/errors/sanitize.ts`
-```ts
-export function humanizeError(e: unknown, context?: string): { 
-  title: string; message: string; action?: 'retry'|'reconnect'|'upgrade'|'wait'; 
-  reportToAdmin?: boolean 
-}
+-- Unlock packs catalog
+CREATE TABLE unlock_packs (
+  id uuid PK, key text UNIQUE, label text, description text,
+  meter text, feature text DEFAULT '*', units bigint,
+  price_inr numeric, validity_hours int NULL, -- null = no expiry
+  active boolean, sort_order int, created_at
+);
+-- Seed: invoice_10, biz_card_10, export_10, storage_1gb_30d, lightweight_24h
 ```
 
-Maps:
-- `FunctionsHttpError`, `Edge Function returned`, `fetch failed`, `Failed to send a request` → "Something interrupted that request. Try again."
-- `quota`, `tier_locked` → upgrade
-- `telegram` + (`bot_blocked`, `chat not found`, `unauthorized`) → "Reconnect Telegram"
-- `otp` → "Enter the access code"
-- `expired`, `revoked` → "This link is no longer available"
-- Unknown → generic + report to admin.
+RLS: balances/ledger user-readable own rows; admins full. Packs public read.
 
-**New**: `src/lib/errors/toast.ts` → `notifyError(e, ctx)` uses `humanizeError` then `toast`. Optionally fires `admin-alert` edge function for `reportToAdmin`.
+### 3. RPCs
 
-**Replace** raw `toast.error(String(e))` / `e.message` patterns in:
-- `src/lib/exports/api.ts` callers
-- `ActivityCard.tsx`
-- `NewsletterOps.tsx`
-- `Exports.tsx`, `Telegram.tsx` settings pages
-(Search for `toast({.*error|toast.error|String\(e`.)
+- `consume_unlock(_user, _meter, _feature, _units)` → tries unlock balance first; returns `{used_unlocks, remaining}`. SECURITY DEFINER.
+- `grant_unlocks(_user, _meter, _feature, _units, _source, _reason, _expires_at)` → admin/system insert balance + ledger row.
+- `unlock_summary(_user)` → returns balances + recent ledger for wallet UI.
 
----
+### 4. Extend `consume_usage` RPC
 
-### 5. Admin Diagnostics & Telegram Alerts
+Modify the existing function so that when `_meter IN ('lightweight','export','storage')` AND tier limit is exhausted:
+1. Check `unlock_balances` for matching row.
+2. If `remaining >= _units`: decrement, write ledger, return `{allowed:true, reason:'unlock', unlocks_remaining}`.
+3. Else: return `{allowed:false, reason:'quota_unlockable', max, used, suggest_unlock:true}`.
 
-**New edge function**: `supabase/functions/admin-alert/index.ts`
-- Body: `{ kind, severity, user_id?, feature?, message, meta? }`
-- Inserts into new table `admin_alerts` (id, kind, severity, user_id, message, meta, created_at, acknowledged_at).
-- If `severity in ('error','critical')`: sends to Telegram admin chat using existing `_shared/notifications/telegram.ts`.
+AI meter path is unchanged — never consults unlocks.
 
-**Migration**: `admin_alerts` table + RLS (admin-only read).
+### 5. Frontend modules
 
-**Wire**:
-- `export-deliver-telegram`, `export-create`, `ai-job-runner` failure paths → call `admin-alert` with structured payload.
-- Frontend `notifyError(reportToAdmin=true)` → invokes `admin-alert`.
+- `src/lib/unlocks/api.ts`: `getBalances()`, `getPacks()`, `purchasePack(packId)` (calls existing Cashfree edge fn with `kind:'unlock'`), `consumeUnlock()`.
+- `src/lib/unlocks/hooks.ts`: `useUnlockBalance(meter, feature)`, `useUnlockPacks()`.
+- `src/components/usage/UnlockSheet.tsx`: drawer shown when `quota_unlockable` is hit. Lists relevant packs, "Comes back in Xh" countdown, instant purchase CTA.
+- Update `QuotaBoundary` to detect `reason === 'quota_unlockable'` and route to `UnlockSheet` instead of generic `UpgradeSheet`.
+- Update `humanizeError` mapping: friendly "You've used today's free generations. Come back in {h}h or unlock 10 more instantly."
 
-**Admin UI**: extend `src/pages/admin/Notifications.tsx` (or new `AdminAlerts.tsx`) with feed + ack + retry deep-links to existing AI Jobs / Telegram Ops.
+### 6. Wallet / Command Center
 
----
+New page `src/pages/settings/Wallet.tsx` (linked from Profile quick actions + Settings nav):
+- Active balances (per meter, with rollover indicator)
+- Storage gauge ("HustleAI Cloud" branding — never "Telegram")
+- Daily resets countdown
+- Recent ledger (last 30 entries)
+- "Buy unlock pack" grid
 
-### 6. PDF Typography System
+Add a compact `UnlockBalanceWidget` to Dashboard alongside `OperationalUsageWidget`.
 
-**New**: `src/lib/pdf/typography.ts` — centralized constants:
-```ts
-export const PDF_TYPO = {
-  base: { fontFamily: 'Inter, system-ui, sans-serif', fontSize: 11, lineHeight: 1.6 },
-  h1: { fontSize: 22, lineHeight: 1.3, marginBottom: 14 },
-  h2: { fontSize: 16, lineHeight: 1.35, marginTop: 20, marginBottom: 10 },
-  h3: { fontSize: 13, lineHeight: 1.4, marginTop: 14, marginBottom: 6 },
-  paragraph: { marginBottom: 10 },
-  section: { marginBottom: 22 },
-  page: { padding: '20mm 18mm' },
-};
-```
-And `pdfBaseCss()` returning a CSS string for html2pdf-style flows.
+### 7. Storage accounting
 
-**Apply** to:
-- `src/lib/blueprint-print.ts`
-- `src/lib/roadmap-print.ts`
-- `src/lib/workspace-docs/export-pdf.ts`
-- `src/lib/tools/print-meta.ts`
-- Any invoice/proposal/resume PDF pipeline.
+- New helper `recordStorageDelta(user, mb, source)` → writes to `usage_counters` (lifetime period).
+- Wire into `export-create`, file uploads, generated_exports cleanup.
+- Cleanup job: existing `mark_expired_exports` extended to refund storage on hard-delete.
+- All UI labels say **"HustleAI Cloud"** — no Telegram references in user copy.
 
-Replace inline tight CSS with shared base + section spacing.
+### 8. Purchase flow
 
----
+Reuse Cashfree edge function. New edge function `unlock-purchase-confirm` (webhook side-effect): on payment success with `metadata.kind='unlock'`, call `grant_unlocks()` with pack contents.
 
-### 7. Export Delivery Flow Polish
+### 9. Files
 
-In `ActivityCard.tsx` and `Exports.tsx`:
-- Use `<CapabilityAction>` for Telegram buttons.
-- Show async chip when `status='pending'` ("Processing — we'll notify you").
-- Telegram not connected → inline "Connect Telegram" link instead of failing action.
-- All errors via `notifyError`.
+**New**: migration, `src/lib/unlocks/{api,hooks,types}.ts`, `src/components/usage/UnlockSheet.tsx`, `src/components/dashboard/UnlockBalanceWidget.tsx`, `src/pages/settings/Wallet.tsx`, `supabase/functions/unlock-purchase-confirm/index.ts`, `mem/features/tool-unlocks.md`.
 
----
+**Edited**: `src/lib/usage/capabilities.ts` (cost_type/boostable), `src/lib/usage/hooks.ts`, `src/lib/usage/guards.ts`, `src/components/usage/QuotaBoundary.tsx`, `src/lib/errors/sanitize.ts`, `src/App.tsx` (route), `src/pages/Dashboard.tsx` (widget), `src/pages/Profile.tsx` (link), migration extending `consume_usage`.
 
-### 8. Files Summary
+### Out of scope (explicit)
 
-**Created**
-- `src/components/usage/CapabilityAction.tsx`
-- `src/lib/usage/useTelegramConnection.ts`
-- `src/lib/errors/sanitize.ts`
-- `src/lib/errors/toast.ts`
-- `src/lib/pdf/typography.ts`
-- `src/pages/PublicLinkUnavailable.tsx`
-- `supabase/functions/admin-alert/index.ts`
-- Migration: `admin_alerts` + `export_download_tokens.is_public`
-
-**Edited**
-- `supabase/functions/export-issue-token/index.ts` (mode public/private)
-- `supabase/functions/export-download/index.ts` (skip auth when public)
-- `supabase/functions/export-deliver-telegram/index.ts` (admin-alert on failure)
-- `supabase/functions/export-create/index.ts` (admin-alert on failure)
-- `src/lib/exports/api.ts` (mode arg)
-- `src/pages/Download.tsx` (branded fallback + OTP UI)
-- `src/pages/settings/Exports.tsx`
-- `src/components/async/ActivityCard.tsx`
-- `src/pages/admin/NewsletterOps.tsx` (notifyError)
-- `src/App.tsx` (route `/link-unavailable` if needed)
-- `src/lib/blueprint-print.ts`, `src/lib/roadmap-print.ts`, `src/lib/workspace-docs/export-pdf.ts` (typography)
-
-**No new** websocket/realtime infra. No resumable workflow work.
-
----
-
-### Execution Order
-1. Migration (admin_alerts + is_public column)
-2. Error sanitization lib (foundation)
-3. CapabilityAction + useTelegramConnection
-4. Public/private link split (edge + frontend)
-5. Branded Download/PublicLinkUnavailable
-6. admin-alert function + wire failures
-7. PDF typography refactor
-8. Settings + ActivityCard polish
+- No changes to AI quota path, `consume_ai_quota`, roadmap/blueprint/hustlebot limits, or premium model gating.
+- No streak/referral/promo flows yet — schema supports them via `unlock_ledger.reason` + `source_id`, surfaced in v2.
