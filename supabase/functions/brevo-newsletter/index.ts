@@ -66,6 +66,194 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const action = body.action as string;
 
+    // ===== Admin gate helper =====
+    async function requireAdmin() {
+      const auth = req.headers.get("authorization") || "";
+      const userClient = createClient(SUPABASE_URL, Deno.env.get("SUPABASE_ANON_KEY")!, { global: { headers: { Authorization: auth } } });
+      const { data: u } = await userClient.auth.getUser();
+      const uid = u?.user?.id;
+      if (!uid) throw new Error("unauthorized");
+      const { data: r } = await sb.from("user_roles").select("role").eq("user_id", uid).eq("role", "admin").maybeSingle();
+      if (!r) throw new Error("forbidden");
+      return uid;
+    }
+
+    function sectionsToHtml(sections: any[]) {
+      return (sections || []).map((s) => {
+        const md = String(s.body_md || "").trim();
+        // Lightweight md → html (paragraphs, lists, links)
+        const html = md
+          .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+          .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" style="color:#6366f1">$1</a>')
+          .replace(/^\- (.*)$/gm, "<li>$1</li>")
+          .replace(/(<li>[\s\S]+?<\/li>)/g, "<ul>$1</ul>")
+          .split(/\n\n+/).map(p => p.startsWith("<ul>") ? p : `<p>${p.replace(/\n/g, "<br/>")}</p>`).join("\n");
+        return `<h2 style="margin:24px 0 8px;font-size:18px;color:#111">${escapeHtml(s.title || "")}</h2>${html}`;
+      }).join("\n");
+    }
+    function escapeHtml(s: string) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'} as any)[c]); }
+
+    // ===== Sectioned AI draft generation (writes a newsletter_issues row) =====
+    if (action === "generate_sections") {
+      await requireAdmin();
+      const focus = body.focus || "weekly digest";
+      const system = `You write the HustleAI weekly digest for Indian creators and freelancers.
+Output ONLY valid JSON of shape:
+{"subject":"...","preheader":"...","sections":[
+  {"id":"ai_trends","title":"AI Trends","body_md":"..."},
+  {"id":"creator_economy","title":"Creator Economy","body_md":"..."},
+  {"id":"freelancing","title":"Freelancing","body_md":"..."},
+  {"id":"automation","title":"Automation Workflows","body_md":"..."},
+  {"id":"hustleai","title":"HustleAI Updates","body_md":"..."},
+  {"id":"tools","title":"Tool Picks","body_md":"..."},
+  {"id":"opportunities","title":"Opportunities","body_md":"..."}
+]}
+Markdown allowed: paragraphs, [text](url), and "- " bullet lists. No HTML. Keep each section under 120 words. Indian context.`;
+      const raw = await callAI(`Focus: ${focus}. Generate this week's digest.`, system);
+      const cleaned = raw.replace(/```json\n?/gi, "").replace(/```/g, "").trim();
+      let parsed: any;
+      try { parsed = JSON.parse(cleaned); }
+      catch { return new Response(JSON.stringify({ error: "ai_parse_failed", raw }), { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }); }
+
+      const { data: issue, error } = await sb.from("newsletter_issues").insert({
+        subject: parsed.subject,
+        preheader: parsed.preheader || null,
+        sections: parsed.sections || [],
+        status: "ready",
+        provider: body.provider || "brevo",
+        channel: body.channel || "email",
+        model: "google/gemini-2.5-flash",
+        metadata: { focus },
+      }).select().single();
+      if (error) throw error;
+      return new Response(JSON.stringify({ ok: true, issue }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    // ===== Regenerate a single section =====
+    if (action === "regenerate_section") {
+      await requireAdmin();
+      const { issue_id, section_id, hint } = body;
+      const { data: issue, error: ie } = await sb.from("newsletter_issues").select("*").eq("id", issue_id).single();
+      if (ie) throw ie;
+      const sections = (issue.sections || []) as any[];
+      const section = sections.find(s => s.id === section_id);
+      if (!section) return new Response(JSON.stringify({ error: "section_not_found" }), { status: 404, headers: corsHeaders });
+
+      const system = `Rewrite ONE newsletter section in markdown. Output ONLY JSON: {"title":"...","body_md":"..."}. Keep under 120 words.`;
+      const raw = await callAI(`Section: ${section.title}. Hint: ${hint || "tighter, fresher"}. Current:\n${section.body_md}`, system);
+      const cleaned = raw.replace(/```json\n?/gi, "").replace(/```/g, "").trim();
+      const next = JSON.parse(cleaned);
+      const updated = sections.map(s => s.id === section_id ? { ...s, ...next } : s);
+      const { error: ue } = await sb.from("newsletter_issues").update({ sections: updated }).eq("id", issue_id);
+      if (ue) throw ue;
+      return new Response(JSON.stringify({ ok: true, sections: updated }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    // ===== Send a test email of a draft to a given address =====
+    if (action === "test_issue") {
+      await requireAdmin();
+      const { issue_id, to_email } = body;
+      const { data: issue, error: ie } = await sb.from("newsletter_issues").select("*").eq("id", issue_id).single();
+      if (ie) throw ie;
+      const html = sectionsToHtml(issue.sections || []);
+      const wrapped = wrapHtml({
+        subject: issue.subject,
+        bodyHtml: html,
+        previewText: issue.preheader,
+        unsubscribeUrl: "https://hustlaiapp.in/unsubscribe?token=test",
+      });
+      const result = await brevoSend({
+        sender: { name: "HustleAI", email: "noreply@hustlaiapp.in" },
+        to: [{ email: to_email }],
+        subject: `[TEST] ${issue.subject}`,
+        htmlContent: wrapped,
+      });
+      return new Response(JSON.stringify({ ok: true, messageId: result.messageId }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    // ===== Dispatch an APPROVED issue (admin only, approval-gated) =====
+    if (action === "dispatch_issue") {
+      await requireAdmin();
+      const { issue_id } = body;
+      const { data: issue, error: ie } = await sb.from("newsletter_issues").select("*").eq("id", issue_id).single();
+      if (ie) throw ie;
+      if (!["approved", "scheduled"].includes(issue.status)) {
+        return new Response(JSON.stringify({ error: "not_approved", status: issue.status }), { status: 409, headers: corsHeaders });
+      }
+      await sb.from("newsletter_issues").update({ status: "sending" }).eq("id", issue_id);
+
+      const { data: subs } = await sb.from("newsletter_subscribers")
+        .select("id, email, name, unsubscribe_token").eq("status", "active").eq("is_active", true);
+
+      const html = sectionsToHtml(issue.sections || []);
+      let sent = 0, failed = 0;
+      for (const s of subs || []) {
+        const unsubUrl = `https://hustlaiapp.in/unsubscribe?token=${s.unsubscribe_token}`;
+        try {
+          const result = await brevoSend({
+            sender: { name: "HustleAI", email: "noreply@hustlaiapp.in" },
+            to: [{ email: s.email, name: s.name || undefined }],
+            subject: issue.subject,
+            htmlContent: wrapHtml({ subject: issue.subject, bodyHtml: html, previewText: issue.preheader, unsubscribeUrl: unsubUrl }),
+            headers: { "List-Unsubscribe": `<${unsubUrl}>` },
+          });
+          await sb.from("newsletter_sends").upsert({
+            issue_id: issue.id, subscriber_id: s.id, email: s.email,
+            provider: issue.provider, provider_message_id: result.messageId,
+            status: "sent", sent_at: new Date().toISOString(),
+          }, { onConflict: "issue_id,subscriber_id" });
+          sent++;
+        } catch (err: any) {
+          await sb.from("newsletter_sends").upsert({
+            issue_id: issue.id, subscriber_id: s.id, email: s.email,
+            provider: issue.provider, status: "failed", error: String(err?.message || err),
+          }, { onConflict: "issue_id,subscriber_id" });
+          failed++;
+        }
+        await new Promise(r => setTimeout(r, 80));
+      }
+      await sb.from("newsletter_issues").update({
+        status: failed === (subs?.length ?? 0) && (subs?.length ?? 0) > 0 ? "failed" : "sent",
+        sent_at: new Date().toISOString(),
+        body_html: html,
+        error: failed > 0 ? `${failed} delivery failures` : null,
+      }).eq("id", issue_id);
+      return new Response(JSON.stringify({ ok: true, sent, failed, total: subs?.length ?? 0 }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    // ===== Retry failed sends for an issue =====
+    if (action === "retry_failed") {
+      await requireAdmin();
+      const { issue_id } = body;
+      const { data: issue } = await sb.from("newsletter_issues").select("*").eq("id", issue_id).single();
+      const { data: failedRows } = await sb.from("newsletter_sends").select("*").eq("issue_id", issue_id).eq("status", "failed");
+      const html = sectionsToHtml(issue.sections || []);
+      let sent = 0, failed = 0;
+      for (const row of failedRows || []) {
+        try {
+          const result = await brevoSend({
+            sender: { name: "HustleAI", email: "noreply@hustlaiapp.in" },
+            to: [{ email: row.email }],
+            subject: issue.subject,
+            htmlContent: wrapHtml({ subject: issue.subject, bodyHtml: html, previewText: issue.preheader, unsubscribeUrl: `https://hustlaiapp.in/unsubscribe?token=na` }),
+          });
+          await sb.from("newsletter_sends").update({
+            status: "sent", provider_message_id: result.messageId,
+            sent_at: new Date().toISOString(), error: null,
+            attempt: (row.attempt || 0) + 1,
+          }).eq("id", row.id);
+          sent++;
+        } catch (err: any) {
+          await sb.from("newsletter_sends").update({
+            error: String(err?.message || err), attempt: (row.attempt || 0) + 1,
+          }).eq("id", row.id);
+          failed++;
+        }
+        await new Promise(r => setTimeout(r, 80));
+      }
+      return new Response(JSON.stringify({ ok: true, sent, failed }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
     // -------- AI generate --------
     if (action === "generate_ai") {
       const userPrompt = body.prompt || "Generate a weekly digest from HustleAI about new tools, features, and side-hustle tips for Indian creators.";
