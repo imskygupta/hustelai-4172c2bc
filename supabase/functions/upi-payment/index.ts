@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { notifyOps } from "../_shared/notify-ops.ts";
 import { emitBillingEvent } from "../_shared/notifications/emit.ts";
 import { flagGuard } from "../_shared/flags/resolve.ts";
+import { emitWorkflowEvent } from "../_shared/workflows/emit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -85,6 +86,11 @@ serve(async (req) => {
         amount, currency: "₹", plan: plan || wallet_pack,
         link: "/profile?tab=billing", email_fallback: user.email || undefined,
       });
+      void emitWorkflowEvent(supabase, "upi.awaiting_review", {
+        user_id: user.id, amount, currency: "INR",
+        payment_type, plan, wallet_pack, utr_number,
+        payment_provider: "upi_manual", submission_id: data?.id,
+      }, { user_id: user.id, dedupe_key: `upi_submit:${data?.id}`, source: "upi-payment" });
 
       return new Response(JSON.stringify({ success: true, submission: data }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -193,6 +199,17 @@ serve(async (req) => {
           plan: sub.plan || sub.wallet_pack,
           link: "/dashboard", email_fallback: profile?.email || undefined,
         });
+        void emitWorkflowEvent(supabase, "upi.approved", {
+          user_id: sub.user_id, amount: Number(sub.amount), currency: sub.currency,
+          tier: sub.plan, payment_type: sub.payment_type, wallet_pack: sub.wallet_pack,
+          payment_provider: "upi_manual", transaction_id: sub.utr_number,
+          submission_id: sub.id,
+        }, { user_id: sub.user_id, dedupe_key: `upi_ok:${sub.id}`, source: "upi-payment" });
+        void emitWorkflowEvent(supabase, "payment.succeeded", {
+          user_id: sub.user_id, amount: Number(sub.amount), currency: sub.currency,
+          tier: sub.plan, kind: sub.payment_type === "plan" ? "subscription" : "one_time",
+          payment_provider: "upi_manual", transaction_id: sub.utr_number,
+        }, { user_id: sub.user_id, dedupe_key: `upi_pay_ok:${sub.id}`, source: "upi-payment" });
       } else if (decision === "rejected") {
         const { data: profile } = await supabase.from("profiles")
           .select("email").eq("user_id", sub.user_id).maybeSingle();
@@ -210,6 +227,11 @@ serve(async (req) => {
           reason: admin_note || undefined,
           link: "/payment", email_fallback: profile?.email || undefined,
         });
+        void emitWorkflowEvent(supabase, "upi.rejected", {
+          user_id: sub.user_id, amount: Number(sub.amount), currency: sub.currency,
+          reason: admin_note || null, submission_id: sub.id,
+          payment_provider: "upi_manual",
+        }, { user_id: sub.user_id, dedupe_key: `upi_no:${sub.id}`, source: "upi-payment" });
       }
 
       return new Response(JSON.stringify({ success: true }), {
