@@ -63,6 +63,9 @@
 
   html {
     scroll-behavior: smooth;
+    /* Avoid iOS auto-zoom on form focus */
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
   }
 
   body {
@@ -70,6 +73,16 @@
     font-family: 'Inter', sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    /* Kill horizontal page scroll caused by stray overflow */
+    overflow-x: hidden;
+    overscroll-behavior-y: none;
+  }
+
+  /* Avoid iOS zoom on input focus (font must be >=16px) */
+  @media (max-width: 767px) {
+    input, select, textarea {
+      font-size: 16px;
+    }
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -141,8 +154,27 @@
   .btn-press:active {
     transform: scale(0.96);
   }
+
+  /* Safe-area helpers (iOS notch / Android gesture bar) */
+  .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+  .pt-safe { padding-top: env(safe-area-inset-top); }
+  .pl-safe { padding-left: env(safe-area-inset-left); }
+  .pr-safe { padding-right: env(safe-area-inset-right); }
+  .h-safe-bottom { height: env(safe-area-inset-bottom); }
+  .min-h-tap { min-height: 44px; }
+  .min-w-tap { min-width: 44px; }
 }
 
 /* Hide scrollbar utility */
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Respect user's reduced-motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
