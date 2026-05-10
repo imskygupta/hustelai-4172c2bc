@@ -212,44 +212,58 @@ export function AsyncOperationsSection() {
 export function RealDeliverablesSection() {
   const navigate = useNavigate();
   const items = [
-    { icon: Receipt, label: "Invoices", desc: "Branded, GST-ready, paid faster." },
-    { icon: FileText, label: "Proposals", desc: "Win-shaped scopes in minutes." },
-    { icon: ScrollText, label: "Contracts", desc: "Lawyer-style clauses, signed." },
-    { icon: IdCard, label: "Resumes & bios", desc: "Themed PDFs, ready to share." },
-    { icon: Boxes, label: "Client portals", desc: "Status, files, approvals." },
-    { icon: Layers, label: "AI deliverables", desc: "Plans, briefs, roadmaps." },
+    { icon: Receipt, label: "Invoices", desc: "Branded, GST-ready, paid faster.", state: "Sent · paid", color: "emerald" as const },
+    { icon: FileText, label: "Proposals", desc: "Win-shaped scopes in minutes.", state: "Opened 4×", color: "sky" as const },
+    { icon: ScrollText, label: "Contracts", desc: "Lawyer-style clauses, signed.", state: "Signed", color: "emerald" as const },
+    { icon: IdCard, label: "Resumes & bios", desc: "Themed PDFs, ready to share.", state: "Exported", color: "violet" as const },
+    { icon: Boxes, label: "Client portals", desc: "Status, files, approvals.", state: "Live", color: "emerald" as const },
+    { icon: Layers, label: "AI deliverables", desc: "Plans, briefs, roadmaps.", state: "Generating", color: "amber" as const },
   ];
   return (
-    <section className="py-20 md:py-28 px-4 bg-white">
+    <section className="py-20 md:py-28 px-4 bg-white relative overflow-hidden">
+      <div className="pointer-events-none absolute top-1/2 -left-32 w-[360px] h-[360px] bg-violet-100/40 blur-3xl rounded-full" />
+      <div className="pointer-events-none absolute top-1/3 -right-32 w-[360px] h-[360px] bg-emerald-100/40 blur-3xl rounded-full" />
       <div className="container mx-auto max-w-6xl">
         <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} className="text-center mb-12 md:mb-16 space-y-4">
-          <div className="text-[11px] uppercase tracking-[0.18em] text-emerald-600 font-medium">Real deliverables</div>
+          <div className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-emerald-600 font-medium">
+            <LivePulse /> Real deliverables
+          </div>
           <h2 className="text-3xl md:text-5xl font-display font-semibold tracking-tight text-slate-900 leading-[1.1]">
             Outputs your clients<br className="hidden md:block" /> actually pay you for.
           </h2>
           <p className="text-slate-500 max-w-xl mx-auto text-sm md:text-base">
-            Not just chat — branded documents, portals and plans you can hand off the same day.
+            Not just chat — branded documents, portals and plans you can hand off the same day they ship.
           </p>
         </motion.div>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 relative">
           {items.map((it, i) => (
             <motion.div
               key={it.label}
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 24 }}
               whileInView={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.05 }}
+              transition={{ delay: i * 0.06, duration: 0.5, ease: "easeOut" }}
               viewport={{ once: true }}
-              className="rounded-2xl border border-slate-200 bg-white p-4 md:p-5 hover:border-emerald-300 hover:shadow-md transition-all"
+              className="group relative rounded-2xl border border-slate-200 bg-white p-4 md:p-5 hover:border-emerald-300 hover:-translate-y-1 hover:shadow-[0_18px_30px_-18px_rgba(15,23,42,0.25)] transition-all duration-300 overflow-hidden"
             >
-              <div className="w-10 h-10 rounded-lg bg-slate-900 text-white flex items-center justify-center mb-3"><it.icon className="w-4 h-4" /></div>
-              <div className="text-sm md:text-base font-display font-semibold text-slate-900">{it.label}</div>
-              <p className="text-xs md:text-sm text-slate-500 mt-1 leading-relaxed">{it.desc}</p>
+              <CornerAccents />
+              {/* Hover sheen */}
+              <span className="pointer-events-none absolute -inset-y-2 -left-1/2 w-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-gradient-to-r from-transparent via-emerald-100/40 to-transparent skew-x-12 group-hover:animate-shimmer-x" />
+              <div className="relative flex items-center justify-between mb-3">
+                <div className="w-10 h-10 rounded-lg bg-slate-900 text-white flex items-center justify-center group-hover:bg-emerald-600 transition-colors duration-300">
+                  <it.icon className="w-4 h-4" />
+                </div>
+                <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                  <LivePulse color={it.color} /> {it.state}
+                </span>
+              </div>
+              <div className="relative text-sm md:text-base font-display font-semibold text-slate-900">{it.label}</div>
+              <p className="relative text-xs md:text-sm text-slate-500 mt-1 leading-relaxed">{it.desc}</p>
             </motion.div>
           ))}
         </div>
         <div className="text-center mt-10">
-          <Button variant="outline" onClick={() => navigate("/tools")} className="border-slate-300 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-300">
-            See deliverables <ArrowRight className="w-4 h-4 ml-2" />
+          <Button onClick={() => navigate("/signup")} className="bg-slate-900 hover:bg-slate-800 text-white">
+            Generate your first deliverable <ArrowRight className="w-4 h-4 ml-2" />
           </Button>
         </div>
       </div>
