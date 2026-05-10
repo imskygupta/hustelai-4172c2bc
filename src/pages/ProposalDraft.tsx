@@ -4,7 +4,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,6 +15,8 @@ import {
 } from "lucide-react";
 import { getMaxUses, getUsage, bumpUsage, awardXP } from "@/lib/tool-limits";
 import { AIToolHero } from "@/components/tools/AIToolHero";
+import { FullscreenTextarea } from "@/components/ai/FullscreenTextarea";
+import { StickyGenerateBar } from "@/components/ai/StickyGenerateBar";
 
 const tones = [
   { value: "Professional", label: "Professional", icon: "💼" },
@@ -156,10 +157,13 @@ export default function ProposalDraft() {
                 <Sparkles className="w-5 h-5 text-primary" />
                 <h2 className="font-display font-bold">Job Description</h2>
               </div>
-              <Textarea
-                placeholder="Paste the job description here... e.g. 'Looking for a web developer to build a React dashboard with analytics...'"
+              <FullscreenTextarea
                 value={jobDescription}
-                onChange={(e) => setJobDescription(e.target.value)}
+                onChange={setJobDescription}
+                placeholder="Paste the job description here... e.g. 'Looking for a web developer to build a React dashboard with analytics...'"
+                rows={6}
+                fullscreenTitle="Job description"
+                ariaLabel="Job description"
                 className="min-h-[160px] text-sm"
               />
 
@@ -280,6 +284,25 @@ export default function ProposalDraft() {
         )}
       </main>
       <Footer />
+      {isEligible && (
+        <StickyGenerateBar
+          status={
+            generating
+              ? <span className="inline-flex items-center gap-1.5"><Loader2 className="w-3.5 h-3.5 animate-spin" /> Crafting…</span>
+              : <span>{usageCount}/{maxUses} used today</span>
+          }
+          action={
+            <Button
+              onClick={handleGenerate}
+              disabled={generating || atLimit || jobDescription.trim().length < 10}
+              className="w-full bg-gradient-primary text-primary-foreground h-11 active:scale-95"
+              size="sm"
+            >
+              {generating ? <Loader2 className="w-4 h-4 animate-spin" /> : atLimit ? <><Lock className="w-4 h-4 mr-1.5" /> Limit</> : <><Zap className="w-4 h-4 mr-1.5" /> Generate</>}
+            </Button>
+          }
+        />
+      )}
     </div>
   );
 }
