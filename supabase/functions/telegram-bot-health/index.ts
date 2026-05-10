@@ -36,6 +36,8 @@ Deno.serve(async (req) => {
 
     let status = "unknown";
     let result: any = null;
+    let webhookInfo: any = null;
+    let pendingUpdates = 0;
     if (!botToken) {
       status = "down";
       result = { error: `Secret ${secretName} not configured` };
@@ -45,6 +47,15 @@ Deno.serve(async (req) => {
         const j = await r.json();
         status = j?.ok ? "ok" : "degraded";
         result = j?.result || j;
+        // Webhook visibility
+        try {
+          const w = await fetch(`https://api.telegram.org/bot${botToken}/getWebhookInfo`);
+          const wj = await w.json();
+          if (wj?.ok) {
+            webhookInfo = wj.result;
+            pendingUpdates = Number(wj.result?.pending_update_count || 0);
+          }
+        } catch { /* ignore */ }
       } catch (err) {
         status = "down";
         result = { error: (err as Error).message };
@@ -52,10 +63,15 @@ Deno.serve(async (req) => {
     }
 
     await sb.from("telegram_bots").update({
-      status, last_ping_at: new Date().toISOString(),
+      status,
+      last_ping_at: new Date().toISOString(),
+      webhook_info: webhookInfo,
+      webhook_last_checked_at: new Date().toISOString(),
+      pending_update_count: pendingUpdates,
+      last_response: { kind: "health", at: new Date().toISOString(), bot: result },
     } as any).eq("id", bot_id);
 
-    return new Response(JSON.stringify({ ok: true, status, result }), {
+    return new Response(JSON.stringify({ ok: true, status, result, webhook: webhookInfo, pending_updates: pendingUpdates }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
