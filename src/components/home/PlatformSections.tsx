@@ -334,36 +334,44 @@ export function IntegrationsNotificationsSection() {
  * ---------------------------------------------------------------- */
 export function ControlGovernanceSection() {
   const items = [
-    { icon: Settings2, title: "Workspace settings", desc: "Branding, voice, defaults — applied everywhere." },
-    { icon: Layers, title: "Feature controls", desc: "Toggle modules per workspace. Roll out at your pace." },
-    { icon: Boxes, title: "Roles & access", desc: "Calm, role-aware access without an IT project." },
-    { icon: Wallet, title: "Usage you can see", desc: "Clear limits, history and a quiet upgrade path." },
+    { icon: Settings2, title: "Workspace settings", desc: "Branding, voice, defaults — applied everywhere.", tag: "Synced" },
+    { icon: Layers, title: "Feature controls", desc: "Toggle modules per workspace. Roll out at your pace.", tag: "Live" },
+    { icon: Boxes, title: "Roles & access", desc: "Calm, role-aware access without an IT project.", tag: "Secure" },
+    { icon: Wallet, title: "Usage you can see", desc: "Clear limits, history and a quiet upgrade path.", tag: "Real-time" },
   ];
   return (
-    <section className="py-20 md:py-28 px-4 bg-white">
+    <section className="py-20 md:py-28 px-4 bg-white relative overflow-hidden">
       <div className="container mx-auto max-w-6xl">
         <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} className="text-center mb-12 md:mb-16 space-y-4">
-          <div className="text-[11px] uppercase tracking-[0.18em] text-emerald-600 font-medium">Control &amp; governance</div>
+          <div className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-emerald-600 font-medium">
+            <LivePulse /> Control &amp; governance
+          </div>
           <h2 className="text-3xl md:text-5xl font-display font-semibold tracking-tight text-slate-900 leading-[1.1]">
             Built like infrastructure.<br className="hidden md:block" /> Used like a workspace.
           </h2>
           <p className="text-slate-500 max-w-xl mx-auto text-sm md:text-base">
-            Feature controls, roles and visible usage — so your workspace scales with you, not against you.
+            Feature controls, roles and transparent usage — your workspace scales with you, never against you.
           </p>
         </motion.div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
           {items.map((it, i) => (
             <motion.div
               key={it.title}
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 24 }}
               whileInView={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.06 }}
+              transition={{ delay: i * 0.07, duration: 0.5, ease: "easeOut" }}
               viewport={{ once: true }}
-              className="rounded-2xl border border-slate-200 bg-white p-4 md:p-5 hover:border-emerald-300 hover:shadow-md transition-all"
+              className="group relative rounded-2xl border border-slate-200 bg-white p-4 md:p-5 hover:border-emerald-300 hover:-translate-y-1 hover:shadow-[0_16px_30px_-18px_rgba(15,23,42,0.2)] transition-all duration-300 overflow-hidden"
             >
-              <div className="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center mb-3"><it.icon className="w-4 h-4" /></div>
-              <div className="text-sm md:text-base font-display font-semibold text-slate-900">{it.title}</div>
-              <p className="text-xs md:text-sm text-slate-500 mt-1 leading-relaxed">{it.desc}</p>
+              <CornerAccents />
+              <div className="relative flex items-center justify-between mb-3">
+                <div className="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                  <it.icon className="w-4 h-4" />
+                </div>
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">{it.tag}</span>
+              </div>
+              <div className="relative text-sm md:text-base font-display font-semibold text-slate-900">{it.title}</div>
+              <p className="relative text-xs md:text-sm text-slate-500 mt-1 leading-relaxed">{it.desc}</p>
             </motion.div>
           ))}
         </div>
