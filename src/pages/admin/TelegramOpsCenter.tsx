@@ -17,7 +17,7 @@ import { FlagQuickControls } from "@/components/admin/FlagQuickControls";
 import {
   Activity, Bot, Radio, Send, Terminal, Database, ShieldAlert,
   RefreshCw, ChevronLeft, CheckCircle2, XCircle, Clock, Loader2,
-  Power, Wrench, Pause, PlayCircle, Search,
+  Power, Wrench, Pause, PlayCircle, Search, ShieldCheck, UserPlus, Trash2, Webhook,
 } from "lucide-react";
 
 type Overview = {
@@ -106,6 +106,9 @@ function BotsTab() {
       {bots.map((b) => {
         const ok = b.status === "healthy" || b.status === "ok";
         const stale = b.last_ping_at ? (Date.now() - new Date(b.last_ping_at).getTime() > 10 * 60_000) : true;
+        const wh = b.webhook_info || {};
+        const whOk = wh?.url && !wh?.last_error_message;
+        const isAdminBot = b.role === "admin";
         return (
           <div key={b.id} className="rounded-xl border border-border/60 bg-card p-4 space-y-3">
             <div className="flex items-start justify-between gap-3 flex-wrap">
@@ -113,31 +116,50 @@ function BotsTab() {
                 <div className="flex items-center gap-2 font-medium">
                   <StatusDot ok={ok && !stale} />
                   {b.name} <span className="text-xs text-muted-foreground">@{b.username}</span>
+                  {isAdminBot && <Badge className="text-[10px] bg-amber-500/15 text-amber-400 border-amber-500/30">admin bot</Badge>}
                 </div>
                 <div className="text-xs text-muted-foreground mt-1">
                   {b.purpose || "—"} · env <Badge variant="outline" className="ml-1">{b.environment}</Badge>
+                  {b.runtime_enabled === false && <Badge variant="destructive" className="ml-1 text-[10px]">runtime disabled</Badge>}
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 <Badge variant={b.enabled ? "default" : "secondary"}>{b.enabled ? "enabled" : "disabled"}</Badge>
                 <Badge variant={ok ? "default" : "destructive"}>{b.status}</Badge>
                 {stale && b.last_ping_at && <Badge variant="outline" className="text-amber-500 border-amber-500/30">stale</Badge>}
+                <Badge variant="outline" className={whOk ? "text-emerald-500 border-emerald-500/30" : "text-amber-500 border-amber-500/30"}>
+                  webhook {whOk ? "ok" : wh?.url ? "warn" : "unset"}
+                </Badge>
               </div>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
               <div><div className="text-muted-foreground">Deliveries 24h</div><div className="font-medium tabular-nums text-sm">{b.delivery_count_24h ?? 0}</div></div>
               <div><div className="text-muted-foreground">Failures 24h</div><div className="font-medium tabular-nums text-sm">{b.failure_count_24h ?? 0}</div></div>
               <div><div className="text-muted-foreground">Last ping</div><div className="font-medium text-sm">{b.last_ping_at ? new Date(b.last_ping_at).toLocaleString() : "never"}</div></div>
-              <div className="truncate"><div className="text-muted-foreground">Webhook</div><div className="font-medium text-sm truncate" title={b.webhook_url || ""}>{b.webhook_url ? "configured" : "—"}</div></div>
+              <div><div className="text-muted-foreground">Pending updates</div><div className={`font-medium tabular-nums text-sm ${b.pending_update_count>0?"text-amber-500":""}`}>{b.pending_update_count ?? 0}</div></div>
+              <div className="md:col-span-2 truncate"><div className="text-muted-foreground">Webhook URL</div><div className="font-mono text-[11px] truncate" title={wh?.url || b.webhook_url || ""}>{wh?.url || b.webhook_url || "—"}</div></div>
+              <div className="md:col-span-2 truncate"><div className="text-muted-foreground">Last command</div><div className="font-medium text-sm truncate">{b.last_command ? `/${b.last_command}` : "—"} {b.last_command_at && <span className="text-muted-foreground text-xs">· {new Date(b.last_command_at).toLocaleTimeString()}</span>}</div></div>
+              {wh?.last_error_message && (
+                <div className="md:col-span-4"><div className="text-muted-foreground">Webhook error</div><div className="text-xs text-red-500 truncate">{wh.last_error_message}</div></div>
+              )}
             </div>
             <div className="flex items-center gap-2 flex-wrap pt-1 border-t border-border/40">
               <Button size="sm" variant="outline" onClick={() => update(b.id, { enabled: !b.enabled })}>
                 {b.enabled ? <><Pause className="h-3.5 w-3.5 mr-1.5" /> Pause</> : <><PlayCircle className="h-3.5 w-3.5 mr-1.5" /> Resume</>}
               </Button>
+              <Button size="sm" variant="outline" onClick={() => update(b.id, { runtime_enabled: !b.runtime_enabled })}>
+                <Power className="h-3.5 w-3.5 mr-1.5" /> Runtime {b.runtime_enabled === false ? "On" : "Off"}
+              </Button>
               <Button size="sm" variant="outline" onClick={async () => {
                 const { error } = await supabase.functions.invoke("telegram-bot-health", { body: { bot_id: b.id } });
                 if (error) toast.error(error.message); else { toast.success("Health check sent"); load(); }
               }}><Activity className="h-3.5 w-3.5 mr-1.5" /> Ping</Button>
+              <Button size="sm" variant="outline" onClick={async () => {
+                if (!confirm(`Set webhook for @${b.username}?`)) return;
+                const { data, error } = await supabase.functions.invoke("telegram-webhook-set", { body: { bot_id: b.id, action: "set" } });
+                if (error || (data as any)?.error) toast.error(error?.message || (data as any).error);
+                else { toast.success("Webhook registered"); load(); }
+              }}><Webhook className="h-3.5 w-3.5 mr-1.5" /> Set webhook</Button>
               <Button size="sm" variant="ghost" onClick={() => {
                 const v = prompt("New environment (production/staging/dev)", b.environment);
                 if (v) update(b.id, { environment: v });
@@ -146,6 +168,108 @@ function BotsTab() {
           </div>
         );
       })}
+    </div>
+  );
+}
+
+/* ---------------- Admins (allowlist + audit) ---------------- */
+function AdminsTab() {
+  const [admins, setAdmins] = useState<any[]>([]);
+  const [audit, setAudit] = useState<any[]>([]);
+  const [bots, setBots] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [draft, setDraft] = useState({ telegram_chat_id: "", telegram_username: "", display_name: "", bot_id: "" });
+
+  const load = async () => {
+    setLoading(true);
+    const [{ data: a }, { data: au }, { data: b }] = await Promise.all([
+      sb.from("telegram_admin_users").select("*").order("created_at", { ascending: false }),
+      sb.from("telegram_admin_audit").select("*").order("created_at", { ascending: false }).limit(100),
+      sb.from("telegram_bots").select("id,name,username,role").eq("role", "admin"),
+    ]);
+    setAdmins(a || []); setAudit(au || []); setBots(b || []);
+    if (b?.[0] && !draft.bot_id) setDraft((d) => ({ ...d, bot_id: b[0].id }));
+    setLoading(false);
+  };
+  useEffect(() => { load(); }, []);
+
+  const add = async () => {
+    if (!draft.telegram_chat_id) { toast.error("Telegram chat ID required"); return; }
+    const { data: { user } } = await supabase.auth.getUser();
+    const { error } = await sb.from("telegram_admin_users").insert({
+      ...draft, bot_id: draft.bot_id || null, created_by: user?.id, enabled: true,
+    });
+    if (error) toast.error(error.message);
+    else { toast.success("Admin authorized"); setDraft({ telegram_chat_id: "", telegram_username: "", display_name: "", bot_id: draft.bot_id }); load(); }
+  };
+  const toggle = async (id: string, enabled: boolean) => {
+    const { error } = await sb.from("telegram_admin_users").update({ enabled }).eq("id", id);
+    if (error) toast.error(error.message); else load();
+  };
+  const remove = async (id: string) => {
+    if (!confirm("Revoke this admin?")) return;
+    const { error } = await sb.from("telegram_admin_users").delete().eq("id", id);
+    if (error) toast.error(error.message); else load();
+  };
+
+  return (
+    <div className="grid lg:grid-cols-5 gap-6">
+      <div className="lg:col-span-2 space-y-3">
+        <div className="rounded-xl border border-border/60 bg-card p-4 space-y-3">
+          <div className="text-sm font-medium flex items-center gap-2"><UserPlus className="h-4 w-4" /> Authorize Telegram admin</div>
+          <div><Label className="text-xs">Telegram chat ID *</Label><Input value={draft.telegram_chat_id} onChange={(e) => setDraft({ ...draft, telegram_chat_id: e.target.value })} placeholder="e.g. 123456789" /></div>
+          <div className="grid grid-cols-2 gap-2">
+            <div><Label className="text-xs">Username</Label><Input value={draft.telegram_username} onChange={(e) => setDraft({ ...draft, telegram_username: e.target.value })} placeholder="optional" /></div>
+            <div><Label className="text-xs">Display name</Label><Input value={draft.display_name} onChange={(e) => setDraft({ ...draft, display_name: e.target.value })} placeholder="optional" /></div>
+          </div>
+          {bots.length > 0 && (
+            <div>
+              <Label className="text-xs">Bot</Label>
+              <Select value={draft.bot_id} onValueChange={(v) => setDraft({ ...draft, bot_id: v })}>
+                <SelectTrigger><SelectValue placeholder="Any admin bot" /></SelectTrigger>
+                <SelectContent>
+                  {bots.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+          <Button size="sm" onClick={add}><ShieldCheck className="h-3.5 w-3.5 mr-1.5" /> Authorize</Button>
+          <p className="text-[11px] text-muted-foreground">Tip: send any message to the admin bot to discover your chat ID, then add it here.</p>
+        </div>
+        <div className="rounded-xl border border-border/60 bg-card divide-y divide-border/40">
+          {loading ? <div className="p-3 space-y-2">{Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-10" />)}</div>
+            : admins.length === 0 ? <div className="p-6 text-center text-sm text-muted-foreground">No authorized admins yet.</div>
+            : admins.map((a) => (
+              <div key={a.id} className="px-3 py-2.5 flex items-center gap-2 text-sm">
+                <ShieldCheck className={`h-3.5 w-3.5 ${a.enabled ? "text-emerald-500" : "text-muted-foreground"}`} />
+                <div className="flex-1 min-w-0">
+                  <div className="font-mono text-xs truncate">{a.telegram_chat_id} {a.telegram_username && <span className="text-muted-foreground">@{a.telegram_username}</span>}</div>
+                  {a.display_name && <div className="text-xs text-muted-foreground truncate">{a.display_name}</div>}
+                </div>
+                <Switch checked={a.enabled} onCheckedChange={(v) => toggle(a.id, v)} />
+                <Button size="icon" variant="ghost" onClick={() => remove(a.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
+              </div>
+            ))}
+        </div>
+      </div>
+      <div className="lg:col-span-3 space-y-2">
+        <div className="text-xs uppercase tracking-wider text-muted-foreground flex items-center justify-between">
+          <span>Admin command audit</span>
+          <Button variant="ghost" size="sm" onClick={load}><RefreshCw className="h-3 w-3" /></Button>
+        </div>
+        <div className="rounded-xl border border-border/60 bg-card divide-y divide-border/40 max-h-[600px] overflow-auto">
+          {audit.length === 0 ? <div className="p-6 text-center text-sm text-muted-foreground">No commands yet.</div>
+            : audit.map((r) => (
+              <div key={r.id} className="px-3 py-2 text-xs flex items-center gap-2 flex-wrap">
+                {r.allowed ? <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" /> : <XCircle className="h-3.5 w-3.5 text-red-500" />}
+                <span className="font-mono">/{r.command}</span>
+                <span className="text-muted-foreground truncate flex-1">{r.telegram_username ? `@${r.telegram_username}` : r.telegram_chat_id} {r.args ? `· ${r.args.slice(0,60)}` : ""}</span>
+                {!r.allowed && <Badge variant="destructive" className="text-[10px]">{r.reason}</Badge>}
+                <span className="text-muted-foreground tabular-nums">{new Date(r.created_at).toLocaleTimeString()}</span>
+              </div>
+            ))}
+        </div>
+      </div>
     </div>
   );
 }
