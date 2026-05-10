@@ -260,6 +260,13 @@ export default function AdminDashboard() {
   const [checkingAdmin, setCheckingAdmin] = useState(true);
   const [section, setSection] = useState<AdminSection>("overview");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>(() => {
+    const init: Record<string, boolean> = {};
+    NAV_GROUPS.forEach((g) => { init[g.label] = !(g.defaultOpen ?? false); });
+    return init;
+  });
+  const [navQuery, setNavQuery] = useState("");
+  const [navOpen, setNavOpen] = useState(false);
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [webinars, setWebinars] = useState<Webinar[]>([]);
