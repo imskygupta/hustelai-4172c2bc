@@ -558,6 +558,7 @@ export default function TelegramOpsCenter() {
             <TabsTrigger value="broadcasts"><Radio className="h-3.5 w-3.5 mr-1.5" /> Broadcasts</TabsTrigger>
             <TabsTrigger value="deliveries"><Send className="h-3.5 w-3.5 mr-1.5" /> Deliveries</TabsTrigger>
             <TabsTrigger value="commands"><Terminal className="h-3.5 w-3.5 mr-1.5" /> Commands</TabsTrigger>
+            <TabsTrigger value="admins"><ShieldCheck className="h-3.5 w-3.5 mr-1.5" /> Admins</TabsTrigger>
             <TabsTrigger value="exports"><Database className="h-3.5 w-3.5 mr-1.5" /> Exports</TabsTrigger>
             <TabsTrigger value="runtime"><Power className="h-3.5 w-3.5 mr-1.5" /> Runtime</TabsTrigger>
           </TabsList>
@@ -566,6 +567,7 @@ export default function TelegramOpsCenter() {
           <TabsContent value="broadcasts" className="mt-6"><BroadcastsTab /></TabsContent>
           <TabsContent value="deliveries" className="mt-6"><DeliveriesTab /></TabsContent>
           <TabsContent value="commands" className="mt-6"><CommandsTab /></TabsContent>
+          <TabsContent value="admins" className="mt-6"><AdminsTab /></TabsContent>
           <TabsContent value="exports" className="mt-6"><ExportsTab /></TabsContent>
           <TabsContent value="runtime" className="mt-6"><RuntimeTab /></TabsContent>
         </Tabs>
