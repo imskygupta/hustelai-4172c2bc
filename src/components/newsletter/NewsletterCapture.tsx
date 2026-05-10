@@ -68,16 +68,16 @@ export function NewsletterCapture({
           <CheckCircle2 className="w-4 h-4" /> Subscribed — see you Sunday.
         </div>
       ) : (
-        <div className="flex flex-col sm:flex-row gap-2">
+        <div className="flex flex-col sm:flex-row gap-2.5">
           <Input
             type="email" inputMode="email" autoComplete="email"
-            placeholder="you@example.com" value={email}
+            placeholder="you@workspace.com" value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="h-11 text-base"
+            className="h-12 text-base bg-white border-slate-300 placeholder:text-slate-400 focus-visible:ring-emerald-500"
             disabled={loading}
             required
           />
-          <Button type="submit" disabled={loading} className="h-11 active:scale-95 transition">
+          <Button type="submit" disabled={loading} className="h-12 px-5 bg-slate-900 hover:bg-slate-800 text-white active:scale-95 transition">
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Subscribe"}
           </Button>
         </div>
