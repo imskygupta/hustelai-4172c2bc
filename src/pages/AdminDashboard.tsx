@@ -745,41 +745,48 @@ export default function AdminDashboard() {
             {sidebarCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
           </button>
         </div>
-        <nav className="p-2 space-y-1 overflow-y-auto" style={{ maxHeight: "calc(100vh - 56px - 100px)" }}>
-          {externalNavGroups.map((group) => (
-            <div key={group.label} className="pb-2 mb-2 border-b border-border/60">
-              {!sidebarCollapsed && (
-                <div className="px-3 pt-1 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">
-                  {group.label}
-                </div>
-              )}
-              {group.items.map((item) => (
-                <button
-                  key={item.href}
-                  onClick={() => navigate(item.href)}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all text-muted-foreground hover:bg-muted hover:text-foreground"
-                  title={item.label}
-                >
-                  <item.icon className="w-4 h-4 shrink-0" />
-                  {!sidebarCollapsed && <span>{item.label}</span>}
-                </button>
-              ))}
-            </div>
-          ))}
-          {sidebarItems.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => setSection(item.id)}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all ${
-                section === item.id
-                  ? "bg-primary/10 text-primary font-medium"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
-              }`}
-            >
-              <item.icon className="w-4 h-4 shrink-0" />
-              {!sidebarCollapsed && <span>{item.label}</span>}
-            </button>
-          ))}
+        <nav className="p-2 space-y-3 overflow-y-auto" style={{ maxHeight: "calc(100vh - 56px - 100px)" }}>
+          {NAV_GROUPS.map((group) => {
+            const closed = !!collapsedGroups[group.label];
+            return (
+              <div key={group.label}>
+                {!sidebarCollapsed && (
+                  <button
+                    onClick={() => setCollapsedGroups((s) => ({ ...s, [group.label]: !s[group.label] }))}
+                    className="w-full flex items-center justify-between px-3 pt-1 pb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 hover:text-foreground transition"
+                  >
+                    <span>{group.label}</span>
+                    <ChevronDown className={`w-3 h-3 transition-transform ${closed ? "-rotate-90" : ""}`} />
+                  </button>
+                )}
+                {(!closed || sidebarCollapsed) && (
+                  <div className="space-y-0.5">
+                    {group.items.map((item) => {
+                      const active = item.kind === "section" && section === item.id;
+                      const onClick = () =>
+                        item.kind === "section" ? setSection(item.id) : navigate(item.href);
+                      const key = item.kind === "section" ? `s:${item.id}` : `r:${item.href}`;
+                      return (
+                        <button
+                          key={key}
+                          onClick={onClick}
+                          title={item.label}
+                          className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-[13px] transition-all ${
+                            active
+                              ? "bg-primary/10 text-primary font-medium"
+                              : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                          }`}
+                        >
+                          <item.icon className="w-4 h-4 shrink-0" />
+                          {!sidebarCollapsed && <span className="truncate">{item.label}</span>}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </nav>
         <div className="absolute bottom-0 left-0 right-0 p-2 border-t border-border space-y-1">
           <button onClick={() => navigate("/dashboard")} className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-muted hover:text-foreground">
