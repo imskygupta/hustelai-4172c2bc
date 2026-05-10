@@ -6,6 +6,9 @@ verify_jwt = false
 [functions.telegram-webhook]
 verify_jwt = false
 
+[functions.skymedia-webhook]
+verify_jwt = false
+
 [functions.ai-chatbot]
 verify_jwt = false
 
