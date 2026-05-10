@@ -2,6 +2,7 @@
 // audience via the chosen channel. Updates broadcast_jobs progress columns.
 // Designed to be safe to re-run (idempotent on per-recipient send).
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.74.0";
+import { flagGuard } from "../_shared/flags/resolve.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -22,6 +23,11 @@ Deno.serve(async (req) => {
     if (!user) throw new Error("Unauthorized");
     const { data: isAdmin } = await sb.rpc("has_role", { _user_id: user.id, _role: "admin" });
     if (!isAdmin) throw new Error("Not admin");
+
+    // Honour broadcast kill switch / maintenance even for admins (admins bypass
+    // automatically inside the resolver).
+    const blocked = await flagGuard(user.id, "telegram.broadcasts", corsHeaders, { endpoint: "telegram-broadcast" });
+    if (blocked) return blocked;
 
     const body = await req.json();
     const { title, message, audience = "all", channel = "telegram", bot_id } = body || {};
