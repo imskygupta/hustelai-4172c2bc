@@ -363,6 +363,7 @@ const App = () => (
             <Route path="*" element={<NotFound />} />
           </Routes>
           </Suspense>
+          </QuotaBoundary>
           <MobileBottomNav />
         </BrowserRouter>
         )}
