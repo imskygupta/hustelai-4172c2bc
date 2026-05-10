@@ -4848,6 +4848,33 @@ export type Database = {
         }
         Relationships: []
       }
+      usage_counters: {
+        Row: {
+          count: number
+          feature: string
+          meter: string
+          period_key: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          count?: number
+          feature?: string
+          meter: string
+          period_key: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          count?: number
+          feature?: string
+          meter?: string
+          period_key?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       usage_overrides: {
         Row: {
           bonus_units: number
@@ -6442,6 +6469,17 @@ export type Database = {
         }
         Returns: string
       }
+      grant_capability_override: {
+        Args: {
+          _expires_at?: string
+          _feature: string
+          _max_override: number
+          _meter: string
+          _reason?: string
+          _user: string
+        }
+        Returns: string
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -6488,6 +6526,14 @@ export type Database = {
           count: number
           last_at: string
           reason: string
+        }[]
+      }
+      usage_top_consumers: {
+        Args: { _limit?: number; _meter: string; _since?: string }
+        Returns: {
+          last_at: string
+          total: number
+          user_id: string
         }[]
       }
       workflow_event_throughput: {

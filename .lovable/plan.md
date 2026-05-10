@@ -1,104 +1,91 @@
-# AI-Curated Newsletter Automation
+## Usage Governance + Tier Capability — Platform-Wide
 
-Build a lean newsletter pipeline: **capture → AI draft → admin approval → multi-provider send**, plugged into existing workflows + async-job infra. Telegram-channel ready, no auto-send.
+The foundation already exists (`tier_limits`, `feature_access`, `usage_overrides`, `consume_usage`, `resolve_user_limits`, `useFeatureAccess`, `useQuota`, edge `flagGuard`). This plan **extends and unifies** it — no parallel system.
 
-## 1. Database (single migration)
+### 1. Extend the meter taxonomy
 
-New tables (all RLS-enabled, audited):
+Add new meters to `tier_limits` (rows only — schema unchanged):
 
-- `newsletter_subscribers` — `email` (unique), `user_id?`, `status` (`pending|active|unsubscribed|suppressed|bounced`), `source` (`onboarding|exit_intent|scroll|footer|manual|signup`), `tags text[]`, `confirmed_at`, `unsubscribed_at`, `last_sent_at`, `engagement_score`.
-- `newsletter_issues` — weekly drafts. Fields: `slug`, `subject`, `preheader`, `status` (`draft|generating|ready|approved|scheduled|sending|sent|failed|rejected`), `sections jsonb` (array of `{id,title,kind,body_md,sources}`), `generated_by` (`ai_job_id`), `provider` (`brevo|mailersend`), `channel` (`email|telegram|both`), `scheduled_at`, `sent_at`, `approved_by`, `rejected_by`, `reject_reason`, `model`, `cost_units`, `metadata`.
-- `newsletter_sends` — per-recipient delivery row (idempotent on `issue_id+subscriber_id`): `provider`, `provider_message_id`, `status` (`queued|sent|failed|bounced|opened|clicked`), `error`, `sent_at`, `opened_at`, `clicked_at`.
-- `newsletter_capture_dismissals` — anonymous + user dismiss persistence (`anon_id` cookie or `user_id`, `surface`, `dismissed_at`).
+| Meter | Free | Pro | Elite | Infinity | Period |
+|---|---|---|---|---|---|
+| `workspace` | 1 | 10 | 50 | -1 | lifetime |
+| `portal` (public client portal) | 1 | 5 | 25 | -1 | lifetime |
+| `upload` (files/day) | 5 | 50 | 200 | -1 | day |
+| `async_job` (queued/day) | 10 | 100 | 500 | -1 | day |
+| `roadmap` | 3 | 15 | 50 | -1 | week |
+| `intake_form` | 1 | 5 | 25 | -1 | lifetime |
 
-RLS:
-- Subscribers: insert open (capture); select/update only owner via `user_id` or admin.
-- Issues / sends / dismissals: admin-only writes; subscribers table reads admin-only except own row.
+Existing AI/export/automation/storage/telegram caps stay (already balanced).
 
-Helper RPCs:
-- `newsletter_create_draft(_subject text, _sections jsonb)` → returns issue id (admin only).
-- `newsletter_mark_approved(_issue uuid)` (admin only, sets `approved_by`, `status=approved`).
-- `newsletter_dispatch_counts(_issue uuid)` → `{queued, sent, failed}` for admin live view.
+Add `period='week'` support to `consume_usage` (currently day/lifetime only) — small SQL extension to compute `period_key` as ISO week when `period='week'`.
 
-## 2. Edge Functions
+### 2. Capability registry (single source of truth)
 
-All deployed under `supabase/functions/`:
+New file `src/lib/usage/capabilities.ts`:
+- Static map of every gated capability → `{ meter, feature, label, costClass: 'cheap'|'standard'|'expensive', upgradeCopy }`.
+- Used by hooks, UI badges, and the admin panel so labels/copy stay consistent.
+- Replaces scattered `TIER_LIMITS` in `src/lib/tool-limits.ts` and `WORKSPACE_LIMITS`/`EXPORT_LIMITS` constants in `entitlements.ts` (those become thin re-exports for back-compat).
 
-- `newsletter-subscribe` — public, validates email (Zod), upserts `newsletter_subscribers`, dedupes, sets source. Returns `{ok}`. CORS open.
-- `newsletter-unsubscribe` — token-based one-click unsubscribe (signed token using `SUPABASE_JWT_SECRET`-style HMAC). Marks status `unsubscribed`.
-- `newsletter-generate` — admin-gated. Enqueues an `ai_job` of kind `newsletter_digest` with structured prompt covering: AI trends, creator economy, freelancing, automation, HustleAI updates, tool picks, opportunities. On completion (handled in `ai-job-runner`), inserts a `newsletter_issues` row with `status=ready`.
-- `newsletter-regenerate-section` — admin-gated. Re-runs a single section through Lovable AI Gateway, replaces the section in `sections` jsonb.
-- `newsletter-send-test` — admin-gated. Sends one email to a provided test address via the chosen provider.
-- `newsletter-dispatch` — admin-gated. Reads approved issue, expands recipients (`status=active`), enqueues `newsletter_sends` rows, then drains in batches calling Brevo (default) or MailerSend through their existing client patterns. Honors suppression.
-- `newsletter-telegram-digest` (optional, stub) — same issue, sends Markdown digest to subscribed Telegram users via existing `telegram-send` infra.
+### 3. Enforcement primitives (frontend)
 
-`ai-job-runner` extension: add `newsletter_digest` kind handler → calls Lovable AI Gateway with structured JSON output (sections array), then inserts the issue row using service role.
+Extend `src/lib/usage/`:
+- `guards.ts` → `requireQuota(meter, feature)` — calls `consumeUsage`, throws `QuotaError` with structured payload `{ used, max, meter, upgradeTier }`.
+- `hooks.ts` → add `useCapability(key)` returning `{ allowed, used, max, remaining, unlimited, upgradeTo }`.
+- React error boundary `<QuotaBoundary>` that catches `QuotaError` and renders the standard upgrade sheet.
 
-## 3. Workflow Wiring
+Refactor existing call sites incrementally — the legacy `enforceLimit` (localStorage) in `tool-limits.ts` becomes a guest-only fallback; signed-in users always go through `consumeUsage`.
 
-- New workflow event `newsletter.weekly_cron` (Sunday 09:00 IST) → enqueues an AI job via `enqueue_ai_job` for `newsletter_digest`.
-- New workflow event `newsletter.draft_ready` (emitted by `ai-job-runner` after insert) → notifies admins (existing `notification_deliveries` + Telegram admin chat).
-- New workflow event `newsletter.approved` → triggers `newsletter-dispatch` automatically once admin approves (still manual approval, dispatch is post-approval).
-- pg_cron job (using `supabase--insert`) hits `workflow-event-emit` weekly with name `newsletter.weekly_cron`.
+### 4. Enforcement primitives (edge)
 
-## 4. Capture UX (frontend, mobile-safe)
+New `supabase/functions/_shared/usage/guard.ts`:
+- `quotaGuard(userId, meter, feature, units, cors)` → returns `Response | null` (mirrors `flagGuard` shape).
+- Used by: `ai-job-runner`, `export-*`, `workspace-create`, `intake-create`, `portal-publish`, `telegram-deliver`, `newsletter-dispatch`.
+- Returns 429 with `{ error, locked: true, meter, used, max, upgrade_url }`.
 
-New component: `src/components/newsletter/NewsletterCapture.tsx`
-- Variants: `inline-footer`, `bottom-sheet` (mobile), `modal` (desktop), `toast`.
-- Triggers via `src/lib/newsletter/triggers.ts`:
-  - `onboarding` step (post-signup checklist).
-  - Time-on-site ≥ 60s.
-  - Scroll depth ≥ 60%.
-  - Exit-intent (desktop only, `mouseleave` toward top).
-- Dismiss persistence: `localStorage` key `nlc:dismissed:<surface>` + server row in `newsletter_capture_dismissals` for logged-in users.
-- Copy: "Get the weekly AI freelance & creator brief. No spam, unsubscribe anytime."
-- Animations: subtle fade-up (Framer-style classes already in project), auto-close after success, respects `prefers-reduced-motion`.
-- Mobile: `vaul` Drawer for the bottom-sheet variant; safe-area padding.
-- Footer wiring: replace existing newsletter input in `src/components/Footer.tsx` with the new component (inline variant).
+### 5. UX surfaces
 
-## 5. Admin Panel
+- `<QuotaBar meter feature />` — inline progress bar (used in tool headers, dashboard usage card, settings).
+- `<CapabilityBadge capability />` — shows tier required (e.g. "Pro", "Infinity") next to gated features.
+- `<UpgradeSheet capability used max />` — drawer/dialog rendered by `QuotaBoundary` and any `meter.exceeded` event. Soft, non-spammy. Suggests the **minimum** tier that unlocks it.
+- Dashboard `DailyUsageWidget` extended with non-AI meters (uploads, exports, portals).
+- Async chips already show queued counts — extend `AsyncActivityIndicator` to surface "X / Y daily jobs used".
 
-New page: `src/pages/admin/NewsletterOps.tsx` mounted under existing `/admin/communications/newsletter`.
+### 6. Admin → Usage Governance
 
-Tabs:
-1. **Drafts** — list `newsletter_issues` filtered by `draft|generating|ready`. Each row → preview drawer with markdown render, regenerate-section buttons, edit-in-place subject/preheader/body, "Send test", "Approve & Schedule", "Reject".
-2. **Scheduled & Sent** — past issues with stats (queued/sent/failed, open rate placeholder).
-3. **Subscribers** — searchable table, status filters, manual add, bulk unsubscribe, source breakdown.
-4. **Automation** — cron toggle, provider routing (transactional → MailerSend, newsletter → Brevo), next-run countdown, last AI cost.
-5. **Telegram digest** — toggle channel, list opted-in users (stub).
+New page `src/pages/admin/UsageGovernance.tsx` at `/admin/usage-governance`:
+- **Tier matrix** — editable table of `tier_limits` rows (per-tier, per-meter). Save → upserts directly via service role; no redeploy.
+- **Feature access matrix** — editable `feature_access` toggles.
+- **Overrides** — search user → grant `usage_overrides` (bonus units / max override / expiry). Wraps existing `grant_bonus_credits` RPC; new RPC `grant_capability_override` for the max_override path.
+- **Analytics tab** — top consumers per meter (uses existing `usage_ledger` on analytics DB), block events, near-cap users.
+- **Abuse signals** — users hitting cap >N times in 24h (read-only list).
 
-Reuses existing admin shell + RLS; no new auth surface.
+Reuses existing admin shell + `has_role(admin)` gating. No new auth surface.
 
-## 6. Provider Routing
+### 7. Workspace/portal hard limits
 
-`src/lib/newsletter/providers.ts` — single dispatcher:
-- `transactional` → MailerSend (uses existing `MAILERSEND_API_KEY`).
-- `bulk_newsletter` → Brevo (uses existing `BREVO_API_KEY`).
-- Selectable per-issue in admin UI; default Brevo for newsletters.
+Server-side trigger on `workspaces` and `client_portals` insert that calls `consume_usage('workspace'|'portal', '*', 1)` and raises if `allowed=false`. Prevents bypass via direct SQL/edge writes.
 
-## 7. UX / Async Integration
+### 8. What's explicitly NOT in scope
 
-- New AI job kind `newsletter_digest` registered in `KIND_LABELS` + `KIND_HREF` in `src/lib/async-activity/hook.ts` so admins see generation in the global activity indicator.
-- `newsletter-dispatch` writes per-batch progress to a small `newsletter_dispatch_runs` row (re-uses `ai_jobs` only if cleaner; otherwise lightweight table).
-- Failed sends visible in admin Drafts tab with one-tap retry (same pattern as the async retry actions just shipped).
+- No usage heatmaps (mentioned as "later").
+- No new payment/upgrade flow — links to existing `/pricing`.
+- No realtime usage websocket — 30s cache on `resolveLimits` is fine.
+- No tier downgrade reconciliation logic.
+- No localStorage migration — old keys silently ignored.
 
-## 8. What is NOT in this plan
+### 9. Migration order
 
-- No new email provider added.
-- No segmentation engine, A/B testing, or campaign builder.
-- No realtime websockets — polling reuse.
-- No Telegram-only auto-send — Telegram is opt-in, manually approved per issue.
-- No resumable workflow engine.
+1. SQL migration: insert new `tier_limits` rows, add `'week'` period support to `consume_usage`, add workspace/portal triggers, add `grant_capability_override` RPC.
+2. `src/lib/usage/capabilities.ts` + `guards.ts` + extended `hooks.ts`.
+3. UX components: `QuotaBar`, `CapabilityBadge`, `UpgradeSheet`, `QuotaBoundary`.
+4. Edge `_shared/usage/guard.ts` + wire into the 6 highest-cost functions.
+5. Admin Usage Governance page + nav entry under existing Admin → Operations.
+6. Refactor `tool-limits.ts` / `entitlements.ts` to re-export from capabilities registry.
+7. Memory update (`mem/tech/usage-metering.md` extended; new `mem/features/usage-governance.md`).
 
-## 9. Memory Updates
+### Technical notes
 
-After ship: add `mem://features/newsletter-automation` covering pipeline, approval rule, provider routing, and Sunday cron. Update index.
-
-## 10. Rollout Order
-
-1. Migration (tables + RLS + RPCs).
-2. Edge functions: subscribe, unsubscribe, generate, regenerate-section, send-test, dispatch.
-3. AI-job-runner `newsletter_digest` handler + workflow events + Sunday cron.
-4. Frontend capture component + footer integration + trigger hook.
-5. Admin Newsletter Ops page + nav entry.
-6. Memory update + manual end-to-end check via `curl_edge_functions`.
+- Free-tier philosophy preserved — only **infra-cost** meters tightened (workspace, portal, upload, async_job). AI/export caps unchanged.
+- `consume_usage` already returns `{allowed, used, max, reason}` — no API break.
+- Admin overrides are append-only (`usage_overrides`) — full audit trail.
+- BYOK bypass for AI meter remains unchanged.
