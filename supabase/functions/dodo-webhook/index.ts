@@ -8,6 +8,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { DODO_MODE, DODO_WEBHOOK_SECRET, corsHeaders } from "../_shared/dodo.ts";
 import { emitBillingEvent } from "../_shared/notifications/emit.ts";
+import { emitWorkflowEvent } from "../_shared/workflows/emit.ts";
 
 async function verifyStandardWebhook(rawBody: string, headers: Headers): Promise<boolean> {
   if (!DODO_WEBHOOK_SECRET) return false;
@@ -133,6 +134,16 @@ serve(async (req) => {
           await supabase.from("profiles").update({
             subscription_tier: "free",
           } as any).eq("user_id", userId).eq("dodo_subscription_id", dodoSubId);
+          fireAndForget(emitWorkflowEvent(supabase, "subscription.cancelled", {
+            user_id: userId, tier: internalKey, status,
+            payment_provider: "dodo", subscription_id: dodoSubId,
+          }, { user_id: userId, dedupe_key: `sub_cancel:${dodoSubId}:${status}`, source: "dodo-webhook" }));
+        } else if (status === "active") {
+          fireAndForget(emitWorkflowEvent(supabase, "subscription.created", {
+            user_id: userId, tier: internalKey, status,
+            payment_provider: "dodo", subscription_id: dodoSubId,
+            amount: upsertRow.amount, currency: upsertRow.currency,
+          }, { user_id: userId, dedupe_key: `sub_active:${dodoSubId}`, source: "dodo-webhook" }));
         }
       }
     }
@@ -206,6 +217,10 @@ serve(async (req) => {
           amount: credits, currency: "credits",
           link: "/dashboard",
         });
+        fireAndForget(emitWorkflowEvent(supabase, "wallet.topup", {
+          user_id: userId, credits, amount: amountInr, currency: data.currency || "INR",
+          payment_provider: "dodo", transaction_id: data.payment_id || eventId,
+        }, { user_id: userId, dedupe_key: `wallet:${data.payment_id || eventId}`, source: "dodo-webhook" }));
       }
 
       if (trulyPaid && isSubscription && userId) {
@@ -215,12 +230,28 @@ serve(async (req) => {
           amount: amountInr, currency: "₹", plan: tierLabel,
           link: "/dashboard",
         });
+        const internalKey = (metadata.internal_key || "").replace(/_yearly$/, "");
+        fireAndForget(emitWorkflowEvent(supabase, "payment.succeeded", {
+          user_id: userId, tier: internalKey, amount: amountInr, currency: data.currency || "INR",
+          payment_provider: "dodo", transaction_id: data.payment_id || eventId,
+          subscription_id: data.subscription_id, kind: "subscription",
+          metadata,
+        }, { user_id: userId, dedupe_key: `pay_ok:${data.payment_id || eventId}`, source: "dodo-webhook" }));
+        fireAndForget(emitWorkflowEvent(supabase, "subscription.renewed", {
+          user_id: userId, tier: internalKey, amount: amountInr, currency: data.currency || "INR",
+          payment_provider: "dodo", subscription_id: data.subscription_id,
+        }, { user_id: userId, dedupe_key: `sub_renew:${data.subscription_id}:${data.payment_id || eventId}`, source: "dodo-webhook" }));
       } else if (trulyPaid && userId) {
         emitBillingEvent({
           user_id: userId, event: "payment_succeeded",
           amount: amountInr, currency: "₹",
           link: "/profile?tab=billing",
         });
+        fireAndForget(emitWorkflowEvent(supabase, "payment.succeeded", {
+          user_id: userId, amount: amountInr, currency: data.currency || "INR",
+          payment_provider: "dodo", transaction_id: data.payment_id || eventId,
+          kind: "one_time", credits, metadata,
+        }, { user_id: userId, dedupe_key: `pay_ok:${data.payment_id || eventId}`, source: "dodo-webhook" }));
       }
 
       // Increment coupon redemption count
@@ -343,6 +374,12 @@ serve(async (req) => {
     // ===== REFUND =====
     if (eventType === "refund.succeeded") {
       // Just log — admins handle reversal manually for now
+      const amountInr = (data.total_amount ?? data.amount ?? 0) / 100;
+      fireAndForget(emitWorkflowEvent(supabase, "refund.succeeded", {
+        user_id: userId, amount: amountInr, currency: data.currency || "INR",
+        payment_provider: "dodo", transaction_id: data.payment_id || data.refund_id || eventId,
+        metadata,
+      }, { user_id: userId, dedupe_key: `refund:${data.refund_id || eventId}`, source: "dodo-webhook" }));
     }
 
     // ===== EXPLICIT FAILURE EVENTS =====
@@ -364,6 +401,13 @@ serve(async (req) => {
           reason: data.failure_reason || data.error_code,
           link: "/payment",
         });
+        fireAndForget(emitWorkflowEvent(supabase, "payment.failed", {
+          user_id: userId, amount: amountInr, currency: data.currency || "INR",
+          payment_provider: "dodo", transaction_id: data.payment_id || eventId,
+          subscription_id: data.subscription_id || null,
+          reason: data.failure_reason || data.error_code || "unknown",
+          metadata,
+        }, { user_id: userId, dedupe_key: `pay_fail:${data.payment_id || eventId}`, source: "dodo-webhook" }));
       }
       // Defensive: if a tier was prematurely granted, revoke it back to free
       // when the matching subscription_id has no successful payment on record.
