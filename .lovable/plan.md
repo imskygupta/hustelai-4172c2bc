@@ -1,91 +1,194 @@
-## Usage Governance + Tier Capability — Platform-Wide
+## UX + Delivery Reliability Cleanup Pass
 
-The foundation already exists (`tier_limits`, `feature_access`, `usage_overrides`, `consume_usage`, `resolve_user_limits`, `useFeatureAccess`, `useQuota`, edge `flagGuard`). This plan **extends and unifies** it — no parallel system.
+A focused, architecture-aligned cleanup integrating with the existing capability engine, feature flags, quota system, async infra, and Telegram admin ops. No ad-hoc logic.
 
-### 1. Extend the meter taxonomy
+---
 
-Add new meters to `tier_limits` (rows only — schema unchanged):
+### 1. Capability-Aware Action Rendering (Telegram + others)
 
-| Meter | Free | Pro | Elite | Infinity | Period |
-|---|---|---|---|---|---|
-| `workspace` | 1 | 10 | 50 | -1 | lifetime |
-| `portal` (public client portal) | 1 | 5 | 25 | -1 | lifetime |
-| `upload` (files/day) | 5 | 50 | 200 | -1 | day |
-| `async_job` (queued/day) | 10 | 100 | 500 | -1 | day |
-| `roadmap` | 3 | 15 | 50 | -1 | week |
-| `intake_form` | 1 | 5 | 25 | -1 | lifetime |
+**New**: `src/components/usage/CapabilityAction.tsx`
+- Wraps any button/action.
+- Resolves capability via `useCapability(key)` + `useFeatureFlag(flag?)`.
+- Three states: `available`, `locked` (tier), `unavailable` (flag/integration missing).
+- Renders disabled button + tier badge + tooltip + opens `<UpgradeSheet>` on click when locked.
+- Variants: `button | menu-item | icon`.
 
-Existing AI/export/automation/storage/telegram caps stay (already balanced).
+**New hook**: `useTelegramConnection()` → `{ connected, loading }` from `notification_integrations` (provider=telegram, status=connected).
 
-Add `period='week'` support to `consume_usage` (currently day/lifetime only) — small SQL extension to compute `period_key` as ISO week when `period='week'`.
+**Wire into**:
+- `src/pages/settings/Exports.tsx` Telegram-related buttons
+- `ActivityCard` Telegram delivery action
+- Anywhere "Send to Telegram" / "Deep link" appears (search `export-tg-deeplink`, `deliverToTelegram`).
 
-### 2. Capability registry (single source of truth)
+Behavior:
+- Free tier → disabled "Telegram Delivery · Pro" badge, click → upgrade sheet.
+- Pro+ but Telegram not connected → "Connect Telegram" CTA → routes to `/settings/telegram`.
+- Connected + allowed → real action.
+- Flag killed/maintenance → disabled "Temporarily unavailable" tooltip.
 
-New file `src/lib/usage/capabilities.ts`:
-- Static map of every gated capability → `{ meter, feature, label, costClass: 'cheap'|'standard'|'expensive', upgradeCopy }`.
-- Used by hooks, UI badges, and the admin panel so labels/copy stay consistent.
-- Replaces scattered `TIER_LIMITS` in `src/lib/tool-limits.ts` and `WORKSPACE_LIMITS`/`EXPORT_LIMITS` constants in `entitlements.ts` (those become thin re-exports for back-compat).
+---
 
-### 3. Enforcement primitives (frontend)
+### 2. Public Share Link Architecture
 
-Extend `src/lib/usage/`:
-- `guards.ts` → `requireQuota(meter, feature)` — calls `consumeUsage`, throws `QuotaError` with structured payload `{ used, max, meter, upgradeTier }`.
-- `hooks.ts` → add `useCapability(key)` returning `{ allowed, used, max, remaining, unlimited, upgradeTo }`.
-- React error boundary `<QuotaBoundary>` that catches `QuotaError` and renders the standard upgrade sheet.
+Two distinct link types — currently `export-issue-token` requires user_id binding via JWT for private, but UI mixed semantics.
 
-Refactor existing call sites incrementally — the legacy `enforceLimit` (localStorage) in `tool-limits.ts` becomes a guest-only fallback; signed-in users always go through `consumeUsage`.
+**Schema** (`generated_exports` and `export_download_tokens` already exist; we add):
+- `export_download_tokens.is_public boolean default false`
+- `export_download_tokens.created_via text` ('private' | 'share')
 
-### 4. Enforcement primitives (edge)
+**Edge function changes**:
+- `export-issue-token`: accept `mode: 'private' | 'public'`. 
+  - `private` → binds `user_id = caller`, requires auth on download.
+  - `public` → `user_id = null`, `is_public = true`, max_uses & expiry tier-gated, optional OTP.
+- `export-download`: when `tok.is_public`, skip JWT user check entirely. Keep OTP, expiry, use_count, revocation.
+- `export-tg-deeplink`: unchanged — always private bot-bound.
 
-New `supabase/functions/_shared/usage/guard.ts`:
-- `quotaGuard(userId, meter, feature, units, cors)` → returns `Response | null` (mirrors `flagGuard` shape).
-- Used by: `ai-job-runner`, `export-*`, `workspace-create`, `intake-create`, `portal-publish`, `telegram-deliver`, `newsletter-dispatch`.
-- Returns 429 with `{ error, locked: true, meter, used, max, upgrade_url }`.
+**Frontend** (`src/lib/exports/api.ts`):
+- `issueShareLink({ mode })` → public URL works in incognito.
+- UI: split "Share" into `Private link (auth required)` and `Public link (anyone with link)`.
 
-### 5. UX surfaces
+---
 
-- `<QuotaBar meter feature />` — inline progress bar (used in tool headers, dashboard usage card, settings).
-- `<CapabilityBadge capability />` — shows tier required (e.g. "Pro", "Infinity") next to gated features.
-- `<UpgradeSheet capability used max />` — drawer/dialog rendered by `QuotaBoundary` and any `meter.exceeded` event. Soft, non-spammy. Suggests the **minimum** tier that unlocks it.
-- Dashboard `DailyUsageWidget` extended with non-AI meters (uploads, exports, portals).
-- Async chips already show queued counts — extend `AsyncActivityIndicator` to surface "X / Y daily jobs used".
+### 3. Branded Public Recovery Page
 
-### 6. Admin → Usage Governance
+Replace raw "Forbidden / failed to fetch" on invalid public links.
 
-New page `src/pages/admin/UsageGovernance.tsx` at `/admin/usage-governance`:
-- **Tier matrix** — editable table of `tier_limits` rows (per-tier, per-meter). Save → upserts directly via service role; no redeploy.
-- **Feature access matrix** — editable `feature_access` toggles.
-- **Overrides** — search user → grant `usage_overrides` (bonus units / max override / expiry). Wraps existing `grant_bonus_credits` RPC; new RPC `grant_capability_override` for the max_override path.
-- **Analytics tab** — top consumers per meter (uses existing `usage_ledger` on analytics DB), block events, near-cap users.
-- **Abuse signals** — users hitting cap >N times in 24h (read-only list).
+**New**: `src/pages/PublicLinkUnavailable.tsx`
+- Branded HustleAI hero
+- Reason chip: `expired | revoked | not_found | limit_reached | otp_required`
+- Sample tools grid (3-4 cards linking to `/tools/*`)
+- "Create your own" CTA → `/signup`
+- SEO-friendly (indexable noindex, canonical to /)
 
-Reuses existing admin shell + `has_role(admin)` gating. No new auth surface.
+**New**: `src/pages/Download.tsx` already exists — refactor to:
+- Detect token from URL
+- Call `export-download` (no JSON-only mode)
+- On error → render `<PublicLinkUnavailable reason={...} />`
+- On OTP required → render OTP form
+- On success → trigger download + thank-you state with growth CTAs
 
-### 7. Workspace/portal hard limits
+Wire route `/d/:token` → `Download`.
 
-Server-side trigger on `workspaces` and `client_portals` insert that calls `consume_usage('workspace'|'portal', '*', 1)` and raises if `allowed=false`. Prevents bypass via direct SQL/edge writes.
+---
 
-### 8. What's explicitly NOT in scope
+### 4. Error Sanitization Layer
 
-- No usage heatmaps (mentioned as "later").
-- No new payment/upgrade flow — links to existing `/pricing`.
-- No realtime usage websocket — 30s cache on `resolveLimits` is fine.
-- No tier downgrade reconciliation logic.
-- No localStorage migration — old keys silently ignored.
+**New**: `src/lib/errors/sanitize.ts`
+```ts
+export function humanizeError(e: unknown, context?: string): { 
+  title: string; message: string; action?: 'retry'|'reconnect'|'upgrade'|'wait'; 
+  reportToAdmin?: boolean 
+}
+```
 
-### 9. Migration order
+Maps:
+- `FunctionsHttpError`, `Edge Function returned`, `fetch failed`, `Failed to send a request` → "Something interrupted that request. Try again."
+- `quota`, `tier_locked` → upgrade
+- `telegram` + (`bot_blocked`, `chat not found`, `unauthorized`) → "Reconnect Telegram"
+- `otp` → "Enter the access code"
+- `expired`, `revoked` → "This link is no longer available"
+- Unknown → generic + report to admin.
 
-1. SQL migration: insert new `tier_limits` rows, add `'week'` period support to `consume_usage`, add workspace/portal triggers, add `grant_capability_override` RPC.
-2. `src/lib/usage/capabilities.ts` + `guards.ts` + extended `hooks.ts`.
-3. UX components: `QuotaBar`, `CapabilityBadge`, `UpgradeSheet`, `QuotaBoundary`.
-4. Edge `_shared/usage/guard.ts` + wire into the 6 highest-cost functions.
-5. Admin Usage Governance page + nav entry under existing Admin → Operations.
-6. Refactor `tool-limits.ts` / `entitlements.ts` to re-export from capabilities registry.
-7. Memory update (`mem/tech/usage-metering.md` extended; new `mem/features/usage-governance.md`).
+**New**: `src/lib/errors/toast.ts` → `notifyError(e, ctx)` uses `humanizeError` then `toast`. Optionally fires `admin-alert` edge function for `reportToAdmin`.
 
-### Technical notes
+**Replace** raw `toast.error(String(e))` / `e.message` patterns in:
+- `src/lib/exports/api.ts` callers
+- `ActivityCard.tsx`
+- `NewsletterOps.tsx`
+- `Exports.tsx`, `Telegram.tsx` settings pages
+(Search for `toast({.*error|toast.error|String\(e`.)
 
-- Free-tier philosophy preserved — only **infra-cost** meters tightened (workspace, portal, upload, async_job). AI/export caps unchanged.
-- `consume_usage` already returns `{allowed, used, max, reason}` — no API break.
-- Admin overrides are append-only (`usage_overrides`) — full audit trail.
-- BYOK bypass for AI meter remains unchanged.
+---
+
+### 5. Admin Diagnostics & Telegram Alerts
+
+**New edge function**: `supabase/functions/admin-alert/index.ts`
+- Body: `{ kind, severity, user_id?, feature?, message, meta? }`
+- Inserts into new table `admin_alerts` (id, kind, severity, user_id, message, meta, created_at, acknowledged_at).
+- If `severity in ('error','critical')`: sends to Telegram admin chat using existing `_shared/notifications/telegram.ts`.
+
+**Migration**: `admin_alerts` table + RLS (admin-only read).
+
+**Wire**:
+- `export-deliver-telegram`, `export-create`, `ai-job-runner` failure paths → call `admin-alert` with structured payload.
+- Frontend `notifyError(reportToAdmin=true)` → invokes `admin-alert`.
+
+**Admin UI**: extend `src/pages/admin/Notifications.tsx` (or new `AdminAlerts.tsx`) with feed + ack + retry deep-links to existing AI Jobs / Telegram Ops.
+
+---
+
+### 6. PDF Typography System
+
+**New**: `src/lib/pdf/typography.ts` — centralized constants:
+```ts
+export const PDF_TYPO = {
+  base: { fontFamily: 'Inter, system-ui, sans-serif', fontSize: 11, lineHeight: 1.6 },
+  h1: { fontSize: 22, lineHeight: 1.3, marginBottom: 14 },
+  h2: { fontSize: 16, lineHeight: 1.35, marginTop: 20, marginBottom: 10 },
+  h3: { fontSize: 13, lineHeight: 1.4, marginTop: 14, marginBottom: 6 },
+  paragraph: { marginBottom: 10 },
+  section: { marginBottom: 22 },
+  page: { padding: '20mm 18mm' },
+};
+```
+And `pdfBaseCss()` returning a CSS string for html2pdf-style flows.
+
+**Apply** to:
+- `src/lib/blueprint-print.ts`
+- `src/lib/roadmap-print.ts`
+- `src/lib/workspace-docs/export-pdf.ts`
+- `src/lib/tools/print-meta.ts`
+- Any invoice/proposal/resume PDF pipeline.
+
+Replace inline tight CSS with shared base + section spacing.
+
+---
+
+### 7. Export Delivery Flow Polish
+
+In `ActivityCard.tsx` and `Exports.tsx`:
+- Use `<CapabilityAction>` for Telegram buttons.
+- Show async chip when `status='pending'` ("Processing — we'll notify you").
+- Telegram not connected → inline "Connect Telegram" link instead of failing action.
+- All errors via `notifyError`.
+
+---
+
+### 8. Files Summary
+
+**Created**
+- `src/components/usage/CapabilityAction.tsx`
+- `src/lib/usage/useTelegramConnection.ts`
+- `src/lib/errors/sanitize.ts`
+- `src/lib/errors/toast.ts`
+- `src/lib/pdf/typography.ts`
+- `src/pages/PublicLinkUnavailable.tsx`
+- `supabase/functions/admin-alert/index.ts`
+- Migration: `admin_alerts` + `export_download_tokens.is_public`
+
+**Edited**
+- `supabase/functions/export-issue-token/index.ts` (mode public/private)
+- `supabase/functions/export-download/index.ts` (skip auth when public)
+- `supabase/functions/export-deliver-telegram/index.ts` (admin-alert on failure)
+- `supabase/functions/export-create/index.ts` (admin-alert on failure)
+- `src/lib/exports/api.ts` (mode arg)
+- `src/pages/Download.tsx` (branded fallback + OTP UI)
+- `src/pages/settings/Exports.tsx`
+- `src/components/async/ActivityCard.tsx`
+- `src/pages/admin/NewsletterOps.tsx` (notifyError)
+- `src/App.tsx` (route `/link-unavailable` if needed)
+- `src/lib/blueprint-print.ts`, `src/lib/roadmap-print.ts`, `src/lib/workspace-docs/export-pdf.ts` (typography)
+
+**No new** websocket/realtime infra. No resumable workflow work.
+
+---
+
+### Execution Order
+1. Migration (admin_alerts + is_public column)
+2. Error sanitization lib (foundation)
+3. CapabilityAction + useTelegramConnection
+4. Public/private link split (edge + frontend)
+5. Branded Download/PublicLinkUnavailable
+6. admin-alert function + wire failures
+7. PDF typography refactor
+8. Settings + ActivityCard polish
