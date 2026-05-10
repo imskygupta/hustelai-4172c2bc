@@ -2,6 +2,7 @@
 import React from "react";
 import { QuotaError } from "@/lib/usage/guards";
 import { UpgradeSheet } from "./UpgradeSheet";
+import { UnlockSheet } from "./UnlockSheet";
 
 type State = { err: QuotaError | null };
 
@@ -28,16 +29,26 @@ export class QuotaBoundary extends React.Component<{ children: React.ReactNode }
   }
 
   render() {
+    const err = this.state.err;
+    const showUnlock = !!err?.unlockable;
     return (
       <>
         {this.props.children}
-        <UpgradeSheet
-          open={!!this.state.err}
+        <UnlockSheet
+          open={!!err && showUnlock}
           onOpenChange={(v) => !v && this.setState({ err: null })}
-          capability={this.state.err?.capability ?? null}
-          used={this.state.err?.used}
-          max={this.state.err?.max}
-          upgradeTo={this.state.err?.upgradeTier as any}
+          capability={err?.capability ?? null}
+          used={err?.used}
+          max={err?.max}
+          upgradeTo={err?.upgradeTier as any}
+        />
+        <UpgradeSheet
+          open={!!err && !showUnlock}
+          onOpenChange={(v) => !v && this.setState({ err: null })}
+          capability={err?.capability ?? null}
+          used={err?.used}
+          max={err?.max}
+          upgradeTo={err?.upgradeTier as any}
         />
       </>
     );
