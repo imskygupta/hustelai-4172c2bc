@@ -1,10 +1,15 @@
 import { useState } from "react";
-import { Activity, Loader2, RefreshCw } from "lucide-react";
+import { Activity, Loader2, RefreshCw, RotateCw } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
 import { useAsyncActivity } from "@/lib/async-activity/hook";
 import { AsyncJobChip } from "./AsyncJobChip";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { isRetryable, retryItem } from "@/lib/async-activity/actions";
+import { useAsyncTransitionToasts } from "@/lib/async-activity/notify";
+import { toast } from "@/hooks/use-toast";
 
 /**
  * Global async activity indicator. Shows a small icon in the header with a
@@ -13,16 +18,30 @@ import { cn } from "@/lib/utils";
  */
 export function AsyncActivityIndicator() {
   const [open, setOpen] = useState(false);
+  const [retrying, setRetrying] = useState<string | null>(null);
+  const isMobile = useIsMobile();
   const { items, activeCount, failedCount, loading, refresh } = useAsyncActivity({
     activeInterval: 5000,
     idleInterval: 30000,
   });
+  useAsyncTransitionToasts(items);
   const total = activeCount + failedCount;
 
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <button
+  const handleRetry = async (id: string, item: any) => {
+    setRetrying(id);
+    try {
+      await retryItem(item);
+      toast({ title: "Retry queued", description: `${item.label} requeued.` });
+      await refresh();
+    } catch (e: any) {
+      toast({ title: "Retry failed", description: e?.message || "Try again later", variant: "destructive" as any });
+    } finally {
+      setRetrying(null);
+    }
+  };
+
+  const trigger = (
+    <button
           aria-label="Async activity"
           className="relative inline-flex items-center justify-center min-h-tap min-w-tap md:min-h-0 md:min-w-0 md:h-9 md:w-9 rounded-md text-slate-600 hover:text-slate-900 hover:bg-slate-100 active:scale-95 transition"
         >
@@ -35,13 +54,11 @@ export function AsyncActivityIndicator() {
               failedCount > 0 ? "bg-rose-500" : "bg-violet-600",
             )}>{total > 9 ? "9+" : total}</span>
           )}
-        </button>
-      </PopoverTrigger>
-      <PopoverContent
-        align="end"
-        sideOffset={8}
-        className="w-[min(360px,calc(100vw-1.5rem))] p-0 max-h-[70vh] overflow-hidden flex flex-col"
-      >
+    </button>
+  );
+
+  const panel = (
+    <>
         <div className="px-3 py-2.5 border-b border-slate-200 flex items-center justify-between gap-2">
           <div className="min-w-0">
             <div className="text-sm font-semibold text-slate-900">Activity</div>
@@ -53,13 +70,13 @@ export function AsyncActivityIndicator() {
           <button
             onClick={() => refresh()}
             aria-label="Refresh"
-            className="inline-flex items-center justify-center h-8 w-8 rounded-md text-slate-500 hover:text-slate-900 hover:bg-slate-100 active:scale-95 transition"
+            className="inline-flex items-center justify-center min-h-tap min-w-tap md:h-8 md:w-8 md:min-h-0 md:min-w-0 rounded-md text-slate-500 hover:text-slate-900 hover:bg-slate-100 active:scale-95 transition"
           >
             <RefreshCw className={cn("w-3.5 h-3.5", loading && "animate-spin")} />
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto overscroll-contain">
+        <div className="flex-1 overflow-y-auto overscroll-contain pb-[env(safe-area-inset-bottom)]">
           {items.length === 0 ? (
             <div className="px-4 py-10 text-center text-xs text-slate-500">
               <Activity className="w-6 h-6 mx-auto mb-2 text-slate-300" />
@@ -68,8 +85,9 @@ export function AsyncActivityIndicator() {
           ) : (
             <ul className="py-1">
               {items.map((it) => {
+                const canRetry = isRetryable(it);
                 const inner = (
-                  <div className="flex items-start gap-2.5 px-3 py-2.5 hover:bg-slate-50 transition">
+                  <div className="flex items-start gap-2.5 px-3 py-3 md:py-2.5 hover:bg-slate-50 transition">
                     <div className="flex-1 min-w-0">
                       <div className="text-[13px] font-medium text-slate-900 truncate">{it.label}</div>
                       <div className="mt-1 flex items-center gap-1.5 flex-wrap">
@@ -82,6 +100,18 @@ export function AsyncActivityIndicator() {
                         <div className="mt-1 text-[11px] text-rose-600 truncate">{it.error}</div>
                       )}
                     </div>
+                    {canRetry && (
+                      <button
+                        type="button"
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleRetry(it.id, it); }}
+                        disabled={retrying === it.id}
+                        className="shrink-0 inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2 py-1 text-[11px] font-medium text-slate-700 hover:bg-slate-50 active:scale-95 transition disabled:opacity-50"
+                        aria-label="Retry"
+                      >
+                        <RotateCw className={cn("w-3 h-3", retrying === it.id && "animate-spin")} />
+                        Retry
+                      </button>
+                    )}
                   </div>
                 );
                 return (
@@ -100,6 +130,31 @@ export function AsyncActivityIndicator() {
           <Link to="/settings/exports" onClick={() => setOpen(false)} className="hover:text-slate-900">All exports →</Link>
           <span>Auto-refreshing</span>
         </div>
+    </>
+  );
+
+  if (isMobile) {
+    return (
+      <Drawer open={open} onOpenChange={setOpen}>
+        <DrawerTrigger asChild>{trigger}</DrawerTrigger>
+        <DrawerContent className="max-h-[85vh] flex flex-col">
+          <div className="flex-1 flex flex-col overflow-hidden">
+            {panel}
+          </div>
+        </DrawerContent>
+      </Drawer>
+    );
+  }
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>{trigger}</PopoverTrigger>
+      <PopoverContent
+        align="end"
+        sideOffset={8}
+        className="w-[min(380px,calc(100vw-1.5rem))] p-0 max-h-[70vh] overflow-hidden flex flex-col"
+      >
+        {panel}
       </PopoverContent>
     </Popover>
   );

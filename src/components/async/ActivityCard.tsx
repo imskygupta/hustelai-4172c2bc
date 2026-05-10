@@ -1,8 +1,11 @@
-import { Activity, ArrowRight, RefreshCw } from "lucide-react";
+import { Activity, ArrowRight, RefreshCw, RotateCw } from "lucide-react";
 import { useAsyncActivity } from "@/lib/async-activity/hook";
 import { AsyncJobChip } from "./AsyncJobChip";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { isRetryable, retryItem } from "@/lib/async-activity/actions";
+import { toast } from "@/hooks/use-toast";
+import { useState } from "react";
 
 /**
  * Dashboard activity card — surfaces the user's most recent async work
@@ -15,6 +18,18 @@ export function ActivityCard({ className }: { className?: string }) {
     idleInterval: 45000,
     limit: 6,
   });
+  const [retrying, setRetrying] = useState<string | null>(null);
+
+  const handleRetry = async (it: any) => {
+    setRetrying(it.id);
+    try {
+      await retryItem(it);
+      toast({ title: "Retry queued", description: `${it.label} requeued.` });
+      await refresh();
+    } catch (e: any) {
+      toast({ title: "Retry failed", description: e?.message || "Try again later", variant: "destructive" as any });
+    } finally { setRetrying(null); }
+  };
 
   const head = (
     <div className="flex items-center justify-between mb-3">
@@ -50,6 +65,7 @@ export function ActivityCard({ className }: { className?: string }) {
       ) : (
         <ul className="space-y-2">
           {items.slice(0, 5).map((it) => {
+            const canRetry = isRetryable(it);
             const row = (
               <div className="flex items-start gap-2 py-1.5">
                 <div className="flex-1 min-w-0">
@@ -59,6 +75,18 @@ export function ActivityCard({ className }: { className?: string }) {
                   </div>
                   {it.error && <div className="text-[11px] text-rose-600 truncate mt-0.5">{it.error}</div>}
                 </div>
+                {canRetry && (
+                  <button
+                    type="button"
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleRetry(it); }}
+                    disabled={retrying === it.id}
+                    className="shrink-0 inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2 py-1 text-[11px] font-medium text-slate-700 hover:bg-slate-50 active:scale-95 transition disabled:opacity-50"
+                    aria-label="Retry"
+                  >
+                    <RotateCw className={cn("w-3 h-3", retrying === it.id && "animate-spin")} />
+                    Retry
+                  </button>
+                )}
               </div>
             );
             return (
