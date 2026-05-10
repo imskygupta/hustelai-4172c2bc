@@ -3,8 +3,9 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
+import { FullscreenTextarea } from "@/components/ai/FullscreenTextarea";
+import { StickyGenerateBar } from "@/components/ai/StickyGenerateBar";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -97,7 +98,7 @@ export default function HustleBlueprint() {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <div className="pt-24 pb-16 px-4">
+      <div className="pt-24 pb-32 md:pb-16 px-4">
         <div className="container mx-auto max-w-5xl space-y-8">
           {/* Header */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center space-y-3">
@@ -127,7 +128,14 @@ export default function HustleBlueprint() {
               </div>
               <div>
                 <label className="text-sm font-medium mb-1.5 block">Description (optional)</label>
-                <Textarea placeholder="Describe the hustle or what you want to do..." value={hustleDesc} onChange={(e) => setHustleDesc(e.target.value)} rows={3} />
+                <FullscreenTextarea
+                  value={hustleDesc}
+                  onChange={setHustleDesc}
+                  placeholder="Describe the hustle or what you want to do..."
+                  rows={3}
+                  fullscreenTitle="Describe your hustle"
+                  ariaLabel="Hustle description"
+                />
               </div>
               <div>
                 <label className="text-sm font-medium mb-1.5 block">Your Skills (optional)</label>
@@ -249,6 +257,28 @@ export default function HustleBlueprint() {
           )}
         </div>
       </div>
+
+      {/* Mobile sticky generate bar — keeps the primary CTA one tap away */}
+      <StickyGenerateBar
+        status={
+          loading
+            ? `Generating · ${Math.round(loadingProgress)}%`
+            : atLimit
+              ? "Daily limit reached"
+              : `${maxUses - usageCount} of ${maxUses} left today`
+        }
+        action={
+          <Button
+            onClick={generateBlueprint}
+            disabled={loading || atLimit}
+            className="bg-gradient-primary text-primary-foreground min-h-tap px-4"
+            size="sm"
+          >
+            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : atLimit ? <Lock className="w-4 h-4" /> : <><Zap className="w-4 h-4 mr-1" /> Generate</>}
+          </Button>
+        }
+      />
+
       <Footer />
     </div>
   );
