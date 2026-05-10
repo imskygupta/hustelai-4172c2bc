@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import {
   Workflow, Play, Pause, RefreshCw, AlertOctagon, CheckCircle2, Clock,
-  XCircle, RotateCcw, ChevronRight, Activity, Layers,
+  XCircle, RotateCcw, ChevronRight, Activity, Layers, Gauge, Radio,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -31,6 +31,13 @@ type FailureRow = {
   attempts: number; last_error: string | null; failed_at: string;
   resolved: boolean; replayed_at: string | null; payload: any;
 };
+type OpsSummary = {
+  total_runs: number; succeeded: number; failed: number;
+  pending: number; retrying: number; dlq_open: number;
+  success_rate: number; avg_attempts: number;
+  queue_lag_p50_s: number; queue_lag_p95_s: number;
+};
+type TopEvent = { event_name: string; total: number; runs_enqueued: number; last_seen: string };
 
 type Tab = "workflows" | "runs" | "failures";
 
@@ -71,6 +78,8 @@ export default function Automations() {
   const [failures, setFailures] = useState<FailureRow[]>([]);
   const [selectedRun, setSelectedRun] = useState<RunRow | null>(null);
   const [steps, setSteps] = useState<StepRow[]>([]);
+  const [ops, setOps] = useState<OpsSummary | null>(null);
+  const [topEvents, setTopEvents] = useState<TopEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
 
@@ -88,14 +97,18 @@ export default function Automations() {
 
   const load = async () => {
     setLoading(true);
-    const [wfs, rns, fls] = await Promise.all([
+    const [wfs, rns, fls, opsRes, topRes] = await Promise.all([
       (supabase as any).from("workflows").select("*").order("updated_at", { ascending: false }),
       (supabase as any).from("workflow_runs").select("*").order("created_at", { ascending: false }).limit(80),
       (supabase as any).from("workflow_failures").select("*").order("failed_at", { ascending: false }).limit(60),
+      (supabase as any).rpc("workflow_ops_summary"),
+      (supabase as any).rpc("workflow_top_events"),
     ]);
     setWorkflows((wfs.data as WorkflowRow[]) || []);
     setRuns((rns.data as RunRow[]) || []);
     setFailures((fls.data as FailureRow[]) || []);
+    setOps((opsRes.data as OpsSummary) || null);
+    setTopEvents((topRes.data as TopEvent[]) || []);
     setLoading(false);
   };
   useEffect(() => { if (isAdmin) load(); /* eslint-disable-next-line */ }, [isAdmin]);
@@ -188,6 +201,50 @@ export default function Automations() {
           <Kpi label="Failed 24h"   value={counts.failed24h} tone={counts.failed24h ? "danger" : "default"} />
           <Kpi label="DLQ open"     value={counts.open_failures} tone={counts.open_failures ? "danger" : "default"} />
         </section>
+
+        {/* Ops visibility (24h window) */}
+        {ops && (
+          <section className="rounded-2xl border border-white/10 bg-white/[0.02] p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Gauge className="h-3.5 w-3.5 text-zinc-400" />
+              <h2 className="text-xs uppercase tracking-[0.18em] text-zinc-400">Engine ops · last 24h</h2>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
+              <Kpi label="Throughput"     value={ops.total_runs} />
+              <Kpi label="Success rate"   value={`${ops.success_rate}%`}
+                tone={ops.success_rate >= 95 ? "ok" : ops.success_rate >= 80 ? "warn" : "danger"} />
+              <Kpi label="Avg attempts"   value={ops.avg_attempts}
+                tone={ops.avg_attempts > 1.5 ? "warn" : "default"} />
+              <Kpi label="Queue lag p50"  value={`${ops.queue_lag_p50_s}s`}
+                tone={ops.queue_lag_p50_s > 60 ? "warn" : "default"} />
+              <Kpi label="Queue lag p95"  value={`${ops.queue_lag_p95_s}s`}
+                tone={ops.queue_lag_p95_s > 300 ? "danger" : ops.queue_lag_p95_s > 120 ? "warn" : "default"} />
+              <Kpi label="Retrying now"   value={ops.retrying}
+                tone={ops.retrying > 0 ? "warn" : "default"} />
+            </div>
+          </section>
+        )}
+
+        {/* Top events (producer health) */}
+        {topEvents.length > 0 && (
+          <section className="rounded-2xl border border-white/10 bg-white/[0.02] p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Radio className="h-3.5 w-3.5 text-zinc-400" />
+              <h2 className="text-xs uppercase tracking-[0.18em] text-zinc-400">Event producers · last 24h</h2>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+              {topEvents.slice(0, 12).map(e => (
+                <div key={e.event_name} className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg border border-white/5 bg-white/[0.015]">
+                  <div className="min-w-0">
+                    <div className="text-xs font-mono truncate">{e.event_name}</div>
+                    <div className="text-[10px] text-zinc-500">{timeAgo(e.last_seen)} · {e.runs_enqueued} runs</div>
+                  </div>
+                  <div className="text-sm font-semibold tabular-nums shrink-0">{e.total}</div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Tabs */}
         <div className="inline-flex rounded-lg border border-white/10 p-0.5 bg-white/[0.02]">
