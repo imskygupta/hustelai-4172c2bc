@@ -14,6 +14,7 @@ import { Film, Loader2, Zap, Sparkles, Camera, Mic, Type as TypeIcon, Clock, Loc
 import { AIToolHero } from "@/components/tools/AIToolHero";
 import { getMaxUses, getUsage, bumpUsage, awardXP } from "@/lib/tool-limits";
 import { useEffect } from "react";
+import { StickyGenerateBar } from "@/components/ai/StickyGenerateBar";
 
 type Scene = { scene_number: number; visual: string; voiceover: string; text_overlay: string; duration_seconds: number };
 type Result = { title: string; hook: string; scenes: Scene[]; cta: string; hashtags: string[] };
@@ -159,6 +160,18 @@ export default function FacelessContent() {
         )}
       </main>
       <Footer />
+      <StickyGenerateBar
+        status={
+          generating
+            ? <span className="inline-flex items-center gap-1.5"><Loader2 className="w-3.5 h-3.5 animate-spin" /> Building storyboard…</span>
+            : <span>{usageCount}/{maxUses} used today</span>
+        }
+        action={
+          <Button onClick={handleGenerate} disabled={generating || atLimit} size="sm" className="w-full bg-primary text-primary-foreground h-11 active:scale-95">
+            {generating ? <Loader2 className="w-4 h-4 animate-spin" /> : atLimit ? <><Lock className="w-4 h-4 mr-1.5" /> Limit</> : <><Zap className="w-4 h-4 mr-1.5" /> Generate</>}
+          </Button>
+        }
+      />
     </div>
   );
 }

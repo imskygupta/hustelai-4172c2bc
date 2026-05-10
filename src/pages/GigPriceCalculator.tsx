@@ -4,7 +4,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,6 +12,8 @@ import { motion } from "framer-motion";
 import { DollarSign, Loader2, RefreshCw, Sparkles, CheckCircle, Trophy, Zap, Target, Lock, Layers, Brain, BadgeIndianRupee } from "lucide-react";
 import { AIToolHero } from "@/components/tools/AIToolHero";
 import { getMaxUses, getUsage, bumpUsage, awardXP } from "@/lib/tool-limits";
+import { FullscreenTextarea } from "@/components/ai/FullscreenTextarea";
+import { StickyGenerateBar } from "@/components/ai/StickyGenerateBar";
 
 type Tier = { name: string; price: number; delivery_days: number; what_you_get: string[]; best_for: string };
 type Result = { currency: string; tiers: Tier[]; rationale: string; psych_tip: string };
@@ -87,7 +88,15 @@ export default function GigPriceCalculator() {
 
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass rounded-2xl p-6 space-y-4 mb-6">
           <div className="flex items-center gap-2"><Sparkles className="w-5 h-5 text-primary" /><h2 className="font-display font-bold">Describe your service</h2></div>
-          <Textarea placeholder="e.g. 'Logo design with 3 concepts, 2 revisions, and brand guidelines for early-stage startups'" value={service} onChange={(e) => setService(e.target.value)} className="min-h-[120px]" />
+          <FullscreenTextarea
+            value={service}
+            onChange={setService}
+            placeholder="e.g. 'Logo design with 3 concepts, 2 revisions, and brand guidelines for early-stage startups'"
+            rows={5}
+            fullscreenTitle="Describe your service"
+            ariaLabel="Service description"
+            className="min-h-[120px]"
+          />
           <div className="grid md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <label className="text-sm font-medium text-muted-foreground">Experience Level</label>
@@ -162,6 +171,18 @@ export default function GigPriceCalculator() {
         )}
       </main>
       <Footer />
+      <StickyGenerateBar
+        status={
+          generating
+            ? <span className="inline-flex items-center gap-1.5"><Loader2 className="w-3.5 h-3.5 animate-spin" /> Calculating…</span>
+            : <span>{usageCount}/{maxUses} used today</span>
+        }
+        action={
+          <Button onClick={handleGenerate} disabled={generating || atLimit} size="sm" className="w-full bg-gradient-primary text-primary-foreground h-11 active:scale-95">
+            {generating ? <Loader2 className="w-4 h-4 animate-spin" /> : atLimit ? <><Lock className="w-4 h-4 mr-1.5" /> Limit</> : <><Zap className="w-4 h-4 mr-1.5" /> Generate</>}
+          </Button>
+        }
+      />
     </div>
   );
 }

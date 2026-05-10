@@ -7,7 +7,6 @@ import { PageTransition } from "@/components/PageTransition";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,6 +17,8 @@ import {
   Plus, X, ArrowRight, Sparkles, Clock, DollarSign, ListChecks, Map, Rocket
 } from "lucide-react";
 import { AIToolHero } from "@/components/tools/AIToolHero";
+import { FullscreenTextarea } from "@/components/ai/FullscreenTextarea";
+import { StickyGenerateBar } from "@/components/ai/StickyGenerateBar";
 
 interface SkillGap {
   skill: string;
@@ -175,9 +176,14 @@ export default function SkillGap() {
               <h2 className="font-display font-semibold flex items-center gap-2 pt-2">
                 <Sparkles className="w-5 h-5 text-primary" /> Your Goals (optional)
               </h2>
-              <Textarea value={goals} onChange={e => setGoals(e.target.value)}
+              <FullscreenTextarea
+                value={goals}
+                onChange={setGoals}
                 placeholder="e.g., I want to earn ₹2L/month, transition to AI/ML freelancing..."
-                rows={3} />
+                rows={3}
+                fullscreenTitle="Your goals"
+                ariaLabel="Your goals"
+              />
 
               <Button className="bg-gradient-primary w-full" onClick={analyze} disabled={loading || skills.length === 0}>
                 {loading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Analyzing...</> : <><Brain className="w-4 h-4 mr-2" /> Analyze My Skills</>}
@@ -291,6 +297,18 @@ export default function SkillGap() {
           </div>
         </div>
         <Footer />
+        <StickyGenerateBar
+          status={
+            loading
+              ? <span className="inline-flex items-center gap-1.5"><Loader2 className="w-3.5 h-3.5 animate-spin" /> Analyzing…</span>
+              : <span>{usageCount}/{maxUses} used · {skills.length} skill{skills.length === 1 ? "" : "s"}</span>
+          }
+          action={
+            <Button onClick={analyze} disabled={loading || atLimit || skills.length === 0} size="sm" className="w-full bg-gradient-primary h-11 active:scale-95">
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Brain className="w-4 h-4 mr-1.5" /> Analyze</>}
+            </Button>
+          }
+        />
       </div>
     </PageTransition>
   );
