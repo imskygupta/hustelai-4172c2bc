@@ -182,6 +182,7 @@ const NAV_GROUPS: { label: string; defaultOpen?: boolean; items: NavItem[] }[] =
       { kind: "route", href: "/admin/runtime", label: "Runtime Controls", icon: Activity, keywords: "runtime kill switch" },
       { kind: "route", href: "/admin/automations", label: "Workflow Engine", icon: Workflow, keywords: "automation workflow" },
       { kind: "route", href: "/admin/ai-jobs", label: "AI Job Queue", icon: ListChecks, keywords: "queue jobs compute" },
+      { kind: "route", href: "/admin/usage-governance", label: "Usage Governance", icon: ShieldCheck, keywords: "limits quota tier capability" },
       { kind: "section", id: "system-health", label: "System Health", icon: Activity },
       { kind: "route", href: "/admin/communications/telegram", label: "Telegram Ops", icon: Radio, keywords: "telegram bot delivery" },
     ],
