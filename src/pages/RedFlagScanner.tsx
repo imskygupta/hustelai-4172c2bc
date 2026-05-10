@@ -4,8 +4,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { FullscreenTextarea } from "@/components/ai/FullscreenTextarea";
+import { StickyGenerateBar } from "@/components/ai/StickyGenerateBar";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
@@ -79,7 +80,7 @@ export default function RedFlagScanner() {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <main className="container mx-auto px-4 pt-24 pb-16 max-w-5xl">
+      <main className="container mx-auto px-4 pt-24 pb-32 md:pb-16 max-w-5xl">
         <AIToolHero
           eyebrow="Client Red-Flag Scanner"
           title={<>Spot <span className="text-gradient">bad clients</span> before they cost you.</>}
@@ -100,9 +101,17 @@ export default function RedFlagScanner() {
           ]}
         />
 
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass rounded-2xl p-6 space-y-4 mb-6">
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass rounded-2xl p-5 md:p-6 space-y-4 mb-6">
           <h2 className="font-display font-bold">Paste the client communication</h2>
-          <Textarea placeholder="Paste their full message, job post, or DM thread here..." value={communication} onChange={(e) => setCommunication(e.target.value)} className="min-h-[180px]" />
+          <FullscreenTextarea
+            value={communication}
+            onChange={setCommunication}
+            placeholder="Paste their full message, job post, or DM thread here..."
+            rows={7}
+            fullscreenTitle="Client message"
+            ariaLabel="Client communication"
+            className="min-h-[180px]"
+          />
           <Button onClick={handleScan} disabled={generating || atLimit} className="w-full bg-gradient-primary text-primary-foreground h-12">
             {generating ? <><Loader2 className="w-5 h-5 animate-spin mr-2" /> Scanning for red flags...</>
               : atLimit ? <><Lock className="w-5 h-5 mr-2" /> Limit reached — upgrade</>
@@ -113,10 +122,10 @@ export default function RedFlagScanner() {
         {result && verdict && VerdictIcon && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
             {/* Verdict header */}
-            <div className={`rounded-2xl p-8 ${verdict.bg} border-2 ${verdict.border} text-center`}>
-              <VerdictIcon className={`w-16 h-16 mx-auto mb-3 ${verdict.color}`} />
-              <h2 className={`text-3xl font-display font-bold ${verdict.color} mb-2`}>{verdict.label}</h2>
-              <p className="text-sm max-w-2xl mx-auto">{result.verdict_reason}</p>
+            <div className={`rounded-2xl p-6 md:p-8 ${verdict.bg} border-2 ${verdict.border} text-center`}>
+              <VerdictIcon className={`w-12 h-12 md:w-16 md:h-16 mx-auto mb-3 ${verdict.color}`} />
+              <h2 className={`text-2xl md:text-3xl font-display font-bold ${verdict.color} mb-2`}>{verdict.label}</h2>
+              <p className="text-sm max-w-2xl mx-auto leading-relaxed">{result.verdict_reason}</p>
             </div>
 
             {/* Risks (red) + Benefits (green) */}
@@ -157,20 +166,44 @@ export default function RedFlagScanner() {
             </div>
 
             {/* Suggested reply */}
-            <div className="glass rounded-2xl p-6 space-y-3 border-primary/30">
-              <div className="flex items-center justify-between">
-                <h3 className="flex items-center gap-2 font-display font-bold"><MessageCircle className="w-5 h-5 text-primary" /> Suggested reply</h3>
-                <Button variant="outline" size="sm" onClick={() => { navigator.clipboard.writeText(result.suggested_reply); toast({ title: "Copied!" }); }}>
+            <div className="glass rounded-2xl p-5 md:p-6 space-y-3 border-primary/30 sticky bottom-2 md:static">
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="flex items-center gap-2 font-display font-bold text-sm md:text-base"><MessageCircle className="w-5 h-5 text-primary" /> Suggested reply</h3>
+                <Button variant="outline" size="sm" className="min-h-tap" onClick={() => { navigator.clipboard.writeText(result.suggested_reply); toast({ title: "Copied!" }); }}>
                   <Copy className="w-4 h-4 mr-1" /> Copy
                 </Button>
               </div>
-              <div className="bg-muted/30 rounded-xl p-4">
-                <p className="text-sm leading-relaxed whitespace-pre-wrap">{result.suggested_reply}</p>
+              <div className="bg-muted/30 rounded-xl p-4 max-h-[40vh] overflow-y-auto overscroll-contain">
+                <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">{result.suggested_reply}</p>
               </div>
             </div>
           </motion.div>
         )}
       </main>
+
+      {/* Mobile sticky scan bar */}
+      {!result && (
+        <StickyGenerateBar
+          status={
+            generating
+              ? "Scanning…"
+              : atLimit
+                ? "Daily limit reached"
+                : `${Math.max(0, maxUses - usageCount)} of ${maxUses} scans left`
+          }
+          action={
+            <Button
+              size="sm"
+              onClick={handleScan}
+              disabled={generating || atLimit}
+              className="bg-gradient-primary text-primary-foreground min-h-tap px-4"
+            >
+              {generating ? <Loader2 className="w-4 h-4 animate-spin" /> : atLimit ? <Lock className="w-4 h-4" /> : <><Zap className="w-4 h-4 mr-1" /> Scan</>}
+            </Button>
+          }
+        />
+      )}
+
       <Footer />
     </div>
   );
