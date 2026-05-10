@@ -28,3 +28,22 @@ type: feature
 ## Wiring guidelines
 - New code: never hardcode a boolean — read from a flag (`useFeatureFlag('payments.dodo_checkout')`).
 - Edge functions for payments/exports/Telegram should `requireFeatureServer(uid, key)` early and return 423 with `{flag}` payload on disable.
+
+## Live integrations (Phase 3.5)
+Edge functions wired with `flagGuard()`:
+- `dodo-checkout` → `payments.dodo_checkout` (master)
+- `upi-payment:submit` → `payments.upi_manual_review` + (`payments.wallet_topups` | `payments.subscription_checkout`)
+- `export-create` → `exports.ai_exports`; if Telegram delivery requested, also `telegram.exports`
+- `telegram-broadcast` → `telegram.broadcasts`
+
+`flagGuard()` returns a 423/503 Response with `{ error, locked, feature, flag }`, fires a `flag_blocked` event to `log-event` (deduped per user/flag/endpoint), and respects maintenance mode (503 + `flag.message`).
+
+## Frontend graceful UX
+- `<FeatureGate flag="…">{children}</FeatureGate>` — variants `card` | `inline` | `silent`. Auto-renders the right tone for maintenance / tier / beta / kill states with optional `onUpgrade` CTA.
+- `<MaintenanceBanner />` mounted globally in `App.tsx`, listens to `system.maintenance_banner` flag and shows the message verbatim.
+
+## Admin quick controls
+`/admin/runtime` includes a "Feature flag quick controls" section with one-click kill switches for the 9 highest-impact flags (payments, exports, telegram, signups, onboarding, banner). Full editor remains at `/admin/feature-flags`.
+
+## Seeded flag catalog
+24 flags across `payments`, `telegram`, `exports`, `ai_tools`, `system`. All default to enabled @ 100%, except `system.maintenance_banner` (off).

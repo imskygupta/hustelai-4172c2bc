@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { notifyOps } from "../_shared/notify-ops.ts";
 import { emitBillingEvent } from "../_shared/notifications/emit.ts";
+import { flagGuard } from "../_shared/flags/resolve.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -37,6 +38,12 @@ serve(async (req) => {
     // ===== USER: SUBMIT PAYMENT =====
     if (action === "submit") {
       if (!user) throw new Error("Unauthorized");
+      // Flag-gated: payment-type-specific switch + master UPI flow
+      const blocked = await flagGuard(user.id, "payments.upi_manual_review", corsHeaders, { endpoint: "upi-payment:submit" });
+      if (blocked) return blocked;
+      const subFlag = body.payment_type === "wallet" ? "payments.wallet_topups" : "payments.subscription_checkout";
+      const blockedSub = await flagGuard(user.id, subFlag, corsHeaders, { endpoint: "upi-payment:submit" });
+      if (blockedSub) return blockedSub;
       const { payment_type, plan, wallet_pack, utr_number, screenshot_url, upi_id_used, user_note } = body;
       if (!utr_number) throw new Error("UTR number is required");
 

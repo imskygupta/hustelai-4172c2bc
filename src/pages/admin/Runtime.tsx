@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Activity, Power, RefreshCw, ShieldAlert, ShieldCheck, Lock, History, CreditCard, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { FlagQuickControls } from "@/components/admin/FlagQuickControls";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
@@ -175,6 +176,7 @@ export default function AdminRuntime() {
       </header>
 
       <main className="mx-auto max-w-5xl px-6 py-10 space-y-10">
+        <FlagQuickControls />
         {/* Emergency actions */}
         <section>
           <h2 className="text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-3">Emergency</h2>

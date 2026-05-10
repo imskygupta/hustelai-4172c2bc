@@ -148,6 +148,7 @@ import AdminNotifications from "./pages/admin/Notifications";
 import TelegramOps from "./pages/admin/TelegramOps";
 import TelegramControl from "./pages/admin/TelegramControl";
 import AdminFeatureFlags from "./pages/admin/FeatureFlags";
+import { MaintenanceBanner } from "./components/flags/FeatureGate";
 import TelegramLanding from "./pages/marketing/TelegramLanding";
 import { Navigate } from "react-router-dom";
 
@@ -173,6 +174,7 @@ const App = () => (
         {isMaintenance() ? <MaintenancePage /> : (
         <BrowserRouter>
           <ScrollToTop />
+          <MaintenanceBanner />
           <DelightToast />
           <MascotCompanion />
           <DocsSubdomainRedirect />
