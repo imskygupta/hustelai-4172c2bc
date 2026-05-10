@@ -5961,6 +5961,19 @@ export type Database = {
           total: number
         }[]
       }
+      ai_jobs_user_cost_breakdown: {
+        Args: { _limit?: number; _since?: string }
+        Returns: {
+          cost_units: number
+          failed: number
+          retries: number
+          succeeded: number
+          tokens_in: number
+          tokens_out: number
+          total_jobs: number
+          user_id: string
+        }[]
+      }
       cancel_ai_job: { Args: { _id: string }; Returns: undefined }
       claim_ai_jobs: {
         Args: { _limit?: number }
