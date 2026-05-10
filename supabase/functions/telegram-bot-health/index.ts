@@ -1,6 +1,7 @@
 // telegram-bot-health — admin-only ping of a registered bot's getMe endpoint.
 // Updates telegram_bots.status + last_ping_at. Never exposes the token.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.74.0";
+import { flagGuard } from "../_shared/flags/resolve.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -21,6 +22,9 @@ Deno.serve(async (req) => {
     if (!user) throw new Error("Unauthorized");
     const { data: isAdmin } = await sb.rpc("has_role", { _user_id: user.id, _role: "admin" });
     if (!isAdmin) throw new Error("Not admin");
+
+    const blocked = await flagGuard(user.id, "telegram.admin_ops", corsHeaders, { endpoint: "telegram-bot-health" });
+    if (blocked) return blocked;
 
     const { bot_id } = await req.json();
     if (!bot_id) throw new Error("bot_id required");
