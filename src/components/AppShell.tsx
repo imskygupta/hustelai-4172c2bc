@@ -110,8 +110,10 @@ export function AppShell({ children, title, breadcrumbs, actions }: AppShellProp
 
         <div className="flex-1 flex flex-col min-w-0">
           {/* Top bar */}
-          <header className="sticky top-0 z-30 h-14 border-b border-slate-200 bg-white/90 backdrop-blur-sm flex items-center gap-3 px-4 md:px-6">
-            <SidebarTrigger className="text-slate-600 hover:text-slate-900" />
+          <header
+            className="sticky top-0 z-30 h-14 border-b border-slate-200 bg-white/90 backdrop-blur-sm flex items-center gap-2 md:gap-3 px-3 md:px-6 pt-safe"
+          >
+            <SidebarTrigger className="text-slate-600 hover:text-slate-900 min-h-tap min-w-tap md:min-h-0 md:min-w-0" />
 
             {breadcrumbs && breadcrumbs.length > 0 && (
               <nav className="hidden md:flex items-center gap-1 text-sm">
@@ -193,8 +195,16 @@ export function AppShell({ children, title, breadcrumbs, actions }: AppShellProp
               </div>
             </div>
 
-            <div className="flex items-center gap-2 ml-auto md:ml-0">
-              <TierBadge />
+            <div className="flex items-center gap-1.5 md:gap-2 ml-auto md:ml-0">
+              {/* Mobile-only quick search trigger → /explore */}
+              <button
+                onClick={() => navigate("/explore")}
+                aria-label="Search"
+                className="md:hidden inline-flex items-center justify-center min-h-tap min-w-tap rounded-md text-slate-600 hover:text-slate-900 hover:bg-slate-100 active:scale-95 transition"
+              >
+                <Search className="w-4 h-4" />
+              </button>
+              <div className="hidden xs:block"><TierBadge /></div>
               {tier !== "infinity" && (
                 <Button
                   size="sm"
@@ -210,16 +220,22 @@ export function AppShell({ children, title, breadcrumbs, actions }: AppShellProp
 
           {/* Page header */}
           {(title || actions) && (
-            <div className="border-b border-slate-200 bg-white px-4 md:px-8 py-5 flex items-center justify-between gap-4">
-              <div>
-                {title && <h1 className="text-xl md:text-2xl font-display font-bold text-slate-900">{title}</h1>}
+            <div className="border-b border-slate-200 bg-white px-4 md:px-8 py-4 md:py-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+              <div className="min-w-0">
+                {title && (
+                  <h1 className="text-lg md:text-2xl font-display font-bold text-slate-900 truncate">
+                    {title}
+                  </h1>
+                )}
               </div>
-              {actions && <div className="flex items-center gap-2">{actions}</div>}
+              {actions && (
+                <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">{actions}</div>
+              )}
             </div>
           )}
 
           {/* Content */}
-          <main className="flex-1 px-4 md:px-8 py-6 md:py-8 pb-24 md:pb-8">
+          <main className="flex-1 px-4 md:px-8 py-5 md:py-8 pb-24 md:pb-8 min-w-0 overflow-x-hidden">
             {children}
           </main>
         </div>

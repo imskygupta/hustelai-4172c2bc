@@ -43,21 +43,30 @@ export function MobileBottomNav() {
   const Item = ({ icon: Icon, label, onClick, active }: any) => (
     <button
       onClick={onClick}
-      className={`flex-1 flex flex-col items-center justify-center gap-0.5 py-1.5 transition-all ${
+      aria-label={label}
+      aria-current={active ? "page" : undefined}
+      className={`flex-1 min-h-tap flex flex-col items-center justify-center gap-0.5 py-1.5 active:scale-95 transition-all ${
         active ? "text-primary" : "text-muted-foreground hover:text-foreground"
       }`}
     >
       <Icon className={`w-5 h-5 ${active ? "scale-110" : ""} transition-transform`} />
-      <span className="text-[10px] font-medium">{label}</span>
+      <span className="text-[10px] font-medium leading-none">{label}</span>
     </button>
   );
 
   return (
     <>
-      {/* Spacer so content isn't hidden under nav */}
-      <div className="h-16 md:hidden" aria-hidden />
+      {/* Spacer so content isn't hidden under nav (incl. iOS home-indicator) */}
+      <div
+        className="md:hidden h-16"
+        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+        aria-hidden
+      />
 
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 glass border-t border-border/50 backdrop-blur-xl">
+      <nav
+        className="md:hidden fixed bottom-0 left-0 right-0 z-40 glass border-t border-border/50 backdrop-blur-xl pb-safe"
+        aria-label="Primary mobile navigation"
+      >
         <div className="flex items-stretch h-16 max-w-md mx-auto px-1">
           <Item
             icon={ArrowLeft}
