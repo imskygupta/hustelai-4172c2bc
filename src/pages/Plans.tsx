@@ -110,7 +110,7 @@ export default function Plans() {
     <div className="min-h-screen bg-background">
       <SEO title="Pricing — HustleAI Workspace OS Plans" description="Simple, transparent pricing for the freelancer Workspace OS. Free, Pro, Elite and Infinity plans built for client work." path="/plans" />
       <Navbar />
-      <div className="pt-24 pb-12 px-4">
+      <div className="pt-24 pb-32 md:pb-12 px-4">
         <div className="container mx-auto max-w-7xl space-y-16">
           {/* Hero */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center space-y-4">
@@ -235,6 +235,28 @@ export default function Plans() {
           </div>
         </div>
       </div>
+
+      {/* Mobile sticky upgrade bar */}
+      {currentTier !== "infinity" && (
+        <div
+          className="md:hidden fixed bottom-16 left-0 right-0 z-40 px-4 pb-safe pointer-events-none"
+        >
+          <div className="pointer-events-auto mx-auto max-w-md rounded-2xl bg-card/95 backdrop-blur-xl border border-border shadow-xl p-3 flex items-center gap-3">
+            <div className="flex-1 min-w-0">
+              <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">Ready to upgrade?</p>
+              <p className="text-sm font-medium truncate">Pro from ₹450/mo · cancel anytime</p>
+            </div>
+            <Button
+              size="sm"
+              onClick={() => navigate("/payment")}
+              className="bg-gradient-primary text-primary-foreground min-h-tap px-4 shrink-0"
+            >
+              Upgrade <ArrowRight className="w-4 h-4 ml-1" />
+            </Button>
+          </div>
+        </div>
+      )}
+
       <Footer />
     </div>
   );

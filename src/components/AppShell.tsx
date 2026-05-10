@@ -204,7 +204,7 @@ export function AppShell({ children, title, breadcrumbs, actions }: AppShellProp
               >
                 <Search className="w-4 h-4" />
               </button>
-              <div className="hidden xs:block"><TierBadge /></div>
+              <TierBadge />
               {tier !== "infinity" && (
                 <Button
                   size="sm"

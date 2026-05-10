@@ -191,8 +191,9 @@ export default function HustleBot() {
       }
     >
       <div className="max-w-4xl mx-auto w-full">
-        <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden flex flex-col"
-             style={{ height: "calc(100vh - 230px)", minHeight: 480 }}>
+        <div
+          className="rounded-none sm:rounded-2xl sm:border border-slate-200 bg-white overflow-hidden flex flex-col h-[calc(100dvh-220px)] sm:h-[calc(100vh-230px)] min-h-[60vh] sm:min-h-[480px]"
+        >
           {/* Header */}
           <div className="px-5 py-3 border-b border-slate-200 bg-gradient-to-r from-violet-50 via-fuchsia-50 to-amber-50 flex items-center gap-3">
             <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-violet-500 via-fuchsia-500 to-amber-400 flex items-center justify-center text-white shadow-md">
@@ -207,7 +208,11 @@ export default function HustleBot() {
           </div>
 
           {/* Messages */}
-          <div ref={scrollRef} className="flex-1 overflow-y-auto p-5 space-y-4 bg-slate-50/40">
+          <div
+            ref={scrollRef}
+            className="flex-1 overflow-y-auto px-3 sm:px-5 py-4 sm:py-5 space-y-3 sm:space-y-4 bg-slate-50/40 overscroll-contain"
+            style={{ WebkitOverflowScrolling: "touch" as any }}
+          >
             {messages.map((m, i) => (
               <motion.div
                 key={i}
@@ -219,7 +224,7 @@ export default function HustleBot() {
                     <Bot className="w-3.5 h-3.5" />
                   </div>
                 )}
-                <div className={`max-w-[78%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
+                <div className={`max-w-[85%] sm:max-w-[78%] rounded-2xl px-3.5 sm:px-4 py-2.5 text-sm leading-relaxed break-words ${
                   m.role === "user"
                     ? "bg-emerald-500 text-white rounded-br-sm"
                     : m.is_admin_reply
@@ -273,24 +278,28 @@ export default function HustleBot() {
             </div>
           )}
 
-          {/* Input */}
+          {/* Input — sticky compose, safe-area aware */}
           {(!isFree || onboardingStep > 0) && (
             <form
               onSubmit={(e) => { e.preventDefault(); send(); }}
-              className="border-t border-slate-200 bg-white p-3 flex gap-2"
+              className="border-t border-slate-200 bg-white p-2.5 sm:p-3 flex gap-2 pb-safe sticky bottom-0"
             >
               <Input
-                value={input} onChange={e => setInput(e.target.value)}
-                placeholder={onboardingStep > 0 ? "Type your answer…" : "Ask HustleBot anything — pricing, scripts, scaling…"}
-                className="flex-1 h-11 bg-slate-50 border-slate-200 focus-visible:ring-emerald-300"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder={onboardingStep > 0 ? "Type your answer…" : "Ask HustleBot anything…"}
+                className="flex-1 h-12 sm:h-11 text-base sm:text-sm bg-slate-50 border-slate-200 focus-visible:ring-emerald-300"
+                enterKeyHint="send"
+                autoComplete="off"
                 disabled={loading || (!isFree && monthlyLimit !== Infinity && usedThisMonth >= monthlyLimit && onboardingStep === 0)}
               />
               <Button
                 type="submit"
-                className="h-11 px-4 bg-gradient-to-br from-violet-500 via-fuchsia-500 to-amber-400 hover:opacity-90 text-white font-semibold"
+                aria-label="Send message"
+                className="h-12 sm:h-11 min-w-tap px-4 bg-gradient-to-br from-violet-500 via-fuchsia-500 to-amber-400 hover:opacity-90 text-white font-semibold active:scale-95 transition-transform"
                 disabled={loading || !input.trim()}
               >
-                <Send className="w-4 h-4" />
+                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
               </Button>
             </form>
           )}
