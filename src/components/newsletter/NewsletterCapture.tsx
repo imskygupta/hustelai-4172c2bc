@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { Mail, X, Loader2, CheckCircle2 } from "lucide-react";
+import { useLocation } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 import { Drawer, DrawerContent } from "@/components/ui/drawer";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -124,8 +126,33 @@ export function NewsletterCapture({
 export function NewsletterCaptureAutoTrigger() {
   const [open, setOpen] = useState(false);
   const [surface, setSurface] = useState<string>("popup");
+  const location = useLocation();
+  const { user, loading } = useAuth() as any;
+
+  // Route-based suppression — never interrupt sensitive flows
+  const path = location.pathname || "/";
+  const SUPPRESS_PREFIXES = [
+    "/admin",
+    "/payment",
+    "/onboarding",
+    "/login",
+    "/signup",
+    "/forgot-password",
+    "/reset-password",
+    "/unsubscribe",
+    "/workspace-os",
+    "/workspaces",
+    "/hustle-canvas",
+    "/hustlebot",
+    "/work/",
+    "/intake/",
+    "/_preview",
+  ];
+  const suppressedRoute = SUPPRESS_PREFIXES.some((p) => path === p || path.startsWith(p + "/") || path.startsWith(p));
 
   useEffect(() => {
+    if (loading) return;
+    if (suppressedRoute) return;
     if (isSubscribed()) return;
     if (isDismissed("popup")) return;
 
@@ -158,7 +185,8 @@ export function NewsletterCaptureAutoTrigger() {
       window.removeEventListener("scroll", onScroll);
       document.removeEventListener("mouseleave", onLeave);
     };
-  }, []);
+  }, [loading, suppressedRoute]);
 
+  if (suppressedRoute) return null;
   return <NewsletterCapture variant="popup" surface={surface} open={open} onOpenChange={setOpen} />;
 }

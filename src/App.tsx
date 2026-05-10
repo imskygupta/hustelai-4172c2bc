@@ -9,6 +9,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { Sentry } from "@/lib/sentry";
 import DelightToast from "@/components/tools/DelightToast";
 import MascotCompanion from "@/components/MascotCompanion";
+import { NewsletterCaptureAutoTrigger } from "@/components/newsletter/NewsletterCapture";
 import Index from "./pages/Index";
 import Explore from "./pages/Explore";
 import Login from "./pages/Login";
@@ -23,6 +24,7 @@ import Reviews from "./pages/Reviews";
 const AdminLogin = lazy(() => import("./pages/AdminLogin"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const AdminCommunications = lazy(() => import("./pages/admin/Communications"));
+const AdminNewsletterOps = lazy(() => import("./pages/admin/NewsletterOps"));
 import NotificationPreferences from "./pages/settings/NotificationPreferences";
 import Integrations from "./pages/settings/Integrations";
 import Exports from "./pages/settings/Exports";
@@ -183,6 +185,7 @@ const App = () => (
           <MaintenanceBanner />
           <DelightToast />
           <MascotCompanion />
+          <NewsletterCaptureAutoTrigger />
           <DocsSubdomainRedirect />
           <StatusSubdomainRedirect />
           <Suspense fallback={
@@ -278,6 +281,7 @@ const App = () => (
             <Route path="/imskygupta-admin" element={<AdminLogin />} />
             <Route path="/admin-dashboard" element={<AdminDashboard />} />
             <Route path="/admin/communications" element={<AdminCommunications />} />
+            <Route path="/admin/communications/newsletter" element={<AdminNewsletterOps />} />
             <Route path="/admin/communications/telegram" element={<TelegramOpsCenter />} />
             <Route path="/admin/ai-jobs" element={<AdminAiJobs />} />
             <Route path="/admin/telegram" element={<TelegramOps />} />
