@@ -11,12 +11,17 @@ const FIFTY_MB = 50 * 1024 * 1024;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  let exportIdOuter: string | null = null;
+  let userIdOuter: string | null = null;
+  const sbOuter = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
   try {
-    const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    const sb = sbOuter;
     const { export_id } = await req.json().catch(() => ({}));
+    exportIdOuter = export_id ?? null;
     if (!export_id) return j({ error: "export_id required" }, 400);
     const { data: exp } = await sb.from("generated_exports").select("*").eq("id", export_id).maybeSingle();
     if (!exp || !exp.storage_path) return j({ error: "not found" }, 404);
+    userIdOuter = exp.user_id;
 
     // Runtime gate: telegram delivery can be disabled / put in maintenance.
     if (!(await isFeatureEnabledServer(exp.user_id, "telegram.notifications"))) {
@@ -112,17 +117,12 @@ serve(async (req) => {
     }
     return j({ ok: true });
   } catch (e: any) {
-    try {
-      const { export_id } = await req.clone().json().catch(() => ({}));
-      if (export_id) {
-        const sb2 = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
-        const { data: exp2 } = await sb2.from("generated_exports").select("user_id").eq("id", export_id).maybeSingle();
-        void emitWorkflowEvent(sb2, "export.failed", {
-          export_id, user_id: exp2?.user_id ?? null, channel: "telegram",
-          reason: String(e?.message || e),
-        }, { user_id: exp2?.user_id ?? null, dedupe_key: `export_fail:${export_id}:tg:${Date.now()}`, source: "export-deliver-telegram" });
-      }
-    } catch { /* ignore */ }
+    if (exportIdOuter) {
+      void emitWorkflowEvent(sbOuter, "export.failed", {
+        export_id: exportIdOuter, user_id: userIdOuter, channel: "telegram",
+        reason: String(e?.message || e),
+      }, { user_id: userIdOuter, dedupe_key: `export_fail:${exportIdOuter}:tg:${Date.now()}`, source: "export-deliver-telegram" });
+    }
     return j({ error: String(e?.message || e) }, 500);
   }
 });
