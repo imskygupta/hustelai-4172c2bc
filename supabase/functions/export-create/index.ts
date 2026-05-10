@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { createExport } from "../_shared/exports/createExport.ts";
+import { flagGuard } from "../_shared/flags/resolve.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -16,9 +17,19 @@ serve(async (req) => {
     const { data: u } = await sb.auth.getUser(jwt);
     if (!u?.user) return json({ error: "unauthorized" }, 401);
 
+    // Master export switch — kill switch + maintenance honored automatically.
+    const blocked = await flagGuard(u.user.id, "exports.ai_exports", corsHeaders, { endpoint: "export-create" });
+    if (blocked) return blocked;
+
     const body = await req.json().catch(() => ({}));
     const { export_type, title, mime_type, file_b64, storage_path, metadata, deliver_to_telegram } = body || {};
     if (!export_type || !title) return json({ error: "export_type and title required" }, 400);
+
+    // Telegram delivery is independently flagged.
+    if (deliver_to_telegram) {
+      const tgBlocked = await flagGuard(u.user.id, "telegram.exports", corsHeaders, { endpoint: "export-create:tg" });
+      if (tgBlocked) return tgBlocked;
+    }
 
     const row = await createExport({
       user_id: u.user.id,
