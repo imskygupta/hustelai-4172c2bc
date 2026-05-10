@@ -12,7 +12,6 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 import { SEO, softwareJsonLd, orgJsonLd } from "@/components/SEO";
 import { TrustStrip } from "@/components/TrustStrip";
-import { WorkflowLoop, LOOPS } from "@/components/media/WorkflowLoop";
 import {
   UnifiedWorkspaceSection,
   AsyncOperationsSection,
@@ -22,14 +21,15 @@ import {
   FlexibleUsageSection,
   FreeToolsStrip,
 } from "@/components/home/PlatformSections";
+import { IntegrationsMarquee } from "@/components/home/IntegrationsMarquee";
 
 gsap.registerPlugin(ScrollTrigger);
 
 const stats = [
-  { value: "1", label: "Workspace, not 12 tabs" },
-  { value: "Async", label: "Background jobs" },
-  { value: "Branded", label: "Every deliverable" },
-  { value: "Free", label: "Tier to start" },
+  { value: "Async", label: "Workflows by default" },
+  { value: "Branded", label: "Every deliverable shipped" },
+  { value: "Live", label: "Operational visibility" },
+  { value: "Free", label: "Tier to get started" },
 ];
 
 export default function Index() {
@@ -91,11 +91,11 @@ export default function Index() {
               The AI Workspace OS · for freelancers &amp; operators
             </div>
             <h1 className="gsap-fade text-[2.6rem] leading-[1.05] sm:text-5xl md:text-7xl font-display font-semibold tracking-tight text-slate-900">
-              The AI Workspace OS<br className="hidden sm:block" />
-              for <span className="text-emerald-600">modern freelancers.</span>
+              Where modern operators<br className="hidden sm:block" />
+              <span className="text-emerald-600">run their work.</span>
             </h1>
             <p className="gsap-fade text-[15px] md:text-lg text-slate-500 max-w-2xl mx-auto leading-relaxed">
-              Run client work, deliverables and async workflows from one calm operating layer — clients, documents, AI assists, exports and integrations, in a single workspace.
+              Run client work, deliverables and async AI workflows from one calm operating layer. Clients, documents, exports and integrations — wired into a single workspace.
             </p>
           </div>
 
@@ -105,7 +105,7 @@ export default function Index() {
               onClick={() => navigate("/signup")}
               className="w-full sm:w-auto h-12 px-6 bg-slate-900 hover:bg-slate-800 text-white text-base"
             >
-              Start your workspace <ArrowRight className="w-4 h-4 ml-2" />
+              Start free workspace <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
             <Button
               size="lg"
@@ -113,7 +113,7 @@ export default function Index() {
               onClick={() => navigate("/workspaces")}
               className="w-full sm:w-auto h-12 px-6 border-slate-300 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-300 text-base"
             >
-              See it in action
+              See async workflow
             </Button>
           </div>
 
@@ -122,18 +122,6 @@ export default function Index() {
             <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5 text-emerald-500" /> Free forever tier</span>
             <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5 text-emerald-500" /> Branded deliverables</span>
             <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5 text-emerald-500" /> Async &amp; cloud-native</span>
-          </div>
-
-          {/* Ambient hero workflow loop — calm placeholder until assets land */}
-          <div className="gsap-fade pt-6 md:pt-10 max-w-5xl mx-auto">
-            <WorkflowLoop
-              srcMp4={LOOPS.hero.srcMp4}
-              srcWebm={LOOPS.hero.srcWebm}
-              poster={LOOPS.hero.poster}
-              aspect="16/9"
-              label="HustleAI Workspace OS — async workflow in motion"
-              className="border border-slate-200/70"
-            />
           </div>
         </div>
       </section>
@@ -166,6 +154,7 @@ export default function Index() {
       <AsyncOperationsSection />
       <RealDeliverablesSection />
       <IntegrationsNotificationsSection />
+      <IntegrationsMarquee />
       <ControlGovernanceSection />
       <FreeToolsStrip />
       <FlexibleUsageSection />
