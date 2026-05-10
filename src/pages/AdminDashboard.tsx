@@ -23,6 +23,7 @@ import {
   Flag,
   CreditCard as CreditCardIcon,
   Radio, Bot, Workflow, ListChecks, Megaphone,
+  Search as SearchIcon, ChevronDown, Wrench, Layers, Cpu, Inbox,
 } from "lucide-react";
 import { PaymentMethodsManager } from "@/components/admin/PaymentMethodsManager";
 import { DodoAdminPanel } from "@/components/admin/DodoAdminPanel";
@@ -165,25 +166,92 @@ const sidebarItems: { id: AdminSection; label: string; icon: any }[] = [
   { id: "usage-analytics" as AdminSection, label: "Usage Analytics", icon: BarChart3 },
 ];
 
-// External admin routes (rendered as navigation links, not in-page sections)
-const externalNavGroups: { label: string; items: { label: string; href: string; icon: any }[] }[] = [
+// Unified grouped admin navigation. Items are either an in-page `section`
+// or an `href` route. This drives the sidebar, the title bar lookup, and
+// the topbar quick-search.
+type NavItem =
+  | { kind: "section"; id: AdminSection; label: string; icon: any; keywords?: string }
+  | { kind: "route"; href: string; label: string; icon: any; keywords?: string };
+
+const NAV_GROUPS: { label: string; defaultOpen?: boolean; items: NavItem[] }[] = [
   {
-    label: "Communications",
+    label: "Operations",
+    defaultOpen: true,
     items: [
-      { label: "Telegram Ops", href: "/admin/communications/telegram", icon: Radio },
-      { label: "Broadcast Center", href: "/admin/communications", icon: Megaphone },
-      { label: "Bot Management", href: "/admin/telegram-control", icon: Bot },
+      { kind: "section", id: "overview", label: "Overview", icon: BarChart3 },
+      { kind: "route", href: "/admin/runtime", label: "Runtime Controls", icon: Activity, keywords: "runtime kill switch" },
+      { kind: "route", href: "/admin/automations", label: "Workflow Engine", icon: Workflow, keywords: "automation workflow" },
+      { kind: "route", href: "/admin/ai-jobs", label: "AI Job Queue", icon: ListChecks, keywords: "queue jobs compute" },
+      { kind: "section", id: "system-health", label: "System Health", icon: Activity },
+      { kind: "route", href: "/admin/communications/telegram", label: "Telegram Ops", icon: Radio, keywords: "telegram bot delivery" },
     ],
   },
   {
-    label: "Infrastructure",
+    label: "Communications",
+    defaultOpen: true,
     items: [
-      { label: "Runtime Controls", href: "/admin/runtime", icon: Activity },
-      { label: "Workflow Engine", href: "/admin/automations", icon: Workflow },
-      { label: "AI Job Queue", href: "/admin/ai-jobs", icon: ListChecks },
+      { kind: "route", href: "/admin/communications", label: "Broadcast Center", icon: Megaphone },
+      { kind: "section", id: "newsletter", label: "Newsletter", icon: Mail },
+      { kind: "section", id: "email-templates", label: "Email Templates", icon: Mail },
+      { kind: "section", id: "mailing-providers", label: "Mailing Providers", icon: Settings },
+      { kind: "section", id: "send-email", label: "Send Email", icon: Send },
+      { kind: "section", id: "notifications", label: "Notifications", icon: Bell },
+      { kind: "route", href: "/admin/telegram-control", label: "Bot Management", icon: Bot },
+    ],
+  },
+  {
+    label: "Revenue",
+    items: [
+      { kind: "section", id: "dodo-payments", label: "Dodo Payments", icon: CreditCardIcon },
+      { kind: "section", id: "orders", label: "Orders", icon: FileText },
+      { kind: "section", id: "payment-logs", label: "Payment Logs", icon: Clock },
+      { kind: "section", id: "payments", label: "Payments", icon: Zap },
+    ],
+  },
+  {
+    label: "Users",
+    items: [
+      { kind: "section", id: "users", label: "Users", icon: Users },
+      { kind: "section", id: "roles", label: "Role Manager", icon: Shield },
+      { kind: "section", id: "verification", label: "Verification", icon: UserCheck },
+      { kind: "section", id: "community", label: "Community", icon: Globe },
+      { kind: "section", id: "forum", label: "Forum Posts", icon: MessageSquare },
+      { kind: "section", id: "chatbot", label: "Personal Chatbot", icon: MessageSquare },
+      { kind: "section", id: "expert", label: "Expert Guidance", icon: Compass },
+    ],
+  },
+  {
+    label: "AI Infrastructure",
+    items: [
+      { kind: "section", id: "ai-providers", label: "AI Providers", icon: Cpu },
+      { kind: "section", id: "usage-analytics" as AdminSection, label: "Usage Analytics", icon: BarChart3 },
+      { kind: "section", id: "feature-flags", label: "Feature Flags", icon: Flag },
+      { kind: "section", id: "config", label: "Config & Keys", icon: Key },
+    ],
+  },
+  {
+    label: "Content & Growth",
+    items: [
+      { kind: "section", id: "blogs", label: "Blog Manager", icon: BookOpen },
+      { kind: "section", id: "seo-pages" as AdminSection, label: "SEO Pages", icon: Globe },
+      { kind: "section", id: "seo-blog" as AdminSection, label: "Insights / Blog", icon: BookOpen },
+      { kind: "section", id: "trending", label: "Trending Links", icon: ExternalLink },
+      { kind: "section", id: "bonus-kits", label: "Bonus Kits", icon: Gift },
+      { kind: "section", id: "social-links", label: "Social Links", icon: Share2 },
+      { kind: "section", id: "webinars", label: "Live Webinars", icon: Video },
+    ],
+  },
+  {
+    label: "Platform",
+    items: [
+      { kind: "section", id: "analytics", label: "Analytics", icon: Activity },
+      { kind: "section", id: "sql-setup", label: "SQL Setup", icon: Database },
+      { kind: "section", id: "email-settings", label: "Email Settings", icon: Settings },
     ],
   },
 ];
+
+const ALL_NAV_ITEMS: NavItem[] = NAV_GROUPS.flatMap((g) => g.items);
 
 export default function AdminDashboard() {
   const { user, profile, loading, signOut } = useAuth();
@@ -192,6 +260,13 @@ export default function AdminDashboard() {
   const [checkingAdmin, setCheckingAdmin] = useState(true);
   const [section, setSection] = useState<AdminSection>("overview");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>(() => {
+    const init: Record<string, boolean> = {};
+    NAV_GROUPS.forEach((g) => { init[g.label] = !(g.defaultOpen ?? false); });
+    return init;
+  });
+  const [navQuery, setNavQuery] = useState("");
+  const [navOpen, setNavOpen] = useState(false);
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [webinars, setWebinars] = useState<Webinar[]>([]);
@@ -670,41 +745,48 @@ export default function AdminDashboard() {
             {sidebarCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
           </button>
         </div>
-        <nav className="p-2 space-y-1 overflow-y-auto" style={{ maxHeight: "calc(100vh - 56px - 100px)" }}>
-          {externalNavGroups.map((group) => (
-            <div key={group.label} className="pb-2 mb-2 border-b border-border/60">
-              {!sidebarCollapsed && (
-                <div className="px-3 pt-1 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">
-                  {group.label}
-                </div>
-              )}
-              {group.items.map((item) => (
-                <button
-                  key={item.href}
-                  onClick={() => navigate(item.href)}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all text-muted-foreground hover:bg-muted hover:text-foreground"
-                  title={item.label}
-                >
-                  <item.icon className="w-4 h-4 shrink-0" />
-                  {!sidebarCollapsed && <span>{item.label}</span>}
-                </button>
-              ))}
-            </div>
-          ))}
-          {sidebarItems.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => setSection(item.id)}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all ${
-                section === item.id
-                  ? "bg-primary/10 text-primary font-medium"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
-              }`}
-            >
-              <item.icon className="w-4 h-4 shrink-0" />
-              {!sidebarCollapsed && <span>{item.label}</span>}
-            </button>
-          ))}
+        <nav className="p-2 space-y-3 overflow-y-auto" style={{ maxHeight: "calc(100vh - 56px - 100px)" }}>
+          {NAV_GROUPS.map((group) => {
+            const closed = !!collapsedGroups[group.label];
+            return (
+              <div key={group.label}>
+                {!sidebarCollapsed && (
+                  <button
+                    onClick={() => setCollapsedGroups((s) => ({ ...s, [group.label]: !s[group.label] }))}
+                    className="w-full flex items-center justify-between px-3 pt-1 pb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 hover:text-foreground transition"
+                  >
+                    <span>{group.label}</span>
+                    <ChevronDown className={`w-3 h-3 transition-transform ${closed ? "-rotate-90" : ""}`} />
+                  </button>
+                )}
+                {(!closed || sidebarCollapsed) && (
+                  <div className="space-y-0.5">
+                    {group.items.map((item) => {
+                      const active = item.kind === "section" && section === item.id;
+                      const onClick = () =>
+                        item.kind === "section" ? setSection(item.id) : navigate(item.href);
+                      const key = item.kind === "section" ? `s:${item.id}` : `r:${item.href}`;
+                      return (
+                        <button
+                          key={key}
+                          onClick={onClick}
+                          title={item.label}
+                          className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-[13px] transition-all ${
+                            active
+                              ? "bg-primary/10 text-primary font-medium"
+                              : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                          }`}
+                        >
+                          <item.icon className="w-4 h-4 shrink-0" />
+                          {!sidebarCollapsed && <span className="truncate">{item.label}</span>}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </nav>
         <div className="absolute bottom-0 left-0 right-0 p-2 border-t border-border space-y-1">
           <button onClick={() => navigate("/dashboard")} className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-muted hover:text-foreground">
@@ -721,14 +803,66 @@ export default function AdminDashboard() {
       {/* Main Content */}
       <main className={`flex-1 transition-all duration-300 ${sidebarCollapsed ? "ml-16" : "ml-60"}`}>
         {/* Top bar */}
-        <header className="sticky top-0 z-40 h-14 glass border-b border-border flex items-center justify-between px-6">
-          <div className="flex items-center gap-2">
-            <h1 className="font-display font-bold text-lg">{sidebarItems.find(s => s.id === section)?.label}</h1>
-            <Badge className="bg-destructive/20 text-destructive text-[10px]">SUPER ADMIN</Badge>
+        <header className="sticky top-0 z-40 h-14 glass border-b border-border flex items-center justify-between gap-4 px-6">
+          <div className="flex items-center gap-2 min-w-0">
+            <h1 className="font-display font-bold text-lg truncate">
+              {ALL_NAV_ITEMS.find((i) => i.kind === "section" && i.id === section)?.label || "Admin"}
+            </h1>
+            <Badge className="bg-destructive/20 text-destructive text-[10px] shrink-0">SUPER ADMIN</Badge>
           </div>
-          <div className="flex items-center gap-2">
+          {/* Quick search */}
+          <div className="relative flex-1 max-w-md hidden md:block">
+            <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+            <input
+              value={navQuery}
+              onChange={(e) => { setNavQuery(e.target.value); setNavOpen(true); }}
+              onFocus={() => setNavOpen(true)}
+              onBlur={() => setTimeout(() => setNavOpen(false), 150)}
+              placeholder="Search admin tools, pages, settings…"
+              className="w-full bg-muted/40 border border-border rounded-md pl-9 pr-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+            />
+            {navOpen && navQuery.trim() && (
+              <div className="absolute top-full mt-1 left-0 right-0 bg-popover border border-border rounded-md shadow-lg overflow-hidden z-50 max-h-80 overflow-y-auto">
+                {ALL_NAV_ITEMS
+                  .filter((i) => {
+                    const q = navQuery.toLowerCase();
+                    return i.label.toLowerCase().includes(q) || (i.keywords || "").toLowerCase().includes(q);
+                  })
+                  .slice(0, 12)
+                  .map((item) => {
+                    const key = item.kind === "section" ? `qs:${item.id}` : `qr:${item.href}`;
+                    return (
+                      <button
+                        key={key}
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => {
+                          if (item.kind === "section") setSection(item.id);
+                          else navigate(item.href);
+                          setNavQuery("");
+                          setNavOpen(false);
+                        }}
+                        className="w-full flex items-center gap-2 px-3 py-2 text-sm text-left hover:bg-muted"
+                      >
+                        <item.icon className="w-4 h-4 text-muted-foreground" />
+                        <span className="truncate">{item.label}</span>
+                        <span className="ml-auto text-[10px] uppercase tracking-wider text-muted-foreground/70">
+                          {item.kind === "route" ? "page" : "section"}
+                        </span>
+                      </button>
+                    );
+                  })}
+                {ALL_NAV_ITEMS.filter((i) => {
+                  const q = navQuery.toLowerCase();
+                  return i.label.toLowerCase().includes(q) || (i.keywords || "").toLowerCase().includes(q);
+                }).length === 0 && (
+                  <div className="px-3 py-3 text-xs text-muted-foreground">No matches</div>
+                )}
+              </div>
+            )}
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
             <Button variant="ghost" size="sm" onClick={loadAllData}><RefreshCw className="w-4 h-4" /></Button>
-            <span className="text-xs text-muted-foreground">{profile?.email}</span>
+            <span className="text-xs text-muted-foreground hidden lg:inline">{profile?.email}</span>
           </div>
         </header>
 
