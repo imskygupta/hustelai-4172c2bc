@@ -10,6 +10,7 @@ import { Sentry } from "@/lib/sentry";
 import DelightToast from "@/components/tools/DelightToast";
 import MascotCompanion from "@/components/MascotCompanion";
 import { NewsletterCaptureAutoTrigger } from "@/components/newsletter/NewsletterCapture";
+import { QuotaBoundary } from "@/components/usage/QuotaBoundary";
 import Index from "./pages/Index";
 import Explore from "./pages/Explore";
 import Login from "./pages/Login";
@@ -25,6 +26,7 @@ const AdminLogin = lazy(() => import("./pages/AdminLogin"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const AdminCommunications = lazy(() => import("./pages/admin/Communications"));
 const AdminNewsletterOps = lazy(() => import("./pages/admin/NewsletterOps"));
+const AdminUsageGovernance = lazy(() => import("./pages/admin/UsageGovernance"));
 import NotificationPreferences from "./pages/settings/NotificationPreferences";
 import Integrations from "./pages/settings/Integrations";
 import Exports from "./pages/settings/Exports";
@@ -188,6 +190,7 @@ const App = () => (
           <NewsletterCaptureAutoTrigger />
           <DocsSubdomainRedirect />
           <StatusSubdomainRedirect />
+          <QuotaBoundary>
           <Suspense fallback={
             <div className="min-h-screen flex items-center justify-center bg-background">
               <div className="h-8 w-8 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
@@ -282,6 +285,7 @@ const App = () => (
             <Route path="/admin-dashboard" element={<AdminDashboard />} />
             <Route path="/admin/communications" element={<AdminCommunications />} />
             <Route path="/admin/communications/newsletter" element={<AdminNewsletterOps />} />
+            <Route path="/admin/usage-governance" element={<AdminUsageGovernance />} />
             <Route path="/admin/communications/telegram" element={<TelegramOpsCenter />} />
             <Route path="/admin/ai-jobs" element={<AdminAiJobs />} />
             <Route path="/admin/telegram" element={<TelegramOps />} />
@@ -359,6 +363,7 @@ const App = () => (
             <Route path="*" element={<NotFound />} />
           </Routes>
           </Suspense>
+          </QuotaBoundary>
           <MobileBottomNav />
         </BrowserRouter>
         )}
