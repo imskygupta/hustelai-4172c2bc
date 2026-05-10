@@ -146,6 +146,7 @@ import RuntimeProviders from "./pages/admin/RuntimeProviders";
 import PaymentsReview from "./pages/admin/PaymentsReview";
 import AdminNotifications from "./pages/admin/Notifications";
 import TelegramOps from "./pages/admin/TelegramOps";
+import TelegramControl from "./pages/admin/TelegramControl";
 import TelegramLanding from "./pages/marketing/TelegramLanding";
 import { Navigate } from "react-router-dom";
 
@@ -264,6 +265,7 @@ const App = () => (
             <Route path="/admin-dashboard" element={<AdminDashboard />} />
             <Route path="/admin/communications" element={<AdminCommunications />} />
             <Route path="/admin/telegram" element={<TelegramOps />} />
+            <Route path="/admin/telegram-control" element={<TelegramControl />} />
             <Route path="/integrations/telegram" element={<TelegramLanding />} />
             <Route path="/d/:token" element={<Download />} />
             <Route path="/settings" element={Shelled(<SettingsLayout />)}>
