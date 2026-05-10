@@ -1,2 +1,3 @@
 - [Free Tools Funnel](mem://features/free-tools-funnel) — Public /tools/* utilities (Invoice/Proposal/Contract) as SEO + PLG signup funnel, no API calls
 - [DB Routing](mem://tech/db-routing) — Multi-DB matrix; primary stays light, heavy workloads go to analytics/workspace DBs
+- [Feature Flag Engine](mem://tech/feature-flag-engine) — Production flag system with rollout %, overrides, kill switch, audit, admin UI at /admin/feature-flags

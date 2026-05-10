@@ -1544,38 +1544,183 @@ export type Database = {
         }
         Relationships: []
       }
+      feature_audit_logs: {
+        Row: {
+          action: string
+          actor_id: string | null
+          after: Json | null
+          before: Json | null
+          created_at: string
+          flag_key: string
+          id: string
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          after?: Json | null
+          before?: Json | null
+          created_at?: string
+          flag_key: string
+          id?: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          after?: Json | null
+          before?: Json | null
+          created_at?: string
+          flag_key?: string
+          id?: string
+        }
+        Relationships: []
+      }
+      feature_flag_overrides: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          enabled: boolean
+          expires_at: string | null
+          flag_key: string
+          group_id: string | null
+          id: string
+          reason: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          enabled: boolean
+          expires_at?: string | null
+          flag_key: string
+          group_id?: string | null
+          id?: string
+          reason?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          enabled?: boolean
+          expires_at?: string | null
+          flag_key?: string
+          group_id?: string | null
+          id?: string
+          reason?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feature_flag_overrides_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "rollout_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      feature_flag_rules: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          flag_key: string
+          group_id: string | null
+          id: string
+          priority: number
+          rollout_percentage: number
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          flag_key: string
+          group_id?: string | null
+          id?: string
+          priority?: number
+          rollout_percentage?: number
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          flag_key?: string
+          group_id?: string | null
+          id?: string
+          priority?: number
+          rollout_percentage?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feature_flag_rules_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "rollout_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       feature_flags: {
         Row: {
+          admin_only: boolean
+          allowed_tiers: string[]
+          beta_only: boolean
           category: string
           created_at: string
           description: string | null
           enabled: boolean
+          environments: string[]
+          expires_at: string | null
           feature_key: string
           id: string
+          kill_switch: boolean
           label: string
+          last_modified_by: string | null
+          maintenance: boolean
+          maintenance_message: string | null
           min_tier: Database["public"]["Enums"]["subscription_tier"] | null
+          owner: string | null
+          rollout_percentage: number
           updated_at: string
         }
         Insert: {
+          admin_only?: boolean
+          allowed_tiers?: string[]
+          beta_only?: boolean
           category?: string
           created_at?: string
           description?: string | null
           enabled?: boolean
+          environments?: string[]
+          expires_at?: string | null
           feature_key: string
           id?: string
+          kill_switch?: boolean
           label: string
+          last_modified_by?: string | null
+          maintenance?: boolean
+          maintenance_message?: string | null
           min_tier?: Database["public"]["Enums"]["subscription_tier"] | null
+          owner?: string | null
+          rollout_percentage?: number
           updated_at?: string
         }
         Update: {
+          admin_only?: boolean
+          allowed_tiers?: string[]
+          beta_only?: boolean
           category?: string
           created_at?: string
           description?: string | null
           enabled?: boolean
+          environments?: string[]
+          expires_at?: string | null
           feature_key?: string
           id?: string
+          kill_switch?: boolean
           label?: string
+          last_modified_by?: string | null
+          maintenance?: boolean
+          maintenance_message?: string | null
           min_tier?: Database["public"]["Enums"]["subscription_tier"] | null
+          owner?: string | null
+          rollout_percentage?: number
           updated_at?: string
         }
         Relationships: []
@@ -3223,6 +3368,62 @@ export type Database = {
           user_id?: string
           workflow_stage?: string
           workspace_id?: string | null
+        }
+        Relationships: []
+      }
+      rollout_group_members: {
+        Row: {
+          added_at: string
+          added_by: string | null
+          group_id: string
+          user_id: string
+        }
+        Insert: {
+          added_at?: string
+          added_by?: string | null
+          group_id: string
+          user_id: string
+        }
+        Update: {
+          added_at?: string
+          added_by?: string | null
+          group_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rollout_group_members_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "rollout_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rollout_groups: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          key: string
+          label: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          key: string
+          label: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          key?: string
+          label?: string
         }
         Relationships: []
       }
@@ -5212,6 +5413,10 @@ export type Database = {
         }
         Returns: Json
       }
+      flag_hash_bucket: {
+        Args: { _flag: string; _user: string }
+        Returns: number
+      }
       grant_bonus_credits: {
         Args: {
           _amount: number
@@ -5234,6 +5439,10 @@ export type Database = {
         Returns: Json
       }
       mark_expired_exports: { Args: never; Returns: number }
+      resolve_feature_flags: {
+        Args: { _env?: string; _user: string }
+        Returns: Json
+      }
       resolve_user_limits: { Args: { _user: string }; Returns: Json }
     }
     Enums: {

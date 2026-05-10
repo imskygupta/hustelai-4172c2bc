@@ -147,6 +147,7 @@ import PaymentsReview from "./pages/admin/PaymentsReview";
 import AdminNotifications from "./pages/admin/Notifications";
 import TelegramOps from "./pages/admin/TelegramOps";
 import TelegramControl from "./pages/admin/TelegramControl";
+import AdminFeatureFlags from "./pages/admin/FeatureFlags";
 import TelegramLanding from "./pages/marketing/TelegramLanding";
 import { Navigate } from "react-router-dom";
 
@@ -331,6 +332,7 @@ const App = () => (
             <Route path="/api/version" element={<Health kind="version" />} />
             <Route path="/admin/runtime" element={<AdminRuntime />} />
             <Route path="/admin/runtime/providers" element={<RuntimeProviders />} />
+            <Route path="/admin/feature-flags" element={<AdminFeatureFlags />} />
             <Route path="/admin/payments-review" element={<PaymentsReview />} />
             <Route path="/admin/notifications" element={<AdminNotifications />} />
             <Route path="*" element={<NotFound />} />
