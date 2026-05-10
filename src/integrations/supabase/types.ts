@@ -1574,6 +1574,81 @@ export type Database = {
         }
         Relationships: []
       }
+      feature_flag_blocks: {
+        Row: {
+          created_at: string
+          endpoint: string | null
+          environment: string
+          flag_key: string
+          id: string
+          reason: string | null
+          source: string | null
+          status_code: number
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          endpoint?: string | null
+          environment?: string
+          flag_key: string
+          id?: string
+          reason?: string | null
+          source?: string | null
+          status_code?: number
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          endpoint?: string | null
+          environment?: string
+          flag_key?: string
+          id?: string
+          reason?: string | null
+          source?: string | null
+          status_code?: number
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      feature_flag_incidents: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          environment: string
+          flag_key: string | null
+          id: string
+          kind: string
+          message: string | null
+          metadata: Json
+          resolved_at: string | null
+          severity: string
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          environment?: string
+          flag_key?: string | null
+          id?: string
+          kind: string
+          message?: string | null
+          metadata?: Json
+          resolved_at?: string | null
+          severity?: string
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          environment?: string
+          flag_key?: string | null
+          id?: string
+          kind?: string
+          message?: string | null
+          metadata?: Json
+          resolved_at?: string | null
+          severity?: string
+        }
+        Relationships: []
+      }
       feature_flag_overrides: {
         Row: {
           created_at: string
@@ -5412,6 +5487,23 @@ export type Database = {
           _user: string
         }
         Returns: Json
+      }
+      flag_block_summary: {
+        Args: { _since?: string }
+        Returns: {
+          blocks: number
+          flag_key: string
+          last_block: string
+          reason: string
+          unique_users: number
+        }[]
+      }
+      flag_block_timeline: {
+        Args: { _bucket?: string; _since?: string }
+        Returns: {
+          blocks: number
+          bucket: string
+        }[]
       }
       flag_hash_bucket: {
         Args: { _flag: string; _user: string }
