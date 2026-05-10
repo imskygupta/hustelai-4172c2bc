@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { sendTelegram } from "../_shared/notifications/telegram.ts";
 import { randomToken, siteOrigin } from "../_shared/exports/createExport.ts";
 import { isFeatureEnabledServer } from "../_shared/flags/resolve.ts";
+import { emitWorkflowEvent } from "../_shared/workflows/emit.ts";
 
 const TG_TOKEN = Deno.env.get("TELEGRAM_BOT_TOKEN") || "";
 const corsHeaders = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, content-type" };
@@ -98,8 +99,30 @@ serve(async (req) => {
       delivery_method: cachedFileId ? "hybrid" : "telegram",
       delivered_at: new Date().toISOString(),
     }).eq("id", exp.id);
+    void emitWorkflowEvent(sb, "export.delivered", {
+      user_id: exp.user_id, export_id: exp.id, channel: "telegram",
+      title: exp.title, export_type: exp.export_type,
+      telegram_chat_id: integ.provider_chat_id,
+      telegram_message_id: messageId,
+    }, { user_id: exp.user_id, dedupe_key: `export_deliv:${exp.id}:tg`, source: "export-deliver-telegram" });
+    if (cachedFileId && cachedFileId !== exp.telegram_file_id) {
+      void emitWorkflowEvent(sb, "export.telegram_uploaded", {
+        user_id: exp.user_id, export_id: exp.id, telegram_file_id: cachedFileId,
+      }, { user_id: exp.user_id, dedupe_key: `export_tg_up:${exp.id}`, source: "export-deliver-telegram" });
+    }
     return j({ ok: true });
   } catch (e: any) {
+    try {
+      const { export_id } = await req.clone().json().catch(() => ({}));
+      if (export_id) {
+        const sb2 = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+        const { data: exp2 } = await sb2.from("generated_exports").select("user_id").eq("id", export_id).maybeSingle();
+        void emitWorkflowEvent(sb2, "export.failed", {
+          export_id, user_id: exp2?.user_id ?? null, channel: "telegram",
+          reason: String(e?.message || e),
+        }, { user_id: exp2?.user_id ?? null, dedupe_key: `export_fail:${export_id}:tg:${Date.now()}`, source: "export-deliver-telegram" });
+      }
+    } catch { /* ignore */ }
     return j({ error: String(e?.message || e) }, 500);
   }
 });
