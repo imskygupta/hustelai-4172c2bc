@@ -20,9 +20,46 @@ import {
   Users,
   Inbox,
   CheckCircle2,
+  TrendingUp,
+  Flame,
+  Activity,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+
+/* ---------------------------------------------------------------- *
+ * Shared kinetic primitives — used across the homepage to keep
+ * the visual rhythm consistent without relying on video assets.
+ * ---------------------------------------------------------------- */
+function CornerAccents() {
+  return (
+    <>
+      <span className="pointer-events-none absolute top-2 left-2 h-3 w-3 border-t border-l border-emerald-400/0 group-hover:border-emerald-400/70 transition-colors duration-300" />
+      <span className="pointer-events-none absolute bottom-2 right-2 h-3 w-3 border-b border-r border-emerald-400/0 group-hover:border-emerald-400/70 transition-colors duration-300" />
+    </>
+  );
+}
+
+function LivePulse({ color = "emerald" }: { color?: "emerald" | "amber" | "sky" | "violet" }) {
+  const map: Record<string, string> = {
+    emerald: "bg-emerald-500",
+    amber: "bg-amber-500",
+    sky: "bg-sky-500",
+    violet: "bg-violet-500",
+  };
+  const ring: Record<string, string> = {
+    emerald: "bg-emerald-400",
+    amber: "bg-amber-400",
+    sky: "bg-sky-400",
+    violet: "bg-violet-400",
+  };
+  return (
+    <span className="relative inline-flex h-2 w-2">
+      <span className={`absolute inline-flex h-full w-full rounded-full ${ring[color]} animate-ping-slow`} />
+      <span className={`relative inline-flex rounded-full h-2 w-2 ${map[color]}`} />
+    </span>
+  );
+}
 
 /* ---------------------------------------------------------------- *
  * 1. Unified Workspace
@@ -30,42 +67,71 @@ import { useNavigate } from "react-router-dom";
 export function UnifiedWorkspaceSection() {
   const navigate = useNavigate();
   const items = [
-    { icon: Users, title: "Clients & pipelines", desc: "Every lead, deal and conversation in one calm timeline." },
-    { icon: FileText, title: "Documents & deliverables", desc: "Invoices, proposals, contracts, resumes — all branded, all yours." },
-    { icon: Workflow, title: "Workflows & AI assists", desc: "Generation, approvals and routine work wired into the same surface." },
+    {
+      icon: Users,
+      title: "Clients & pipelines",
+      desc: "Every lead, deal and conversation in one calm timeline.",
+      meta: "12 active",
+      accent: "emerald" as const,
+    },
+    {
+      icon: FileText,
+      title: "Documents & deliverables",
+      desc: "Invoices, proposals, contracts, resumes — all branded.",
+      meta: "Branded · synced",
+      accent: "sky" as const,
+    },
+    {
+      icon: Workflow,
+      title: "Workflows & AI assists",
+      desc: "Generation, approvals and routine work in one surface.",
+      meta: "3 running",
+      accent: "violet" as const,
+    },
   ];
   return (
-    <section className="py-20 md:py-28 px-4 bg-white">
+    <section className="py-20 md:py-28 px-4 bg-white relative overflow-hidden">
+      <div className="pointer-events-none absolute -top-24 left-1/4 w-[420px] h-[260px] bg-emerald-100/40 blur-3xl rounded-full" />
       <div className="container mx-auto max-w-6xl">
         <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} className="text-center mb-12 md:mb-16 space-y-4">
-          <div className="text-[11px] uppercase tracking-[0.18em] text-emerald-600 font-medium">Unified Workspace</div>
+          <div className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-emerald-600 font-medium">
+            <LivePulse /> One operating layer
+          </div>
           <h2 className="text-3xl md:text-5xl font-display font-semibold tracking-tight text-slate-900 leading-[1.1]">
-            Clients, documents and AI<br className="hidden md:block" /> in one operating layer.
+            Run client work from one<br className="hidden md:block" /> calm operating layer.
           </h2>
           <p className="text-slate-500 max-w-xl mx-auto text-sm md:text-base">
-            Stop switching between docs, sheets, drives and chat tabs. Run client work, generation and delivery from a single, calm workspace.
+            Clients, documents, AI assists and deliveries — wired into a single workspace. No tab juggling. No copy-paste loops.
           </p>
         </motion.div>
-        <div className="grid md:grid-cols-3 gap-4 md:gap-6">
+        <div className="grid md:grid-cols-3 gap-4 md:gap-5">
           {items.map((it, i) => (
             <motion.div
               key={it.title}
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 24 }}
               whileInView={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.08 }}
+              transition={{ delay: i * 0.08, duration: 0.5, ease: "easeOut" }}
               viewport={{ once: true }}
-              className="rounded-2xl border border-slate-200 bg-gradient-to-br from-white to-slate-50/60 p-5 md:p-6 hover:border-emerald-300 hover:shadow-lg hover:-translate-y-0.5 transition-all"
+              className="group relative rounded-2xl border border-slate-200 bg-gradient-to-br from-white to-slate-50/60 p-5 md:p-6 hover:border-emerald-300/80 hover:shadow-[0_20px_40px_-20px_rgba(16,185,129,0.35)] hover:-translate-y-1 transition-all duration-300 overflow-hidden"
             >
-              <div className="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-4">
-                <it.icon className="w-5 h-5" />
+              {/* Hover gradient sheen */}
+              <span className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-br from-emerald-50/0 via-emerald-50/40 to-emerald-100/30" />
+              <CornerAccents />
+              <div className="relative flex items-start justify-between mb-4">
+                <div className="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-110 group-hover:rotate-[-4deg] transition-transform duration-300">
+                  <it.icon className="w-5 h-5" />
+                </div>
+                <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+                  <LivePulse color={it.accent} /> {it.meta}
+                </span>
               </div>
-              <h3 className="font-display font-semibold text-base md:text-lg text-slate-900 mb-1.5">{it.title}</h3>
-              <p className="text-sm text-slate-500 leading-relaxed">{it.desc}</p>
+              <h3 className="relative font-display font-semibold text-base md:text-lg text-slate-900 mb-1.5">{it.title}</h3>
+              <p className="relative text-sm text-slate-500 leading-relaxed">{it.desc}</p>
             </motion.div>
           ))}
         </div>
         <div className="text-center mt-10">
-          <Button onClick={() => navigate("/workspaces")} className="bg-slate-900 hover:bg-slate-800 text-white">
+          <Button onClick={() => navigate("/workspaces")} className="bg-slate-900 hover:bg-slate-800 text-white group">
             Explore the workspace <ArrowRight className="w-4 h-4 ml-2" />
           </Button>
         </div>
@@ -83,10 +149,10 @@ export function AsyncOperationsSection() {
       <div className="container mx-auto max-w-6xl grid lg:grid-cols-2 gap-10 md:gap-14 items-center">
         <motion.div initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="space-y-5">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-violet-50 text-violet-700 border border-violet-200 text-xs font-medium">
-            <Zap className="w-3.5 h-3.5" /> Async operations
+            <LivePulse color="violet" /> Async operations
           </div>
           <h2 className="text-3xl md:text-5xl font-display font-semibold tracking-tight text-slate-900 leading-[1.1]">
-            Long jobs run in the background. <br className="hidden md:block" /> You don’t babysit a tab.
+            Long jobs run in the background. <br className="hidden md:block" /> You don't babysit a tab.
           </h2>
           <p className="text-slate-500 leading-relaxed text-sm md:text-base">
             Generations, exports, deliveries and follow-ups happen quietly in the background. Get a live activity feed and a notification when a deliverable is ready.
@@ -101,6 +167,12 @@ export function AsyncOperationsSection() {
               <li key={t} className="flex gap-2"><CheckCircle2 className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" />{t}</li>
             ))}
           </ul>
+          <div className="pt-2">
+            <a href="/workspaces" className="inline-flex items-center gap-1.5 text-sm font-medium text-emerald-700 hover:text-emerald-800 group">
+              See async workflow
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+            </a>
+          </div>
         </motion.div>
 
         <motion.div initial={{ opacity: 0, x: 20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}
