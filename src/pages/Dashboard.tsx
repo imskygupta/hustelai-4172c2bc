@@ -7,6 +7,7 @@ import { AffiliateTab } from "@/components/AffiliateTab";
 import { EmailVerificationBanner } from "@/components/EmailVerificationBanner";
 import { DailyUsageWidget } from "@/components/dashboard/DailyUsageWidget";
 import { OperationalUsageWidget } from "@/components/dashboard/OperationalUsageWidget";
+import { UnlockBalanceWidget } from "@/components/dashboard/UnlockBalanceWidget";
 import { ActivityCard } from "@/components/async/ActivityCard";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
