@@ -5914,6 +5914,24 @@ export type Database = {
         Returns: Json
       }
       resolve_user_limits: { Args: { _user: string }; Returns: Json }
+      workflow_event_throughput: {
+        Args: { _bucket?: string; _since?: string }
+        Returns: {
+          bucket: string
+          count: number
+          event_name: string
+        }[]
+      }
+      workflow_ops_summary: { Args: { _since?: string }; Returns: Json }
+      workflow_top_events: {
+        Args: { _since?: string }
+        Returns: {
+          event_name: string
+          last_seen: string
+          runs_enqueued: number
+          total: number
+        }[]
+      }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
