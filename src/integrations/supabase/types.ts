@@ -512,6 +512,74 @@ export type Database = {
         }
         Relationships: []
       }
+      broadcast_jobs: {
+        Row: {
+          audience: string
+          audience_user_ids: string[] | null
+          bot_id: string | null
+          channel: string
+          created_at: string
+          created_by: string | null
+          error: string | null
+          failed_count: number
+          finished_at: string | null
+          id: string
+          message: string
+          scheduled_at: string | null
+          sent_count: number
+          started_at: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          audience?: string
+          audience_user_ids?: string[] | null
+          bot_id?: string | null
+          channel?: string
+          created_at?: string
+          created_by?: string | null
+          error?: string | null
+          failed_count?: number
+          finished_at?: string | null
+          id?: string
+          message: string
+          scheduled_at?: string | null
+          sent_count?: number
+          started_at?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          audience?: string
+          audience_user_ids?: string[] | null
+          bot_id?: string | null
+          channel?: string
+          created_at?: string
+          created_by?: string | null
+          error?: string | null
+          failed_count?: number
+          finished_at?: string | null
+          id?: string
+          message?: string
+          scheduled_at?: string | null
+          sent_count?: number
+          started_at?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "broadcast_jobs_bot_id_fkey"
+            columns: ["bot_id"]
+            isOneToOne: false
+            referencedRelation: "telegram_bots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       category_requests: {
         Row: {
           category_name: string
@@ -2563,6 +2631,56 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_routes: {
+        Row: {
+          channel: string
+          created_at: string
+          enabled: boolean
+          event_pattern: string
+          id: string
+          notes: string | null
+          severity_min: string
+          target_bot_id: string | null
+          target_email: string | null
+          target_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          channel: string
+          created_at?: string
+          enabled?: boolean
+          event_pattern: string
+          id?: string
+          notes?: string | null
+          severity_min?: string
+          target_bot_id?: string | null
+          target_email?: string | null
+          target_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          channel?: string
+          created_at?: string
+          enabled?: boolean
+          event_pattern?: string
+          id?: string
+          notes?: string | null
+          severity_min?: string
+          target_bot_id?: string | null
+          target_email?: string | null
+          target_url?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_routes_target_bot_id_fkey"
+            columns: ["target_bot_id"]
+            isOneToOne: false
+            referencedRelation: "telegram_bots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           created_at: string
@@ -3788,6 +3906,154 @@ export type Database = {
         }
         Relationships: []
       }
+      telegram_bots: {
+        Row: {
+          created_at: string
+          delivery_count_24h: number
+          enabled: boolean
+          environment: string
+          failure_count_24h: number
+          id: string
+          last_ping_at: string | null
+          name: string
+          notes: string | null
+          purpose: string | null
+          status: string
+          token_secret_name: string | null
+          updated_at: string
+          username: string
+          webhook_secret_name: string | null
+          webhook_url: string | null
+        }
+        Insert: {
+          created_at?: string
+          delivery_count_24h?: number
+          enabled?: boolean
+          environment?: string
+          failure_count_24h?: number
+          id?: string
+          last_ping_at?: string | null
+          name: string
+          notes?: string | null
+          purpose?: string | null
+          status?: string
+          token_secret_name?: string | null
+          updated_at?: string
+          username: string
+          webhook_secret_name?: string | null
+          webhook_url?: string | null
+        }
+        Update: {
+          created_at?: string
+          delivery_count_24h?: number
+          enabled?: boolean
+          environment?: string
+          failure_count_24h?: number
+          id?: string
+          last_ping_at?: string | null
+          name?: string
+          notes?: string | null
+          purpose?: string | null
+          status?: string
+          token_secret_name?: string | null
+          updated_at?: string
+          username?: string
+          webhook_secret_name?: string | null
+          webhook_url?: string | null
+        }
+        Relationships: []
+      }
+      telegram_commands: {
+        Row: {
+          admin_only: boolean
+          beta_only: boolean
+          bot_id: string | null
+          command: string
+          created_at: string
+          description: string | null
+          enabled: boolean
+          handler_key: string | null
+          id: string
+          min_tier: string | null
+          rate_limit_per_min: number
+        }
+        Insert: {
+          admin_only?: boolean
+          beta_only?: boolean
+          bot_id?: string | null
+          command: string
+          created_at?: string
+          description?: string | null
+          enabled?: boolean
+          handler_key?: string | null
+          id?: string
+          min_tier?: string | null
+          rate_limit_per_min?: number
+        }
+        Update: {
+          admin_only?: boolean
+          beta_only?: boolean
+          bot_id?: string | null
+          command?: string
+          created_at?: string
+          description?: string | null
+          enabled?: boolean
+          handler_key?: string | null
+          id?: string
+          min_tier?: string | null
+          rate_limit_per_min?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "telegram_commands_bot_id_fkey"
+            columns: ["bot_id"]
+            isOneToOne: false
+            referencedRelation: "telegram_bots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      telegram_link_tokens: {
+        Row: {
+          bot_id: string | null
+          created_at: string
+          device_info: Json | null
+          expires_at: string
+          id: string
+          token: string
+          used_at: string | null
+          user_id: string
+        }
+        Insert: {
+          bot_id?: string | null
+          created_at?: string
+          device_info?: Json | null
+          expires_at: string
+          id?: string
+          token: string
+          used_at?: string | null
+          user_id: string
+        }
+        Update: {
+          bot_id?: string | null
+          created_at?: string
+          device_info?: Json | null
+          expires_at?: string
+          id?: string
+          token?: string
+          used_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "telegram_link_tokens_bot_id_fkey"
+            columns: ["bot_id"]
+            isOneToOne: false
+            referencedRelation: "telegram_bots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tier_limits: {
         Row: {
           created_at: string
@@ -4936,6 +5202,7 @@ export type Database = {
         Returns: Json
       }
       consume_export_quota: { Args: { _user_id: string }; Returns: Json }
+      consume_telegram_link_token: { Args: { _token: string }; Returns: string }
       consume_usage: {
         Args: {
           _feature: string
@@ -4961,6 +5228,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      issue_telegram_link_token: {
+        Args: { _bot?: string; _user: string }
+        Returns: Json
       }
       mark_expired_exports: { Args: never; Returns: number }
       resolve_user_limits: { Args: { _user: string }; Returns: Json }
