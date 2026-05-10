@@ -2,3 +2,4 @@
 - [DB Routing](mem://tech/db-routing) — Multi-DB matrix; primary stays light, heavy workloads go to analytics/workspace DBs
 - [Feature Flag Engine](mem://tech/feature-flag-engine) — Production flag system with rollout %, overrides, kill switch, audit, admin UI at /admin/feature-flags
 - [Workflow Event Producers](mem://features/workflow-event-producers) — Real producers (payments/exports/telegram) wired into workflow engine; templates + ops RPCs
+- [AI Job Queue](mem://tech/ai-job-queue) — Async AI execution layer with cron worker, retries, provider failover, admin console

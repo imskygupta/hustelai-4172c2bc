@@ -148,6 +148,7 @@ import AdminNotifications from "./pages/admin/Notifications";
 import TelegramOps from "./pages/admin/TelegramOps";
 import TelegramControl from "./pages/admin/TelegramControl";
 import TelegramOpsCenter from "./pages/admin/TelegramOpsCenter";
+import AdminAiJobs from "./pages/admin/AiJobs";
 import AdminFeatureFlags from "./pages/admin/FeatureFlags";
 import RuntimeAnalytics from "./pages/admin/RuntimeAnalytics";
 import Automations from "./pages/admin/Automations";
@@ -271,6 +272,7 @@ const App = () => (
             <Route path="/admin-dashboard" element={<AdminDashboard />} />
             <Route path="/admin/communications" element={<AdminCommunications />} />
             <Route path="/admin/communications/telegram" element={<TelegramOpsCenter />} />
+            <Route path="/admin/ai-jobs" element={<AdminAiJobs />} />
             <Route path="/admin/telegram" element={<TelegramOps />} />
             <Route path="/admin/telegram-control" element={<TelegramControl />} />
             <Route path="/integrations/telegram" element={<TelegramLanding />} />

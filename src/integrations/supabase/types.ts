@@ -71,6 +71,142 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_job_events: {
+        Row: {
+          created_at: string
+          data: Json | null
+          id: string
+          job_id: string
+          level: string
+          message: string | null
+        }
+        Insert: {
+          created_at?: string
+          data?: Json | null
+          id?: string
+          job_id: string
+          level?: string
+          message?: string | null
+        }
+        Update: {
+          created_at?: string
+          data?: Json | null
+          id?: string
+          job_id?: string
+          level?: string
+          message?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_job_events_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "ai_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_jobs: {
+        Row: {
+          attempt: number
+          cancelled_at: string | null
+          cost_units: number
+          created_at: string
+          dedupe_key: string | null
+          duration_ms: number | null
+          error: string | null
+          feature: string | null
+          finished_at: string | null
+          id: string
+          input: Json
+          kind: string
+          max_attempts: number
+          metadata: Json
+          model: string | null
+          output: Json | null
+          parent_job_id: string | null
+          priority: number
+          progress: number
+          provider: string | null
+          scheduled_at: string
+          source: string | null
+          started_at: string | null
+          status: string
+          tokens_input: number
+          tokens_output: number
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          attempt?: number
+          cancelled_at?: string | null
+          cost_units?: number
+          created_at?: string
+          dedupe_key?: string | null
+          duration_ms?: number | null
+          error?: string | null
+          feature?: string | null
+          finished_at?: string | null
+          id?: string
+          input?: Json
+          kind: string
+          max_attempts?: number
+          metadata?: Json
+          model?: string | null
+          output?: Json | null
+          parent_job_id?: string | null
+          priority?: number
+          progress?: number
+          provider?: string | null
+          scheduled_at?: string
+          source?: string | null
+          started_at?: string | null
+          status?: string
+          tokens_input?: number
+          tokens_output?: number
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          attempt?: number
+          cancelled_at?: string | null
+          cost_units?: number
+          created_at?: string
+          dedupe_key?: string | null
+          duration_ms?: number | null
+          error?: string | null
+          feature?: string | null
+          finished_at?: string | null
+          id?: string
+          input?: Json
+          kind?: string
+          max_attempts?: number
+          metadata?: Json
+          model?: string | null
+          output?: Json | null
+          parent_job_id?: string | null
+          priority?: number
+          progress?: number
+          provider?: string | null
+          scheduled_at?: string
+          source?: string | null
+          started_at?: string | null
+          status?: string
+          tokens_input?: number
+          tokens_output?: number
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_jobs_parent_job_id_fkey"
+            columns: ["parent_job_id"]
+            isOneToOne: false
+            referencedRelation: "ai_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_provider_keys: {
         Row: {
           api_endpoint: string
@@ -5802,6 +5938,69 @@ export type Database = {
       }
     }
     Functions: {
+      ai_jobs_kind_breakdown: {
+        Args: { _since?: string }
+        Returns: {
+          avg_ms: number
+          failed: number
+          kind: string
+          succeeded: number
+          total: number
+        }[]
+      }
+      ai_jobs_ops_summary: { Args: { _since?: string }; Returns: Json }
+      ai_jobs_provider_breakdown: {
+        Args: { _since?: string }
+        Returns: {
+          avg_ms: number
+          cost: number
+          failed: number
+          provider: string
+          succeeded: number
+          tokens: number
+          total: number
+        }[]
+      }
+      cancel_ai_job: { Args: { _id: string }; Returns: undefined }
+      claim_ai_jobs: {
+        Args: { _limit?: number }
+        Returns: {
+          attempt: number
+          cancelled_at: string | null
+          cost_units: number
+          created_at: string
+          dedupe_key: string | null
+          duration_ms: number | null
+          error: string | null
+          feature: string | null
+          finished_at: string | null
+          id: string
+          input: Json
+          kind: string
+          max_attempts: number
+          metadata: Json
+          model: string | null
+          output: Json | null
+          parent_job_id: string | null
+          priority: number
+          progress: number
+          provider: string | null
+          scheduled_at: string
+          source: string | null
+          started_at: string | null
+          status: string
+          tokens_input: number
+          tokens_output: number
+          updated_at: string
+          user_id: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "ai_jobs"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       claim_workflow_runs: {
         Args: { _limit?: number }
         Returns: {
@@ -5830,6 +6029,18 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      complete_ai_job: {
+        Args: {
+          _cost?: number
+          _id: string
+          _model?: string
+          _output: Json
+          _provider?: string
+          _tokens_in?: number
+          _tokens_out?: number
+        }
+        Returns: undefined
+      }
       consume_ai_quota: {
         Args: { _feature: string; _user_id: string }
         Returns: Json
@@ -5849,6 +6060,20 @@ export type Database = {
         }
         Returns: Json
       }
+      enqueue_ai_job: {
+        Args: {
+          _dedupe_key?: string
+          _feature?: string
+          _input?: Json
+          _kind: string
+          _max_attempts?: number
+          _priority?: number
+          _scheduled_at?: string
+          _source?: string
+          _user?: string
+        }
+        Returns: string
+      }
       enqueue_workflow_runs: {
         Args: {
           _dedupe_key?: string
@@ -5862,6 +6087,7 @@ export type Database = {
           runs_enqueued: number
         }[]
       }
+      fail_ai_job: { Args: { _error: string; _id: string }; Returns: undefined }
       flag_block_summary: {
         Args: { _since?: string }
         Returns: {

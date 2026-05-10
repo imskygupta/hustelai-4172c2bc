@@ -17,6 +17,7 @@ const QUICK = [
   { key: "ai_tools.chatbot",             label: "AI chatbot" },
   { key: "ai_tools.search",              label: "AI search" },
   { key: "ai_tools.exports",             label: "AI exports" },
+  { key: "ai_jobs.engine",               label: "AI job queue" },
   { key: "system.signup",                label: "New signups" },
   { key: "system.onboarding",            label: "Onboarding" },
   { key: "system.maintenance_banner",    label: "Maintenance banner" },
