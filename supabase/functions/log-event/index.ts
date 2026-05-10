@@ -33,6 +33,9 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const category = String(body.category ?? "");
     const action = String(body.action ?? "");
+    const severity = String(body.severity ?? "info");
+    const source = String(body.source ?? "client");
+    const dedupe_key = body.dedupe_key ? String(body.dedupe_key) : null;
     const payload = body.payload && typeof body.payload === "object" ? body.payload : {};
 
     if (!ALLOWED_CATEGORIES.has(category) || !action || action.length > 120) {
@@ -65,10 +68,27 @@ Deno.serve(async (req) => {
         user_id: userId,
         category,
         action,
+        severity,
+        source,
+        dedupe_key,
         payload,
         ip: req.headers.get("x-forwarded-for") ?? null,
         user_agent: req.headers.get("user-agent") ?? null,
       });
+
+      // Fan-out to dispatcher (best-effort)
+      const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
+      const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+      if (SUPABASE_URL && SERVICE_KEY) {
+        void fetch(`${SUPABASE_URL}/functions/v1/event-dispatcher`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${SERVICE_KEY}`,
+          },
+          body: JSON.stringify({ user_id: userId, category, action, severity, source, payload }),
+        }).catch(() => {});
+      }
     } catch (err) {
       // Analytics DB not provisioned yet — accept silently so callers don't break.
       console.warn("log-event analytics write skipped:", (err as Error).message);
