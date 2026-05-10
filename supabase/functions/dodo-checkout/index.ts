@@ -3,6 +3,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { dodo, DODO_MODE, corsHeaders } from "../_shared/dodo.ts";
+import { flagGuard } from "../_shared/flags/resolve.ts";
 
 const RETURN_URL = "https://hustlaiapp.in/payment-status";
 
@@ -40,6 +41,10 @@ serve(async (req) => {
     const userId = claims?.claims?.sub;
     const email = claims?.claims?.email;
     if (!userId) throw new Error("Unauthorized");
+
+    // Flag-gated entry: master Dodo checkout switch (kept alongside legacy api_runtime_config locks)
+    const blockedDodo = await flagGuard(userId, "payments.dodo_checkout", corsHeaders, { endpoint: "dodo-checkout" });
+    if (blockedDodo) return blockedDodo;
 
     if (!rateLimit(`co:${userId}`, 10, 60_000)) {
       return new Response(JSON.stringify({ error: "Too many requests, slow down." }), {
