@@ -1,12 +1,10 @@
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Zap, Send, Mail, MapPin, ArrowUpRight, Instagram, Youtube, Twitter, Linkedin, Facebook, MessageCircle, Globe } from "lucide-react";
+import { Zap, Mail, MapPin, ArrowUpRight, Instagram, Youtube, Twitter, Linkedin, Facebook, MessageCircle, Globe, Send } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
 import { Link, useLocation } from "react-router-dom";
 import { isAppShellRoute } from "@/components/app-shell-routes";
 import { CONTACT_EMAIL, SUPPORT_EMAIL } from "@/config/branding";
+import { NewsletterCapture } from "@/components/newsletter/NewsletterCapture";
 
 const productLinks = [
   { label: "Workspace OS", href: "/workspace-os" },
@@ -49,10 +47,7 @@ const platformIcons: Record<string, any> = {
 export function Footer() {
   const { pathname } = useLocation();
   const hiddenInAppShell = isAppShellRoute(pathname);
-  const [email, setEmail] = useState("");
-  const [loading, setLoading] = useState(false);
   const [socialLinks, setSocialLinks] = useState<any[]>([]);
-  const { toast } = useToast();
 
   const loadSocialLinks = async () => {
     const { data } = await supabase.from("social_links" as any).select("*").eq("is_active", true).order("display_order");
@@ -66,26 +61,6 @@ export function Footer() {
   // Hide marketing footer inside the SaaS app shell so users don't get
   // confused thinking they're still on the landing page.
   if (hiddenInAppShell) return null;
-
-  const handleSubscribe = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email.trim()) return;
-    setLoading(true);
-    const { error } = await supabase
-      .from("newsletter_subscribers" as any)
-      .insert({ email: email.trim() } as any);
-    setLoading(false);
-    if (error) {
-      if (error.code === "23505") {
-        toast({ title: "Already subscribed!", description: "You're already on our list." });
-      } else {
-        toast({ title: "Error", description: error.message, variant: "destructive" });
-      }
-    } else {
-      toast({ title: "Subscribed! 🎉", description: "You'll receive our best freelancing tips." });
-      setEmail("");
-    }
-  };
 
   return (
     <footer className="relative border-t border-border/50 pt-16 pb-8 px-4 overflow-hidden">
@@ -174,21 +149,12 @@ export function Footer() {
 
           {/* Newsletter */}
           <div className="space-y-4">
-            <h4 className="font-display font-semibold text-sm">Stay in the Loop</h4>
-            <p className="text-xs text-muted-foreground">
-              Get weekly freelancing tips, trending gigs, and exclusive offers.
-            </p>
-            <form onSubmit={handleSubscribe} className="flex gap-2">
-              <Input
-                type="email" value={email} onChange={(e) => setEmail(e.target.value)}
-                placeholder="your@email.com"
-                className="h-10 text-sm bg-background border-border text-foreground placeholder:text-muted-foreground/70"
-                required
-              />
-              <Button type="submit" size="sm" className="bg-gradient-primary text-primary-foreground shrink-0 h-10 px-4 btn-press" disabled={loading}>
-                <Send className="w-4 h-4" />
-              </Button>
-            </form>
+            <NewsletterCapture
+              variant="inline"
+              surface="footer"
+              headline="Weekly AI freelance & creator brief"
+              description="One concise email each Sunday. No spam, unsubscribe anytime."
+            />
           </div>
         </div>
 
