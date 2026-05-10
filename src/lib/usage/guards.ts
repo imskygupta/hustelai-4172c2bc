@@ -10,6 +10,7 @@ export class QuotaError extends Error {
     public max: number,
     public currentTier: Tier,
     public upgradeTier: Tier,
+    public unlockable: boolean = false,
   ) {
     super(`Quota exceeded for ${capability.label}`);
     this.name = "QuotaError";
@@ -29,7 +30,11 @@ export async function requireQuota(
   if (!cap) return { used: 0, max: -1 };
   const r = await consumeUsage(cap.meter as any, cap.feature, units);
   if (!r.allowed) {
-    throw new QuotaError(cap, r.used, r.max, currentTier, suggestUpgradeTier(currentTier, cap));
+    const unlockable = cap.boostable && r.reason === "quota_unlockable";
+    throw new QuotaError(
+      cap, r.used, r.max, currentTier,
+      suggestUpgradeTier(currentTier, cap), unlockable,
+    );
   }
   return { used: r.used, max: r.max };
 }

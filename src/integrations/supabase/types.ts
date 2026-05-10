@@ -4899,6 +4899,126 @@ export type Database = {
         }
         Relationships: []
       }
+      unlock_balances: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          feature: string
+          id: string
+          lifetime_purchased: number
+          meter: string
+          remaining: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          feature?: string
+          id?: string
+          lifetime_purchased?: number
+          meter: string
+          remaining?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          feature?: string
+          id?: string
+          lifetime_purchased?: number
+          meter?: string
+          remaining?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      unlock_ledger: {
+        Row: {
+          balance_after: number
+          created_at: string
+          delta: number
+          feature: string
+          id: string
+          metadata: Json
+          meter: string
+          reason: string
+          source_id: string | null
+          user_id: string
+        }
+        Insert: {
+          balance_after: number
+          created_at?: string
+          delta: number
+          feature?: string
+          id?: string
+          metadata?: Json
+          meter: string
+          reason: string
+          source_id?: string | null
+          user_id: string
+        }
+        Update: {
+          balance_after?: number
+          created_at?: string
+          delta?: number
+          feature?: string
+          id?: string
+          metadata?: Json
+          meter?: string
+          reason?: string
+          source_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      unlock_packs: {
+        Row: {
+          active: boolean
+          created_at: string
+          description: string
+          feature: string
+          id: string
+          key: string
+          label: string
+          meter: string
+          price_inr: number
+          sort_order: number
+          units: number
+          validity_hours: number | null
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          description?: string
+          feature?: string
+          id?: string
+          key: string
+          label: string
+          meter: string
+          price_inr: number
+          sort_order?: number
+          units: number
+          validity_hours?: number | null
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          description?: string
+          feature?: string
+          id?: string
+          key?: string
+          label?: string
+          meter?: string
+          price_inr?: number
+          sort_order?: number
+          units?: number
+          validity_hours?: number | null
+        }
+        Relationships: []
+      }
       usage_counters: {
         Row: {
           count: number
@@ -6531,6 +6651,19 @@ export type Database = {
         }
         Returns: string
       }
+      grant_unlocks: {
+        Args: {
+          _expires_at?: string
+          _feature: string
+          _metadata?: Json
+          _meter: string
+          _reason?: string
+          _source?: string
+          _units: number
+          _user: string
+        }
+        Returns: string
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -6579,6 +6712,7 @@ export type Database = {
           reason: string
         }[]
       }
+      unlock_summary: { Args: { _user: string }; Returns: Json }
       usage_top_consumers: {
         Args: { _limit?: number; _meter: string; _since?: string }
         Returns: {
