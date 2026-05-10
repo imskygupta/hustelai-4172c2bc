@@ -22,6 +22,7 @@ import {
   Wallet, Gift, Share2,
   Flag,
   CreditCard as CreditCardIcon,
+  Radio, Bot, Workflow, ListChecks, Megaphone,
 } from "lucide-react";
 import { PaymentMethodsManager } from "@/components/admin/PaymentMethodsManager";
 import { DodoAdminPanel } from "@/components/admin/DodoAdminPanel";
@@ -162,6 +163,26 @@ const sidebarItems: { id: AdminSection; label: string; icon: any }[] = [
   { id: "seo-pages" as AdminSection, label: "SEO Pages", icon: Globe },
   { id: "seo-blog" as AdminSection, label: "Insights / Blog", icon: BookOpen },
   { id: "usage-analytics" as AdminSection, label: "Usage Analytics", icon: BarChart3 },
+];
+
+// External admin routes (rendered as navigation links, not in-page sections)
+const externalNavGroups: { label: string; items: { label: string; href: string; icon: any }[] }[] = [
+  {
+    label: "Communications",
+    items: [
+      { label: "Telegram Ops", href: "/admin/communications/telegram", icon: Radio },
+      { label: "Broadcast Center", href: "/admin/communications", icon: Megaphone },
+      { label: "Bot Management", href: "/admin/telegram-control", icon: Bot },
+    ],
+  },
+  {
+    label: "Infrastructure",
+    items: [
+      { label: "Runtime Controls", href: "/admin/runtime", icon: Activity },
+      { label: "Workflow Engine", href: "/admin/automations", icon: Workflow },
+      { label: "AI Job Queue", href: "/admin/ai-jobs", icon: ListChecks },
+    ],
+  },
 ];
 
 export default function AdminDashboard() {
@@ -650,6 +671,26 @@ export default function AdminDashboard() {
           </button>
         </div>
         <nav className="p-2 space-y-1 overflow-y-auto" style={{ maxHeight: "calc(100vh - 56px - 100px)" }}>
+          {externalNavGroups.map((group) => (
+            <div key={group.label} className="pb-2 mb-2 border-b border-border/60">
+              {!sidebarCollapsed && (
+                <div className="px-3 pt-1 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+                  {group.label}
+                </div>
+              )}
+              {group.items.map((item) => (
+                <button
+                  key={item.href}
+                  onClick={() => navigate(item.href)}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all text-muted-foreground hover:bg-muted hover:text-foreground"
+                  title={item.label}
+                >
+                  <item.icon className="w-4 h-4 shrink-0" />
+                  {!sidebarCollapsed && <span>{item.label}</span>}
+                </button>
+              ))}
+            </div>
+          ))}
           {sidebarItems.map((item) => (
             <button
               key={item.id}
