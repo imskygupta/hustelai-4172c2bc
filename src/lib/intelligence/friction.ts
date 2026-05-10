@@ -14,12 +14,12 @@ function key(surface: string, kind: string) {
 
 function emit(surface: string, kind: string, count: number, metadata: Record<string, unknown> = {}) {
   track(EVENTS.RAGE_CLICK, { surface, metadata: { kind, count, ...metadata } });
-  void supabase.from("friction_signals").insert({
+  void supabase.from("friction_signals").insert([{
     surface,
     signal_kind: kind,
     count,
-    metadata,
-  });
+    metadata: metadata as never,
+  }]);
 }
 
 /** Record a click on a specific surface. If 4+ clicks within 1.2s, fires a rage signal. */

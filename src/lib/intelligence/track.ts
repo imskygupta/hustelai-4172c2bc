@@ -68,7 +68,7 @@ function flush() {
       _value_num: item.p.valueNum ?? null,
       _route: typeof window !== "undefined" ? window.location.pathname : null,
       _session_id: sessionId(),
-      _metadata: item.p.metadata ?? {},
+      _metadata: (item.p.metadata ?? {}) as never,
     });
   }
 }
@@ -100,7 +100,7 @@ export async function trackServer(
       _value_num: payload.valueNum ?? null,
       _route: null,
       _session_id: null,
-      _metadata: payload.metadata ?? {},
+      _metadata: (payload.metadata ?? {}) as never,
     });
   } catch {
     /* swallow */
