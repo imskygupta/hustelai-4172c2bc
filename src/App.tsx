@@ -9,6 +9,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { Sentry } from "@/lib/sentry";
 import DelightToast from "@/components/tools/DelightToast";
 import MascotCompanion from "@/components/MascotCompanion";
+import { NewsletterCaptureAutoTrigger } from "@/components/newsletter/NewsletterCapture";
 import Index from "./pages/Index";
 import Explore from "./pages/Explore";
 import Login from "./pages/Login";
@@ -183,6 +184,7 @@ const App = () => (
           <MaintenanceBanner />
           <DelightToast />
           <MascotCompanion />
+          <NewsletterCaptureAutoTrigger />
           <DocsSubdomainRedirect />
           <StatusSubdomainRedirect />
           <Suspense fallback={
