@@ -22,6 +22,7 @@ import {
   Wallet, Gift, Share2,
   Flag,
   CreditCard as CreditCardIcon,
+  Radio, Bot, Workflow, ListChecks, Megaphone,
 } from "lucide-react";
 import { PaymentMethodsManager } from "@/components/admin/PaymentMethodsManager";
 import { DodoAdminPanel } from "@/components/admin/DodoAdminPanel";
@@ -162,6 +163,26 @@ const sidebarItems: { id: AdminSection; label: string; icon: any }[] = [
   { id: "seo-pages" as AdminSection, label: "SEO Pages", icon: Globe },
   { id: "seo-blog" as AdminSection, label: "Insights / Blog", icon: BookOpen },
   { id: "usage-analytics" as AdminSection, label: "Usage Analytics", icon: BarChart3 },
+];
+
+// External admin routes (rendered as navigation links, not in-page sections)
+const externalNavGroups: { label: string; items: { label: string; href: string; icon: any }[] }[] = [
+  {
+    label: "Communications",
+    items: [
+      { label: "Telegram Ops", href: "/admin/communications/telegram", icon: Radio },
+      { label: "Broadcast Center", href: "/admin/communications", icon: Megaphone },
+      { label: "Bot Management", href: "/admin/telegram-control", icon: Bot },
+    ],
+  },
+  {
+    label: "Infrastructure",
+    items: [
+      { label: "Runtime Controls", href: "/admin/runtime", icon: Activity },
+      { label: "Workflow Engine", href: "/admin/automations", icon: Workflow },
+      { label: "AI Job Queue", href: "/admin/ai-jobs", icon: ListChecks },
+    ],
+  },
 ];
 
 export default function AdminDashboard() {
