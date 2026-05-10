@@ -330,6 +330,114 @@ export type Database = {
         }
         Relationships: []
       }
+      analytics_event_aggregates: {
+        Row: {
+          bucket_hour: string
+          capability: string
+          event_name: string
+          tier: string
+          total: number
+          unique_users: number
+        }
+        Insert: {
+          bucket_hour: string
+          capability?: string
+          event_name: string
+          tier?: string
+          total?: number
+          unique_users?: number
+        }
+        Update: {
+          bucket_hour?: string
+          capability?: string
+          event_name?: string
+          tier?: string
+          total?: number
+          unique_users?: number
+        }
+        Relationships: []
+      }
+      analytics_events: {
+        Row: {
+          capability: string | null
+          created_at: string
+          event_name: string
+          feature: string | null
+          id: string
+          metadata: Json
+          meter: string | null
+          route: string | null
+          session_id: string | null
+          surface: string | null
+          tier: string | null
+          user_agent: string | null
+          user_id: string | null
+          value_num: number | null
+        }
+        Insert: {
+          capability?: string | null
+          created_at?: string
+          event_name: string
+          feature?: string | null
+          id?: string
+          metadata?: Json
+          meter?: string | null
+          route?: string | null
+          session_id?: string | null
+          surface?: string | null
+          tier?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+          value_num?: number | null
+        }
+        Update: {
+          capability?: string | null
+          created_at?: string
+          event_name?: string
+          feature?: string | null
+          id?: string
+          metadata?: Json
+          meter?: string | null
+          route?: string | null
+          session_id?: string | null
+          surface?: string | null
+          tier?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+          value_num?: number | null
+        }
+        Relationships: []
+      }
+      analytics_funnel_steps: {
+        Row: {
+          created_at: string
+          description: string | null
+          event_name: string
+          funnel_key: string
+          id: string
+          step_name: string
+          step_order: number
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          event_name: string
+          funnel_key: string
+          id?: string
+          step_name: string
+          step_order: number
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          event_name?: string
+          funnel_key?: string
+          id?: string
+          step_name?: string
+          step_order?: number
+        }
+        Relationships: []
+      }
       api_provider_fallback_logs: {
         Row: {
           created_at: string
@@ -760,6 +868,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      capability_cost_ledger: {
+        Row: {
+          capability: string
+          cost_micro: number
+          created_at: string
+          duration_ms: number | null
+          feature: string | null
+          id: string
+          metadata: Json
+          model: string | null
+          provider: string | null
+          tokens_in: number
+          tokens_out: number
+          user_id: string | null
+        }
+        Insert: {
+          capability: string
+          cost_micro?: number
+          created_at?: string
+          duration_ms?: number | null
+          feature?: string | null
+          id?: string
+          metadata?: Json
+          model?: string | null
+          provider?: string | null
+          tokens_in?: number
+          tokens_out?: number
+          user_id?: string | null
+        }
+        Update: {
+          capability?: string
+          cost_micro?: number
+          created_at?: string
+          duration_ms?: number | null
+          feature?: string | null
+          id?: string
+          metadata?: Json
+          model?: string | null
+          provider?: string | null
+          tokens_in?: number
+          tokens_out?: number
+          user_id?: string | null
+        }
+        Relationships: []
       }
       category_requests: {
         Row: {
@@ -2109,6 +2262,36 @@ export type Database = {
           },
         ]
       }
+      friction_signals: {
+        Row: {
+          count: number
+          created_at: string
+          id: string
+          metadata: Json
+          signal_kind: string
+          surface: string
+          user_id: string | null
+        }
+        Insert: {
+          count?: number
+          created_at?: string
+          id?: string
+          metadata?: Json
+          signal_kind: string
+          surface: string
+          user_id?: string | null
+        }
+        Update: {
+          count?: number
+          created_at?: string
+          id?: string
+          metadata?: Json
+          signal_kind?: string
+          surface?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       generated_exports: {
         Row: {
           created_at: string
@@ -2286,6 +2469,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      intelligence_alerts: {
+        Row: {
+          acknowledged_at: string | null
+          acknowledged_by: string | null
+          capability: string | null
+          created_at: string
+          id: string
+          kind: string
+          message: string | null
+          metadata: Json
+          severity: string
+          source: string | null
+          title: string
+          user_id: string | null
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          capability?: string | null
+          created_at?: string
+          id?: string
+          kind: string
+          message?: string | null
+          metadata?: Json
+          severity?: string
+          source?: string | null
+          title: string
+          user_id?: string | null
+        }
+        Update: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          capability?: string | null
+          created_at?: string
+          id?: string
+          kind?: string
+          message?: string | null
+          metadata?: Json
+          severity?: string
+          source?: string | null
+          title?: string
+          user_id?: string | null
+        }
+        Relationships: []
       }
       invoices: {
         Row: {
@@ -6446,6 +6674,7 @@ export type Database = {
       }
     }
     Functions: {
+      ack_intelligence_alert: { Args: { _id: string }; Returns: undefined }
       ai_jobs_kind_breakdown: {
         Args: { _since?: string }
         Returns: {
@@ -6480,6 +6709,31 @@ export type Database = {
           tokens_out: number
           total_jobs: number
           user_id: string
+        }[]
+      }
+      analytics_capability_breakdown: {
+        Args: { _since?: string }
+        Returns: {
+          capability: string
+          cost_micro: number
+          generations: number
+          opens: number
+          quota_hits: number
+          rage_signals: number
+          unlock_prompts: number
+          unlock_purchases: number
+          upgrade_clicks: number
+        }[]
+      }
+      analytics_funnel_summary: {
+        Args: { _funnel_key?: string; _since?: string }
+        Returns: {
+          conversion_pct: number
+          event_name: string
+          events: number
+          step_name: string
+          step_order: number
+          users: number
         }[]
       }
       cancel_ai_job: { Args: { _id: string }; Returns: undefined }
@@ -6671,6 +6925,29 @@ export type Database = {
         }
         Returns: boolean
       }
+      intelligence_open_alerts: {
+        Args: { _limit?: number }
+        Returns: {
+          acknowledged_at: string | null
+          acknowledged_by: string | null
+          capability: string | null
+          created_at: string
+          id: string
+          kind: string
+          message: string | null
+          metadata: Json
+          severity: string
+          source: string | null
+          title: string
+          user_id: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "intelligence_alerts"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       issue_telegram_link_token: {
         Args: { _bot?: string; _user: string }
         Returns: Json
@@ -6685,6 +6962,21 @@ export type Database = {
         Args: { _issue: string; _reason: string }
         Returns: string
       }
+      record_capability_cost: {
+        Args: {
+          _capability: string
+          _cost_micro: number
+          _duration_ms?: number
+          _feature: string
+          _metadata?: Json
+          _model?: string
+          _provider?: string
+          _tokens_in?: number
+          _tokens_out?: number
+          _user: string
+        }
+        Returns: string
+      }
       replay_workflow_failure: {
         Args: { _failure_id: string }
         Returns: string
@@ -6694,6 +6986,10 @@ export type Database = {
         Returns: Json
       }
       resolve_user_limits: { Args: { _user: string }; Returns: Json }
+      roll_up_analytics_events: {
+        Args: { _lookback?: string }
+        Returns: number
+      }
       telegram_delivery_timeline: {
         Args: { _bucket?: string; _since?: string }
         Returns: {
@@ -6711,6 +7007,20 @@ export type Database = {
           last_at: string
           reason: string
         }[]
+      }
+      track_event: {
+        Args: {
+          _capability?: string
+          _event_name: string
+          _feature?: string
+          _metadata?: Json
+          _meter?: string
+          _route?: string
+          _session_id?: string
+          _surface?: string
+          _value_num?: number
+        }
+        Returns: string
       }
       unlock_summary: { Args: { _user: string }; Returns: Json }
       usage_top_consumers: {
