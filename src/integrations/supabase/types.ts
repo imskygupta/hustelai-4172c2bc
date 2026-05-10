@@ -2679,6 +2679,114 @@ export type Database = {
         }
         Relationships: []
       }
+      newsletter_capture_dismissals: {
+        Row: {
+          anon_id: string | null
+          dismissed_at: string
+          id: string
+          metadata: Json
+          surface: string
+          user_id: string | null
+        }
+        Insert: {
+          anon_id?: string | null
+          dismissed_at?: string
+          id?: string
+          metadata?: Json
+          surface: string
+          user_id?: string | null
+        }
+        Update: {
+          anon_id?: string | null
+          dismissed_at?: string
+          id?: string
+          metadata?: Json
+          surface?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      newsletter_issues: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          body_html: string | null
+          channel: string
+          cost_units: number | null
+          created_at: string
+          created_by: string | null
+          error: string | null
+          generated_by_job: string | null
+          id: string
+          metadata: Json
+          model: string | null
+          preheader: string | null
+          provider: string
+          reject_reason: string | null
+          rejected_at: string | null
+          rejected_by: string | null
+          scheduled_at: string | null
+          sections: Json
+          sent_at: string | null
+          slug: string | null
+          status: string
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          body_html?: string | null
+          channel?: string
+          cost_units?: number | null
+          created_at?: string
+          created_by?: string | null
+          error?: string | null
+          generated_by_job?: string | null
+          id?: string
+          metadata?: Json
+          model?: string | null
+          preheader?: string | null
+          provider?: string
+          reject_reason?: string | null
+          rejected_at?: string | null
+          rejected_by?: string | null
+          scheduled_at?: string | null
+          sections?: Json
+          sent_at?: string | null
+          slug?: string | null
+          status?: string
+          subject: string
+          updated_at?: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          body_html?: string | null
+          channel?: string
+          cost_units?: number | null
+          created_at?: string
+          created_by?: string | null
+          error?: string | null
+          generated_by_job?: string | null
+          id?: string
+          metadata?: Json
+          model?: string | null
+          preheader?: string | null
+          provider?: string
+          reject_reason?: string | null
+          rejected_at?: string | null
+          rejected_by?: string | null
+          scheduled_at?: string | null
+          sections?: Json
+          sent_at?: string | null
+          slug?: string | null
+          status?: string
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       newsletter_schedules: {
         Row: {
           ai_prompt: string
@@ -2724,39 +2832,123 @@ export type Database = {
         }
         Relationships: []
       }
+      newsletter_sends: {
+        Row: {
+          attempt: number
+          clicked_at: string | null
+          created_at: string
+          email: string
+          error: string | null
+          id: string
+          issue_id: string
+          opened_at: string | null
+          provider: string
+          provider_message_id: string | null
+          sent_at: string | null
+          status: string
+          subscriber_id: string
+          updated_at: string
+        }
+        Insert: {
+          attempt?: number
+          clicked_at?: string | null
+          created_at?: string
+          email: string
+          error?: string | null
+          id?: string
+          issue_id: string
+          opened_at?: string | null
+          provider: string
+          provider_message_id?: string | null
+          sent_at?: string | null
+          status?: string
+          subscriber_id: string
+          updated_at?: string
+        }
+        Update: {
+          attempt?: number
+          clicked_at?: string | null
+          created_at?: string
+          email?: string
+          error?: string | null
+          id?: string
+          issue_id?: string
+          opened_at?: string | null
+          provider?: string
+          provider_message_id?: string | null
+          sent_at?: string | null
+          status?: string
+          subscriber_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "newsletter_sends_issue_id_fkey"
+            columns: ["issue_id"]
+            isOneToOne: false
+            referencedRelation: "newsletter_issues"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "newsletter_sends_subscriber_id_fkey"
+            columns: ["subscriber_id"]
+            isOneToOne: false
+            referencedRelation: "newsletter_subscribers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       newsletter_subscribers: {
         Row: {
+          confirmed_at: string | null
           email: string
+          engagement_score: number
           id: string
           is_active: boolean
+          last_sent_at: string | null
+          metadata: Json
           name: string | null
           source: string | null
+          status: string
           subscribed_at: string
           tags: string[] | null
           unsubscribe_token: string | null
           unsubscribed_at: string | null
+          user_id: string | null
         }
         Insert: {
+          confirmed_at?: string | null
           email: string
+          engagement_score?: number
           id?: string
           is_active?: boolean
+          last_sent_at?: string | null
+          metadata?: Json
           name?: string | null
           source?: string | null
+          status?: string
           subscribed_at?: string
           tags?: string[] | null
           unsubscribe_token?: string | null
           unsubscribed_at?: string | null
+          user_id?: string | null
         }
         Update: {
+          confirmed_at?: string | null
           email?: string
+          engagement_score?: number
           id?: string
           is_active?: boolean
+          last_sent_at?: string | null
+          metadata?: Json
           name?: string | null
           source?: string | null
+          status?: string
           subscribed_at?: string
           tags?: string[] | null
           unsubscribe_token?: string | null
           unsubscribed_at?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -6262,6 +6454,15 @@ export type Database = {
         Returns: Json
       }
       mark_expired_exports: { Args: never; Returns: number }
+      newsletter_approve_issue: {
+        Args: { _issue: string; _scheduled_at?: string }
+        Returns: string
+      }
+      newsletter_dispatch_counts: { Args: { _issue: string }; Returns: Json }
+      newsletter_reject_issue: {
+        Args: { _issue: string; _reason: string }
+        Returns: string
+      }
       replay_workflow_failure: {
         Args: { _failure_id: string }
         Returns: string
