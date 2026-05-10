@@ -671,6 +671,26 @@ export default function AdminDashboard() {
           </button>
         </div>
         <nav className="p-2 space-y-1 overflow-y-auto" style={{ maxHeight: "calc(100vh - 56px - 100px)" }}>
+          {externalNavGroups.map((group) => (
+            <div key={group.label} className="pb-2 mb-2 border-b border-border/60">
+              {!sidebarCollapsed && (
+                <div className="px-3 pt-1 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+                  {group.label}
+                </div>
+              )}
+              {group.items.map((item) => (
+                <button
+                  key={item.href}
+                  onClick={() => navigate(item.href)}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all text-muted-foreground hover:bg-muted hover:text-foreground"
+                  title={item.label}
+                >
+                  <item.icon className="w-4 h-4 shrink-0" />
+                  {!sidebarCollapsed && <span>{item.label}</span>}
+                </button>
+              ))}
+            </div>
+          ))}
           {sidebarItems.map((item) => (
             <button
               key={item.id}
