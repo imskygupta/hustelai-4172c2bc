@@ -35,15 +35,24 @@ Edge functions wired with `flagGuard()`:
 - `upi-payment:submit` → `payments.upi_manual_review` + (`payments.wallet_topups` | `payments.subscription_checkout`)
 - `export-create` → `exports.ai_exports`; if Telegram delivery requested, also `telegram.exports`
 - `telegram-broadcast` → `telegram.broadcasts`
+- `telegram-bot-health` → `telegram.admin_ops`
+- `telegram-webhook` → `telegram.auth` (handshake) + `telegram.commands` (free-form msgs)
+- `export-deliver-telegram` → soft-checks `telegram.notifications` + `telegram.storage` (returns `deferred`, does not throw)
+- `ai-chatbot` → `ai_tools.chatbot`
+- `ai-search` → `ai_tools.search`
 
 `flagGuard()` returns a 423/503 Response with `{ error, locked, feature, flag }`, fires a `flag_blocked` event to `log-event` (deduped per user/flag/endpoint), and respects maintenance mode (503 + `flag.message`).
 
 ## Frontend graceful UX
-- `<FeatureGate flag="…">{children}</FeatureGate>` — variants `card` | `inline` | `silent`. Auto-renders the right tone for maintenance / tier / beta / kill states with optional `onUpgrade` CTA.
+- `<FeatureGate flag="…">{children}</FeatureGate>` — variants `card` | `inline` | `compact` | `silent`. Loading shows `<FlagSkeleton />`. Auto-renders maintenance / tier / beta / kill / queued states. Supports `onRetry` and `onUpgrade`.
+- `<DegradedState />` — same UI, can be used standalone when handling 423/503 responses from edge functions. Helper `degradedFromFlag(flag)` maps a `ResolvedFlag`.
+- `safeInvoke(() => supabase.functions.invoke(...))` — narrow union return: `{ ok, data }` | `{ locked, payload }` | `{ error }`. Use to render `<DegradedState reason={payload.flag?.reason} ... />` instead of toasting raw errors.
 - `<MaintenanceBanner />` mounted globally in `App.tsx`, listens to `system.maintenance_banner` flag and shows the message verbatim.
 
 ## Admin quick controls
 `/admin/runtime` includes a "Feature flag quick controls" section with one-click kill switches for the 9 highest-impact flags (payments, exports, telegram, signups, onboarding, banner). Full editor remains at `/admin/feature-flags`.
 
 ## Seeded flag catalog
-24 flags across `payments`, `telegram`, `exports`, `ai_tools`, `system`. All default to enabled @ 100%, except `system.maintenance_banner` (off).
+38 flags across `payments`, `telegram`, `exports`, `ai_tools`, `system`. All default to enabled @ 100%, except `system.maintenance_banner` (off).
+New telegram keys: `telegram.auth`, `telegram.notifications`, `telegram.broadcasts`, `telegram.storage`, `telegram.admin_ops`, `telegram.commands`.
+New AI tool keys: `ai_tools.{chatbot,search,resume_builder,hustle_explore,exports,image,generators,marketplace}`.

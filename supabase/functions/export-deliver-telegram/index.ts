@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { sendTelegram } from "../_shared/notifications/telegram.ts";
 import { randomToken, siteOrigin } from "../_shared/exports/createExport.ts";
+import { isFeatureEnabledServer } from "../_shared/flags/resolve.ts";
 
 const TG_TOKEN = Deno.env.get("TELEGRAM_BOT_TOKEN") || "";
 const corsHeaders = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, content-type" };
@@ -15,6 +16,14 @@ serve(async (req) => {
     if (!export_id) return j({ error: "export_id required" }, 400);
     const { data: exp } = await sb.from("generated_exports").select("*").eq("id", export_id).maybeSingle();
     if (!exp || !exp.storage_path) return j({ error: "not found" }, 404);
+
+    // Runtime gate: telegram delivery can be disabled / put in maintenance.
+    if (!(await isFeatureEnabledServer(exp.user_id, "telegram.notifications"))) {
+      return j({ ok: false, reason: "telegram_notifications_disabled", deferred: true });
+    }
+    if (!(await isFeatureEnabledServer(exp.user_id, "telegram.storage"))) {
+      return j({ ok: false, reason: "telegram_storage_disabled", deferred: true });
+    }
 
     const { data: integ } = await sb.from("notification_integrations")
       .select("*").eq("user_id", exp.user_id).eq("provider", "telegram").eq("status", "connected").maybeSingle();

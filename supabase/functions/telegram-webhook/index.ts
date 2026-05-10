@@ -5,6 +5,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { sendTelegram, answerCallbackQuery } from "../_shared/notifications/telegram.ts";
 import { randomToken } from "../_shared/exports/createExport.ts";
+import { isFeatureEnabledServer } from "../_shared/flags/resolve.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -75,6 +76,14 @@ serve(async (req) => {
     if (text.startsWith("/start")) {
       const parts = text.split(/\s+/);
       const token = parts[1];
+      // /start without token is the public auth handshake — gated by telegram.auth
+      if (!(await isFeatureEnabledServer(null, "telegram.auth"))) {
+        await sendTelegram(chatId, {
+          title: "🛠 Account linking paused",
+          body: "Telegram linking is temporarily under maintenance. Please try again in a few minutes.",
+        });
+        return ok();
+      }
       if (!token) {
         await sendTelegram(chatId, { title: "Hello 👋", body: "To link your HustleAI account, open Settings → Integrations and tap Connect Telegram." });
         return ok();
@@ -158,6 +167,14 @@ serve(async (req) => {
     // Resolve user from chat
     const { data: integ } = await sb.from("notification_integrations")
       .select("user_id").eq("provider", "telegram").eq("provider_chat_id", chatId).eq("status", "connected").maybeSingle();
+    // Free-form bot commands gated by telegram.commands
+    if (integ?.user_id && !(await isFeatureEnabledServer(integ.user_id, "telegram.commands"))) {
+      await sendTelegram(chatId, {
+        title: "💤 Bot commands paused",
+        body: "Bot commands are temporarily disabled by the operations team. We'll be back shortly.",
+      });
+      return ok();
+    }
     const userId = integ?.user_id || null;
 
     const cmd = text.split(/\s+/)[0].toLowerCase();
