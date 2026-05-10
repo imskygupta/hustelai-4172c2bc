@@ -49,8 +49,37 @@ export default function SettingsLayout() {
           </p>
         </div>
 
+        {/* Mobile: horizontal scrollable pill nav. Desktop: vertical sidebar. */}
+        <nav className="lg:hidden -mx-4 sm:-mx-6 mb-5 px-4 sm:px-6 overflow-x-auto no-scrollbar">
+          <ul className="flex gap-2 min-w-max">
+            {SECTIONS.flatMap((s) => s.items).map((item) => {
+              const Icon = item.icon;
+              const active = pathname.startsWith(item.to);
+              return (
+                <li key={item.to}>
+                  <NavLink
+                    to={item.to}
+                    className={cn(
+                      "inline-flex items-center gap-2 px-3.5 py-2 rounded-full text-sm border min-h-tap whitespace-nowrap transition-colors",
+                      active
+                        ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                        : "bg-card text-muted-foreground border-border hover:text-foreground"
+                    )}
+                  >
+                    <Icon className="h-3.5 w-3.5" />
+                    {item.label}
+                    {item.status === "soon" && (
+                      <span className="text-[9px] uppercase tracking-wider font-bold text-amber-600 bg-amber-50 px-1 py-0.5 rounded">Soon</span>
+                    )}
+                  </NavLink>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
+
         <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-8">
-          <aside className="lg:sticky lg:top-6 self-start">
+          <aside className="hidden lg:block lg:sticky lg:top-6 self-start">
             <nav className="space-y-6">
               {SECTIONS.map((section) => (
                 <div key={section.label}>
