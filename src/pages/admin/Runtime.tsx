@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Activity, Power, RefreshCw, ShieldAlert, ShieldCheck, Lock, History, CreditCard, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { FlagQuickControls } from "@/components/admin/FlagQuickControls";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
