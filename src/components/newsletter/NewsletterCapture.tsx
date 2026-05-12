@@ -7,8 +7,9 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { subscribe, markDismissed, isSubscribed, isDismissed } from "@/lib/newsletter/capture";
+import { subscribe, markDismissed, isSubscribed, isDismissed, markNeverShow } from "@/lib/newsletter/capture";
 import { toast } from "@/hooks/use-toast";
+import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 
 type Variant = "inline" | "popup";
@@ -34,6 +35,7 @@ export function NewsletterCapture({
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
+  const [neverShow, setNeverShow] = useState(false);
 
   const handleSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -54,6 +56,13 @@ export function NewsletterCapture({
   };
 
   const dismiss = () => { markDismissed(surface); onOpenChange?.(false); };
+  const handleClose = (v: boolean) => {
+    if (!v) {
+      if (neverShow) markNeverShow();
+      else markDismissed(surface);
+    }
+    onOpenChange?.(v);
+  };
 
   const form = (
     <form onSubmit={handleSubmit} className="space-y-3">
@@ -83,6 +92,15 @@ export function NewsletterCapture({
         </div>
       )}
       <p className="text-[11px] text-slate-400">By subscribing you agree to receive emails from HustleAI. Unsubscribe with one click.</p>
+      {variant === "popup" && !done && (
+        <label className="flex items-center gap-2 text-[12px] text-slate-600 cursor-pointer select-none pt-1">
+          <Checkbox
+            checked={neverShow}
+            onCheckedChange={(v) => setNeverShow(v === true)}
+          />
+          Don't show this again
+        </label>
+      )}
     </form>
   );
 
@@ -97,7 +115,7 @@ export function NewsletterCapture({
   // Popup variant — drawer on mobile, dialog on desktop
   if (isMobile) {
     return (
-      <Drawer open={open} onOpenChange={(v) => { if (!v) markDismissed(surface); onOpenChange?.(v); }}>
+      <Drawer open={open} onOpenChange={handleClose}>
         <DrawerContent className="px-5 pb-[calc(env(safe-area-inset-bottom)+1.25rem)] pt-2">
           {form}
         </DrawerContent>
@@ -105,10 +123,10 @@ export function NewsletterCapture({
     );
   }
   return (
-    <Dialog open={open} onOpenChange={(v) => { if (!v) markDismissed(surface); onOpenChange?.(v); }}>
+    <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md p-6">
         <button
-          aria-label="Close" onClick={dismiss}
+          aria-label="Close" onClick={() => handleClose(false)}
           className="absolute top-3 right-3 inline-flex items-center justify-center h-8 w-8 rounded-md text-slate-500 hover:bg-slate-100 active:scale-95 transition"
         >
           <X className="w-4 h-4" />
@@ -140,6 +158,9 @@ export function NewsletterCaptureAutoTrigger() {
     "/forgot-password",
     "/reset-password",
     "/unsubscribe",
+    "/dashboard",
+    "/settings",
+    "/profile",
     "/workspace-os",
     "/workspaces",
     "/hustle-canvas",
@@ -153,6 +174,8 @@ export function NewsletterCaptureAutoTrigger() {
   useEffect(() => {
     if (loading) return;
     if (suppressedRoute) return;
+    // Authenticated users never see the marketing popup — they manage email prefs in settings
+    if (user) return;
     if (isSubscribed()) return;
     if (isDismissed("popup")) return;
 
@@ -164,14 +187,14 @@ export function NewsletterCaptureAutoTrigger() {
       setOpen(true);
     };
 
-    // Time-on-site: 60s
-    const timer = window.setTimeout(() => fire("time"), 60_000);
+    // Time-on-site: 3 minutes (lowered frequency vs 60s)
+    const timer = window.setTimeout(() => fire("time"), 180_000);
 
-    // Scroll depth: 60%
+    // Scroll depth: 85% (only deeply engaged readers)
     const onScroll = () => {
       const scrolled = window.scrollY + window.innerHeight;
       const total = document.documentElement.scrollHeight;
-      if (total > 0 && scrolled / total >= 0.6) fire("scroll");
+      if (total > 0 && scrolled / total >= 0.85) fire("scroll");
     };
     window.addEventListener("scroll", onScroll, { passive: true });
 
@@ -185,8 +208,9 @@ export function NewsletterCaptureAutoTrigger() {
       window.removeEventListener("scroll", onScroll);
       document.removeEventListener("mouseleave", onLeave);
     };
-  }, [loading, suppressedRoute]);
+  }, [loading, suppressedRoute, user]);
 
   if (suppressedRoute) return null;
+  if (user) return null;
   return <NewsletterCapture variant="popup" surface={surface} open={open} onOpenChange={setOpen} />;
 }
