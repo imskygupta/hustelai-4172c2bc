@@ -6,6 +6,7 @@ import { Send, Check, Copy, Zap, Bell, Loader2, ExternalLink, Plug, Crown, X, Me
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Link } from "react-router-dom";
+import { continueWorkflow } from "@/lib/nextActions/continueWorkflow";
 
 interface Integration {
   id: string;
