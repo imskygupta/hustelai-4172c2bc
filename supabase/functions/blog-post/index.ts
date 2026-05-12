@@ -35,7 +35,19 @@ Deno.serve(async (req) => {
       .order("published_at", { ascending: false })
       .limit(3);
 
-    return new Response(JSON.stringify({ post, tags, related: related ?? [] }), {
+    // Adjacent posts (prev/next by published_at) for category continuation
+    const { data: prev } = await blog.from("blog_posts")
+      .select("slug,title").eq("status","published").eq("category_id", post.category_id)
+      .lt("published_at", post.published_at).order("published_at", { ascending: false }).limit(1).maybeSingle();
+    const { data: next } = await blog.from("blog_posts")
+      .select("slug,title").eq("status","published").eq("category_id", post.category_id)
+      .gt("published_at", post.published_at).order("published_at", { ascending: true }).limit(1).maybeSingle();
+
+    // Surface workflows/tools mapped on the post (workflow_refs/tool_refs jsonb arrays of slugs)
+    const workflows = Array.isArray((post as any).workflow_refs) ? (post as any).workflow_refs : [];
+    const tools = Array.isArray((post as any).tool_refs) ? (post as any).tool_refs : [];
+
+    return new Response(JSON.stringify({ post, tags, related: related ?? [], prev, next, workflows, tools }), {
       headers: { ...cors, "content-type": "application/json", "cache-control": "public, max-age=120" },
     });
   } catch (e) {
