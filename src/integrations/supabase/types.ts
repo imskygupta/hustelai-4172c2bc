@@ -153,6 +153,7 @@ export type Database = {
       }
       ai_jobs: {
         Row: {
+          archived_at: string | null
           attempt: number
           cancelled_at: string | null
           cost_units: number
@@ -173,6 +174,7 @@ export type Database = {
           priority: number
           progress: number
           provider: string | null
+          retry_truncated_at: string | null
           scheduled_at: string
           source: string | null
           started_at: string | null
@@ -183,6 +185,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          archived_at?: string | null
           attempt?: number
           cancelled_at?: string | null
           cost_units?: number
@@ -203,6 +206,7 @@ export type Database = {
           priority?: number
           progress?: number
           provider?: string | null
+          retry_truncated_at?: string | null
           scheduled_at?: string
           source?: string | null
           started_at?: string | null
@@ -213,6 +217,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          archived_at?: string | null
           attempt?: number
           cancelled_at?: string | null
           cost_units?: number
@@ -233,6 +238,7 @@ export type Database = {
           priority?: number
           progress?: number
           provider?: string | null
+          retry_truncated_at?: string | null
           scheduled_at?: string
           source?: string | null
           started_at?: string | null
@@ -3275,6 +3281,7 @@ export type Database = {
       }
       notification_deliveries: {
         Row: {
+          archived_at: string | null
           attempt_count: number
           created_at: string
           delivered_at: string | null
@@ -3283,11 +3290,13 @@ export type Database = {
           id: string
           last_error: string | null
           provider: string
+          retry_truncated_at: string | null
           status: string
           updated_at: string
           user_id: string | null
         }
         Insert: {
+          archived_at?: string | null
           attempt_count?: number
           created_at?: string
           delivered_at?: string | null
@@ -3296,11 +3305,13 @@ export type Database = {
           id?: string
           last_error?: string | null
           provider: string
+          retry_truncated_at?: string | null
           status?: string
           updated_at?: string
           user_id?: string | null
         }
         Update: {
+          archived_at?: string | null
           attempt_count?: number
           created_at?: string
           delivered_at?: string | null
@@ -3309,6 +3320,7 @@ export type Database = {
           id?: string
           last_error?: string | null
           provider?: string
+          retry_truncated_at?: string | null
           status?: string
           updated_at?: string
           user_id?: string | null
@@ -3933,6 +3945,186 @@ export type Database = {
           username?: string | null
           website?: string | null
           xp_points?: number
+        }
+        Relationships: []
+      }
+      queue_archive: {
+        Row: {
+          archive_reason: string
+          archived_at: string
+          attempts: number
+          duration_ms: number | null
+          error: string | null
+          id: string
+          kind: string | null
+          original_created_at: string | null
+          original_finished_at: string | null
+          payload_snapshot: Json
+          queue: string
+          ref_id: string
+          status: string
+          tier: string | null
+          user_id: string | null
+        }
+        Insert: {
+          archive_reason?: string
+          archived_at?: string
+          attempts?: number
+          duration_ms?: number | null
+          error?: string | null
+          id?: string
+          kind?: string | null
+          original_created_at?: string | null
+          original_finished_at?: string | null
+          payload_snapshot?: Json
+          queue: string
+          ref_id: string
+          status: string
+          tier?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          archive_reason?: string
+          archived_at?: string
+          attempts?: number
+          duration_ms?: number | null
+          error?: string | null
+          id?: string
+          kind?: string | null
+          original_created_at?: string | null
+          original_finished_at?: string | null
+          payload_snapshot?: Json
+          queue?: string
+          ref_id?: string
+          status?: string
+          tier?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      queue_dead_letter: {
+        Row: {
+          first_seen_at: string
+          id: string
+          last_error: string | null
+          last_seen_at: string
+          occurrences: number
+          payload: Json
+          queue: string
+          reason: string
+          ref_id: string
+          resolution_notes: string | null
+          resolved: boolean
+          resolved_at: string | null
+          resolved_by: string | null
+          user_id: string | null
+        }
+        Insert: {
+          first_seen_at?: string
+          id?: string
+          last_error?: string | null
+          last_seen_at?: string
+          occurrences?: number
+          payload?: Json
+          queue: string
+          reason: string
+          ref_id: string
+          resolution_notes?: string | null
+          resolved?: boolean
+          resolved_at?: string | null
+          resolved_by?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          first_seen_at?: string
+          id?: string
+          last_error?: string | null
+          last_seen_at?: string
+          occurrences?: number
+          payload?: Json
+          queue?: string
+          reason?: string
+          ref_id?: string
+          resolution_notes?: string | null
+          resolved?: boolean
+          resolved_at?: string | null
+          resolved_by?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      queue_health_snapshots: {
+        Row: {
+          archive_24h: number
+          captured_at: string
+          depth: number
+          dlq_size: number
+          failed_24h: number
+          id: string
+          oldest_age_seconds: number
+          queue: string
+          retried_24h: number
+          running: number
+          succeeded_24h: number
+        }
+        Insert: {
+          archive_24h?: number
+          captured_at?: string
+          depth?: number
+          dlq_size?: number
+          failed_24h?: number
+          id?: string
+          oldest_age_seconds?: number
+          queue: string
+          retried_24h?: number
+          running?: number
+          succeeded_24h?: number
+        }
+        Update: {
+          archive_24h?: number
+          captured_at?: string
+          depth?: number
+          dlq_size?: number
+          failed_24h?: number
+          id?: string
+          oldest_age_seconds?: number
+          queue?: string
+          retried_24h?: number
+          running?: number
+          succeeded_24h?: number
+        }
+        Relationships: []
+      }
+      queue_retention_policy: {
+        Row: {
+          created_at: string
+          id: string
+          max_retry_history: number
+          queue: string
+          retain_days_failed: number
+          retain_days_succeeded: number
+          tier: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          max_retry_history?: number
+          queue: string
+          retain_days_failed?: number
+          retain_days_succeeded?: number
+          tier: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          max_retry_history?: number
+          queue?: string
+          retain_days_failed?: number
+          retain_days_succeeded?: number
+          tier?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -5621,6 +5813,7 @@ export type Database = {
       }
       workflow_runs: {
         Row: {
+          archived_at: string | null
           attempt: number
           context: Json
           created_at: string
@@ -5631,6 +5824,7 @@ export type Database = {
           last_error: string | null
           max_attempts: number
           payload: Json
+          retry_truncated_at: string | null
           scheduled_at: string
           started_at: string | null
           status: string
@@ -5640,6 +5834,7 @@ export type Database = {
           workflow_id: string
         }
         Insert: {
+          archived_at?: string | null
           attempt?: number
           context?: Json
           created_at?: string
@@ -5650,6 +5845,7 @@ export type Database = {
           last_error?: string | null
           max_attempts?: number
           payload?: Json
+          retry_truncated_at?: string | null
           scheduled_at?: string
           started_at?: string | null
           status?: string
@@ -5659,6 +5855,7 @@ export type Database = {
           workflow_id: string
         }
         Update: {
+          archived_at?: string | null
           attempt?: number
           context?: Json
           created_at?: string
@@ -5669,6 +5866,7 @@ export type Database = {
           last_error?: string | null
           max_attempts?: number
           payload?: Json
+          retry_truncated_at?: string | null
           scheduled_at?: string
           started_at?: string | null
           status?: string
@@ -6740,6 +6938,7 @@ export type Database = {
       claim_ai_jobs: {
         Args: { _limit?: number }
         Returns: {
+          archived_at: string | null
           attempt: number
           cancelled_at: string | null
           cost_units: number
@@ -6760,6 +6959,7 @@ export type Database = {
           priority: number
           progress: number
           provider: string | null
+          retry_truncated_at: string | null
           scheduled_at: string
           source: string | null
           started_at: string | null
@@ -6779,6 +6979,7 @@ export type Database = {
       claim_workflow_runs: {
         Args: { _limit?: number }
         Returns: {
+          archived_at: string | null
           attempt: number
           context: Json
           created_at: string
@@ -6789,6 +6990,7 @@ export type Database = {
           last_error: string | null
           max_attempts: number
           payload: Json
+          retry_truncated_at: string | null
           scheduled_at: string
           started_at: string | null
           status: string
@@ -6962,6 +7164,29 @@ export type Database = {
         Args: { _issue: string; _reason: string }
         Returns: string
       }
+      queue_archive_promote: {
+        Args: { _queue: string; _reason?: string; _ref_id: string }
+        Returns: undefined
+      }
+      queue_dlq_resolve: {
+        Args: { _id: string; _notes?: string }
+        Returns: undefined
+      }
+      queue_health_overview: {
+        Args: never
+        Returns: {
+          archive_24h: number
+          depth: number
+          dlq_size: number
+          failed_24h: number
+          oldest_age_seconds: number
+          queue: string
+          retried_24h: number
+          running: number
+          succeeded_24h: number
+        }[]
+      }
+      queue_purge_expired: { Args: never; Returns: Json }
       record_capability_cost: {
         Args: {
           _capability: string
