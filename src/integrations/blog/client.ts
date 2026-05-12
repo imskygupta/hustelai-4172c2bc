@@ -41,6 +41,9 @@ export const blogApi = {
   adminGenerate: (topic?: string, angle?: string, keyword?: string) =>
     call(`/blog-ai-draft`, { admin: true, method: "POST", body: JSON.stringify({ topic, angle, keyword }) }),
   seoHealth: () => call(`/blog-seo-health`, { admin: true }),
+  schedulerStats: () => call(`/blog-scheduler`, { admin: true }),
+  runScheduler: (opts: { dry_run?: boolean; publish_target?: number; generate_target?: number } = {}) =>
+    call(`/blog-scheduler`, { admin: true, method: "POST", body: JSON.stringify(opts) }),
 };
 
 export type BlogPost = {
