@@ -20,6 +20,7 @@ import { CONTRACT_TEMPLATES } from "@/lib/tools/templates";
 import { useAuth } from "@/hooks/useAuth";
 import { printWithMeta, watermarkModeForTier } from "@/lib/tools/print-meta";
 import { emitDelight, pickDelight, bumpDelightCount } from "@/lib/delight-bus";
+import { continueWorkflow } from "@/lib/nextActions/continueWorkflow";
 
 const STORAGE_KEY = "hustleai-tool-contract-v1";
 
@@ -108,6 +109,11 @@ export default function ContractGenerator() {
         afterPrint: () => {
           bumpDelightCount();
           emitDelight(pickDelight("contract_pdf"));
+          continueWorkflow({
+            trigger: "contract_exported",
+            surface: "tool.contract_generator",
+            headline: "Contract exported",
+          });
         },
       }),
     );
