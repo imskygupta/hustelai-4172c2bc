@@ -155,6 +155,12 @@ export default function DocEditor() {
         });
       } catch { /* non-fatal */ }
       toast.success("PDF exported");
+      continueWorkflow({
+        trigger: "doc_exported",
+        surface: "workspace.doc_editor",
+        headline: "Doc exported",
+        description: "Send it to a client or open another doc.",
+      });
     } catch (e: any) {
       toast.error(e?.message || "Export failed");
     } finally {
