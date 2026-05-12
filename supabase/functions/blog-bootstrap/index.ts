@@ -125,67 +125,62 @@ async function callAI(topic: { title: string; angle: string; keyword: string }) 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
 
-  const results: any[] = [];
   const { data: author } = await blog.from("blog_authors").select("id").eq("slug", "hustleai-editorial").maybeSingle();
 
-  for (const t of TOPICS) {
-    try {
-      const desiredSlug = slugify(t.title);
-      const { data: existing } = await blog.from("blog_posts").select("id, slug, status").eq("slug", desiredSlug).maybeSingle();
-      if (existing) {
-        results.push({ topic: t.title, skipped: "already_exists", slug: existing.slug, status: existing.status });
-        continue;
-      }
+  const settled = await Promise.allSettled(TOPICS.map(async (t) => {
+    const desiredSlug = slugify(t.title);
+    const { data: existing } = await blog.from("blog_posts").select("id, slug, status").eq("slug", desiredSlug).maybeSingle();
+    if (existing) return { topic: t.title, skipped: "already_exists", slug: existing.slug, status: existing.status };
 
-      const out = await callAI(t);
-      const md: string = out.body_md ?? "";
-      const hash = dedupHash((out.title ?? t.title) + " " + md.slice(0, 400));
+    const out = await callAI(t);
+    const md: string = out.body_md ?? "";
+    const hash = dedupHash((out.title ?? t.title) + " " + md.slice(0, 400));
 
-      const { data: cat } = await blog.from("blog_categories").select("id")
-        .eq("slug", out.suggested_category_slug ?? t.category).maybeSingle();
+    const { data: cat } = await blog.from("blog_categories").select("id")
+      .eq("slug", out.suggested_category_slug ?? t.category).maybeSingle();
 
-      const heroQ = out.hero_image_query || t.hero_query;
-      const hero = (out.hero_image && /^https?:\/\//.test(out.hero_image)) ? out.hero_image : unsplash(heroQ);
+    const heroQ = out.hero_image_query || t.hero_query;
+    const hero = (out.hero_image && /^https?:\/\//.test(out.hero_image)) ? out.hero_image : unsplash(heroQ);
 
-      const slug = desiredSlug;
-      const now = new Date().toISOString();
+    const now = new Date().toISOString();
 
-      const { data: post, error } = await blog.from("blog_posts").insert({
-        slug,
-        title: out.title ?? t.title,
-        subtitle: out.subtitle ?? null,
-        excerpt: out.excerpt ?? null,
-        body_md: md,
-        meta_title: out.meta_title ?? out.title ?? t.title,
-        meta_description: out.meta_description ?? out.excerpt ?? "",
-        focus_keyword: out.focus_keyword ?? t.keyword,
-        faq: out.faq ?? [],
-        cta_blocks: (out.cta_blocks ?? []).slice(0, 2),
-        category_id: cat?.id ?? null,
-        author_id: author?.id ?? null,
-        ai_generated: true,
-        ai_model: "google/gemini-2.5-pro",
-        dedup_hash: hash,
-        hero_image: hero,
-        reading_time: readingMinutes(md),
-        toc: buildToc(md),
-        status: "published",
-        published_at: now,
-      }).select().single();
-      if (error) throw error;
+    const { data: post, error } = await blog.from("blog_posts").insert({
+      slug: desiredSlug,
+      title: out.title ?? t.title,
+      subtitle: out.subtitle ?? null,
+      excerpt: out.excerpt ?? null,
+      body_md: md,
+      meta_title: out.meta_title ?? out.title ?? t.title,
+      meta_description: out.meta_description ?? out.excerpt ?? "",
+      focus_keyword: out.focus_keyword ?? t.keyword,
+      faq: out.faq ?? [],
+      cta_blocks: (out.cta_blocks ?? []).slice(0, 2),
+      category_id: cat?.id ?? null,
+      author_id: author?.id ?? null,
+      ai_generated: true,
+      ai_model: "google/gemini-2.5-flash",
+      dedup_hash: hash,
+      hero_image: hero,
+      reading_time: readingMinutes(md),
+      toc: buildToc(md),
+      status: "published",
+      published_at: now,
+    }).select().single();
+    if (error) throw error;
 
-      results.push({
-        topic: t.title,
-        slug: post.slug,
-        url: `https://blogs.hustlaiapp.in/${post.slug}`,
-        words: md.trim().split(/\s+/).filter(Boolean).length,
-        reading_time: post.reading_time,
-        category: out.suggested_category_slug,
-      });
-    } catch (e) {
-      results.push({ topic: t.title, error: String(e) });
-    }
-  }
+    return {
+      topic: t.title,
+      slug: post.slug,
+      url: `https://blogs.hustlaiapp.in/${post.slug}`,
+      words: md.trim().split(/\s+/).filter(Boolean).length,
+      reading_time: post.reading_time,
+      category: out.suggested_category_slug,
+    };
+  }));
+
+  const results = settled.map((s, i) =>
+    s.status === "fulfilled" ? s.value : { topic: TOPICS[i].title, error: String((s as PromiseRejectedResult).reason) }
+  );
 
   // Best-effort sitemap pings so Google/Bing recrawl quickly
   await Promise.allSettled([
