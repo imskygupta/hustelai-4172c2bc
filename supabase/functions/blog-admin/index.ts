@@ -208,6 +208,9 @@ Deno.serve(async (req) => {
           const { data, error } = await blog.from("blog_posts").update(payload).eq("id", payload.id).select().single();
           if (error) throw error; row = data;
           await blog.from("blog_post_revisions").insert({ post_id: row.id, revision_no: row.revision_no ?? 1, snapshot: payload, created_by: guard.userId });
+          if (row?.status === "published" && row?.slug) {
+            await pingIndexNow(row.slug, row.id);
+          }
         } else {
           const { data, error } = await blog.from("blog_posts").insert(payload).select().single();
           if (error) throw error; row = data;
