@@ -153,6 +153,7 @@ import { AppRouteShell } from "@/components/AppRouteShell";
 import { RequireAuth } from "@/components/RequireAuth";
 import { DocsSubdomainRedirect } from "@/components/DocsSubdomainRedirect";
 import { StatusSubdomainRedirect } from "@/components/StatusSubdomainRedirect";
+import { BlogSubdomainRouter, isBlogHost } from "@/components/blog/BlogSubdomainRouter";
 import { isMaintenance, MaintenancePage } from "@/components/MaintenanceGate";
 import { RootErrorFallback } from "@/components/RootErrorFallback";
 import Status from "./pages/Status";
@@ -193,6 +194,7 @@ const App = () => (
         <Sonner />
         {isMaintenance() ? <MaintenancePage /> : (
         <BrowserRouter>
+          {isBlogHost() ? <BlogSubdomainRouter /> : (<>
           <ScrollToTop />
           <MaintenanceBanner />
           <DelightToast />
@@ -388,6 +390,7 @@ const App = () => (
           </Suspense>
           </QuotaBoundary>
           <MobileBottomNav />
+          </>)}
         </BrowserRouter>
         )}
       </TooltipProvider>
