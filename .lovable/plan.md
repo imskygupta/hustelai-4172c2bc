@@ -1,118 +1,109 @@
-## Tool Unlocks & Boosts — Independent Consumable Economy
+# Multi-Database Architecture Optimization
 
-A second monetization layer running in parallel with the core tier system. Tiers continue to govern AI credits, premium models, and infra-heavy workflows. Unlocks govern lightweight tools, exports, and storage only.
+## Goal
 
-### 1. Capability Classification (metadata layer)
+Relieve the primary Supabase instance by splitting workloads across three isolated databases. Auth and money stay on Core. Telemetry moves to Analytics. Queues and delivery state move to Async. The frontend keeps using one façade — it never knows which DB serves a request.
 
-Extend `src/lib/usage/capabilities.ts` with two fields:
-- `cost_type: "ai_heavy" | "lightweight" | "export" | "storage"`
-- `boostable: boolean` (only true for `lightweight | export | storage`)
+## Today vs Target
 
-Update existing keys:
-- `lightweight`: `invoice`, `business_card`, `proposal_lite`, `contract_lite`, `portfolio_bio`, `pricing_calc`, `content_calendar`, `pomodoro` (boostable)
-- `export`: `export_pdf`, `export_docx` (boostable)
-- `storage`: new `storage_mb` (boostable)
-- `ai_heavy`: all `ai/*`, `roadmap`, `blueprint`, `hustlebot`, `resume_ai` (NOT boostable — tier-gated only)
+We already run three Supabase projects:
 
-Add `getCostType(key)` and `isBoostable(key)` helpers. `useCapability` hook returns these flags.
+- **Primary (Core)** — `vbnqaovxatucrgtnggea` — auth, profiles, subscriptions, workspaces, payments, flags.
+- **Workspace** — `utflzmecghdtcjupgdan` — Work Hub data (kept as-is, orthogonal to this plan).
+- **Community / co-located Analytics** — `qeswhaytgvosfzzgraef` — forums + analytics tables temporarily co-located.
 
-### 2. Database (new migration)
+Target after this pass:
 
-```sql
--- Daily lightweight tool limits (per tier)
-INSERT INTO tier_limits (tier, meter, feature, max_value, period) VALUES
-  ('free','lightweight','invoice',3,'day'),
-  ('pro','lightweight','invoice',20,'day'),
-  ('elite','lightweight','invoice',100,'day'),
-  ('infinity','lightweight','invoice',-1,'day'),
-  -- repeat for business_card, proposal_lite, contract_lite, portfolio_bio
-  -- storage in MB
-  ('free','storage','*',1024,'lifetime'),
-  ('pro','storage','*',2048,'lifetime'),
-  ('elite','storage','*',3072,'lifetime'),
-  ('infinity','storage','*',10240,'lifetime');
-
--- Unlock balances (rollover ledger)
-CREATE TABLE unlock_balances (
-  id uuid PK, user_id uuid, meter text, feature text DEFAULT '*',
-  remaining bigint DEFAULT 0, lifetime_purchased bigint DEFAULT 0,
-  expires_at timestamptz NULL, created_at, updated_at,
-  UNIQUE(user_id, meter, feature)
-);
-
--- Ledger (audit trail)
-CREATE TABLE unlock_ledger (
-  id uuid PK, user_id uuid, meter text, feature text,
-  delta bigint, balance_after bigint,
-  reason text, -- 'purchase' | 'consume' | 'grant' | 'expire' | 'rollover'
-  source_id uuid NULL, -- payment id / promo id
-  metadata jsonb, created_at
-);
-
--- Unlock packs catalog
-CREATE TABLE unlock_packs (
-  id uuid PK, key text UNIQUE, label text, description text,
-  meter text, feature text DEFAULT '*', units bigint,
-  price_inr numeric, validity_hours int NULL, -- null = no expiry
-  active boolean, sort_order int, created_at
-);
--- Seed: invoice_10, biz_card_10, export_10, storage_1gb_30d, lightweight_24h
+```text
+DB 1 CORE         DB 2 ANALYTICS              DB 3 ASYNC
+auth              event_log                    workflow_runs / events / failures
+profiles          analytics_events             ai_jobs / ai_job_events
+subscriptions     analytics_event_aggregates   notification_deliveries
+payments          capability_cost_ledger       broadcast_jobs
+feature_flags     usage_ledger (history)       newsletter_sends / dispatch
+integrations      audit / admin_action logs    email_logs
+clients/workspace rage_click / friction        telegram_commands / send logs
+exports metadata  notification_events
+                  feature telemetry
 ```
 
-RLS: balances/ledger user-readable own rows; admins full. Packs public read.
+Hot-path writes still hit Core first; secondary writes are fire-and-forget.
 
-### 3. RPCs
+## Routing Rules (hard)
 
-- `consume_unlock(_user, _meter, _feature, _units)` → tries unlock balance first; returns `{used_unlocks, remaining}`. SECURITY DEFINER.
-- `grant_unlocks(_user, _meter, _feature, _units, _source, _reason, _expires_at)` → admin/system insert balance + ledger row.
-- `unlock_summary(_user)` → returns balances + recent ledger for wallet UI.
+1. Auth, money, entitlements, current-day quota counters → **Core only**.
+2. Append-only telemetry, history, cost ledgers, audit → **Analytics**.
+3. Queues, retry state, delivery logs, cron checkpoints, AI job state → **Async**.
+4. **No cross-DB joins.** Issue parallel queries, merge in code. Denormalize identity (store `user_id` + tier snapshot on secondary rows).
+5. Frontend never imports secondary clients directly — it goes through edge functions or the existing `logEvent()` / `track()` helpers.
 
-### 4. Extend `consume_usage` RPC
+## Phased Migration (incremental, each phase shippable)
 
-Modify the existing function so that when `_meter IN ('lightweight','export','storage')` AND tier limit is exhausted:
-1. Check `unlock_balances` for matching row.
-2. If `remaining >= _units`: decrement, write ledger, return `{allowed:true, reason:'unlock', unlocks_remaining}`.
-3. Else: return `{allowed:false, reason:'quota_unlockable', max, used, suggest_unlock:true}`.
+### Phase 0 — Plumbing (no data move)
 
-AI meter path is unchanged — never consults unlocks.
+- Add new env/secret names alongside existing ones:
+  - `ANALYTICS_SUPABASE_URL` / `ANALYTICS_SUPABASE_SERVICE_ROLE_KEY` (already partially wired)
+  - `ASYNC_SUPABASE_URL` / `ASYNC_SUPABASE_SERVICE_ROLE_KEY` (new)
+- Extend `supabase/functions/_shared/clients.ts` with `getAsync()` + `safeAsyncInsert()` mirroring the Analytics helpers.
+- Add `src/integrations/async/client.ts` (read-only anon client, parallel to `analytics/client.ts`). Frontend will not write directly.
+- Update `mem://tech/db-routing.md` with the 3-DB matrix and Async additions.
 
-### 5. Frontend modules
+### Phase 1 — Telemetry isolation (Analytics DB)
 
-- `src/lib/unlocks/api.ts`: `getBalances()`, `getPacks()`, `purchasePack(packId)` (calls existing Cashfree edge fn with `kind:'unlock'`), `consumeUnlock()`.
-- `src/lib/unlocks/hooks.ts`: `useUnlockBalance(meter, feature)`, `useUnlockPacks()`.
-- `src/components/usage/UnlockSheet.tsx`: drawer shown when `quota_unlockable` is hit. Lists relevant packs, "Comes back in Xh" countdown, instant purchase CTA.
-- Update `QuotaBoundary` to detect `reason === 'quota_unlockable'` and route to `UnlockSheet` instead of generic `UpgradeSheet`.
-- Update `humanizeError` mapping: friendly "You've used today's free generations. Come back in {h}h or unlock 10 more instantly."
+Already mostly done. Finish:
 
-### 6. Wallet / Command Center
+- Provision a dedicated Analytics Supabase project; set `ANALYTICS_SUPABASE_*` secrets so we stop co-locating on Community.
+- Create tables on Analytics: `event_log`, `analytics_events`, `analytics_event_aggregates`, `capability_cost_ledger`, `usage_ledger`, `audit_logs`, `admin_actions`, `notification_events`, `friction_signals`.
+- Repoint `log-event`, `usage-record`, `track_event` RPC writers, `record_capability_cost`, `roll_up_analytics_events` to Analytics via `getAnalytics()`.
+- Keep a thin shim on Core that drops writes silently if Analytics is down (already in `safeAnalyticsInsert`).
+- Backfill: dual-write for 24h, then snapshot-copy historical rows, then stop Core writes.
 
-New page `src/pages/settings/Wallet.tsx` (linked from Profile quick actions + Settings nav):
-- Active balances (per meter, with rollover indicator)
-- Storage gauge ("HustleAI Cloud" branding — never "Telegram")
-- Daily resets countdown
-- Recent ledger (last 30 entries)
-- "Buy unlock pack" grid
+### Phase 2 — Queues + delivery (Async DB)
 
-Add a compact `UnlockBalanceWidget` to Dashboard alongside `OperationalUsageWidget`.
+- Create on Async: `workflow_runs`, `workflow_events`, `workflow_failures`, `ai_jobs`, `ai_job_events`, `notification_deliveries`, `broadcast_jobs`, `newsletter_sends`, `email_logs`, `telegram_commands`, `cron_checkpoints`.
+- Move the SECURITY DEFINER claim/complete RPCs (`claim_ai_jobs`, `complete_ai_job`, `fail_ai_job`, `claim_workflow_runs`, `enqueue_workflow_runs`, `enqueue_ai_job`, `replay_workflow_failure`) to Async. Keep Core wrappers that proxy via edge function for one release, then delete.
+- Update workers (`ai-job-runner`, `workflow-runner`, `telegram-send`, `newsletter-dispatch`, `email-send`) to use `getAsync()` for state and only touch Core for identity/feature checks.
+- Cron jobs (pg_cron) stay on Core but trigger edge functions; checkpoints move to Async.
 
-### 7. Storage accounting
+### Phase 3 — Resilience & monitoring
 
-- New helper `recordStorageDelta(user, mb, source)` → writes to `usage_counters` (lifetime period).
-- Wire into `export-create`, file uploads, generated_exports cleanup.
-- Cleanup job: existing `mark_expired_exports` extended to refund storage on hard-delete.
-- All UI labels say **"HustleAI Cloud"** — no Telegram references in user copy.
+- Wrap every secondary write in a `safe*Insert` helper: try once, log failure to Core `system_health` table, never throw.
+- Add a `db_ops_metrics` table on Analytics: `db_target`, `op`, `count`, `failures`, `bucket_minute`. Increment via a tiny middleware in `_shared/clients.ts`.
+- Admin Mission Control gets a "DB Health" widget reading: ops/min per DB, write failure rate, queue depth (Async), telemetry lag (Analytics).
+- Add a circuit breaker: if Analytics or Async write failure > 20% over 5 min, downgrade to in-memory queue + alert.
 
-### 8. Purchase flow
+### Phase 4 — Cleanup
 
-Reuse Cashfree edge function. New edge function `unlock-purchase-confirm` (webhook side-effect): on payment success with `metadata.kind='unlock'`, call `grant_unlocks()` with pack contents.
+- Drop migrated tables on Core only after 7 days of clean dual-read parity.
+- Remove proxy RPCs.
+- Final memory update + routing matrix freeze.
 
-### 9. Files
+## Frontend Contract (unchanged)
 
-**New**: migration, `src/lib/unlocks/{api,hooks,types}.ts`, `src/components/usage/UnlockSheet.tsx`, `src/components/dashboard/UnlockBalanceWidget.tsx`, `src/pages/settings/Wallet.tsx`, `supabase/functions/unlock-purchase-confirm/index.ts`, `mem/features/tool-unlocks.md`.
+- `supabase` import still resolves to Core.
+- `track()`, `logEvent()`, `consumeUsage()`, `enqueueAiJob()` keep their signatures. Only their underlying transport changes.
+- No component or page edits required.
 
-**Edited**: `src/lib/usage/capabilities.ts` (cost_type/boostable), `src/lib/usage/hooks.ts`, `src/lib/usage/guards.ts`, `src/components/usage/QuotaBoundary.tsx`, `src/lib/errors/sanitize.ts`, `src/App.tsx` (route), `src/pages/Dashboard.tsx` (widget), `src/pages/Profile.tsx` (link), migration extending `consume_usage`.
+## Risks & Mitigations
 
-### Out of scope (explicit)
+- **Risk:** RPC moves break callers. **Mitigation:** keep Core proxy RPCs for one release; feature-flag the cutover per RPC.
+- **Risk:** Cross-DB FK loss on `user_id`. **Mitigation:** denormalize email/tier; nightly orphan sweep.
+- **Risk:** Cost of a 4th project. **Mitigation:** Phase 1 already paid; Phase 2 needs one new project (Async).
+- **Risk:** Auth tokens reused across DBs. **Mitigation:** secondary clients use `persistSession: false` + their own `storageKey` (already pattern in `analytics/client.ts`).
 
-- No changes to AI quota path, `consume_ai_quota`, roadmap/blueprint/hustlebot limits, or premium model gating.
-- No streak/referral/promo flows yet — schema supports them via `unlock_ledger.reason` + `source_id`, surfaced in v2.
+## Deliverables Checklist
+
+- [ ] `ASYNC_SUPABASE_*` secrets requested
+- [ ] `getAsync()` + `safeAsyncInsert()` in `_shared/clients.ts`
+- [ ] `src/integrations/async/client.ts`
+- [ ] Analytics project provisioned (stop co-locating on Community)
+- [ ] Phase 1 dual-write → cutover
+- [ ] Phase 2 queue tables + worker repoint
+- [ ] DB Health widget in Mission Control
+- [ ] `mem://tech/db-routing.md` updated to 3-DB matrix
+
+## Out of Scope
+
+- Workspace DB restructuring (already isolated).
+- Schema changes to Core auth/payments tables.
+- Any frontend redesign.
