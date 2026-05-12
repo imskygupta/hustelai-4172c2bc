@@ -1,60 +1,127 @@
-# Editorial Command Center
+## Product Narrative Engine — Architecture Plan
 
-Turn `BlogOperations` into a real newsroom + DevOps console for `blogs.hustlaiapp.in`. Build on the existing `blog-admin`, `blog-intelligence`, `blog-seo-health`, `blog-link-engine`, `indexnow`, and `blog-image-pipeline` edge functions plus the `blog_posts` table on the blog Supabase project — no schema sprawl, just one new analytics table.
+Evolves the blog into a product-aware publishing system with a centralized Tool Registry, Knowledge Graph, and DB-isolated pipeline. **No new blog IO on primary DB.**
 
-## Scope
+---
 
-A single new admin route `src/pages/admin/EditorialCenter.tsx` (linked from the existing Blog Operations nav) with 10 panels, backed by one new edge function `editorial-center` that aggregates all signals server-side.
+### 1. Multi-DB Layout (no primary writes)
 
-## Panels
+| DB | Purpose | Client |
+|---|---|---|
+| **BLOG_DB** (existing `BLOG_SUPABASE_URL`) | tool_registry, knowledge_graph, generation_runs, snapshots | `blog` service-role in edge fns |
+| **MEDIA_DB** (reuse BLOG bucket `tool-media`) | screenshots, icons, hero variants, WebP | Storage on BLOG project |
+| **EMBEDDINGS_DB** (BLOG, pgvector) | tool + chunk embeddings (3072-dim Gemini) | same blog client |
+| **ANALYTICS_DB** | run telemetry, ad-safety scores | `getAnalytics()` |
+| **PRIMARY_DB** | UNTOUCHED for blog work | — |
 
-1. **Editorial Pipeline** — Kanban with stages: Ideas, Drafting, Internal Review, Scheduled, Published, Needs Refresh, Decaying Traffic. Cards show stage age, owner, target keyword, last action.
-2. **Topic Intelligence** — Highest CTR, fastest-growing keywords, most-linked, orphan posts, no-impression-after-14d, high-impression-low-CTR. Sourced from GSC table + link graph from `blog-link-engine`.
-3. **SEO Decay Detection** — Per-post checks: ranking drops, stale `updated_at`, outdated screenshot heuristics, thin content (< 600 words), low internal link count, missing schema, missing FAQ. Severity badges.
-4. **AI Refresh Engine** — Per-post quick actions calling `blog-admin?action=ai_refresh` with intent: `refresh | rewrite_intro | improve_title | regen_meta | add_faq | expand_depth | inject_cta`. Diff preview before save.
-5. **Authority Layer** — Cluster, semantic relevance score (Jaccard via link engine), authority score (PageRank-lite), backlink targets, mini internal link graph (SVG).
-6. **Humanization Layer** — Pre-publish "humanize" pass: sentence variance, repetitive phrase scrub, filler removal, operational tone injection. New `blog-admin?action=humanize` op using Lovable AI.
-7. **Programmatic SEO Guardrails** — Duplicate-intent detector (title + focus_keyword overlap), cannibalization (same query top page conflicts), keyword stuffing %, over-optimized anchor ratio, thin pages.
-8. **Monetization Readiness** — Per-article ad-safe score, affiliate-ready block detection, CTA placement score, RPM estimate (heuristic from category × wordcount), scroll-depth estimate.
-9. **Indexing Ops** — Crawl/index status pulled from `indexnow_log` + live HEAD probes against `site:` queries to Bing/Yandex. Last IndexNow ping, manual recrawl button (re-enqueue).
-10. **Traffic Intelligence** — Impressions, CTR, top queries, entry pages, time on page, conversions to HustleAI. New table `editorial_traffic_snapshots` (post_id, day, impressions, clicks, ctr, position, queries jsonb, conv_clicks). Manual ingest endpoint for GSC CSV upload, plus daily aggregator.
+Add migration **on BLOG project only** (separate file, executed via blog admin migration script — not the primary `supabase/migrations/`):
+- `tool_registry`, `tool_relationships`, `tool_media`, `feature_snapshots`, `generation_runs`, `generation_events`, `narrative_coverage`, plus `vector(3072)` columns + HNSW indexes.
 
-## Technical Plan
+### 2. Tool Registry Engine
 
-### Backend
-- **New edge function**: `supabase/functions/editorial-center/index.ts`
-  - `?action=overview` — returns pipeline buckets + decay scores + authority + monetization in one batched payload (admin-gated).
-  - `?action=topic_intelligence` — joins traffic snapshots with posts.
-  - `?action=guardrails` — runs duplicate / cannibalization / stuffing scans.
-  - `?action=indexing_status&slug=…` — live ping check.
-  - `?action=ingest_traffic` — POST GSC CSV rows into snapshots table.
-- **Extend `blog-admin`** with `ai_refresh` (subtypes above) and `humanize` actions, both calling Lovable AI gateway.
-- **Migration on blog DB** (3rd Supabase project — same as other blog tables):
-  ```
-  editorial_traffic_snapshots(post_id, day, impressions, clicks, ctr, position, queries jsonb, conv_clicks)
-  editorial_pipeline_state(post_id, stage, owner, notes, moved_at)
-  ```
-  RLS: service-role only (admin function reads via service key like other blog tables).
+New edge function **`tool-registry-sync`** (BLOG-scoped):
+- Reads a static manifest `supabase/functions/tool-registry-sync/manifest.ts` derived from `src/lib/tools/templates.ts`, `src/components/tools/`, `AppSidebar`, feature flags catalog, workflows registry, AI tools grid.
+- Diffs against `tool_registry.last_synced_at` + content hash; only upserts changed rows.
+- Generates Gemini embeddings for new/changed tools (batched).
+- Recomputes relationships via cosine similarity + manifest-declared edges.
 
-### Frontend
-- `src/pages/admin/EditorialCenter.tsx` — single page, 10 collapsible sections, dark editorial theme using existing tokens. Uses `framer-motion` for activity-feed pulses (already in deps).
-- `src/components/admin/editorial/` — `PipelineBoard.tsx`, `TopicIntelPanel.tsx`, `DecayList.tsx`, `RefreshActions.tsx`, `AuthorityCard.tsx`, `HumanizePreview.tsx`, `GuardrailsPanel.tsx`, `MonetizationCard.tsx`, `IndexingOps.tsx`, `TrafficPanel.tsx`.
-- Add link in `BlogOperations.tsx` header → "Editorial Center".
-- Extend `src/integrations/blog/client.ts` with typed wrappers.
+### 3. Weekly Auto-Sync
 
-### Design
-- Dark surface `bg-card` with `border-border/50`, status chips reusing existing `Badge` variants, monospaced metrics (`font-mono text-xs`), subtle pulse via `motion.div` on live items, no neon — newsroom seriousness.
+`pg_cron` on BLOG DB → calls `tool-registry-sync?mode=incremental` weekly. Manual full-sync button in admin. Admin can also trigger per-category resync.
 
-### Out of scope (explicit)
-- Real-time GSC OAuth ingestion — we accept CSV upload + manual paste for v1; scheduled OAuth sync can come later.
-- Full backlink crawler — we surface user-supplied backlink targets and internal graph only.
-- Screenshot freshness via vision — heuristic on `hero_image` URL age only.
+### 4. Knowledge Graph
 
-## Deliverables
-1. Migration adding 2 tables on blog DB.
-2. New `editorial-center` edge function.
-3. Extensions to `blog-admin` (refresh/humanize ops).
-4. New `EditorialCenter.tsx` page + 10 sub-components.
-5. Nav entry from Blog Operations.
+`tool_relationships(source_id, target_id, kind, weight)` — kinds: `workflow_pair`, `category_sibling`, `semantic`, `funnel_next`. Exposed via `/knowledge-graph?action=neighbors&slug=`.
 
-Approve and I'll build it end-to-end.
+### 5. Content Injection Engine
+
+Rewrite **`blog-ai-draft`** flow:
+1. Resolve topic/keyword.
+2. Call `knowledge-graph` → top-K tools + workflows + CTAs.
+3. Build "context bundle" injected into Gemini system prompt as structured JSON (NOT prose).
+4. Post-process: replace `{{tool:slug}}` placeholders with internal links + cards; insert "Recommended workflow stack" block; emit anchor diversity log.
+
+### 6. Tool Media Library
+
+New edge fn **`tool-media-pipeline`**:
+- Lazy: on first reference in a draft, enqueue screenshot via existing image gen → store WebP in `tool-media` bucket.
+- Regeneration queue table; cap 10/day; cache forever until manual invalidate.
+
+### 7. Feature Snapshot Engine
+
+`feature_snapshots(taken_at, kind, json_graph, embedding)` — taken weekly. AI queries the latest snapshot rather than re-scanning.
+
+### 8. Live Generation UI
+
+`generation_runs` + `generation_events` (BLOG DB) streamed via Supabase realtime to a new admin panel **`ProductNarrativeOps`**. Stages: `keyword → graph_query → tool_resolution → outline → draft → links → cta → hero → seo → indexnow → publish`. Terminal feed with status chips.
+
+### 9. Ad / Monetization Readiness
+
+Per-post: `content_quality`, `thin_content`, `ad_safe`, `commercial_intent`, `engagement_depth`, `rpm_estimate`, `affiliate_slots`, `cta_heatmap` — computed in `editorial-center` on publish.
+
+### 10. Admin Experience
+
+New routes inside admin (Content & Growth group):
+- **`/admin/blog/registry`** — tool registry table + sync health + orphan/missing detection.
+- **`/admin/blog/graph`** — relationships viewer (force-graph) + cluster map.
+- **`/admin/blog/narrative`** — live generation feed + narrative coverage %.
+- **`/admin/blog/media`** — tool media library (already exists, extend).
+
+Sidebar additions in `AdminDashboard.tsx`.
+
+### 11. Performance Rules
+
+- Diff sync (content hash per tool).
+- Embeddings only on hash change.
+- Bucket-level WebP, lazy generation queue.
+- Realtime channel scoped to current run id.
+- All scans hit BLOG DB only — primary DB unchanged.
+
+### 12. AI Writing Quality
+
+System prompt updated with: "operational field notes; cite specific HustleAI tools from the provided context bundle; no fluff list; show one tactical workflow stack."
+
+---
+
+### File Plan (high-signal subset)
+
+**Edge functions (new, BLOG-scoped):**
+- `supabase/functions/tool-registry-sync/index.ts` (+ `manifest.ts`)
+- `supabase/functions/knowledge-graph/index.ts`
+- `supabase/functions/tool-media-pipeline/index.ts`
+- `supabase/functions/narrative-generate/index.ts` (replaces inline AI draft pipeline; orchestrates stages, writes `generation_events`)
+
+**Edge functions (edited):**
+- `blog-ai-draft` → thin wrapper that enqueues `narrative-generate`.
+- `editorial-center` → adds monetization scoring + narrative coverage endpoints.
+
+**BLOG DB migration (new file under `supabase/migrations/`, but every statement targets BLOG schema via service-role client at runtime — NOT primary):** included as SQL in a one-shot bootstrap edge fn `narrative-bootstrap` so the primary migration runner stays untouched.
+
+**Frontend (admin only):**
+- `src/pages/admin/ProductRegistry.tsx`
+- `src/pages/admin/KnowledgeGraph.tsx`
+- `src/pages/admin/NarrativeOps.tsx` (live terminal feed)
+- `src/integrations/blog/client.ts` — add `registry*`, `graph*`, `narrative*` methods
+- `src/App.tsx`, `src/pages/AdminDashboard.tsx` — register routes + sidebar entries
+
+**Cron (BLOG DB):**
+- Weekly `tool-registry-sync?mode=incremental`
+- Daily `tool-media-pipeline?action=drain_queue`
+- Hourly `narrative-generate?action=process_queue`
+
+---
+
+### Scope of this implementation pass
+
+Given the size, I will ship in **Phase 1** (this turn):
+1. BLOG DB schema bootstrap (`narrative-bootstrap` fn + invoke-once endpoint).
+2. `tool-registry-sync` with manifest.
+3. `knowledge-graph` neighbors + embeddings.
+4. `narrative-generate` orchestrator with live `generation_events` stream.
+5. Admin panels: ProductRegistry + KnowledgeGraph + NarrativeOps.
+6. Sidebar + route wiring.
+7. `blog-ai-draft` rewired to call `narrative-generate`.
+
+Phase 2 (follow-up turn after you approve Phase 1): media pipeline auto-screenshots, monetization scoring expansion, force-graph viewer polish, weekly cron registration.
+
+Confirm and I'll execute Phase 1.
