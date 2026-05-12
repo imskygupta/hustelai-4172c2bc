@@ -19,7 +19,7 @@ import Dashboard from "./pages/Dashboard";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Unsubscribe from "./pages/Unsubscribe";
-import Blog from "./pages/Blog";
+import BlogRedirect from "./pages/BlogRedirect";
 import Reviews from "./pages/Reviews";
 // Admin pages are lazy-loaded — they sit off the user critical path
 const AdminLogin = lazy(() => import("./pages/AdminLogin"));
@@ -254,7 +254,8 @@ const App = () => (
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/unsubscribe" element={<Unsubscribe />} />
-            <Route path="/blog" element={<Blog />} />
+            <Route path="/blog" element={<BlogRedirect />} />
+            <Route path="/blog/*" element={<BlogRedirect />} />
             <Route path="/reviews" element={<Reviews />} />
             {/* Community removed (Nov 2026 pivot to pure SaaS / CRM). Redirect to dashboard. */}
             <Route path="/community" element={<Navigate to="/dashboard" replace />} />
