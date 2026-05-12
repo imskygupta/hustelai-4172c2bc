@@ -131,15 +131,14 @@ function PostCard({ post, priority, isNew }: { post: any; priority?: boolean; is
     <article>
       <Link to={`/${post.slug}`} className="block group">
         <div className="aspect-[16/10] rounded-md overflow-hidden bg-muted/40 mb-4">
-          {post.hero_image && (
-            <img
-              src={post.hero_image}
-              alt={post.title}
-              loading={priority ? "eager" : "lazy"}
+          <img
+            src={heroFor(post)}
+            alt={post.title}
+            loading={priority ? "eager" : "lazy"}
               decoding="async"
+              onError={(e) => onImgError(e, post)}
               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
             />
-          )}
         </div>
         <div className="text-[11px] uppercase tracking-wide text-muted-foreground mb-1.5 flex items-center gap-2">
           <span>{post.blog_categories?.title ?? "Note"}</span>
