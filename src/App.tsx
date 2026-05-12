@@ -169,6 +169,7 @@ const AdminAiJobs = lazy(() => import("./pages/admin/AiJobs"));
 const AdminFeatureFlags = lazy(() => import("./pages/admin/FeatureFlags"));
 const RuntimeAnalytics = lazy(() => import("./pages/admin/RuntimeAnalytics"));
 const Automations = lazy(() => import("./pages/admin/Automations"));
+const BlogAdmin = lazy(() => import("./pages/admin/BlogAdmin"));
 import { MaintenanceBanner } from "./components/flags/FeatureGate";
 import TelegramLanding from "./pages/marketing/TelegramLanding";
 import { Navigate } from "react-router-dom";
@@ -385,6 +386,7 @@ const App = () => (
             <Route path="/admin/automations" element={<Automations />} />
             <Route path="/admin/payments-review" element={<PaymentsReview />} />
             <Route path="/admin/notifications" element={<AdminNotifications />} />
+            <Route path="/admin/blog" element={<BlogAdmin />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           </Suspense>
