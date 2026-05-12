@@ -52,6 +52,10 @@ export const blogApi = {
     call(`/blog-image-pipeline?action=regenerate`, { admin: true, method: "POST", body: JSON.stringify({ post_id, ...opts }) }),
   migrateHeroes: (limit = 25) =>
     call(`/blog-image-pipeline?action=migrate`, { admin: true, method: "POST", body: JSON.stringify({ limit }) }),
+
+  // editorial intelligence
+  intelligence: () => call(`/blog-intelligence?action=overview`, { admin: true }),
+  refreshTrends: () => call(`/blog-intelligence?action=refresh_trends`, { admin: true, method: "POST" }),
 };
 
 export type BlogPost = {
