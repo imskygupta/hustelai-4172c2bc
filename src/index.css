@@ -240,3 +240,57 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* ============================================================
+   Blog editorial typography (blogs.hustlaiapp.in)
+   Goals: high readability, low CLS, premium feel, ad-friendly.
+   ============================================================ */
+.prose-blog {
+  color: hsl(var(--foreground));
+  font-size: 1.0625rem;
+  line-height: 1.75;
+  font-family: ui-serif, Georgia, "Times New Roman", serif;
+}
+.prose-blog h2 {
+  font-family: ui-serif, Georgia, "Times New Roman", serif;
+  font-size: 1.6rem;
+  line-height: 1.25;
+  margin: 2.4rem 0 0.85rem;
+  letter-spacing: -0.01em;
+  scroll-margin-top: 80px;
+}
+.prose-blog h3 {
+  font-size: 1.225rem;
+  line-height: 1.3;
+  margin: 1.8rem 0 0.6rem;
+  font-weight: 600;
+  scroll-margin-top: 80px;
+}
+.prose-blog p { margin: 0 0 1.15rem; }
+.prose-blog a { text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; text-decoration-color: hsl(var(--foreground) / 0.35); }
+.prose-blog a:hover { text-decoration-color: hsl(var(--foreground)); }
+.prose-blog ul { padding-left: 1.25rem; margin: 0 0 1.15rem; }
+.prose-blog ul li { list-style: disc; margin-bottom: 0.35rem; }
+.prose-blog blockquote {
+  border-left: 3px solid hsl(var(--foreground) / 0.3);
+  padding: 0.25rem 0 0.25rem 1rem;
+  margin: 1.4rem 0;
+  color: hsl(var(--muted-foreground));
+  font-style: italic;
+}
+.prose-blog code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  background: hsl(var(--muted) / 0.5);
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+  font-size: 0.9em;
+}
+.prose-blog img {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin: 1.6rem 0;
+  background: hsl(var(--muted) / 0.4);
+  display: block;
+}
+.prose-blog strong { font-weight: 600; color: hsl(var(--foreground)); }

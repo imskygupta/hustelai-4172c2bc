@@ -153,6 +153,7 @@ import { AppRouteShell } from "@/components/AppRouteShell";
 import { RequireAuth } from "@/components/RequireAuth";
 import { DocsSubdomainRedirect } from "@/components/DocsSubdomainRedirect";
 import { StatusSubdomainRedirect } from "@/components/StatusSubdomainRedirect";
+import { BlogSubdomainRouter, isBlogHost } from "@/components/blog/BlogSubdomainRouter";
 import { isMaintenance, MaintenancePage } from "@/components/MaintenanceGate";
 import { RootErrorFallback } from "@/components/RootErrorFallback";
 import Status from "./pages/Status";
@@ -168,6 +169,7 @@ const AdminAiJobs = lazy(() => import("./pages/admin/AiJobs"));
 const AdminFeatureFlags = lazy(() => import("./pages/admin/FeatureFlags"));
 const RuntimeAnalytics = lazy(() => import("./pages/admin/RuntimeAnalytics"));
 const Automations = lazy(() => import("./pages/admin/Automations"));
+const BlogAdmin = lazy(() => import("./pages/admin/BlogAdmin"));
 import { MaintenanceBanner } from "./components/flags/FeatureGate";
 import TelegramLanding from "./pages/marketing/TelegramLanding";
 import { Navigate } from "react-router-dom";
@@ -193,6 +195,7 @@ const App = () => (
         <Sonner />
         {isMaintenance() ? <MaintenancePage /> : (
         <BrowserRouter>
+          {isBlogHost() ? <BlogSubdomainRouter /> : (<>
           <ScrollToTop />
           <MaintenanceBanner />
           <DelightToast />
@@ -383,11 +386,13 @@ const App = () => (
             <Route path="/admin/automations" element={<Automations />} />
             <Route path="/admin/payments-review" element={<PaymentsReview />} />
             <Route path="/admin/notifications" element={<AdminNotifications />} />
+            <Route path="/admin/blog" element={<BlogAdmin />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           </Suspense>
           </QuotaBoundary>
           <MobileBottomNav />
+          </>)}
         </BrowserRouter>
         )}
       </TooltipProvider>
