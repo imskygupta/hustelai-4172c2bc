@@ -129,26 +129,8 @@ export default function Index() {
 
       <TrustStrip />
 
-      {/* Stats */}
-      <section className="py-10 md:py-12 border-y border-slate-200 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
-            {stats.map((stat, i) => (
-              <motion.div
-                key={stat.label}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.1 }}
-                viewport={{ once: true }}
-                className="text-center"
-              >
-                <div className="text-2xl md:text-4xl font-display font-semibold text-slate-900 tracking-tight">{stat.value}</div>
-                <div className="text-xs md:text-sm text-slate-500 mt-1">{stat.label}</div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* Operational social proof — async ops, exports, Telegram pings */}
+      <OpsStats />
 
       {/* Platform story */}
       <UnifiedWorkspaceSection />
