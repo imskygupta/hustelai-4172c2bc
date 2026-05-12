@@ -44,6 +44,14 @@ export const blogApi = {
   schedulerStats: () => call(`/blog-scheduler`, { admin: true }),
   runScheduler: (opts: { dry_run?: boolean; publish_target?: number; generate_target?: number } = {}) =>
     call(`/blog-scheduler`, { admin: true, method: "POST", body: JSON.stringify(opts) }),
+
+  // hero image pipeline
+  imageStatus: () => call(`/blog-image-pipeline?action=status`, { admin: true }),
+  ensureBucket: () => call(`/blog-image-pipeline?action=ensure_bucket`, { admin: true }),
+  regenerateHero: (post_id: string, opts: { custom_url?: string; force?: boolean } = {}) =>
+    call(`/blog-image-pipeline?action=regenerate`, { admin: true, method: "POST", body: JSON.stringify({ post_id, ...opts }) }),
+  migrateHeroes: (limit = 25) =>
+    call(`/blog-image-pipeline?action=migrate`, { admin: true, method: "POST", body: JSON.stringify({ limit }) }),
 };
 
 export type BlogPost = {
