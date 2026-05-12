@@ -6,6 +6,8 @@ import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 
 const BING_VERIFICATION = "9C4743D0C435C4CF0059E56C66972551";
+const YANDEX_FILE = "yandex_67f758ee3c9bd150.html";
+const YANDEX_TOKEN = "67f758ee3c9bd150";
 const VERIFY_DOMAINS = [
   { label: "hustlaiapp.in", url: "https://hustlaiapp.in" },
   { label: "blogs.hustlaiapp.in", url: "https://blogs.hustlaiapp.in" },
@@ -48,21 +50,26 @@ export default function BlogSeoHealth() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>("all");
   const [severity, setSeverity] = useState<string>("all");
-  const [verify, setVerify] = useState<Record<string, "checking" | "ok" | "missing" | "error">>({});
+  type VStatus = "checking" | "ok" | "missing" | "error";
+  const [verify, setVerify] = useState<Record<string, { bing: VStatus; yandex: VStatus }>>({});
 
   const checkVerification = async () => {
     const next: typeof verify = {};
-    for (const d of VERIFY_DOMAINS) next[d.label] = "checking";
+    for (const d of VERIFY_DOMAINS) next[d.label] = { bing: "checking", yandex: "checking" };
     setVerify(next);
     await Promise.all(VERIFY_DOMAINS.map(async d => {
+      // Bing meta lives in the SPA shell
       try {
         const r = await fetch(`${d.url}/?_v=${Date.now()}`, { mode: "cors" });
         const html = await r.text();
-        next[d.label] = html.includes(BING_VERIFICATION) ? "ok" : "missing";
-      } catch {
-        // CORS-blocked fetches still tell us nothing — mark as unknown but not an error
-        next[d.label] = "error";
-      }
+        next[d.label].bing = html.includes(BING_VERIFICATION) ? "ok" : "missing";
+      } catch { next[d.label].bing = "error"; }
+      // Yandex verification file must serve as static HTML, not the SPA fallback
+      try {
+        const r = await fetch(`${d.url}/${YANDEX_FILE}?_v=${Date.now()}`, { mode: "cors" });
+        const html = await r.text();
+        next[d.label].yandex = r.ok && html.includes(YANDEX_TOKEN) && !html.includes("<div id=\"root\"") ? "ok" : "missing";
+      } catch { next[d.label].yandex = "error"; }
       setVerify({ ...next });
     }));
   };
@@ -171,31 +178,36 @@ export default function BlogSeoHealth() {
             <div className="font-medium text-sm">Webmaster verification</div>
             <Button size="sm" variant="ghost" onClick={checkVerification}>Re-check</Button>
           </div>
-          <div className="space-y-2 text-sm">
+          <div className="space-y-3 text-sm">
             {VERIFY_DOMAINS.map(d => {
-              const s = verify[d.label] ?? "checking";
-              const tone = s === "ok" ? "secondary" : s === "missing" ? "destructive" : "outline";
-              const label = s === "ok" ? "Bing meta found"
-                : s === "missing" ? "Meta tag missing"
-                : s === "error" ? "Could not verify (CORS)"
-                : "Checking…";
+              const s = verify[d.label] ?? { bing: "checking" as const, yandex: "checking" as const };
+              const chip = (st: "checking" | "ok" | "missing" | "error", okText: string) => {
+                const tone = st === "ok" ? "secondary" : st === "missing" ? "destructive" : "outline";
+                const text = st === "ok" ? okText
+                  : st === "missing" ? "Missing"
+                  : st === "error" ? "Cannot verify (CORS)"
+                  : "Checking…";
+                return <Badge variant={tone as any} className="text-[11px]">{text}</Badge>;
+              };
               return (
-                <div key={d.label} className="flex items-center gap-2">
+                <div key={d.label} className="flex flex-wrap items-center gap-2">
                   <span className="text-muted-foreground w-44 shrink-0 text-xs uppercase tracking-wide">{d.label}</span>
-                  <Badge variant={tone as any} className="text-[11px]">{label}</Badge>
-                  <a href={d.url} target="_blank" rel="noopener" className="text-xs underline text-muted-foreground hover:text-foreground ml-auto">Open</a>
+                  <span className="text-[11px] text-muted-foreground">Bing</span>{chip(s.bing, "Meta found")}
+                  <span className="text-[11px] text-muted-foreground ml-2">Yandex</span>{chip(s.yandex, "File served")}
+                  <a href={`${d.url}/${YANDEX_FILE}`} target="_blank" rel="noopener" className="text-xs underline text-muted-foreground hover:text-foreground ml-auto">Yandex file</a>
                 </div>
               );
             })}
           </div>
           <div className="grid sm:grid-cols-2 gap-2 mt-4 pt-4 border-t border-border/40 text-sm">
-            <a className="underline" href="https://www.bing.com/webmasters/" target="_blank" rel="noopener">Bing Webmaster Tools →</a>
             <a className="underline" href="https://search.google.com/search-console" target="_blank" rel="noopener">Google Search Console →</a>
+            <a className="underline" href="https://www.bing.com/webmasters/" target="_blank" rel="noopener">Bing Webmaster Tools →</a>
+            <a className="underline" href="https://webmaster.yandex.com/sites/" target="_blank" rel="noopener">Yandex Webmaster →</a>
             {data?.helpers.robots_url && <a className="underline" href={data.helpers.robots_url} target="_blank" rel="noopener">robots.txt →</a>}
             {data?.helpers.sitemap_url && <a className="underline" href={data.helpers.sitemap_url} target="_blank" rel="noopener">sitemap.xml →</a>}
           </div>
           <p className="text-[11px] text-muted-foreground mt-3">
-            Verification meta <code>msvalidate.01</code> ships in <code>index.html</code> and renders for every host the SPA serves.
+            Bing meta <code>msvalidate.01</code> ships in <code>index.html</code>; Yandex uses the static file <code>/{YANDEX_FILE}</code>. Both are served on every host the SPA deploys to.
           </p>
         </Card>
 
