@@ -13,11 +13,13 @@ export interface BlogSEOProps {
   publishedAt?: string;
   updatedAt?: string;
   author?: string;
+  /** Hero image to <link rel="preload"> for LCP. */
+  preloadImage?: string;
 }
 
 export function BlogSEO({
   title, description, path = "", image, noindex = false, type = "website",
-  jsonLd, publishedAt, updatedAt, author,
+  jsonLd, publishedAt, updatedAt, author, preloadImage,
 }: BlogSEOProps) {
   const url = `${BLOG_SITE}${path}`;
   const blocks = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
@@ -28,6 +30,7 @@ export function BlogSEO({
       <title>{safeTitle}</title>
       <meta name="description" content={safeDesc} />
       <link rel="canonical" href={url} />
+      {preloadImage && <link rel="preload" as="image" href={preloadImage} {...({ fetchpriority: "high" } as any)} />}
       {noindex && <meta name="robots" content="noindex,nofollow" />}
       <meta property="og:title" content={safeTitle} />
       <meta property="og:description" content={safeDesc} />

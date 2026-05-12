@@ -21,7 +21,7 @@ async function call<T = any>(path: string, init?: RequestInit & { admin?: boolea
 }
 
 export const blogApi = {
-  feed: (params: { category?: string; tag?: string; limit?: number; offset?: number } = {}) => {
+  feed: (params: { category?: string; tag?: string; limit?: number; offset?: number; mode?: "cluster" } = {}) => {
     const q = new URLSearchParams();
     Object.entries(params).forEach(([k, v]) => v != null && q.set(k, String(v)));
     return call(`/blog-feed?${q}`);

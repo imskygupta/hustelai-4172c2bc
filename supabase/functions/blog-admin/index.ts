@@ -73,6 +73,22 @@ async function validateForPublish(post: any): Promise<string[]> {
   if (h1 > 0) issues.push("Body must not contain H1 (#). Use H2 (##) and H3 (###).");
   if (h2 < 2) issues.push("Need at least 2 H2 sections (##) for structure.");
 
+  // Unique heading anchors (avoid duplicate TOC ids)
+  const headings = lines
+    .map(l => l.match(/^#{2,3}\s+(.+)$/))
+    .filter(Boolean)
+    .map((m: any) => m[1].toLowerCase().replace(/[^a-z0-9\s-]/g, "").replace(/\s+/g, "-"));
+  const seen = new Set<string>();
+  for (const a of headings) {
+    if (seen.has(a)) { issues.push(`Duplicate heading slug "${a}". Headings must be unique.`); break; }
+    seen.add(a);
+  }
+
+  // Internal linking presence: encourage at least 1 internal link to hustlaiapp.in or relative
+  const links = [...md.matchAll(/\]\(([^)\s]+)\)/g)].map(m => m[1]);
+  const internal = links.filter(h => /^\//.test(h) || /(^|\.)hustlaiapp\.in/.test(h));
+  if (internal.length < 1) issues.push("Add at least 1 internal link to a HustleAI workflow, tool, or related note.");
+
   // Image alt enforcement
   const imgs = [...md.matchAll(/!\[([^\]]*)\]\(([^)]+)\)/g)];
   for (const m of imgs) {

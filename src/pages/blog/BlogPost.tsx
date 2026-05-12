@@ -5,6 +5,8 @@ import { BlogShell } from "@/components/blog/BlogShell";
 import { BlogSEO } from "@/components/blog/BlogSEO";
 import { AdSlot } from "@/components/blog/AdSlot";
 import { renderMarkdown, buildArticleJsonLd, buildFaqJsonLd } from "@/lib/blog-md";
+import { extractEditorialMeta } from "@/lib/blog-meta";
+import { injectInternalLinks, buildLinkTargets } from "@/lib/blog-internal-links";
 
 export default function BlogPost() {
   const { slug = "" } = useParams();
@@ -44,7 +46,18 @@ export default function BlogPost() {
   }
 
   const { post, tags = [], related = [], prev, next, workflows = [], tools = [] } = data;
-  const html = renderMarkdown(post.body_md ?? "");
+  const { meta: editorial, body } = extractEditorialMeta(post.body_md ?? "");
+  const rawHtml = renderMarkdown(body);
+  const html = injectInternalLinks(
+    rawHtml,
+    buildLinkTargets({
+      related,
+      category: post.blog_categories,
+      workflows,
+      tools,
+    }),
+    { max: 6 },
+  );
   const articleLd = buildArticleJsonLd(post, post.blog_authors);
   const faqLd = buildFaqJsonLd(post.faq);
   const updated = post.updated_at && post.published_at && new Date(post.updated_at).getTime() - new Date(post.published_at).getTime() > 86400000;
@@ -56,6 +69,7 @@ export default function BlogPost() {
         description={post.meta_description || post.excerpt || ""}
         path={`/${post.slug}`}
         image={post.hero_image}
+        preloadImage={post.hero_image}
         type="article"
         publishedAt={post.published_at}
         updatedAt={post.updated_at}
@@ -91,6 +105,30 @@ export default function BlogPost() {
             </>
           )}
         </div>
+
+        {(editorial.reviewed_by || editorial.difficulty || editorial.setup_time || editorial.notes || editorial.examples) && (
+          <aside className="mt-6 rounded-md border border-border/60 bg-muted/20 px-4 py-3 text-sm">
+            <div className="grid sm:grid-cols-2 gap-x-6 gap-y-2">
+              {editorial.reviewed_by && (
+                <div><span className="text-muted-foreground">Reviewed by</span> <span className="font-medium">{editorial.reviewed_by}</span></div>
+              )}
+              {editorial.difficulty && (
+                <div><span className="text-muted-foreground">Difficulty</span> <span className="font-medium">{editorial.difficulty}</span></div>
+              )}
+              {editorial.setup_time && (
+                <div><span className="text-muted-foreground">Setup time</span> <span className="font-medium">{editorial.setup_time}</span></div>
+              )}
+              {editorial.examples && (
+                <div><span className="text-muted-foreground">Used by</span> <span className="font-medium">{editorial.examples}</span></div>
+              )}
+            </div>
+            {editorial.notes && (
+              <p className="mt-3 text-muted-foreground">
+                <span className="text-foreground/70 font-medium">Operational note · </span>{editorial.notes}
+              </p>
+            )}
+          </aside>
+        )}
       </article>
 
       {post.hero_image && (

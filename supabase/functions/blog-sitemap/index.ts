@@ -8,6 +8,6 @@ Deno.serve(async () => {
   const now = new Date().toISOString();
   const urls = [`<url><loc>${SITE}/</loc><lastmod>${now}</lastmod><priority>1.0</priority></url>`];
   for (const c of cats ?? []) urls.push(`<url><loc>${SITE}/category/${esc(c.slug)}</loc><priority>0.7</priority></url>`);
-  for (const p of posts ?? []) urls.push(`<url><loc>${SITE}/p/${esc(p.slug)}</loc><lastmod>${p.updated_at ?? p.published_at ?? now}</lastmod><priority>0.8</priority></url>`);
+  for (const p of posts ?? []) urls.push(`<url><loc>${SITE}/${esc(p.slug)}</loc><lastmod>${p.updated_at ?? p.published_at ?? now}</lastmod><priority>0.8</priority></url>`);
   return new Response(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls.join("")}</urlset>`, { headers: { "content-type": "application/xml; charset=utf-8" } });
 });
