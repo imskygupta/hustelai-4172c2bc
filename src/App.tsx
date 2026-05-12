@@ -170,6 +170,7 @@ const AdminFeatureFlags = lazy(() => import("./pages/admin/FeatureFlags"));
 const RuntimeAnalytics = lazy(() => import("./pages/admin/RuntimeAnalytics"));
 const Automations = lazy(() => import("./pages/admin/Automations"));
 const BlogAdmin = lazy(() => import("./pages/admin/BlogAdmin"));
+const BlogSeoHealth = lazy(() => import("./pages/admin/BlogSeoHealth"));
 import { MaintenanceBanner } from "./components/flags/FeatureGate";
 import TelegramLanding from "./pages/marketing/TelegramLanding";
 import { Navigate } from "react-router-dom";
