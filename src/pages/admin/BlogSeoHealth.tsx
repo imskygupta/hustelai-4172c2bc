@@ -5,6 +5,12 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 
+const BING_VERIFICATION = "9C4743D0C435C4CF0059E56C66972551";
+const VERIFY_DOMAINS = [
+  { label: "hustlaiapp.in", url: "https://hustlaiapp.in" },
+  { label: "blogs.hustlaiapp.in", url: "https://blogs.hustlaiapp.in" },
+];
+
 type Issue = { post_id: string; slug: string; title: string; severity: "error" | "warn" | "info"; kind: string; detail: string };
 type Health = {
   summary: Record<string, any> & { external_hosts: { host: string; count: number }[] };
@@ -42,6 +48,25 @@ export default function BlogSeoHealth() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>("all");
   const [severity, setSeverity] = useState<string>("all");
+  const [verify, setVerify] = useState<Record<string, "checking" | "ok" | "missing" | "error">>({});
+
+  const checkVerification = async () => {
+    const next: typeof verify = {};
+    for (const d of VERIFY_DOMAINS) next[d.label] = "checking";
+    setVerify(next);
+    await Promise.all(VERIFY_DOMAINS.map(async d => {
+      try {
+        const r = await fetch(`${d.url}/?_v=${Date.now()}`, { mode: "cors" });
+        const html = await r.text();
+        next[d.label] = html.includes(BING_VERIFICATION) ? "ok" : "missing";
+      } catch {
+        // CORS-blocked fetches still tell us nothing — mark as unknown but not an error
+        next[d.label] = "error";
+      }
+      setVerify({ ...next });
+    }));
+  };
+  useEffect(() => { checkVerification(); }, []);
 
   const reload = async () => {
     setLoading(true);
@@ -139,6 +164,40 @@ export default function BlogSeoHealth() {
             </p>
           </Card>
         )}
+
+        {/* Webmaster verification + quick links */}
+        <Card className="p-4">
+          <div className="flex items-center justify-between mb-3">
+            <div className="font-medium text-sm">Webmaster verification</div>
+            <Button size="sm" variant="ghost" onClick={checkVerification}>Re-check</Button>
+          </div>
+          <div className="space-y-2 text-sm">
+            {VERIFY_DOMAINS.map(d => {
+              const s = verify[d.label] ?? "checking";
+              const tone = s === "ok" ? "secondary" : s === "missing" ? "destructive" : "outline";
+              const label = s === "ok" ? "Bing meta found"
+                : s === "missing" ? "Meta tag missing"
+                : s === "error" ? "Could not verify (CORS)"
+                : "Checking…";
+              return (
+                <div key={d.label} className="flex items-center gap-2">
+                  <span className="text-muted-foreground w-44 shrink-0 text-xs uppercase tracking-wide">{d.label}</span>
+                  <Badge variant={tone as any} className="text-[11px]">{label}</Badge>
+                  <a href={d.url} target="_blank" rel="noopener" className="text-xs underline text-muted-foreground hover:text-foreground ml-auto">Open</a>
+                </div>
+              );
+            })}
+          </div>
+          <div className="grid sm:grid-cols-2 gap-2 mt-4 pt-4 border-t border-border/40 text-sm">
+            <a className="underline" href="https://www.bing.com/webmasters/" target="_blank" rel="noopener">Bing Webmaster Tools →</a>
+            <a className="underline" href="https://search.google.com/search-console" target="_blank" rel="noopener">Google Search Console →</a>
+            {data?.helpers.robots_url && <a className="underline" href={data.helpers.robots_url} target="_blank" rel="noopener">robots.txt →</a>}
+            {data?.helpers.sitemap_url && <a className="underline" href={data.helpers.sitemap_url} target="_blank" rel="noopener">sitemap.xml →</a>}
+          </div>
+          <p className="text-[11px] text-muted-foreground mt-3">
+            Verification meta <code>msvalidate.01</code> ships in <code>index.html</code> and renders for every host the SPA serves.
+          </p>
+        </Card>
 
         {/* External link map */}
         {data?.summary.external_hosts?.length > 0 && (
