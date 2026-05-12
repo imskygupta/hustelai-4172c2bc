@@ -10,10 +10,9 @@ import { StickyMobileCTA } from "@/components/seo/StickyMobileCTA";
 import { WorkflowConnector } from "@/components/seo/WorkflowConnector";
 import { VersusBlock } from "@/components/seo/VersusBlock";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, CheckCircle2, Sparkles, ChevronRight } from "lucide-react";
+import { ArrowRight, CheckCircle2, ChevronRight } from "lucide-react";
 import NotFound from "@/pages/NotFound";
 import {
-  SEO_CATALOG,
   KIND_META,
   byKind,
   findEntry,
