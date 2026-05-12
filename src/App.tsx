@@ -111,6 +111,7 @@ import ClientsPage from "./pages/workspace-os/Clients";
 import IntakeForms from "./pages/workspace-os/IntakeForms";
 import IntakeInbox from "./pages/workspace-os/IntakeInbox";
 import IntakeSubmit from "./pages/IntakeSubmit";
+import IntakePreview from "./pages/IntakePreview";
 import Work from "./pages/Work";
 import WorkTool from "./pages/WorkTool";
 import ClientPortal from "./pages/ClientPortal";
@@ -366,6 +367,7 @@ const App = () => (
             <Route path="/portal/:token" element={<ClientPortal />} />
             <Route path="/p/:token" element={<WorkspacePortal />} />
             <Route path="/intake/:slug" element={<IntakeSubmit />} />
+            <Route path="/intake/preview" element={<IntakePreview />} />
             <Route path="/docs" element={<DocsLayout />}>
               <Route index element={<DocsHome />} />
               <Route path=":slug" element={<DocsArticle />} />
