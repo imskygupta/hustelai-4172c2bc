@@ -9,6 +9,7 @@ import { DailyUsageWidget } from "@/components/dashboard/DailyUsageWidget";
 import { OperationalUsageWidget } from "@/components/dashboard/OperationalUsageWidget";
 import { UnlockBalanceWidget } from "@/components/dashboard/UnlockBalanceWidget";
 import { ActivityCard } from "@/components/async/ActivityCard";
+import StartHerePanel from "@/components/activation/StartHerePanel";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -379,6 +380,7 @@ export default function Dashboard() {
 
           {/* OVERVIEW */}
           <TabsContent value="overview" className="mt-5 space-y-5">
+            <StartHerePanel />
             <div className="grid md:grid-cols-2 gap-5">
               <DailyUsageWidget />
               <OperationalUsageWidget />

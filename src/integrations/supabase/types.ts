@@ -3855,6 +3855,7 @@ export type Database = {
           dodo_customer_id: string | null
           dodo_subscription_id: string | null
           email: string | null
+          first_run_state: Json
           freelancer_category: string | null
           headline: string | null
           id: string
@@ -3889,6 +3890,7 @@ export type Database = {
           dodo_customer_id?: string | null
           dodo_subscription_id?: string | null
           email?: string | null
+          first_run_state?: Json
           freelancer_category?: string | null
           headline?: string | null
           id?: string
@@ -3923,6 +3925,7 @@ export type Database = {
           dodo_customer_id?: string | null
           dodo_subscription_id?: string | null
           email?: string | null
+          first_run_state?: Json
           freelancer_category?: string | null
           headline?: string | null
           id?: string
