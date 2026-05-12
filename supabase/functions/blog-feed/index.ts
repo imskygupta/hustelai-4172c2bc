@@ -17,6 +17,7 @@ Deno.serve(async (req) => {
     const url = new URL(req.url);
     const category = url.searchParams.get("category");
     const tag = url.searchParams.get("tag");
+    const mode = url.searchParams.get("mode"); // "cluster" for hub pages
     const limit = Math.min(parseInt(url.searchParams.get("limit") ?? "20"), 50);
     const offset = parseInt(url.searchParams.get("offset") ?? "0");
 
@@ -44,6 +45,30 @@ Deno.serve(async (req) => {
     }
 
     const { data: cats } = await blog.from("blog_categories").select("slug,title,description").order("sort_order");
+
+    // Cluster / hub mode: return featured pillar + supporting + related categories + tags
+    if (mode === "cluster" && category) {
+      const { data: cat } = await blog.from("blog_categories").select("id,slug,title,description").eq("slug", category).maybeSingle();
+      let pillar: any = null;
+      let supporting: any[] = [];
+      if (cat) {
+        // Newest post in category acts as pillar if none explicitly flagged.
+        const { data: pillarRow } = await blog.from("blog_posts")
+          .select("slug,title,subtitle,excerpt,hero_image,reading_time,published_at")
+          .eq("status", "published").eq("category_id", cat.id)
+          .order("published_at", { ascending: false }).limit(1).maybeSingle();
+        pillar = pillarRow;
+        supporting = (posts ?? []).filter((p: any) => p.slug !== pillar?.slug);
+      }
+      const { data: tags } = await blog.from("blog_tags").select("slug,title").limit(24);
+      return new Response(JSON.stringify({
+        category: cat, pillar, supporting,
+        related_categories: (cats ?? []).filter((c: any) => c.slug !== category).slice(0, 6),
+        tags: tags ?? [],
+        posts,
+      }), { headers: { ...cors, "content-type": "application/json", "cache-control": "public, max-age=120" } });
+    }
+
     return new Response(JSON.stringify({ posts, categories: cats ?? [] }), {
       headers: { ...cors, "content-type": "application/json", "cache-control": "public, max-age=60" },
     });

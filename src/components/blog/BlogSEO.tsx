@@ -30,7 +30,7 @@ export function BlogSEO({
       <title>{safeTitle}</title>
       <meta name="description" content={safeDesc} />
       <link rel="canonical" href={url} />
-      {preloadImage && <link rel="preload" as="image" href={preloadImage} fetchpriority="high" />}
+      {preloadImage && <link rel="preload" as="image" href={preloadImage} {...({ fetchpriority: "high" } as any)} />}
       {noindex && <meta name="robots" content="noindex,nofollow" />}
       <meta property="og:title" content={safeTitle} />
       <meta property="og:description" content={safeDesc} />
