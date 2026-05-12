@@ -158,6 +158,68 @@
   /* Safe-area helpers (iOS notch / Android gesture bar) */
   .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
   .pt-safe { padding-top: env(safe-area-inset-top); }
+
+  /* Operational hover system — calm, infrastructural micro-motion.
+   * Activates a subtle delivery glow on the card border + a moving
+   * async lane along the bottom. CSS-only; no JS needed. */
+  .hover-ops {
+    position: relative;
+    transition: border-color 0.25s ease, box-shadow 0.3s ease, transform 0.25s ease;
+  }
+  .hover-ops::after {
+    content: "";
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    bottom: 0;
+    height: 1px;
+    background-image: repeating-linear-gradient(
+      to right,
+      hsl(160 84% 39% / 0.55) 0 6px,
+      transparent 6px 12px
+    );
+    background-size: 24px 1px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+    border-radius: 1px;
+  }
+  .hover-ops:hover {
+    box-shadow: 0 18px 36px -22px hsl(160 84% 39% / 0.28);
+  }
+  .hover-ops:hover::after {
+    opacity: 1;
+    animation: lane-flow 1.6s linear infinite;
+  }
+
+  /* Workflow progression glow — used on featured / primary cards.
+   * Quiet ambient pulse instead of a flashing animation. */
+  .ops-glow {
+    position: relative;
+    isolation: isolate;
+  }
+  .ops-glow::before {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(
+      120deg,
+      hsl(160 84% 39% / 0) 0%,
+      hsl(160 84% 39% / 0.35) 45%,
+      hsl(265 84% 60% / 0.35) 60%,
+      hsl(160 84% 39% / 0) 100%
+    );
+    background-size: 200% 100%;
+    animation: lane-sweep 6s ease-in-out infinite;
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    opacity: 0.55;
+  }
   .pl-safe { padding-left: env(safe-area-inset-left); }
   .pr-safe { padding-right: env(safe-area-inset-right); }
   .h-safe-bottom { height: env(safe-area-inset-bottom); }

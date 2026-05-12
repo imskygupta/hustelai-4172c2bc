@@ -58,7 +58,7 @@ export function OperationalContinuitySection() {
           {TRAITS.map((t, i) => (
             <div
               key={t.title}
-              className="group relative rounded-2xl border border-slate-200 bg-white p-5 md:p-6 hover:border-slate-300 hover:shadow-[0_18px_36px_-24px_rgba(15,23,42,0.25)] transition-all duration-300 overflow-hidden"
+              className="hover-ops group relative rounded-2xl border border-slate-200 bg-white p-5 md:p-6 hover:border-slate-300 transition-all duration-300 overflow-hidden"
             >
               <div className="absolute top-3 right-3 text-[10px] font-mono text-slate-300">0{i + 1}</div>
               <div className="flex items-start gap-4">

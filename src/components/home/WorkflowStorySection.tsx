@@ -78,7 +78,7 @@ export function WorkflowStorySection() {
                   <AsyncLane tone={i < 3 ? "emerald" : i < 5 ? "violet" : "sky"} />
                 </div>
               ) : null}
-              <div className="group relative h-full rounded-2xl border border-slate-200 bg-white p-4 hover:border-slate-300 hover:shadow-[0_12px_28px_-20px_rgba(15,23,42,0.25)] transition-all duration-300">
+              <div className="hover-ops group relative h-full rounded-2xl border border-slate-200 bg-white p-4 hover:border-slate-300 transition-all duration-300">
                 <div className="absolute top-2.5 right-3 text-[10px] font-mono text-slate-300">{s.step}</div>
                 <div className="w-9 h-9 rounded-xl bg-slate-900 text-white flex items-center justify-center mb-3 group-hover:bg-emerald-600 transition-colors">
                   <s.icon className="w-4 h-4" />
