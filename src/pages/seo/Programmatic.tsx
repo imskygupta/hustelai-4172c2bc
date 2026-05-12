@@ -81,11 +81,12 @@ export function ProgrammaticDetail({ kind }: { kind: SeoKind }) {
 
   const meta = KIND_META[kind];
   const cta = { href: entry.ctaHref ?? "/signup", label: entry.ctaLabel ?? "Start free workspace" };
-  // 4 related cross-cluster links — pull from same kind first, fill from other kinds.
-  const related = [
-    ...byKind(kind).filter((e) => e.slug !== entry.slug),
-    ...SEO_CATALOG.filter((e) => e.kind !== kind),
-  ].slice(0, 6);
+  const stickyCta = CTA_BY_KIND[kind];
+  // Merge per-page FAQs with kind-default expansion FAQs (deduped by question).
+  const allFaqs = [
+    ...entry.faqs,
+    ...EXTRA_FAQS[kind].filter((e) => !entry.faqs.some((p) => p.q === e.q)),
+  ];
 
   return (
     <div className="min-h-screen bg-white">
@@ -95,7 +96,7 @@ export function ProgrammaticDetail({ kind }: { kind: SeoKind }) {
         path={entry.path}
         jsonLd={[
           softwareJsonLd,
-          faqJsonLd(entry.faqs),
+          faqJsonLd(allFaqs),
           breadcrumbJsonLd([
             { name: "Home", path: "/" },
             { name: meta.label, path: `/${kind}` },
@@ -104,60 +105,61 @@ export function ProgrammaticDetail({ kind }: { kind: SeoKind }) {
         ]}
       />
       <Navbar />
-      <main className="pt-24 pb-16">
+      <main className="pt-24 pb-24 md:pb-16">
+        {/* Hero — operational, calm, async-native */}
         <section className="px-4">
-          <div className="container mx-auto max-w-5xl space-y-5">
+          <div className="container mx-auto max-w-5xl space-y-5 md:space-y-6">
             <Crumbs kind={kind} entry={entry} />
-            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs bg-emerald-50 text-emerald-700 border border-emerald-100">
-              <Sparkles className="w-3 h-3" /> {entry.badge ?? "AI Workspace OS"}
+            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs bg-white border border-slate-200 text-slate-600 shadow-sm">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+              {entry.badge ?? `${meta.label} · live in workspace`}
             </span>
-            <h1 className="text-4xl md:text-6xl font-display font-bold tracking-tight text-slate-900 max-w-3xl">{entry.h1}</h1>
-            <p className="text-lg text-slate-600 max-w-2xl">{entry.subhead}</p>
-            <div className="flex flex-wrap gap-3 pt-2">
-              <Button asChild size="lg" className="bg-slate-900 hover:bg-slate-800 text-white">
+            <h1 className="text-[2.4rem] leading-[1.05] sm:text-5xl md:text-6xl font-display font-semibold tracking-tight text-slate-900 max-w-3xl">{entry.h1}</h1>
+            <p className="text-base md:text-lg text-slate-600 max-w-2xl leading-relaxed">{entry.subhead}</p>
+            <div className="flex flex-col sm:flex-row gap-2.5 pt-1 max-w-md sm:max-w-none">
+              <Button asChild size="lg" className="w-full sm:w-auto bg-slate-900 hover:bg-slate-800 text-white">
                 <Link to={cta.href}>{cta.label} <ArrowRight className="w-4 h-4 ml-1" /></Link>
               </Button>
-              <Button asChild size="lg" variant="outline">
+              <Button asChild size="lg" variant="outline" className="w-full sm:w-auto">
                 <Link to="/plans">See pricing</Link>
               </Button>
             </div>
-            <ul className="flex flex-wrap gap-x-5 gap-y-2 pt-3 text-sm text-slate-600">
+            <ul className="flex flex-wrap gap-x-5 gap-y-2 pt-2 text-[13px] md:text-sm text-slate-500">
               {entry.bullets.map((b) => (
-                <li key={b} className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-500" /> {b}
+                <li key={b} className="flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> {b}
                 </li>
               ))}
             </ul>
+            <div className="pt-6">
+              <WorkflowConnector />
+            </div>
           </div>
         </section>
 
-        <section className="px-4 mt-20">
-          <div className="container mx-auto max-w-3xl space-y-12">
+        {/* Long-form sections — tighter mobile rhythm */}
+        <section className="px-4 mt-16 md:mt-20">
+          <div className="container mx-auto max-w-3xl space-y-10 md:space-y-12">
             {entry.sections.map((s) => (
-              <article key={s.title} className="space-y-3">
-                <h2 className="text-2xl md:text-3xl font-display font-bold tracking-tight text-slate-900">{s.title}</h2>
-                <p className="text-slate-600 leading-relaxed">{s.body}</p>
+              <article key={s.title} className="space-y-2.5">
+                <h2 className="text-xl md:text-3xl font-display font-bold tracking-tight text-slate-900">{s.title}</h2>
+                <p className="text-[15px] md:text-base text-slate-600 leading-relaxed">{s.body}</p>
               </article>
             ))}
           </div>
         </section>
 
-        <FAQBlock items={entry.faqs} />
+        {/* Comparison: HustleAI vs the legacy way */}
+        <VersusBlock kind={kind} />
 
-        <section className="px-4 mt-20">
-          <div className="container mx-auto max-w-5xl">
-            <h2 className="text-xl font-display font-bold mb-4 text-slate-900">Related across the workspace</h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-              {related.map((r) => (
-                <Link key={r.path} to={r.path}
-                  className="rounded-lg border border-slate-200 p-4 text-sm hover:border-emerald-300 hover:text-emerald-700 transition">
-                  <div className="text-[10px] uppercase tracking-wider text-slate-400 mb-1">{KIND_META[r.kind].label}</div>
-                  {r.h1} <ArrowRight className="w-3 h-3 inline ml-1" />
-                </Link>
-              ))}
-            </div>
-          </div>
-        </section>
+        {/* FAQs — page-specific + kind-defaults expanded */}
+        <FAQBlock items={allFaqs} />
+
+        {/* Discovery: 4-cluster related grid (workflows / integrations / free tools / use cases) */}
+        <RelatedClusters current={entry} />
 
         <CTASection
           heading="Run your work like a modern studio"
@@ -167,6 +169,7 @@ export function ProgrammaticDetail({ kind }: { kind: SeoKind }) {
         />
       </main>
       <Footer />
+      <StickyMobileCTA href={stickyCta.href} label={stickyCta.label} hint={stickyCta.hint} />
     </div>
   );
 }
