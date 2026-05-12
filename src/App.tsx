@@ -139,6 +139,13 @@ import {
   FreelancerProductivityToolsPage,
   AIBusinessCardMakerPage,
 } from "./pages/seo/landings";
+import {
+  FeatureDetail, FeatureHub,
+  IntegrationDetail,
+  WorkflowDetail, WorkflowHub,
+  UseCaseDetail, UseCaseHub,
+  FreeToolDetail, FreeToolHub,
+} from "./pages/seo/Programmatic";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { AppRouteShell } from "@/components/AppRouteShell";
@@ -213,6 +220,15 @@ const App = () => (
             <Route path="/agency-workflow-tools" element={<AgencyWorkflowToolsPage />} />
             <Route path="/freelancer-productivity-tools" element={<FreelancerProductivityToolsPage />} />
             <Route path="/ai-business-card-maker" element={<AIBusinessCardMakerPage />} />
+            {/* Programmatic SEO clusters */}
+            <Route path="/features" element={<FeatureHub />} />
+            <Route path="/features/:slug" element={<FeatureDetail />} />
+            <Route path="/workflows" element={<WorkflowHub />} />
+            <Route path="/workflows/:slug" element={<WorkflowDetail />} />
+            <Route path="/use-cases" element={<UseCaseHub />} />
+            <Route path="/use-cases/:slug" element={<UseCaseDetail />} />
+            <Route path="/free-tools" element={<FreeToolHub />} />
+            <Route path="/free-tools/:slug" element={<FreeToolDetail />} />
             {/* Dynamic SEO blog */}
             <Route path="/insights" element={<SeoBlogIndex />} />
             <Route path="/insights/tag/:slug" element={<TagArchive />} />
