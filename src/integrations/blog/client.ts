@@ -82,6 +82,28 @@ export const blogApi = {
     call(`/editorial-center?action=ai_refresh`, { admin: true, method: "POST", body: JSON.stringify({ id, intent }) }),
   editorialHumanize: (payload: { id?: string; body_md?: string }) =>
     call(`/editorial-center?action=humanize`, { admin: true, method: "POST", body: JSON.stringify(payload) }),
+
+  // Product Narrative Engine — Tool Registry
+  registryList: () => call(`/tool-registry-sync?action=list`, { admin: true }),
+  registryHealth: () => call(`/tool-registry-sync?action=health`, { admin: true }),
+  registrySync: (mode: "incremental" | "full" = "incremental") =>
+    call(`/tool-registry-sync?action=sync&mode=${mode}`, { admin: true, method: "POST" }),
+  registryBootstrapSql: () => call(`/narrative-bootstrap?action=bootstrap`, { admin: true }),
+  registryBootstrapVerify: () => call(`/narrative-bootstrap?action=verify`, { admin: true }),
+
+  // Knowledge graph
+  graphAll: () => call(`/knowledge-graph?action=graph`, { admin: true }),
+  graphNeighbors: (slug: string) => call(`/knowledge-graph?action=neighbors&slug=${encodeURIComponent(slug)}`, { admin: true }),
+  graphContext: (query: string, k = 6) =>
+    call(`/knowledge-graph?action=context`, { admin: true, method: "POST", body: JSON.stringify({ query, k }) }),
+  graphCoverage: () => call(`/knowledge-graph?action=coverage`, { admin: true }),
+
+  // Narrative engine
+  narrativeRuns: (limit = 20) => call(`/narrative-generate?action=runs&limit=${limit}`, { admin: true }),
+  narrativeEvents: (run_id: string) =>
+    call(`/narrative-generate?action=events&run_id=${encodeURIComponent(run_id)}`, { admin: true }),
+  narrativeGenerate: (payload: { topic?: string; angle?: string; keyword?: string; auto_publish?: boolean } = {}) =>
+    call(`/narrative-generate?action=generate`, { admin: true, method: "POST", body: JSON.stringify(payload) }),
 };
 
 export type BlogPost = {
