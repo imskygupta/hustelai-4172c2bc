@@ -27,6 +27,7 @@ import { ConnectedWorkflowSection } from "@/components/home/ConnectedWorkflowSec
 import { WorkflowStorySection } from "@/components/home/WorkflowStorySection";
 import { OperationalContinuitySection } from "@/components/home/OperationalContinuitySection";
 import { WorkflowRibbon } from "@/components/home/ops-primitives";
+import { PersonalizedHeroCTA } from "@/components/home/PersonalizedHeroCTA";
 import { OpsStats } from "@/components/seo/OpsStats";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -116,22 +117,8 @@ export default function Index() {
             </div>
           </div>
 
-          <div className="gsap-fade flex flex-col sm:flex-row items-center justify-center gap-3 max-w-md mx-auto sm:max-w-none">
-            <Button
-              size="lg"
-              onClick={() => navigate("/signup")}
-              className="w-full sm:w-auto h-12 px-6 bg-slate-900 hover:bg-slate-800 text-white text-base"
-            >
-              Ship your first export <ArrowRight className="w-4 h-4 ml-2" />
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              onClick={() => navigate("/workspaces")}
-              className="w-full sm:w-auto h-12 px-6 border-slate-300 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-300 text-base"
-            >
-              See the operating layer
-            </Button>
+          <div className="gsap-fade">
+            <PersonalizedHeroCTA />
           </div>
 
           <div className="gsap-fade flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[11px] md:text-xs text-slate-500 pt-1">
