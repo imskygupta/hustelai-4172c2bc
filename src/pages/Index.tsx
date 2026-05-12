@@ -28,6 +28,7 @@ import { WorkflowStorySection } from "@/components/home/WorkflowStorySection";
 import { OperationalContinuitySection } from "@/components/home/OperationalContinuitySection";
 import { WorkflowRibbon, SectionConnector } from "@/components/home/ops-primitives";
 import { PersonalizedHeroCTA } from "@/components/home/PersonalizedHeroCTA";
+import { ReturningUserContinuity } from "@/components/home/ReturningUserContinuity";
 import { OpsStats } from "@/components/seo/OpsStats";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -129,6 +130,10 @@ export default function Index() {
           </div>
         </div>
       </section>
+
+      {/* Continuity-aware strip — only renders for authed users.
+          Persistent operational state from the previous session. */}
+      <ReturningUserContinuity />
 
       <TrustStrip />
 
