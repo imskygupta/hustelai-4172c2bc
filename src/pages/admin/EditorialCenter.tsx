@@ -384,7 +384,7 @@ export default function EditorialCenter() {
         </Section>
 
         {/* 9. Indexing Ops */}
-        <Section icon={<Search className="w-4 h-4 text-cyan-400" />} title="Indexing Ops" subtitle="Probe Bing, Google, Yandex per slug. Manual recrawl via IndexNow.">
+        <Section anchor="indexing" icon={<Search className="w-4 h-4 text-cyan-400" />} title="Indexing Ops" subtitle="Probe Bing, Google, Yandex per slug. Manual recrawl via IndexNow.">
           <div className="flex flex-wrap items-center gap-2 mb-3">
             <Input value={indexingSlug} onChange={e => setIndexingSlug(e.target.value)} placeholder="post-slug"
               className="max-w-[260px] h-8 font-mono text-xs" />
@@ -411,7 +411,7 @@ export default function EditorialCenter() {
         </Section>
 
         {/* 10. Traffic Intelligence (CSV) */}
-        <Section icon={<Gauge className="w-4 h-4 text-amber-400" />} title="Traffic Intelligence" subtitle="Paste GSC export rows (CSV) — parsed locally, never persisted.">
+        <Section anchor="topics" icon={<Gauge className="w-4 h-4 text-amber-400" />} title="Topic Intelligence · Traffic" subtitle="Paste GSC export rows (CSV) — parsed locally, never persisted.">
           <div className="grid md:grid-cols-2 gap-3">
             <div>
               <Textarea rows={8} className="font-mono text-xs"
