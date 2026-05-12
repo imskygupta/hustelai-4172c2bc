@@ -17,14 +17,31 @@ export default function BlogOperations() {
   const [posts, setPosts] = useState<any[]>([]);
   const [busy, setBusy]   = useState(false);
   const [filter, setFilter] = useState<"all" | "missing" | "external" | "internal">("all");
+  const [pipelineError, setPipelineError] = useState<string | null>(null);
+  const [lastOk, setLastOk] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const reload = async () => {
+    setLoading(true);
     try {
       const [s, h, q] = await Promise.all([
-        blogApi.imageStatus(), blogApi.seoHealth().catch(() => null), blogApi.schedulerStats().catch(() => null),
+        blogApi.imageStatus().catch((e: any) => ({ ok: false, error: String(e?.message ?? e) })),
+        blogApi.seoHealth().catch(() => null),
+        blogApi.schedulerStats().catch(() => null),
       ]);
-      setStats(s.stats); setPosts(s.posts ?? []); setSeo(h); setSched(q);
-    } catch (e: any) { toast.error(String(e.message ?? e)); }
+      if (s?.ok === false) {
+        setPipelineError(s.error || "Pipeline unavailable");
+        setStats(null); setPosts([]);
+      } else {
+        setPipelineError(null);
+        setStats(s.stats); setPosts(s.posts ?? []);
+        if (s.stats?.last_successful_run) setLastOk(s.stats.last_successful_run);
+      }
+      setSeo(h); setSched(q);
+    } catch (e: any) {
+      setPipelineError(String(e?.message ?? e));
+      toast.error(String(e.message ?? e));
+    } finally { setLoading(false); }
   };
   useEffect(() => { reload(); }, []);
 
@@ -74,6 +91,40 @@ export default function BlogOperations() {
       </header>
 
       <main className="max-w-6xl mx-auto p-6 space-y-8">
+        {pipelineError && (
+          <section className="rounded-md border border-rose-500/40 bg-rose-500/5 p-4 flex items-start justify-between gap-4">
+            <div className="space-y-1">
+              <div className="text-sm font-medium text-rose-500">Pipeline unavailable</div>
+              <div className="text-xs text-muted-foreground">
+                {pipelineError === "ENV_VALIDATION_FAILED" && "Required environment variables are missing. Check Lovable Cloud secrets."}
+                {pipelineError === "BUCKET_ACCESS_FAILED" && "Could not reach the blog-assets storage bucket."}
+                {pipelineError === "forbidden" && "Admin session expired — sign in again."}
+                {!["ENV_VALIDATION_FAILED","BUCKET_ACCESS_FAILED","forbidden"].includes(pipelineError) && pipelineError}
+              </div>
+              {lastOk && <div className="text-[11px] text-muted-foreground">Last successful run · {new Date(lastOk).toLocaleString()}</div>}
+            </div>
+            <Button size="sm" variant="outline" onClick={reload} disabled={loading}>{loading ? "Retrying…" : "Retry"}</Button>
+          </section>
+        )}
+
+        {/* Pipeline diagnostics */}
+        <section className="rounded-md border border-border/60 p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="font-medium text-sm">Pipeline diagnostics</h2>
+            <Button size="sm" variant="ghost" onClick={reload} disabled={loading}>{loading ? "Refreshing…" : "Refresh"}</Button>
+          </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 text-sm">
+            <Diag label="Storage bucket" value={stats?.bucket_status ?? (pipelineError ? "unknown" : "—")}
+                  tone={stats?.bucket_status === "ok" ? "success" : stats?.bucket_status ? "warn" : "danger"} />
+            <Diag label="AI provider" value={stats?.provider_available ? "available" : pipelineError ? "unknown" : "missing key"}
+                  tone={stats?.provider_available ? "success" : "warn"} />
+            <Diag label="Queued ingestion" value={stats?.queued ?? "—"} />
+            <Diag label="Failed jobs" value={stats?.failed ?? "—"} tone={stats?.failed ? "warn" : undefined} />
+            <Diag label="Last generated image" value={stats?.last_generated_at ? new Date(stats.last_generated_at).toLocaleString() : "never"} />
+            <Diag label="Migration progress" value={stats ? `${stats.migration_progress_pct}%` : "—"} tone={stats?.migration_progress_pct === 100 ? "success" : undefined} />
+          </div>
+        </section>
+
         <section className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <Stat label="Total posts" value={stats?.total ?? "—"} />
           <Stat label="Hosted on CDN" value={stats?.with_internal ?? "—"} tone="success" />
@@ -116,6 +167,16 @@ export default function BlogOperations() {
           </div>
         </section>
       </main>
+    </div>
+  );
+}
+
+function Diag({ label, value, tone }: { label: string; value: any; tone?: "success" | "warn" | "danger" }) {
+  const color = tone === "success" ? "text-emerald-500" : tone === "warn" ? "text-amber-500" : tone === "danger" ? "text-rose-500" : "text-foreground";
+  return (
+    <div className="rounded border border-border/50 px-3 py-2">
+      <div className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</div>
+      <div className={`text-sm mt-0.5 ${color}`}>{String(value)}</div>
     </div>
   );
 }

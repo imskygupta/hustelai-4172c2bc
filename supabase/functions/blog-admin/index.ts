@@ -16,9 +16,9 @@ const blog = createClient(
 async function requireAdmin(req: Request): Promise<{ ok: true; userId: string } | Response> {
   const auth = req.headers.get("Authorization");
   if (!auth?.startsWith("Bearer ")) return new Response(JSON.stringify({ error: "unauthorized" }), { status: 401, headers: { ...cors, "content-type": "application/json" } });
-  const { data, error } = await main.auth.getClaims(auth.replace("Bearer ", ""));
-  if (error || !data?.claims?.sub) return new Response(JSON.stringify({ error: "unauthorized" }), { status: 401, headers: { ...cors, "content-type": "application/json" } });
-  const userId = data.claims.sub as string;
+  const { data, error } = await main.auth.getUser(auth.replace("Bearer ", ""));
+  if (error || !data?.user?.id) return new Response(JSON.stringify({ error: "unauthorized" }), { status: 401, headers: { ...cors, "content-type": "application/json" } });
+  const userId = data.user.id as string;
   const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
   const { data: roles } = await admin.from("user_roles").select("role").eq("user_id", userId).eq("role", "admin").maybeSingle();
   if (!roles) return new Response(JSON.stringify({ error: "forbidden" }), { status: 403, headers: { ...cors, "content-type": "application/json" } });

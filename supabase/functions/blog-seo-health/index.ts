@@ -15,11 +15,11 @@ const blog = createClient(
 async function requireAdmin(req: Request) {
   const auth = req.headers.get("Authorization");
   if (!auth?.startsWith("Bearer ")) return false;
-  const { data, error } = await main.auth.getClaims(auth.replace("Bearer ", ""));
-  if (error || !data?.claims?.sub) return false;
+  const { data, error } = await main.auth.getUser(auth.replace("Bearer ", ""));
+  if (error || !data?.user?.id) return false;
   const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
   const { data: roles } = await admin.from("user_roles")
-    .select("role").eq("user_id", data.claims.sub).eq("role", "admin").maybeSingle();
+    .select("role").eq("user_id", data.user.id).eq("role", "admin").maybeSingle();
   return !!roles;
 }
 
