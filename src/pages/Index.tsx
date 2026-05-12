@@ -23,6 +23,8 @@ import {
 } from "@/components/home/PlatformSections";
 import { IntegrationsMarquee } from "@/components/home/IntegrationsMarquee";
 import { OperatingSystemArchitecture } from "@/components/home/OperatingSystemArchitecture";
+import { ConnectedWorkflowSection } from "@/components/home/ConnectedWorkflowSection";
+import { WorkflowRibbon } from "@/components/home/ops-primitives";
 import { OpsStats } from "@/components/seo/OpsStats";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -126,13 +128,18 @@ export default function Index() {
       {/* Operational social proof — async ops, exports, Telegram pings */}
       <OpsStats />
 
+      <WorkflowRibbon label="System rhythm" hint="Async · delivery-aware · operator-grade" />
+
       {/* Platform story */}
       <UnifiedWorkspaceSection />
       <AsyncOperationsSection />
       <OperatingSystemArchitecture />
+      <ConnectedWorkflowSection />
+      <WorkflowRibbon label="Deliverables lane" hint="Branded outputs · signed share links" tone="violet" />
       <RealDeliverablesSection />
       <IntegrationsNotificationsSection />
       <IntegrationsMarquee />
+      <WorkflowRibbon label="Governance lane" hint="Roles · feature flags · usage" tone="sky" />
       <ControlGovernanceSection />
       <FreeToolsStrip />
       <FlexibleUsageSection />

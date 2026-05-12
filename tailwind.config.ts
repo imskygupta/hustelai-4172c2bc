@@ -100,6 +100,19 @@ export default {
           "0%": { transform: "scale(1)", opacity: "0.6" },
           "75%, 100%": { transform: "scale(2.4)", opacity: "0" },
         },
+        "lane-flow": {
+          "0%": { backgroundPosition: "0 0" },
+          "100%": { backgroundPosition: "24px 0" },
+        },
+        "lane-sweep": {
+          "0%": { transform: "translateX(-30%)" },
+          "100%": { transform: "translateX(330%)" },
+        },
+        "queue-progress": {
+          "0%": { transform: "translateX(-100%)" },
+          "60%": { transform: "translateX(20%)" },
+          "100%": { transform: "translateX(120%)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -110,6 +123,9 @@ export default {
         "marquee-slow": "marquee-slow 60s linear infinite",
         "shimmer-x": "shimmer-x 2.4s ease-in-out infinite",
         "ping-slow": "ping-slow 2.4s cubic-bezier(0,0,0.2,1) infinite",
+        "lane-flow": "lane-flow 1.6s linear infinite",
+        "lane-sweep": "lane-sweep 4.2s ease-in-out infinite",
+        "queue-progress": "queue-progress 3.2s ease-in-out infinite",
       },
     },
   },
