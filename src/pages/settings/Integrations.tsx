@@ -111,6 +111,14 @@ export default function Integrations() {
           setPolling(false);
           setModalState("success");
           load();
+          if (provider === "telegram") {
+            continueWorkflow({
+              trigger: "telegram_connected",
+              surface: "settings.integrations",
+              headline: "Telegram connected",
+              description: "Enable export delivery or send a test message.",
+            });
+          }
           // Auto-close after a brief celebratory state
           setTimeout(() => {
             setModalState("idle");
