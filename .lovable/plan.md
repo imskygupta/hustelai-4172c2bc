@@ -1,126 +1,143 @@
-# Activation & Conversion Pass
+# Blog Engine on blogs.hustlaiapp.in
 
-Goal: every new user reaches a successful first outcome in minutes, then naturally flows toward exports → workspace → upgrades. No new infra. All work is in the frontend presentation layer plus a small `next_action` content registry.
+A dedicated operational SEO + content system, isolated on its own subdomain and Supabase project, that funnels readers into HustleAI workflows (free tools, exports, Telegram delivery, workspace).
 
-The plan is sized in 6 self-contained phases. Each phase ships independently and is verifiable in the preview. We can stop or reorder after any phase.
+## Architecture
 
----
+```text
+blogs.hustlaiapp.in  ──►  same Vite app, subdomain-routed to /blogs/*
+                          │
+                          ├── Public reader UI  (premium editorial)
+                          ├── Admin editor      (approval workflow)
+                          └── Edge Functions    (AI drafts, sitemap, RSS)
+                                  │
+                                  └── Blog Supabase DB (NEW, ynvfxxmhowlvhtqiigfc)
+                                       posts · categories · tags · authors
+                                       revisions · seo_meta · cta_blocks
+                                       analytics · ai_drafts · schedules
+```
 
-## Phase 1 — First-action guidance & "Start Here" rail
+The blog DB is **separate** from the main HustleAI Supabase. The main app reads it only for cross-promotion (latest posts widget). Auth for admin uses the existing main HustleAI auth (`has_role(admin)`) — admin panel calls an edge function that proxies into the blog DB with a service role.
 
-The single biggest activation lever. New users currently land on a tool directory and have to choose. We replace ambiguity with one obvious path.
+## Subdomain routing
 
-What ships:
-1. `StartHerePanel` on `/dashboard` (top of page, above existing widgets) shown for users with `< 3` lifetime activity events. Three opinionated paths:
-   - "Send your first proposal" → `/tools/proposal-generator` (template pre-filled)
-   - "Onboard your first client" → `/workspace-os/intake-forms`
-   - "Generate your first invoice" → `/tools/invoice-generator`
-   Each card shows the expected outcome ("a delivered PDF in ~2 min"), a tiny operational ribbon, and an explicit "What happens after" line.
-2. `FirstRunChecklist` (collapsible, persisted in `localStorage` + `profiles.first_run_state` jsonb): create a workspace · run one tool · export one file · connect Telegram. Auto-checks as events fire.
-3. Auto-dismiss the panel once any path is completed; replace with `NextActionRail` (Phase 4).
+`blogs.hustlaiapp.in` resolves to the same Vite build. A small `BlogSubdomainRouter` in `App.tsx` detects `host.startsWith("blogs.")` and mounts a parallel router with only blog routes:
 
-Files: `src/components/activation/StartHerePanel.tsx`, `FirstRunChecklist.tsx`, hook into `Dashboard.tsx`. One small migration adds `profiles.first_run_state jsonb default '{}'`.
+- `/` → BlogHome (categories, featured, latest)
+- `/p/:slug` → BlogPost (TOC, FAQ schema, CTA blocks, related)
+- `/category/:slug`
+- `/tag/:slug`
+- `/authors/:slug`
+- `/rss.xml` → 302 to edge function
+- `/sitemap.xml` → 302 to edge function
+- `/admin` → editorial dashboard (gated by main-app `has_role('admin')`)
 
----
+Main app sidebar gets a "Blog Ops" link for admins.
 
-## Phase 2 — Homepage conversion rewrite
+## Phase 1 — Schema (blog DB)
 
-Tighten the hero, add operational storytelling, kill generic AI copy.
+Tables in the new Supabase project (`ynvfxxmhowlvhtqiigfc`):
 
-What ships:
-1. New hero block: single H1 ("Run your freelance business like infrastructure"), one primary CTA ("Start free — first export in 2 minutes"), one secondary ("See a 60-second tour"). Replace any "AI-powered" boilerplate with delivery language ("proposals → invoice → Telegram").
-2. `WorkflowStorySection` — three concrete scenarios with before/after timelines:
-   - "Friday lead → Monday signed contract"
-   - "Brief in chat → branded PDF in inbox"
-   - "Repeat client → invoice + reminder fully async"
-3. `WhatHappensNext` strip below the fold: 4 numbered steps with tiny screenshot crops, ending in "And we keep delivering while you sleep."
-4. CTA hierarchy audit: only ONE primary CTA per viewport on the homepage; secondary buttons demoted to ghost.
+- `blog_authors` (slug, name, bio, avatar, social, jsonld)
+- `blog_categories` (slug, title, description, hero_image, sort)
+- `blog_tags` (slug, title)
+- `blog_posts`
+  - core: slug, title, subtitle, excerpt, body_md, body_html, hero_image, status (`draft|in_review|approved|scheduled|published|rejected`), author_id, category_id, language
+  - SEO: meta_title, meta_description, canonical_url, og_image, focus_keyword, schema_type, faq jsonb, toc jsonb, reading_time
+  - workflow CTAs: cta_blocks jsonb (kind: free_tool, telegram, export, workspace, signup)
+  - publishing: scheduled_at, published_at, updated_at, revision_no
+  - quality: ai_generated bool, ai_model, originality_score, dedup_hash
+- `blog_post_tags` (M2M)
+- `blog_post_revisions` (snapshot of body + meta per save)
+- `blog_related_posts` (manual + auto)
+- `blog_ai_drafts` (queue: topic, brief, status `queued|generating|ready|approved|discarded`, generated_post_id)
+- `blog_analytics_events` (post_id, kind: impression|view|cta_click|outbound, ref, ua_hash, created_at)
+- `blog_settings` (singleton: rss feed config, default cta, branding)
 
-Files: rewrite `src/pages/Index.tsx` hero region, new `src/components/home/WorkflowStorySection.tsx`, `WhatHappensNextStrip.tsx`. No backend changes.
+RLS: all `blog_*` tables are **service-role only**. Public reads go through cached edge functions (`blog-feed`, `blog-post`) that strip drafts. Admin writes go through `blog-admin` edge function that verifies the JWT against the main HustleAI DB's `user_roles` table via shared admin secret.
 
----
+## Phase 2 — Edge functions (deployed to blog Supabase)
 
-## Phase 3 — Free → paid UX (contextual, non-paywall)
+- `blog-feed` — paginated published posts (category/tag filter), cached 60s
+- `blog-post` — single post + author + related + faq/toc, cached 120s
+- `blog-admin` — CRUD for posts, revisions, scheduled publish, approve/reject; verifies admin via JWT
+- `blog-ai-draft` — calls Lovable AI Gateway (`google/gemini-2.5-flash`) with strict prompt: workflow-native, no fluff, anti-template structure, mandatory FAQ + TOC + 2 CTA blocks; writes to `blog_ai_drafts` then `blog_posts(status=in_review)`
+- `blog-cron` — runs every hour: (a) publish posts whose `scheduled_at <= now()`, (b) generate 1 daily draft from a rotating topic bank
+- `sitemap` — XML index of published posts + categories + tags
+- `rss` — RSS 2.0 of latest 50 posts
 
-Reframe limits as "workflow continuation," not walls.
+`pg_cron` schedules `blog-cron` hourly via `pg_net.http_post`.
 
-What ships:
-1. Update `UpgradeSheet.tsx` copy + layout: lead with "Continue this workflow," then show the *specific* next operational unlock the user just hit (e.g. "deliver to Telegram automatically," "export 20 branded PDFs/day"). Pricing table moves below the fold of the sheet.
-2. New `ContinueWorkflowBanner` that appears inline (not as a modal) when a user finishes a free-tool run and is ~80% of their daily quota. Calm, single line: "You've used 4 of 5 today — upgrade adds Telegram delivery + 20 more."
-3. `QuotaBar.tsx` gets a "what unlocks at the next tier" tooltip — same data, no new lookups.
-4. Remove any aggressive paywall full-screen blocks; replace with the standard `QuotaBoundary` soft state.
-5. New `UpgradeMomentTracker` (client-only) so we never show the same contextual prompt twice in a session.
+## Phase 3 — Public reader UI (premium editorial)
 
-Files: edit `src/components/usage/UpgradeSheet.tsx`, `QuotaBar.tsx`, `QuotaBoundary.tsx`; new `src/components/usage/ContinueWorkflowBanner.tsx`, `src/lib/usage/upgrade-moments.ts`.
+Design language — **not** generic SaaS blog:
 
----
+- Serif display headings (Fraunces or Instrument Serif via Google Fonts) paired with Inter body
+- Generous whitespace, narrow ~680px reading column
+- Subtle dotted lane separators reusing existing `ops-primitives` motion
+- Operational chips ("workflow", "async", "telegram", "export") on each card
+- Sticky TOC sidebar on desktop, collapsible on mobile
+- CTA blocks rendered inline mid-article: muted glass card with one primary action ("Try the free invoice generator", "Connect Telegram delivery"), never popups
+- Author byline with avatar + 1-line operational tagline
+- Related posts strip ("Continue the workflow")
+- FAQ accordion at bottom emits FAQPage JSON-LD
+- Full SEO meta via existing `<SEO>` component, plus per-post `Article` JSON-LD with author, datePublished, publisher
 
-## Phase 4 — "Recommended next action" engine
+Components: `BlogHome.tsx`, `BlogPost.tsx`, `BlogCategory.tsx`, `BlogTag.tsx`, `BlogAuthor.tsx`, `components/blog/PostCard`, `PostHero`, `TocSidebar`, `WorkflowCTA`, `FAQBlock`, `RelatedStrip`.
 
-After every meaningful action (tool generated, export made, intake submitted), surface 1–3 contextual next steps.
+## Phase 4 — Admin editorial dashboard
 
-What ships:
-1. Tiny content registry `src/lib/next-actions/registry.ts` — pure data, e.g.
-   ```text
-   proposal_generated → [send_to_client, save_to_workspace, draft_invoice]
-   invoice_generated  → [deliver_to_telegram, schedule_reminder, log_in_workspace]
-   intake_submitted   → [convert_to_proposal, add_to_pipeline, send_welcome_email]
-   ```
-2. `NextActionRail` component — sticky strip that appears for ~10 seconds after success, then collapses into a small chip in the corner. Uses ops primitives we already have (signal pulses, delivery indicators).
-3. Wire into the 4 highest-impact tools first: Proposal, Invoice, Onboarding form, Content Calendar. Other tools can adopt the same hook later.
+`/admin` on blogs subdomain (gated by main HustleAI `has_role('admin')`):
 
-Files: `src/lib/next-actions/registry.ts`, `src/components/activation/NextActionRail.tsx`, hook calls inside the 4 tool pages.
+- **Inbox**: AI drafts awaiting review (filter by status)
+- **Editor**: split-pane Markdown editor with live preview, theme-matched
+  - meta panel: title/desc, focus keyword, og image upload, canonical, category, tags
+  - CTA builder: pick type + label + target route
+  - FAQ builder: add/remove Q&A
+  - schedule picker
+- **Actions**: approve · reject (with reason → discarded draft) · edit · schedule · publish now · revert to revision
+- **Generate**: button to enqueue AI draft with topic + angle + target keyword
+- **Analytics**: per-post views/CTR/CTA clicks (last 30d)
 
----
+## Phase 5 — AI editorial pipeline (anti-fluff guardrails)
 
-## Phase 5 — Workspace onboarding & guided setup
+The `blog-ai-draft` function uses a layered prompt:
 
-When a user first opens `/workspace-os` we currently dump them into a grid.
+1. **Topic bank** in `blog_settings.topic_bank`: rotating list seeded with freelancer workflows, async ops, proposals, invoices, onboarding, creator systems, AI automation, Indian freelancer trends
+2. **Outline pass** (Gemini Flash) → returns H2 structure + key points
+3. **Originality check**: `dedup_hash` from outline n-grams compared against prior 200 posts; if cosine-ish overlap > 0.6 → discard, retry with new angle
+4. **Body pass** (Gemini Flash, larger context) with system prompt forbidding: "In today's fast-paced world", "leverage", "unleash", numbered listicle padding, repeated CTA phrasing
+5. **Post-processing**: extract TOC from H2/H3, build FAQ from "People also ask" style closing, inject 2 CTA blocks (one mid, one end) chosen by topic→tool map
+6. Insert as `status=in_review`; admin must approve
 
-What ships:
-1. `WorkspaceWizard` (3 steps, dismissible): name your workspace → pick a starter pack (Freelancer / Agency / Async Team) → import or skip.
-2. Starter packs (pure JSON, no DB schema change) seed: 1 client, 1 intake form, 1 proposal template, 1 invoice template, 1 doc, 1 pipeline. Insert via existing client APIs.
-3. `SuggestedWorkflows` panel on the workspace overview: 3 cards tied to the user's chosen pack, each one a 2–3 step flow.
-4. "What should I do next?" widget powered by the same next-action registry from Phase 4 + workspace state (no clients yet → "add your first client", clients but no invoice → "send your first invoice", etc.).
+## Phase 6 — Cross-promotion
 
-Files: `src/components/workspace-os/WorkspaceWizard.tsx`, `SuggestedWorkflows.tsx`, `src/lib/workspace-os/starter-packs.ts`. Edits to `src/pages/workspace-os/Overview.tsx` and `WorkspaceOS.tsx`.
+- Main HustleAI homepage: small "From the blog" strip pulling 3 latest via public `blog-feed` edge function
+- Blog post pages link contextually to: `/free-tools/*`, `/settings/integrations` (Telegram), `/workspaces`, `/signup`
+- Footer of every blog page: single calm "Run your hustle inside HustleAI" card → `/signup`
 
----
+## Phase 7 — Analytics
 
-## Phase 6 — Empty-state, free-tool→workspace bridge, confidence signals
+Edge function `blog-track` records impression/view/cta_click into `blog_analytics_events`. Admin dashboard shows per-post and overall: views, unique sessions (ua_hash), CTR to product, top referrers. Heavy aggregation done in a SQL view `blog_post_stats_30d`.
 
-Polish layer; ties everything together.
+## Implementation order
 
-What ships:
-1. Upgrade `EmptyState` component to support `template` (a one-line example), `previewSteps` (3 mini chips showing the workflow), and `secondaryAction`. Migrate the top ~10 empty states (workspace lists, exports, intake inbox, pipeline, etc.).
-2. Free-tool footer strip — every public tool gets a slim "Continue inside workspace" CTA in its result card linking to the relevant workspace surface (proposals → workspace docs, invoices → revenue, intake → intake-inbox).
-3. Confidence signals: standardize `DeliveryBadge`, `WorkflowStateChip`, `AsyncCompletionPing` (already exist as ops-primitives) and apply them on every async surface (exports list, telegram send list, intake submissions, AI jobs panel) with a small shared `<OpsStatus />` wrapper.
-4. Mobile pass on all of the above: tap targets ≥ 44px, sticky CTAs use safe-area, `StartHerePanel` collapses to a swipeable horizontal rail < `sm`.
+1. Connect blog Supabase project + create schema migration
+2. Deploy edge functions (`blog-admin`, `blog-feed`, `blog-post`, `sitemap`, `rss`, `blog-ai-draft`, `blog-cron`, `blog-track`)
+3. Build subdomain router + public reader UI
+4. Build admin editorial dashboard
+5. Seed topic bank + run first AI drafts
+6. Wire cross-promotion strip on main homepage
+7. Add `blogs.hustlaiapp.in` DNS instructions for the user
 
-Files: edit `src/components/ui/empty-state.tsx`, new `src/components/activation/ContinueInWorkspaceFooter.tsx`, `src/components/ops/OpsStatus.tsx`. Targeted edits across the listed pages.
+## What I need from you before I start
 
----
+The blog Supabase project credentials you shared are the **publishable** key + DB password. To run migrations, deploy edge functions, and call admin APIs I need a few extra pieces. Please confirm:
 
-## Out of scope (intentional)
-- No new database tables beyond the tiny `profiles.first_run_state` jsonb (Phase 1).
-- No new edge functions.
-- No queue, telemetry, or analytics infra changes (per "stop expanding queue infra").
-- No homepage/marketing redesign beyond the hero + two added sections.
-- No price changes, no plan SKU changes.
+1. **Service role key** for `ynvfxxmhowlvhtqiigfc` (from that project's API settings) — required for admin writes from edge functions. I'll store it as a runtime secret `BLOG_SUPABASE_SERVICE_ROLE`.
+2. Should I add the blog project URL + anon key as runtime secrets `BLOG_SUPABASE_URL` and `BLOG_SUPABASE_ANON_KEY`? (Recommended — keeps it isolated from the main client.)
+3. **DNS**: I'll give you the CNAME / A record to point `blogs.hustlaiapp.in` at the Lovable hosting after the code ships. Confirm you have DNS access at your registrar.
+4. **Admin auth model**: confirm OK to reuse the main HustleAI admin login (`support@skycart.xyz` + `has_role('admin')`) rather than a separate blog admin account.
+5. **First-run AI drafts**: should I auto-generate 5 seed drafts on launch (still requiring your approval), or wait for you to trigger the first one manually?
 
----
-
-## Verification per phase
-- Phase 1: open `/dashboard` as a fresh account → see Start Here panel + checklist; complete one path → panel auto-dismisses.
-- Phase 2: lighthouse + manual scroll on `/`; only one primary CTA per viewport.
-- Phase 3: hit a free-tool quota → soft banner appears, sheet copy leads with "Continue this workflow."
-- Phase 4: generate a proposal → rail shows 3 next actions; clicking one navigates correctly.
-- Phase 5: create a fresh workspace → wizard appears → starter pack populates real rows.
-- Phase 6: sample 5 empty states + 3 mobile breakpoints in preview.
-
----
-
-## Suggested execution order
-Phase 1 → 4 → 3 → 6 → 2 → 5. (Activation lever first, conversion plumbing second, marketing polish last so it benefits from the new product surfaces it's selling.)
-
-Reply with **approve** to start with Phase 1, or tell me which phases to drop / re-order.
+Once you confirm 1, 2, and 4 (plus a yes/no on 5) I'll start with the schema migration on the blog DB and work through the phases.
