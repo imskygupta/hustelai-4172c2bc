@@ -7,7 +7,25 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, Activity, Play, RefreshCw, Database, Network } from "lucide-react";
 import { Link } from "react-router-dom";
 
-const STAGES = ["keyword","graph_query","tool_resolution","outline","draft","links","cta","hero","seo","indexnow","publish"];
+const STAGES = [
+  "keyword","graph_query","tool_resolution","outline","draft",
+  "links","cta","hero","screenshots","seo","indexnow","publish"
+];
+
+const STAGE_LABELS: Record<string, string> = {
+  keyword: "Resolving keyword",
+  graph_query: "Mapping tool graph",
+  tool_resolution: "Selecting workflows",
+  outline: "Drafting outline",
+  draft: "Generating narrative",
+  links: "Injecting internal links",
+  cta: "Building CTA strategy",
+  hero: "Producing hero image",
+  screenshots: "Capturing screenshots",
+  seo: "SEO + schema",
+  indexnow: "Queuing IndexNow",
+  publish: "Publishing",
+};
 
 export default function NarrativeOps() {
   const [runs, setRuns] = useState<any[]>([]);
@@ -144,19 +162,29 @@ export default function NarrativeOps() {
           )}
 
           <Card className="p-0 overflow-hidden bg-black/40 border-emerald-900/30">
-            <div className="px-4 py-2 border-b border-border/50 text-xs text-muted-foreground flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-              Live operational feed
+            <div className="px-4 py-2 border-b border-emerald-900/40 text-xs flex items-center gap-2 bg-gradient-to-r from-emerald-950/40 to-transparent">
+              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
+              <span className="text-emerald-300 font-mono">narrative-engine</span>
+              <span className="text-muted-foreground">·</span>
+              <span className="text-muted-foreground">live operational feed</span>
+              <span className="ml-auto text-[10px] text-muted-foreground tabular-nums">{events.length} events</span>
             </div>
             <div className="font-mono text-xs p-4 max-h-[600px] overflow-y-auto space-y-1">
               {events.map(e => (
-                <div key={e.id} className="flex gap-3">
+                <div key={e.id} className="flex gap-3 group">
                   <span className="text-muted-foreground/60 shrink-0">{new Date(e.created_at).toLocaleTimeString()}</span>
-                  <span className={`shrink-0 w-24 ${e.status === "error" ? "text-red-400" : e.status === "ok" ? "text-emerald-400" : "text-amber-300"}`}>[{e.stage}]</span>
-                  <span className="text-foreground/80">{e.message}</span>
+                  <span className={`shrink-0 w-32 ${e.status === "error" ? "text-red-400" : e.status === "ok" ? "text-emerald-400" : "text-amber-300"}`}>
+                    [{(STAGE_LABELS[e.stage] ?? e.stage).toLowerCase()}]
+                  </span>
+                  <span className="text-foreground/80 group-hover:text-foreground transition">{e.message}</span>
                 </div>
               ))}
-              {!events.length && <div className="text-muted-foreground">Awaiting events…</div>}
+              {!events.length && (
+                <div className="text-muted-foreground flex items-center gap-2">
+                  <span className="inline-block w-1.5 h-3 bg-emerald-400/60 animate-pulse" />
+                  <span>awaiting narrative run…</span>
+                </div>
+              )}
             </div>
           </Card>
         </div>

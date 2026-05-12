@@ -208,6 +208,20 @@ Deno.serve(async (req) => {
       const hero = (out.hero_image && /^https?:\/\//.test(out.hero_image))
         ? out.hero_image
         : `https://source.unsplash.com/1600x900/?${encodeURIComponent(out.hero_image_query || keyword || topic)}`;
+      await emit(run_id, "hero", "ok", "Hero image resolved");
+
+      // Trigger lazy screenshot capture for tools cited in this run.
+      try {
+        await emit(run_id, "screenshots", "running", "Queuing tool screenshot captures…");
+        const cited = bundle.filter(b => md.includes(b.internal_url)).map(b => b.slug);
+        const fnUrl = `${Deno.env.get("BLOG_SUPABASE_URL")}/functions/v1/tool-media-pipeline?action=queue&limit=${Math.min(20, cited.length || 10)}`;
+        // fire-and-forget — never block publishing on media
+        fetch(fnUrl, {
+          method: "POST",
+          headers: { "content-type": "application/json", apikey: Deno.env.get("BLOG_SUPABASE_SERVICE_ROLE")!, authorization: `Bearer ${Deno.env.get("BLOG_SUPABASE_SERVICE_ROLE")!}` },
+        }).catch(() => {});
+        await emit(run_id, "screenshots", "ok", `Capture queued for ${cited.length} tools`);
+      } catch (_) { /* non-fatal */ }
 
       const { data: cat } = await blog.from("blog_categories").select("id").eq("slug", out.suggested_category_slug ?? "freelancer-workflows").maybeSingle();
       const { data: author } = await blog.from("blog_authors").select("id").eq("slug", "hustleai-editorial").maybeSingle();

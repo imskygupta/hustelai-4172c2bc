@@ -104,6 +104,14 @@ export const blogApi = {
     call(`/narrative-generate?action=events&run_id=${encodeURIComponent(run_id)}`, { admin: true }),
   narrativeGenerate: (payload: { topic?: string; angle?: string; keyword?: string; auto_publish?: boolean } = {}) =>
     call(`/narrative-generate?action=generate`, { admin: true, method: "POST", body: JSON.stringify(payload) }),
+
+  // Tool media pipeline
+  mediaList: () => call(`/tool-media-pipeline?action=list`, { admin: true }),
+  mediaForTool: (slug: string) => call(`/tool-media-pipeline?action=for_tool&slug=${encodeURIComponent(slug)}`, { admin: true }),
+  mediaCoverage: () => call(`/tool-media-pipeline?action=coverage`, { admin: true }),
+  mediaCapture: (slug: string, kind: string) =>
+    call(`/tool-media-pipeline?action=capture`, { admin: true, method: "POST", body: JSON.stringify({ slug, kind }) }),
+  mediaQueue: (limit = 25) => call(`/tool-media-pipeline?action=queue&limit=${limit}`, { admin: true, method: "POST" }),
 };
 
 export type BlogPost = {
