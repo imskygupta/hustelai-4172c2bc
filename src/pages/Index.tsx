@@ -26,13 +26,6 @@ import { OpsStats } from "@/components/seo/OpsStats";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const stats = [
-  { value: "Async", label: "Workflows by default" },
-  { value: "Branded", label: "Every deliverable shipped" },
-  { value: "Live", label: "Operational visibility" },
-  { value: "Free", label: "Tier to get started" },
-];
-
 export default function Index() {
   const navigate = useNavigate();
   const heroRef = useRef<HTMLDivElement>(null);
