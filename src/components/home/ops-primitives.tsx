@@ -169,3 +169,85 @@ export function OpsGrid({ className }: { className?: string }) {
     />
   );
 }
+
+/** Section connector — a near-invisible flowing lane that visually stitches
+ *  two adjacent sections together. Calm. Infrastructural. No labels. */
+export function SectionConnector({ tone = "emerald" }: { tone?: Tone }) {
+  const colorMap: Record<Tone, string> = {
+    emerald: "rgb(16 185 129 / 0.45)",
+    amber: "rgb(245 158 11 / 0.45)",
+    sky: "rgb(14 165 233 / 0.45)",
+    violet: "rgb(139 92 246 / 0.45)",
+    slate: "rgb(100 116 139 / 0.4)",
+  };
+  return (
+    <div aria-hidden className="relative bg-white">
+      <div className="container mx-auto max-w-6xl px-4">
+        <div className="relative h-6 flex items-center">
+          <div
+            className="h-px w-full animate-lane-flow"
+            style={{
+              backgroundImage: `repeating-linear-gradient(to right, ${colorMap[tone]} 0 5px, transparent 5px 14px)`,
+              backgroundSize: "19px 1px",
+            }}
+          />
+          <span className={cn("absolute left-1/2 -translate-x-1/2 h-1.5 w-1.5 rounded-full", toneDot[tone])}>
+            <span className={cn("absolute inset-0 rounded-full opacity-60 animate-ping-slow", toneRing[tone])} />
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** Queue pulse cluster — a row of dots that softly pulse out of phase to
+ *  imply background queue depth. Use sparingly. */
+export function QueuePulse({
+  count = 5,
+  tone = "emerald",
+  className,
+}: {
+  count?: number;
+  tone?: Tone;
+  className?: string;
+}) {
+  return (
+    <div aria-hidden className={cn("inline-flex items-center gap-1", className)}>
+      {Array.from({ length: count }).map((_, i) => (
+        <span
+          key={i}
+          className={cn("h-1.5 w-1.5 rounded-full", toneDot[tone])}
+          style={{
+            animation: "pulse-glow 2s ease-in-out infinite",
+            animationDelay: `${i * 0.18}s`,
+            opacity: 0.6,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+/** Live counter — wraps a numeric/textual value and adds a quiet "tick"
+ *  pulse on a slow interval to imply the system is moving. Visual only. */
+export function LiveCounter({
+  value,
+  className,
+  intervalMs = 4200,
+}: {
+  value: string;
+  className?: string;
+  intervalMs?: number;
+}) {
+  const id = React.useId();
+  const [tick, setTick] = React.useState(0);
+  React.useEffect(() => {
+    const t = setInterval(() => setTick((n) => n + 1), intervalMs);
+    return () => clearInterval(t);
+  }, [intervalMs]);
+  return (
+    <span key={`${id}-${tick}`} className={cn("inline-block animate-fade-in", className)}>
+      {value}
+    </span>
+  );
+}
