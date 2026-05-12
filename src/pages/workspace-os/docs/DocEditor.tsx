@@ -22,6 +22,7 @@ import {
   type ClientProfile, type DocBlock, type DocStatus,
 } from "@/lib/workspace-docs/infra";
 import { BigScreenHint } from "@/components/BigScreenHint";
+import { continueWorkflow } from "@/lib/nextActions/continueWorkflow";
 
 const PAID_TIERS = ["pro", "elite", "infinity"];
 
