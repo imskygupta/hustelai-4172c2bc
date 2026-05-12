@@ -172,6 +172,7 @@ const Automations = lazy(() => import("./pages/admin/Automations"));
 const BlogAdmin = lazy(() => import("./pages/admin/BlogAdmin"));
 const BlogSeoHealth = lazy(() => import("./pages/admin/BlogSeoHealth"));
 const BlogOperations = lazy(() => import("./pages/admin/BlogOperations"));
+const EditorialCenter = lazy(() => import("./pages/admin/EditorialCenter"));
 import { MaintenanceBanner } from "./components/flags/FeatureGate";
 import TelegramLanding from "./pages/marketing/TelegramLanding";
 import { Navigate } from "react-router-dom";
