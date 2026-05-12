@@ -7,6 +7,8 @@ import { AdSlot } from "@/components/blog/AdSlot";
 import { renderMarkdown, buildArticleJsonLd, buildFaqJsonLd } from "@/lib/blog-md";
 import { extractEditorialMeta } from "@/lib/blog-meta";
 import { injectInternalLinks, buildLinkTargets } from "@/lib/blog-internal-links";
+import { BlogImage } from "@/components/blog/BlogImage";
+import { optimizedImage } from "@/lib/blog-image";
 
 export default function BlogPost() {
   const { slug = "" } = useParams();
@@ -69,7 +71,7 @@ export default function BlogPost() {
         description={post.meta_description || post.excerpt || ""}
         path={`/${post.slug}`}
         image={post.hero_image}
-        preloadImage={post.hero_image}
+        preloadImage={post.hero_image ? optimizedImage(post.hero_image, 1440) : undefined}
         type="article"
         publishedAt={post.published_at}
         updatedAt={post.updated_at}
@@ -134,7 +136,15 @@ export default function BlogPost() {
       {post.hero_image && (
         <div className="mx-auto max-w-4xl px-5 mb-10">
           <div className="aspect-[16/9] rounded-md overflow-hidden bg-muted/40">
-            <img src={post.hero_image} alt={post.title} loading="eager" decoding="async" className="w-full h-full object-cover" />
+            <BlogImage
+              src={post.hero_image}
+              alt={post.title}
+              width={1440}
+              height={810}
+              priority
+              sizes="(min-width: 1024px) 960px, 100vw"
+              className="w-full h-full object-cover"
+            />
           </div>
         </div>
       )}
