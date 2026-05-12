@@ -52,6 +52,30 @@ export default function BlogSeoHealth() {
   const [severity, setSeverity] = useState<string>("all");
   type VStatus = "checking" | "ok" | "missing" | "error";
   const [verify, setVerify] = useState<Record<string, { bing: VStatus; yandex: VStatus }>>({});
+  const [indexnow, setIndexnow] = useState<any>(null);
+  const [indexnowBusy, setIndexnowBusy] = useState(false);
+  const [linkData, setLinkData] = useState<any>(null);
+
+  const loadIndexnow = async () => {
+    try { setIndexnow(await blogApi.indexnowStatus()); } catch (e: any) { toast.error(`IndexNow: ${e.message ?? e}`); }
+  };
+  const loadLinks = async () => {
+    try { setLinkData(await blogApi.linkOverview()); } catch (e: any) { toast.error(`Linking: ${e.message ?? e}`); }
+  };
+  useEffect(() => { loadIndexnow(); loadLinks(); }, []);
+
+  const flushIndexnow = async () => {
+    setIndexnowBusy(true);
+    try { const r = await blogApi.indexnowFlush(100); toast.success(`Submitted ${r.batched ?? 0} URLs`); await loadIndexnow(); }
+    catch (e: any) { toast.error(String(e.message ?? e)); }
+    finally { setIndexnowBusy(false); }
+  };
+  const retryIndexnow = async () => {
+    setIndexnowBusy(true);
+    try { await blogApi.indexnowRetry(); toast.success("Retrying failed URLs"); await loadIndexnow(); }
+    catch (e: any) { toast.error(String(e.message ?? e)); }
+    finally { setIndexnowBusy(false); }
+  };
 
   const checkVerification = async () => {
     const next: typeof verify = {};
@@ -209,6 +233,120 @@ export default function BlogSeoHealth() {
           <p className="text-[11px] text-muted-foreground mt-3">
             Bing meta <code>msvalidate.01</code> ships in <code>index.html</code>; Yandex uses the static file <code>/{YANDEX_FILE}</code>. Both are served on every host the SPA deploys to.
           </p>
+        </Card>
+
+        {/* IndexNow widget */}
+        <Card className="p-4">
+          <div className="flex items-center justify-between mb-3">
+            <div className="font-medium text-sm">IndexNow · Bing + Yandex</div>
+            <div className="flex gap-2">
+              <Button size="sm" variant="ghost" onClick={loadIndexnow}>Refresh</Button>
+              <Button size="sm" variant="outline" onClick={retryIndexnow} disabled={indexnowBusy || !indexnow?.counts?.failed}>Retry failed</Button>
+              <Button size="sm" variant="default" onClick={flushIndexnow} disabled={indexnowBusy}>{indexnowBusy ? "Submitting…" : "Flush queue"}</Button>
+            </div>
+          </div>
+          {indexnow ? (
+            <>
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                <Tile label="Pending" value={indexnow.counts?.pending ?? 0} />
+                <Tile label="Sent" value={indexnow.counts?.sent ?? 0} />
+                <Tile label="Failed" value={indexnow.counts?.failed ?? 0} tone={indexnow.counts?.failed ? "error" : undefined} />
+                <Tile label="Success (24h)" value={indexnow.successful_24h ?? 0} />
+                <Tile label="Failed (24h)" value={indexnow.failed_24h ?? 0} tone={indexnow.failed_24h ? "warn" : undefined} />
+              </div>
+              <div className="text-xs text-muted-foreground mt-3 space-y-1">
+                <div>Last ping: <span className="text-foreground">{indexnow.last_ping_at ? new Date(indexnow.last_ping_at).toLocaleString() : "never"}</span></div>
+                <div>Last successful submission: <span className="text-foreground">{indexnow.last_sent_at ? new Date(indexnow.last_sent_at).toLocaleString() : "never"}</span></div>
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {(indexnow.key_files ?? []).map((u: string) => (
+                    <a key={u} href={u} target="_blank" rel="noopener" className="underline hover:text-foreground">{u}</a>
+                  ))}
+                </div>
+              </div>
+              {indexnow.recent?.length > 0 && (
+                <div className="mt-4 pt-3 border-t border-border/40 space-y-1 text-xs">
+                  {indexnow.recent.slice(0, 6).map((l: any) => (
+                    <div key={l.id} className="flex items-center gap-2">
+                      <Badge variant={l.ok ? "secondary" : "destructive"} className="text-[10px]">{l.engine}</Badge>
+                      <span className="text-muted-foreground">{new Date(l.created_at).toLocaleTimeString()}</span>
+                      <span>{l.url_count} URL{l.url_count === 1 ? "" : "s"}</span>
+                      <span className="ml-auto text-muted-foreground">{l.status_code || (l.ok ? "ok" : "err")}{l.error ? ` · ${l.error.slice(0, 60)}` : ""}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
+          ) : (
+            <p className="text-sm text-muted-foreground">Loading…</p>
+          )}
+        </Card>
+
+        {/* Internal linking engine */}
+        <Card className="p-4">
+          <div className="flex items-center justify-between mb-3">
+            <div className="font-medium text-sm">Internal linking engine</div>
+            <Button size="sm" variant="ghost" onClick={loadLinks}>Re-scan</Button>
+          </div>
+          {linkData ? (
+            <>
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                <Tile label="Posts" value={linkData.summary?.total_posts} />
+                <Tile label="Clusters" value={linkData.summary?.clusters} />
+                <Tile label="Orphans" value={linkData.summary?.orphans} tone={linkData.summary?.orphans ? "warn" : undefined} />
+                <Tile label="Internal links" value={linkData.summary?.total_internal_links} />
+                <Tile label="Avg / post" value={linkData.summary?.avg_links_per_post} />
+              </div>
+              <div className="grid md:grid-cols-2 gap-4 mt-4 pt-3 border-t border-border/40">
+                <div>
+                  <div className="text-xs uppercase tracking-wide text-muted-foreground mb-2">Top authority</div>
+                  <ul className="space-y-1 text-sm max-h-48 overflow-auto">
+                    {(linkData.authority ?? []).slice(0, 8).map((a: any) => (
+                      <li key={a.slug} className="flex items-center gap-2">
+                        <Badge variant="secondary" className="text-[10px] font-mono">{a.score}</Badge>
+                        <a href={`https://blogs.hustlaiapp.in/${a.slug}`} target="_blank" rel="noopener" className="truncate hover:underline">{a.title}</a>
+                        <span className="ml-auto text-[11px] text-muted-foreground">{a.inbound} in</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div>
+                  <div className="text-xs uppercase tracking-wide text-muted-foreground mb-2">Orphan posts</div>
+                  <ul className="space-y-1 text-sm max-h-48 overflow-auto">
+                    {(linkData.orphans ?? []).slice(0, 8).map((o: any) => (
+                      <li key={o.slug} className="flex items-center gap-2">
+                        <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
+                        <a href={`https://blogs.hustlaiapp.in/${o.slug}`} target="_blank" rel="noopener" className="truncate hover:underline">{o.title}</a>
+                      </li>
+                    ))}
+                    {!linkData.orphans?.length && <li className="text-muted-foreground text-xs">None — every post has at least one inbound link.</li>}
+                  </ul>
+                </div>
+                <div className="md:col-span-2">
+                  <div className="text-xs uppercase tracking-wide text-muted-foreground mb-2">Topic clusters</div>
+                  <div className="flex flex-wrap gap-2">
+                    {(linkData.clusters ?? []).slice(0, 12).map((c: any) => (
+                      <Badge key={c.id} variant="outline" className="text-[11px]">{c.label} · {c.members.length}</Badge>
+                    ))}
+                    {!linkData.clusters?.length && <span className="text-xs text-muted-foreground">No clusters yet.</span>}
+                  </div>
+                </div>
+                <div className="md:col-span-2">
+                  <div className="text-xs uppercase tracking-wide text-muted-foreground mb-2">Anchor diversity (lowest first)</div>
+                  <ul className="space-y-1 text-sm max-h-40 overflow-auto">
+                    {(linkData.anchors ?? []).slice(0, 8).map((a: any) => (
+                      <li key={a.slug} className="flex items-center gap-2">
+                        <Badge variant={a.unique_anchors <= 1 ? "destructive" : "secondary"} className="text-[10px]">{a.unique_anchors}</Badge>
+                        <code className="text-xs truncate">{a.slug}</code>
+                        <span className="ml-auto text-[11px] text-muted-foreground truncate">{a.anchors.join(" · ")}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </>
+          ) : (
+            <p className="text-sm text-muted-foreground">Loading…</p>
+          )}
         </Card>
 
         {/* External link map */}
