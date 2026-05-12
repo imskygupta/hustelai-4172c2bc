@@ -40,6 +40,7 @@ export const blogApi = {
   adminDelete: (id: string) => call(`/blog-admin?action=delete`, { admin: true, method: "POST", body: JSON.stringify({ id }) }),
   adminGenerate: (topic?: string, angle?: string, keyword?: string) =>
     call(`/blog-ai-draft`, { admin: true, method: "POST", body: JSON.stringify({ topic, angle, keyword }) }),
+  seoHealth: () => call(`/blog-seo-health`, { admin: true }),
 };
 
 export type BlogPost = {
