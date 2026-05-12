@@ -7,3 +7,4 @@
 - [Usage Governance](mem://features/usage-governance) — Capability registry, quota guards, admin governance UI
 - [Tool Unlocks](mem://features/tool-unlocks) — Consumable unlock packs for lightweight tools, exports, storage. AI is never boostable.
 - [Usage Intelligence](mem://features/usage-intelligence) — Standardized event tracking, funnel/heatmap, rage detection, anomaly alerts, cost ledger
+- [Operational Continuity](mem://transfer/operational-continuity) — Cross-workspace handoff snapshot: multi-DB topology, blog/SEO ecosystem, async queue infra, connectors, activation systems, migration checklist
