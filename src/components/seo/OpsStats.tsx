@@ -1,5 +1,5 @@
 import { Activity, FileCheck2, Plug, Send, Cpu } from "lucide-react";
-import { OperationalChip, AsyncLane } from "@/components/home/ops-primitives";
+import { OperationalChip, AsyncLane, LiveCounter, QueuePulse } from "@/components/home/ops-primitives";
 
 /**
  * Operational social-proof strip. Numbers are intentionally directional
@@ -33,13 +33,18 @@ export function OpsStats({ heading = "Operational by default" }: { heading?: str
                   <AsyncLane tone={tone} />
                 </div>
               ) : null}
-              <div className="rounded-xl border border-slate-200 bg-white p-4 md:p-5 hover:border-slate-300 transition h-full">
+              <div className="hover-ops rounded-xl border border-slate-200 bg-white p-4 md:p-5 hover:border-slate-300 transition h-full">
                 <div className="flex items-center justify-between mb-2">
                   <Icon className="w-4 h-4 text-slate-700" />
                   <OperationalChip tone={tone}>{chip}</OperationalChip>
                 </div>
-                <div className="text-xl md:text-2xl font-display font-semibold text-slate-900 tracking-tight">{value}</div>
-                <div className="text-[11px] md:text-xs text-slate-500 mt-1">{label}</div>
+                <div className="text-xl md:text-2xl font-display font-semibold text-slate-900 tracking-tight">
+                  <LiveCounter value={value} intervalMs={3600 + i * 420} />
+                </div>
+                <div className="text-[11px] md:text-xs text-slate-500 mt-1 flex items-center justify-between">
+                  <span>{label}</span>
+                  <QueuePulse count={3} tone={tone} className="opacity-70" />
+                </div>
               </div>
             </div>
           ))}
