@@ -423,6 +423,24 @@ function Stat({ label, value, tone }: { label: string; value: any; tone?: "succe
   );
 }
 
+function Tag({ children, tone }: { children: any; tone?: "success" | "warn" | "danger" }) {
+  const c = tone === "success" ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/30"
+         : tone === "warn"    ? "bg-amber-500/10  text-amber-600  border-amber-500/30"
+         : tone === "danger"  ? "bg-rose-500/10   text-rose-500   border-rose-500/30"
+         :                       "border-border/60 text-muted-foreground";
+  return <span className={`rounded border px-1.5 py-0.5 ${c}`}>{children}</span>;
+}
+
+function Mini({ label, value, tone }: { label: string; value: any; tone?: "success" | "warn" }) {
+  const c = tone === "success" ? "text-emerald-500" : tone === "warn" ? "text-amber-500" : "text-foreground";
+  return (
+    <div className="flex items-center justify-between">
+      <span>{label}</span>
+      <span className={c}>{String(value)}</span>
+    </div>
+  );
+}
+
 function PostRow({ post, busy, onRegen }: { post: any; busy: boolean; onRegen: (id: string, customUrl?: string) => void }) {
   const [custom, setCustom] = useState("");
   const internal = post.hero_image?.includes("/storage/v1/object/public/blog-assets/");
