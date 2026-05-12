@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { ClipboardList, Plus, Trash2, Copy, Link2, Sparkles, Loader2, Lock } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { ClipboardList, Plus, Trash2, Copy, Link2, Sparkles, Loader2, Lock, Eye, ExternalLink } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -77,6 +77,8 @@ export default function OnboardingFormBuilder() {
   const [aiPrompt, setAiPrompt] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
   const [signupOpen, setSignupOpen] = useState(false);
+  const [shareLink, setShareLink] = useState<string>("");
+  const [linkGenerated, setLinkGenerated] = useState(false);
 
   const updateField = (id: string, patch: Partial<Field>) =>
     setTpl({ ...tpl, fields: tpl.fields.map(f => f.id === id ? { ...f, ...patch } : f) });
@@ -128,12 +130,28 @@ export default function OnboardingFormBuilder() {
     }
   };
 
-  const shareLink = useMemo(() => {
+  const buildLink = () => {
     try {
       const payload = btoa(unescape(encodeURIComponent(JSON.stringify({ name: tpl.name, fields: tpl.fields }))));
-      return `${window.location.origin}/intake/preview?d=${payload.slice(0, 80)}…`;
-    } catch { return ""; }
-  }, [tpl]);
+      const link = `${window.location.origin}/intake/preview?d=${payload}`;
+      setShareLink(link);
+      setLinkGenerated(true);
+      toast.success("Preview link ready — open or copy below.");
+    } catch {
+      toast.error("Couldn't build preview link.");
+    }
+  };
+
+  // Reset preview link whenever the form is edited after generation
+  const tplSig = useMemo(() => JSON.stringify({ n: tpl.name, f: tpl.fields }), [tpl]);
+  const lastSigRef = useRef<string>("");
+  useEffect(() => {
+    if (linkGenerated && lastSigRef.current && lastSigRef.current !== tplSig) {
+      setLinkGenerated(false);
+      setShareLink("");
+    }
+    lastSigRef.current = tplSig;
+  }, [tplSig, linkGenerated]);
 
   return (
     <ToolPageLayout
@@ -236,15 +254,43 @@ export default function OnboardingFormBuilder() {
                 ))}
               </div>
 
-              <div className="mt-5 rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 p-4 flex items-center gap-3">
-                <Link2 className="w-4 h-4 text-emerald-700 shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <div className="text-[10px] uppercase tracking-wider font-bold text-emerald-700">Share link (preview)</div>
-                  <div className="text-xs text-slate-700 truncate">{shareLink}</div>
-                </div>
-                <Button size="sm" variant="outline" onClick={() => guard(() => { navigator.clipboard.writeText(shareLink); toast.success("Link copied"); }, "publish & share your intake form")}>
-                  <Copy className="w-3.5 h-3.5 mr-1" /> Copy
-                </Button>
+              <div className="mt-5 rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 p-4">
+                {!linkGenerated ? (
+                  <div className="flex items-center gap-3">
+                    <Link2 className="w-4 h-4 text-emerald-700 shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[11px] uppercase tracking-wider font-bold text-emerald-700">Preview link</div>
+                      <div className="text-xs text-slate-600 mt-0.5">Generate a working preview link to test your form before publishing.</div>
+                    </div>
+                    <Button size="sm" onClick={buildLink} className="bg-emerald-600 hover:bg-emerald-700 text-white shrink-0">
+                      <Sparkles className="w-3.5 h-3.5 mr-1" /> Create preview link
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <Link2 className="w-4 h-4 text-emerald-700 shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <div className="text-[11px] uppercase tracking-wider font-bold text-emerald-700">Live preview link</div>
+                        <div className="text-xs text-slate-700 truncate font-mono">{shareLink}</div>
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Button size="sm" variant="outline" onClick={() => { window.open(shareLink, "_blank"); }}>
+                        <Eye className="w-3.5 h-3.5 mr-1" /> Open preview
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => { navigator.clipboard.writeText(shareLink); toast.success("Link copied"); }}>
+                        <Copy className="w-3.5 h-3.5 mr-1" /> Copy link
+                      </Button>
+                      <Button size="sm" onClick={() => guard(() => navigate("/dashboard/workspace-os/intake-forms"), "publish your intake form")} className="bg-slate-900 hover:bg-slate-800 text-white ml-auto">
+                        <ExternalLink className="w-3.5 h-3.5 mr-1" /> Publish for real
+                      </Button>
+                    </div>
+                    <p className="text-[11px] text-slate-500">
+                      This is a sandbox preview — replies aren't stored. Publish from your workspace to get a permanent link and route replies to the Intake Inbox.
+                    </p>
+                  </div>
+                )}
               </div>
 
               <p className="mt-3 text-[11px] text-slate-500">
