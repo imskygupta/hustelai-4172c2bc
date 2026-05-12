@@ -109,6 +109,7 @@ export default function BlogOperations() {
         </div>
         <div className="flex items-center gap-2">
           <Button asChild size="sm" variant="ghost"><Link to="/admin/blog">Editorial →</Link></Button>
+          <Button asChild size="sm" variant="default"><Link to="/admin/blog/editorial">Command Center →</Link></Button>
           <Button asChild size="sm" variant="ghost"><Link to="/admin/blog/seo">SEO health →</Link></Button>
           <Button size="sm" variant="outline" onClick={ensure} disabled={busy}>Ensure bucket</Button>
           <Button size="sm" onClick={migrate} disabled={busy}>Migrate heroes</Button>
