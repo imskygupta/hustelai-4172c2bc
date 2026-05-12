@@ -22,15 +22,9 @@ import {
   FreeToolsStrip,
 } from "@/components/home/PlatformSections";
 import { IntegrationsMarquee } from "@/components/home/IntegrationsMarquee";
+import { OpsStats } from "@/components/seo/OpsStats";
 
 gsap.registerPlugin(ScrollTrigger);
-
-const stats = [
-  { value: "Async", label: "Workflows by default" },
-  { value: "Branded", label: "Every deliverable shipped" },
-  { value: "Live", label: "Operational visibility" },
-  { value: "Free", label: "Tier to get started" },
-];
 
 export default function Index() {
   const navigate = useNavigate();
@@ -88,14 +82,14 @@ export default function Index() {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
               </span>
-              AI Workspace Operating System · for freelancers &amp; operators
+              AI Workspace Operating System · async-native · operator-grade
             </div>
             <h1 className="gsap-fade text-[2.6rem] leading-[1.05] sm:text-5xl md:text-7xl font-display font-semibold tracking-tight text-slate-900">
-              Where modern operators<br className="hidden sm:block" />
-              <span className="text-emerald-600">run their work.</span>
+              The operating layer for<br className="hidden sm:block" />
+              <span className="text-emerald-600">how operators ship work.</span>
             </h1>
             <p className="gsap-fade text-[15px] md:text-lg text-slate-500 max-w-2xl mx-auto leading-relaxed">
-              Run client work, deliverables and async AI workflows from one calm operating layer. Clients, documents, exports and integrations — wired into a single workspace.
+              Clients, deliverables and async AI workflows — running together inside one calm, operational workspace. Built for solo operators and modern studios who treat their work like infrastructure.
             </p>
           </div>
 
@@ -128,26 +122,8 @@ export default function Index() {
 
       <TrustStrip />
 
-      {/* Stats */}
-      <section className="py-10 md:py-12 border-y border-slate-200 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
-            {stats.map((stat, i) => (
-              <motion.div
-                key={stat.label}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.1 }}
-                viewport={{ once: true }}
-                className="text-center"
-              >
-                <div className="text-2xl md:text-4xl font-display font-semibold text-slate-900 tracking-tight">{stat.value}</div>
-                <div className="text-xs md:text-sm text-slate-500 mt-1">{stat.label}</div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* Operational social proof — async ops, exports, Telegram pings */}
+      <OpsStats />
 
       {/* Platform story */}
       <UnifiedWorkspaceSection />
