@@ -6,6 +6,9 @@
 //   getAnalytics() → telemetry, audit logs, event queue, email logs, AI
 //                    generation history, provider metrics, status history,
 //                    activity streams, export history.
+//   getAsync()     → workflow runs, AI job state, retries, cron checkpoints,
+//                    notification deliveries, broadcast/newsletter dispatch,
+//                    email send logs, telegram command/send logs.
 //   getWorkspace() → Work Hub data (clients, notes, action log).
 //
 // NEVER mix: do not write payment/auth state to analytics, do not write
