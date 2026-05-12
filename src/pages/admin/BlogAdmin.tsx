@@ -89,6 +89,7 @@ export default function BlogAdmin() {
         <h1 className="font-medium">Blog editorial</h1>
         <div className="flex gap-2">
           <Button size="sm" variant="ghost" asChild><a href="/admin/blog/seo">SEO health →</a></Button>
+          <Button size="sm" variant="ghost" asChild><a href="/admin/blog/operations">Operations →</a></Button>
           <Button size="sm" variant="outline" onClick={() => generate("freelance workflow automation")}>+ AI draft</Button>
           <Button size="sm" onClick={() => setEditing({ status: "draft", body_md: "", title: "Untitled", cta_blocks: [], faq: [] })}>+ New post</Button>
         </div>
