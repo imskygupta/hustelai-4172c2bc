@@ -5,6 +5,10 @@ import { SEO, softwareJsonLd, faqJsonLd, breadcrumbJsonLd } from "@/components/S
 import { FAQBlock } from "@/components/seo/FAQBlock";
 import { CTASection } from "@/components/seo/CTASection";
 import { UseCasesGrid } from "@/components/seo/UseCasesGrid";
+import { RelatedClusters } from "@/components/seo/RelatedClusters";
+import { StickyMobileCTA } from "@/components/seo/StickyMobileCTA";
+import { WorkflowConnector } from "@/components/seo/WorkflowConnector";
+import { VersusBlock } from "@/components/seo/VersusBlock";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, CheckCircle2, Sparkles, ChevronRight } from "lucide-react";
 import NotFound from "@/pages/NotFound";
@@ -33,6 +37,41 @@ function Crumbs({ kind, entry }: { kind: SeoKind; entry?: SeoEntry }) {
     </nav>
   );
 }
+
+/** Per-kind sticky CTA copy — operational, not generic. */
+const CTA_BY_KIND: Record<SeoKind, { label: string; hint: string; href: string }> = {
+  features:      { label: "Open the workspace",     hint: "Free to start",       href: "/signup" },
+  workflows:     { label: "Start an async workflow", hint: "Free workspace",      href: "/signup" },
+  integrations:  { label: "Connect Telegram",        hint: "Free on every tier", href: "/integrations/telegram" },
+  "use-cases":   { label: "Open your workspace",     hint: "Built for operators", href: "/signup" },
+  "free-tools":  { label: "Generate document",       hint: "No signup",           href: "/signup" },
+};
+
+/** Default FAQ expansion blocks — appended per-kind for crawl depth + CTR. */
+const EXTRA_FAQS: Record<SeoKind, { q: string; a: string }[]> = {
+  features: [
+    { q: "How long does it take to set up the workspace?", a: "Under three minutes — create the workspace, add a brand kit, invite a client. The rest grows as you work." },
+    { q: "Does HustleAI work for solo operators?", a: "Yes — the free tier is built for solo. Studio tier scales to 2–10 person teams without changing the workflow." },
+  ],
+  workflows: [
+    { q: "Are workflows triggered manually or automatically?", a: "Both. Trigger from the workspace, on a schedule, via webhook, or from inside Telegram." },
+    { q: "Can I pause an async job?", a: "Yes — every job has a pause + cancel control. Paused jobs hold their inputs so you can resume cleanly." },
+    { q: "How do I know when an async job finishes?", a: "Live status in the workspace, optional Telegram pings, and webhook callbacks for custom routing." },
+  ],
+  integrations: [
+    { q: "Is Telegram the only delivery channel?", a: "No — Telegram, email and public portal links all work. Telegram is just the fastest." },
+    { q: "Can clients receive deliverables without an account?", a: "Yes — public portal links and Telegram bridge links work without signup." },
+    { q: "Are integrations available on the free tier?", a: "Telegram delivery is free on every tier. Payment integrations sit on paid tiers." },
+  ],
+  "use-cases": [
+    { q: "Can I switch tiers later?", a: "Anytime. Upgrades take effect immediately; downgrades happen at the next billing cycle." },
+    { q: "Will my data move with me?", a: "All workspace data is portable — exports include clients, documents, invoices and brand kits." },
+  ],
+  "free-tools": [
+    { q: "Do free tools require an account?", a: "No — generate without signup. Sign in only if you want to save outputs to a client record." },
+    { q: "What happens to my data?", a: "Free-tool inputs are processed and discarded. Saved outputs live in your workspace under your account." },
+  ],
+};
 
 /** Detail page: /features/:slug, /integrations/:slug, /workflows/:slug, /use-cases/:slug, /free-tools/:slug */
 export function ProgrammaticDetail({ kind }: { kind: SeoKind }) {
