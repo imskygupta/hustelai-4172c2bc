@@ -173,6 +173,9 @@ const BlogAdmin = lazy(() => import("./pages/admin/BlogAdmin"));
 const BlogSeoHealth = lazy(() => import("./pages/admin/BlogSeoHealth"));
 const BlogOperations = lazy(() => import("./pages/admin/BlogOperations"));
 const EditorialCenter = lazy(() => import("./pages/admin/EditorialCenter"));
+const ProductRegistry = lazy(() => import("./pages/admin/ProductRegistry"));
+const KnowledgeGraph = lazy(() => import("./pages/admin/KnowledgeGraph"));
+const NarrativeOps = lazy(() => import("./pages/admin/NarrativeOps"));
 import { MaintenanceBanner } from "./components/flags/FeatureGate";
 import TelegramLanding from "./pages/marketing/TelegramLanding";
 import { Navigate } from "react-router-dom";
@@ -400,6 +403,9 @@ const App = () => (
             <Route path="/admin/blog/indexing" element={<EditorialCenter />} />
             <Route path="/admin/blog/media" element={<BlogOperations />} />
             <Route path="/admin/blog/queue" element={<BlogOperations />} />
+            <Route path="/admin/blog/registry" element={<ProductRegistry />} />
+            <Route path="/admin/blog/graph" element={<KnowledgeGraph />} />
+            <Route path="/admin/blog/narrative" element={<NarrativeOps />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           </Suspense>
