@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import QueuePressure from "@/components/admin/QueuePressure";
+import QueueReplay from "@/components/admin/QueueReplay";
 
 type FunnelRow = {
   step_order: number;
@@ -136,6 +137,7 @@ export default function MissionControl() {
             <TabsTrigger value="funnel">Funnel</TabsTrigger>
             <TabsTrigger value="heatmap">Capability heatmap</TabsTrigger>
             <TabsTrigger value="queues">Queues</TabsTrigger>
+            <TabsTrigger value="replay">Replay</TabsTrigger>
             <TabsTrigger value="alerts" className="gap-1.5">
               Alerts
               {alerts.length > 0 && <Badge variant="destructive" className="h-4 px-1.5 text-[10px]">{alerts.length}</Badge>}
@@ -237,6 +239,10 @@ export default function MissionControl() {
           {/* Queues */}
           <TabsContent value="queues">
             <QueuePressure />
+          </TabsContent>
+
+          <TabsContent value="replay">
+            <QueueReplay />
           </TabsContent>
 
           {/* Alerts */}
