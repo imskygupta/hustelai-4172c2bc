@@ -393,6 +393,7 @@ const App = () => (
             <Route path="/admin/blog" element={<BlogAdmin />} />
             <Route path="/admin/blog/seo" element={<BlogSeoHealth />} />
             <Route path="/admin/blog/operations" element={<BlogOperations />} />
+            <Route path="/admin/blog/editorial" element={<EditorialCenter />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           </Suspense>
