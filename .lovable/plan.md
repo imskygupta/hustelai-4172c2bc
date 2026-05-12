@@ -1,109 +1,126 @@
-# Multi-Database Architecture Optimization
+# Activation & Conversion Pass
 
-## Goal
+Goal: every new user reaches a successful first outcome in minutes, then naturally flows toward exports → workspace → upgrades. No new infra. All work is in the frontend presentation layer plus a small `next_action` content registry.
 
-Relieve the primary Supabase instance by splitting workloads across three isolated databases. Auth and money stay on Core. Telemetry moves to Analytics. Queues and delivery state move to Async. The frontend keeps using one façade — it never knows which DB serves a request.
+The plan is sized in 6 self-contained phases. Each phase ships independently and is verifiable in the preview. We can stop or reorder after any phase.
 
-## Today vs Target
+---
 
-We already run three Supabase projects:
+## Phase 1 — First-action guidance & "Start Here" rail
 
-- **Primary (Core)** — `vbnqaovxatucrgtnggea` — auth, profiles, subscriptions, workspaces, payments, flags.
-- **Workspace** — `utflzmecghdtcjupgdan` — Work Hub data (kept as-is, orthogonal to this plan).
-- **Community / co-located Analytics** — `qeswhaytgvosfzzgraef` — forums + analytics tables temporarily co-located.
+The single biggest activation lever. New users currently land on a tool directory and have to choose. We replace ambiguity with one obvious path.
 
-Target after this pass:
+What ships:
+1. `StartHerePanel` on `/dashboard` (top of page, above existing widgets) shown for users with `< 3` lifetime activity events. Three opinionated paths:
+   - "Send your first proposal" → `/tools/proposal-generator` (template pre-filled)
+   - "Onboard your first client" → `/workspace-os/intake-forms`
+   - "Generate your first invoice" → `/tools/invoice-generator`
+   Each card shows the expected outcome ("a delivered PDF in ~2 min"), a tiny operational ribbon, and an explicit "What happens after" line.
+2. `FirstRunChecklist` (collapsible, persisted in `localStorage` + `profiles.first_run_state` jsonb): create a workspace · run one tool · export one file · connect Telegram. Auto-checks as events fire.
+3. Auto-dismiss the panel once any path is completed; replace with `NextActionRail` (Phase 4).
 
-```text
-DB 1 CORE         DB 2 ANALYTICS              DB 3 ASYNC
-auth              event_log                    workflow_runs / events / failures
-profiles          analytics_events             ai_jobs / ai_job_events
-subscriptions     analytics_event_aggregates   notification_deliveries
-payments          capability_cost_ledger       broadcast_jobs
-feature_flags     usage_ledger (history)       newsletter_sends / dispatch
-integrations      audit / admin_action logs    email_logs
-clients/workspace rage_click / friction        telegram_commands / send logs
-exports metadata  notification_events
-                  feature telemetry
-```
+Files: `src/components/activation/StartHerePanel.tsx`, `FirstRunChecklist.tsx`, hook into `Dashboard.tsx`. One small migration adds `profiles.first_run_state jsonb default '{}'`.
 
-Hot-path writes still hit Core first; secondary writes are fire-and-forget.
+---
 
-## Routing Rules (hard)
+## Phase 2 — Homepage conversion rewrite
 
-1. Auth, money, entitlements, current-day quota counters → **Core only**.
-2. Append-only telemetry, history, cost ledgers, audit → **Analytics**.
-3. Queues, retry state, delivery logs, cron checkpoints, AI job state → **Async**.
-4. **No cross-DB joins.** Issue parallel queries, merge in code. Denormalize identity (store `user_id` + tier snapshot on secondary rows).
-5. Frontend never imports secondary clients directly — it goes through edge functions or the existing `logEvent()` / `track()` helpers.
+Tighten the hero, add operational storytelling, kill generic AI copy.
 
-## Phased Migration (incremental, each phase shippable)
+What ships:
+1. New hero block: single H1 ("Run your freelance business like infrastructure"), one primary CTA ("Start free — first export in 2 minutes"), one secondary ("See a 60-second tour"). Replace any "AI-powered" boilerplate with delivery language ("proposals → invoice → Telegram").
+2. `WorkflowStorySection` — three concrete scenarios with before/after timelines:
+   - "Friday lead → Monday signed contract"
+   - "Brief in chat → branded PDF in inbox"
+   - "Repeat client → invoice + reminder fully async"
+3. `WhatHappensNext` strip below the fold: 4 numbered steps with tiny screenshot crops, ending in "And we keep delivering while you sleep."
+4. CTA hierarchy audit: only ONE primary CTA per viewport on the homepage; secondary buttons demoted to ghost.
 
-### Phase 0 — Plumbing (no data move)
+Files: rewrite `src/pages/Index.tsx` hero region, new `src/components/home/WorkflowStorySection.tsx`, `WhatHappensNextStrip.tsx`. No backend changes.
 
-- Add new env/secret names alongside existing ones:
-  - `ANALYTICS_SUPABASE_URL` / `ANALYTICS_SUPABASE_SERVICE_ROLE_KEY` (already partially wired)
-  - `ASYNC_SUPABASE_URL` / `ASYNC_SUPABASE_SERVICE_ROLE_KEY` (new)
-- Extend `supabase/functions/_shared/clients.ts` with `getAsync()` + `safeAsyncInsert()` mirroring the Analytics helpers.
-- Add `src/integrations/async/client.ts` (read-only anon client, parallel to `analytics/client.ts`). Frontend will not write directly.
-- Update `mem://tech/db-routing.md` with the 3-DB matrix and Async additions.
+---
 
-### Phase 1 — Telemetry isolation (Analytics DB)
+## Phase 3 — Free → paid UX (contextual, non-paywall)
 
-Already mostly done. Finish:
+Reframe limits as "workflow continuation," not walls.
 
-- Provision a dedicated Analytics Supabase project; set `ANALYTICS_SUPABASE_*` secrets so we stop co-locating on Community.
-- Create tables on Analytics: `event_log`, `analytics_events`, `analytics_event_aggregates`, `capability_cost_ledger`, `usage_ledger`, `audit_logs`, `admin_actions`, `notification_events`, `friction_signals`.
-- Repoint `log-event`, `usage-record`, `track_event` RPC writers, `record_capability_cost`, `roll_up_analytics_events` to Analytics via `getAnalytics()`.
-- Keep a thin shim on Core that drops writes silently if Analytics is down (already in `safeAnalyticsInsert`).
-- Backfill: dual-write for 24h, then snapshot-copy historical rows, then stop Core writes.
+What ships:
+1. Update `UpgradeSheet.tsx` copy + layout: lead with "Continue this workflow," then show the *specific* next operational unlock the user just hit (e.g. "deliver to Telegram automatically," "export 20 branded PDFs/day"). Pricing table moves below the fold of the sheet.
+2. New `ContinueWorkflowBanner` that appears inline (not as a modal) when a user finishes a free-tool run and is ~80% of their daily quota. Calm, single line: "You've used 4 of 5 today — upgrade adds Telegram delivery + 20 more."
+3. `QuotaBar.tsx` gets a "what unlocks at the next tier" tooltip — same data, no new lookups.
+4. Remove any aggressive paywall full-screen blocks; replace with the standard `QuotaBoundary` soft state.
+5. New `UpgradeMomentTracker` (client-only) so we never show the same contextual prompt twice in a session.
 
-### Phase 2 — Queues + delivery (Async DB)
+Files: edit `src/components/usage/UpgradeSheet.tsx`, `QuotaBar.tsx`, `QuotaBoundary.tsx`; new `src/components/usage/ContinueWorkflowBanner.tsx`, `src/lib/usage/upgrade-moments.ts`.
 
-- Create on Async: `workflow_runs`, `workflow_events`, `workflow_failures`, `ai_jobs`, `ai_job_events`, `notification_deliveries`, `broadcast_jobs`, `newsletter_sends`, `email_logs`, `telegram_commands`, `cron_checkpoints`.
-- Move the SECURITY DEFINER claim/complete RPCs (`claim_ai_jobs`, `complete_ai_job`, `fail_ai_job`, `claim_workflow_runs`, `enqueue_workflow_runs`, `enqueue_ai_job`, `replay_workflow_failure`) to Async. Keep Core wrappers that proxy via edge function for one release, then delete.
-- Update workers (`ai-job-runner`, `workflow-runner`, `telegram-send`, `newsletter-dispatch`, `email-send`) to use `getAsync()` for state and only touch Core for identity/feature checks.
-- Cron jobs (pg_cron) stay on Core but trigger edge functions; checkpoints move to Async.
+---
 
-### Phase 3 — Resilience & monitoring
+## Phase 4 — "Recommended next action" engine
 
-- Wrap every secondary write in a `safe*Insert` helper: try once, log failure to Core `system_health` table, never throw.
-- Add a `db_ops_metrics` table on Analytics: `db_target`, `op`, `count`, `failures`, `bucket_minute`. Increment via a tiny middleware in `_shared/clients.ts`.
-- Admin Mission Control gets a "DB Health" widget reading: ops/min per DB, write failure rate, queue depth (Async), telemetry lag (Analytics).
-- Add a circuit breaker: if Analytics or Async write failure > 20% over 5 min, downgrade to in-memory queue + alert.
+After every meaningful action (tool generated, export made, intake submitted), surface 1–3 contextual next steps.
 
-### Phase 4 — Cleanup
+What ships:
+1. Tiny content registry `src/lib/next-actions/registry.ts` — pure data, e.g.
+   ```text
+   proposal_generated → [send_to_client, save_to_workspace, draft_invoice]
+   invoice_generated  → [deliver_to_telegram, schedule_reminder, log_in_workspace]
+   intake_submitted   → [convert_to_proposal, add_to_pipeline, send_welcome_email]
+   ```
+2. `NextActionRail` component — sticky strip that appears for ~10 seconds after success, then collapses into a small chip in the corner. Uses ops primitives we already have (signal pulses, delivery indicators).
+3. Wire into the 4 highest-impact tools first: Proposal, Invoice, Onboarding form, Content Calendar. Other tools can adopt the same hook later.
 
-- Drop migrated tables on Core only after 7 days of clean dual-read parity.
-- Remove proxy RPCs.
-- Final memory update + routing matrix freeze.
+Files: `src/lib/next-actions/registry.ts`, `src/components/activation/NextActionRail.tsx`, hook calls inside the 4 tool pages.
 
-## Frontend Contract (unchanged)
+---
 
-- `supabase` import still resolves to Core.
-- `track()`, `logEvent()`, `consumeUsage()`, `enqueueAiJob()` keep their signatures. Only their underlying transport changes.
-- No component or page edits required.
+## Phase 5 — Workspace onboarding & guided setup
 
-## Risks & Mitigations
+When a user first opens `/workspace-os` we currently dump them into a grid.
 
-- **Risk:** RPC moves break callers. **Mitigation:** keep Core proxy RPCs for one release; feature-flag the cutover per RPC.
-- **Risk:** Cross-DB FK loss on `user_id`. **Mitigation:** denormalize email/tier; nightly orphan sweep.
-- **Risk:** Cost of a 4th project. **Mitigation:** Phase 1 already paid; Phase 2 needs one new project (Async).
-- **Risk:** Auth tokens reused across DBs. **Mitigation:** secondary clients use `persistSession: false` + their own `storageKey` (already pattern in `analytics/client.ts`).
+What ships:
+1. `WorkspaceWizard` (3 steps, dismissible): name your workspace → pick a starter pack (Freelancer / Agency / Async Team) → import or skip.
+2. Starter packs (pure JSON, no DB schema change) seed: 1 client, 1 intake form, 1 proposal template, 1 invoice template, 1 doc, 1 pipeline. Insert via existing client APIs.
+3. `SuggestedWorkflows` panel on the workspace overview: 3 cards tied to the user's chosen pack, each one a 2–3 step flow.
+4. "What should I do next?" widget powered by the same next-action registry from Phase 4 + workspace state (no clients yet → "add your first client", clients but no invoice → "send your first invoice", etc.).
 
-## Deliverables Checklist
+Files: `src/components/workspace-os/WorkspaceWizard.tsx`, `SuggestedWorkflows.tsx`, `src/lib/workspace-os/starter-packs.ts`. Edits to `src/pages/workspace-os/Overview.tsx` and `WorkspaceOS.tsx`.
 
-- [ ] `ASYNC_SUPABASE_*` secrets requested
-- [ ] `getAsync()` + `safeAsyncInsert()` in `_shared/clients.ts`
-- [ ] `src/integrations/async/client.ts`
-- [ ] Analytics project provisioned (stop co-locating on Community)
-- [ ] Phase 1 dual-write → cutover
-- [ ] Phase 2 queue tables + worker repoint
-- [ ] DB Health widget in Mission Control
-- [ ] `mem://tech/db-routing.md` updated to 3-DB matrix
+---
 
-## Out of Scope
+## Phase 6 — Empty-state, free-tool→workspace bridge, confidence signals
 
-- Workspace DB restructuring (already isolated).
-- Schema changes to Core auth/payments tables.
-- Any frontend redesign.
+Polish layer; ties everything together.
+
+What ships:
+1. Upgrade `EmptyState` component to support `template` (a one-line example), `previewSteps` (3 mini chips showing the workflow), and `secondaryAction`. Migrate the top ~10 empty states (workspace lists, exports, intake inbox, pipeline, etc.).
+2. Free-tool footer strip — every public tool gets a slim "Continue inside workspace" CTA in its result card linking to the relevant workspace surface (proposals → workspace docs, invoices → revenue, intake → intake-inbox).
+3. Confidence signals: standardize `DeliveryBadge`, `WorkflowStateChip`, `AsyncCompletionPing` (already exist as ops-primitives) and apply them on every async surface (exports list, telegram send list, intake submissions, AI jobs panel) with a small shared `<OpsStatus />` wrapper.
+4. Mobile pass on all of the above: tap targets ≥ 44px, sticky CTAs use safe-area, `StartHerePanel` collapses to a swipeable horizontal rail < `sm`.
+
+Files: edit `src/components/ui/empty-state.tsx`, new `src/components/activation/ContinueInWorkspaceFooter.tsx`, `src/components/ops/OpsStatus.tsx`. Targeted edits across the listed pages.
+
+---
+
+## Out of scope (intentional)
+- No new database tables beyond the tiny `profiles.first_run_state` jsonb (Phase 1).
+- No new edge functions.
+- No queue, telemetry, or analytics infra changes (per "stop expanding queue infra").
+- No homepage/marketing redesign beyond the hero + two added sections.
+- No price changes, no plan SKU changes.
+
+---
+
+## Verification per phase
+- Phase 1: open `/dashboard` as a fresh account → see Start Here panel + checklist; complete one path → panel auto-dismisses.
+- Phase 2: lighthouse + manual scroll on `/`; only one primary CTA per viewport.
+- Phase 3: hit a free-tool quota → soft banner appears, sheet copy leads with "Continue this workflow."
+- Phase 4: generate a proposal → rail shows 3 next actions; clicking one navigates correctly.
+- Phase 5: create a fresh workspace → wizard appears → starter pack populates real rows.
+- Phase 6: sample 5 empty states + 3 mobile breakpoints in preview.
+
+---
+
+## Suggested execution order
+Phase 1 → 4 → 3 → 6 → 2 → 5. (Activation lever first, conversion plumbing second, marketing polish last so it benefits from the new product surfaces it's selling.)
+
+Reply with **approve** to start with Phase 1, or tell me which phases to drop / re-order.
