@@ -4007,12 +4007,17 @@ export type Database = {
           first_seen_at: string
           id: string
           last_error: string | null
+          last_replayed_at: string | null
+          last_replayed_by: string | null
           last_seen_at: string
+          max_replays: number
           occurrences: number
           payload: Json
           queue: string
           reason: string
           ref_id: string
+          replay_count: number
+          replay_locked_until: string | null
           resolution_notes: string | null
           resolved: boolean
           resolved_at: string | null
@@ -4023,12 +4028,17 @@ export type Database = {
           first_seen_at?: string
           id?: string
           last_error?: string | null
+          last_replayed_at?: string | null
+          last_replayed_by?: string | null
           last_seen_at?: string
+          max_replays?: number
           occurrences?: number
           payload?: Json
           queue: string
           reason: string
           ref_id: string
+          replay_count?: number
+          replay_locked_until?: string | null
           resolution_notes?: string | null
           resolved?: boolean
           resolved_at?: string | null
@@ -4039,12 +4049,17 @@ export type Database = {
           first_seen_at?: string
           id?: string
           last_error?: string | null
+          last_replayed_at?: string | null
+          last_replayed_by?: string | null
           last_seen_at?: string
+          max_replays?: number
           occurrences?: number
           payload?: Json
           queue?: string
           reason?: string
           ref_id?: string
+          replay_count?: number
+          replay_locked_until?: string | null
           resolution_notes?: string | null
           resolved?: boolean
           resolved_at?: string | null
@@ -4094,6 +4109,56 @@ export type Database = {
           succeeded_24h?: number
         }
         Relationships: []
+      }
+      queue_replay_audit: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          dlq_id: string | null
+          forced: boolean
+          id: string
+          new_ref_id: string | null
+          original_ref_id: string
+          payload_snapshot: Json | null
+          queue: string
+          reason: string | null
+          status: string
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          dlq_id?: string | null
+          forced?: boolean
+          id?: string
+          new_ref_id?: string | null
+          original_ref_id: string
+          payload_snapshot?: Json | null
+          queue: string
+          reason?: string | null
+          status: string
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          dlq_id?: string | null
+          forced?: boolean
+          id?: string
+          new_ref_id?: string | null
+          original_ref_id?: string
+          payload_snapshot?: Json | null
+          queue?: string
+          reason?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "queue_replay_audit_dlq_id_fkey"
+            columns: ["dlq_id"]
+            isOneToOne: false
+            referencedRelation: "queue_dead_letter"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       queue_retention_policy: {
         Row: {
@@ -7187,6 +7252,25 @@ export type Database = {
         }[]
       }
       queue_purge_expired: { Args: never; Returns: Json }
+      queue_replay: {
+        Args: { _dlq_id: string; _force?: boolean; _notes?: string }
+        Returns: Json
+      }
+      queue_replay_history: {
+        Args: { _limit?: number }
+        Returns: {
+          actor_id: string
+          created_at: string
+          dlq_id: string
+          forced: boolean
+          id: string
+          new_ref_id: string
+          original_ref_id: string
+          queue: string
+          reason: string
+          status: string
+        }[]
+      }
       record_capability_cost: {
         Args: {
           _capability: string
