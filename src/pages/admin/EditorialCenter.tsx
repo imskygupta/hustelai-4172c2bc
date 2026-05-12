@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { Loader2, RefreshCw, Sparkles, RadioTower, ArrowLeft, Activity, AlertTriangle, Wand2, Network, ShieldAlert, DollarSign, Search, Gauge } from "lucide-react";
@@ -47,6 +47,15 @@ function timeAgo(iso?: string | null) {
 }
 
 export default function EditorialCenter() {
+  const location = useLocation();
+  const focus = (() => {
+    const p = location.pathname;
+    if (p.endsWith("/pipeline")) return "pipeline";
+    if (p.endsWith("/topics")) return "topics";
+    if (p.endsWith("/linking")) return "linking";
+    if (p.endsWith("/indexing")) return "indexing";
+    return "";
+  })();
   const [data, setData] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -71,6 +80,14 @@ export default function EditorialCenter() {
   };
 
   useEffect(() => { load(); }, []);
+  useEffect(() => {
+    if (!focus || loading) return;
+    const t = setTimeout(() => {
+      const el = document.getElementById(`section-${focus}`);
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 250);
+    return () => clearTimeout(t);
+  }, [focus, loading]);
   useEffect(() => {
     const t = setInterval(() => setPulse(p => (p + 1) % 1000), 2400);
     return () => clearInterval(t);
@@ -196,7 +213,7 @@ export default function EditorialCenter() {
         )}
 
         {/* 1. Pipeline */}
-        <Section icon={<Activity className="w-4 h-4" />} title="Editorial Pipeline" subtitle="Stage by stage. Cards age in place.">
+        <Section anchor="pipeline" icon={<Activity className="w-4 h-4" />} title="Editorial Pipeline" subtitle="Stage by stage. Cards age in place.">
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
             {STAGES.map(s => {
               const items: Card[] = data?.pipeline?.[s.key] ?? [];
@@ -276,7 +293,7 @@ export default function EditorialCenter() {
         )}
 
         {/* 5. Authority Layer */}
-        <Section icon={<Network className="w-4 h-4 text-blue-400" />} title="Authority Layer" subtitle="PageRank-lite, clusters, orphans.">
+        <Section anchor="linking" icon={<Network className="w-4 h-4 text-blue-400" />} title="Authority Layer · Internal Linking" subtitle="PageRank-lite, clusters, orphans.">
           <div className="grid md:grid-cols-3 gap-3">
             <Panel title="Top Authority">
               {(data?.authority?.top ?? []).map((t: any) => (
@@ -424,9 +441,9 @@ export default function EditorialCenter() {
   );
 }
 
-function Section({ icon, title, subtitle, children }: any) {
+function Section({ icon, title, subtitle, children, anchor }: any) {
   return (
-    <Card className="bg-card/40 border-border/50">
+    <Card id={anchor ? `section-${anchor}` : undefined} className="bg-card/40 border-border/50 scroll-mt-24">
       <CardHeader className="pb-2">
         <CardTitle className="text-base font-semibold flex items-center gap-2">
           {icon}{title}
