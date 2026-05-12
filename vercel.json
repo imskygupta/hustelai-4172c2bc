@@ -1,6 +1,40 @@
 {
   "rewrites": [
     {
+      "source": "/sitemap.xml",
+      "has": [{ "type": "host", "value": "blogs.hustlaiapp.in" }],
+      "destination": "https://vbnqaovxatucrgtnggea.supabase.co/functions/v1/blog-sitemap?type=posts"
+    },
+    {
+      "source": "/sitemap-index.xml",
+      "has": [{ "type": "host", "value": "blogs.hustlaiapp.in" }],
+      "destination": "https://vbnqaovxatucrgtnggea.supabase.co/functions/v1/blog-sitemap?type=index"
+    },
+    {
+      "source": "/sitemap-posts.xml",
+      "has": [{ "type": "host", "value": "blogs.hustlaiapp.in" }],
+      "destination": "https://vbnqaovxatucrgtnggea.supabase.co/functions/v1/blog-sitemap?type=posts"
+    },
+    {
+      "source": "/sitemap-categories.xml",
+      "has": [{ "type": "host", "value": "blogs.hustlaiapp.in" }],
+      "destination": "https://vbnqaovxatucrgtnggea.supabase.co/functions/v1/blog-sitemap?type=categories"
+    },
+    {
+      "source": "/sitemap-images.xml",
+      "has": [{ "type": "host", "value": "blogs.hustlaiapp.in" }],
+      "destination": "https://vbnqaovxatucrgtnggea.supabase.co/functions/v1/blog-sitemap?type=images"
+    },
+    {
+      "source": "/robots.txt",
+      "has": [{ "type": "host", "value": "blogs.hustlaiapp.in" }],
+      "destination": "https://vbnqaovxatucrgtnggea.supabase.co/functions/v1/blog-sitemap?type=robots"
+    },
+    {
+      "source": "/sitemap.xml",
+      "destination": "https://vbnqaovxatucrgtnggea.supabase.co/functions/v1/sitemap"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
