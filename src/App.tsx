@@ -177,6 +177,7 @@ const EditorialCenter = lazy(() => import("./pages/admin/EditorialCenter"));
 const ProductRegistry = lazy(() => import("./pages/admin/ProductRegistry"));
 const KnowledgeGraph = lazy(() => import("./pages/admin/KnowledgeGraph"));
 const NarrativeOps = lazy(() => import("./pages/admin/NarrativeOps"));
+const TrafficIntelligence = lazy(() => import("./pages/admin/TrafficIntelligence"));
 import { MaintenanceBanner } from "./components/flags/FeatureGate";
 import TelegramLanding from "./pages/marketing/TelegramLanding";
 import { Navigate } from "react-router-dom";
@@ -408,6 +409,7 @@ const App = () => (
             <Route path="/admin/blog/registry" element={<ProductRegistry />} />
             <Route path="/admin/blog/graph" element={<KnowledgeGraph />} />
             <Route path="/admin/blog/narrative" element={<NarrativeOps />} />
+            <Route path="/admin/blog/traffic" element={<TrafficIntelligence />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           </Suspense>
