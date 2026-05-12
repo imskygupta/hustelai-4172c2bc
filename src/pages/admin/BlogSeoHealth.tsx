@@ -6,6 +6,8 @@ import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 
 const BING_VERIFICATION = "9C4743D0C435C4CF0059E56C66972551";
+const YANDEX_FILE = "yandex_67f758ee3c9bd150.html";
+const YANDEX_TOKEN = "67f758ee3c9bd150";
 const VERIFY_DOMAINS = [
   { label: "hustlaiapp.in", url: "https://hustlaiapp.in" },
   { label: "blogs.hustlaiapp.in", url: "https://blogs.hustlaiapp.in" },
@@ -48,21 +50,26 @@ export default function BlogSeoHealth() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>("all");
   const [severity, setSeverity] = useState<string>("all");
-  const [verify, setVerify] = useState<Record<string, "checking" | "ok" | "missing" | "error">>({});
+  type VStatus = "checking" | "ok" | "missing" | "error";
+  const [verify, setVerify] = useState<Record<string, { bing: VStatus; yandex: VStatus }>>({});
 
   const checkVerification = async () => {
     const next: typeof verify = {};
-    for (const d of VERIFY_DOMAINS) next[d.label] = "checking";
+    for (const d of VERIFY_DOMAINS) next[d.label] = { bing: "checking", yandex: "checking" };
     setVerify(next);
     await Promise.all(VERIFY_DOMAINS.map(async d => {
+      // Bing meta lives in the SPA shell
       try {
         const r = await fetch(`${d.url}/?_v=${Date.now()}`, { mode: "cors" });
         const html = await r.text();
-        next[d.label] = html.includes(BING_VERIFICATION) ? "ok" : "missing";
-      } catch {
-        // CORS-blocked fetches still tell us nothing — mark as unknown but not an error
-        next[d.label] = "error";
-      }
+        next[d.label].bing = html.includes(BING_VERIFICATION) ? "ok" : "missing";
+      } catch { next[d.label].bing = "error"; }
+      // Yandex verification file must serve as static HTML, not the SPA fallback
+      try {
+        const r = await fetch(`${d.url}/${YANDEX_FILE}?_v=${Date.now()}`, { mode: "cors" });
+        const html = await r.text();
+        next[d.label].yandex = r.ok && html.includes(YANDEX_TOKEN) && !html.includes("<div id=\"root\"") ? "ok" : "missing";
+      } catch { next[d.label].yandex = "error"; }
       setVerify({ ...next });
     }));
   };
