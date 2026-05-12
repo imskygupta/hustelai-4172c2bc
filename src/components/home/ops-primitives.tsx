@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
+import { useEffect, useId, useState } from "react";
 
 /**
  * Unified operational visual language.
@@ -239,9 +240,9 @@ export function LiveCounter({
   className?: string;
   intervalMs?: number;
 }) {
-  const id = React.useId();
-  const [tick, setTick] = React.useState(0);
-  React.useEffect(() => {
+  const id = useId();
+  const [tick, setTick] = useState(0);
+  useEffect(() => {
     const t = setInterval(() => setTick((n) => n + 1), intervalMs);
     return () => clearInterval(t);
   }, [intervalMs]);
