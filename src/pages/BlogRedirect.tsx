@@ -29,7 +29,6 @@ export default function BlogRedirect() {
         title="HustleAI Notes — Operational publication"
         description="The HustleAI editorial publication has moved to blogs.hustlaiapp.in — operational writing on freelance workflows, async client systems and AI exports."
         path="/blog"
-        canonical={`${BLOG_HOST}/`}
       />
       <link rel="canonical" href={`${BLOG_HOST}/`} />
       <meta httpEquiv="refresh" content={`0; url=${target}`} />
