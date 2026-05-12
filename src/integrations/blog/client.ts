@@ -71,6 +71,17 @@ export const blogApi = {
   linkReadNext: (slug: string) => call(`/blog-link-engine?action=read_next&slug=${encodeURIComponent(slug)}`, { admin: true }),
   linkAutoInsert: (payload: { id?: string; body_md: string; focus_keyword?: string; max?: number; append_cta?: boolean }) =>
     call(`/blog-link-engine?action=auto_insert`, { admin: true, method: "POST", body: JSON.stringify(payload) }),
+
+  // Editorial Command Center
+  editorialOverview: () => call(`/editorial-center?action=overview`, { admin: true }),
+  editorialTopicIntel: () => call(`/editorial-center?action=topic_intel`, { admin: true }),
+  editorialIndexing: (slug: string) => call(`/editorial-center?action=indexing&slug=${encodeURIComponent(slug)}`, { admin: true }),
+  editorialRecrawl: (slug: string) =>
+    call(`/editorial-center?action=recrawl`, { admin: true, method: "POST", body: JSON.stringify({ slug }) }),
+  editorialAiRefresh: (id: string, intent: string) =>
+    call(`/editorial-center?action=ai_refresh`, { admin: true, method: "POST", body: JSON.stringify({ id, intent }) }),
+  editorialHumanize: (payload: { id?: string; body_md?: string }) =>
+    call(`/editorial-center?action=humanize`, { admin: true, method: "POST", body: JSON.stringify(payload) }),
 };
 
 export type BlogPost = {
