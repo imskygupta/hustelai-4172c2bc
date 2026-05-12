@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Check, Crown, Rocket, Sparkles, Star, Building2, ArrowRight, Flame, Zap } from "lucide-react";
 import { track } from "@/lib/analytics";
+import { yandexTrack } from "@/lib/yandex";
 
 const plans = [
   {
@@ -66,7 +67,10 @@ const plans = [
 
 export default function PricingPage() {
   const navigate = useNavigate();
-  useEffect(() => { track("pricing_page_viewed"); }, []);
+  useEffect(() => {
+    track("pricing_page_viewed");
+    yandexTrack("pricing_view");
+  }, []);
 
   return (
     <div className="min-h-screen bg-white text-slate-900">
@@ -160,7 +164,10 @@ export default function PricingPage() {
                         ? "bg-amber-400 hover:bg-amber-500 text-slate-900"
                         : "bg-slate-900 hover:bg-emerald-500 text-white transition-colors"
                     }`}
-                    onClick={() => navigate(p.href)}
+                    onClick={() => {
+                      yandexTrack("pricing_click", { plan: p.name, href: p.href });
+                      navigate(p.href);
+                    }}
                   >
                     {p.cta}
                   </Button>
