@@ -176,13 +176,41 @@ Deno.serve(async (req) => {
       external_hosts: [...externalHosts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 20).map(([host, count]) => ({ host, count })),
     };
 
-    const sitemapUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/blog-sitemap`;
+    const PUBLIC_SITE = "https://blogs.hustlaiapp.in";
+    const sitemapUrl = `${PUBLIC_SITE}/sitemap.xml`;
+    const sitemapIndexUrl = `${PUBLIC_SITE}/sitemap-index.xml`;
+    const robotsUrl = `${PUBLIC_SITE}/robots.txt`;
+
+    // Live sitemap health probe (uses public domain so we validate the
+    // Vercel rewrite + edge function path together).
+    let sitemap_health: { ok: boolean; status?: number; reachable: boolean; content_type?: string; article_count?: number; error?: string } = {
+      ok: false, reachable: false,
+    };
+    try {
+      const probe = await fetch(`${PUBLIC_SITE}/sitemap.xml`, { redirect: "follow" });
+      const ct = probe.headers.get("content-type") ?? "";
+      const text = probe.ok ? await probe.text() : "";
+      const count = (text.match(/<url>/g) ?? []).length;
+      sitemap_health = {
+        ok: probe.ok && /xml/i.test(ct),
+        reachable: true,
+        status: probe.status,
+        content_type: ct,
+        article_count: count,
+      };
+    } catch (e) {
+      sitemap_health = { ok: false, reachable: false, error: String(e) };
+    }
+
     const helpers = {
       sitemap_url: sitemapUrl,
+      sitemap_index_url: sitemapIndexUrl,
+      robots_url: robotsUrl,
+      sitemap_health,
       // Search-engine ping endpoints (still respected by Bing/Yandex; Google deprecated theirs).
       ping_bing: `https://www.bing.com/ping?sitemap=${encodeURIComponent(sitemapUrl)}`,
-      gsc_submit: `https://search.google.com/search-console/sitemaps?resource_id=${encodeURIComponent("https://blogs.hustlaiapp.in/")}`,
-      gsc_inspect: `https://search.google.com/search-console/inspect?resource_id=${encodeURIComponent("https://blogs.hustlaiapp.in/")}`,
+      gsc_submit: `https://search.google.com/search-console/sitemaps?resource_id=${encodeURIComponent(PUBLIC_SITE + "/")}`,
+      gsc_inspect: `https://search.google.com/search-console/inspect?resource_id=${encodeURIComponent(PUBLIC_SITE + "/")}`,
     };
 
     return new Response(JSON.stringify({ summary, issues, helpers }), {
