@@ -5,6 +5,24 @@ import { BlogShell } from "@/components/blog/BlogShell";
 import { BlogSEO, blogOrgJsonLd } from "@/components/blog/BlogSEO";
 import { AdSlot } from "@/components/blog/AdSlot";
 
+const CATEGORY_PLACEHOLDERS: Record<string, string> = {
+  "freelancer-workflows": "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1600&q=70&auto=format&fit=crop",
+  "client-systems":       "https://images.unsplash.com/photo-1552581234-26160f608093?w=1600&q=70&auto=format&fit=crop",
+  "async-operations":     "https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=1600&q=70&auto=format&fit=crop",
+  "ai-operations":        "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=1600&q=70&auto=format&fit=crop",
+  "creator-workflows":    "https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=1600&q=70&auto=format&fit=crop",
+  "telegram-delivery":    "https://images.unsplash.com/photo-1531403009284-440f080d1e12?w=1600&q=70&auto=format&fit=crop",
+};
+function heroFor(post: any): string {
+  return post?.hero_image
+    || CATEGORY_PLACEHOLDERS[post?.blog_categories?.slug ?? ""]
+    || CATEGORY_PLACEHOLDERS["async-operations"];
+}
+function onImgError(e: React.SyntheticEvent<HTMLImageElement>, post: any) {
+  const fb = CATEGORY_PLACEHOLDERS[post?.blog_categories?.slug ?? ""] || CATEGORY_PLACEHOLDERS["async-operations"];
+  if (e.currentTarget.src !== fb) e.currentTarget.src = fb;
+}
+
 export default function BlogHome() {
   const [posts, setPosts] = useState<any[]>([]);
   const [cats, setCats] = useState<any[]>([]);
@@ -113,15 +131,14 @@ function PostCard({ post, priority, isNew }: { post: any; priority?: boolean; is
     <article>
       <Link to={`/${post.slug}`} className="block group">
         <div className="aspect-[16/10] rounded-md overflow-hidden bg-muted/40 mb-4">
-          {post.hero_image && (
-            <img
-              src={post.hero_image}
-              alt={post.title}
-              loading={priority ? "eager" : "lazy"}
+          <img
+            src={heroFor(post)}
+            alt={post.title}
+            loading={priority ? "eager" : "lazy"}
               decoding="async"
+              onError={(e) => onImgError(e, post)}
               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
             />
-          )}
         </div>
         <div className="text-[11px] uppercase tracking-wide text-muted-foreground mb-1.5 flex items-center gap-2">
           <span>{post.blog_categories?.title ?? "Note"}</span>
@@ -140,18 +157,17 @@ function FeaturedCard({ post, isNew }: { post: any; isNew?: boolean }) {
   return (
     <article className="border border-border/50 rounded-lg overflow-hidden bg-muted/10">
       <Link to={`/${post.slug}`} className="block group">
-        {post.hero_image && (
-          <div className="aspect-[16/9] overflow-hidden bg-muted/30">
-            <img
-              src={post.hero_image}
-              alt={post.title}
-              loading="eager"
-              decoding="async"
-              fetchPriority={"high" as any}
-              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.02]"
-            />
-          </div>
-        )}
+        <div className="aspect-[16/9] overflow-hidden bg-muted/30">
+          <img
+            src={heroFor(post)}
+            alt={post.title}
+            loading="eager"
+            decoding="async"
+            fetchPriority={"high" as any}
+            onError={(e) => onImgError(e, post)}
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.02]"
+          />
+        </div>
         <div className="p-6">
           <div className="text-[11px] uppercase tracking-wide text-muted-foreground mb-2 flex items-center gap-2">
             <span className="px-1.5 py-px rounded-sm bg-foreground/10 text-foreground/80">Featured</span>

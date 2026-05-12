@@ -107,6 +107,17 @@ Deno.serve(async (req) => {
       if (pErr) throw pErr;
 
       await blog.from("blog_ai_drafts").update({ status: "ready", generated_post_id: post.id }).eq("id", draft!.id);
+
+      // Fire-and-forget hero image pipeline
+      try {
+        const fnBase = (Deno.env.get("SUPABASE_URL") ?? "").replace(/\/$/, "") + "/functions/v1";
+        fetch(`${fnBase}/blog-image-pipeline?action=regenerate&key=${encodeURIComponent(Deno.env.get("BLOG_SUPABASE_SERVICE_ROLE")!)}`, {
+          method: "POST",
+          headers: { "content-type": "application/json", apikey: Deno.env.get("SUPABASE_ANON_KEY")! },
+          body: JSON.stringify({ post_id: post.id, force: true }),
+        }).catch(() => {});
+      } catch {}
+
       return new Response(JSON.stringify({ post }), { headers: { ...cors, "content-type": "application/json" } });
     } catch (e) {
       await blog.from("blog_ai_drafts").update({ status: "failed", error: String(e) }).eq("id", draft!.id);
