@@ -12,6 +12,7 @@ import {
   Gauge, Sparkles, TrendingDown, TrendingUp, Zap, CheckCircle2,
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import QueuePressure from "@/components/admin/QueuePressure";
 
 type FunnelRow = {
   step_order: number;
@@ -134,6 +135,7 @@ export default function MissionControl() {
           <TabsList className="bg-muted/20 border border-border/50">
             <TabsTrigger value="funnel">Funnel</TabsTrigger>
             <TabsTrigger value="heatmap">Capability heatmap</TabsTrigger>
+            <TabsTrigger value="queues">Queues</TabsTrigger>
             <TabsTrigger value="alerts" className="gap-1.5">
               Alerts
               {alerts.length > 0 && <Badge variant="destructive" className="h-4 px-1.5 text-[10px]">{alerts.length}</Badge>}
@@ -230,6 +232,11 @@ export default function MissionControl() {
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Queues */}
+          <TabsContent value="queues">
+            <QueuePressure />
           </TabsContent>
 
           {/* Alerts */}
