@@ -149,6 +149,7 @@ import {
 } from "./pages/seo/Programmatic";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { ScrollToTop } from "@/components/ScrollToTop";
+import { YandexRouteTracker } from "@/components/YandexRouteTracker";
 import { AppRouteShell } from "@/components/AppRouteShell";
 import { RequireAuth } from "@/components/RequireAuth";
 import { DocsSubdomainRedirect } from "@/components/DocsSubdomainRedirect";
@@ -201,6 +202,7 @@ const App = () => (
         <Sonner />
         {isMaintenance() ? <MaintenancePage /> : (
         <BrowserRouter>
+          <YandexRouteTracker />
           {isBlogHost() ? <BlogSubdomainRouter /> : (<>
           <ScrollToTop />
           <MaintenanceBanner />
