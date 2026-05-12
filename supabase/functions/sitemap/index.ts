@@ -40,6 +40,27 @@ const PROGRAMMATIC: { kind: string; slug: string }[] = [
   { kind: "free-tools", slug: "ai-invoice-generator" },
   { kind: "free-tools", slug: "ai-proposal-generator" },
   { kind: "free-tools", slug: "ai-contract-generator" },
+  // +20 long-tail landings
+  { kind: "workflows", slug: "retainer-renewal-automation" },
+  { kind: "workflows", slug: "weekly-client-update-automation" },
+  { kind: "workflows", slug: "ai-scope-creep-detector" },
+  { kind: "workflows", slug: "follow-up-cadence-engine" },
+  { kind: "workflows", slug: "async-deliverable-pipeline" },
+  { kind: "workflows", slug: "lead-qualification-workflow" },
+  { kind: "workflows", slug: "recurring-invoice-automation" },
+  { kind: "workflows", slug: "project-handoff-automation" },
+  { kind: "integrations", slug: "telegram-invoice-bot" },
+  { kind: "integrations", slug: "telegram-proposal-delivery" },
+  { kind: "integrations", slug: "telegram-client-notifications" },
+  { kind: "integrations", slug: "gmail-async-inbox-triage" },
+  { kind: "features", slug: "ai-meeting-notes-for-freelancers" },
+  { kind: "features", slug: "branded-pdf-export-engine" },
+  { kind: "features", slug: "multi-currency-invoicing" },
+  { kind: "features", slug: "freelancer-time-tracking-with-ai" },
+  { kind: "use-cases", slug: "web-developer-workspace" },
+  { kind: "use-cases", slug: "marketing-consultant-os" },
+  { kind: "free-tools", slug: "freelance-rate-calculator" },
+  { kind: "free-tools", slug: "ai-cold-email-writer" },
 ];
 
 function xmlEscape(s: string) {
