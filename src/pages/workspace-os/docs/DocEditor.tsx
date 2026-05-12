@@ -22,6 +22,7 @@ import {
   type ClientProfile, type DocBlock, type DocStatus,
 } from "@/lib/workspace-docs/infra";
 import { BigScreenHint } from "@/components/BigScreenHint";
+import { continueWorkflow } from "@/lib/nextActions/continueWorkflow";
 
 const PAID_TIERS = ["pro", "elite", "infinity"];
 
@@ -155,6 +156,12 @@ export default function DocEditor() {
         });
       } catch { /* non-fatal */ }
       toast.success("PDF exported");
+      continueWorkflow({
+        trigger: "doc_exported",
+        surface: "workspace.doc_editor",
+        headline: "Doc exported",
+        description: "Send it to a client or open another doc.",
+      });
     } catch (e: any) {
       toast.error(e?.message || "Export failed");
     } finally {

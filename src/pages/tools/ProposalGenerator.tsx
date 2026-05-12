@@ -19,6 +19,7 @@ import { GuestSignupBar } from "@/components/tools/GuestSignupBar";
 import { PROPOSAL_TEMPLATES } from "@/lib/tools/templates";
 import { useAuth } from "@/hooks/useAuth";
 import { printWithMeta, watermarkModeForTier } from "@/lib/tools/print-meta";
+import { continueWorkflow } from "@/lib/nextActions/continueWorkflow";
 import { emitDelight, pickDelight, bumpDelightCount } from "@/lib/delight-bus";
 
 const STORAGE_KEY = "hustleai-tool-proposal-v1";
@@ -110,6 +111,11 @@ export default function ProposalGenerator() {
         afterPrint: () => {
           bumpDelightCount();
           emitDelight(pickDelight("proposal_pdf"));
+          continueWorkflow({
+            trigger: "proposal_exported",
+            surface: "tool.proposal_generator",
+            headline: "Proposal exported",
+          });
         },
       }),
     );

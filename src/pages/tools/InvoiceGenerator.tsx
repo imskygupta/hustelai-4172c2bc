@@ -19,6 +19,7 @@ import { GuestSignupBar } from "@/components/tools/GuestSignupBar";
 import { useAuth } from "@/hooks/useAuth";
 import { printWithMeta, watermarkModeForTier } from "@/lib/tools/print-meta";
 import { emitDelight, pickDelight, bumpDelightCount } from "@/lib/delight-bus";
+import { continueWorkflow } from "@/lib/nextActions/continueWorkflow";
 
 interface LineItem { id: string; desc: string; qty: number; rate: number; }
 
@@ -94,6 +95,11 @@ export default function InvoiceGenerator() {
         afterPrint: () => {
           bumpDelightCount();
           emitDelight(pickDelight("invoice_pdf"));
+          continueWorkflow({
+            trigger: "invoice_exported",
+            surface: "tool.invoice_generator",
+            headline: "Invoice exported",
+          });
         },
       }),
     );

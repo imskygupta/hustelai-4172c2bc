@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      activation_events: {
+        Row: {
+          context: Json
+          event_key: string
+          id: string
+          occurred_at: string
+          surface: string | null
+          user_id: string
+        }
+        Insert: {
+          context?: Json
+          event_key: string
+          id?: string
+          occurred_at?: string
+          surface?: string | null
+          user_id: string
+        }
+        Update: {
+          context?: Json
+          event_key?: string
+          id?: string
+          occurred_at?: string
+          surface?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       admin_alerts: {
         Row: {
           acknowledged_at: string | null
