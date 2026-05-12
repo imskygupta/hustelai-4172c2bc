@@ -59,8 +59,8 @@ export default function Index() {
   return (
     <div className="min-h-screen bg-white text-slate-900">
       <SEO
-        title="HustleAI — The AI Workspace OS for freelancers & operators"
-        description="HustleAI is the AI-powered workspace OS for freelancers, creators and modern agencies — clients, deliverables, async workflows and branded exports in one operating layer."
+        title="HustleAI — AI Workspace Operating System for freelancers & operators"
+        description="HustleAI is the AI Workspace Operating System for freelancers, creators and modern agencies — clients, deliverables, async AI workflows and branded exports in one operating layer."
         path="/"
         jsonLd={[softwareJsonLd, orgJsonLd]}
       />
@@ -88,7 +88,7 @@ export default function Index() {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
               </span>
-              The AI Workspace OS · for freelancers &amp; operators
+              AI Workspace Operating System · for freelancers &amp; operators
             </div>
             <h1 className="gsap-fade text-[2.6rem] leading-[1.05] sm:text-5xl md:text-7xl font-display font-semibold tracking-tight text-slate-900">
               Where modern operators<br className="hidden sm:block" />

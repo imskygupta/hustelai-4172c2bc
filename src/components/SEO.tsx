@@ -67,3 +67,14 @@ export const faqJsonLd = (qa: { q: string; a: string }[]) => ({
     acceptedAnswer: { "@type": "Answer", text: a },
   })),
 });
+
+export const breadcrumbJsonLd = (items: { name: string; path: string }[]) => ({
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: items.map((it, i) => ({
+    "@type": "ListItem",
+    position: i + 1,
+    name: it.name,
+    item: `${SITE}${it.path}`,
+  })),
+});
