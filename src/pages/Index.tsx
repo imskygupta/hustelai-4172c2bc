@@ -26,7 +26,7 @@ import { OperatingSystemArchitecture } from "@/components/home/OperatingSystemAr
 import { ConnectedWorkflowSection } from "@/components/home/ConnectedWorkflowSection";
 import { WorkflowStorySection } from "@/components/home/WorkflowStorySection";
 import { OperationalContinuitySection } from "@/components/home/OperationalContinuitySection";
-import { WorkflowRibbon } from "@/components/home/ops-primitives";
+import { WorkflowRibbon, SectionConnector } from "@/components/home/ops-primitives";
 import { PersonalizedHeroCTA } from "@/components/home/PersonalizedHeroCTA";
 import { OpsStats } from "@/components/seo/OpsStats";
 
@@ -139,12 +139,14 @@ export default function Index() {
 
       {/* Operational story — six-stage pipeline */}
       <WorkflowStorySection />
+      <SectionConnector tone="emerald" />
 
       {/* Platform story */}
       <UnifiedWorkspaceSection />
       <AsyncOperationsSection />
       <OperatingSystemArchitecture />
       <ConnectedWorkflowSection />
+      <SectionConnector tone="violet" />
       <OperationalContinuitySection />
       <WorkflowRibbon label="Deliverables lane" hint="Branded outputs · signed share links" tone="violet" />
       <RealDeliverablesSection />
@@ -152,6 +154,7 @@ export default function Index() {
       <IntegrationsMarquee />
       <WorkflowRibbon label="Governance lane" hint="Roles · feature flags · usage" tone="sky" />
       <ControlGovernanceSection />
+      <SectionConnector tone="amber" />
       <FreeToolsStrip />
       <FlexibleUsageSection />
 
