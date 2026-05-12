@@ -9,7 +9,15 @@ type Issue = { post_id: string; slug: string; title: string; severity: "error" |
 type Health = {
   summary: Record<string, any> & { external_hosts: { host: string; count: number }[] };
   issues: Issue[];
-  helpers: { sitemap_url: string; ping_bing: string; gsc_submit: string; gsc_inspect: string };
+  helpers: {
+    sitemap_url: string;
+    sitemap_index_url?: string;
+    robots_url?: string;
+    sitemap_health?: { ok: boolean; reachable: boolean; status?: number; content_type?: string; article_count?: number; error?: string };
+    ping_bing: string;
+    gsc_submit: string;
+    gsc_inspect: string;
+  };
 };
 
 const KIND_LABELS: Record<string, string> = {
@@ -93,19 +101,41 @@ export default function BlogSeoHealth() {
         {/* Search Console helpers */}
         {data && (
           <Card className="p-4">
-            <div className="font-medium mb-2 text-sm">Crawl & indexing</div>
-            <div className="grid sm:grid-cols-2 gap-2 text-sm">
-              <div className="flex items-center gap-2">
-                <span className="text-muted-foreground w-24 shrink-0">Sitemap</span>
-                <code className="text-xs truncate flex-1">{data.helpers.sitemap_url}</code>
-                <Button size="sm" variant="ghost" onClick={() => copy(data.helpers.sitemap_url)}>Copy</Button>
-              </div>
-              <a className="text-sm underline" href={data.helpers.gsc_submit} target="_blank" rel="noopener">Submit sitemap in Search Console →</a>
-              <a className="text-sm underline" href={data.helpers.gsc_inspect} target="_blank" rel="noopener">Inspect URLs in Search Console →</a>
-              <a className="text-sm underline" href={data.helpers.ping_bing} target="_blank" rel="noopener">Ping Bing sitemap →</a>
+            <div className="flex items-center justify-between mb-3">
+              <div className="font-medium text-sm">Crawl & indexing</div>
+              {data.helpers.sitemap_health && (
+                <Badge variant={data.helpers.sitemap_health.ok ? "secondary" : "destructive"} className="text-[11px]">
+                  {data.helpers.sitemap_health.ok
+                    ? `Sitemap healthy · ${data.helpers.sitemap_health.article_count ?? 0} URLs`
+                    : data.helpers.sitemap_health.reachable
+                      ? `Sitemap unhealthy · HTTP ${data.helpers.sitemap_health.status}`
+                      : "Sitemap unreachable"}
+                </Badge>
+              )}
+            </div>
+            <div className="space-y-2 text-sm">
+              {[
+                { label: "Sitemap", value: data.helpers.sitemap_url },
+                { label: "Sitemap index", value: data.helpers.sitemap_index_url },
+                { label: "Robots", value: data.helpers.robots_url },
+              ].filter(r => r.value).map(r => (
+                <div key={r.label} className="flex items-center gap-2">
+                  <span className="text-muted-foreground w-28 shrink-0 text-xs uppercase tracking-wide">{r.label}</span>
+                  <code className="text-xs truncate flex-1 bg-muted/40 rounded px-2 py-1">{r.value}</code>
+                  <Button size="sm" variant="ghost" onClick={() => copy(r.value!)}>Copy</Button>
+                  <a href={r.value!} target="_blank" rel="noopener" className="text-xs underline text-muted-foreground hover:text-foreground">Open</a>
+                </div>
+              ))}
+            </div>
+            <div className="grid sm:grid-cols-2 gap-2 text-sm mt-4 pt-4 border-t border-border/40">
+              <Button size="sm" variant="default" onClick={() => { copy(data.helpers.sitemap_url); window.open(data.helpers.gsc_submit, "_blank"); }}>
+                Submit to Search Console
+              </Button>
+              <a className="text-sm underline self-center" href={data.helpers.gsc_inspect} target="_blank" rel="noopener">Inspect URLs in Search Console →</a>
+              <a className="text-sm underline self-center" href={data.helpers.ping_bing} target="_blank" rel="noopener">Ping Bing sitemap →</a>
             </div>
             <p className="text-[11px] text-muted-foreground mt-3">
-              Google deprecated the public ping endpoint — submit via Search Console. Bing/Yandex still accept pings.
+              Sitemaps are served from the verified <code>blogs.hustlaiapp.in</code> domain. The button above copies the public URL and opens Search Console — paste it into the “Add a new sitemap” field.
             </p>
           </Card>
         )}
