@@ -204,9 +204,11 @@ export function ProgrammaticHub({ kind }: { kind: SeoKind }) {
           title=""
           items={items.map((e) => ({ title: e.h1, description: e.subhead, href: e.path }))}
         />
+        <RelatedClusters />
         <CTASection heading="One operating layer for your work" />
       </main>
       <Footer />
+      <StickyMobileCTA />
     </div>
   );
 }
