@@ -4,7 +4,7 @@ import { Navbar } from "@/components/Navbar";
 import { Pricing } from "@/components/Pricing";
 import { Testimonials } from "@/components/Testimonials";
 import { Footer } from "@/components/Footer";
-import { ArrowRight, Check, Sparkles } from "lucide-react";
+import { ArrowRight, Check, Sparkles, Send, FileDown, Workflow } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
@@ -24,6 +24,8 @@ import {
 import { IntegrationsMarquee } from "@/components/home/IntegrationsMarquee";
 import { OperatingSystemArchitecture } from "@/components/home/OperatingSystemArchitecture";
 import { ConnectedWorkflowSection } from "@/components/home/ConnectedWorkflowSection";
+import { WorkflowStorySection } from "@/components/home/WorkflowStorySection";
+import { OperationalContinuitySection } from "@/components/home/OperationalContinuitySection";
 import { WorkflowRibbon } from "@/components/home/ops-primitives";
 import { OpsStats } from "@/components/seo/OpsStats";
 
@@ -85,15 +87,33 @@ export default function Index() {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
               </span>
-              AI Workspace Operating System · async-native · operator-grade
+              AI Workspace OS · async-native · delivery-aware
             </div>
             <h1 className="gsap-fade text-[2.6rem] leading-[1.05] sm:text-5xl md:text-7xl font-display font-semibold tracking-tight text-slate-900">
-              The operating layer for<br className="hidden sm:block" />
-              <span className="text-emerald-600">how operators ship work.</span>
+              Generate. Export. Deliver.<br className="hidden sm:block" />
+              <span className="text-emerald-600">All in one operating layer.</span>
             </h1>
             <p className="gsap-fade text-[15px] md:text-lg text-slate-500 max-w-2xl mx-auto leading-relaxed">
-              Clients, deliverables and async AI workflows — running together inside one calm, operational workspace. Built for solo operators and modern studios who treat their work like infrastructure.
+              HustleAI runs the full async pipeline behind your work — proposals, exports, Telegram delivery and resumable workflows — so every job moves forward even when you don't.
             </p>
+
+            {/* Live ops stage strip */}
+            <div className="gsap-fade flex flex-wrap items-center justify-center gap-2 pt-1">
+              {[
+                { Icon: Sparkles, label: "Generate", tone: "bg-violet-50 text-violet-700 border-violet-200" },
+                { Icon: FileDown, label: "Export",   tone: "bg-sky-50 text-sky-700 border-sky-200" },
+                { Icon: Send,     label: "Deliver",  tone: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+                { Icon: Workflow, label: "Continue", tone: "bg-amber-50 text-amber-700 border-amber-200" },
+              ].map(({ Icon, label, tone }) => (
+                <span
+                  key={label}
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-semibold uppercase tracking-wider ${tone}`}
+                >
+                  <Icon className="w-3 h-3" />
+                  {label}
+                </span>
+              ))}
+            </div>
           </div>
 
           <div className="gsap-fade flex flex-col sm:flex-row items-center justify-center gap-3 max-w-md mx-auto sm:max-w-none">
@@ -102,7 +122,7 @@ export default function Index() {
               onClick={() => navigate("/signup")}
               className="w-full sm:w-auto h-12 px-6 bg-slate-900 hover:bg-slate-800 text-white text-base"
             >
-              Start free workspace <ArrowRight className="w-4 h-4 ml-2" />
+              Ship your first export <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
             <Button
               size="lg"
@@ -110,15 +130,15 @@ export default function Index() {
               onClick={() => navigate("/workspaces")}
               className="w-full sm:w-auto h-12 px-6 border-slate-300 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-300 text-base"
             >
-              See async workflow
+              See the operating layer
             </Button>
           </div>
 
           <div className="gsap-fade flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[11px] md:text-xs text-slate-500 pt-1">
             <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5 text-emerald-500" /> No credit card</span>
             <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5 text-emerald-500" /> Free forever tier</span>
-            <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5 text-emerald-500" /> Branded deliverables</span>
-            <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5 text-emerald-500" /> Async &amp; cloud-native</span>
+            <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5 text-emerald-500" /> Telegram delivery built-in</span>
+            <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5 text-emerald-500" /> Resumable async workflows</span>
           </div>
         </div>
       </section>
@@ -130,11 +150,15 @@ export default function Index() {
 
       <WorkflowRibbon label="System rhythm" hint="Async · delivery-aware · operator-grade" />
 
+      {/* Operational story — six-stage pipeline */}
+      <WorkflowStorySection />
+
       {/* Platform story */}
       <UnifiedWorkspaceSection />
       <AsyncOperationsSection />
       <OperatingSystemArchitecture />
       <ConnectedWorkflowSection />
+      <OperationalContinuitySection />
       <WorkflowRibbon label="Deliverables lane" hint="Branded outputs · signed share links" tone="violet" />
       <RealDeliverablesSection />
       <IntegrationsNotificationsSection />
@@ -178,21 +202,31 @@ export default function Index() {
           >
             <div className="absolute -top-20 -right-20 w-64 h-64 bg-emerald-500/20 blur-3xl rounded-full" />
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/15 text-[11px] tracking-wide text-white/80 relative">
-              <Sparkles className="w-3.5 h-3.5" /> Workspace OS · free to start
+              <Sparkles className="w-3.5 h-3.5" /> Workspace OS · async-native · free to start
             </div>
             <h2 className="text-2xl md:text-4xl font-display font-semibold tracking-tight relative leading-tight">
-              Run your work like<br className="hidden md:block" /> a modern studio.
+              Ship your first deliverable<br className="hidden md:block" /> in under five minutes.
             </h2>
             <p className="text-slate-300 relative text-sm md:text-base">
-              Create your workspace in under a minute. Upgrade only when your workflow grows.
+              Generate a proposal. Export it branded. Route it through Telegram. Pick the workflow back up tomorrow — the system holds the state.
             </p>
-            <Button
-              size="lg"
-              className="bg-emerald-500 hover:bg-emerald-600 text-white text-base px-8 h-12 relative w-full sm:w-auto"
-              onClick={() => navigate("/signup")}
-            >
-              Start your workspace <ArrowRight className="w-4 h-4 ml-2" />
-            </Button>
+            <div className="relative flex flex-col sm:flex-row items-center justify-center gap-3">
+              <Button
+                size="lg"
+                className="bg-emerald-500 hover:bg-emerald-600 text-white text-base px-8 h-12 w-full sm:w-auto"
+                onClick={() => navigate("/signup")}
+              >
+                Ship your first export <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+              <Button
+                size="lg"
+                variant="outline"
+                className="bg-transparent border-white/20 text-white hover:bg-white/10 hover:text-white text-base px-8 h-12 w-full sm:w-auto"
+                onClick={() => navigate("/workspaces")}
+              >
+                Activate a workspace
+              </Button>
+            </div>
           </motion.div>
         </div>
       </section>
