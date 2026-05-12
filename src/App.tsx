@@ -310,6 +310,7 @@ const App = () => (
             <Route path="/admin/telegram" element={<TelegramOps />} />
             <Route path="/admin/telegram-control" element={<TelegramControl />} />
             <Route path="/integrations/telegram" element={<TelegramLanding />} />
+            <Route path="/integrations/:slug" element={<IntegrationDetail />} />
             <Route path="/d/:token" element={<Download />} />
             <Route path="/settings" element={Shelled(<SettingsLayout />)}>
               <Route index element={<Navigate to="/settings/profile" replace />} />
