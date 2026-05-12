@@ -157,18 +157,17 @@ function FeaturedCard({ post, isNew }: { post: any; isNew?: boolean }) {
   return (
     <article className="border border-border/50 rounded-lg overflow-hidden bg-muted/10">
       <Link to={`/${post.slug}`} className="block group">
-        {post.hero_image && (
-          <div className="aspect-[16/9] overflow-hidden bg-muted/30">
-            <img
-              src={post.hero_image}
-              alt={post.title}
-              loading="eager"
-              decoding="async"
-              fetchPriority={"high" as any}
-              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.02]"
-            />
-          </div>
-        )}
+        <div className="aspect-[16/9] overflow-hidden bg-muted/30">
+          <img
+            src={heroFor(post)}
+            alt={post.title}
+            loading="eager"
+            decoding="async"
+            fetchPriority={"high" as any}
+            onError={(e) => onImgError(e, post)}
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.02]"
+          />
+        </div>
         <div className="p-6">
           <div className="text-[11px] uppercase tracking-wide text-muted-foreground mb-2 flex items-center gap-2">
             <span className="px-1.5 py-px rounded-sm bg-foreground/10 text-foreground/80">Featured</span>
