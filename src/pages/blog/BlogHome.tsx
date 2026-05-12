@@ -5,6 +5,24 @@ import { BlogShell } from "@/components/blog/BlogShell";
 import { BlogSEO, blogOrgJsonLd } from "@/components/blog/BlogSEO";
 import { AdSlot } from "@/components/blog/AdSlot";
 
+const CATEGORY_PLACEHOLDERS: Record<string, string> = {
+  "freelancer-workflows": "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1600&q=70&auto=format&fit=crop",
+  "client-systems":       "https://images.unsplash.com/photo-1552581234-26160f608093?w=1600&q=70&auto=format&fit=crop",
+  "async-operations":     "https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=1600&q=70&auto=format&fit=crop",
+  "ai-operations":        "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=1600&q=70&auto=format&fit=crop",
+  "creator-workflows":    "https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=1600&q=70&auto=format&fit=crop",
+  "telegram-delivery":    "https://images.unsplash.com/photo-1531403009284-440f080d1e12?w=1600&q=70&auto=format&fit=crop",
+};
+function heroFor(post: any): string {
+  return post?.hero_image
+    || CATEGORY_PLACEHOLDERS[post?.blog_categories?.slug ?? ""]
+    || CATEGORY_PLACEHOLDERS["async-operations"];
+}
+function onImgError(e: React.SyntheticEvent<HTMLImageElement>, post: any) {
+  const fb = CATEGORY_PLACEHOLDERS[post?.blog_categories?.slug ?? ""] || CATEGORY_PLACEHOLDERS["async-operations"];
+  if (e.currentTarget.src !== fb) e.currentTarget.src = fb;
+}
+
 export default function BlogHome() {
   const [posts, setPosts] = useState<any[]>([]);
   const [cats, setCats] = useState<any[]>([]);
