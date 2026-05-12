@@ -11,6 +11,8 @@ import { UnlockBalanceWidget } from "@/components/dashboard/UnlockBalanceWidget"
 import { ActivityCard } from "@/components/async/ActivityCard";
 import StartHerePanel from "@/components/activation/StartHerePanel";
 import RecentNextAction from "@/components/activation/RecentNextAction";
+import WorkflowMomentum from "@/components/activation/WorkflowMomentum";
+import ResumeWorkflowCard from "@/components/activation/ResumeWorkflowCard";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -382,7 +384,9 @@ export default function Dashboard() {
           {/* OVERVIEW */}
           <TabsContent value="overview" className="mt-5 space-y-5">
             <StartHerePanel />
+            <ResumeWorkflowCard />
             <RecentNextAction />
+            <WorkflowMomentum />
             <div className="grid md:grid-cols-2 gap-5">
               <DailyUsageWidget />
               <OperationalUsageWidget />

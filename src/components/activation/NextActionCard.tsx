@@ -1,10 +1,11 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, X, Sparkles } from "lucide-react";
+import { ArrowRight, X, Workflow } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNextActions } from "@/hooks/useNextActions";
 import { trackActivation } from "@/lib/nextActions/track";
 import type { NextActionTrigger } from "@/lib/nextActions/registry";
 import { useState } from "react";
+import { SignalDot, AsyncLane } from "@/components/home/ops-primitives";
 
 interface NextActionCardProps {
   trigger: NextActionTrigger;
@@ -40,7 +41,7 @@ export default function NextActionCard({
   return (
     <div
       className={cn(
-        "rounded-2xl border border-slate-200 bg-white",
+        "rounded-2xl border border-slate-200 bg-white relative overflow-hidden",
         "shadow-[0_1px_0_rgba(15,23,42,0.04)]",
         compact ? "p-4" : "p-5",
         className,
@@ -49,12 +50,11 @@ export default function NextActionCard({
       aria-label="Recommended next steps"
     >
       <div className="flex items-start justify-between gap-3 mb-3">
-        <div className="flex items-center gap-2 text-xs font-semibold text-slate-600">
-          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-violet-50 text-violet-700">
-            <Sparkles className="w-3 h-3" />
-            Workflow
-          </span>
-          <span className="text-slate-700">{headline}</span>
+        <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] font-semibold text-slate-500">
+          <SignalDot tone="emerald" />
+          <span>Workflow</span>
+          <span className="text-slate-300">·</span>
+          <span className="text-slate-600 normal-case tracking-normal text-[12px] font-medium">{headline}</span>
         </div>
         {!pinned && (
           <button
@@ -71,10 +71,11 @@ export default function NextActionCard({
         )}
       </div>
 
-      <ul className="space-y-2">
+      <ul className="space-y-2 relative">
         {actions.map((a, idx) => {
           const Icon = a.icon;
           const primary = a.tone === "primary" || idx === 0;
+          const stepNum = String(idx + 1).padStart(2, "0");
           const inner = (
             <div
               className={cn(
@@ -84,13 +85,23 @@ export default function NextActionCard({
                   : "border-slate-200 bg-white text-slate-900 hover:border-slate-300 hover:bg-slate-50",
               )}
             >
-              <div
-                className={cn(
-                  "flex items-center justify-center w-8 h-8 rounded-lg shrink-0",
-                  primary ? "bg-white/10 text-white" : "bg-slate-100 text-slate-700",
-                )}
-              >
-                <Icon className="w-4 h-4" />
+              <div className="relative flex items-center justify-center w-9 h-9 shrink-0">
+                <div
+                  className={cn(
+                    "absolute inset-0 rounded-lg",
+                    primary ? "bg-white/10" : "bg-slate-100",
+                  )}
+                />
+                <Icon className={cn("relative w-4 h-4", primary ? "text-white" : "text-slate-700")} />
+                <span
+                  className={cn(
+                    "absolute -top-1.5 -left-1.5 text-[9px] font-mono px-1 rounded-sm leading-tight",
+                    primary ? "bg-white text-slate-900" : "bg-slate-900 text-white",
+                  )}
+                  aria-hidden
+                >
+                  {stepNum}
+                </span>
               </div>
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-semibold leading-tight">{a.label}</div>
@@ -106,19 +117,30 @@ export default function NextActionCard({
               surface,
               context: { trigger, action_id: a.id },
             });
-          if (a.to) return (
-            <li key={a.id}>
-              <Link to={a.to} onClick={onClick}>{inner}</Link>
+          const wrapper = a.to ? (
+            <Link to={a.to} onClick={onClick}>{inner}</Link>
+          ) : a.href ? (
+            <a href={a.href} target="_blank" rel="noreferrer" onClick={onClick}>{inner}</a>
+          ) : inner;
+          return (
+            <li key={a.id} className="relative">
+              {wrapper}
+              {idx < actions.length - 1 ? (
+                <div className="pl-[18px] py-1" aria-hidden>
+                  <div className="w-[120px] max-w-full">
+                    <AsyncLane tone={primary ? "emerald" : "slate"} />
+                  </div>
+                </div>
+              ) : null}
             </li>
           );
-          if (a.href) return (
-            <li key={a.id}>
-              <a href={a.href} target="_blank" rel="noreferrer" onClick={onClick}>{inner}</a>
-            </li>
-          );
-          return <li key={a.id}>{inner}</li>;
         })}
       </ul>
+
+      <div className="mt-3 flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-slate-400 font-semibold">
+        <Workflow className="w-3 h-3" />
+        Sequential workflow · pick one to continue
+      </div>
     </div>
   );
 }
