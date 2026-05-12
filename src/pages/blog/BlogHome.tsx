@@ -50,12 +50,11 @@ export default function BlogHome() {
           <p className="text-muted-foreground">No posts yet. Come back soon.</p>
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-12">
-            {posts.map((p: any, i: number) => (
-              <>
-                <PostCard key={p.id} post={p} priority={i < 3} />
-                {i === 5 && <div key="ad" className="sm:col-span-2 lg:col-span-3"><AdSlot height={120} format="leaderboard" /></div>}
-              </>
-            ))}
+            {posts.flatMap((p: any, i: number) => {
+              const items = [<PostCard key={p.id} post={p} priority={i < 3} />];
+              if (i === 5) items.push(<div key={`ad-${i}`} className="sm:col-span-2 lg:col-span-3"><AdSlot height={120} format="leaderboard" /></div>);
+              return items;
+            })}
           </div>
         )}
       </section>
