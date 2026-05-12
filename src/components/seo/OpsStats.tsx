@@ -1,4 +1,5 @@
 import { Activity, FileCheck2, Plug, Send, Cpu } from "lucide-react";
+import { OperationalChip, AsyncLane } from "@/components/home/ops-primitives";
 
 /**
  * Operational social-proof strip. Numbers are intentionally directional
@@ -6,11 +7,11 @@ import { Activity, FileCheck2, Plug, Send, Cpu } from "lucide-react";
  * without faking analytics.
  */
 const STATS = [
-  { label: "Async workflows", value: "1,200+", Icon: Activity },
-  { label: "AI operations / week", value: "9k+", Icon: Cpu },
-  { label: "Branded exports delivered", value: "4.7k+", Icon: FileCheck2 },
-  { label: "Telegram pings shipped", value: "11k+", Icon: Send },
-  { label: "Active integrations", value: "12", Icon: Plug },
+  { label: "Workflows completed",     value: "1,200+", Icon: Activity,   tone: "emerald" as const, chip: "Live" },
+  { label: "AI operations this week", value: "9k+",   Icon: Cpu,        tone: "violet"  as const, chip: "Async" },
+  { label: "Branded exports shipped", value: "4.7k+", Icon: FileCheck2, tone: "sky"     as const, chip: "Rendered" },
+  { label: "Async deliveries routed", value: "11k+",  Icon: Send,       tone: "emerald" as const, chip: "Delivered" },
+  { label: "Integrations connected",  value: "12",    Icon: Plug,       tone: "amber"   as const, chip: "Wired" },
 ];
 
 export function OpsStats({ heading = "Operational by default" }: { heading?: string }) {
@@ -24,15 +25,22 @@ export function OpsStats({ heading = "Operational by default" }: { heading?: str
           </span>
           <span className="text-[11px] uppercase tracking-[0.2em] font-semibold">{heading}</span>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 md:gap-4">
-          {STATS.map(({ label, value, Icon }) => (
-            <div
-              key={label}
-              className="rounded-xl border border-slate-200 bg-white p-4 md:p-5 text-center hover:border-emerald-300 transition"
-            >
-              <Icon className="w-4 h-4 text-emerald-600 mx-auto mb-2" />
-              <div className="text-xl md:text-2xl font-display font-semibold text-slate-900 tracking-tight">{value}</div>
-              <div className="text-[11px] md:text-xs text-slate-500 mt-1">{label}</div>
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 md:gap-0 relative">
+          {STATS.map(({ label, value, Icon, tone, chip }, i) => (
+            <div key={label} className="relative md:px-2">
+              {i < STATS.length - 1 ? (
+                <div className="hidden md:flex absolute top-1/2 -right-1 translate-x-1/2 -translate-y-1/2 w-4 items-center z-10">
+                  <AsyncLane tone={tone} />
+                </div>
+              ) : null}
+              <div className="rounded-xl border border-slate-200 bg-white p-4 md:p-5 hover:border-slate-300 transition h-full">
+                <div className="flex items-center justify-between mb-2">
+                  <Icon className="w-4 h-4 text-slate-700" />
+                  <OperationalChip tone={tone}>{chip}</OperationalChip>
+                </div>
+                <div className="text-xl md:text-2xl font-display font-semibold text-slate-900 tracking-tight">{value}</div>
+                <div className="text-[11px] md:text-xs text-slate-500 mt-1">{label}</div>
+              </div>
             </div>
           ))}
         </div>
