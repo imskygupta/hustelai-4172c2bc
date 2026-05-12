@@ -2503,6 +2503,78 @@ export type Database = {
           },
         ]
       }
+      indexnow_log: {
+        Row: {
+          created_at: string
+          engine: string
+          error: string | null
+          id: string
+          ok: boolean
+          sample_urls: Json | null
+          status_code: number | null
+          url_count: number
+        }
+        Insert: {
+          created_at?: string
+          engine: string
+          error?: string | null
+          id?: string
+          ok?: boolean
+          sample_urls?: Json | null
+          status_code?: number | null
+          url_count?: number
+        }
+        Update: {
+          created_at?: string
+          engine?: string
+          error?: string | null
+          id?: string
+          ok?: boolean
+          sample_urls?: Json | null
+          status_code?: number | null
+          url_count?: number
+        }
+        Relationships: []
+      }
+      indexnow_queue: {
+        Row: {
+          attempts: number
+          created_at: string
+          id: string
+          last_attempt_at: string | null
+          last_error: string | null
+          sent_at: string | null
+          source_id: string | null
+          source_kind: string
+          status: string
+          url: string
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          id?: string
+          last_attempt_at?: string | null
+          last_error?: string | null
+          sent_at?: string | null
+          source_id?: string | null
+          source_kind?: string
+          status?: string
+          url: string
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          id?: string
+          last_attempt_at?: string | null
+          last_error?: string | null
+          sent_at?: string | null
+          source_id?: string | null
+          source_kind?: string
+          status?: string
+          url?: string
+        }
+        Relationships: []
+      }
       intelligence_alerts: {
         Row: {
           acknowledged_at: string | null

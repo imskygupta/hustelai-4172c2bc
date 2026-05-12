@@ -56,6 +56,21 @@ export const blogApi = {
   // editorial intelligence
   intelligence: () => call(`/blog-intelligence?action=overview`, { admin: true }),
   refreshTrends: () => call(`/blog-intelligence?action=refresh_trends`, { admin: true, method: "POST" }),
+
+  // IndexNow
+  indexnowStatus: () => call(`/indexnow?action=status`, { admin: true }),
+  indexnowEnqueue: (urls: string[], source_kind = "manual", source_id?: string) =>
+    call(`/indexnow?action=enqueue`, { admin: true, method: "POST", body: JSON.stringify({ urls, source_kind, source_id }) }),
+  indexnowFlush: (limit = 100) =>
+    call(`/indexnow?action=flush`, { admin: true, method: "POST", body: JSON.stringify({ limit }) }),
+  indexnowRetry: () => call(`/indexnow?action=retry`, { admin: true, method: "POST" }),
+
+  // Internal linking engine
+  linkOverview: () => call(`/blog-link-engine?action=overview`, { admin: true }),
+  linkSuggest: (id: string) => call(`/blog-link-engine?action=suggest&id=${encodeURIComponent(id)}`, { admin: true }),
+  linkReadNext: (slug: string) => call(`/blog-link-engine?action=read_next&slug=${encodeURIComponent(slug)}`, { admin: true }),
+  linkAutoInsert: (payload: { id?: string; body_md: string; focus_keyword?: string; max?: number; append_cta?: boolean }) =>
+    call(`/blog-link-engine?action=auto_insert`, { admin: true, method: "POST", body: JSON.stringify(payload) }),
 };
 
 export type BlogPost = {
