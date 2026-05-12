@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ClipboardList, Plus, Trash2, Copy, Link2, Sparkles, Loader2, Lock, Eye, ExternalLink } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -142,14 +142,16 @@ export default function OnboardingFormBuilder() {
     }
   };
 
-  // Reset link if the form is edited after generation
+  // Reset preview link whenever the form is edited after generation
   const tplSig = useMemo(() => JSON.stringify({ n: tpl.name, f: tpl.fields }), [tpl]);
-  const lastSigRef = useMemo(() => ({ v: "" }), []);
-  if (linkGenerated && lastSigRef.v && lastSigRef.v !== tplSig) {
-    setLinkGenerated(false);
-    setShareLink("");
-  }
-  lastSigRef.v = tplSig;
+  const lastSigRef = useRef<string>("");
+  useEffect(() => {
+    if (linkGenerated && lastSigRef.current && lastSigRef.current !== tplSig) {
+      setLinkGenerated(false);
+      setShareLink("");
+    }
+    lastSigRef.current = tplSig;
+  }, [tplSig, linkGenerated]);
 
   return (
     <ToolPageLayout
