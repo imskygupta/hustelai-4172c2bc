@@ -109,7 +109,7 @@ async function callAI(topic: { title: string; angle: string; keyword: string }) 
     method: "POST",
     headers: { "content-type": "application/json", authorization: `Bearer ${Deno.env.get("LOVABLE_API_KEY")}` },
     body: JSON.stringify({
-      model: "google/gemini-2.5-pro",
+      model: "google/gemini-2.5-flash",
       messages: [
         { role: "system", content: SYSTEM },
         { role: "user", content: `Title: ${topic.title}\nAngle: ${topic.angle}\nFocus keyword: ${topic.keyword}\nReturn JSON only.` },
