@@ -394,6 +394,12 @@ const App = () => (
             <Route path="/admin/blog/seo" element={<BlogSeoHealth />} />
             <Route path="/admin/blog/operations" element={<BlogOperations />} />
             <Route path="/admin/blog/editorial" element={<EditorialCenter />} />
+            <Route path="/admin/blog/pipeline" element={<EditorialCenter />} />
+            <Route path="/admin/blog/topics" element={<EditorialCenter />} />
+            <Route path="/admin/blog/linking" element={<EditorialCenter />} />
+            <Route path="/admin/blog/indexing" element={<EditorialCenter />} />
+            <Route path="/admin/blog/media" element={<BlogOperations />} />
+            <Route path="/admin/blog/queue" element={<BlogOperations />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           </Suspense>
