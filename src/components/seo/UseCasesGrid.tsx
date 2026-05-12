@@ -12,7 +12,9 @@ export function UseCasesGrid({ items, title = "Built for how operators actually 
   return (
     <section className="px-4 mt-20">
       <div className="container mx-auto max-w-6xl">
-        <h2 className="text-2xl md:text-3xl font-display font-bold tracking-tight text-slate-900 mb-8">{title}</h2>
+        {title ? (
+          <h2 className="text-2xl md:text-3xl font-display font-bold tracking-tight text-slate-900 mb-8">{title}</h2>
+        ) : null}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {items.map((u) => (
             <Link
