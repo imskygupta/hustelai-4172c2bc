@@ -44,9 +44,15 @@ export function BlogShell({ children }: { children: ReactNode }) {
             </ul>
           </div>
           <div>
-            <div className="font-medium mb-2">Run your hustle inside HustleAI</div>
-            <p className="text-muted-foreground mb-3">Workspaces, async exports, Telegram delivery — built for operators.</p>
-            <a href="https://hustlaiapp.in/signup" className="inline-block rounded-md bg-foreground text-background px-4 py-2 text-xs font-medium">Start free</a>
+            <div className="font-medium mb-2">Operate alongside the publication</div>
+            <p className="text-muted-foreground mb-3">
+              The workflows in these notes run inside HustleAI — workspaces, async exports, Telegram delivery, client systems.
+              Open the workspace when you're ready, no rush.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <a href="https://hustlaiapp.in" className="inline-block rounded-md border border-border/60 text-foreground px-3 py-1.5 text-xs hover:border-foreground/40">Open workspace</a>
+              <a href="https://hustlaiapp.in/tools" className="inline-block rounded-md border border-border/60 text-foreground/80 px-3 py-1.5 text-xs hover:text-foreground hover:border-foreground/40">Free tools</a>
+            </div>
           </div>
         </div>
         <div className="border-t border-border/60 py-4 text-center text-xs text-muted-foreground">
