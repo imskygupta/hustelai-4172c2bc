@@ -62,6 +62,49 @@ export function getWorkspace(): SupabaseClient {
 }
 
 /**
+ * Async/queue DB client. Holds workflow runs, AI job state, retries, cron
+ * checkpoints and notification/email/telegram delivery logs.
+ *
+ * Falls back to the primary URL until ASYNC_SUPABASE_URL is provisioned, so
+ * callers always get a usable client during the progressive cutover. Use
+ * `safeAsyncInsert()` for fire-and-forget writes that must not break the
+ * primary code path.
+ */
+export function getAsync(): SupabaseClient {
+  const url =
+    Deno.env.get("ASYNC_SUPABASE_URL") ??
+    Deno.env.get("SUPABASE_URL")!;
+  const key =
+    Deno.env.get("ASYNC_SUPABASE_SERVICE_ROLE_KEY") ??
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  return createClient(url, key, { auth: { persistSession: false } });
+}
+
+/**
+ * Fire-and-forget insert into the async DB. Never throws — queue/delivery
+ * writes must not break the primary path. Returns true on success. If the
+ * Async DB is not yet provisioned, falls through to the primary service
+ * client so existing tables keep working during the migration.
+ */
+export async function safeAsyncInsert(
+  table: string,
+  row: Record<string, unknown>,
+): Promise<boolean> {
+  try {
+    const sb = getAsync();
+    const { error } = await sb.from(table).insert(row);
+    if (error) {
+      console.warn(`safeAsyncInsert ${table}:`, error.message);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.warn(`safeAsyncInsert ${table} threw:`, (err as Error).message);
+    return false;
+  }
+}
+
+/**
  * Fire-and-forget insert into the analytics DB. Never throws — analytics
  * writes must never break a primary-path operation. Returns true on success.
  *
