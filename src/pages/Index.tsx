@@ -22,6 +22,7 @@ import {
   FreeToolsStrip,
 } from "@/components/home/PlatformSections";
 import { IntegrationsMarquee } from "@/components/home/IntegrationsMarquee";
+import { OperatingSystemArchitecture } from "@/components/home/OperatingSystemArchitecture";
 import { OpsStats } from "@/components/seo/OpsStats";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -128,6 +129,7 @@ export default function Index() {
       {/* Platform story */}
       <UnifiedWorkspaceSection />
       <AsyncOperationsSection />
+      <OperatingSystemArchitecture />
       <RealDeliverablesSection />
       <IntegrationsNotificationsSection />
       <IntegrationsMarquee />

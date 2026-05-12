@@ -32,6 +32,20 @@ const companyLinks = [
   { label: "Contact", href: "/contact" },
 ];
 
+const integrationLinks = [
+  { label: "Telegram Delivery", href: "/integrations/telegram-export-delivery" },
+  { label: "Stripe Payments", href: "/integrations/stripe-payments" },
+  { label: "All Integrations", href: "/integrations" },
+  { label: "Webhooks & API", href: "/integrations" },
+];
+
+const workflowLinks = [
+  { label: "Async Workflows", href: "/workflows/async-ai-workflow-platform" },
+  { label: "All Workflows", href: "/workflows" },
+  { label: "Use Cases", href: "/use-cases" },
+  { label: "Features", href: "/features" },
+];
+
 const platformIcons: Record<string, any> = {
   instagram: Instagram,
   youtube: Youtube,
@@ -100,9 +114,9 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
+        <div className="grid md:grid-cols-2 lg:grid-cols-6 gap-x-10 gap-y-12 mb-14">
           {/* Brand */}
-          <div className="space-y-4 lg:col-span-1">
+          <div className="space-y-4 lg:col-span-2">
             <div className="flex items-center gap-2">
               <Zap className="w-6 h-6 text-primary" />
               <span className="font-display font-bold text-xl">HustleAI</span>
@@ -144,7 +158,7 @@ export function Footer() {
 
           {/* Product */}
           <div className="space-y-4">
-            <h4 className="font-display font-semibold text-sm">Product</h4>
+            <h4 className="font-display font-semibold text-xs uppercase tracking-[0.14em] text-slate-500">Product</h4>
             <div className="space-y-2.5">
               {productLinks.map(l => (
                 <Link key={l.href} to={l.href} className="block text-sm text-muted-foreground hover:text-primary transition-colors group">
@@ -156,7 +170,7 @@ export function Footer() {
 
           {/* Free Tools */}
           <div className="space-y-4">
-            <h4 className="font-display font-semibold text-sm">Free Tools</h4>
+            <h4 className="font-display font-semibold text-xs uppercase tracking-[0.14em] text-slate-500">Free Tools</h4>
             <div className="space-y-2.5">
               {freeToolLinks.map(l => (
                 <Link key={l.href} to={l.href} className="block text-sm text-muted-foreground hover:text-primary transition-colors group">
@@ -166,9 +180,33 @@ export function Footer() {
             </div>
           </div>
 
+          {/* Integrations */}
+          <div className="space-y-4">
+            <h4 className="font-display font-semibold text-xs uppercase tracking-[0.14em] text-slate-500">Integrations</h4>
+            <div className="space-y-2.5">
+              {integrationLinks.map(l => (
+                <Link key={l.href} to={l.href} className="block text-sm text-muted-foreground hover:text-primary transition-colors group">
+                  {l.label} <ArrowUpRight className="w-3 h-3 inline opacity-0 group-hover:opacity-100 transition-opacity" />
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {/* Workflows */}
+          <div className="space-y-4">
+            <h4 className="font-display font-semibold text-xs uppercase tracking-[0.14em] text-slate-500">Workflows</h4>
+            <div className="space-y-2.5">
+              {workflowLinks.map(l => (
+                <Link key={l.href} to={l.href} className="block text-sm text-muted-foreground hover:text-primary transition-colors group">
+                  {l.label} <ArrowUpRight className="w-3 h-3 inline opacity-0 group-hover:opacity-100 transition-opacity" />
+                </Link>
+              ))}
+            </div>
+          </div>
+
           {/* Company */}
           <div className="space-y-4">
-            <h4 className="font-display font-semibold text-sm">Company</h4>
+            <h4 className="font-display font-semibold text-xs uppercase tracking-[0.14em] text-slate-500">Company</h4>
             <div className="space-y-2.5">
               {companyLinks.map(l => (
                 <Link key={l.href} to={l.href} className="block text-sm text-muted-foreground hover:text-primary transition-colors group">

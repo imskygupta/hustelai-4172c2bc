@@ -9,6 +9,9 @@ import { RelatedClusters } from "@/components/seo/RelatedClusters";
 import { StickyMobileCTA } from "@/components/seo/StickyMobileCTA";
 import { WorkflowConnector } from "@/components/seo/WorkflowConnector";
 import { VersusBlock } from "@/components/seo/VersusBlock";
+import { WhoIsThisFor } from "@/components/seo/WhoIsThisFor";
+import { JourneySection } from "@/components/seo/JourneySection";
+import { NextActions } from "@/components/seo/NextActions";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, CheckCircle2, ChevronRight } from "lucide-react";
 import NotFound from "@/pages/NotFound";
@@ -151,11 +154,20 @@ export function ProgrammaticDetail({ kind }: { kind: SeoKind }) {
           </div>
         </section>
 
+        {/* Use-case journey — proposal → invoice → Telegram delivery */}
+        <JourneySection kind={kind} />
+
+        {/* Audience block — freelancers, agencies, consultants, creators, async teams */}
+        <WhoIsThisFor kind={kind} />
+
         {/* Comparison: HustleAI vs the legacy way */}
         <VersusBlock kind={kind} />
 
         {/* FAQs — page-specific + kind-defaults expanded */}
         <FAQBlock items={allFaqs} />
+
+        {/* What happens next — operator-oriented next steps */}
+        <NextActions kind={kind} />
 
         {/* Discovery: 4-cluster related grid (workflows / integrations / free tools / use cases) */}
         <RelatedClusters current={entry} />
