@@ -432,11 +432,14 @@ export function FreeToolsStrip() {
         <div className="flex items-end justify-between flex-wrap gap-4 mb-8 md:mb-10">
           <div>
             <div className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-emerald-600 font-medium mb-2">
-              <LivePulse /> Free utilities · live
+              <LivePulse /> Workflow entry points · live
             </div>
             <h2 className="text-2xl md:text-4xl font-display font-semibold tracking-tight text-slate-900 leading-tight">
-              Lightweight tools that plug<br className="hidden md:block" /> into your workspace.
+              Free tools that route into<br className="hidden md:block" /> your operating layer.
             </h2>
+            <p className="text-sm text-slate-500 mt-2 max-w-xl">
+              Each tool drops you straight into the async pipeline — generate, export, deliver, continue. No standalone dead-ends.
+            </p>
           </div>
           <Button variant="link" onClick={() => navigate("/tools")} className="text-emerald-700 hover:text-emerald-800 group">
             Browse all tools <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-0.5 transition-transform" />
