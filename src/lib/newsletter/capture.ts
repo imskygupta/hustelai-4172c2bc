@@ -3,7 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 const ANON_KEY = "nlc:anon";
 const DISMISS_KEY = (surface: string) => `nlc:dismissed:${surface}`;
 const SUBSCRIBED_KEY = "nlc:subscribed";
-const DISMISS_TTL_DAYS = 30;
+const NEVER_KEY = "nlc:never";
+const DISMISS_TTL_DAYS = 90;
 
 export function getAnonId(): string {
   try {
@@ -18,6 +19,7 @@ export function getAnonId(): string {
 
 export function isDismissed(surface: string): boolean {
   try {
+    if (localStorage.getItem(NEVER_KEY) === "1") return true;
     const raw = localStorage.getItem(DISMISS_KEY(surface));
     if (!raw) return false;
     const ts = Number(raw);
@@ -32,6 +34,17 @@ export function markDismissed(surface: string) {
   void supabase.from("newsletter_capture_dismissals" as any).insert({
     anon_id: getAnonId(), surface,
   } as any);
+}
+
+export function markNeverShow() {
+  try {
+    localStorage.setItem(NEVER_KEY, "1");
+    localStorage.setItem(DISMISS_KEY("popup"), String(Date.now()));
+  } catch {}
+}
+
+export function isNeverShow(): boolean {
+  try { return localStorage.getItem(NEVER_KEY) === "1"; } catch { return false; }
 }
 
 export function isSubscribed(): boolean {
