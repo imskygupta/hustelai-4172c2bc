@@ -3,10 +3,13 @@ import App from "./App.tsx";
 import "./index.css";
 import { initAnalytics } from "./lib/analytics";
 import { initSentry } from "./lib/sentry";
+import { initYandex } from "./lib/yandex";
 import { loadServerRuntimeConfig } from "./config/runtime";
 
 initSentry();
 initAnalytics();
+// Lazy-init Yandex Metrica after hydration (uses requestIdleCallback inside).
+initYandex();
 // Fire-and-forget. Failures NEVER block boot — runtime falls back to defaults.
 loadServerRuntimeConfig();
 

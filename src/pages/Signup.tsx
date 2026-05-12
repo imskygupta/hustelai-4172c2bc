@@ -145,6 +145,10 @@ export default function Signup() {
     }
     setLoading(false);
     toast({ title: "Welcome to HustleAI! 🎉", description: "Let's personalize your workspace…" });
+    try {
+      const { yandexTrack } = await import("@/lib/yandex");
+      yandexTrack("signup_complete", { method: "password" });
+    } catch {}
     navigate("/onboarding");
   };
 
