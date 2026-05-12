@@ -43,6 +43,30 @@ function readingMinutes(md: string) {
   return Math.max(1, Math.ceil(words / 200));
 }
 
+// Fire-and-forget IndexNow ping for a published post URL.
+async function pingIndexNow(slug: string, source_id: string) {
+  try {
+    const url = `https://blogs.hustlaiapp.in/${slug}`;
+    await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/indexnow?action=enqueue`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+      },
+      body: JSON.stringify({ urls: [url], source_kind: "blog_post", source_id }),
+    });
+    // Trigger immediate flush (non-blocking best-effort).
+    fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/indexnow?action=flush`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+      },
+      body: "{}",
+    }).catch(() => null);
+  } catch (_) { /* swallow */ }
+}
+
 // ---------- Editorial safeguards ----------
 const STOP = new Set(("a an the and or for of to in on at is are be by with from as it this that these those your you we our i me my their they them his her she he").split(" "));
 function tokenize(s: string) {
@@ -204,6 +228,9 @@ Deno.serve(async (req) => {
         if (status === "scheduled") patch.scheduled_at = scheduled_at;
         const { data, error } = await blog.from("blog_posts").update(patch).eq("id", id).select().single();
         if (error) throw error;
+        if (status === "published" && data?.slug) {
+          await pingIndexNow(data.slug, data.id);
+        }
         return new Response(JSON.stringify({ post: data }), { headers: { ...cors, "content-type": "application/json" } });
       }
       if (action === "validate") {
