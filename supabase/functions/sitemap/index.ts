@@ -18,6 +18,28 @@ const STATIC_ROUTES: { path: string; priority: number; changefreq: string }[] = 
   { path: "/privacy-policy", priority: 0.3, changefreq: "yearly" },
   { path: "/terms-conditions", priority: 0.3, changefreq: "yearly" },
   { path: "/refund-policy", priority: 0.3, changefreq: "yearly" },
+  // Programmatic SEO hubs
+  { path: "/features", priority: 0.8, changefreq: "weekly" },
+  { path: "/workflows", priority: 0.8, changefreq: "weekly" },
+  { path: "/use-cases", priority: 0.7, changefreq: "weekly" },
+  { path: "/free-tools", priority: 0.8, changefreq: "weekly" },
+];
+
+// Programmatic SEO landing slugs. Keep in sync with src/lib/seo/programmatic-catalog.ts
+const PROGRAMMATIC: { kind: string; slug: string }[] = [
+  { kind: "features", slug: "ai-client-management-workspace" },
+  { kind: "features", slug: "freelancer-workspace-os" },
+  { kind: "features", slug: "ai-document-generator" },
+  { kind: "integrations", slug: "telegram-export-delivery" },
+  { kind: "integrations", slug: "stripe-payments" },
+  { kind: "workflows", slug: "async-ai-workflow-platform" },
+  { kind: "workflows", slug: "client-onboarding-automation" },
+  { kind: "use-cases", slug: "solo-consultant" },
+  { kind: "use-cases", slug: "design-agency" },
+  { kind: "use-cases", slug: "creator-business" },
+  { kind: "free-tools", slug: "ai-invoice-generator" },
+  { kind: "free-tools", slug: "ai-proposal-generator" },
+  { kind: "free-tools", slug: "ai-contract-generator" },
 ];
 
 function xmlEscape(s: string) {
@@ -39,6 +61,10 @@ Deno.serve(async () => {
 
   for (const r of STATIC_ROUTES) {
     parts.push(urlEntry(`${SITE}${r.path}`, now, r.changefreq, r.priority));
+  }
+
+  for (const p of PROGRAMMATIC) {
+    parts.push(urlEntry(`${SITE}/${p.kind}/${p.slug}`, now, "weekly", 0.7));
   }
 
   const { data: pages } = await supabase
