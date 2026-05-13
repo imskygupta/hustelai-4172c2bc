@@ -57,6 +57,24 @@ export default function Explore() {
       .then(({ data }) => { if (data) setTrendingCards(data.map(mapDbResult)); });
   }, []);
 
+  // Preload from blog conversion deep-link: /explore?template=<slug>
+  useEffect(() => {
+    const tplSlug = searchParams.get("template");
+    if (!tplSlug) return;
+    const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/hustle-templates?action=get&slug=${encodeURIComponent(tplSlug)}`;
+    fetch(url, { headers: { apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string } })
+      .then((r) => r.json())
+      .then((j) => {
+        const tpl = j?.template;
+        if (!tpl) return;
+        const seedQuery: string = tpl.prompt_system?.prompt || tpl.title;
+        toast({ title: `Loaded template: ${tpl.title}`, description: tpl.summary || "Prompt and tools pre-filled." });
+        handleSearch(seedQuery);
+      })
+      .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
   const handleSearch = async (query: string) => {
     if (user && !requireVerified()) return;
     setIsLoading(true);

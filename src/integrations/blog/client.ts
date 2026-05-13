@@ -130,6 +130,36 @@ export const blogApi = {
     call(`/crawl-orchestrator?action=refresh_post`, { admin: true, method: "POST", body: JSON.stringify({ slug }) }),
 };
 
+// ──────────────────────────────────────────────────────────────────────────
+// Editorial Acquisition + Tool Conversion (Phase 11)
+// ──────────────────────────────────────────────────────────────────────────
+export const conversionApi = {
+  // Hustle templates
+  templatesList: () => call(`/hustle-templates?action=list`),
+  templateGet: (slug: string) => call(`/hustle-templates?action=get&slug=${encodeURIComponent(slug)}`),
+  templateSave: (template: any) =>
+    call(`/hustle-templates?action=save`, { admin: true, method: "POST", body: JSON.stringify(template) }),
+  templateDelete: (id: string) =>
+    call(`/hustle-templates?action=delete`, { admin: true, method: "POST", body: JSON.stringify({ id }) }),
+  templatesBootstrapSql: () => call(`/hustle-templates?action=bootstrap_sql`),
+
+  // Tool matcher
+  matchTools: (payload: { post_id?: string; body_md?: string; title?: string; focus_keyword?: string; cluster?: string; mode?: "auto" | "manual" | "hybrid"; overrides?: any }) =>
+    call(`/tool-matcher?action=match`, { admin: true, method: "POST", body: JSON.stringify(payload) }),
+
+  // AdSense readiness
+  adsenseCheck: (post_id: string) =>
+    call(`/adsense-readiness?action=check`, { admin: true, method: "POST", body: JSON.stringify({ post_id }) }),
+  adsenseOverview: () => call(`/adsense-readiness?action=overview`, { admin: true }),
+  adsenseRescanAll: () => call(`/adsense-readiness?action=rescan_all`, { admin: true, method: "POST" }),
+
+  // Authority batch
+  batchList: () => call(`/authority-batch?action=list`, { admin: true }),
+  batchGet: (id: string) => call(`/authority-batch?action=get&id=${encodeURIComponent(id)}`, { admin: true }),
+  batchStart: (payload: { count?: number; clusters?: string[]; stagger_hours?: number; auto_publish?: boolean; min_adsense_score?: number }) =>
+    call(`/authority-batch?action=start`, { admin: true, method: "POST", body: JSON.stringify(payload) }),
+};
+
 export type BlogPost = {
   id: string; slug: string; title: string; subtitle?: string; excerpt?: string;
   body_md?: string; hero_image?: string; reading_time?: number;

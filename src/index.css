@@ -337,3 +337,52 @@
     radial-gradient(900px 500px at 0% 10%, hsl(35 50% 60% / 0.04), transparent 55%),
     hsl(var(--background));
 }
+
+/* === Editorial Acquisition layer (Phase 11) ============================== */
+
+/* Stronger H2/H3 rhythm + first-letter drop cap on lead paragraph */
+.prose-blog h2 {
+  font-size: 1.75rem;
+  letter-spacing: -0.012em;
+  margin-top: 2.6rem;
+  padding-top: 0.4rem;
+  border-top: 1px solid hsl(var(--border) / 0.5);
+}
+.prose-blog h3 {
+  font-size: 1.225rem;
+  letter-spacing: -0.008em;
+  margin-top: 1.9rem;
+}
+.prose-blog > p:first-of-type::first-letter {
+  font-family: "Source Serif Pro", "Charter", serif;
+  font-weight: 600;
+  font-size: 3.1rem;
+  line-height: 0.92;
+  float: left;
+  margin: 0.18rem 0.55rem 0 0;
+  color: hsl(var(--foreground));
+}
+
+/* Inline conversion + tool card overrides — undo prose underline on a tags
+   inside our embedded React components */
+.prose-blog [data-conversion] a,
+.prose-blog [data-conversion] a:hover { text-decoration: none; }
+
+/* Category accent chips — referenced by CategoryPill */
+.accent-emerald, .accent-sky, .accent-violet, .accent-amber,
+.accent-rose, .accent-blue, .accent-stone { font-feature-settings: "ss01"; }
+
+/* Editorial card — used by hustle conversion + sidebar tool blocks */
+.editorial-card {
+  border: 1px solid hsl(var(--border) / 0.6);
+  border-radius: 12px;
+  background: linear-gradient(180deg, hsl(var(--card)) 0%, hsl(var(--background)) 100%);
+  transition: border-color 160ms ease, transform 160ms ease;
+}
+.editorial-card:hover { border-color: hsl(158 64% 42% / 0.45); }
+
+/* Reading-progress polish — narrower, warmer */
+.reading-progress-bar {
+  background: linear-gradient(90deg, hsl(158 64% 42%), hsl(158 64% 55%));
+  box-shadow: 0 0 8px hsl(158 64% 42% / 0.4);
+}
