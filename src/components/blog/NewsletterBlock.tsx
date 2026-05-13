@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { captureNewsletterSignup } from "@/lib/newsletter/capture";
+import { subscribe, markSubscribed } from "@/lib/newsletter/capture";
 
 /** Editorial inline subscribe — no DB schema changes; reuses existing capture helper. */
 export function NewsletterBlock({
@@ -17,7 +17,8 @@ export function NewsletterBlock({
     if (!/.+@.+\..+/.test(email)) return setState("err");
     setState("loading");
     try {
-      await captureNewsletterSignup({ email, source });
+      await subscribe({ email, source });
+      markSubscribed();
       setState("ok");
     } catch {
       setState("err");
