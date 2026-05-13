@@ -9,6 +9,9 @@ import { extractEditorialMeta } from "@/lib/blog-meta";
 import { injectInternalLinks, buildLinkTargets } from "@/lib/blog-internal-links";
 import { BlogImage } from "@/components/blog/BlogImage";
 import { optimizedImage } from "@/lib/blog-image";
+import { ReadingProgress } from "@/components/blog/ReadingProgress";
+import { Breadcrumb } from "@/components/blog/Breadcrumb";
+import { NewsletterBlock } from "@/components/blog/NewsletterBlock";
 
 export default function BlogPost() {
   const { slug = "" } = useParams();
@@ -66,6 +69,7 @@ export default function BlogPost() {
 
   return (
     <BlogShell>
+      <ReadingProgress />
       <BlogSEO
         title={post.meta_title || post.title}
         description={post.meta_description || post.excerpt || ""}
@@ -79,23 +83,42 @@ export default function BlogPost() {
         jsonLd={faqLd ? [articleLd, faqLd] : articleLd}
       />
 
-      <article className="mx-auto max-w-[720px] px-5 pt-12 pb-6">
-        <div className="text-[11px] uppercase tracking-wide text-muted-foreground mb-3">
+      <article className="mx-auto max-w-[760px] px-5 pt-10 pb-6">
+        <Breadcrumb
+          items={[
+            { label: "Notes", to: "/" },
+            ...(post.blog_categories
+              ? [{ label: post.blog_categories.title, to: `/category/${post.blog_categories.slug}` }]
+              : []),
+            { label: post.title },
+          ]}
+        />
+        <div className="mt-5 flex flex-wrap items-center gap-2 text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
           {post.blog_categories?.title && (
-            <Link to={`/category/${post.blog_categories.slug}`} className="hover:text-foreground">{post.blog_categories.title}</Link>
+            <Link
+              to={`/category/${post.blog_categories.slug}`}
+              className="px-2 py-0.5 rounded-sm bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/15"
+            >
+              {post.blog_categories.title}
+            </Link>
           )}
-          {" · "}{post.reading_time ?? 4} min read
+          <span>{post.reading_time ?? 4} min read</span>
+          <span>·</span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="h-1 w-1 rounded-full bg-emerald-500" />
+            Operationally reviewed
+          </span>
         </div>
-        <h1 className="font-serif text-3xl sm:text-4xl tracking-tight leading-[1.1]">{post.title}</h1>
+        <h1 className="mt-3 font-serif text-[34px] sm:text-[44px] tracking-[-0.02em] leading-[1.08]">{post.title}</h1>
         {post.subtitle && <p className="mt-4 text-lg text-muted-foreground">{post.subtitle}</p>}
 
-        <div className="mt-6 flex items-center gap-3 text-sm text-muted-foreground">
+        <div className="mt-6 flex flex-wrap items-center gap-3 text-sm text-muted-foreground border-y border-border/50 py-3">
           {post.blog_authors && (
             <Link to={`/author/${post.blog_authors.slug}`} className="flex items-center gap-2 hover:text-foreground">
               {post.blog_authors.avatar_url && (
-                <img src={post.blog_authors.avatar_url} alt={post.blog_authors.name} loading="lazy" className="w-7 h-7 rounded-full object-cover" />
+                <img src={post.blog_authors.avatar_url} alt={post.blog_authors.name} loading="lazy" className="w-8 h-8 rounded-full object-cover ring-1 ring-border" />
               )}
-              <span>{post.blog_authors.name}</span>
+              <span className="text-foreground/85">{post.blog_authors.name}</span>
             </Link>
           )}
           <span>·</span>
@@ -103,7 +126,10 @@ export default function BlogPost() {
           {updated && (
             <>
               <span>·</span>
-              <span>Updated {new Date(post.updated_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
+              <span className="inline-flex items-center gap-1.5">
+                <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                Updated {new Date(post.updated_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+              </span>
             </>
           )}
         </div>
@@ -134,8 +160,8 @@ export default function BlogPost() {
       </article>
 
       {post.hero_image && (
-        <div className="mx-auto max-w-4xl px-5 mb-10">
-          <div className="aspect-[16/9] rounded-md overflow-hidden bg-muted/40">
+        <div className="mx-auto max-w-4xl px-5 mb-12">
+          <figure className="aspect-[16/9] rounded-lg overflow-hidden bg-muted/40 ring-1 ring-border/40 shadow-[0_30px_60px_-30px_hsl(var(--foreground)/0.18)]">
             <BlogImage
               src={post.hero_image}
               alt={post.title}
@@ -145,43 +171,71 @@ export default function BlogPost() {
               sizes="(min-width: 1024px) 960px, 100vw"
               className="w-full h-full object-cover"
             />
-          </div>
+          </figure>
         </div>
       )}
 
-      {post.toc && post.toc.length > 2 && (
-        <nav aria-label="Table of contents" className="mx-auto max-w-[720px] px-5 mb-8">
-          <details className="rounded-md border border-border/60 bg-muted/20 px-4 py-3 text-sm">
-            <summary className="cursor-pointer font-medium">In this article</summary>
-            <ol className="mt-3 space-y-1.5 text-muted-foreground">
-              {post.toc.map((t: any) => (
-                <li key={t.slug} className={t.level === 3 ? "pl-4" : ""}>
-                  <a href={`#${t.slug}`} className="hover:text-foreground">{t.text}</a>
-                </li>
-              ))}
-            </ol>
-          </details>
-        </nav>
-      )}
+      {/* Body with optional desktop sidebar TOC */}
+      <div className="mx-auto max-w-6xl px-5">
+        <div className="grid lg:grid-cols-[minmax(0,720px)_240px] lg:gap-12 lg:justify-center">
+          <div className="min-w-0">
+            {post.toc && post.toc.length > 2 && (
+              <nav aria-label="Table of contents" className="lg:hidden mb-8">
+                <details className="rounded-md border border-border/60 bg-muted/20 px-4 py-3 text-sm">
+                  <summary className="cursor-pointer font-medium">In this article</summary>
+                  <ol className="mt-3 space-y-1.5 text-muted-foreground">
+                    {post.toc.map((t: any) => (
+                      <li key={t.slug} className={t.level === 3 ? "pl-4" : ""}>
+                        <a href={`#${t.slug}`} className="hover:text-foreground">{t.text}</a>
+                      </li>
+                    ))}
+                  </ol>
+                </details>
+              </nav>
+            )}
+            <div
+              className="prose-blog"
+              dangerouslySetInnerHTML={{ __html: html }}
+            />
 
-      <div
-        className="mx-auto max-w-[720px] px-5 prose-blog"
-        dangerouslySetInnerHTML={{ __html: html }}
-      />
+            {/* Mid-content reserved ad slot */}
+            <AdSlot height={250} format="rectangle" />
+          </div>
 
-      {/* Inline ad — placed after the body, never inside reading flow */}
-      <div className="mx-auto max-w-[720px] px-5">
-        <AdSlot height={250} format="rectangle" />
+          {/* Sticky desktop TOC + meta rail */}
+          <aside className="hidden lg:block">
+            <div className="sticky top-32 space-y-6 text-sm">
+              {post.toc && post.toc.length > 1 && (
+                <div>
+                  <div className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground mb-3">In this article</div>
+                  <ol className="space-y-1.5 text-muted-foreground border-l border-border/60 pl-3">
+                    {post.toc.map((t: any) => (
+                      <li key={t.slug} className={t.level === 3 ? "pl-3" : ""}>
+                        <a href={`#${t.slug}`} className="hover:text-foreground line-clamp-2 text-[13px] leading-snug">{t.text}</a>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+              )}
+              <div className="rounded-md border border-border/60 bg-muted/20 p-3 text-[12px] text-muted-foreground space-y-1.5">
+                <div className="text-[10px] uppercase tracking-[0.14em] text-foreground/70">Editorial standards</div>
+                <p>Reviewed by working operators. Updated when the underlying workflow changes.</p>
+              </div>
+              {/* Reserved sidebar ad slot */}
+              <AdSlot height={300} format="rectangle" className="!my-0" />
+            </div>
+          </aside>
+        </div>
       </div>
 
       {(post.cta_blocks ?? []).length > 0 && (
-        <section className="mx-auto max-w-[720px] px-5 my-10">
+        <section className="mx-auto max-w-[760px] px-5 my-10">
           {post.cta_blocks.map((c: any, i: number) => (
             <a key={i} href={c.href.startsWith("http") ? c.href : `https://hustlaiapp.in${c.href}`}
               onClick={() => blogApi.track("cta", post.id, c.kind)}
-              className="block rounded-lg border border-border/60 bg-muted/20 px-5 py-4 mb-3 hover:border-foreground/40 transition">
-              <div className="text-[11px] uppercase tracking-wide text-muted-foreground mb-1">{c.kind}</div>
-              <div className="font-medium">{c.label}</div>
+              className="block rounded-lg border border-border/60 bg-gradient-to-br from-emerald-500/[0.04] to-transparent px-5 py-4 mb-3 hover:border-emerald-500/40 transition group">
+              <div className="text-[11px] uppercase tracking-wide text-emerald-700 dark:text-emerald-400 mb-1">{c.kind}</div>
+              <div className="font-medium group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors">{c.label}</div>
               {c.note && <div className="text-sm text-muted-foreground mt-1">{c.note}</div>}
             </a>
           ))}
@@ -189,7 +243,7 @@ export default function BlogPost() {
       )}
 
       {post.faq && post.faq.length > 0 && (
-        <section className="mx-auto max-w-[720px] px-5 my-12">
+        <section className="mx-auto max-w-[760px] px-5 my-12">
           <h2 className="font-serif text-2xl mb-4">FAQ</h2>
           <div className="divide-y divide-border/60 border-t border-b border-border/60">
             {post.faq.map((f: any, i: number) => (
@@ -203,7 +257,7 @@ export default function BlogPost() {
       )}
 
       {tags.length > 0 && (
-        <div className="mx-auto max-w-[720px] px-5 my-8 flex flex-wrap gap-2">
+        <div className="mx-auto max-w-[760px] px-5 my-8 flex flex-wrap gap-2">
           {tags.map((t: any) => (
             <Link key={t.slug} to={`/tag/${t.slug}`} className="text-xs px-3 py-1 rounded-full border border-border/60 text-muted-foreground hover:text-foreground">#{t.title}</Link>
           ))}
@@ -211,22 +265,30 @@ export default function BlogPost() {
       )}
 
       {post.blog_authors?.bio && (
-        <section className="mx-auto max-w-[720px] px-5 my-10 rounded-lg border border-border/60 bg-muted/20 p-5">
+        <section className="mx-auto max-w-[760px] px-5 my-10">
+          <div className="rounded-lg border border-border/60 bg-gradient-to-br from-muted/20 to-transparent p-6">
+            <div className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground mb-3">Written by</div>
           <div className="flex items-start gap-4">
             {post.blog_authors.avatar_url && (
-              <img src={post.blog_authors.avatar_url} alt={post.blog_authors.name} loading="lazy" className="w-12 h-12 rounded-full object-cover" />
+              <img src={post.blog_authors.avatar_url} alt={post.blog_authors.name} loading="lazy" className="w-14 h-14 rounded-full object-cover ring-1 ring-border" />
             )}
             <div>
-              <div className="font-medium">{post.blog_authors.name}</div>
+              <div className="font-serif text-[17px]">{post.blog_authors.name}</div>
               <p className="text-sm text-muted-foreground mt-1">{post.blog_authors.bio}</p>
               <Link to={`/author/${post.blog_authors.slug}`} className="text-xs underline mt-2 inline-block">More from this author</Link>
             </div>
           </div>
+          </div>
         </section>
       )}
 
+      {/* Inline newsletter — humanizes the experience between article and recommendations */}
+      <section className="mx-auto max-w-[760px] px-5 my-12">
+        <NewsletterBlock variant="compact" source={`post:${post.slug}`} />
+      </section>
+
       {(workflows.length > 0 || tools.length > 0) && (
-        <section className="mx-auto max-w-[720px] px-5 my-10">
+        <section className="mx-auto max-w-[760px] px-5 my-10">
           <h2 className="font-serif text-xl mb-3">Use this inside HustleAI</h2>
           <div className="grid sm:grid-cols-2 gap-3">
             {workflows.map((w: string) => (
@@ -246,17 +308,17 @@ export default function BlogPost() {
       )}
 
       {(prev || next) && (
-        <nav className="mx-auto max-w-[720px] px-5 my-10 grid sm:grid-cols-2 gap-3">
+        <nav className="mx-auto max-w-[760px] px-5 my-10 grid sm:grid-cols-2 gap-4" aria-label="Read next">
           {prev ? (
-            <Link to={`/${prev.slug}`} className="rounded-md border border-border/60 px-4 py-3 hover:border-foreground/40">
-              <div className="text-[11px] uppercase tracking-wide text-muted-foreground">← Previous</div>
-              <div className="text-sm font-medium mt-1">{prev.title}</div>
+            <Link to={`/${prev.slug}`} className="group rounded-lg border border-border/60 p-5 hover:border-foreground/40 transition bg-background/40">
+              <div className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">← Previous</div>
+              <div className="font-serif text-[16px] mt-2 leading-snug group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors">{prev.title}</div>
             </Link>
           ) : <span />}
           {next ? (
-            <Link to={`/${next.slug}`} className="rounded-md border border-border/60 px-4 py-3 hover:border-foreground/40 text-right">
-              <div className="text-[11px] uppercase tracking-wide text-muted-foreground">Next →</div>
-              <div className="text-sm font-medium mt-1">{next.title}</div>
+            <Link to={`/${next.slug}`} className="group rounded-lg border border-border/60 p-5 hover:border-foreground/40 transition text-right sm:text-right bg-background/40">
+              <div className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">Read next →</div>
+              <div className="font-serif text-[16px] mt-2 leading-snug group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors">{next.title}</div>
             </Link>
           ) : <span />}
         </nav>
@@ -264,15 +326,21 @@ export default function BlogPost() {
 
       {related.length > 0 && (
         <section className="mx-auto max-w-6xl px-5 my-16">
-          <h2 className="font-serif text-2xl mb-6">Continue reading</h2>
+          <div className="flex items-baseline justify-between mb-6 border-b border-border/40 pb-2">
+            <h2 className="font-serif text-2xl">Continue reading</h2>
+            <Link to="/" className="text-xs text-muted-foreground hover:text-foreground">All notes →</Link>
+          </div>
           <div className="grid sm:grid-cols-3 gap-8">
             {related.map((r: any) => (
               <Link key={r.slug} to={`/${r.slug}`} className="group">
-                <div className="aspect-[16/10] rounded-md overflow-hidden bg-muted/40 mb-3">
+                <div className="aspect-[16/10] rounded-lg overflow-hidden bg-muted/40 mb-3 ring-1 ring-border/40">
                   {r.hero_image && <img src={r.hero_image} alt={r.title} loading="lazy" className="w-full h-full object-cover" />}
                 </div>
-                <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{r.reading_time ?? 4} min</div>
-                <h3 className="font-serif text-lg mt-1 group-hover:underline underline-offset-4">{r.title}</h3>
+                <div className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+                  {r.blog_categories?.title ?? "Note"} · {r.reading_time ?? 4} min
+                </div>
+                <h3 className="font-serif text-[18px] mt-1 leading-snug group-hover:underline underline-offset-4">{r.title}</h3>
+                {r.excerpt && <p className="mt-1.5 text-sm text-muted-foreground line-clamp-2">{r.excerpt}</p>}
               </Link>
             ))}
           </div>
