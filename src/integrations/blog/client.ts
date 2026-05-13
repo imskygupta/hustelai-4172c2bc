@@ -16,8 +16,13 @@ async function call<T = any>(path: string, init?: RequestInit & { admin?: boolea
     headers["authorization"] = `Bearer ${ANON}`;
   }
   const r = await fetch(`${BASE}${path}`, { ...init, headers });
-  if (!r.ok) throw new Error(`${path} ${r.status}`);
-  return r.json();
+  let payload: any = null;
+  try { payload = await r.json(); } catch { /* non-json */ }
+  if (!r.ok) {
+    const detail = payload?.error ? ` — ${typeof payload.error === "string" ? payload.error : JSON.stringify(payload.error)}` : "";
+    throw new Error(`${path} ${r.status}${detail}`);
+  }
+  return payload;
 }
 
 export const blogApi = {
