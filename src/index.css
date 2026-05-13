@@ -386,3 +386,28 @@
   background: linear-gradient(90deg, hsl(158 64% 42%), hsl(158 64% 55%));
   box-shadow: 0 0 8px hsl(158 64% 42% / 0.4);
 }
+
+/* Editorial shimmer — calmer than the default pulse, used by skeletons. */
+@keyframes editorial-shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+.editorial-shimmer {
+  background-image: linear-gradient(
+    90deg,
+    hsl(var(--muted) / 0.45) 0%,
+    hsl(var(--muted) / 0.75) 50%,
+    hsl(var(--muted) / 0.45) 100%
+  );
+  background-size: 800px 100%;
+  animation: editorial-shimmer 1.6s ease-in-out infinite;
+}
+
+/* Smooth view-transition for blog navigation where supported. */
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 240ms;
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+}
