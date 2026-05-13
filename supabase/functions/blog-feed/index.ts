@@ -67,10 +67,15 @@ Deno.serve(async (req) => {
         tags: tags ?? [],
         posts,
       }), { headers: { ...cors, "content-type": "application/json", "cache-control": "public, max-age=120" } });
+      // (cluster mode response above)
     }
 
     return new Response(JSON.stringify({ posts, categories: cats ?? [] }), {
-      headers: { ...cors, "content-type": "application/json", "cache-control": "public, max-age=60" },
+      headers: {
+        ...cors,
+        "content-type": "application/json",
+        "cache-control": "public, max-age=30, s-maxage=180, stale-while-revalidate=86400",
+      },
     });
   } catch (e) {
     return new Response(JSON.stringify({ error: String(e) }), { status: 500, headers: { ...cors, "content-type": "application/json" } });
