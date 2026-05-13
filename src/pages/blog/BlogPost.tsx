@@ -14,28 +14,45 @@ import { Breadcrumb } from "@/components/blog/Breadcrumb";
 import { NewsletterBlock } from "@/components/blog/NewsletterBlock";
 import { HustleConversionBlock } from "@/components/blog/HustleConversionBlock";
 import { CategoryPill } from "@/components/blog/CategoryAccent";
+import { EditorialPostSkeleton } from "@/components/blog/EditorialSkeleton";
+import { PrefetchLink } from "@/components/blog/PrefetchLink";
+import { onIdle } from "@/lib/blog-cache";
 
 export default function BlogPost() {
   const { slug = "" } = useParams();
-  const [data, setData] = useState<any>(null);
-  const [state, setState] = useState<"loading" | "ok" | "missing">("loading");
+  // Hydrate immediately from SWR cache to avoid blank flashes on back/next nav.
+  const [data, setData] = useState<any>(() => blogApi.cachedPost(slug));
+  const [state, setState] = useState<"loading" | "ok" | "missing">(() =>
+    blogApi.cachedPost(slug) ? "ok" : "loading",
+  );
 
   useEffect(() => {
-    setState("loading");
-    blogApi.post(slug)
-      .then((r: any) => { setData(r); setState("ok"); blogApi.track("view", r.post?.id, document.referrer); })
-      .catch(() => setState("missing"));
+    const cached = blogApi.cachedPost(slug);
+    if (cached) { setData(cached); setState("ok"); }
+    else setState("loading");
+    blogApi.postSWR(slug, (r: any, fromCache) => {
+      setData(r);
+      setState("ok");
+      if (!fromCache) blogApi.track("view", r.post?.id, document.referrer);
+    }).catch(() => { if (!cached) setState("missing"); });
   }, [slug]);
+
+  // Idle-prefetch related + adjacent posts for instant onward navigation.
+  useEffect(() => {
+    if (!data?.post) return;
+    onIdle(() => {
+      (data.related ?? []).slice(0, 3).forEach((r: any) => r?.slug && blogApi.prefetchPost(r.slug));
+      if (data.prev?.slug) blogApi.prefetchPost(data.prev.slug);
+      if (data.next?.slug) blogApi.prefetchPost(data.next.slug);
+      const cat = data.post?.blog_categories?.slug;
+      if (cat) blogApi.prefetchFeed({ category: cat, limit: 30, mode: "cluster" });
+    });
+  }, [data]);
 
   if (state === "loading") {
     return (
       <BlogShell>
-        <div className="mx-auto max-w-2xl px-5 py-20">
-          <div className="h-4 w-32 bg-muted/40 rounded animate-pulse mb-4" />
-          <div className="h-10 w-full bg-muted/40 rounded animate-pulse mb-2" />
-          <div className="h-10 w-3/4 bg-muted/40 rounded animate-pulse mb-8" />
-          <div className="aspect-[16/9] bg-muted/40 rounded animate-pulse" />
-        </div>
+        <EditorialPostSkeleton />
       </BlogShell>
     );
   }
@@ -351,7 +368,7 @@ export default function BlogPost() {
           </div>
           <div className="grid sm:grid-cols-3 gap-8">
             {related.map((r: any) => (
-              <Link key={r.slug} to={`/${r.slug}`} className="group">
+              <PrefetchLink key={r.slug} to={`/${r.slug}`} prefetchPost={r.slug} className="group">
                 <div className="aspect-[16/10] rounded-lg overflow-hidden bg-muted/40 mb-3 ring-1 ring-border/40">
                   {r.hero_image && <img src={r.hero_image} alt={r.title} loading="lazy" className="w-full h-full object-cover" />}
                 </div>
