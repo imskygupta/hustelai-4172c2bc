@@ -235,6 +235,7 @@ const NAV_GROUPS: { label: string; defaultOpen?: boolean; items: NavItem[] }[] =
     label: "Content & Growth",
     items: [
       { kind: "section", id: "blogs", label: "Blog Manager", icon: BookOpen },
+      { kind: "route", href: "/admin/blog/os", label: "Editorial OS", icon: Compass, keywords: "editorial operating system command center palette unified hub" },
       { kind: "route", href: "/admin/blog/editorial", label: "Editorial Ops", icon: Activity, keywords: "editorial newsroom blog command center" },
       { kind: "route", href: "/admin/blog/pipeline", label: "Blog Pipeline", icon: Workflow, keywords: "pipeline drafts scheduled" },
       { kind: "route", href: "/admin/blog/seo", label: "SEO Health", icon: ShieldCheck, keywords: "sitemap indexnow bing google" },

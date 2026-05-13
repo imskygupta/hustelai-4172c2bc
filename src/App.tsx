@@ -188,6 +188,8 @@ const AuthorityBatch = lazy(() => import("./pages/admin/AuthorityBatch"));
 const HustleTemplatesAdmin = lazy(() => import("./pages/admin/HustleTemplates"));
 const AdsenseReadiness = lazy(() => import("./pages/admin/AdsenseReadiness"));
 const BootstrapSqlHub = lazy(() => import("./pages/admin/BootstrapSqlHub"));
+const EditorialOS = lazy(() => import("./pages/admin/EditorialOS"));
+const BlogAdminNotFound = lazy(() => import("./pages/admin/BlogAdminNotFound"));
 const AuthorityIndex = lazy(() => import("./pages/authority/AuthorityIndex"));
 const AuthorityPage = lazy(() => import("./pages/authority/AuthorityPage"));
 import { MaintenanceBanner } from "./components/flags/FeatureGate";
@@ -431,7 +433,19 @@ const App = () => (
             <Route path="/admin/blog/authority-batch" element={<AuthorityBatch />} />
             <Route path="/admin/blog/hustle-templates" element={<HustleTemplatesAdmin />} />
             <Route path="/admin/blog/adsense" element={<AdsenseReadiness />} />
+            {/* Aliases — operators frequently type the long form */}
+            <Route path="/admin/blog/adsense-readiness" element={<AdsenseReadiness />} />
+            <Route path="/admin/blog/seo-health" element={<BlogSeoHealth />} />
+            <Route path="/admin/blog/knowledge-graph" element={<KnowledgeGraph />} />
+            <Route path="/admin/blog/tool-registry" element={<ProductRegistry />} />
+            <Route path="/admin/blog/crawl-orchestrator" element={<CrawlOrchestrator />} />
             <Route path="/admin/blog/bootstrap" element={<BootstrapSqlHub />} />
+            <Route path="/admin/blog/bootstrap-sql" element={<BootstrapSqlHub />} />
+            {/* Unified editorial operating system */}
+            <Route path="/admin/blog/os" element={<EditorialOS />} />
+            <Route path="/admin/blog/command" element={<EditorialOS />} />
+            {/* Smart 404 for any other /admin/blog/* path — must stay last in this group */}
+            <Route path="/admin/blog/*" element={<BlogAdminNotFound />} />
             <Route path="/systems" element={<AuthorityIndex />} />
             <Route path="/systems/:slug" element={<AuthorityPage />} />
             <Route path="*" element={<NotFound />} />
