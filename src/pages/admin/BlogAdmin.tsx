@@ -13,6 +13,7 @@ import {
   RadioTower, Eye, Activity, Network, Target, Gauge, Zap, AlertTriangle, FileText,
   TrendingUp, Cpu, ChevronRight, Lightbulb, Rocket,
 } from "lucide-react";
+import ReadinessPanel from "@/components/admin/ReadinessPanel";
 
 type Post = any;
 
@@ -315,6 +316,11 @@ export default function BlogAdmin() {
                         <div className="font-medium mb-1 flex items-center gap-1.5"><AlertTriangle className="w-3.5 h-3.5 text-destructive" /> Editorial checks</div>
                         <ul className="list-disc pl-5 space-y-0.5 text-muted-foreground">{issues.map((i, k) => <li key={k}>{i}</li>)}</ul>
                       </motion.div>
+                    )}
+
+                    {/* Self-healing AI editorial layer */}
+                    {editing.id && (
+                      <ReadinessPanel postId={editing.id} onApplied={() => { open(editing.id); reload(); }} />
                     )}
                   </div>
                 )}
