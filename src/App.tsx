@@ -184,6 +184,9 @@ const NarrativeOps = lazy(() => import("./pages/admin/NarrativeOps"));
 const TrafficIntelligence = lazy(() => import("./pages/admin/TrafficIntelligence"));
 const ToolMediaLibrary = lazy(() => import("./pages/admin/ToolMediaLibrary"));
 const CrawlOrchestrator = lazy(() => import("./pages/admin/CrawlOrchestrator"));
+const AuthorityBatch = lazy(() => import("./pages/admin/AuthorityBatch"));
+const HustleTemplatesAdmin = lazy(() => import("./pages/admin/HustleTemplates"));
+const AdsenseReadiness = lazy(() => import("./pages/admin/AdsenseReadiness"));
 const AuthorityIndex = lazy(() => import("./pages/authority/AuthorityIndex"));
 const AuthorityPage = lazy(() => import("./pages/authority/AuthorityPage"));
 import { MaintenanceBanner } from "./components/flags/FeatureGate";
@@ -424,6 +427,9 @@ const App = () => (
             <Route path="/admin/blog/traffic" element={<TrafficIntelligence />} />
             <Route path="/admin/blog/tool-media" element={<ToolMediaLibrary />} />
             <Route path="/admin/blog/crawl" element={<CrawlOrchestrator />} />
+            <Route path="/admin/blog/authority-batch" element={<AuthorityBatch />} />
+            <Route path="/admin/blog/hustle-templates" element={<HustleTemplatesAdmin />} />
+            <Route path="/admin/blog/adsense" element={<AdsenseReadiness />} />
             <Route path="/systems" element={<AuthorityIndex />} />
             <Route path="/systems/:slug" element={<AuthorityPage />} />
             <Route path="*" element={<NotFound />} />
