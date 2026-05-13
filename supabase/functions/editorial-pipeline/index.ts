@@ -41,17 +41,31 @@ type Stage =
   | "screenshot_generation" | "seo_scoring" | "awaiting_review"
   | "indexed" | "published" | "failed" | "rejected" | "deduped";
 
+// Defensive: any status value not in this set is coerced to "failed"
+// so the pipeline never crashes on unknown/legacy enum values.
+const SAFE_STATUS = new Set([
+  "queued", "researching", "research", "draft", "enriching",
+  "in_review", "review", "scheduled", "published", "indexed",
+  "failed", "rejected", "deduped", "deleted",
+]);
+function normalizeStatus(s: any): string {
+  const v = typeof s === "string" ? s : "";
+  return SAFE_STATUS.has(v) ? v : "failed";
+}
+
 function deriveStage(p: any): Stage {
-  if (p.status === "rejected") return "rejected";
-  if (p.status === "deduped" || p.deduped_at) return "deduped";
-  if (p.status === "failed" || p.last_error) return "failed";
-  if (p.status === "published") {
+  const status = normalizeStatus(p.status);
+  if (status === "rejected") return "rejected";
+  if (status === "deduped" || p.deduped_at) return "deduped";
+  if (status === "deleted") return "deduped";
+  if (status === "failed" || p.last_error) return "failed";
+  if (status === "published") {
     if (p.last_indexed_at) return "indexed";
     return "published";
   }
-  if (p.status === "in_review" || p.status === "review") return "awaiting_review";
-  if (p.status === "scheduled") return "awaiting_review";
-  if (p.status === "draft") {
+  if (status === "in_review" || status === "review") return "awaiting_review";
+  if (status === "scheduled") return "awaiting_review";
+  if (status === "draft") {
     const md: string = p.body_md ?? "";
     const hasBody = md.trim().split(/\s+/).filter(Boolean).length > 200;
     const hasTools = Array.isArray(p.tool_matches) && p.tool_matches.length > 0;
@@ -63,8 +77,8 @@ function deriveStage(p: any): Stage {
     if (!hasScore) return "seo_scoring";
     return "enriching";
   }
-  if (p.status === "queued" || p.status === "research" || p.status === "researching") {
-    return p.status === "research" ? "researching" : "queued";
+  if (status === "queued" || status === "research" || status === "researching") {
+    return status === "research" ? "researching" : "queued";
   }
   return "queued";
 }
@@ -212,17 +226,22 @@ Deno.serve(async (req) => {
       const stage = url.searchParams.get("stage");
       const include_hidden = url.searchParams.get("hidden") === "1";
       const limit = Math.min(500, Number(url.searchParams.get("limit") ?? 200));
-      // Defensive: select * so we never crash because the table is missing
-      // a newly added column on older rows. Per-row try/catch isolates bad rows.
-      let q = blog().from("blog_posts").select("*")
+      // Defensive: select * and DO NOT filter by status at the SQL level —
+      // a `.neq("status", "deleted")` will crash if "deleted" is not a valid
+      // enum value in BLOG_DB. Filter in JS after normalization instead.
+      const q = blog().from("blog_posts").select("*")
         .order("updated_at", { ascending: false }).limit(limit);
-      if (!include_hidden) q = q.neq("status", "deleted");
       const { data, error } = await q;
       if (error) return json({ error: error.message, where: "list.select" }, 500);
       const rows: any[] = [];
       const failedRows: { id?: string; slug?: string; error: string }[] = [];
       for (const p of data ?? []) {
-        try { rows.push(deriveSummary(p)); }
+        try {
+          const summary = deriveSummary(p);
+          // Hide soft-deleted rows unless explicitly requested
+          if (!include_hidden && (summary.status === "deleted" || summary.stage === "deduped")) continue;
+          rows.push(summary);
+        }
         catch (e) { failedRows.push({ id: p?.id, slug: p?.slug, error: String((e as Error)?.message ?? e) }); }
       }
       const filtered = stage ? rows.filter((r) => r.stage === stage) : rows;
