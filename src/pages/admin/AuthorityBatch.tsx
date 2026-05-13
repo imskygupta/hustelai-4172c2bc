@@ -118,7 +118,15 @@ export default function AuthorityBatch() {
                   <div>{new Date(b.created_at).toLocaleString()} · {b.count} articles · {b.status}</div>
                   <div className="text-xs text-muted-foreground">{b.clusters?.join(", ")}</div>
                 </div>
-                <div className="text-xs text-muted-foreground">{b.results?.length ?? 0} results</div>
+                <a
+                  href={`/admin/blog/pipeline?batch=${b.id}`}
+                  target="_blank"
+                  rel="noopener"
+                  className="text-xs text-emerald-600 dark:text-emerald-400 hover:underline"
+                  title="Open batch articles in pipeline"
+                >
+                  {b.results?.length ?? 0} results →
+                </a>
               </div>
             ))}
           </div>
