@@ -187,6 +187,26 @@ export const conversionApi = {
     call(`/authority-batch?action=start`, { admin: true, method: "POST", body: JSON.stringify(payload) }),
 };
 
+// ──────────────────────────────────────────────────────────────────────────
+// Editorial Pipeline (Phase 12) — unified state + auto-fix
+// ──────────────────────────────────────────────────────────────────────────
+export const pipelineApi = {
+  list: (opts: { stage?: string; hidden?: boolean; limit?: number } = {}) => {
+    const q = new URLSearchParams();
+    if (opts.stage) q.set("stage", opts.stage);
+    if (opts.hidden) q.set("hidden", "1");
+    if (opts.limit) q.set("limit", String(opts.limit));
+    return call(`/editorial-pipeline?action=list&${q}`, { admin: true });
+  },
+  autoFix: (payload: { id?: string; ids?: string[] } = {}) =>
+    call(`/editorial-pipeline?action=auto_fix`, { admin: true, method: "POST", body: JSON.stringify(payload) }),
+  publishPassing: (min_score = 70) =>
+    call(`/editorial-pipeline?action=publish_passing`, { admin: true, method: "POST", body: JSON.stringify({ min_score }) }),
+  retry: (id: string) =>
+    call(`/editorial-pipeline?action=retry`, { admin: true, method: "POST", body: JSON.stringify({ id }) }),
+  reconcileRoutes: () => call(`/editorial-pipeline?action=reconcile_routes`, { admin: true }),
+};
+
 export type BlogPost = {
   id: string; slug: string; title: string; subtitle?: string; excerpt?: string;
   body_md?: string; hero_image?: string; reading_time?: number;
