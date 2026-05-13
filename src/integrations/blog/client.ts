@@ -218,6 +218,16 @@ export const pipelineApi = {
     call(`/editorial-pipeline?action=recover`, { admin: true, method: "POST", body: JSON.stringify({ limit }) }),
 };
 
+// ──────────────────────────────────────────────────────────────────────────
+// Self-Healing Editorial — analyze + granular fix on the post editor
+// ──────────────────────────────────────────────────────────────────────────
+export const autofixApi = {
+  analyze: (id: string) =>
+    call(`/editorial-pipeline?action=analyze&id=${encodeURIComponent(id)}`, { admin: true }),
+  fix: (id: string, kinds: string[] = ["all"]) =>
+    call(`/editorial-pipeline?action=fix_one`, { admin: true, method: "POST", body: JSON.stringify({ id, kinds }) }),
+};
+
 export type BlogPost = {
   id: string; slug: string; title: string; subtitle?: string; excerpt?: string;
   body_md?: string; hero_image?: string; reading_time?: number;
