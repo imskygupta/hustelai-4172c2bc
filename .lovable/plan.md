@@ -1,3 +1,9 @@
+## Crawl Orchestration (added)
+- Edge fn `crawl-orchestrator` on BLOG DB: registry, freshness scoring, priority queue, IndexNow handoff, sitemap pings, diagnostics.
+- Admin UI at `/admin/blog/crawl` with hourly cron snippet.
+- Curated authority pages on main domain at `/systems/:slug` (5 operational system explainers, NOT blog content).
+- Sitemap (main) extended with `/systems` + 5 system slugs.
+- Internal-link engine extended to include `systems` cross-domain link targets so blog posts naturally link into main-domain authority pages.
 ## Product Narrative Engine — Architecture Plan
 
 Evolves the blog into a product-aware publishing system with a centralized Tool Registry, Knowledge Graph, and DB-isolated pipeline. **No new blog IO on primary DB.**

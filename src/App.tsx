@@ -183,6 +183,9 @@ const KnowledgeGraph = lazy(() => import("./pages/admin/KnowledgeGraph"));
 const NarrativeOps = lazy(() => import("./pages/admin/NarrativeOps"));
 const TrafficIntelligence = lazy(() => import("./pages/admin/TrafficIntelligence"));
 const ToolMediaLibrary = lazy(() => import("./pages/admin/ToolMediaLibrary"));
+const CrawlOrchestrator = lazy(() => import("./pages/admin/CrawlOrchestrator"));
+const AuthorityIndex = lazy(() => import("./pages/authority/AuthorityIndex"));
+const AuthorityPage = lazy(() => import("./pages/authority/AuthorityPage"));
 import { MaintenanceBanner } from "./components/flags/FeatureGate";
 import TelegramLanding from "./pages/marketing/TelegramLanding";
 import { Navigate } from "react-router-dom";
@@ -420,6 +423,9 @@ const App = () => (
             <Route path="/admin/blog/narrative" element={<NarrativeOps />} />
             <Route path="/admin/blog/traffic" element={<TrafficIntelligence />} />
             <Route path="/admin/blog/tool-media" element={<ToolMediaLibrary />} />
+            <Route path="/admin/blog/crawl" element={<CrawlOrchestrator />} />
+            <Route path="/systems" element={<AuthorityIndex />} />
+            <Route path="/systems/:slug" element={<AuthorityPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           </Suspense>

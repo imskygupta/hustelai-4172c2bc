@@ -112,6 +112,22 @@ export const blogApi = {
   mediaCapture: (slug: string, kind: string) =>
     call(`/tool-media-pipeline?action=capture`, { admin: true, method: "POST", body: JSON.stringify({ slug, kind }) }),
   mediaQueue: (limit = 25) => call(`/tool-media-pipeline?action=queue&limit=${limit}`, { admin: true, method: "POST" }),
+
+  // Crawl Orchestrator
+  crawlBootstrapSql: () => call(`/crawl-orchestrator?action=bootstrap_sql`),
+  crawlDiagnostics: () => call(`/crawl-orchestrator?action=diagnostics`, { admin: true }),
+  crawlQueue: (limit = 50) => call(`/crawl-orchestrator?action=queue&limit=${limit}`, { admin: true }),
+  crawlSyncBlog: () => call(`/crawl-orchestrator?action=sync_blog`, { admin: true, method: "POST" }),
+  crawlSyncMain: (extra: string[] = []) =>
+    call(`/crawl-orchestrator?action=sync_main`, { admin: true, method: "POST", body: JSON.stringify({ extra }) }),
+  crawlRegister: (rows: any[]) =>
+    call(`/crawl-orchestrator?action=register`, { admin: true, method: "POST", body: JSON.stringify({ rows }) }),
+  crawlSubmit: (limit = 50) =>
+    call(`/crawl-orchestrator?action=submit`, { admin: true, method: "POST", body: JSON.stringify({ limit }) }),
+  crawlPing: () => call(`/crawl-orchestrator?action=ping`, { admin: true, method: "POST" }),
+  crawlFreshness: () => call(`/crawl-orchestrator?action=freshness`, { admin: true, method: "POST" }),
+  crawlRefreshPost: (slug: string) =>
+    call(`/crawl-orchestrator?action=refresh_post`, { admin: true, method: "POST", body: JSON.stringify({ slug }) }),
 };
 
 export type BlogPost = {

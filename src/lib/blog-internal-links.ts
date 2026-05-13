@@ -120,9 +120,12 @@ export function buildLinkTargets(opts: {
   category?: { slug: string; title: string };
   workflows?: string[];
   tools?: string[];
+  /** Operational authority systems on the main domain (slug → label). */
+  systems?: { slug: string; title: string }[];
 }): LinkTarget[] {
   const targets: LinkTarget[] = [];
-  for (const r of opts.related ?? []) {
+  // 3–5 related posts (most specific) come first.
+  for (const r of (opts.related ?? []).slice(0, 5)) {
     if (!r?.slug || !r?.title) continue;
     targets.push({
       href: `/${r.slug}`,
@@ -135,6 +138,14 @@ export function buildLinkTargets(opts: {
       href: `/category/${opts.category.slug}`,
       kind: "category",
       phrases: [opts.category.title],
+    });
+  }
+  for (const s of opts.systems ?? []) {
+    if (!s?.slug) continue;
+    targets.push({
+      href: `https://hustlaiapp.in/systems/${s.slug}`,
+      kind: "workflow",
+      phrases: [s.title, s.slug.replace(/-/g, " ")],
     });
   }
   for (const w of opts.workflows ?? []) {
