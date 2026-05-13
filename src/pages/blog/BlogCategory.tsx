@@ -3,6 +3,9 @@ import { Link, useParams } from "react-router-dom";
 import { blogApi } from "@/integrations/blog/client";
 import { BlogShell } from "@/components/blog/BlogShell";
 import { BlogSEO } from "@/components/blog/BlogSEO";
+import { Breadcrumb } from "@/components/blog/Breadcrumb";
+import { NewsletterBlock } from "@/components/blog/NewsletterBlock";
+import { AdSlot } from "@/components/blog/AdSlot";
 
 /**
  * Topic cluster hub: pillar + supporting posts + sibling clusters + tags.
@@ -47,10 +50,18 @@ export default function BlogCategory() {
         jsonLd={jsonLd}
       />
 
-      <section className="mx-auto max-w-6xl px-5 pt-14 pb-8">
-        <div className="text-[11px] uppercase tracking-wide text-muted-foreground mb-2">Topic cluster</div>
-        <h1 className="font-serif text-4xl sm:text-5xl tracking-tight">{title}</h1>
-        {cat?.description && <p className="mt-3 text-muted-foreground max-w-2xl">{cat.description}</p>}
+      <section className="mx-auto max-w-6xl px-5 pt-10 pb-10 border-b border-border/40">
+        <Breadcrumb items={[{ label: "Notes", to: "/" }, { label: title }]} />
+        <div className="mt-5 inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.14em] text-emerald-700 dark:text-emerald-400">
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Topic cluster · SEO authority hub
+        </div>
+        <h1 className="mt-3 font-serif text-[42px] sm:text-[52px] tracking-[-0.02em] leading-[1.04]">{title}</h1>
+        {cat?.description && <p className="mt-4 text-[16px] text-muted-foreground max-w-2xl leading-relaxed">{cat.description}</p>}
+        <div className="mt-5 flex flex-wrap gap-3 text-[12px] text-muted-foreground">
+          <span className="inline-flex items-center gap-1.5"><span className="h-1 w-1 rounded-full bg-foreground/40" /> Operationally reviewed</span>
+          <span className="inline-flex items-center gap-1.5"><span className="h-1 w-1 rounded-full bg-foreground/40" /> Updated when workflows change</span>
+          <span className="inline-flex items-center gap-1.5"><span className="h-1 w-1 rounded-full bg-foreground/40" /> Written by working operators</span>
+        </div>
       </section>
 
       {loading ? (
@@ -74,13 +85,20 @@ export default function BlogCategory() {
             </section>
           )}
 
+          <section className="mx-auto max-w-6xl px-5 mb-10">
+            <AdSlot height={120} format="leaderboard" />
+          </section>
+
           {supporting.length > 0 && (
             <section className="mx-auto max-w-6xl px-5 mb-16">
-              <h2 className="font-serif text-xl mb-6 text-muted-foreground">Supporting playbooks</h2>
+              <div className="flex items-baseline justify-between mb-6 border-b border-border/40 pb-2">
+                <h2 className="font-serif text-xl">Supporting playbooks</h2>
+                <span className="text-[11px] uppercase tracking-wide text-muted-foreground">{supporting.length} articles</span>
+              </div>
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-12">
                 {supporting.map((p: any) => (
                   <Link key={p.id ?? p.slug} to={`/${p.slug}`} className="block group">
-                    <div className="aspect-[16/10] rounded-md overflow-hidden bg-muted/40 mb-3">
+                    <div className="aspect-[16/10] rounded-lg overflow-hidden bg-muted/40 mb-3 ring-1 ring-border/40">
                       {p.hero_image && <img src={p.hero_image} alt={p.title} loading="lazy" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.02]" />}
                     </div>
                     <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{p.reading_time ?? 4} min</div>
@@ -91,6 +109,10 @@ export default function BlogCategory() {
               </div>
             </section>
           )}
+
+          <section className="mx-auto max-w-6xl px-5 mb-12">
+            <NewsletterBlock variant="wide" source={`category:${slug}`} />
+          </section>
 
           {(siblings.length > 0 || tags.length > 0) && (
             <section className="mx-auto max-w-6xl px-5 mb-20 grid md:grid-cols-2 gap-10">
