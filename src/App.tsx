@@ -189,6 +189,7 @@ const HustleTemplatesAdmin = lazy(() => import("./pages/admin/HustleTemplates"))
 const AdsenseReadiness = lazy(() => import("./pages/admin/AdsenseReadiness"));
 const BootstrapSqlHub = lazy(() => import("./pages/admin/BootstrapSqlHub"));
 const EditorialOS = lazy(() => import("./pages/admin/EditorialOS"));
+const EditorialPipeline = lazy(() => import("./pages/admin/EditorialPipeline"));
 const BlogAdminNotFound = lazy(() => import("./pages/admin/BlogAdminNotFound"));
 const AuthorityIndex = lazy(() => import("./pages/authority/AuthorityIndex"));
 const AuthorityPage = lazy(() => import("./pages/authority/AuthorityPage"));
@@ -418,7 +419,7 @@ const App = () => (
             <Route path="/admin/blog/seo" element={<BlogSeoHealth />} />
             <Route path="/admin/blog/operations" element={<BlogOperations />} />
             <Route path="/admin/blog/editorial" element={<EditorialCenter />} />
-            <Route path="/admin/blog/pipeline" element={<EditorialCenter />} />
+           <Route path="/admin/blog/pipeline" element={<EditorialPipeline />} />
             <Route path="/admin/blog/topics" element={<EditorialCenter />} />
             <Route path="/admin/blog/linking" element={<EditorialCenter />} />
             <Route path="/admin/blog/indexing" element={<EditorialCenter />} />
