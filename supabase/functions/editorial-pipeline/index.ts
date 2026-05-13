@@ -427,6 +427,24 @@ Deno.serve(async (req) => {
       return json({ db: "BLOG_DB", processed: results.length, results });
     }
 
+    if (action === "analyze") {
+      const id = url.searchParams.get("id");
+      if (!id) return json({ error: "id required" }, 400);
+      const { data: post, error } = await blog().from("blog_posts").select("*").eq("id", id).maybeSingle();
+      if (error) return json({ error: error.message }, 500);
+      if (!post) return json({ error: "not_found" }, 404);
+      return json({ db: "BLOG_DB", id, ...analyzeReadiness(post), title: post.title, slug: post.slug, status: post.status });
+    }
+
+    if (action === "fix_one" && req.method === "POST") {
+      const body = await req.json().catch(() => ({}));
+      const id: string = body.id;
+      const kinds: string[] = Array.isArray(body.kinds) && body.kinds.length ? body.kinds : ["all"];
+      if (!id) return json({ error: "id required" }, 400);
+      const r = await runFix(id, kinds);
+      return json({ db: "BLOG_DB", ...r });
+    }
+
     if (action === "publish_passing" && req.method === "POST") {
       const body = await req.json().catch(() => ({}));
       const min = Number(body.min_score ?? 70);
