@@ -231,11 +231,11 @@ export default function BlogHome() {
   );
 }
 
-function PostCard({ post, priority, isNew }: { post: any; priority?: boolean; isNew?: boolean }) {
+function PostCard({ post, priority, isNew, compact }: { post: any; priority?: boolean; isNew?: boolean; compact?: boolean }) {
   return (
     <article>
       <Link to={`/${post.slug}`} className="block group">
-        <div className="aspect-[16/10] rounded-md overflow-hidden bg-muted/40 mb-4">
+        <div className={`${compact ? "aspect-[16/9]" : "aspect-[16/10]"} rounded-md overflow-hidden bg-muted/40 mb-4`}>
           <img
             src={heroFor(post)}
             alt={post.title}
