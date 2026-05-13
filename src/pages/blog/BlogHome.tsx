@@ -4,6 +4,7 @@ import { blogApi } from "@/integrations/blog/client";
 import { BlogShell } from "@/components/blog/BlogShell";
 import { BlogSEO, blogOrgJsonLd } from "@/components/blog/BlogSEO";
 import { AdSlot } from "@/components/blog/AdSlot";
+import { NewsletterBlock } from "@/components/blog/NewsletterBlock";
 
 const CATEGORY_PLACEHOLDERS: Record<string, string> = {
   "freelancer-workflows": "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1600&q=70&auto=format&fit=crop",
@@ -13,6 +14,22 @@ const CATEGORY_PLACEHOLDERS: Record<string, string> = {
   "creator-workflows":    "https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=1600&q=70&auto=format&fit=crop",
   "telegram-delivery":    "https://images.unsplash.com/photo-1531403009284-440f080d1e12?w=1600&q=70&auto=format&fit=crop",
 };
+
+const CATEGORY_DESCRIPTIONS: Record<string, string> = {
+  "freelancer-workflows": "Operating systems for solo operators — pricing, scoping, delivery rhythm.",
+  "client-systems":       "Onboarding, briefs, and the kind of documentation that prevents 2am Slack messages.",
+  "async-operations":     "Run client work without standups — handoffs, status, decisions, and tools.",
+  "ai-operations":        "Practical AI export workflows that survive contact with real clients.",
+  "creator-workflows":    "Proposals, contracts, and the writing that wins the work.",
+  "telegram-delivery":    "Async delivery and notifications via Telegram, no apps to install.",
+};
+
+const STARTER_COLLECTIONS = [
+  { slug: "freelancer-workflows", label: "Start a freelance practice", note: "Foundations: pricing, scoping, retainers." },
+  { slug: "client-systems",       label: "Run client work async",      note: "Briefs, status, decisions on rails." },
+  { slug: "ai-operations",        label: "Ship AI as a deliverable",   note: "Exports clients can actually use." },
+];
+
 function heroFor(post: any): string {
   return post?.hero_image
     || CATEGORY_PLACEHOLDERS[post?.blog_categories?.slug ?? ""]
@@ -35,6 +52,7 @@ export default function BlogHome() {
 
   const featured = posts[0];
   const trending = posts.slice(1, 5);
+  const editorPicks = posts.slice(5, 8);
   const rest = posts.slice(featured ? 1 : 0);
   const todayKey = new Date().toISOString().slice(0, 10);
   const isNewToday = (p: any) => (p.published_at ?? "").slice(0, 10) === todayKey;
@@ -47,24 +65,49 @@ export default function BlogHome() {
         path="/"
         jsonLd={blogOrgJsonLd}
       />
-      <section className="mx-auto max-w-6xl px-5 pt-14 pb-6">
-        <div className="flex items-center gap-2 text-[11px] uppercase tracking-wide text-muted-foreground mb-4">
+      {/* Editorial masthead */}
+      <section className="mx-auto max-w-6xl px-5 pt-14 pb-8 border-b border-border/40">
+        <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.14em] text-muted-foreground mb-5">
           <span className="inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-          Updated daily · operational publication
+          Vol. {new Date().getFullYear()} · Operational publication
+          <span className="text-muted-foreground/50">·</span>
+          <span>{new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}</span>
         </div>
-        <h1 className="font-serif text-4xl sm:text-5xl tracking-tight max-w-3xl">Operational notes for people who actually ship work.</h1>
-        <p className="mt-4 text-muted-foreground max-w-2xl">Workflows, async ops, client systems, AI exports — no fluff, no vibes, no "10x" anything.</p>
-        {cats.length > 0 && (
-          <div className="mt-6 flex flex-wrap gap-2">
-            {cats.map((c: any) => (
-              <Link key={c.slug} to={`/category/${c.slug}`} className="text-xs px-3 py-1 rounded-full border border-border/60 text-muted-foreground hover:text-foreground hover:border-foreground/40">{c.title}</Link>
-            ))}
-          </div>
-        )}
+        <h1 className="font-serif text-[42px] sm:text-[56px] leading-[1.02] tracking-[-0.02em] max-w-3xl">
+          Operational notes for people who <em className="not-italic text-emerald-700 dark:text-emerald-400">actually</em> ship the work.
+        </h1>
+        <p className="mt-5 text-[16px] text-muted-foreground max-w-2xl leading-relaxed">
+          Workflows, async ops, client systems and AI exports — written by operators running real client work.
+          No fluff, no vibes, no &quot;10x&quot; anything.
+        </p>
+      </section>
+
+      {/* Start here — reading collections */}
+      <section className="mx-auto max-w-6xl px-5 py-8 border-b border-border/40">
+        <div className="flex items-baseline justify-between mb-4">
+          <h2 className="text-[12px] uppercase tracking-[0.14em] text-muted-foreground">Start here</h2>
+          <span className="text-[11px] text-muted-foreground/70 hidden sm:inline">Three reading paths for new readers</span>
+        </div>
+        <div className="grid sm:grid-cols-3 gap-4">
+          {STARTER_COLLECTIONS.map((c, i) => (
+            <Link
+              key={c.slug}
+              to={`/category/${c.slug}`}
+              className="group rounded-lg border border-border/60 px-4 py-4 hover:border-foreground/40 transition bg-background/40"
+            >
+              <div className="flex items-center gap-2 text-[11px] uppercase tracking-wide text-muted-foreground mb-1.5">
+                <span className="font-mono">0{i + 1}</span>
+                <span>Collection</span>
+              </div>
+              <div className="font-serif text-lg leading-snug group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors">{c.label}</div>
+              <div className="mt-1.5 text-sm text-muted-foreground">{c.note}</div>
+            </Link>
+          ))}
+        </div>
       </section>
 
       {!loading && featured && (
-        <section className="mx-auto max-w-6xl px-5 pb-10">
+        <section className="mx-auto max-w-6xl px-5 py-10">
           <div className="grid lg:grid-cols-[1.4fr_1fr] gap-8 items-start">
             <FeaturedCard post={featured} isNew={isNewToday(featured)} />
             <aside className="space-y-4">
@@ -90,14 +133,76 @@ export default function BlogHome() {
                   </li>
                 ))}
               </ul>
+              <Link to="/category/freelancer-workflows" className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
+                More trending workflows →
+              </Link>
             </aside>
           </div>
         </section>
       )}
 
-      <section className="mx-auto max-w-6xl px-5 pb-20">
+      {/* Reserved ad slot below hero — placeholder; flips on AdSense approval */}
+      {!loading && featured && (
+        <section className="mx-auto max-w-6xl px-5">
+          <AdSlot height={120} format="leaderboard" />
+        </section>
+      )}
+
+      {/* Editor picks */}
+      {!loading && editorPicks.length > 0 && (
+        <section className="mx-auto max-w-6xl px-5 py-10">
+          <div className="flex items-baseline justify-between mb-6 border-b border-border/50 pb-2">
+            <h2 className="font-serif text-lg flex items-center gap-2">
+              <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+              Editor picks
+            </h2>
+            <span className="text-[11px] uppercase tracking-wide text-muted-foreground">Reviewed this week</span>
+          </div>
+          <div className="grid md:grid-cols-3 gap-x-8 gap-y-10">
+            {editorPicks.map((p: any) => <PostCard key={p.id} post={p} isNew={isNewToday(p)} compact />)}
+          </div>
+        </section>
+      )}
+
+      {/* Category highlights */}
+      {!loading && cats.length > 0 && (
+        <section className="mx-auto max-w-6xl px-5 py-10 border-t border-border/40">
+          <div className="flex items-baseline justify-between mb-6">
+            <h2 className="font-serif text-lg">Browse by topic</h2>
+            <span className="text-[11px] uppercase tracking-wide text-muted-foreground">SEO authority hubs</span>
+          </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {cats.slice(0, 6).map((c: any) => (
+              <Link
+                key={c.slug}
+                to={`/category/${c.slug}`}
+                className="group rounded-lg border border-border/60 p-5 hover:border-foreground/40 transition bg-gradient-to-br from-background to-muted/10"
+              >
+                <div className="text-[11px] uppercase tracking-wide text-muted-foreground mb-2">Topic cluster</div>
+                <div className="font-serif text-[17px] group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors">{c.title}</div>
+                <p className="mt-1.5 text-sm text-muted-foreground line-clamp-2">
+                  {CATEGORY_DESCRIPTIONS[c.slug] ?? c.description ?? "Operational notes and field playbooks."}
+                </p>
+                <div className="mt-3 text-xs text-muted-foreground/80 group-hover:text-foreground inline-flex items-center gap-1">
+                  Read the cluster →
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Newsletter */}
+      <section className="mx-auto max-w-6xl px-5 py-10">
+        <NewsletterBlock variant="wide" source="blog_home" />
+      </section>
+
+      <section className="mx-auto max-w-6xl px-5 pb-20 pt-4">
         <div className="flex items-baseline justify-between mb-6 border-b border-border/50 pb-2">
-          <h2 className="font-serif text-lg">Latest field notes</h2>
+          <h2 className="font-serif text-lg flex items-center gap-2">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+            Latest field notes
+          </h2>
           <span className="text-[11px] uppercase tracking-wide text-muted-foreground">Recently indexed</span>
         </div>
         {loading ? (
