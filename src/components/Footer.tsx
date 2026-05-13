@@ -219,13 +219,25 @@ export function Footer() {
 
         <div className="border-t border-border/50 pt-6 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
           <p>© 2026 HustleAI. All rights reserved.</p>
-          <div className="flex items-center gap-4">
-            <Link to="/privacy-policy" className="hover:text-primary transition-colors">Privacy Policy</Link>
-            <span>·</span>
-            <Link to="/terms-conditions" className="hover:text-primary transition-colors">Terms & Conditions</Link>
-            <span>·</span>
-            <Link to="/refund-policy" className="hover:text-primary transition-colors">Refund Policy</Link>
-            <span>·</span>
+          <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2">
+            <Link to="/about" className="hover:text-primary transition-colors">About</Link>
+            <span aria-hidden>·</span>
+            <Link to="/company" className="hover:text-primary transition-colors">Company</Link>
+            <span aria-hidden>·</span>
+            <Link to="/security" className="hover:text-primary transition-colors">Security</Link>
+            <span aria-hidden>·</span>
+            <Link to="/data-policy" className="hover:text-primary transition-colors">Data</Link>
+            <span aria-hidden>·</span>
+            <Link to="/privacy-policy" className="hover:text-primary transition-colors">Privacy</Link>
+            <span aria-hidden>·</span>
+            <Link to="/terms-conditions" className="hover:text-primary transition-colors">Terms</Link>
+            <span aria-hidden>·</span>
+            <Link to="/acceptable-use" className="hover:text-primary transition-colors">Acceptable Use</Link>
+            <span aria-hidden>·</span>
+            <Link to="/refund-policy" className="hover:text-primary transition-colors">Refunds</Link>
+            <span aria-hidden>·</span>
+            <Link to="/compliance" className="hover:text-primary transition-colors">Compliance</Link>
+            <span aria-hidden>·</span>
             <a href={`mailto:${SUPPORT_EMAIL}`} className="hover:text-primary transition-colors">Support</a>
           </div>
         </div>
