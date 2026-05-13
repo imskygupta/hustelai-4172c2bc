@@ -48,7 +48,12 @@ Deno.serve(async (req) => {
     const tools = Array.isArray((post as any).tool_refs) ? (post as any).tool_refs : [];
 
     return new Response(JSON.stringify({ post, tags, related: related ?? [], prev, next, workflows, tools }), {
-      headers: { ...cors, "content-type": "application/json", "cache-control": "public, max-age=120" },
+      headers: {
+        ...cors,
+        "content-type": "application/json",
+        // Edge SWR — fast revalidation, generous serve-while-revalidate window.
+        "cache-control": "public, max-age=60, s-maxage=300, stale-while-revalidate=86400",
+      },
     });
   } catch (e) {
     return new Response(JSON.stringify({ error: String(e) }), { status: 500, headers: { ...cors, "content-type": "application/json" } });
