@@ -103,6 +103,11 @@ export default function EditorialPipeline() {
 
   useEffect(() => { load(); }, [load]);
   useEffect(() => {
+    const id = new URLSearchParams(window.location.search).get("batch");
+    if (id) openBatch(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  useEffect(() => {
     const t = setInterval(load, 15000);
     return () => clearInterval(t);
   }, [load]);
