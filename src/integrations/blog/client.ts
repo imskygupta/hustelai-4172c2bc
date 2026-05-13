@@ -205,6 +205,17 @@ export const pipelineApi = {
   retry: (id: string) =>
     call(`/editorial-pipeline?action=retry`, { admin: true, method: "POST", body: JSON.stringify({ id }) }),
   reconcileRoutes: () => call(`/editorial-pipeline?action=reconcile_routes`, { admin: true }),
+  diagnostics: () => call(`/editorial-pipeline?action=diagnostics`, { admin: true }),
+  raw: (opts: { limit?: number; batch_id?: string } = {}) => {
+    const q = new URLSearchParams();
+    if (opts.limit) q.set("limit", String(opts.limit));
+    if (opts.batch_id) q.set("batch_id", opts.batch_id);
+    return call(`/editorial-pipeline?action=raw&${q}`, { admin: true });
+  },
+  batchArticles: (batch_id: string) =>
+    call(`/editorial-pipeline?action=batch_articles&batch_id=${encodeURIComponent(batch_id)}`, { admin: true }),
+  recover: (limit = 50) =>
+    call(`/editorial-pipeline?action=recover`, { admin: true, method: "POST", body: JSON.stringify({ limit }) }),
 };
 
 export type BlogPost = {

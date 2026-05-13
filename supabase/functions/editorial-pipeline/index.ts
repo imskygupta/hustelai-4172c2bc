@@ -70,7 +70,7 @@ function deriveStage(p: any): Stage {
 }
 
 function deriveSummary(p: any) {
-  const md: string = p.body_md ?? "";
+  const md: string = typeof p.body_md === "string" ? p.body_md : "";
   const internal = (md.match(/\]\((\/[a-z0-9\-/]+)\)/g) ?? []).length
     + (md.match(/hustlaiapp\.in/g) ?? []).length;
   const tools = Array.isArray(p.tool_matches) ? p.tool_matches.length : 0;
@@ -78,11 +78,11 @@ function deriveSummary(p: any) {
   const stage = deriveStage(p);
   return {
     id: p.id,
-    slug: p.slug,
-    title: p.title,
+    slug: p.slug ?? null,
+    title: p.title ?? null,
     cluster: p.cluster ?? p.focus_keyword ?? null,
     stage,
-    status: p.status,
+    status: p.status ?? null,
     adsense_score: p.adsense_score ?? null,
     generated_at: p.created_at ?? p.inserted_at ?? null,
     updated_at: p.updated_at ?? null,
@@ -90,12 +90,14 @@ function deriveSummary(p: any) {
     last_indexed_at: p.last_indexed_at ?? null,
     tool_matches: tools,
     rejection_reason: p.rejection_reason ?? p.last_error ?? null,
+    batch_id: p.batch_id ?? null,
+    hustle_template_slug: p.hustle_template_slug ?? null,
     internal_links: internal,
     cta_injected: cta > 0,
     screenshots: tools, // best-effort proxy
     auto_fix_eligible: stage !== "published" && stage !== "indexed" && stage !== "rejected",
-    meta_title_ok: !!p.meta_title && p.meta_title.length >= 30 && p.meta_title.length <= 65,
-    meta_desc_ok: !!p.meta_description && p.meta_description.length >= 70 && p.meta_description.length <= 165,
+    meta_title_ok: typeof p.meta_title === "string" && p.meta_title.length >= 30 && p.meta_title.length <= 65,
+    meta_desc_ok: typeof p.meta_description === "string" && p.meta_description.length >= 70 && p.meta_description.length <= 165,
     has_category: !!p.category_id,
   };
 }
@@ -210,17 +212,102 @@ Deno.serve(async (req) => {
       const stage = url.searchParams.get("stage");
       const include_hidden = url.searchParams.get("hidden") === "1";
       const limit = Math.min(500, Number(url.searchParams.get("limit") ?? 200));
-      let q = blog().from("blog_posts").select(
-        "id,slug,title,status,scheduled_at,published_at,created_at,updated_at,category_id,focus_keyword,cluster,meta_title,meta_description,excerpt,hero_image,body_md,tool_matches,cta_blocks,hustle_template_slug,adsense_score,adsense_report,last_indexed_at,last_error,rejection_reason,deduped_at,ai_generated"
-      ).order("updated_at", { ascending: false }).limit(limit);
-      if (!include_hidden) q = q.not("status", "in", "(deleted)");
+      // Defensive: select * so we never crash because the table is missing
+      // a newly added column on older rows. Per-row try/catch isolates bad rows.
+      let q = blog().from("blog_posts").select("*")
+        .order("updated_at", { ascending: false }).limit(limit);
+      if (!include_hidden) q = q.neq("status", "deleted");
       const { data, error } = await q;
-      if (error) throw error;
-      const rows = (data ?? []).map(deriveSummary);
+      if (error) return json({ error: error.message, where: "list.select" }, 500);
+      const rows: any[] = [];
+      const failedRows: { id?: string; slug?: string; error: string }[] = [];
+      for (const p of data ?? []) {
+        try { rows.push(deriveSummary(p)); }
+        catch (e) { failedRows.push({ id: p?.id, slug: p?.slug, error: String((e as Error)?.message ?? e) }); }
+      }
       const filtered = stage ? rows.filter((r) => r.stage === stage) : rows;
       const counts: Record<string, number> = {};
       for (const r of rows) counts[r.stage] = (counts[r.stage] ?? 0) + 1;
-      return json({ rows: filtered, counts, total: rows.length, db: "BLOG_DB" });
+      return json({ rows: filtered, counts, total: rows.length, failedRows, db: "BLOG_DB" });
+    }
+
+    if (action === "diagnostics") {
+      const out: any = { db: "BLOG_DB", checked_at: new Date().toISOString() };
+      try {
+        const { data, error } = await blog().from("blog_posts").select("*").limit(1000);
+        if (error) { out.fatal = error.message; return json(out, 200); }
+        const all = data ?? [];
+        out.total_rows = all.length;
+        const slugs = all.map((r: any) => r?.slug).filter(Boolean);
+        const seen = new Set<string>(); const dups = new Set<string>();
+        for (const s of slugs) { if (seen.has(s)) dups.add(s); else seen.add(s); }
+        out.null_slugs = all.filter((r: any) => !r?.slug).length;
+        out.duplicate_slugs = [...dups];
+        out.missing_title = all.filter((r: any) => !r?.title).length;
+        out.missing_status = all.filter((r: any) => !r?.status).length;
+        out.missing_body = all.filter((r: any) => !r?.body_md).length;
+        const stageCounts: Record<string, number> = {};
+        const serFail: any[] = [];
+        const badStages: any[] = [];
+        for (const r of all) {
+          let s: string | null = null;
+          try { s = deriveStage(r); } catch (e) { badStages.push({ id: r?.id, error: String(e) }); }
+          if (s) stageCounts[s] = (stageCounts[s] ?? 0) + 1;
+          try { JSON.stringify(deriveSummary(r)); }
+          catch (e) { serFail.push({ id: r?.id, slug: r?.slug, error: String(e) }); }
+        }
+        out.stage_counts = stageCounts;
+        out.bad_stages = badStages;
+        out.serialization_failures = serFail;
+        out.sample_columns = all[0] ? Object.keys(all[0]).sort() : [];
+      } catch (e) { out.fatal = String(e); }
+      return json(out);
+    }
+
+    if (action === "raw") {
+      const limit = Math.min(200, Number(url.searchParams.get("limit") ?? 50));
+      const batch_id = url.searchParams.get("batch_id");
+      let q = blog().from("blog_posts").select("*")
+        .order("created_at", { ascending: false }).limit(limit);
+      if (batch_id) q = q.eq("batch_id", batch_id);
+      const { data, error } = await q;
+      if (error) return json({ error: error.message }, 500);
+      return json({ db: "BLOG_DB", rows: data ?? [] });
+    }
+
+    if (action === "batch_articles") {
+      const batch_id = url.searchParams.get("batch_id");
+      if (!batch_id) return json({ error: "batch_id required" }, 400);
+      const { data, error } = await blog().from("blog_posts").select("*").eq("batch_id", batch_id).order("created_at", { ascending: false });
+      if (error) return json({ error: error.message }, 500);
+      const rows: any[] = []; const failedRows: any[] = [];
+      for (const p of data ?? []) {
+        try { rows.push(deriveSummary(p)); }
+        catch (e) { failedRows.push({ id: p?.id, error: String(e) }); }
+      }
+      return json({ db: "BLOG_DB", batch_id, rows, failedRows });
+    }
+
+    if (action === "recover" && req.method === "POST") {
+      const body = await req.json().catch(() => ({}));
+      const limit = Math.min(100, Number(body.limit ?? 50));
+      const { data } = await blog().from("blog_posts").select("*").limit(limit);
+      const fixed: string[] = [];
+      for (const p of data ?? []) {
+        const patch: any = {};
+        if (!p.slug && p.title) {
+          patch.slug = String(p.title).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 80) || `post-${p.id?.slice(0, 8)}`;
+        }
+        if (!p.status) patch.status = "draft";
+        const meta = deriveMetaFallback(p);
+        if (!p.meta_title) patch.meta_title = meta.meta_title;
+        if (!p.meta_description) patch.meta_description = meta.meta_description;
+        if (Object.keys(patch).length) {
+          const { error } = await blog().from("blog_posts").update(patch).eq("id", p.id);
+          if (!error) fixed.push(p.id);
+        }
+      }
+      return json({ db: "BLOG_DB", fixed: fixed.length, ids: fixed });
     }
 
     if (action === "auto_fix" && req.method === "POST") {
