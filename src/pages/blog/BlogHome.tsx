@@ -5,6 +5,9 @@ import { BlogShell } from "@/components/blog/BlogShell";
 import { BlogSEO, blogOrgJsonLd } from "@/components/blog/BlogSEO";
 import { AdSlot } from "@/components/blog/AdSlot";
 import { NewsletterBlock } from "@/components/blog/NewsletterBlock";
+import { EditorialFeedSkeleton, OperationalHint } from "@/components/blog/EditorialSkeleton";
+import { PrefetchLink } from "@/components/blog/PrefetchLink";
+import { onIdle } from "@/lib/blog-cache";
 
 const CATEGORY_PLACEHOLDERS: Record<string, string> = {
   "freelancer-workflows": "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1600&q=70&auto=format&fit=crop",
@@ -45,10 +48,20 @@ export default function BlogHome() {
   const [cats, setCats] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   useEffect(() => {
-    blogApi.feed({ limit: 24 }).then((r: any) => {
+    blogApi.feedSWR({ limit: 24 }, (r: any, fromCache) => {
       setPosts(r.posts ?? []); setCats(r.categories ?? []);
-    }).finally(() => setLoading(false));
+      setLoading(false);
+      if (fromCache) {
+        // Already showing cached → keep silent revalidate.
+      }
+    });
   }, []);
+
+  // Idle-warm the top trending posts so first-click feels instant.
+  useEffect(() => {
+    if (!posts.length) return;
+    onIdle(() => posts.slice(0, 6).forEach((p) => p?.slug && blogApi.prefetchPost(p.slug)));
+  }, [posts]);
 
   const featured = posts[0];
   const trending = posts.slice(1, 5);
@@ -206,15 +219,10 @@ export default function BlogHome() {
           <span className="text-[11px] uppercase tracking-wide text-muted-foreground">Recently indexed</span>
         </div>
         {loading ? (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="animate-pulse">
-                <div className="aspect-[16/10] rounded-md bg-muted/40 mb-3" />
-                <div className="h-4 w-3/4 bg-muted/40 rounded mb-2" />
-                <div className="h-3 w-1/2 bg-muted/30 rounded" />
-              </div>
-            ))}
-          </div>
+          <>
+            <EditorialFeedSkeleton count={6} />
+            <OperationalHint label="Fetching recently indexed workflows…" />
+          </>
         ) : posts.length === 0 ? (
           <EditorialEmptyState />
         ) : (
