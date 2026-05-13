@@ -155,59 +155,143 @@ async function pickCategory(p: any) {
 }
 
 async function autoFixOne(id: string) {
+  return runFix(id, ["meta", "category", "tools", "links", "cta", "score", "promote"]);
+}
+
+// ──────────────────────────────────────────────────────────────────────
+// Granular fixer — runs only the requested kinds. Returns a diff payload.
+// kinds: meta | keyword | category | tools | links | cta | score | promote
+// ──────────────────────────────────────────────────────────────────────
+async function runFix(id: string, kinds: string[]) {
   const events: string[] = [];
+  const want = (k: string) => kinds.includes(k) || kinds.includes("all");
   const { data: post } = await blog().from("blog_posts").select("*").eq("id", id).maybeSingle();
   if (!post) return { ok: false, error: "not_found" };
+  const before = { meta_title: post.meta_title, meta_description: post.meta_description, category_id: post.category_id, tool_matches: post.tool_matches, cta_blocks: post.cta_blocks, body_md_len: (post.body_md ?? "").length, adsense_score: post.adsense_score, status: post.status };
 
   const patch: any = {};
-  // 1. Meta
-  const meta = deriveMetaFallback(post);
-  if (meta.meta_title !== post.meta_title) { patch.meta_title = meta.meta_title; events.push("meta_title"); }
-  if (meta.meta_description !== post.meta_description) { patch.meta_description = meta.meta_description; events.push("meta_description"); }
-
-  // 2. Category
-  if (!post.category_id) {
+  if (want("meta")) {
+    const meta = deriveMetaFallback(post);
+    if (meta.meta_title !== post.meta_title) { patch.meta_title = meta.meta_title; events.push("meta_title"); }
+    if (meta.meta_description !== post.meta_description) { patch.meta_description = meta.meta_description; events.push("meta_description"); }
+  }
+  if (want("keyword") && !post.focus_keyword && post.title) {
+    const guess = String(post.title).toLowerCase().split(/[:\-—|]/)[0].trim().split(/\s+/).slice(0, 4).join(" ");
+    if (guess) { patch.focus_keyword = guess; events.push(`focus_keyword:${guess}`); }
+  }
+  if (want("category") && !post.category_id) {
     const cat = await pickCategory(post);
     if (cat) { patch.category_id = cat; events.push("category"); }
   }
 
   if (Object.keys(patch).length) await blog().from("blog_posts").update(patch).eq("id", id);
 
-  // 3. Tool matching (writes tool_matches + hustle_template_slug directly)
-  await callFn("tool-matcher", { post_id: id, body_md: post.body_md, title: post.title, focus_keyword: post.focus_keyword, mode: "auto" }, "?action=match");
-  events.push("tool_match");
-
-  // 4. Internal link injection
-  const li = await callFn("blog-link-engine", { id, body_md: post.body_md, focus_keyword: post.focus_keyword, append_cta: true, max: 4 }, "?action=auto_insert");
-  if (li?.body_md && li.body_md !== post.body_md) {
-    await blog().from("blog_posts").update({ body_md: li.body_md }).eq("id", id);
-    events.push("internal_links");
+  if (want("tools")) {
+    await callFn("tool-matcher", { post_id: id, body_md: post.body_md, title: post.title, focus_keyword: patch.focus_keyword ?? post.focus_keyword, mode: "auto" }, "?action=match");
+    events.push("tool_match");
   }
 
-  // 5. CTA block — ensure at least one
+  if (want("links")) {
+    const li = await callFn("blog-link-engine", { id, body_md: post.body_md, focus_keyword: patch.focus_keyword ?? post.focus_keyword, append_cta: true, max: 4 }, "?action=auto_insert");
+    if (li?.body_md && li.body_md !== post.body_md) {
+      await blog().from("blog_posts").update({ body_md: li.body_md }).eq("id", id);
+      events.push("internal_links");
+    }
+  }
+
   const fresh = (await blog().from("blog_posts").select("*").eq("id", id).maybeSingle()).data ?? post;
-  let ctas = Array.isArray(fresh.cta_blocks) ? fresh.cta_blocks : [];
-  const tm = Array.isArray(fresh.tool_matches) ? fresh.tool_matches : [];
-  if (!ctas.length && tm[0]) {
-    ctas = [{ kind: "tool", label: `Try ${tm[0].title}`, href: tm[0].href, note: "Recommended workflow" }];
-    await blog().from("blog_posts").update({ cta_blocks: ctas }).eq("id", id);
-    events.push("cta");
+  if (want("cta")) {
+    let ctas = Array.isArray(fresh.cta_blocks) ? fresh.cta_blocks : [];
+    const tm = Array.isArray(fresh.tool_matches) ? fresh.tool_matches : [];
+    if (!ctas.length && tm[0]) {
+      const slug = tm[0].slug ?? tm[0].href?.split("/").pop() ?? "";
+      ctas = [{ kind: "deep_tool", label: `Try ${tm[0].title}`, href: slug ? `/explore?template=${slug}` : tm[0].href, note: "Recommended workflow", workflow_prompt: post.focus_keyword ?? post.title }];
+      await blog().from("blog_posts").update({ cta_blocks: ctas }).eq("id", id);
+      events.push("cta");
+    }
   }
 
-  // 6. AdSense rescore
-  const ads = await callFn("adsense-readiness", { post_id: id }, "?action=check");
-  const score = ads?.report?.score ?? null;
-  events.push(`adsense:${score ?? "?"}`);
+  let score: number | null = null;
+  if (want("score")) {
+    const ads = await callFn("adsense-readiness", { post_id: id }, "?action=check");
+    score = ads?.report?.score ?? null;
+    events.push(`adsense:${score ?? "?"}`);
+  }
 
-  // 7. Promote to in_review if score crosses threshold
   let promoted = false;
-  if (typeof score === "number" && score >= 70 && (fresh.status === "draft" || fresh.status === "queued")) {
+  if (want("promote") && typeof score === "number" && score >= 70 && (fresh.status === "draft" || fresh.status === "queued")) {
     await blog().from("blog_posts").update({ status: "in_review" }).eq("id", id);
     promoted = true;
     events.push("→ in_review");
   }
 
-  return { ok: true, id, score, promoted, events };
+  const after = (await blog().from("blog_posts").select("*").eq("id", id).maybeSingle()).data ?? fresh;
+  const diff = {
+    meta_title: before.meta_title !== after.meta_title,
+    meta_description: before.meta_description !== after.meta_description,
+    category: before.category_id !== after.category_id,
+    tools_count: (Array.isArray(after.tool_matches) ? after.tool_matches.length : 0) - (Array.isArray(before.tool_matches) ? before.tool_matches.length : 0),
+    cta_count: (Array.isArray(after.cta_blocks) ? after.cta_blocks.length : 0) - (Array.isArray(before.cta_blocks) ? before.cta_blocks.length : 0),
+    body_delta_chars: (after.body_md ?? "").length - before.body_md_len,
+    score_delta: typeof after.adsense_score === "number" && typeof before.adsense_score === "number" ? after.adsense_score - before.adsense_score : null,
+    status_change: before.status !== after.status ? `${before.status} → ${after.status}` : null,
+  };
+  return { ok: true, id, score, promoted, events, diff };
+}
+
+// ──────────────────────────────────────────────────────────────────────
+// Readiness analyzer — non-mutating. Returns operational readiness score.
+// ──────────────────────────────────────────────────────────────────────
+function analyzeReadiness(p: any) {
+  const md: string = typeof p.body_md === "string" ? p.body_md : "";
+  const words = md.trim().split(/\s+/).filter(Boolean).length;
+  const internalLinks = (md.match(/\]\((\/[a-z0-9\-/]+)\)/g) ?? []).length + (md.match(/hustlaiapp\.in/g) ?? []).length;
+  const tools = Array.isArray(p.tool_matches) ? p.tool_matches.length : 0;
+  const ctas = Array.isArray(p.cta_blocks) ? p.cta_blocks.length : 0;
+  const fk = (p.focus_keyword ?? "").toLowerCase();
+  const kwHits = fk ? (md.toLowerCase().match(new RegExp(`\\b${fk.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "g")) ?? []).length : 0;
+  const metaTitleOk = typeof p.meta_title === "string" && p.meta_title.length >= 30 && p.meta_title.length <= 65;
+  const metaDescOk = typeof p.meta_description === "string" && p.meta_description.length >= 70 && p.meta_description.length <= 165;
+  const hasCategory = !!p.category_id;
+
+  // Sub-scores 0-100
+  const seo = Math.round(((metaTitleOk ? 35 : 0) + (metaDescOk ? 35 : 0) + (kwHits >= 1 ? 30 : 0)));
+  const monetization = Math.min(100, ctas * 50 + tools * 20);
+  const semantic_depth = Math.min(100, Math.round((words / 1500) * 100));
+  const conversion = Math.min(100, ctas * 40 + (ctas && (p.cta_blocks ?? []).some((c: any) => c.kind === "deep_tool") ? 30 : 0) + (tools ? 30 : 0));
+  const internal_linking = Math.min(100, internalLinks * 25);
+  const cluster_authority = hasCategory ? (p.cluster ? 100 : 60) : 20;
+  const indexing = Math.round(((metaTitleOk ? 20 : 0) + (metaDescOk ? 20 : 0) + (p.slug ? 20 : 0) + (hasCategory ? 20 : 0) + (typeof p.adsense_score === "number" && p.adsense_score >= 70 ? 20 : 0)));
+
+  const breakdown = { seo, monetization, semantic_depth, conversion, internal_linking, cluster_authority, indexing };
+  const readiness = Math.round((seo + monetization + semantic_depth + conversion + internal_linking + cluster_authority + indexing) / 7);
+
+  const blockers: string[] = [];
+  const warnings: string[] = [];
+  const suggestions: { kind: string; label: string; impact: string }[] = [];
+
+  if (!metaTitleOk) { blockers.push("Meta title missing or wrong length (30–65)"); suggestions.push({ kind: "meta", label: "Auto-fix meta title", impact: "+SEO" }); }
+  if (!metaDescOk) { blockers.push("Meta description missing or wrong length (70–165)"); suggestions.push({ kind: "meta", label: "Auto-fix meta description", impact: "+SEO" }); }
+  if (!fk) { warnings.push("No focus keyword set"); suggestions.push({ kind: "keyword", label: "Infer focus keyword from title", impact: "+SEO" }); }
+  else if (kwHits < 1) { warnings.push(`Focus keyword "${fk}" not found in body`); }
+  if (!hasCategory) { blockers.push("No category assigned"); suggestions.push({ kind: "category", label: "Auto-assign best-fit cluster", impact: "+authority" }); }
+  if (tools === 0) { warnings.push("No tools linked"); suggestions.push({ kind: "tools", label: "Match tools from registry", impact: "+monetization" }); }
+  if (ctas === 0) { blockers.push("No CTA block"); suggestions.push({ kind: "cta", label: "Inject contextual CTA", impact: "+conversion" }); }
+  if (internalLinks < 2) { warnings.push("Fewer than 2 internal links"); suggestions.push({ kind: "links", label: "Auto-insert internal links", impact: "+authority" }); }
+  if (words < 600) { warnings.push(`Thin content (${words} words)`); }
+  if (typeof p.adsense_score !== "number") { suggestions.push({ kind: "score", label: "Score AdSense readiness", impact: "+visibility" }); }
+
+  const sub_stage =
+    blockers.some((b) => b.includes("CTA")) ? "needs_cta"
+    : blockers.some((b) => b.includes("category")) ? "needs_cluster"
+    : !metaTitleOk || !metaDescOk ? "seo_fix_needed"
+    : tools === 0 ? "needs_tools"
+    : internalLinks < 2 ? "needs_links"
+    : readiness >= 75 && p.status === "in_review" ? "monetization_ready"
+    : readiness >= 80 ? "awaiting_publish"
+    : null;
+
+  return { readiness, breakdown, blockers, warnings, suggestions, sub_stage, words };
 }
 
 Deno.serve(async (req) => {
@@ -341,6 +425,24 @@ Deno.serve(async (req) => {
       const results = [];
       for (const id of ids.slice(0, 25)) results.push(await autoFixOne(id));
       return json({ db: "BLOG_DB", processed: results.length, results });
+    }
+
+    if (action === "analyze") {
+      const id = url.searchParams.get("id");
+      if (!id) return json({ error: "id required" }, 400);
+      const { data: post, error } = await blog().from("blog_posts").select("*").eq("id", id).maybeSingle();
+      if (error) return json({ error: error.message }, 500);
+      if (!post) return json({ error: "not_found" }, 404);
+      return json({ db: "BLOG_DB", id, ...analyzeReadiness(post), title: post.title, slug: post.slug, status: post.status });
+    }
+
+    if (action === "fix_one" && req.method === "POST") {
+      const body = await req.json().catch(() => ({}));
+      const id: string = body.id;
+      const kinds: string[] = Array.isArray(body.kinds) && body.kinds.length ? body.kinds : ["all"];
+      if (!id) return json({ error: "id required" }, 400);
+      const r = await runFix(id, kinds);
+      return json({ db: "BLOG_DB", ...r });
     }
 
     if (action === "publish_passing" && req.method === "POST") {
