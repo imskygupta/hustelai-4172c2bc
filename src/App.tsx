@@ -187,6 +187,7 @@ const CrawlOrchestrator = lazy(() => import("./pages/admin/CrawlOrchestrator"));
 const AuthorityBatch = lazy(() => import("./pages/admin/AuthorityBatch"));
 const HustleTemplatesAdmin = lazy(() => import("./pages/admin/HustleTemplates"));
 const AdsenseReadiness = lazy(() => import("./pages/admin/AdsenseReadiness"));
+const BootstrapSqlHub = lazy(() => import("./pages/admin/BootstrapSqlHub"));
 const AuthorityIndex = lazy(() => import("./pages/authority/AuthorityIndex"));
 const AuthorityPage = lazy(() => import("./pages/authority/AuthorityPage"));
 import { MaintenanceBanner } from "./components/flags/FeatureGate";
@@ -430,6 +431,7 @@ const App = () => (
             <Route path="/admin/blog/authority-batch" element={<AuthorityBatch />} />
             <Route path="/admin/blog/hustle-templates" element={<HustleTemplatesAdmin />} />
             <Route path="/admin/blog/adsense" element={<AdsenseReadiness />} />
+            <Route path="/admin/blog/bootstrap" element={<BootstrapSqlHub />} />
             <Route path="/systems" element={<AuthorityIndex />} />
             <Route path="/systems/:slug" element={<AuthorityPage />} />
             <Route path="*" element={<NotFound />} />

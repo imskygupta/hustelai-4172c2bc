@@ -8,10 +8,21 @@ const cors = {
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
 };
 
-const blog = createClient(
-  Deno.env.get("BLOG_SUPABASE_URL")!,
-  Deno.env.get("BLOG_SUPABASE_SERVICE_ROLE")!,
-);
+const json = (body: unknown, status = 200) =>
+  new Response(JSON.stringify(body), { status, headers: { ...cors, "content-type": "application/json" } });
+
+// Lazy client — never throw at module load (would 500 the OPTIONS preflight).
+let _blog: ReturnType<typeof createClient> | null = null;
+function getBlog() {
+  if (_blog) return _blog;
+  const url = Deno.env.get("BLOG_SUPABASE_URL");
+  const key = Deno.env.get("BLOG_SUPABASE_SERVICE_ROLE");
+  if (!url || !key) {
+    throw new Error("BLOG DB env not configured (BLOG_SUPABASE_URL / BLOG_SUPABASE_SERVICE_ROLE)");
+  }
+  _blog = createClient(url, key);
+  return _blog;
+}
 
 const BOOTSTRAP_SQL = `-- Run inside BLOG DB SQL editor (NOT the primary DB)
 create table if not exists public.hustle_templates (
@@ -73,19 +84,21 @@ Deno.serve(async (req) => {
     const action = url.searchParams.get("action") ?? "list";
 
     if (action === "bootstrap_sql") {
-      return new Response(JSON.stringify({ sql: BOOTSTRAP_SQL }), { headers: { ...cors, "content-type": "application/json" } });
+      return json({ sql: BOOTSTRAP_SQL, db: "BLOG_DB", note: "Run inside BLOG DB SQL editor (NOT primary)" });
     }
+
+    const blog = getBlog();
 
     if (action === "list") {
       const { data } = await blog.from("hustle_templates").select("*").order("created_at", { ascending: false });
-      return new Response(JSON.stringify({ templates: data ?? [] }), { headers: { ...cors, "content-type": "application/json" } });
+      return json({ templates: data ?? [], db: "BLOG_DB" });
     }
 
     if (action === "get") {
       const slug = url.searchParams.get("slug");
-      if (!slug) return new Response(JSON.stringify({ error: "slug required" }), { status: 400, headers: cors });
+      if (!slug) return json({ error: "slug required" }, 400);
       const { data } = await blog.from("hustle_templates").select("*").eq("slug", slug).maybeSingle();
-      return new Response(JSON.stringify({ template: data }), { headers: { ...cors, "content-type": "application/json" } });
+      return json({ template: data, db: "BLOG_DB" });
     }
 
     if (action === "save" && req.method === "POST") {
@@ -93,17 +106,17 @@ Deno.serve(async (req) => {
       const row = { ...body, updated_at: new Date().toISOString() };
       const { data, error } = await blog.from("hustle_templates").upsert(row, { onConflict: "slug" }).select().single();
       if (error) throw error;
-      return new Response(JSON.stringify({ template: data }), { headers: { ...cors, "content-type": "application/json" } });
+      return json({ template: data, db: "BLOG_DB" });
     }
 
     if (action === "delete" && req.method === "POST") {
       const { id } = await req.json();
       await blog.from("hustle_templates").delete().eq("id", id);
-      return new Response(JSON.stringify({ ok: true }), { headers: { ...cors, "content-type": "application/json" } });
+      return json({ ok: true, db: "BLOG_DB" });
     }
 
-    return new Response(JSON.stringify({ error: "unknown action" }), { status: 400, headers: cors });
+    return json({ error: "unknown action" }, 400);
   } catch (e) {
-    return new Response(JSON.stringify({ error: String(e) }), { status: 500, headers: { ...cors, "content-type": "application/json" } });
+    return json({ error: String(e?.message ?? e), db: "BLOG_DB" }, 500);
   }
 });
