@@ -1,133 +1,120 @@
-## Crawl Orchestration (added)
-- Edge fn `crawl-orchestrator` on BLOG DB: registry, freshness scoring, priority queue, IndexNow handoff, sitemap pings, diagnostics.
-- Admin UI at `/admin/blog/crawl` with hourly cron snippet.
-- Curated authority pages on main domain at `/systems/:slug` (5 operational system explainers, NOT blog content).
-- Sitemap (main) extended with `/systems` + 5 system slugs.
-- Internal-link engine extended to include `systems` cross-domain link targets so blog posts naturally link into main-domain authority pages.
-## Product Narrative Engine — Architecture Plan
+# Editorial Acquisition + Tool Conversion System
 
-Evolves the blog into a product-aware publishing system with a centralized Tool Registry, Knowledge Graph, and DB-isolated pipeline. **No new blog IO on primary DB.**
+Build the bridge from blog authority → explore/tools conversion, plus generate the first 20 authority articles. All infra stays on BLOG_DB; primary DB untouched.
 
----
+## 1. Authority Batch Generator (admin)
 
-### 1. Multi-DB Layout (no primary writes)
+New edge function `authority-batch` (BLOG_DB):
+- Accepts `{ count: 20, clusters: [...], stagger_hours: 6 }`
+- Pulls from `narrative-generate` per cluster, balanced across the 10 clusters listed
+- Dedup check: cosine similarity vs last 60 days of titles + focus_keyword (reject >0.82)
+- Schedules `published_at` in staggered slots (2/day operational + 1 narrative cadence already in scheduler)
+- Each draft runs through: tool-matcher → internal-link engine → AdSense readiness → status `scheduled`
 
-| DB | Purpose | Client |
-|---|---|---|
-| **BLOG_DB** (existing `BLOG_SUPABASE_URL`) | tool_registry, knowledge_graph, generation_runs, snapshots | `blog` service-role in edge fns |
-| **MEDIA_DB** (reuse BLOG bucket `tool-media`) | screenshots, icons, hero variants, WebP | Storage on BLOG project |
-| **EMBEDDINGS_DB** (BLOG, pgvector) | tool + chunk embeddings (3072-dim Gemini) | same blog client |
-| **ANALYTICS_DB** | run telemetry, ad-safety scores | `getAnalytics()` |
-| **PRIMARY_DB** | UNTOUCHED for blog work | — |
+New admin page `/admin/blog/authority-batch`:
+- Cluster checklist, count slider (5–30), stagger interval
+- Live progress (run_id → events stream from `narrative-generate`)
+- Results grid: title, cluster, score, AdSense pass/fail, scheduled_at
 
-Add migration **on BLOG project only** (separate file, executed via blog admin migration script — not the primary `supabase/migrations/`):
-- `tool_registry`, `tool_relationships`, `tool_media`, `feature_snapshots`, `generation_runs`, `generation_events`, `narrative_coverage`, plus `vector(3072)` columns + HNSW indexes.
+## 2. Hustle Templates (BLOG_DB table `hustle_templates`)
 
-### 2. Tool Registry Engine
+```
+id, slug, title, summary, cluster, prompt_system jsonb,
+workflow jsonb, tool_slugs text[], cta_label, cta_href,
+config_preset jsonb, status, created_at
+```
 
-New edge function **`tool-registry-sync`** (BLOG-scoped):
-- Reads a static manifest `supabase/functions/tool-registry-sync/manifest.ts` derived from `src/lib/tools/templates.ts`, `src/components/tools/`, `AppSidebar`, feature flags catalog, workflows registry, AI tools grid.
-- Diffs against `tool_registry.last_synced_at` + content hash; only upserts changed rows.
-- Generates Gemini embeddings for new/changed tools (batched).
-- Recomputes relationships via cosine similarity + manifest-declared edges.
+Seed 8 templates (Proposal Closing, Async Onboarding, Telegram Delivery, Freelancer CRM, AI Weekly Content, Discovery Call SOP, Scope Lock Kit, Retainer Renewal).
 
-### 3. Weekly Auto-Sync
+Admin page `/admin/blog/hustle-templates` — CRUD + preview.
 
-`pg_cron` on BLOG DB → calls `tool-registry-sync?mode=incremental` weekly. Manual full-sync button in admin. Admin can also trigger per-category resync.
+## 3. Tool Matcher (edge fn `tool-matcher`)
 
-### 4. Knowledge Graph
+For a given draft (title + body + focus_keyword + cluster):
+- Embed once → cosine search vs `tool_registry` embeddings (cached)
+- Returns `{ tools: [2-5], workflow: 1, hustle_template: 1, cta: {...}, score }`
+- Modes: `auto`, `manual`, `hybrid` (auto + admin overrides)
+- Stores selection on `blog_posts.tool_matches jsonb` + `hustle_template_slug`
 
-`tool_relationships(source_id, target_id, kind, weight)` — kinds: `workflow_pair`, `category_sibling`, `semantic`, `funnel_next`. Exposed via `/knowledge-graph?action=neighbors&slug=`.
+Admin sidebar block on `BlogAdmin` post editor: "Suggested tools to promote" with re-rank + override.
 
-### 5. Content Injection Engine
+## 4. Blog → Hustle Conversion Flow
 
-Rewrite **`blog-ai-draft`** flow:
-1. Resolve topic/keyword.
-2. Call `knowledge-graph` → top-K tools + workflows + CTAs.
-3. Build "context bundle" injected into Gemini system prompt as structured JSON (NOT prose).
-4. Post-process: replace `{{tool:slug}}` placeholders with internal links + cards; insert "Recommended workflow stack" block; emit anchor diversity log.
+In `BlogPost.tsx`:
+- New `<HustleConversionBlock>` rendered after first H2 + at article tail
+- Pulls `tool_matches` + `hustle_template_slug` from post payload
+- CTAs deep-link to `/explore?template=<slug>` or `/work/<tool>?preset=<id>`
 
-### 6. Tool Media Library
+New `src/components/blog/HustleConversionBlock.tsx` + `ToolCard.tsx` + `WorkflowEmbed.tsx`.
 
-New edge fn **`tool-media-pipeline`**:
-- Lazy: on first reference in a draft, enqueue screenshot via existing image gen → store WebP in `tool-media` bucket.
-- Regeneration queue table; cap 10/day; cache forever until manual invalidate.
+## 5. Explore Preload
 
-### 7. Feature Snapshot Engine
+`Explore.tsx` reads `?template=<slug>` and `?preset=<id>`:
+- Fetches `hustle_templates` row
+- Auto-fills prompt textarea (`ai-fill-bus`)
+- Pre-selects tools, opens template card highlighted
+- Workspace presets via `config_preset` (passed to existing workspace store)
 
-`feature_snapshots(taken_at, kind, json_graph, embedding)` — taken weekly. AI queries the latest snapshot rather than re-scanning.
+## 6. AdSense Readiness
 
-### 8. Live Generation UI
+Edge fn `adsense-readiness` (also called inline by batch):
+- Checks: word_count ≥ 1100, ≥4 internal links, ≥1 outbound ref, hero image, author + category set, FAQ ≥ 2, no thin H2 sections (<60 words), readability (sentence avg < 28 words), legal pages crawlable
+- Returns `{ score 0-100, fails: [...], warnings: [...] }`
+- Stored on `blog_posts.adsense_score` + `adsense_report jsonb`
+- Posts below 70 cannot auto-publish
 
-`generation_runs` + `generation_events` (BLOG DB) streamed via Supabase realtime to a new admin panel **`ProductNarrativeOps`**. Stages: `keyword → graph_query → tool_resolution → outline → draft → links → cta → hero → seo → indexnow → publish`. Terminal feed with status chips.
+Admin page `/admin/blog/adsense` — readiness dashboard, re-check button.
 
-### 9. Ad / Monetization Readiness
+## 7. Editorial Theme Refresh
 
-Per-post: `content_quality`, `thin_content`, `ad_safe`, `commercial_intent`, `engagement_depth`, `rpm_estimate`, `affiliate_slots`, `cta_heatmap` — computed in `editorial-center` on publish.
+`src/index.css` `.prose-blog` + `BlogShell` + `BlogPost`:
+- Stronger display font sizing rhythm (3.25/2.25/1.5/1.25)
+- Category color tokens (10 clusters → 10 accents) via CSS vars
+- Highlighted callout component (`.editorial-callout` info/warn/quote variants)
+- Embedded `<ToolCard>` and `<WorkflowEmbed>` blocks
+- Reading progress polish + sticky TOC active-state
+- Subtle gradient surfaces per category
+- Richer author footer (avatar 64px, bio, links, more from author)
 
-### 10. Admin Experience
+New: `src/components/blog/Callout.tsx`, `ToolCard.tsx`, `WorkflowEmbed.tsx`, `AuthorFooter.tsx`, `CategoryAccent.tsx`.
 
-New routes inside admin (Content & Growth group):
-- **`/admin/blog/registry`** — tool registry table + sync health + orphan/missing detection.
-- **`/admin/blog/graph`** — relationships viewer (force-graph) + cluster map.
-- **`/admin/blog/narrative`** — live generation feed + narrative coverage %.
-- **`/admin/blog/media`** — tool media library (already exists, extend).
+## 8. Files
 
-Sidebar additions in `AdminDashboard.tsx`.
+**New edge functions** (BLOG_DB only):
+- `supabase/functions/authority-batch/index.ts`
+- `supabase/functions/tool-matcher/index.ts`
+- `supabase/functions/adsense-readiness/index.ts`
+- `supabase/functions/hustle-templates/index.ts`
 
-### 11. Performance Rules
+**New admin pages**:
+- `src/pages/admin/AuthorityBatch.tsx`
+- `src/pages/admin/HustleTemplates.tsx`
+- `src/pages/admin/AdsenseReadiness.tsx`
 
-- Diff sync (content hash per tool).
-- Embeddings only on hash change.
-- Bucket-level WebP, lazy generation queue.
-- Realtime channel scoped to current run id.
-- All scans hit BLOG DB only — primary DB unchanged.
+**New components**:
+- `src/components/blog/HustleConversionBlock.tsx`
+- `src/components/blog/ToolCard.tsx`
+- `src/components/blog/WorkflowEmbed.tsx`
+- `src/components/blog/Callout.tsx`
+- `src/components/blog/AuthorFooter.tsx`
+- `src/components/blog/CategoryAccent.tsx`
 
-### 12. AI Writing Quality
+**Updates**:
+- `src/integrations/blog/client.ts` (new API methods)
+- `src/pages/AdminDashboard.tsx` (sidebar entries)
+- `src/pages/blog/BlogPost.tsx` (conversion block + callouts)
+- `src/components/blog/BlogShell.tsx` (category accents)
+- `src/index.css` (editorial typography + callouts)
+- `src/pages/Explore.tsx` (template preload)
+- `src/App.tsx` (admin routes)
 
-System prompt updated with: "operational field notes; cite specific HustleAI tools from the provided context bundle; no fluff list; show one tactical workflow stack."
+## 9. Bootstrap SQL (BLOG_DB)
 
----
+The Authority Batch admin page exposes a "Bootstrap SQL" button that returns the `hustle_templates` table + seed inserts + new columns on `blog_posts` (`tool_matches`, `hustle_template_slug`, `adsense_score`, `adsense_report`). User runs it in BLOG_DB SQL editor.
 
-### File Plan (high-signal subset)
+## 10. Out of scope (next phase)
 
-**Edge functions (new, BLOG-scoped):**
-- `supabase/functions/tool-registry-sync/index.ts` (+ `manifest.ts`)
-- `supabase/functions/knowledge-graph/index.ts`
-- `supabase/functions/tool-media-pipeline/index.ts`
-- `supabase/functions/narrative-generate/index.ts` (replaces inline AI draft pipeline; orchestrates stages, writes `generation_events`)
+- Live AdSense ad slot fills (only readiness checks now; ad units land later)
+- Full content rewrite of existing 100+ posts (a backfill button is provided but limited to manual triggers)
 
-**Edge functions (edited):**
-- `blog-ai-draft` → thin wrapper that enqueues `narrative-generate`.
-- `editorial-center` → adds monetization scoring + narrative coverage endpoints.
-
-**BLOG DB migration (new file under `supabase/migrations/`, but every statement targets BLOG schema via service-role client at runtime — NOT primary):** included as SQL in a one-shot bootstrap edge fn `narrative-bootstrap` so the primary migration runner stays untouched.
-
-**Frontend (admin only):**
-- `src/pages/admin/ProductRegistry.tsx`
-- `src/pages/admin/KnowledgeGraph.tsx`
-- `src/pages/admin/NarrativeOps.tsx` (live terminal feed)
-- `src/integrations/blog/client.ts` — add `registry*`, `graph*`, `narrative*` methods
-- `src/App.tsx`, `src/pages/AdminDashboard.tsx` — register routes + sidebar entries
-
-**Cron (BLOG DB):**
-- Weekly `tool-registry-sync?mode=incremental`
-- Daily `tool-media-pipeline?action=drain_queue`
-- Hourly `narrative-generate?action=process_queue`
-
----
-
-### Scope of this implementation pass
-
-Given the size, I will ship in **Phase 1** (this turn):
-1. BLOG DB schema bootstrap (`narrative-bootstrap` fn + invoke-once endpoint).
-2. `tool-registry-sync` with manifest.
-3. `knowledge-graph` neighbors + embeddings.
-4. `narrative-generate` orchestrator with live `generation_events` stream.
-5. Admin panels: ProductRegistry + KnowledgeGraph + NarrativeOps.
-6. Sidebar + route wiring.
-7. `blog-ai-draft` rewired to call `narrative-generate`.
-
-Phase 2 (follow-up turn after you approve Phase 1): media pipeline auto-screenshots, monetization scoring expansion, force-graph viewer polish, weekly cron registration.
-
-Confirm and I'll execute Phase 1.
+Approve to start; I'll ship in this order: bootstrap SQL → tool-matcher + adsense-readiness → authority-batch → hustle templates UI → blog conversion components + theme refresh → Explore preload.
