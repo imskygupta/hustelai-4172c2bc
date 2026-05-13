@@ -6,6 +6,9 @@ import { BlogSEO } from "@/components/blog/BlogSEO";
 import { Breadcrumb } from "@/components/blog/Breadcrumb";
 import { NewsletterBlock } from "@/components/blog/NewsletterBlock";
 import { AdSlot } from "@/components/blog/AdSlot";
+import { EditorialCategorySkeleton } from "@/components/blog/EditorialSkeleton";
+import { PrefetchLink } from "@/components/blog/PrefetchLink";
+import { onIdle } from "@/lib/blog-cache";
 
 /**
  * Topic cluster hub: pillar + supporting posts + sibling clusters + tags.
@@ -18,10 +21,19 @@ export default function BlogCategory() {
 
   useEffect(() => {
     setLoading(true);
-    blogApi.feed({ category: slug, limit: 30, mode: "cluster" } as any)
-      .then((r) => setData(r))
-      .finally(() => setLoading(false));
+    blogApi.feedSWR({ category: slug, limit: 30, mode: "cluster" }, (r) => {
+      setData(r); setLoading(false);
+    });
   }, [slug]);
+
+  // Idle-prefetch supporting + pillar posts in this cluster.
+  useEffect(() => {
+    if (!data) return;
+    onIdle(() => {
+      if (data.pillar?.slug) blogApi.prefetchPost(data.pillar.slug);
+      (data.supporting ?? []).slice(0, 6).forEach((p: any) => p?.slug && blogApi.prefetchPost(p.slug));
+    });
+  }, [data]);
 
   const cat = data?.category ?? { slug, title: slug, description: "" };
   const title = cat?.title ?? slug;
@@ -65,12 +77,12 @@ export default function BlogCategory() {
       </section>
 
       {loading ? (
-        <p className="mx-auto max-w-6xl px-5 text-muted-foreground">Loading…</p>
+        <EditorialCategorySkeleton />
       ) : (
         <>
           {pillar && (
             <section className="mx-auto max-w-6xl px-5 mb-12">
-              <Link to={`/${pillar.slug}`} className="block group rounded-lg overflow-hidden border border-border/60 hover:border-foreground/40 transition">
+              <PrefetchLink to={`/${pillar.slug}`} prefetchPost={pillar.slug} className="block group rounded-lg overflow-hidden border border-border/60 hover:border-foreground/40 transition">
                 <div className="grid md:grid-cols-2">
                   <div className="aspect-[16/10] md:aspect-auto bg-muted/40">
                     {pillar.hero_image && <img src={pillar.hero_image} alt={pillar.title} loading="eager" className="w-full h-full object-cover" />}
@@ -81,7 +93,7 @@ export default function BlogCategory() {
                     {pillar.excerpt && <p className="mt-3 text-muted-foreground line-clamp-3">{pillar.excerpt}</p>}
                   </div>
                 </div>
-              </Link>
+              </PrefetchLink>
             </section>
           )}
 
@@ -97,14 +109,14 @@ export default function BlogCategory() {
               </div>
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-12">
                 {supporting.map((p: any) => (
-                  <Link key={p.id ?? p.slug} to={`/${p.slug}`} className="block group">
+                  <PrefetchLink key={p.id ?? p.slug} to={`/${p.slug}`} prefetchPost={p.slug} className="block group">
                     <div className="aspect-[16/10] rounded-lg overflow-hidden bg-muted/40 mb-3 ring-1 ring-border/40">
                       {p.hero_image && <img src={p.hero_image} alt={p.title} loading="lazy" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.02]" />}
                     </div>
                     <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{p.reading_time ?? 4} min</div>
                     <h3 className="font-serif text-lg mt-1 group-hover:underline underline-offset-4">{p.title}</h3>
                     {p.excerpt && <p className="mt-1 text-sm text-muted-foreground line-clamp-2">{p.excerpt}</p>}
-                  </Link>
+                  </PrefetchLink>
                 ))}
               </div>
             </section>
