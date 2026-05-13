@@ -66,8 +66,11 @@ Deno.serve(async (req) => {
         related_categories: (cats ?? []).filter((c: any) => c.slug !== category).slice(0, 6),
         tags: tags ?? [],
         posts,
-      }), { headers: { ...cors, "content-type": "application/json", "cache-control": "public, max-age=120" } });
-      // (cluster mode response above)
+      }), { headers: {
+        ...cors,
+        "content-type": "application/json",
+        "cache-control": "public, max-age=60, s-maxage=300, stale-while-revalidate=86400",
+      } });
     }
 
     return new Response(JSON.stringify({ posts, categories: cats ?? [] }), {
