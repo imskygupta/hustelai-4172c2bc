@@ -1,13 +1,5 @@
-import { Navbar } from "@/components/Navbar";
-import { Footer } from "@/components/Footer";
-import { PageTransition } from "@/components/PageTransition";
-import { ScrollReveal } from "@/components/ScrollReveal";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Zap, Target, Eye, Heart, Globe, Users, Shield, Award, ArrowRight, Mail } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-
-import { SEO } from "@/components/SEO";
+import { LegalLayout } from "@/components/legal/LegalLayout";
+import { BRAND } from "@/config/branding";
 
 const values = [
   { icon: Target, title: "Mission-Driven", desc: "Every feature we build aims to democratize freelancing access for everyone, everywhere." },
