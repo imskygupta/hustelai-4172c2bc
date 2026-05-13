@@ -12,6 +12,8 @@ import { optimizedImage } from "@/lib/blog-image";
 import { ReadingProgress } from "@/components/blog/ReadingProgress";
 import { Breadcrumb } from "@/components/blog/Breadcrumb";
 import { NewsletterBlock } from "@/components/blog/NewsletterBlock";
+import { HustleConversionBlock } from "@/components/blog/HustleConversionBlock";
+import { CategoryPill } from "@/components/blog/CategoryAccent";
 
 export default function BlogPost() {
   const { slug = "" } = useParams();
@@ -51,6 +53,14 @@ export default function BlogPost() {
   }
 
   const { post, tags = [], related = [], prev, next, workflows = [], tools = [] } = data;
+  const toolMatches: any[] = Array.isArray(post.tool_matches) ? post.tool_matches : [];
+  const templateSlug: string | undefined = post.hustle_template_slug ?? undefined;
+  const conversionTemplate = templateSlug ? {
+    slug: templateSlug,
+    title: templateSlug.replace(/-/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase()),
+    href: `/explore?template=${templateSlug}`,
+    label: "Open the workflow",
+  } : null;
   const { meta: editorial, body } = extractEditorialMeta(post.body_md ?? "");
   const rawHtml = renderMarkdown(body);
   const html = injectInternalLinks(
@@ -95,11 +105,8 @@ export default function BlogPost() {
         />
         <div className="mt-5 flex flex-wrap items-center gap-2 text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
           {post.blog_categories?.title && (
-            <Link
-              to={`/category/${post.blog_categories.slug}`}
-              className="px-2 py-0.5 rounded-sm bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/15"
-            >
-              {post.blog_categories.title}
+            <Link to={`/category/${post.blog_categories.slug}`}>
+              <CategoryPill slug={post.blog_categories.slug} label={post.blog_categories.title} />
             </Link>
           )}
           <span>{post.reading_time ?? 4} min read</span>
@@ -197,6 +204,18 @@ export default function BlogPost() {
               className="prose-blog"
               dangerouslySetInnerHTML={{ __html: html }}
             />
+
+            {/* Editorial Conversion — bridge from article to workflow/tool */}
+            {(conversionTemplate || toolMatches.length > 0) && (
+              <div data-conversion>
+                <HustleConversionBlock
+                  template={conversionTemplate}
+                  tools={toolMatches}
+                  variant="terminal"
+                  onCta={(kind, href) => blogApi.track("cta", post.id, `${kind}:${href}`)}
+                />
+              </div>
+            )}
 
             {/* Mid-content reserved ad slot */}
             <AdSlot height={250} format="rectangle" />
