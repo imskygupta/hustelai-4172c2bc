@@ -67,6 +67,15 @@ const PROGRAMMATIC: { kind: string; slug: string }[] = [
   { kind: "free-tools", slug: "ai-cold-email-writer" },
 ];
 
+// Operational authority pages (entity-authority anchors, not blog content).
+const AUTHORITY_SLUGS = [
+  "async-client-delivery",
+  "ai-proposal-workflows",
+  "operational-crm-for-freelancers",
+  "telegram-delivery-systems",
+  "workspace-automation",
+];
+
 function xmlEscape(s: string) {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
@@ -90,6 +99,11 @@ Deno.serve(async () => {
 
   for (const p of PROGRAMMATIC) {
     parts.push(urlEntry(`${SITE}/${p.kind}/${p.slug}`, now, "weekly", 0.7));
+  }
+
+  parts.push(urlEntry(`${SITE}/systems`, now, "weekly", 0.7));
+  for (const s of AUTHORITY_SLUGS) {
+    parts.push(urlEntry(`${SITE}/systems/${s}`, now, "monthly", 0.8));
   }
 
   const { data: pages } = await supabase

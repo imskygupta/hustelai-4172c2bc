@@ -248,6 +248,7 @@ const NAV_GROUPS: { label: string; defaultOpen?: boolean; items: NavItem[] }[] =
       { kind: "route", href: "/admin/blog/graph", label: "Knowledge Graph", icon: Share2, keywords: "graph relationships clusters product" },
       { kind: "route", href: "/admin/blog/traffic", label: "Traffic Intelligence", icon: Activity, keywords: "yandex metrica traffic visitors bounce ctr regional" },
       { kind: "route", href: "/admin/blog/tool-media", label: "Tool Media Library", icon: FileText, keywords: "screenshots tool media auto capture webp" },
+      { kind: "route", href: "/admin/blog/crawl", label: "Crawl Orchestrator", icon: Radio, keywords: "crawl orchestrator indexing sitemap freshness authority indexnow" },
       { kind: "section", id: "seo-pages" as AdminSection, label: "SEO Pages", icon: Globe },
       { kind: "section", id: "seo-blog" as AdminSection, label: "Insights / Blog", icon: BookOpen },
       { kind: "section", id: "trending", label: "Trending Links", icon: ExternalLink },
