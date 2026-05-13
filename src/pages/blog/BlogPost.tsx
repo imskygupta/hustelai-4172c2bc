@@ -346,16 +346,16 @@ export default function BlogPost() {
       {(prev || next) && (
         <nav className="mx-auto max-w-[760px] px-5 my-10 grid sm:grid-cols-2 gap-4" aria-label="Read next">
           {prev ? (
-            <Link to={`/${prev.slug}`} className="group rounded-lg border border-border/60 p-5 hover:border-foreground/40 transition bg-background/40">
+            <PrefetchLink to={`/${prev.slug}`} prefetchPost={prev.slug} className="group rounded-lg border border-border/60 p-5 hover:border-foreground/40 transition bg-background/40">
               <div className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">← Previous</div>
               <div className="font-serif text-[16px] mt-2 leading-snug group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors">{prev.title}</div>
-            </Link>
+            </PrefetchLink>
           ) : <span />}
           {next ? (
-            <Link to={`/${next.slug}`} className="group rounded-lg border border-border/60 p-5 hover:border-foreground/40 transition text-right sm:text-right bg-background/40">
+            <PrefetchLink to={`/${next.slug}`} prefetchPost={next.slug} className="group rounded-lg border border-border/60 p-5 hover:border-foreground/40 transition text-right sm:text-right bg-background/40">
               <div className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">Read next →</div>
               <div className="font-serif text-[16px] mt-2 leading-snug group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors">{next.title}</div>
-            </Link>
+            </PrefetchLink>
           ) : <span />}
         </nav>
       )}
