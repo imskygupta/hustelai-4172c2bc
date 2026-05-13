@@ -377,7 +377,7 @@ export default function BlogPost() {
                 </div>
                 <h3 className="font-serif text-[18px] mt-1 leading-snug group-hover:underline underline-offset-4">{r.title}</h3>
                 {r.excerpt && <p className="mt-1.5 text-sm text-muted-foreground line-clamp-2">{r.excerpt}</p>}
-              </Link>
+              </PrefetchLink>
             ))}
           </div>
         </section>
