@@ -442,6 +442,7 @@ function TableView({ rows, onAutoFix, onRetry, busy }: { rows: Row[]; onAutoFix:
 }
 
 function TimelineView({ rows, onAutoFix, onRetry, busy }: { rows: Row[]; onAutoFix: (id?: string) => void; onRetry: (id: string) => void; busy: string | null }) {
+  void 0;
   const grouped = useMemo(() => {
     const m = new Map<Stage, Row[]>();
     for (const s of STAGES) m.set(s, []);
@@ -477,6 +478,27 @@ function TimelineView({ rows, onAutoFix, onRetry, busy }: { rows: Row[]; onAutoF
           </ul>
         </div>
       ))}
+    </div>
+  );
+}
+
+function PipelineSkeleton() {
+  return (
+    <div className="rounded-xl border border-border/60 bg-card overflow-hidden">
+      <div className="p-3 border-b border-border/60 flex gap-2">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div key={i} className="h-3 w-20 rounded bg-muted animate-pulse" />
+        ))}
+      </div>
+      <ul className="divide-y divide-border/60">
+        {Array.from({ length: 8 }).map((_, i) => (
+          <li key={i} className="px-4 py-3 flex items-center gap-3">
+            <div className="h-3 w-1/3 rounded bg-muted animate-pulse" />
+            <div className="h-3 w-16 rounded bg-muted/70 animate-pulse" />
+            <div className="h-3 w-12 rounded bg-muted/70 animate-pulse ml-auto" />
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
