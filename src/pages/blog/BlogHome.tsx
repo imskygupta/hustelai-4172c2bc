@@ -103,9 +103,10 @@ export default function BlogHome() {
         </div>
         <div className="grid sm:grid-cols-3 gap-4">
           {STARTER_COLLECTIONS.map((c, i) => (
-            <Link
+            <PrefetchLink
               key={c.slug}
               to={`/category/${c.slug}`}
+              prefetchCategory={c.slug}
               className="group rounded-lg border border-border/60 px-4 py-4 hover:border-foreground/40 transition bg-background/40"
             >
               <div className="flex items-center gap-2 text-[11px] uppercase tracking-wide text-muted-foreground mb-1.5">
@@ -114,7 +115,7 @@ export default function BlogHome() {
               </div>
               <div className="font-serif text-lg leading-snug group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors">{c.label}</div>
               <div className="mt-1.5 text-sm text-muted-foreground">{c.note}</div>
-            </Link>
+            </PrefetchLink>
           ))}
         </div>
       </section>
@@ -131,7 +132,7 @@ export default function BlogHome() {
               <ul className="divide-y divide-border/50 border-y border-border/50">
                 {trending.map((p: any) => (
                   <li key={p.id}>
-                    <Link to={`/${p.slug}`} className="flex items-baseline gap-3 py-3 group">
+                    <PrefetchLink to={`/${p.slug}`} prefetchPost={p.slug} className="flex items-baseline gap-3 py-3 group">
                       <span className="font-mono text-xs text-muted-foreground w-6 shrink-0">{String(trending.indexOf(p) + 1).padStart(2, "0")}</span>
                       <div className="min-w-0">
                         <div className="font-serif text-[15px] leading-snug group-hover:underline underline-offset-4 decoration-foreground/30 line-clamp-2">{p.title}</div>
@@ -142,7 +143,7 @@ export default function BlogHome() {
                           {isNewToday(p) && <span className="ml-1 px-1.5 py-px rounded-sm bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] uppercase tracking-wide">new</span>}
                         </div>
                       </div>
-                    </Link>
+                    </PrefetchLink>
                   </li>
                 ))}
               </ul>
@@ -186,9 +187,10 @@ export default function BlogHome() {
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {cats.slice(0, 6).map((c: any) => (
-              <Link
+              <PrefetchLink
                 key={c.slug}
                 to={`/category/${c.slug}`}
+                prefetchCategory={c.slug}
                 className="group rounded-lg border border-border/60 p-5 hover:border-foreground/40 transition bg-gradient-to-br from-background to-muted/10"
               >
                 <div className="text-[11px] uppercase tracking-wide text-muted-foreground mb-2">Topic cluster</div>
@@ -199,7 +201,7 @@ export default function BlogHome() {
                 <div className="mt-3 text-xs text-muted-foreground/80 group-hover:text-foreground inline-flex items-center gap-1">
                   Read the cluster →
                 </div>
-              </Link>
+              </PrefetchLink>
             ))}
           </div>
         </section>
@@ -242,7 +244,7 @@ export default function BlogHome() {
 function PostCard({ post, priority, isNew, compact }: { post: any; priority?: boolean; isNew?: boolean; compact?: boolean }) {
   return (
     <article>
-      <Link to={`/${post.slug}`} className="block group">
+      <PrefetchLink to={`/${post.slug}`} prefetchPost={post.slug} className="block group">
         <div className={`${compact ? "aspect-[16/9]" : "aspect-[16/10]"} rounded-md overflow-hidden bg-muted/40 mb-4`}>
           <img
             src={heroFor(post)}
@@ -261,7 +263,7 @@ function PostCard({ post, priority, isNew, compact }: { post: any; priority?: bo
         </div>
         <h2 className="font-serif text-xl leading-snug group-hover:underline underline-offset-4 decoration-foreground/30">{post.title}</h2>
         {post.excerpt && <p className="mt-2 text-sm text-muted-foreground line-clamp-2">{post.excerpt}</p>}
-      </Link>
+      </PrefetchLink>
     </article>
   );
 }
@@ -269,7 +271,7 @@ function PostCard({ post, priority, isNew, compact }: { post: any; priority?: bo
 function FeaturedCard({ post, isNew }: { post: any; isNew?: boolean }) {
   return (
     <article className="border border-border/50 rounded-lg overflow-hidden bg-muted/10">
-      <Link to={`/${post.slug}`} className="block group">
+      <PrefetchLink to={`/${post.slug}`} prefetchPost={post.slug} className="block group">
         <div className="aspect-[16/9] overflow-hidden bg-muted/30">
           <img
             src={heroFor(post)}
@@ -293,7 +295,7 @@ function FeaturedCard({ post, isNew }: { post: any; isNew?: boolean }) {
           <h2 className="font-serif text-2xl sm:text-3xl tracking-tight leading-snug group-hover:underline underline-offset-4 decoration-foreground/30">{post.title}</h2>
           {post.excerpt && <p className="mt-3 text-muted-foreground text-[15px] line-clamp-3">{post.excerpt}</p>}
         </div>
-      </Link>
+      </PrefetchLink>
     </article>
   );
 }
