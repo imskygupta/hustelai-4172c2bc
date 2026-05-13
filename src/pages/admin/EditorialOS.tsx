@@ -18,12 +18,15 @@ import {
   Activity, AlertCircle, ArrowRight, BookOpen, CheckCircle2, Command,
   Compass, Database, FileText, Flag, Gauge, Globe, Layers, ListChecks,
   Network, Radio, Search, Share2, ShieldCheck, Sparkles, Workflow, Zap,
+  Wand2, TimerReset,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList,
 } from "@/components/ui/command";
+import { useToast } from "@/hooks/use-toast";
+import { pipelineApi } from "@/integrations/blog/client";
 
 type ModuleDef = {
   href: string;
@@ -51,6 +54,7 @@ const GROUPS: GroupDef[] = [
     icon: BookOpen,
     items: [
       { href: "/admin/blog/editorial", label: "Editorial Dashboard", desc: "Live newsroom + post status.", icon: Activity, keywords: "editorial newsroom posts" },
+      { href: "/admin/blog/pipeline", label: "Content Pipeline", desc: "Unified queued → indexed timeline + auto-fix.", icon: Workflow, keywords: "pipeline timeline stages auto-fix" },
       { href: "/admin/blog", label: "Draft Queue", desc: "Drafts, review, scheduled.", icon: ListChecks, keywords: "drafts queue posts" },
       { href: "/admin/blog/authority-batch", label: "Authority Batch", desc: "Mass-generate balanced clusters.", icon: Sparkles, keywords: "authority batch generator" },
       { href: "/admin/blog/narrative", label: "Narrative Ops", desc: "Generation feed + narrative engine.", icon: Workflow, keywords: "narrative engine live feed" },
@@ -151,9 +155,33 @@ function useCmdK(open: boolean, setOpen: (v: boolean) => void) {
 
 export default function EditorialOS() {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [filter, setFilter] = useState("");
+  const [busy, setBusy] = useState<string | null>(null);
   useCmdK(paletteOpen, setPaletteOpen);
+
+  async function handleAutoFixAll() {
+    setBusy("autofix");
+    try {
+      const r = await pipelineApi.autoFix({});
+      toast({ title: "Auto-fix complete", description: `Processed ${r.processed} article(s).` });
+    } catch (e: any) {
+      toast({ title: "Auto-fix failed", description: e.message, variant: "destructive" });
+    } finally { setBusy(null); }
+  }
+  async function handleRepairRoutes() {
+    setBusy("reconcile");
+    try {
+      const r = await pipelineApi.reconcileRoutes();
+      toast({
+        title: "Routes reconciled",
+        description: `${r.total_published ?? 0} published · ${r.duplicate_slugs?.length ?? 0} dup · ${r.broken_internal_refs?.length ?? 0} broken refs`,
+      });
+    } catch (e: any) {
+      toast({ title: "Reconcile failed", description: e.message, variant: "destructive" });
+    } finally { setBusy(null); }
+  }
 
   const allModules = useMemo(() => GROUPS.flatMap((g) => g.items.map((i) => ({ ...i, group: g.label }))), []);
 
@@ -198,6 +226,15 @@ export default function EditorialOS() {
               <Button variant="outline" onClick={() => setPaletteOpen(true)} className="gap-2">
                 <Command className="h-3.5 w-3.5" /> Command palette
                 <kbd className="ml-1 hidden sm:inline-flex items-center rounded border border-border/60 px-1.5 py-0.5 text-[10px] text-muted-foreground">⌘K</kbd>
+              </Button>
+              <Button variant="outline" onClick={handleRepairRoutes} disabled={busy === "reconcile"} className="gap-2">
+                <TimerReset className="h-3.5 w-3.5" /> Repair routes
+              </Button>
+              <Button variant="outline" onClick={handleAutoFixAll} disabled={busy === "autofix"} className="gap-2">
+                <Wand2 className="h-3.5 w-3.5" /> Auto-fix editorial
+              </Button>
+              <Button variant="secondary" onClick={() => navigate("/admin/blog/pipeline")} className="gap-2">
+                <Workflow className="h-3.5 w-3.5" /> Open pipeline
               </Button>
               <Button onClick={() => navigate("/admin/blog/authority-batch")} className="gap-2">
                 <Sparkles className="h-3.5 w-3.5" /> New batch
