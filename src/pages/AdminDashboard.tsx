@@ -252,6 +252,7 @@ const NAV_GROUPS: { label: string; defaultOpen?: boolean; items: NavItem[] }[] =
       { kind: "route", href: "/admin/blog/authority-batch", label: "Authority Batch", icon: Activity, keywords: "authority batch generator mass articles 20 cluster balanced" },
       { kind: "route", href: "/admin/blog/hustle-templates", label: "Hustle Templates", icon: Workflow, keywords: "hustle templates explore preset prompt workflow" },
       { kind: "route", href: "/admin/blog/adsense", label: "AdSense Readiness", icon: ShieldCheck, keywords: "adsense readiness ads monetization score" },
+      { kind: "route", href: "/admin/blog/bootstrap", label: "Bootstrap SQL Center", icon: Database, keywords: "bootstrap sql migrations schema blog db crawl hustle templates" },
       { kind: "section", id: "seo-pages" as AdminSection, label: "SEO Pages", icon: Globe },
       { kind: "section", id: "seo-blog" as AdminSection, label: "Insights / Blog", icon: BookOpen },
       { kind: "section", id: "trending", label: "Trending Links", icon: ExternalLink },
