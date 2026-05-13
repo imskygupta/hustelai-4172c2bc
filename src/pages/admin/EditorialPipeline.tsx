@@ -10,6 +10,7 @@ import { Link } from "react-router-dom";
 import {
   AlertCircle, ArrowRight, CheckCircle2, ExternalLink, Filter, Hammer,
   ListChecks, Loader2, RefreshCw, Rocket, Sparkles, TimerReset, Wand2,
+  Bug, FileJson, LifeBuoy, Layers,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -81,6 +82,10 @@ export default function EditorialPipeline() {
   const [view, setView] = useState<"table" | "timeline">("table");
   const [busy, setBusy] = useState<string | null>(null);
   const [reconcile, setReconcile] = useState<any>(null);
+  const [diag, setDiag] = useState<any>(null);
+  const [raw, setRaw] = useState<any[] | null>(null);
+  const [batch, setBatch] = useState<{ id: string; rows: any[] } | null>(null);
+  const [failedRows, setFailedRows] = useState<any[]>([]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -88,6 +93,7 @@ export default function EditorialPipeline() {
       const r = await pipelineApi.list({ stage: stage || undefined, hidden, limit: 250 });
       setRows(r.rows ?? []);
       setCounts(r.counts ?? {});
+      setFailedRows(r.failedRows ?? []);
     } catch (e: any) {
       toast({ title: "Failed to load pipeline", description: e.message, variant: "destructive" });
     } finally {
@@ -142,6 +148,33 @@ export default function EditorialPipeline() {
     catch (e: any) { toast({ title: "Reconcile failed", description: e.message, variant: "destructive" }); }
     finally { setBusy(null); }
   }
+  async function loadDiagnostics() {
+    setBusy("diag");
+    try { setDiag(await pipelineApi.diagnostics()); }
+    catch (e: any) { toast({ title: "Diagnostics failed", description: e.message, variant: "destructive" }); }
+    finally { setBusy(null); }
+  }
+  async function loadRaw() {
+    setBusy("raw");
+    try { const r = await pipelineApi.raw({ limit: 100 }); setRaw(r.rows ?? []); }
+    catch (e: any) { toast({ title: "Raw fetch failed", description: e.message, variant: "destructive" }); }
+    finally { setBusy(null); }
+  }
+  async function recoverFailed() {
+    setBusy("recover");
+    try {
+      const r = await pipelineApi.recover(100);
+      toast({ title: "Recovery complete", description: `${r.fixed} row(s) patched.` });
+      await load();
+    } catch (e: any) { toast({ title: "Recover failed", description: e.message, variant: "destructive" }); }
+    finally { setBusy(null); }
+  }
+  async function openBatch(id: string) {
+    setBusy("batch");
+    try { const r = await pipelineApi.batchArticles(id); setBatch({ id, rows: r.rows ?? [] }); }
+    catch (e: any) { toast({ title: "Batch fetch failed", description: e.message, variant: "destructive" }); }
+    finally { setBusy(null); }
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -171,6 +204,15 @@ export default function EditorialPipeline() {
               </Button>
               <Button variant="outline" size="sm" onClick={repairRoutes} disabled={busy === "reconcile"} className="gap-2">
                 <TimerReset className="h-3.5 w-3.5" /> Repair routes
+              </Button>
+              <Button variant="outline" size="sm" onClick={loadDiagnostics} disabled={busy === "diag"} className="gap-2">
+                <Bug className="h-3.5 w-3.5" /> Diagnostics
+              </Button>
+              <Button variant="outline" size="sm" onClick={loadRaw} disabled={busy === "raw"} className="gap-2">
+                <FileJson className="h-3.5 w-3.5" /> View raw rows
+              </Button>
+              <Button variant="outline" size="sm" onClick={recoverFailed} disabled={busy === "recover"} className="gap-2">
+                <LifeBuoy className="h-3.5 w-3.5" /> Recover failed
               </Button>
               <Button size="sm" onClick={() => autoFix()} disabled={busy === "all"} className="gap-2">
                 {busy === "all" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Wand2 className="h-3.5 w-3.5" />}
@@ -217,6 +259,64 @@ export default function EditorialPipeline() {
       </div>
 
       <main className="max-w-[1400px] mx-auto px-6 py-6">
+        {failedRows.length > 0 && (
+          <div className="mb-4 rounded-lg border border-rose-500/40 bg-rose-500/5 p-3 text-xs">
+            <strong className="text-rose-700 dark:text-rose-300">{failedRows.length} row(s) failed to serialize</strong> — they were skipped so the pipeline still renders.
+            Click <button className="underline" onClick={recoverFailed}>Recover failed</button> to patch them.
+            <details className="mt-1"><summary className="cursor-pointer text-muted-foreground">Show details</summary>
+              <pre className="mt-2 max-h-48 overflow-auto bg-background/40 p-2 rounded">{JSON.stringify(failedRows, null, 2)}</pre>
+            </details>
+          </div>
+        )}
+        {diag && (
+          <div className="mb-4 rounded-lg border border-border/60 bg-card p-4 text-sm">
+            <div className="flex items-center justify-between mb-2">
+              <strong className="flex items-center gap-2"><Bug className="h-4 w-4" /> Pipeline diagnostics</strong>
+              <button className="text-xs text-muted-foreground hover:text-foreground" onClick={() => setDiag(null)}>dismiss</button>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs mb-2">
+              <div><span className="text-muted-foreground">Total rows:</span> {diag.total_rows ?? "—"}</div>
+              <div><span className="text-muted-foreground">Null slugs:</span> {diag.null_slugs ?? 0}</div>
+              <div><span className="text-muted-foreground">Duplicate slugs:</span> {diag.duplicate_slugs?.length ?? 0}</div>
+              <div><span className="text-muted-foreground">Missing title:</span> {diag.missing_title ?? 0}</div>
+              <div><span className="text-muted-foreground">Missing status:</span> {diag.missing_status ?? 0}</div>
+              <div><span className="text-muted-foreground">Missing body:</span> {diag.missing_body ?? 0}</div>
+              <div><span className="text-muted-foreground">Bad stages:</span> {diag.bad_stages?.length ?? 0}</div>
+              <div><span className="text-muted-foreground">Serialization fails:</span> {diag.serialization_failures?.length ?? 0}</div>
+            </div>
+            {diag.fatal && <div className="text-rose-600 text-xs mt-2">Fatal: {diag.fatal}</div>}
+            <details className="mt-2 text-xs"><summary className="cursor-pointer text-muted-foreground">Stage counts & columns</summary>
+              <pre className="mt-2 max-h-64 overflow-auto bg-background/40 p-2 rounded">{JSON.stringify({ stage_counts: diag.stage_counts, sample_columns: diag.sample_columns }, null, 2)}</pre>
+            </details>
+          </div>
+        )}
+        {raw && (
+          <div className="mb-4 rounded-lg border border-border/60 bg-card p-4 text-sm">
+            <div className="flex items-center justify-between mb-2">
+              <strong className="flex items-center gap-2"><FileJson className="h-4 w-4" /> Raw rows from BLOG_DB · {raw.length}</strong>
+              <button className="text-xs text-muted-foreground hover:text-foreground" onClick={() => setRaw(null)}>dismiss</button>
+            </div>
+            <pre className="max-h-[420px] overflow-auto bg-background/40 p-2 rounded text-[11px]">{JSON.stringify(raw, null, 2)}</pre>
+          </div>
+        )}
+        {batch && (
+          <div className="mb-4 rounded-lg border border-emerald-500/40 bg-card p-4 text-sm">
+            <div className="flex items-center justify-between mb-2">
+              <strong className="flex items-center gap-2"><Layers className="h-4 w-4" /> Batch {batch.id.slice(0, 8)} · {batch.rows.length} articles</strong>
+              <button className="text-xs text-muted-foreground hover:text-foreground" onClick={() => setBatch(null)}>close</button>
+            </div>
+            <ul className="divide-y divide-border/60 max-h-[420px] overflow-auto">
+              {batch.rows.map((r: any) => (
+                <li key={r.id} className="py-2 flex items-center gap-3">
+                  <span className="text-[10px] uppercase border rounded px-1.5 py-0.5 text-muted-foreground">{r.status}</span>
+                  <a href={`/admin/blog?id=${r.id}`} target="_blank" rel="noopener" className="text-sm hover:underline truncate">{r.title || r.slug || r.id}</a>
+                  <span className="ml-auto text-xs text-muted-foreground">score {r.adsense_score ?? "—"}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         {reconcile && (
           <div className="mb-4 rounded-lg border border-border/60 bg-card p-4 text-sm">
             <div className="flex items-center justify-between mb-2">
@@ -238,10 +338,7 @@ export default function EditorialPipeline() {
         )}
 
         {loading && rows.length === 0 ? (
-          <div className="rounded-xl border border-border/60 p-10 text-center text-muted-foreground">
-            <Loader2 className="h-5 w-5 mx-auto animate-spin mb-2" />
-            Loading pipeline…
-          </div>
+          <PipelineSkeleton />
         ) : filtered.length === 0 ? (
           <div className="rounded-xl border border-dashed border-border/60 p-10 text-center text-muted-foreground">
             <AlertCircle className="h-5 w-5 mx-auto mb-2" />
