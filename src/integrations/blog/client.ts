@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { swr, prefetch, readCache } from "@/lib/blog-cache";
 
 const BASE = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
 const ANON = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
@@ -32,6 +33,27 @@ export const blogApi = {
     return call(`/blog-feed?${q}`);
   },
   post: (slug: string) => call(`/blog-post?slug=${encodeURIComponent(slug)}`),
+
+  // Stale-while-revalidate variants — render cached instantly, refresh in bg.
+  postSWR: (slug: string, onData: (data: any, fromCache: boolean) => void) =>
+    swr(`post:${slug}`, () => call(`/blog-post?slug=${encodeURIComponent(slug)}`), onData),
+  feedSWR: (params: { category?: string; tag?: string; limit?: number; offset?: number; mode?: "cluster" }, onData: (data: any, fromCache: boolean) => void) => {
+    const q = new URLSearchParams();
+    Object.entries(params).forEach(([k, v]) => v != null && q.set(k, String(v)));
+    const key = `feed:${q.toString()}`;
+    return swr(key, () => call(`/blog-feed?${q}`), onData);
+  },
+
+  // Prefetch helpers — warm the SWR cache for likely-next navigation.
+  prefetchPost: (slug: string) =>
+    prefetch(`post:${slug}`, () => call(`/blog-post?slug=${encodeURIComponent(slug)}`)),
+  prefetchFeed: (params: { category?: string; limit?: number; mode?: "cluster" } = {}) => {
+    const q = new URLSearchParams();
+    Object.entries(params).forEach(([k, v]) => v != null && q.set(k, String(v)));
+    prefetch(`feed:${q.toString()}`, () => call(`/blog-feed?${q}`));
+  },
+  cachedPost: (slug: string) => readCache<any>(`post:${slug}`),
+
   track: (kind: string, post_id?: string, ref?: string) =>
     call(`/blog-track`, { method: "POST", body: JSON.stringify({ kind, post_id, ref }) }).catch(() => null),
 
