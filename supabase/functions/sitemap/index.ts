@@ -18,6 +18,10 @@ const STATIC_ROUTES: { path: string; priority: number; changefreq: string }[] = 
   { path: "/privacy-policy", priority: 0.3, changefreq: "yearly" },
   { path: "/terms-conditions", priority: 0.3, changefreq: "yearly" },
   { path: "/refund-policy", priority: 0.3, changefreq: "yearly" },
+  { path: "/security", priority: 0.5, changefreq: "monthly" },
+  { path: "/data-policy", priority: 0.4, changefreq: "monthly" },
+  { path: "/acceptable-use", priority: 0.3, changefreq: "yearly" },
+  { path: "/compliance", priority: 0.4, changefreq: "monthly" },
   // Programmatic SEO hubs
   { path: "/features", priority: 0.8, changefreq: "weekly" },
   { path: "/workflows", priority: 0.8, changefreq: "weekly" },

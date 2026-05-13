@@ -1,51 +1,60 @@
-import { Navbar } from "@/components/Navbar";
-import { Footer } from "@/components/Footer";
-import { PageTransition } from "@/components/PageTransition";
-import { SEO } from "@/components/SEO";
-import { ShieldCheck } from "lucide-react";
+import { LegalLayout } from "@/components/legal/LegalLayout";
 import { BRAND, SUPPORT_EMAIL } from "@/config/branding";
 
 export default function PrivacyPolicy() {
   return (
-    <PageTransition>
-            <SEO title="Privacy Policy | HustleAI Workspace OS" description="How HustleAI Workspace OS collects, uses and protects your data." path="/privacy-policy" />
-      <Navbar />
-      <main className="min-h-screen pt-24 pb-16 px-4">
-        <div className="container mx-auto max-w-3xl">
-          <header className="mb-10 space-y-3">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium">
-              <ShieldCheck className="w-3.5 h-3.5" /> Legal
-            </div>
-            <h1 className="text-3xl md:text-4xl font-display font-semibold tracking-tight text-foreground">Privacy Policy</h1>
-            <p className="text-sm text-muted-foreground">Last updated: May 6, 2026</p>
-          </header>
-
-          <article className="rounded-2xl border border-border bg-card shadow-sm p-6 md:p-10 space-y-8 text-sm md:text-[0.95rem] leading-relaxed text-muted-foreground">
-            {[
-              { h: "1. Information We Collect", p: `When you use ${BRAND.name}, we collect information you provide directly — including your name, email address, profile details, and any content you create inside your workspace. We also collect operational data such as feature usage, document exports, and AI assist counts to improve reliability and security.` },
-              { h: "2. How We Use Your Information", p: "We use your information to operate and improve the workspace platform, personalise your experience, deliver notifications and product updates, process subscription payments, enforce usage limits, and respond to support requests." },
-              { h: "3. Data Storage & Security", p: "Your data is stored on managed cloud infrastructure with encryption in transit and at rest. Access is gated by row-level security policies, scoped API tokens, and audited admin controls." },
-              { h: "4. Cookies", p: "We use a small number of cookies and similar technologies for authentication, session continuity, and product analytics. You can disable non-essential cookies through your browser settings." },
-              { h: "5. Third-Party Services", p: "We rely on selected third-party providers for payment processing (Dodo Payments), transactional email, analytics, and AI inference. These providers receive only the data required to perform their function and operate under their own data protection obligations." },
-              { h: "6. Data Retention", p: "We retain personal data for as long as your account is active or as required to comply with legal, accounting, and operational obligations. You can request deletion of your account and associated personal data at any time." },
-              { h: "7. Your Rights", p: "You can access, update, export or delete your personal information from inside your account. For deletion or data-portability requests that cannot be completed in-app, contact our support team." },
-              { h: "8. Changes to This Policy", p: "We may update this policy as the platform evolves. Material changes will be communicated by email or in-app notification, and the 'Last updated' date above will always reflect the current version." },
-            ].map((s) => (
-              <section key={s.h} className="space-y-2">
-                <h2 className="text-base md:text-lg font-display font-semibold text-foreground">{s.h}</h2>
-                <p>{s.p}</p>
-              </section>
-            ))}
-
-            <section className="space-y-2 pt-4 border-t border-border">
-              <h2 className="text-base md:text-lg font-display font-semibold text-foreground">9. Contact</h2>
-              <p>For privacy questions or data requests, contact us at <a href={`mailto:${SUPPORT_EMAIL}`} className="text-primary hover:underline font-medium">{SUPPORT_EMAIL}</a>.</p>
-              <p className="text-xs">{BRAND.name} · Prayagraj, Uttar Pradesh, India</p>
-            </section>
-          </article>
-        </div>
-      </main>
-      <Footer />
-    </PageTransition>
+    <LegalLayout
+      eyebrow="Legal"
+      title="Privacy Policy"
+      summary={`How ${BRAND.name} collects, processes, stores, and protects information when you use the platform.`}
+      updated="May 13, 2026"
+      effective="May 13, 2026"
+      canonicalPath="/privacy-policy"
+      sections={[
+        { id: "scope", title: "1. Scope",
+          body: <p>This policy covers information processed by {BRAND.name} across the web application at <a href={BRAND.url}>{BRAND.domain}</a>, the editorial subdomain, public APIs, transactional email, and supporting backend infrastructure.</p> },
+        { id: "data-we-collect", title: "2. Information we collect",
+          body: <ul>
+            <li><strong>Account data</strong> — name, email, profile metadata, authentication identifiers.</li>
+            <li><strong>Workspace content</strong> — clients, projects, documents, intake forms and assets you create inside the platform.</li>
+            <li><strong>Operational telemetry</strong> — feature usage, AI assist counts, document exports, error reports.</li>
+            <li><strong>Billing metadata</strong> — subscription state, invoice references, wallet credit balances. Card details are handled exclusively by our payment processors.</li>
+            <li><strong>Device and request metadata</strong> — IP address, user agent, referrer, page-level analytics.</li>
+          </ul> },
+        { id: "purpose", title: "3. How we use information",
+          body: <ul>
+            <li>Provide, secure, and improve the workspace platform.</li>
+            <li>Personalize the operational surfaces you see (entitlements, recommended workflows).</li>
+            <li>Send transactional notifications and material product updates.</li>
+            <li>Enforce usage limits, prevent abuse, and respond to support requests.</li>
+            <li>Generate aggregate, non-identifying analytics for capacity planning.</li>
+          </ul> },
+        { id: "legal-basis", title: "4. Legal basis",
+          body: <p>We process personal data on the basis of contract performance (delivering the service), legitimate interest (securing the platform, preventing abuse), legal obligation (tax, accounting), and consent where required (optional marketing).</p> },
+        { id: "storage", title: "5. Storage and security",
+          body: <p>Data is stored on managed cloud infrastructure with encryption in transit and at rest. Access is gated by row-level security policies, scoped service tokens, and audited admin controls. See the <a href="/security">Security</a> document for control specifics.</p> },
+        { id: "sharing", title: "6. Sharing with third parties",
+          body: <ul>
+            <li><strong>Payment processors</strong> — Cashfree, Dodo Payments.</li>
+            <li><strong>Email infrastructure</strong> — Resend, Zoho Mail, Brevo (transactional + newsletter).</li>
+            <li><strong>AI inference providers</strong> — Google Gemini, OpenAI, Zhipu, LongCat, routed via our gateway.</li>
+            <li><strong>Analytics</strong> — Yandex Metrica (anonymized session telemetry on public surfaces).</li>
+          </ul> },
+        { id: "ai", title: "7. AI processing",
+          body: <p>AI assists send only the minimum content required to satisfy the user request. We do not train foundation models on your workspace data. Generated outputs are logged for billing, abuse detection, and quality review for a limited retention window.</p> },
+        { id: "retention", title: "8. Retention",
+          body: <p>We retain personal data for as long as your account is active or as required to comply with legal, accounting, and operational obligations. You can request deletion of your account from settings; certain audit logs are retained for up to 24 months.</p> },
+        { id: "rights", title: "9. Your rights",
+          body: <p>You can access, update, export, or delete personal information from inside your account. For requests that cannot be completed in-app, contact <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a>. We respond to verified requests within 30 days.</p> },
+        { id: "international", title: "10. International transfers",
+          body: <p>Backend infrastructure is operated in multiple regions. Where data crosses borders, we rely on standard contractual clauses or equivalent safeguards offered by our infrastructure partners.</p> },
+        { id: "children", title: "11. Children",
+          body: <p>{BRAND.name} is not directed to anyone under 18. We do not knowingly collect data from minors.</p> },
+        { id: "changes", title: "12. Changes",
+          body: <p>Material changes are communicated by email or in-app notification. The "Last updated" date at the top of this document always reflects the current version.</p> },
+        { id: "contact", title: "13. Contact",
+          body: <p>For privacy questions or data requests, contact <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a>.</p> },
+      ]}
+    />
   );
 }

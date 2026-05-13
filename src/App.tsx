@@ -64,6 +64,10 @@ import ResetPassword from "./pages/ResetPassword";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsConditions from "./pages/TermsConditions";
 import RefundPolicy from "./pages/RefundPolicy";
+import SecurityTrust from "./pages/Security";
+import DataPolicy from "./pages/DataPolicy";
+import AcceptableUse from "./pages/AcceptableUse";
+import Compliance from "./pages/Compliance";
 import ProblemLeads from "./pages/ProblemLeads";
 import ProposalDraft from "./pages/ProposalDraft";
 import SkillGap from "./pages/SkillGap";
@@ -312,6 +316,10 @@ const App = () => (
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/terms-conditions" element={<TermsConditions />} />
             <Route path="/refund-policy" element={<RefundPolicy />} />
+            <Route path="/security" element={<SecurityTrust />} />
+            <Route path="/data-policy" element={<DataPolicy />} />
+            <Route path="/acceptable-use" element={<AcceptableUse />} />
+            <Route path="/compliance" element={<Compliance />} />
             <Route path="/operations" element={<Operations />} />
             <Route path="/admin" element={<AdminBlock />} />
             <Route path="/imskygupta-admin" element={<AdminLogin />} />
