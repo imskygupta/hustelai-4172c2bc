@@ -25,8 +25,8 @@ const STAGES = [
   },
   {
     icon: MessageCircle,
-    label: "Telegram ping",
-    note: "Client notified the moment it's ready",
+    label: "Client notified",
+    note: "Email or Telegram ping the moment it's ready",
     chip: { tone: "emerald" as const, text: "Live" },
     progress: false,
   },
@@ -79,7 +79,7 @@ export function ConnectedWorkflowSection() {
 
                 <div className="mt-3 flex items-center justify-between gap-2">
                   <OperationalChip tone={s.chip.tone}>{s.chip.text}</OperationalChip>
-                  {i === STAGES.length - 1 ? <DeliveryBadge to="Telegram" /> : null}
+                  {i === STAGES.length - 1 ? <DeliveryBadge to="Client" /> : null}
                 </div>
 
                 {s.progress ? (
