@@ -19,9 +19,8 @@ function logGuardFailure(path: string, reason: string) {
 }
 
 /**
- * Guards in-app (AppShell) routes. If the user is not signed in we redirect
- * them to /signup instead of rendering the SaaS shell — otherwise logged-out
- * visitors see the sidebar with Profile / Sign out which is confusing.
+ * Guards in-app (AppShell) routes. It waits for centralized auth hydration
+ * before redirecting so page refreshes and workspace transitions don't race.
  */
 export function RequireAuth({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth();
@@ -32,7 +31,7 @@ export function RequireAuth({ children }: { children: ReactNode }) {
     if (!loading && !user) {
       const next = encodeURIComponent(location.pathname + location.search);
       logGuardFailure(location.pathname + location.search, "missing_user_after_hydration");
-      navigate(`/signup?next=${next}`, { replace: true });
+      navigate(`/login?next=${next}`, { replace: true });
     }
   }, [loading, user, navigate, location]);
 
