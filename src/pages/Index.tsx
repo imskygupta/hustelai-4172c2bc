@@ -4,7 +4,7 @@ import { Navbar } from "@/components/Navbar";
 import { Pricing } from "@/components/Pricing";
 import { Testimonials } from "@/components/Testimonials";
 import { Footer } from "@/components/Footer";
-import { ArrowRight, Check, Sparkles, Send, FileDown, Workflow } from "lucide-react";
+import { ArrowRight, Check, FileText, Users, Receipt, Briefcase } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
@@ -61,8 +61,8 @@ export default function Index() {
   return (
     <div className="min-h-screen bg-white text-slate-900">
       <SEO
-        title="HustleAI — AI Workspace Operating System for freelancers & operators"
-        description="HustleAI is the AI Workspace Operating System for freelancers, creators and modern agencies — clients, deliverables, async AI workflows and branded exports in one operating layer."
+        title="HustleAI — Client Operations Workspace for Freelancers & Agencies"
+        description="HustleAI is a focused client operations workspace for freelancers and agencies — manage proposals, onboarding, invoices, projects and client delivery in one place."
         path="/"
         jsonLd={[softwareJsonLd, orgJsonLd]}
       />
@@ -90,23 +90,23 @@ export default function Index() {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
               </span>
-              AI Workspace OS · async-native · delivery-aware
+              Client operations workspace · for freelancers & agencies
             </div>
             <h1 className="gsap-fade text-[2.6rem] leading-[1.05] sm:text-5xl md:text-7xl font-display font-semibold tracking-tight text-slate-900">
-              Generate. Export. Deliver.<br className="hidden sm:block" />
-              <span className="text-emerald-600">All in one operating layer.</span>
+              Run your freelance and client operations<br className="hidden sm:block" />
+              <span className="text-emerald-600">from one workspace.</span>
             </h1>
             <p className="gsap-fade text-[15px] md:text-lg text-slate-500 max-w-2xl mx-auto leading-relaxed">
-              HustleAI runs the full async pipeline behind your work — proposals, exports, Telegram delivery and resumable workflows — so every job moves forward even when you don't.
+              Manage proposals, client onboarding, invoices, projects and async delivery without juggling multiple tools. Built for freelancers, solo operators and modern agencies.
             </p>
 
-            {/* Live ops stage strip */}
+            {/* Core capability strip */}
             <div className="gsap-fade flex flex-wrap items-center justify-center gap-2 pt-1">
               {[
-                { Icon: Sparkles, label: "Generate", tone: "bg-violet-50 text-violet-700 border-violet-200" },
-                { Icon: FileDown, label: "Export",   tone: "bg-sky-50 text-sky-700 border-sky-200" },
-                { Icon: Send,     label: "Deliver",  tone: "bg-emerald-50 text-emerald-700 border-emerald-200" },
-                { Icon: Workflow, label: "Continue", tone: "bg-amber-50 text-amber-700 border-amber-200" },
+                { Icon: FileText,  label: "Proposals",  tone: "bg-violet-50 text-violet-700 border-violet-200" },
+                { Icon: Users,     label: "Onboarding", tone: "bg-sky-50 text-sky-700 border-sky-200" },
+                { Icon: Receipt,   label: "Invoices",   tone: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+                { Icon: Briefcase, label: "Delivery",   tone: "bg-amber-50 text-amber-700 border-amber-200" },
               ].map(({ Icon, label, tone }) => (
                 <span
                   key={label}
@@ -126,8 +126,8 @@ export default function Index() {
           <div className="gsap-fade flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[11px] md:text-xs text-slate-500 pt-1">
             <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5 text-emerald-500" /> No credit card</span>
             <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5 text-emerald-500" /> Free forever tier</span>
-            <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5 text-emerald-500" /> Telegram delivery built-in</span>
-            <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5 text-emerald-500" /> Resumable async workflows</span>
+            <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5 text-emerald-500" /> Client portals & invoices</span>
+            <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5 text-emerald-500" /> GDPR-aware data controls</span>
           </div>
         </div>
       </section>
@@ -201,13 +201,13 @@ export default function Index() {
           >
             <div className="absolute -top-20 -right-20 w-64 h-64 bg-emerald-500/20 blur-3xl rounded-full" />
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/15 text-[11px] tracking-wide text-white/80 relative">
-              <Sparkles className="w-3.5 h-3.5" /> Workspace OS · async-native · free to start
+              <Briefcase className="w-3.5 h-3.5" /> Client operations workspace · free to start
             </div>
             <h2 className="text-2xl md:text-4xl font-display font-semibold tracking-tight relative leading-tight">
-              Ship your first deliverable<br className="hidden md:block" /> in under five minutes.
+              Send your first proposal<br className="hidden md:block" /> in under five minutes.
             </h2>
             <p className="text-slate-300 relative text-sm md:text-base">
-              Generate a proposal. Export it branded. Route it through Telegram. Pick the workflow back up tomorrow — the system holds the state.
+              Draft a proposal. Send a branded onboarding form. Issue your first invoice. Everything lives in one workspace, tied to the right client.
             </p>
             <div className="relative flex flex-col sm:flex-row items-center justify-center gap-3">
               <Button
@@ -215,7 +215,7 @@ export default function Index() {
                 className="bg-emerald-500 hover:bg-emerald-600 text-white text-base px-8 h-12 w-full sm:w-auto"
                 onClick={() => navigate("/signup")}
               >
-                Ship your first export <ArrowRight className="w-4 h-4 ml-2" />
+                Open your workspace <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
               <Button
                 size="lg"
@@ -223,7 +223,7 @@ export default function Index() {
                 className="bg-transparent border-white/20 text-white hover:bg-white/10 hover:text-white text-base px-8 h-12 w-full sm:w-auto"
                 onClick={() => navigate("/workspaces")}
               >
-                Activate a workspace
+                See the workspace
               </Button>
             </div>
           </motion.div>
