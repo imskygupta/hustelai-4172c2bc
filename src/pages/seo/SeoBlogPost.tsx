@@ -5,11 +5,11 @@ import { Footer } from "@/components/Footer";
 import { SEO } from "@/components/SEO";
 import {
   fetchPublishedBlog, fetchAnyBlog, fetchAuthor, fetchTopic, fetchPostsByIds,
-  fetchToolsByIds, listInternalLinks, extractToc,
+  fetchToolsByIds, listInternalLinks, extractToc, bumpBlogView,
   type SeoBlogRow, type SeoAuthorRow, type SeoTopicRow, type SeoToolRow, type SeoInternalLinkRow,
 } from "@/lib/seo-cms";
 import NotFound from "@/pages/NotFound";
-import { Loader2 } from "lucide-react";
+import { Eye, Loader2 } from "lucide-react";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { TableOfContents } from "@/components/seo/TableOfContents";
 import { FaqSection } from "@/components/seo/FaqSection";
@@ -20,6 +20,15 @@ import { AuthorByline } from "@/components/seo/AuthorByline";
 import { AutoLinkedHtml } from "@/components/seo/AutoLinkedHtml";
 import { ShareButtons } from "@/components/seo/ShareButtons";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  ContextualCTACard,
+  pickContextualCTAs,
+} from "@/components/blog/operational/ContextualCTA";
+import { JourneyChain } from "@/components/blog/operational/JourneyChain";
+import {
+  inferPersonas,
+  personaMeta,
+} from "@/components/blog/operational/OperatorPersonas";
 
 function renderMarkdown(md: string): string {
   // Lightweight, safe-ish markdown → HTML. Real sanitization is overkill here
@@ -61,6 +70,12 @@ export default function SeoBlogPost({ preview = false }: { preview?: boolean }) 
       const r = isPreview ? await fetchAnyBlog(slug) : await fetchPublishedBlog(slug);
       if (!cancelled) setPost(r);
       if (!r) return;
+      // Fire-and-forget operational analytics — counts as a "view".
+      if (!isPreview) bumpBlogView(r.slug, "view");
+      // ~30s on the page counts as a "read".
+      const readTimer = setTimeout(() => {
+        if (!isPreview) bumpBlogView(r.slug, "read");
+      }, 30_000);
       const topicRow = r.topic_id
         ? ((await supabase.from("seo_topics" as any).select("*").eq("id", r.topic_id).maybeSingle()).data as any) ?? null
         : null;
@@ -80,12 +95,23 @@ export default function SeoBlogPost({ preview = false }: { preview?: boolean }) 
       setTools(tl);
       setTogether(fw);
       setLinks(ln.filter((l) => l.target_slug !== slug));
+      return () => clearTimeout(readTimer);
     })();
     return () => { cancelled = true; };
   }, [slug, isPreview]);
 
   const html = useMemo(() => post ? renderMarkdown(post.content) : "", [post]);
   const toc = useMemo(() => post ? (post.toc?.length ? post.toc : extractToc(post.content)) : [], [post]);
+  const ctas = useMemo(
+    () => post ? pickContextualCTAs(`${post.title} ${post.excerpt ?? ""} ${post.tags?.join(" ") ?? ""} ${post.category ?? ""}`, 2) : [],
+    [post],
+  );
+  const personas = useMemo(
+    () => post ? inferPersonas(post.tags ?? [], post.category) : [],
+    [post],
+  );
+  const prevPost = related[0] ?? null;
+  const nextPost = related[1] ?? null;
 
   if (post === undefined) {
     return <div className="min-h-screen flex items-center justify-center bg-background"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
@@ -135,11 +161,34 @@ export default function SeoBlogPost({ preview = false }: { preview?: boolean }) 
                 <div className="text-xs text-muted-foreground mb-2">{post.category} · {new Date(post.published_at ?? post.created_at).toLocaleDateString()}</div>
                 <h1 className="text-4xl md:text-5xl font-display font-bold mb-3">{post.title}</h1>
                 {post.excerpt && <p className="text-lg text-muted-foreground mb-4">{post.excerpt}</p>}
+                {/* Persona tags + activity counter — operator handbook framing. */}
+                {(personas.length > 0 || ((post as any).view_count ?? 0) > 0) && (
+                  <div className="flex flex-wrap items-center gap-2 mb-4">
+                    {personas.map((id) => {
+                      const m = personaMeta(id);
+                      return (
+                        <span
+                          key={id}
+                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-semibold"
+                        >
+                          <span>{m.emoji}</span> {m.label}
+                        </span>
+                      );
+                    })}
+                    {((post as any).view_count ?? 0) > 0 && (
+                      <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
+                        <Eye className="w-3 h-3" /> {((post as any).view_count as number).toLocaleString()} operators viewed this guide
+                      </span>
+                    )}
+                  </div>
+                )}
                 <div className="flex items-center justify-between flex-wrap gap-3">
                   <AuthorByline author={author} readingTime={post.reading_time_minutes} updatedAt={post.updated_at} />
                   <ShareButtons url={url} title={post.title} />
                 </div>
               </header>
+              {/* Contextual "Use this system" CTA above the fold of the article body. */}
+              <ContextualCTACard ctas={ctas} />
               <AutoLinkedHtml
                 html={html}
                 links={links}
@@ -153,6 +202,8 @@ export default function SeoBlogPost({ preview = false }: { preview?: boolean }) 
                   ))}
                 </div>
               )}
+              {/* Journey chain — connect each guide into a story. */}
+              <JourneyChain prev={prevPost} next={nextPost} />
               {post.faq_blocks && post.faq_blocks.length > 0 && (
                 <FaqSection items={post.faq_blocks as any} />
               )}
