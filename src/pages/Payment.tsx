@@ -416,8 +416,8 @@ export default function Payment() {
             <span className="inline-flex items-center gap-1.5"><Shield className="w-3 h-3 text-emerald-500" /> Powered by Dodo Payments</span>
           </div>
 
-          {/* Priority 1 UPI Banner */}
-          {primaryUpi && (
+          {/* Priority 1 UPI Banner (gated — see MANUAL_UPI_ENABLED) */}
+          {showManualUpi && primaryUpi && (
             <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
               className="rounded-2xl p-5 bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-transparent border-2 border-emerald-500/30">
               <div className="flex items-center gap-2 mb-2">
@@ -604,7 +604,7 @@ export default function Payment() {
                             <>Upgrade to {plan.name} <ArrowRight className="w-4 h-4 ml-1.5" /></>
                           )}
                         </Button>
-                        {primaryUpi && (
+                        {showManualUpi && (
                           <Button onClick={() => openUpiDialog(plan.id, "plan", displayPrice, `${plan.name} Plan`)} disabled={!!processing}
                             variant="outline" className="w-full border-emerald-500/30 hover:bg-emerald-500/10 text-emerald-600">
                             <Smartphone className="w-3.5 h-3.5 mr-1.5" /> Pay via UPI manually
@@ -688,7 +688,7 @@ export default function Payment() {
                           {processing === pack.id ? <Loader2 className="w-3 h-3 animate-spin" />
                             : <>Top up ₹{pack.price}</>}
                         </Button>
-                        {primaryUpi && (
+                        {showManualUpi && (
                           <Button onClick={() => openUpiDialog(pack.id, "wallet", pack.price, `${pack.credits} Credits`)} disabled={!!processing}
                             variant="ghost" size="sm"
                             className="w-full text-[11px] text-emerald-600 hover:bg-emerald-500/10">
@@ -806,8 +806,8 @@ export default function Payment() {
         </div>
       </div>
 
-      {/* UPI Payment Dialog */}
-      <Dialog open={upiDialog.open} onOpenChange={(o) => setUpiDialog({ ...upiDialog, open: o })}>
+      {/* UPI Payment Dialog (gated — only renders when manual UPI is enabled) */}
+      <Dialog open={showManualUpi && upiDialog.open} onOpenChange={(o) => setUpiDialog({ ...upiDialog, open: o })}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
