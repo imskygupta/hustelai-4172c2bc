@@ -4672,9 +4672,11 @@ export type Database = {
           id: string
           is_indexed: boolean
           json_ld: Json
+          last_viewed_at: string | null
           meta_description: string
           og_image: string | null
           published_at: string | null
+          read_count: number
           reading_time_minutes: number
           related_post_ids: string[] | null
           related_tool_ids: string[] | null
@@ -4685,7 +4687,9 @@ export type Database = {
           title: string
           toc: Json
           topic_id: string | null
+          trending_score: number
           updated_at: string
+          view_count: number
         }
         Insert: {
           author_id?: string | null
@@ -4702,9 +4706,11 @@ export type Database = {
           id?: string
           is_indexed?: boolean
           json_ld?: Json
+          last_viewed_at?: string | null
           meta_description?: string
           og_image?: string | null
           published_at?: string | null
+          read_count?: number
           reading_time_minutes?: number
           related_post_ids?: string[] | null
           related_tool_ids?: string[] | null
@@ -4715,7 +4721,9 @@ export type Database = {
           title: string
           toc?: Json
           topic_id?: string | null
+          trending_score?: number
           updated_at?: string
+          view_count?: number
         }
         Update: {
           author_id?: string | null
@@ -4732,9 +4740,11 @@ export type Database = {
           id?: string
           is_indexed?: boolean
           json_ld?: Json
+          last_viewed_at?: string | null
           meta_description?: string
           og_image?: string | null
           published_at?: string | null
+          read_count?: number
           reading_time_minutes?: number
           related_post_ids?: string[] | null
           related_tool_ids?: string[] | null
@@ -4745,7 +4755,9 @@ export type Database = {
           title?: string
           toc?: Json
           topic_id?: string | null
+          trending_score?: number
           updated_at?: string
+          view_count?: number
         }
         Relationships: []
       }
@@ -7100,6 +7112,10 @@ export type Database = {
           step_order: number
           users: number
         }[]
+      }
+      bump_blog_view: {
+        Args: { _kind?: string; _slug: string }
+        Returns: undefined
       }
       cancel_ai_job: { Args: { _id: string }; Returns: undefined }
       claim_ai_jobs: {
