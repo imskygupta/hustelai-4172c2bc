@@ -184,7 +184,10 @@ export default function SeoBlogPost({ preview = false }: { preview?: boolean }) 
                 )}
                 <div className="flex items-center justify-between flex-wrap gap-3">
                   <AuthorByline author={author} readingTime={post.reading_time_minutes} updatedAt={post.updated_at} />
-                  <ShareButtons url={url} title={post.title} />
+                  <div className="flex items-center gap-2">
+                    <BookmarkButton slug={post.slug} />
+                    <ShareButtons url={url} title={post.title} />
+                  </div>
                 </div>
               </header>
               {/* Contextual "Use this system" CTA above the fold of the article body. */}
