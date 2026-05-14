@@ -126,3 +126,13 @@ export const MostReadRail = (props: { posts: SeoBlogRow[] }) => (
     posts={props.posts}
   />
 );
+
+export const MostSavedRail = (props: { posts: SeoBlogRow[] }) => (
+  <DiscoveryRail
+    title="Most-saved operator systems"
+    subtitle="Guides operators bookmark to revisit and run."
+    icon={Bookmark}
+    accent="emerald"
+    posts={props.posts}
+  />
+);
