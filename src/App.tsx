@@ -53,6 +53,7 @@ import SavedHustles from "./pages/SavedHustles";
 import Career from "./pages/Career";
 import Affiliates from "./pages/Affiliates";
 import Company from "./pages/Company";
+import Trust from "./pages/Trust";
 import Relax from "./pages/Relax";
 import HustleDetail from "./pages/HustleDetail";
 import RoadmapViewer from "@/pages/RoadmapViewer";
