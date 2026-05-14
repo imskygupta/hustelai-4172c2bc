@@ -4,7 +4,6 @@ import {
   isWorkspaceHost,
   isMarketingHost,
   isWorkspacePath,
-  isMarketingOnlyPath,
   WORKSPACE_ORIGIN,
   MARKETING_ORIGIN,
 } from "@/lib/host";
@@ -24,14 +23,18 @@ export function SurfaceHostRedirect() {
     try {
       if (typeof window === "undefined") return;
 
-      // Marketing host → workspace path: bounce to workspace.*
+      // Marketing host → deep workspace execution path: bounce to workspace.*
+      // Note: workspace paths are narrow (only /workspaces, /canvas, /client).
+      // Dashboard, admin, AI tools, settings, billing all stay on main.
       if (isMarketingHost() && isWorkspacePath(pathname)) {
         window.location.replace(`${WORKSPACE_ORIGIN}${pathname}${search}${hash}`);
         return;
       }
 
-      // Workspace host → marketing-only path: bounce to root domain
-      if (isWorkspaceHost() && isMarketingOnlyPath(pathname)) {
+      // Workspace host → anything that is NOT a workspace execution path:
+      // bounce back to main app. Workspace subdomain is a focused surface,
+      // not a mirror of the whole product.
+      if (isWorkspaceHost() && !isWorkspacePath(pathname)) {
         window.location.replace(`${MARKETING_ORIGIN}${pathname}${search}${hash}`);
         return;
       }
