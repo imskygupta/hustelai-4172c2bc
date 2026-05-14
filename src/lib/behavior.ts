@@ -164,3 +164,64 @@ export async function fetchMostSavedSlugs(limit = 6): Promise<string[]> {
   const { data } = await supabase.rpc("most_saved_posts" as any, { _limit: limit });
   return ((data as any[]) ?? []).map((r) => r.post_slug as string);
 }
+
+/* ---------------- Live activity / pulse ---------------- */
+
+export interface OperatorPulse {
+  views_today: number;
+  reads_today: number;
+  bookmarks_24h: number;
+  launches_24h: number;
+  distinct_7d: number;
+  total_bookmarks: number;
+  last_bookmark_at: string | null;
+}
+
+export async function fetchOperatorPulse(slug: string): Promise<OperatorPulse | null> {
+  if (!slug) return null;
+  const { data } = await supabase.rpc("operator_pulse" as any, { _slug: slug });
+  return (data as OperatorPulse) ?? null;
+}
+
+export interface GlobalPulse {
+  active_guides: number;
+  launches_today: number;
+  saves_today: number;
+  views_today: number;
+}
+
+export async function fetchGlobalPulse(): Promise<GlobalPulse | null> {
+  const { data } = await supabase.rpc("operator_pulse_global" as any);
+  return (data as GlobalPulse) ?? null;
+}
+
+/* ---------------- Editorial conversion intelligence ---------------- */
+
+export interface PostPerformance {
+  views: number;
+  reads: number;
+  bookmarks: number;
+  cta_impressions: number;
+  cta_clicks: number;
+  cta_ctr: number;
+  tool_launches: number;
+  conversion_pct: number;
+  returning_pct: number;
+  distinct_visitors: number;
+  top_persona: string | null;
+  engagement_score: number;
+}
+
+export async function fetchPostPerformance(slug: string): Promise<PostPerformance | null> {
+  if (!slug) return null;
+  const { data, error } = await supabase.rpc("post_performance" as any, { _slug: slug });
+  if (error) return null;
+  return (data as PostPerformance) ?? null;
+}
+
+/* ---------------- Recommendations ---------------- */
+
+export async function fetchRecommendedToolsFromPost(slug: string, limit = 4) {
+  const { data } = await supabase.rpc("recommend_next_tools" as any, { _slug: slug, _limit: limit });
+  return ((data as any[]) ?? []) as { tool_slug: string; launches: number }[];
+}

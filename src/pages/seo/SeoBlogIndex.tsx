@@ -25,6 +25,7 @@ import {
   type OperatorPersona,
 } from "@/components/blog/operational/OperatorPersonas";
 import { fetchMostSavedSlugs } from "@/lib/behavior";
+import { GlobalActivityRibbon } from "@/components/blog/operational/ActivityRibbon";
 
 export default function SeoBlogIndex() {
   const [allPosts, setAllPosts] = useState<SeoBlogRow[] | null>(null);
@@ -89,6 +90,7 @@ export default function SeoBlogIndex() {
               <span className="inline-flex items-center gap-1.5"><Eye className="w-3.5 h-3.5 text-emerald-500" /> Real operators reading right now</span>
               <span className="inline-flex items-center gap-1.5"><Sparkles className="w-3.5 h-3.5 text-emerald-500" /> Connected to live tools & templates</span>
             </div>
+            <GlobalActivityRibbon className="pt-3" />
           </div>
         </section>
 

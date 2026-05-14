@@ -20,6 +20,8 @@ import { AuthorByline } from "@/components/seo/AuthorByline";
 import { AutoLinkedHtml } from "@/components/seo/AutoLinkedHtml";
 import { ShareButtons } from "@/components/seo/ShareButtons";
 import { BookmarkButton } from "@/components/blog/operational/BookmarkButton";
+import { ArticleActivityRibbon } from "@/components/blog/operational/ActivityRibbon";
+import { NextOperationalStep } from "@/components/blog/operational/NextOperationalStep";
 import { supabase } from "@/integrations/supabase/client";
 import {
   ContextualCTACard,
@@ -192,7 +194,8 @@ export default function SeoBlogPost({ preview = false }: { preview?: boolean }) 
                 </div>
               </header>
               {/* Contextual "Use this system" CTA above the fold of the article body. */}
-              <ContextualCTACard ctas={ctas} />
+              <ContextualCTACard ctas={ctas} sourceSlug={post.slug} persona={personas[0] ?? null} />
+              <ArticleActivityRibbon slug={post.slug} />
               <AutoLinkedHtml
                 html={html}
                 links={links}
@@ -214,6 +217,11 @@ export default function SeoBlogPost({ preview = false }: { preview?: boolean }) 
               <RelatedTools tools={tools} />
               <FrequentlyUsedTogether tools={together} />
               <RelatedPosts posts={related} />
+              <NextOperationalStep
+                slug={post.slug}
+                signalText={`${post.title} ${post.excerpt ?? ""} ${post.tags?.join(" ") ?? ""} ${post.category ?? ""}`}
+                persona={personas[0] ?? null}
+              />
             </article>
             <div className="hidden lg:block">
               <TableOfContents items={toc} />

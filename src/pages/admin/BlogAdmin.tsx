@@ -14,6 +14,7 @@ import {
   TrendingUp, Cpu, ChevronRight, Lightbulb, Rocket,
 } from "lucide-react";
 import ReadinessPanel from "@/components/admin/ReadinessPanel";
+import ConversionPanel from "@/components/admin/ConversionPanel";
 
 type Post = any;
 
@@ -320,7 +321,14 @@ export default function BlogAdmin() {
 
                     {/* Self-healing AI editorial layer */}
                     {editing.id && (
-                      <ReadinessPanel postId={editing.id} onApplied={() => { open(editing.id); reload(); }} />
+                      <>
+                        <ReadinessPanel postId={editing.id} onApplied={() => { open(editing.id); reload(); }} />
+                        {editing.slug && (
+                          <div className="mt-4">
+                            <ConversionPanel slug={editing.slug} />
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
                 )}
