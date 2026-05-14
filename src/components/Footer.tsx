@@ -7,13 +7,15 @@ import { CONTACT_EMAIL, SUPPORT_EMAIL } from "@/config/branding";
 import { NewsletterCapture } from "@/components/newsletter/NewsletterCapture";
 
 const productLinks = [
-  { label: "Workspace OS", href: "/workspace-os" },
+  { label: "The platform", href: "/platform" },
+  { label: "How it works", href: "/how-it-works" },
+  { label: "Workspace overview", href: "/workspace-os" },
   { label: "Freelancer CRM", href: "/freelancer-crm" },
-  { label: "AI Invoice Generator", href: "/ai-invoice-generator" },
-  { label: "Proposal Generator", href: "/proposal-generator" },
-  { label: "Client Portals", href: "/client-portal-software" },
-  { label: "Plans & Pricing", href: "/plans" },
-  { label: "Blog", href: "/blog" },
+  { label: "Invoices", href: "/ai-invoice-generator" },
+  { label: "Proposals", href: "/proposal-generator" },
+  { label: "Client portals", href: "/client-portal-software" },
+  { label: "Plans & pricing", href: "/plans" },
+  { label: "Trust & security", href: "/trust" },
 ];
 
 const freeToolLinks = [
@@ -33,9 +35,10 @@ const companyLinks = [
 ];
 
 const integrationLinks = [
-  { label: "Telegram Delivery", href: "/integrations/telegram-export-delivery" },
-  { label: "Stripe Payments", href: "/integrations/stripe-payments" },
-  { label: "All Integrations", href: "/integrations" },
+  { label: "All integrations", href: "/integrations" },
+  { label: "Email notifications", href: "/integrations" },
+  { label: "Telegram notifications", href: "/integrations/telegram-export-delivery" },
+  { label: "Stripe payments", href: "/integrations/stripe-payments" },
   { label: "Webhooks & API", href: "/integrations" },
 ];
 
