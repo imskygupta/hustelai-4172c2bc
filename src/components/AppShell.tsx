@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
-import { Search, Crown, Sparkles, Rocket, Star, ChevronRight, ArrowRight, Command } from "lucide-react";
+import { Search, Crown, Sparkles, Rocket, Star, ChevronRight, ArrowRight, Command, BookOpen } from "lucide-react";
 import { VerifyEmailGate } from "@/components/VerifyEmailGate";
 import { Chatbot } from "@/components/Chatbot";
 import { HustleBotIntro } from "@/components/HustleBotIntro";
@@ -227,6 +227,15 @@ export function AppShell({ children, title, breadcrumbs, actions }: AppShellProp
               <ThemeToggle />
               <AsyncActivityIndicator />
               <NotificationCenter />
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 px-2 hidden sm:inline-flex"
+                onClick={() => window.open("https://docs.hustlaiapp.in/docs", "_blank", "noopener,noreferrer")}
+                title="Documentation"
+              >
+                <BookOpen className="w-4 h-4 mr-1" /> Docs
+              </Button>
             </div>
           </header>
 
