@@ -28,6 +28,7 @@ import {
   pickContextualCTAs,
 } from "@/components/blog/operational/ContextualCTA";
 import { JourneyChain } from "@/components/blog/operational/JourneyChain";
+import { StackBadge } from "@/components/blog/operational/StackBadge";
 import {
   inferPersonas,
   personaMeta,
@@ -195,6 +196,7 @@ export default function SeoBlogPost({ preview = false }: { preview?: boolean }) 
               </header>
               {/* Contextual "Use this system" CTA above the fold of the article body. */}
               <ContextualCTACard ctas={ctas} sourceSlug={post.slug} persona={personas[0] ?? null} />
+              <StackBadge keywords={[...(post.tags ?? []), post.category ?? "", post.title ?? ""]} />
               <ArticleActivityRibbon slug={post.slug} />
               <AutoLinkedHtml
                 html={html}

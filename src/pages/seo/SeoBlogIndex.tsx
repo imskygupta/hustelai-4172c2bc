@@ -10,8 +10,9 @@ import {
   listMostViewedBlogs,
   type SeoBlogRow,
 } from "@/lib/seo-cms";
-import { ArrowRight, Eye, Loader2, Sparkles } from "lucide-react";
+import { ArrowRight, Eye, Loader2, Sparkles, Workflow } from "lucide-react";
 import { StartHereRoadmap } from "@/components/blog/operational/StartHereRoadmap";
+import { OPERATIONAL_STACKS } from "@/lib/operational-stacks";
 import {
   TrendingRail,
   NewlyPublishedRail,
@@ -104,6 +105,7 @@ export default function SeoBlogIndex() {
         ) : (
           <>
             <StartHereRoadmap />
+            <StacksRail />
             <TrendingRail posts={trending} />
             <MostSavedRail posts={mostSaved} />
             <NewlyPublishedRail posts={recent} />
@@ -128,6 +130,48 @@ function FullArchive({ posts }: { posts: SeoBlogRow[] | null }) {
           </h2>
         </div>
         <ArchiveList posts={posts} />
+      </div>
+    </section>
+  );
+}
+
+function StacksRail() {
+  return (
+    <section className="px-4 py-14 border-t border-slate-100">
+      <div className="container mx-auto max-w-6xl">
+        <div className="flex items-end justify-between gap-4 mb-6">
+          <div>
+            <div className="text-[11px] uppercase tracking-[0.18em] font-semibold text-emerald-600 mb-2 inline-flex items-center gap-2">
+              <Workflow className="w-3 h-3" /> Operational stacks
+            </div>
+            <h2 className="text-2xl md:text-3xl font-display font-semibold tracking-tight text-slate-900">
+              The systems behind the guides.
+            </h2>
+            <p className="text-sm text-slate-500 mt-1 max-w-xl">
+              Each stack chains tools and guides into a progression — from first lead to retention.
+            </p>
+          </div>
+          <Link to="/systems" className="hidden sm:inline-flex items-center gap-1 text-sm font-medium text-emerald-600 hover:text-emerald-700">
+            All stacks <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {OPERATIONAL_STACKS.map((s) => (
+            <Link
+              key={s.slug}
+              to={`/systems/${s.slug}`}
+              className="group rounded-xl border border-slate-200 bg-white hover:border-emerald-300 hover:shadow-sm transition p-4"
+            >
+              <div className="text-[10px] uppercase tracking-wider text-slate-400 mb-1">
+                {s.stages.length} stages · {s.persona.replace(/-/g, " ")}
+              </div>
+              <div className="text-sm font-semibold text-slate-900 group-hover:text-emerald-700 leading-snug">
+                {s.title}
+              </div>
+              <div className="text-xs text-slate-500 mt-1 line-clamp-2">{s.blurb}</div>
+            </Link>
+          ))}
+        </div>
       </div>
     </section>
   );
