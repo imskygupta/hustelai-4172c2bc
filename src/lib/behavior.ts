@@ -1,0 +1,166 @@
+import { supabase } from "@/integrations/supabase/client";
+
+/**
+ * Behavior intelligence SDK.
+ *
+ * - Stable anon_id in localStorage (UUID) so anonymous events can be
+ *   correlated across a session without auth.
+ * - All track* helpers are fire-and-forget — analytics must never break UI.
+ * - Bookmarks: auth-aware persistence via toggle_bookmark RPC + a local
+ *   fallback set so guests can still "save" things and we can reconcile
+ *   on signup (future work).
+ */
+
+const ANON_KEY = "ha_anon_id";
+const LOCAL_BOOKMARKS_KEY = "ha_local_bookmarks";
+
+export function anonId(): string {
+  if (typeof window === "undefined") return "ssr";
+  let v = localStorage.getItem(ANON_KEY);
+  if (!v) {
+    v = (crypto as any)?.randomUUID?.() ?? `anon_${Math.random().toString(36).slice(2)}`;
+    try { localStorage.setItem(ANON_KEY, v); } catch { /* ignore */ }
+  }
+  return v;
+}
+
+function safe<T>(p: Promise<T>) {
+  return p.catch(() => undefined);
+}
+
+/* ---------------- Tool launches ---------------- */
+
+export interface ToolLaunchAttribution {
+  toolSlug: string;
+  sourceKind?: "blog" | "cta" | "rail" | "homepage" | "persona_page" | "direct" | "saved";
+  sourceSlug?: string | null;
+  ctaId?: string | null;
+  persona?: string | null;
+  metadata?: Record<string, any>;
+}
+
+export function trackToolLaunch(a: ToolLaunchAttribution) {
+  return safe(
+    supabase.rpc("track_tool_launch" as any, {
+      _tool_slug: a.toolSlug,
+      _source_kind: a.sourceKind ?? "direct",
+      _source_slug: a.sourceSlug ?? null,
+      _cta_id: a.ctaId ?? null,
+      _persona: a.persona ?? null,
+      _anon_id: anonId(),
+      _metadata: a.metadata ?? {},
+    }),
+  );
+}
+
+/* ---------------- CTA events ---------------- */
+
+export interface CtaEvent {
+  ctaId: string;
+  kind: "impression" | "click";
+  sourceSlug?: string | null;
+  targetSlug?: string | null;
+  persona?: string | null;
+  metadata?: Record<string, any>;
+}
+
+export function trackCta(e: CtaEvent) {
+  return safe(
+    supabase.rpc("track_cta_event" as any, {
+      _cta_id: e.ctaId,
+      _kind: e.kind,
+      _source_slug: e.sourceSlug ?? null,
+      _target_slug: e.targetSlug ?? null,
+      _persona: e.persona ?? null,
+      _anon_id: anonId(),
+      _metadata: e.metadata ?? {},
+    }),
+  );
+}
+
+/* ---------------- Bookmarks ---------------- */
+
+function getLocalBookmarks(): Set<string> {
+  if (typeof window === "undefined") return new Set();
+  try {
+    const raw = localStorage.getItem(LOCAL_BOOKMARKS_KEY);
+    return new Set(raw ? (JSON.parse(raw) as string[]) : []);
+  } catch { return new Set(); }
+}
+function setLocalBookmarks(set: Set<string>) {
+  try { localStorage.setItem(LOCAL_BOOKMARKS_KEY, JSON.stringify([...set])); } catch { /* ignore */ }
+}
+
+export function isLocallyBookmarked(slug: string) {
+  return getLocalBookmarks().has(slug);
+}
+
+export async function toggleBookmark(slug: string): Promise<{ saved: boolean; count: number; localOnly: boolean }> {
+  const { data: sess } = await supabase.auth.getSession();
+  if (!sess.session?.user) {
+    // Guest: local-only fallback
+    const set = getLocalBookmarks();
+    const saved = !set.has(slug);
+    if (saved) set.add(slug); else set.delete(slug);
+    setLocalBookmarks(set);
+    safe(
+      supabase.from("blog_events" as any).insert({
+        post_slug: slug,
+        anon_id: anonId(),
+        kind: saved ? "bookmark_local" : "unbookmark_local",
+      }),
+    );
+    const count = await fetchBookmarkCount(slug);
+    return { saved, count, localOnly: true };
+  }
+  const { data, error } = await supabase.rpc("toggle_bookmark" as any, { _slug: slug });
+  if (error) throw error;
+  const res = (data ?? {}) as { saved: boolean; count: number };
+  return { saved: !!res.saved, count: res.count ?? 0, localOnly: false };
+}
+
+export async function fetchBookmarkCount(slug: string): Promise<number> {
+  const { data } = await supabase.rpc("bookmark_count_for_post" as any, { _slug: slug });
+  return (data as number) ?? 0;
+}
+
+export async function fetchBookmarkCounts(slugs: string[]): Promise<Record<string, number>> {
+  if (!slugs.length) return {};
+  const { data } = await supabase.rpc("bookmark_counts_for_posts" as any, { _slugs: slugs });
+  const out: Record<string, number> = {};
+  for (const r of (data as any[]) ?? []) out[r.post_slug] = r.count;
+  return out;
+}
+
+export async function fetchUserBookmarks(): Promise<string[]> {
+  const { data: sess } = await supabase.auth.getSession();
+  if (!sess.session?.user) return [...getLocalBookmarks()];
+  const { data } = await supabase.rpc("user_bookmarks" as any);
+  const remote = ((data as any[]) ?? []).map((r) => r.post_slug as string);
+  // Merge with local fallback so saved-page works during transition.
+  return Array.from(new Set([...remote, ...getLocalBookmarks()]));
+}
+
+export async function isBookmarked(slug: string): Promise<boolean> {
+  const { data: sess } = await supabase.auth.getSession();
+  if (!sess.session?.user) return getLocalBookmarks().has(slug);
+  const { data } = await supabase
+    .from("blog_bookmarks" as any)
+    .select("id")
+    .eq("post_slug", slug)
+    .eq("user_id", sess.session.user.id)
+    .maybeSingle();
+  return !!data;
+}
+
+/* ---------------- Most-X helpers (homepage / rails) ---------------- */
+
+export async function fetchMostLaunchedTools(limit = 6) {
+  const { data } = await supabase.rpc("most_launched_tools" as any, { _limit: limit });
+  return ((data as any[]) ?? []) as { tool_slug: string; launches: number }[];
+}
+
+export async function fetchMostSavedSlugs(limit = 6): Promise<string[]> {
+  const { data } = await supabase.rpc("most_saved_posts" as any, { _limit: limit });
+  return ((data as any[]) ?? []).map((r) => r.post_slug as string);
+}
