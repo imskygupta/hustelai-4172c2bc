@@ -12,6 +12,9 @@ import {
 } from "@/lib/seo-cms";
 import { ArrowRight, Eye, Loader2, Sparkles } from "lucide-react";
 import { StartHereRoadmap } from "@/components/blog/operational/StartHereRoadmap";
+import { Link } from "react-router-dom";
+import { OPERATIONAL_STACKS } from "@/lib/operational-stacks";
+import { Workflow, ArrowRight } from "lucide-react";
 import {
   TrendingRail,
   NewlyPublishedRail,
@@ -104,6 +107,7 @@ export default function SeoBlogIndex() {
         ) : (
           <>
             <StartHereRoadmap />
+            <StacksRail />
             <TrendingRail posts={trending} />
             <MostSavedRail posts={mostSaved} />
             <NewlyPublishedRail posts={recent} />
