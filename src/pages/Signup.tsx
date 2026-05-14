@@ -135,6 +135,20 @@ export default function Signup() {
     } catch (e) {
       console.error("Welcome email failed:", e);
     }
+    // Fire-and-forget admin telegram notification (must not block signup flow)
+    try {
+      void supabase.functions.invoke("admin-bot-notify", {
+        body: {
+          event: "signup",
+          payload: {
+            email,
+            name: displayName,
+            timestamp: new Date().toISOString(),
+            source: typeof window !== "undefined" ? window.location.hostname : "",
+          },
+        },
+      }).catch(() => {});
+    } catch {}
     // Also fire branded verify-reminder via Resend (non-blocking)
     try {
       await supabase.functions.invoke("send-resend-email", {
