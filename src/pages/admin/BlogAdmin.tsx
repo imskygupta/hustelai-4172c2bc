@@ -321,12 +321,14 @@ export default function BlogAdmin() {
 
                     {/* Self-healing AI editorial layer */}
                     {editing.id && (
-                      <ReadinessPanel postId={editing.id} onApplied={() => { open(editing.id); reload(); }} />
-                      {editing.slug && (
-                        <div className="mt-4">
-                          <ConversionPanel slug={editing.slug} />
-                        </div>
-                      )}
+                      <>
+                        <ReadinessPanel postId={editing.id} onApplied={() => { open(editing.id); reload(); }} />
+                        {editing.slug && (
+                          <div className="mt-4">
+                            <ConversionPanel slug={editing.slug} />
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
                 )}
