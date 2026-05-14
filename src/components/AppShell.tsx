@@ -12,6 +12,7 @@ import { Chatbot } from "@/components/Chatbot";
 import NotificationCenter from "@/components/workspace-os/NotificationCenter";
 import AIFillStatusBanner from "@/components/tools/AIFillStatusBanner";
 import { AsyncActivityIndicator } from "@/components/async/AsyncActivityIndicator";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 interface AppShellProps {
   children: ReactNode;
@@ -215,6 +216,7 @@ export function AppShell({ children, title, breadcrumbs, actions }: AppShellProp
                   Upgrade
                 </Button>
               )}
+              <ThemeToggle />
               <AsyncActivityIndicator />
               <NotificationCenter />
             </div>

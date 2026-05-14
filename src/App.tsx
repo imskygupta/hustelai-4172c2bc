@@ -356,6 +356,11 @@ const App = () => (
             <Route path="/platform" element={<Platform />} />
             <Route path="/how-it-works" element={<HowItWorks />} />
             <Route path="/operations" element={<Operations />} />
+            {/* Surface aliases — simulate the multi-surface architecture in-app
+                until subdomains are cut over. Mental model: one purpose per surface. */}
+            <Route path="/workspace" element={<Navigate to="/workspaces" replace />} />
+            <Route path="/client" element={<Navigate to="/work/clients" replace />} />
+            <Route path="/ai" element={<Navigate to="/ai-tools" replace />} />
             <Route path="/admin" element={<AdminBlock />} />
             <Route path="/imskygupta-admin" element={<AdminLogin />} />
             <Route path="/admin-dashboard" element={<AdminDashboard />} />
