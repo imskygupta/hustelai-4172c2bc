@@ -10,3 +10,4 @@
 - [Operational Continuity](mem://transfer/operational-continuity) — Cross-workspace handoff snapshot: multi-DB topology, blog/SEO ecosystem, async queue infra, connectors, activation systems, migration checklist
 - [Editorial Pipeline](mem://features/editorial-pipeline) — Unified /admin/blog/pipeline timeline, auto-fix, publish-passing, route reconciliation
 - [Self-Healing Editorial](mem://features/self-healing-editorial) — AI auto-fix engine with readiness score, granular fixes, fix-with-AI preview in post editor
+- [Operational Stacks](mem://features/operational-stacks) — /systems and /stories: curated operator journeys + workflow setups
