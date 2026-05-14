@@ -687,6 +687,66 @@ export type Database = {
         }
         Relationships: []
       }
+      blog_bookmarks: {
+        Row: {
+          anon_id: string | null
+          created_at: string
+          id: string
+          post_slug: string
+          user_id: string | null
+        }
+        Insert: {
+          anon_id?: string | null
+          created_at?: string
+          id?: string
+          post_slug: string
+          user_id?: string | null
+        }
+        Update: {
+          anon_id?: string | null
+          created_at?: string
+          id?: string
+          post_slug?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      blog_events: {
+        Row: {
+          anon_id: string | null
+          created_at: string
+          id: number
+          kind: string
+          metadata: Json | null
+          persona: string | null
+          post_slug: string | null
+          referrer: string | null
+          user_id: string | null
+        }
+        Insert: {
+          anon_id?: string | null
+          created_at?: string
+          id?: number
+          kind: string
+          metadata?: Json | null
+          persona?: string | null
+          post_slug?: string | null
+          referrer?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          anon_id?: string | null
+          created_at?: string
+          id?: number
+          kind?: string
+          metadata?: Json | null
+          persona?: string | null
+          post_slug?: string | null
+          referrer?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       blog_posts: {
         Row: {
           author_name: string | null
@@ -1288,6 +1348,45 @@ export type Database = {
         }
         Relationships: []
       }
+      cta_events: {
+        Row: {
+          anon_id: string | null
+          created_at: string
+          cta_id: string
+          id: number
+          kind: string
+          metadata: Json | null
+          persona: string | null
+          source_slug: string | null
+          target_slug: string | null
+          user_id: string | null
+        }
+        Insert: {
+          anon_id?: string | null
+          created_at?: string
+          cta_id: string
+          id?: number
+          kind: string
+          metadata?: Json | null
+          persona?: string | null
+          source_slug?: string | null
+          target_slug?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          anon_id?: string | null
+          created_at?: string
+          cta_id?: string
+          id?: number
+          kind?: string
+          metadata?: Json | null
+          persona?: string | null
+          source_slug?: string | null
+          target_slug?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       doc_blocks: {
         Row: {
           body: string
@@ -1738,6 +1837,39 @@ export type Database = {
           otp_code?: string
           user_id?: string
           verified?: boolean | null
+        }
+        Relationships: []
+      }
+      engagement_rollups_post: {
+        Row: {
+          bookmarks: number
+          cta_clicks: number
+          day: string
+          engagement_score: number
+          post_slug: string
+          reads: number
+          tool_launches: number
+          views: number
+        }
+        Insert: {
+          bookmarks?: number
+          cta_clicks?: number
+          day: string
+          engagement_score?: number
+          post_slug: string
+          reads?: number
+          tool_launches?: number
+          views?: number
+        }
+        Update: {
+          bookmarks?: number
+          cta_clicks?: number
+          day?: string
+          engagement_score?: number
+          post_slug?: string
+          reads?: number
+          tool_launches?: number
+          views?: number
         }
         Relationships: []
       }
@@ -5459,6 +5591,45 @@ export type Database = {
         }
         Relationships: []
       }
+      tool_launch_events: {
+        Row: {
+          anon_id: string | null
+          created_at: string
+          cta_id: string | null
+          id: number
+          metadata: Json | null
+          persona: string | null
+          source_kind: string | null
+          source_slug: string | null
+          tool_slug: string
+          user_id: string | null
+        }
+        Insert: {
+          anon_id?: string | null
+          created_at?: string
+          cta_id?: string | null
+          id?: number
+          metadata?: Json | null
+          persona?: string | null
+          source_kind?: string | null
+          source_slug?: string | null
+          tool_slug: string
+          user_id?: string | null
+        }
+        Update: {
+          anon_id?: string | null
+          created_at?: string
+          cta_id?: string | null
+          id?: number
+          metadata?: Json | null
+          persona?: string | null
+          source_kind?: string | null
+          source_slug?: string | null
+          tool_slug?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       trending_links: {
         Row: {
           category: string | null
@@ -7113,6 +7284,14 @@ export type Database = {
           users: number
         }[]
       }
+      bookmark_count_for_post: { Args: { _slug: string }; Returns: number }
+      bookmark_counts_for_posts: {
+        Args: { _slugs: string[] }
+        Returns: {
+          count: number
+          post_slug: string
+        }[]
+      }
       bump_blog_view: {
         Args: { _kind?: string; _slug: string }
         Returns: undefined
@@ -7338,6 +7517,20 @@ export type Database = {
         Returns: Json
       }
       mark_expired_exports: { Args: never; Returns: number }
+      most_launched_tools: {
+        Args: { _limit?: number; _since?: string }
+        Returns: {
+          launches: number
+          tool_slug: string
+        }[]
+      }
+      most_saved_posts: {
+        Args: { _limit?: number }
+        Returns: {
+          post_slug: string
+          saves: number
+        }[]
+      }
       newsletter_approve_issue: {
         Args: { _issue: string; _scheduled_at?: string }
         Returns: string
@@ -7435,6 +7628,19 @@ export type Database = {
           reason: string
         }[]
       }
+      toggle_bookmark: { Args: { _slug: string }; Returns: Json }
+      track_cta_event: {
+        Args: {
+          _anon_id?: string
+          _cta_id: string
+          _kind: string
+          _metadata?: Json
+          _persona?: string
+          _source_slug?: string
+          _target_slug?: string
+        }
+        Returns: undefined
+      }
       track_event: {
         Args: {
           _capability?: string
@@ -7449,6 +7655,18 @@ export type Database = {
         }
         Returns: string
       }
+      track_tool_launch: {
+        Args: {
+          _anon_id?: string
+          _cta_id?: string
+          _metadata?: Json
+          _persona?: string
+          _source_kind?: string
+          _source_slug?: string
+          _tool_slug: string
+        }
+        Returns: undefined
+      }
       unlock_summary: { Args: { _user: string }; Returns: Json }
       usage_top_consumers: {
         Args: { _limit?: number; _meter: string; _since?: string }
@@ -7456,6 +7674,13 @@ export type Database = {
           last_at: string
           total: number
           user_id: string
+        }[]
+      }
+      user_bookmarks: {
+        Args: never
+        Returns: {
+          created_at: string
+          post_slug: string
         }[]
       }
       workflow_event_throughput: {

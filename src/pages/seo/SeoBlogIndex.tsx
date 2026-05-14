@@ -16,6 +16,7 @@ import {
   TrendingRail,
   NewlyPublishedRail,
   MostReadRail,
+  MostSavedRail,
 } from "@/components/blog/operational/DiscoveryRails";
 import { PersonaFilter } from "@/components/blog/operational/PersonaFilter";
 import {
@@ -23,12 +24,14 @@ import {
   personaMeta,
   type OperatorPersona,
 } from "@/components/blog/operational/OperatorPersonas";
+import { fetchMostSavedSlugs } from "@/lib/behavior";
 
 export default function SeoBlogIndex() {
   const [allPosts, setAllPosts] = useState<SeoBlogRow[] | null>(null);
   const [trending, setTrending] = useState<SeoBlogRow[]>([]);
   const [recent, setRecent] = useState<SeoBlogRow[]>([]);
   const [mostRead, setMostRead] = useState<SeoBlogRow[]>([]);
+  const [mostSaved, setMostSaved] = useState<SeoBlogRow[]>([]);
   const [search, setSearch] = useSearchParams();
   const activePersona = (search.get("persona") as OperatorPersona | null) || null;
 
@@ -37,6 +40,12 @@ export default function SeoBlogIndex() {
     listTrendingBlogs(6).then(setTrending);
     listRecentBlogs(6).then(setRecent);
     listMostViewedBlogs(6).then(setMostRead);
+    (async () => {
+      const slugs = await fetchMostSavedSlugs(6);
+      if (!slugs.length) return;
+      const rows = await Promise.all(slugs.map((s) => import("@/lib/seo-cms").then((m) => m.fetchPublishedBlog(s))));
+      setMostSaved(rows.filter(Boolean) as SeoBlogRow[]);
+    })();
   }, []);
 
   const filtered = useMemo(() => {
@@ -94,6 +103,7 @@ export default function SeoBlogIndex() {
           <>
             <StartHereRoadmap />
             <TrendingRail posts={trending} />
+            <MostSavedRail posts={mostSaved} />
             <NewlyPublishedRail posts={recent} />
             <MostReadRail posts={mostRead} />
             <FullArchive posts={allPosts} />

@@ -1,5 +1,7 @@
+import { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, Wrench } from "lucide-react";
+import { trackCta, trackToolLaunch } from "@/lib/behavior";
 
 interface CTASpec {
   label: string;
@@ -89,8 +91,49 @@ export function pickContextualCTAs(text: string, max = 2): CTASpec[] {
   return out;
 }
 
-export function ContextualCTACard({ ctas }: { ctas: CTASpec[] }) {
+export function ContextualCTACard({
+  ctas,
+  sourceSlug,
+  persona,
+}: {
+  ctas: CTASpec[];
+  sourceSlug?: string;
+  persona?: string | null;
+}) {
+  const fired = useRef(false);
+  useEffect(() => {
+    if (fired.current || !ctas.length) return;
+    fired.current = true;
+    for (const c of ctas) {
+      trackCta({
+        ctaId: `tool:${c.to}`,
+        kind: "impression",
+        sourceSlug: sourceSlug ?? null,
+        targetSlug: c.to,
+        persona: persona ?? null,
+      });
+    }
+  }, [ctas, sourceSlug, persona]);
+
   if (!ctas.length) return null;
+
+  const handleClick = (c: CTASpec) => {
+    trackCta({
+      ctaId: `tool:${c.to}`,
+      kind: "click",
+      sourceSlug: sourceSlug ?? null,
+      targetSlug: c.to,
+      persona: persona ?? null,
+    });
+    trackToolLaunch({
+      toolSlug: c.to.replace(/^\//, ""),
+      sourceKind: "blog",
+      sourceSlug: sourceSlug ?? null,
+      ctaId: `tool:${c.to}`,
+      persona: persona ?? null,
+    });
+  };
+
   return (
     <aside className="my-10 not-prose rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-white p-6">
       <div className="flex items-center gap-2 mb-4 text-[11px] uppercase tracking-[0.18em] font-semibold text-emerald-700">
@@ -101,6 +144,7 @@ export function ContextualCTACard({ ctas }: { ctas: CTASpec[] }) {
           <Link
             key={c.to}
             to={c.to}
+            onClick={() => handleClick(c)}
             className="group block rounded-xl border border-slate-200 bg-white p-4 hover:border-emerald-400 transition-colors"
           >
             <div className="font-display font-semibold text-slate-900 mb-1">{c.label}</div>
