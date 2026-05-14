@@ -2,7 +2,7 @@ import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Zap, ArrowRight, Menu, X, LogOut, User, ChevronDown, Shield } from "lucide-react";
+import { Zap, ArrowRight, Menu, X, LogOut, User, ChevronDown, Shield, BookOpen } from "lucide-react";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { isAppShellRoute } from "@/components/app-shell-routes";
@@ -185,6 +185,15 @@ export function Navbar() {
                 </Button>
               )}
               <NotificationCenter />
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => window.open("https://docs.hustlaiapp.in/docs", "_blank", "noopener,noreferrer")}
+                title="Documentation"
+                className={isHome ? "text-slate-600 hover:text-slate-900 hover:bg-slate-100" : ""}
+              >
+                <BookOpen className="w-4 h-4 mr-1" /> Docs
+              </Button>
               <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")}
                 className={isHome ? "text-slate-600 hover:text-slate-900 hover:bg-slate-100" : ""}>
                 Dashboard
