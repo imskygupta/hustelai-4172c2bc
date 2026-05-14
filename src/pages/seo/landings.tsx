@@ -13,6 +13,10 @@ const ALL: { path: string; label: string }[] = [
   { path: "/agency-workflow-tools", label: "Agency Workflow Tools" },
   { path: "/freelancer-productivity-tools", label: "Freelancer Productivity Tools" },
   { path: "/ai-business-card-maker", label: "AI Business Card Maker" },
+  { path: "/for-freelancers", label: "For Freelancers" },
+  { path: "/for-agencies", label: "For Agencies" },
+  { path: "/for-creators", label: "For Creators" },
+  { path: "/for-telegram-business", label: "For Telegram-first Operators" },
 ];
 
 const related = (current: string): RelatedLink[] =>
