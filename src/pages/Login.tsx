@@ -3,7 +3,7 @@ import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
-import { AUTH_EMAIL_REDIRECT_TO, authRedirectTo } from "@/lib/auth-config";
+import { authRedirectTo } from "@/lib/auth-config";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -74,16 +74,6 @@ export default function Login() {
 
     // Normal user login must never auto-fallback into the admin surface.
     // Admins can enter via /imskygupta-admin or the explicit Admin Panel link.
-    const { data: adminRole, error } = await supabase.rpc("has_role", {
-      _user_id: _userId,
-      _role: "admin",
-    });
-
-    if (!error && adminRole) {
-      navigate("/dashboard", { replace: true });
-      return;
-    }
-
     navigate("/dashboard", { replace: true });
   };
 
