@@ -30,22 +30,20 @@ export default function ContextualNudge() {
     if (!user || !mode) return;
     (async () => {
       // Best-effort counts — silently degrade if a table is missing.
+      const sb: any = supabase;
       const safe = async (q: any) => {
         try { const { count } = await q; return count || 0; } catch { return 0; }
       };
-      const weekAgo = new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString();
       const [proposals, invoices, clients] = await Promise.all([
-        safe(supabase.from("workspace_docs").select("*", { count: "exact", head: true }).eq("user_id", user.id).eq("type", "proposal")),
-        safe(supabase.from("workspace_docs").select("*", { count: "exact", head: true }).eq("user_id", user.id).eq("type", "invoice")),
-        safe(supabase.from("clients").select("*", { count: "exact", head: true }).eq("user_id", user.id)),
+        safe(sb.from("workspace_docs").select("*", { count: "exact", head: true }).eq("user_id", user.id).eq("type", "proposal")),
+        safe(sb.from("workspace_docs").select("*", { count: "exact", head: true }).eq("user_id", user.id).eq("type", "invoice")),
+        safe(sb.from("clients").select("*", { count: "exact", head: true }).eq("user_id", user.id)),
       ]);
       setStats({
         proposals, invoices, clients,
         deadlinesThisWeek: 0, // hooked up later via workspace DB
         contentIdeasThisWeek: 0,
       });
-      // best-effort: ignore weekAgo for now — kept for future activity windowing
-      void weekAgo;
     })();
   }, [user, mode]);
 
