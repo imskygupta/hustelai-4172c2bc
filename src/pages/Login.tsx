@@ -65,7 +65,7 @@ export default function Login() {
     }
   }, []);
 
-  const redirectAfterLogin = async (_userId: string) => {
+  const redirectAfterLogin = async () => {
     const next = searchParams.get("next");
     if (next && next.startsWith("/") && !next.startsWith("//")) {
       navigate(next, { replace: true });
@@ -92,7 +92,7 @@ export default function Login() {
     setLoading(false);
 
     if (signedInUser) {
-      await redirectAfterLogin(signedInUser.id);
+      await redirectAfterLogin();
     } else {
       navigate("/dashboard");
     }
