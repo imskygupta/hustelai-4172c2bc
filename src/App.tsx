@@ -143,6 +143,10 @@ import {
   AgencyWorkflowToolsPage,
   FreelancerProductivityToolsPage,
   AIBusinessCardMakerPage,
+  ForFreelancersPage,
+  ForAgenciesPage,
+  ForCreatorsPage,
+  ForTelegramBusinessPage,
 } from "./pages/seo/landings";
 import {
   FeatureDetail, FeatureHub,
@@ -248,6 +252,11 @@ const App = () => (
             <Route path="/agency-workflow-tools" element={<AgencyWorkflowToolsPage />} />
             <Route path="/freelancer-productivity-tools" element={<FreelancerProductivityToolsPage />} />
             <Route path="/ai-business-card-maker" element={<AIBusinessCardMakerPage />} />
+            {/* Persona landing pages */}
+            <Route path="/for-freelancers" element={<ForFreelancersPage />} />
+            <Route path="/for-agencies" element={<ForAgenciesPage />} />
+            <Route path="/for-creators" element={<ForCreatorsPage />} />
+            <Route path="/for-telegram-business" element={<ForTelegramBusinessPage />} />
             {/* Programmatic SEO clusters */}
             <Route path="/features" element={<FeatureHub />} />
             <Route path="/features/:slug" element={<FeatureDetail />} />

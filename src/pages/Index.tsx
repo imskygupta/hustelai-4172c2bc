@@ -30,6 +30,7 @@ import { WorkflowRibbon, SectionConnector } from "@/components/home/ops-primitiv
 import { PersonalizedHeroCTA } from "@/components/home/PersonalizedHeroCTA";
 import { ReturningUserContinuity } from "@/components/home/ReturningUserContinuity";
 import { OpsStats } from "@/components/seo/OpsStats";
+import { WhoIsHustleAIFor } from "@/components/home/WhoIsHustleAIFor";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -136,6 +137,9 @@ export default function Index() {
       <ReturningUserContinuity />
 
       <TrustStrip />
+
+      {/* Persona positioning — who exactly is this for */}
+      <WhoIsHustleAIFor />
 
       {/* Operational social proof — async ops, exports, Telegram pings */}
       <OpsStats />

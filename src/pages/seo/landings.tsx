@@ -13,6 +13,10 @@ const ALL: { path: string; label: string }[] = [
   { path: "/agency-workflow-tools", label: "Agency Workflow Tools" },
   { path: "/freelancer-productivity-tools", label: "Freelancer Productivity Tools" },
   { path: "/ai-business-card-maker", label: "AI Business Card Maker" },
+  { path: "/for-freelancers", label: "For Freelancers" },
+  { path: "/for-agencies", label: "For Agencies" },
+  { path: "/for-creators", label: "For Creators" },
+  { path: "/for-telegram-business", label: "For Telegram-first Operators" },
 ];
 
 const related = (current: string): RelatedLink[] =>
@@ -353,5 +357,142 @@ export const AIBusinessCardMakerPage = () => (
       { q: "Can I add a QR code?", a: "Yes — every digital card auto-generates a QR linking to your vCard." },
     ]}
     related={related("/ai-business-card-maker")}
+  />
+);
+/* ---------- 13. For Freelancers (persona) ---------- */
+export const ForFreelancersPage = () => (
+  <SeoLanding
+    path="/for-freelancers"
+    title="HustleAI for Freelancers — Run Client Operations from One Workspace"
+    description="Got your first client? HustleAI helps freelancers run proposals, invoices, onboarding, async delivery and client communication from one AI-powered workspace."
+    h1="Got your first client? Now what?"
+    subhead="Stop managing client work across 12 apps. Run onboarding, proposals, invoices and delivery from one AI workspace built for solo operators."
+    bullets={["Onboarding in minutes", "AI proposals & invoices", "Async delivery", "Telegram updates"]}
+    badge="For Freelancers"
+    ctaLabel="Start freelancing operations"
+    sections={[
+      { title: "The freelancer chaos is real", body: <>
+        {P("You got the client. Now you're juggling proposals in Docs, invoices in another app, updates over WhatsApp and tasks in random notes. Three months in, you can't find anything.")}
+        {P("HustleAI is the operating system freelancers wish they'd started with on day one — proposals, invoices, onboarding, delivery and client comms in one place, with AI doing the boring parts.")}
+      </> },
+      { title: "Onboard clients without 14 emails", body: <>
+        {P("Send a single intake link. The AI structures responses into a client record, kicks off a branded onboarding flow and surfaces what's blocking you on day one.")}
+      </> },
+      { title: "Proposals & invoices that close", body: <>
+        {P("Generate AI proposals tuned to scope, budget and deliverables. Convert won deals to GST-ready invoices in one click. Auto-reminders chase payments politely.")}
+      </> },
+      { title: "Async delivery, no meetings", body: <>
+        {P("Push deliverables, status updates and approvals through branded portals or Telegram. Clients self-serve. You stay in flow.")}
+      </> },
+    ]}
+    faqs={[
+      { q: "Is this just for full-time freelancers?", a: "No — it works whether freelancing is a side hustle or your full-time operation." },
+      { q: "Do I need to install anything?", a: "No. It's a browser-based workspace with a Telegram bridge for delivery." },
+      { q: "What's the free tier?", a: "Free forever — covers your first client, basic proposals, invoices and onboarding." },
+    ]}
+    related={related("/for-freelancers")}
+  />
+);
+
+/* ---------- 14. For Agencies (persona) ---------- */
+export const ForAgenciesPage = () => (
+  <SeoLanding
+    path="/for-agencies"
+    title="HustleAI for Agencies — Async Client Operations & Delivery Pipelines"
+    description="Manage multiple clients, async approvals, onboarding and delivery without hiring ops staff. HustleAI is the operating system for small modern agencies."
+    h1="Your agency doesn't need more dashboards. It needs systems."
+    subhead="Run multi-client operations, async approvals, onboarding and delivery pipelines from one workspace — without bolting on five tools."
+    bullets={["Multi-client pipelines", "Async approvals", "Branded portals", "Internal SOPs"]}
+    badge="For Agencies"
+    ctaLabel="Scale client operations"
+    sections={[
+      { title: "Most agency tools were built for enterprises", body: <>
+        {P("They assume project managers, ops leads and full-time admins. Modern small agencies don't have that — they have 2-10 operators who need leverage, not overhead.")}
+        {P("HustleAI gives small agencies the operational backbone of a 50-person studio without the headcount.")}
+      </> },
+      { title: "Multi-client delivery pipelines", body: <>
+        {P("See every client, every deliverable, every approval state in one pipeline. Filter by owner, stage or due date. Catch slipping work before the client notices.")}
+      </> },
+      { title: "Async approvals that actually move", body: <>
+        {P("Send approval requests through branded portals or Telegram. Clients tap approve. Status flips automatically. Stop chasing sign-off in WhatsApp.")}
+      </> },
+      { title: "Internal SOPs as templates", body: <>
+        {P("Codify how your agency runs — onboarding, delivery, QA, invoicing — as reusable templates. New team members ship like seniors on day one.")}
+      </> },
+    ]}
+    faqs={[
+      { q: "How many seats can we have?", a: "Pro starts at 5 seats and scales to 50+ for studios." },
+      { q: "Does this replace ClickUp or Notion?", a: "It replaces the patchwork of CRM + docs + delivery + invoicing — not a wiki." },
+      { q: "Can clients log in?", a: "Yes — branded client portals are included." },
+    ]}
+    related={related("/for-agencies")}
+  />
+);
+
+/* ---------- 15. For Creators (persona) ---------- */
+export const ForCreatorsPage = () => (
+  <SeoLanding
+    path="/for-creators"
+    title="HustleAI for Creators — Turn Audience into Operations"
+    description="Digital product workflows, client delivery, automation and lead systems for creators monetising their audience. Built on the HustleAI Workspace OS."
+    h1="Turn audience into operations."
+    subhead="When the audience starts paying, the chaos begins. HustleAI handles digital product delivery, client workflows, automation and lead systems so creators can stay creating."
+    bullets={["Digital product delivery", "Lead capture & nurture", "Automation flows", "Templates & roadmaps"]}
+    badge="For Creators"
+    ctaLabel="Productize your audience"
+    sections={[
+      { title: "Audience → revenue → operations", body: <>
+        {P("First it's a few DMs. Then product launches. Then coaching calls. Then client work. Suddenly your DMs are a customer support inbox and your launches break things.")}
+        {P("HustleAI is the back office every creator needs the moment audience starts converting — without becoming a SaaS founder.")}
+      </> },
+      { title: "Digital product workflows", body: <>
+        {P("Sell templates, courses, prompts and digital products with branded delivery, tracked usage and automatic upsell flows.")}
+      </> },
+      { title: "Lead systems that don't leak", body: <>
+        {P("Capture leads from socials, intake forms and link-in-bio. Auto-tag, auto-nurture and auto-route to your offers — no Zapier sprawl.")}
+      </> },
+      { title: "Automation without engineering", body: <>
+        {P("Build automation flows visually. Triggered emails, Telegram notifications, content drips and approval workflows — all native.")}
+      </> },
+    ]}
+    faqs={[
+      { q: "I sell digital products on Gumroad — does this replace it?", a: "No, it complements it. HustleAI handles the operational layer (delivery, comms, automation)." },
+      { q: "Do I need a team?", a: "No — it's designed for solo creators first." },
+    ]}
+    related={related("/for-creators")}
+  />
+);
+
+/* ---------- 16. For Telegram-first Operators (persona) ---------- */
+export const ForTelegramBusinessPage = () => (
+  <SeoLanding
+    path="/for-telegram-business"
+    title="HustleAI for Telegram-first Operators — Run Client Ops in Telegram"
+    description="Deliver client updates, approvals and workflows directly through Telegram. HustleAI is the AI workspace for operators who run business inside chat."
+    h1="Run client operations directly through Telegram."
+    subhead="Skip the bloated dashboards. HustleAI pipes proposals, invoices, approvals and delivery updates straight into Telegram — for you and your clients."
+    bullets={["Telegram-native delivery", "Approval flows in chat", "AI-drafted updates", "Async-first ops"]}
+    badge="Telegram-first operators"
+    ctaLabel="Explore Telegram workflows"
+    sections={[
+      { title: "Your business already lives in Telegram", body: <>
+        {P("If your clients, team and suppliers all coordinate in Telegram, forcing them into yet another dashboard is friction. HustleAI meets the work where it already happens.")}
+      </> },
+      { title: "Approvals & deliveries in chat", body: <>
+        {P("Send proposals, deliverables, invoices and milestones directly to Telegram threads. Clients approve with a tap — status flips automatically inside the workspace.")}
+      </> },
+      { title: "AI-drafted operator updates", body: <>
+        {P("The AI summarises status, drafts client check-ins and queues approvals. You skim, approve, send. Hours of comms collapse into minutes.")}
+      </> },
+      { title: "Operator-grade workflows", body: <>
+        {P("Internal SOPs, async standups, payment confirmations and lead routing — all wired through Telegram with full audit trails inside HustleAI.")}
+      </> },
+    ]}
+    faqs={[
+      { q: "Do clients need a HustleAI account?", a: "No — they interact through Telegram or branded share links." },
+      { q: "Is this only for India?", a: "No — Telegram-first ops works globally; we have strong India + SEA traction." },
+      { q: "Can I switch off Telegram later?", a: "Yes — every workflow also works through web portals and email." },
+    ]}
+    related={related("/for-telegram-business")}
   />
 );
