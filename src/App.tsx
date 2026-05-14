@@ -350,6 +350,7 @@ const App = () => (
             <Route path="/data-policy" element={<DataPolicy />} />
             <Route path="/acceptable-use" element={<AcceptableUse />} />
             <Route path="/compliance" element={<Compliance />} />
+            <Route path="/trust" element={<Trust />} />
             <Route path="/operations" element={<Operations />} />
             <Route path="/admin" element={<AdminBlock />} />
             <Route path="/imskygupta-admin" element={<AdminLogin />} />
