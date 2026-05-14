@@ -7,6 +7,23 @@ import {
   WORKSPACE_ORIGIN,
   MARKETING_ORIGIN,
 } from "@/lib/host";
+import { useAuth } from "@/hooks/useAuth";
+
+const AUTH_DEBUG_KEY = "hustleai_auth_debug";
+
+function logRedirect(reason: string, target?: string) {
+  try {
+    if (localStorage.getItem(AUTH_DEBUG_KEY) !== "1") return;
+    console.info("[auth] middleware_redirect", {
+      host: window.location.hostname,
+      path: window.location.pathname,
+      reason,
+      target,
+    });
+  } catch {
+    // Debug logging should never affect routing.
+  }
+}
 
 /**
  * Cross-host redirector. Same SPA build serves both surfaces; this component
@@ -18,16 +35,27 @@ import {
  */
 export function SurfaceHostRedirect() {
   const { pathname, search, hash } = useLocation();
+  const { user, loading } = useAuth();
 
   useEffect(() => {
     try {
       if (typeof window === "undefined") return;
+      if (loading) {
+        logRedirect("auth_hydration_pending");
+        return;
+      }
 
       // Marketing host → deep workspace execution path: bounce to workspace.*
       // Note: workspace paths are narrow (only /workspaces, /canvas, /client).
       // Dashboard, admin, AI tools, settings, billing all stay on main.
       if (isMarketingHost() && isWorkspacePath(pathname)) {
-        window.location.replace(`${WORKSPACE_ORIGIN}${pathname}${search}${hash}`);
+        if (!user) {
+          logRedirect("workspace_path_requires_main_auth", `/signup?next=${pathname}${search}`);
+          return;
+        }
+        const target = `${WORKSPACE_ORIGIN}${pathname}${search}${hash}`;
+        logRedirect("open_workspace_surface", target);
+        window.location.replace(target);
         return;
       }
 
@@ -35,13 +63,15 @@ export function SurfaceHostRedirect() {
       // bounce back to main app. Workspace subdomain is a focused surface,
       // not a mirror of the whole product.
       if (isWorkspaceHost() && !isWorkspacePath(pathname)) {
-        window.location.replace(`${MARKETING_ORIGIN}${pathname}${search}${hash}`);
+        const target = `${MARKETING_ORIGIN}${pathname}${search}${hash}`;
+        logRedirect("non_workspace_path_on_workspace_host", target);
+        window.location.replace(target);
         return;
       }
     } catch (err) {
       console.warn("[SurfaceHostRedirect] safe-fallback:", err);
     }
-  }, [pathname, search, hash]);
+  }, [pathname, search, hash, loading, user]);
 
   return null;
 }

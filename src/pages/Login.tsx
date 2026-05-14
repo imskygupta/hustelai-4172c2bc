@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
-import { AUTH_EMAIL_REDIRECT_TO } from "@/lib/auth-config";
+import { authRedirectTo } from "@/lib/auth-config";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -39,8 +39,9 @@ export default function Login() {
   const [quoteIdx, setQuoteIdx] = useState(0);
   const [method, setMethod] = useState<LoginMethod>("password");
   const [linkSent, setLinkSent] = useState(false);
-  const { signIn } = useAuth();
+  const { signIn, user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const formRef = useRef<HTMLDivElement>(null);
   const glowRef = useRef<HTMLDivElement>(null);
@@ -64,19 +65,21 @@ export default function Login() {
     }
   }, []);
 
-  const redirectAfterLogin = async (userId: string) => {
-    const { data: adminRole, error } = await supabase.rpc("has_role", {
-      _user_id: userId,
-      _role: "admin",
-    });
-
-    if (!error && adminRole) {
-      navigate("/admin-dashboard");
+  const redirectAfterLogin = async () => {
+    const next = searchParams.get("next");
+    if (next && next.startsWith("/") && !next.startsWith("//")) {
+      navigate(next, { replace: true });
       return;
     }
 
-    navigate("/dashboard");
+    // Normal user login must never auto-fallback into the admin surface.
+    // Admins can enter via /imskygupta-admin or the explicit Admin Panel link.
+    navigate("/dashboard", { replace: true });
   };
+
+  useEffect(() => {
+    if (!authLoading && user) void redirectAfterLogin();
+  }, [authLoading, user?.id]);
 
   const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -93,7 +96,7 @@ export default function Login() {
     setLoading(false);
 
     if (signedInUser) {
-      await redirectAfterLogin(signedInUser.id);
+      await redirectAfterLogin();
     } else {
       navigate("/dashboard");
     }
@@ -107,7 +110,7 @@ export default function Login() {
       email,
       options: {
         shouldCreateUser: false,
-        emailRedirectTo: AUTH_EMAIL_REDIRECT_TO,
+        emailRedirectTo: authRedirectTo(searchParams.get("next") || "/dashboard"),
       },
     });
     setLoading(false);
@@ -276,7 +279,7 @@ export default function Login() {
                     const { data, error } = await supabase.auth.signInWithOAuth({
                       provider: "google",
                       options: {
-                        redirectTo: AUTH_EMAIL_REDIRECT_TO,
+                        redirectTo: authRedirectTo(searchParams.get("next") || "/dashboard"),
                         skipBrowserRedirect: true,
                         queryParams: { prompt: "select_account" },
                       },
@@ -287,7 +290,7 @@ export default function Login() {
                     }
                   } else {
                     const { error } = await lovable.auth.signInWithOAuth("google", {
-                      redirect_uri: AUTH_EMAIL_REDIRECT_TO,
+                        redirect_uri: authRedirectTo(searchParams.get("next") || "/dashboard"),
                       extraParams: { prompt: "select_account" },
                     });
                     if (error) throw error;

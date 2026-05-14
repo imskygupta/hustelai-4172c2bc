@@ -1,6 +1,6 @@
 ---
 name: workspace-subdomain
-description: Two-surface routing — marketing on hustlaiapp.in, authenticated cockpit on workspace.hustlaiapp.in, served from one SPA build
+description: Workspace subdomain is a focused execution surface; main domain owns centralized auth and session hydration
 type: feature
 ---
 
@@ -22,9 +22,9 @@ Earlier the redirect layer treated the entire authenticated app as the workspace
 - `src/components/SurfaceHostRedirect.tsx` — mounted in `App.tsx`. On marketing host, the (narrow) workspace paths bounce to `https://workspace.hustlaiapp.in${path}`. On workspace host, anything that is NOT a workspace execution path bounces back to `https://hustlaiapp.in${path}`. Query + hash preserved.
 - `vercel.json` is unchanged — same SPA serves both hostnames; user attaches the `workspace.` subdomain in Vercel.
 
-## Auth continuity (TODO)
+## Auth continuity
 
-Supabase session storage is `localStorage`, scoped per-origin → no native SSO between subdomains today. Sign-in must happen on the workspace host. Future fix: switch Supabase auth `storage` to a cookie scoped to `.hustlaiapp.in` so a single session spans both surfaces. Out of scope for this pass.
+Main domain owns authentication. Workspace execution routes consume the same centralized auth provider and must not introduce separate route guards, auth providers, or fallback redirects. A temporary first-party bridge cookie scoped to `.hustlaiapp.in` mirrors the existing session across `hustlaiapp.in` and `workspace.hustlaiapp.in` while the generated auth client continues using localStorage. Route redirects must wait for auth hydration before firing, and normal login must return to `next` or `/dashboard`, never auto-fallback to admin.
 
 ## Cross-host CTAs
 
