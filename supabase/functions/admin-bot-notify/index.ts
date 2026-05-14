@@ -6,7 +6,9 @@
 // Keep this surface tiny so it cannot affect auth, payments, or middleware.
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 
-const TG_TOKEN = Deno.env.get("TELEGRAM_BOT_TOKEN") || "";
+// Use the SkyMedia admin bot (@theskymediabot) for ops notifications.
+// Falls back to the user-facing bot only if the admin token is missing.
+const TG_TOKEN = Deno.env.get("SKYMEDIA_BOT_TOKEN") || Deno.env.get("TELEGRAM_BOT_TOKEN") || "";
 const TG_CHATS = (Deno.env.get("TELEGRAM_ADMIN_CHAT_IDS") || Deno.env.get("TELEGRAM_ADMIN_CHAT_ID") || "")
   .split(/[,;\s]+/).map(s => s.trim()).filter(Boolean);
 
