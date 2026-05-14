@@ -19,6 +19,7 @@ import { FrequentlyUsedTogether } from "@/components/seo/FrequentlyUsedTogether"
 import { AuthorByline } from "@/components/seo/AuthorByline";
 import { AutoLinkedHtml } from "@/components/seo/AutoLinkedHtml";
 import { ShareButtons } from "@/components/seo/ShareButtons";
+import { BookmarkButton } from "@/components/blog/operational/BookmarkButton";
 import { supabase } from "@/integrations/supabase/client";
 import {
   ContextualCTACard,
