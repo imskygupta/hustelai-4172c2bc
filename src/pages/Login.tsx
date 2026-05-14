@@ -39,7 +39,7 @@ export default function Login() {
   const [quoteIdx, setQuoteIdx] = useState(0);
   const [method, setMethod] = useState<LoginMethod>("password");
   const [linkSent, setLinkSent] = useState(false);
-  const { signIn } = useAuth();
+  const { signIn, user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
@@ -76,6 +76,10 @@ export default function Login() {
     // Admins can enter via /imskygupta-admin or the explicit Admin Panel link.
     navigate("/dashboard", { replace: true });
   };
+
+  useEffect(() => {
+    if (!authLoading && user) void redirectAfterLogin();
+  }, [authLoading, user?.id]);
 
   const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
