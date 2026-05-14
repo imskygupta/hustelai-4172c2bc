@@ -1,47 +1,185 @@
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { SEO } from "@/components/SEO";
-import { listBlogs, type SeoBlogRow } from "@/lib/seo-cms";
-import { ArrowRight, Loader2 } from "lucide-react";
+import {
+  listBlogs,
+  listTrendingBlogs,
+  listRecentBlogs,
+  listMostViewedBlogs,
+  type SeoBlogRow,
+} from "@/lib/seo-cms";
+import { ArrowRight, Eye, Loader2, Sparkles } from "lucide-react";
+import { StartHereRoadmap } from "@/components/blog/operational/StartHereRoadmap";
+import {
+  TrendingRail,
+  NewlyPublishedRail,
+  MostReadRail,
+} from "@/components/blog/operational/DiscoveryRails";
+import { PersonaFilter } from "@/components/blog/operational/PersonaFilter";
+import {
+  inferPersonas,
+  personaMeta,
+  type OperatorPersona,
+} from "@/components/blog/operational/OperatorPersonas";
 
 export default function SeoBlogIndex() {
-  const [posts, setPosts] = useState<SeoBlogRow[] | null>(null);
-  useEffect(() => { listBlogs(false).then(setPosts); }, []);
+  const [allPosts, setAllPosts] = useState<SeoBlogRow[] | null>(null);
+  const [trending, setTrending] = useState<SeoBlogRow[]>([]);
+  const [recent, setRecent] = useState<SeoBlogRow[]>([]);
+  const [mostRead, setMostRead] = useState<SeoBlogRow[]>([]);
+  const [search, setSearch] = useSearchParams();
+  const activePersona = (search.get("persona") as OperatorPersona | null) || null;
+
+  useEffect(() => {
+    listBlogs(false).then(setAllPosts);
+    listTrendingBlogs(6).then(setTrending);
+    listRecentBlogs(6).then(setRecent);
+    listMostViewedBlogs(6).then(setMostRead);
+  }, []);
+
+  const filtered = useMemo(() => {
+    if (!allPosts) return null;
+    if (!activePersona) return allPosts;
+    return allPosts.filter((p) =>
+      inferPersonas(p.tags ?? [], p.category).includes(activePersona),
+    );
+  }, [allPosts, activePersona]);
+
+  const setPersona = (p: OperatorPersona | null) => {
+    const next = new URLSearchParams(search);
+    if (p) next.set("persona", p);
+    else next.delete("persona");
+    setSearch(next, { replace: true });
+  };
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-white">
       <SEO
-        title="Insights — Freelancer CRM, AI Workspace & SaaS Operations | HustleAI"
-        description="Tactical insights for freelancers and small agencies — CRM, invoicing, proposals, AI workflows and growth playbooks from HustleAI Workspace OS."
+        title="Operational Guides for Freelancers & Modern Agencies | HustleAI"
+        description="Operator handbooks for freelancers, solo hustlers and small agencies — onboarding, proposals, async delivery, automation and Telegram-first workflows."
         path="/insights"
       />
       <Navbar />
-      <main className="pt-24 pb-16 px-4">
-        <div className="container mx-auto max-w-4xl">
-          <header className="mb-10 text-center space-y-3">
-            <h1 className="text-4xl md:text-5xl font-display font-bold">Insights</h1>
-            <p className="text-muted-foreground">Playbooks, teardowns and operating notes for the modern freelancer.</p>
-          </header>
-          {posts === null ? (
-            <div className="flex justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
-          ) : posts.length === 0 ? (
-            <p className="text-center text-muted-foreground py-20">No posts yet — check back soon.</p>
-          ) : (
-            <div className="grid gap-4">
-              {posts.map((p) => (
-                <Link key={p.id} to={`/insights/${p.slug}`} className="glass rounded-xl p-6 hover:border-primary/40 transition-colors">
-                  <div className="text-xs text-muted-foreground mb-1">{p.category} · {new Date(p.published_at ?? p.updated_at).toLocaleDateString()}</div>
-                  <h2 className="text-xl font-display font-bold mb-2">{p.title}</h2>
-                  {p.excerpt && <p className="text-sm text-muted-foreground line-clamp-2">{p.excerpt}</p>}
-                  <div className="text-sm text-primary mt-3 inline-flex items-center gap-1">Read more <ArrowRight className="w-3 h-3" /></div>
-                </Link>
-              ))}
+      <main className="pt-24">
+        {/* Hero */}
+        <section className="px-4 pb-12 md:pb-16 bg-gradient-to-b from-slate-50 via-white to-white">
+          <div className="container mx-auto max-w-4xl text-center space-y-5">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-slate-200 bg-white text-slate-600 text-xs shadow-sm">
+              <Sparkles className="w-3 h-3 text-emerald-500" />
+              Operational guides · operator handbook · async-first
             </div>
-          )}
-        </div>
+            <h1 className="text-4xl md:text-6xl font-display font-semibold tracking-tight text-slate-900 leading-[1.05]">
+              Operational guides for modern<br className="hidden sm:block" /> freelancers & agencies.
+            </h1>
+            <p className="text-slate-500 text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
+              Learn how to onboard clients, automate delivery, manage async workflows and build scalable systems with AI — written for operators, not readers.
+            </p>
+            <div className="flex items-center justify-center gap-4 pt-2 text-[11.5px] text-slate-500">
+              <span className="inline-flex items-center gap-1.5"><Eye className="w-3.5 h-3.5 text-emerald-500" /> Real operators reading right now</span>
+              <span className="inline-flex items-center gap-1.5"><Sparkles className="w-3.5 h-3.5 text-emerald-500" /> Connected to live tools & templates</span>
+            </div>
+          </div>
+        </section>
+
+        {/* Persona filter sticky bar */}
+        <PersonaFilter active={activePersona} onChange={setPersona} />
+
+        {/* When a persona is selected we narrow to a flat filtered list.
+            Otherwise we show the full operational architecture: roadmap → rails → archive. */}
+        {activePersona ? (
+          <FilteredArchive posts={filtered} persona={activePersona} />
+        ) : (
+          <>
+            <StartHereRoadmap />
+            <TrendingRail posts={trending} />
+            <NewlyPublishedRail posts={recent} />
+            <MostReadRail posts={mostRead} />
+            <FullArchive posts={allPosts} />
+          </>
+        )}
       </main>
       <Footer />
+    </div>
+  );
+}
+
+function FullArchive({ posts }: { posts: SeoBlogRow[] | null }) {
+  return (
+    <section className="px-4 py-14 border-t border-slate-100">
+      <div className="container mx-auto max-w-6xl">
+        <div className="mb-8">
+          <div className="text-[11px] uppercase tracking-[0.18em] font-semibold text-slate-400 mb-2">All operator handbooks</div>
+          <h2 className="text-2xl md:text-3xl font-display font-semibold tracking-tight text-slate-900">
+            Browse every guide in the system.
+          </h2>
+        </div>
+        <ArchiveList posts={posts} />
+      </div>
+    </section>
+  );
+}
+
+function FilteredArchive({ posts, persona }: { posts: SeoBlogRow[] | null; persona: OperatorPersona }) {
+  const meta = personaMeta(persona);
+  return (
+    <section className="px-4 py-12">
+      <div className="container mx-auto max-w-6xl">
+        <div className="mb-8">
+          <div className="text-[11px] uppercase tracking-[0.18em] font-semibold text-emerald-600 mb-2">
+            Filtered: {meta.emoji} {meta.label}
+          </div>
+          <h2 className="text-2xl md:text-3xl font-display font-semibold tracking-tight text-slate-900">
+            Guides for {meta.label.toLowerCase()}.
+          </h2>
+          <p className="text-slate-500 text-sm mt-1">{meta.blurb}</p>
+        </div>
+        <ArchiveList posts={posts} />
+      </div>
+    </section>
+  );
+}
+
+function ArchiveList({ posts }: { posts: SeoBlogRow[] | null }) {
+  if (posts === null) {
+    return (
+      <div className="flex justify-center py-12">
+        <Loader2 className="w-6 h-6 animate-spin text-emerald-500" />
+      </div>
+    );
+  }
+  if (posts.length === 0) {
+    return (
+      <p className="text-center text-slate-500 py-12 text-sm">
+        No guides match this filter yet — new systems are being indexed continuously.
+      </p>
+    );
+  }
+  return (
+    <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+      {posts.map((p) => (
+        <Link
+          key={p.id}
+          to={`/insights/${p.slug}`}
+          className="group block rounded-xl border border-slate-200 bg-white p-5 hover:border-emerald-300 hover:shadow-[0_6px_24px_-12px_rgba(16,185,129,0.25)] transition-all"
+        >
+          <div className="flex items-center gap-2 mb-2 text-[10.5px] uppercase tracking-wider font-semibold text-slate-500">
+            <span>{p.category || "Operations"}</span>
+            <span className="opacity-40">·</span>
+            <span>{new Date(p.published_at ?? p.updated_at).toLocaleDateString()}</span>
+          </div>
+          <h3 className="font-display font-semibold text-[16.5px] leading-snug text-slate-900 mb-1.5 line-clamp-2">
+            {p.title}
+          </h3>
+          {p.excerpt && (
+            <p className="text-[13px] text-slate-500 leading-relaxed line-clamp-2 mb-3">{p.excerpt}</p>
+          )}
+          <div className="text-[12px] font-semibold text-slate-900 inline-flex items-center gap-1 group-hover:text-emerald-700 transition-colors">
+            Read guide <ArrowRight className="w-3 h-3" />
+          </div>
+        </Link>
+      ))}
     </div>
   );
 }
