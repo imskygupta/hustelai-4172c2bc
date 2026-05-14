@@ -13,6 +13,7 @@ import StartHerePanel from "@/components/activation/StartHerePanel";
 import RecentNextAction from "@/components/activation/RecentNextAction";
 import WorkflowMomentum from "@/components/activation/WorkflowMomentum";
 import ResumeWorkflowCard from "@/components/activation/ResumeWorkflowCard";
+import AdaptiveCockpit from "@/components/dashboard/AdaptiveCockpit";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -171,6 +172,11 @@ export default function Dashboard() {
       <div className="space-y-6 max-w-7xl mx-auto w-full">
         {!emailVerified && <EmailVerificationBanner email={user!.email || ""} />}
 
+        {/* Intent-first cockpit — replaces the old "tool wall first" experience.
+            Picks a role, surfaces ONE next action, shows only relevant modules.
+            Everything else is still available below under "Show all modules". */}
+        <AdaptiveCockpit />
+
         {/* KPI cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <KpiCard
@@ -199,8 +205,20 @@ export default function Dashboard() {
           />
         </div>
 
+        {/* Everything below is folded away by default — users opt in to the
+            full module wall instead of being overwhelmed on first paint. */}
+        <details className="group rounded-2xl border border-border bg-card open:bg-card">
+          <summary className="cursor-pointer list-none flex items-center justify-between px-5 py-4">
+            <div>
+              <p className="font-display font-semibold text-sm text-foreground">All modules &amp; tools</p>
+              <p className="text-xs text-muted-foreground">Roadmap engine, document studio, daily tools, infrastructure &amp; more.</p>
+            </div>
+            <span className="text-[11px] uppercase tracking-wider font-semibold text-primary group-open:hidden">Show all</span>
+            <span className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground hidden group-open:inline">Hide</span>
+          </summary>
+          <div className="px-5 pb-5 space-y-6 border-t border-border pt-5">
         {/* Operational Brain — featured module */}
-        <div className="relative overflow-hidden rounded-2xl border border-violet-200 bg-gradient-to-br from-violet-50 via-white to-fuchsia-50 p-5 sm:p-6">
+        <div className="relative overflow-hidden rounded-2xl border border-violet-200 bg-gradient-to-br from-violet-50 via-white to-fuchsia-50 p-5 sm:p-6 dark:border-violet-900/40 dark:from-violet-950/40 dark:via-card dark:to-fuchsia-950/30">
           <div className="absolute -top-12 -right-12 w-48 h-48 rounded-full bg-gradient-to-br from-violet-200/50 to-fuchsia-200/40 blur-2xl pointer-events-none" />
           <div className="relative grid lg:grid-cols-3 gap-5 items-center">
             <div className="lg:col-span-2">
