@@ -344,6 +344,14 @@ export default function Payment() {
   const currentTier = profile?.subscription_tier || "free";
   const primaryUpi = upiMethods.find(m => m.upi_id) || null;
   const primaryQr = upiMethods.find(m => m.qr_image_url) || null;
+
+  // === DODO-ONLY MODE ===
+  // Manual UPI flows (priority banner, "Pay via UPI manually" buttons,
+  // UTR-submission dialog) are temporarily hidden so Dodo Payments is the
+  // only visible checkout gateway in production. Code, state, RPCs and
+  // edge functions are preserved — flip this flag to re-enable manual UPI.
+  const MANUAL_UPI_ENABLED = false;
+  const showManualUpi = MANUAL_UPI_ENABLED && !!primaryUpi;
   const annualSavings = plans.reduce((acc, p) => acc + (p.price * 12 - Math.round(p.price * 12 * 0.8)), 0);
 
   return (
