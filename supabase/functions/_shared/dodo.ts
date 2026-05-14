@@ -24,6 +24,17 @@ if (DODO_API_KEY) {
   }
 }
 
+// TEMP boot diagnostics for live verification — no secret values, prefix only.
+console.log(JSON.stringify({
+  tag: "[dodo:boot]",
+  mode: DODO_MODE,
+  base: DODO_BASE,
+  api_key_present: !!DODO_API_KEY,
+  api_key_prefix: DODO_API_KEY ? DODO_API_KEY.slice(0, 8) + "…" : null,
+  webhook_secret_present: !!DODO_WEBHOOK_SECRET,
+  webhook_secret_prefix: DODO_WEBHOOK_SECRET ? DODO_WEBHOOK_SECRET.slice(0, 6) + "…" : null,
+}));
+
 export async function dodo<T = any>(
   path: string,
   init: RequestInit = {},

@@ -44,6 +44,15 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   const rawBody = await req.text();
+  // TEMP: live verification log (no secrets)
+  console.log(JSON.stringify({
+    tag: "[dodo-webhook:received]",
+    mode: DODO_MODE,
+    has_id: !!req.headers.get("webhook-id"),
+    has_ts: !!req.headers.get("webhook-timestamp"),
+    has_sig: !!req.headers.get("webhook-signature"),
+    body_len: rawBody.length,
+  }));
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
@@ -52,6 +61,7 @@ serve(async (req) => {
   // Verify
   const valid = await verifyStandardWebhook(rawBody, req.headers).catch(() => false);
   if (!valid) {
+    console.error(JSON.stringify({ tag: "[dodo-webhook:invalid_signature]", mode: DODO_MODE }));
     return new Response(JSON.stringify({ error: "Invalid signature" }), {
       status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
@@ -65,6 +75,7 @@ serve(async (req) => {
   const eventId = event.id || event.event_id || req.headers.get("webhook-id") || crypto.randomUUID();
   const eventType: string = event.type || event.event_type || "unknown";
   const data = event.data || event.object || event;
+  console.log(JSON.stringify({ tag: "[dodo-webhook:verified]", event_id: eventId, type: eventType }));
 
   // Idempotency
   const { data: existing } = await supabase.from("dodo_events")
@@ -183,6 +194,10 @@ serve(async (req) => {
             subscription_tier: internalKey,
             dodo_subscription_id: dodoSubId,
           } as any).eq("user_id", userId);
+          console.log(JSON.stringify({
+            tag: "[dodo-webhook:plan_updated]",
+            user_id: userId, tier: internalKey, sub_id: dodoSubId,
+          }));
           fireAndForget(supabase.functions.invoke("discord-sync-role", {
             body: { user_id: userId, tier: internalKey, source: "dodo" },
           }));
@@ -401,6 +416,12 @@ serve(async (req) => {
           reason: data.failure_reason || data.error_code,
           link: "/payment",
         });
+        console.log(JSON.stringify({
+          tag: "[dodo-webhook:payment_failed]",
+          user_id: userId,
+          reason: data.failure_reason || data.error_code || "unknown",
+          payment_id: data.payment_id || null,
+        }));
         fireAndForget(emitWorkflowEvent(supabase, "payment.failed", {
           user_id: userId, amount: amountInr, currency: data.currency || "INR",
           payment_provider: "dodo", transaction_id: data.payment_id || eventId,
