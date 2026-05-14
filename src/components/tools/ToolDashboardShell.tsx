@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import { ReactNode, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   FileText, FilePen, ScrollText, Calculator, User2, CalendarRange, CreditCard, ClipboardList,
@@ -40,13 +40,32 @@ export function ToolDashboardShell({ children, toolKey }: { children: ReactNode;
   const navigate = useNavigate();
   const { pathname } = useLocation();
 
-  // Map our internal toolKey → the dashboard route slug (they're identical
-  // for every tool except "intake-form" which lives at /dashboard/tools/onboarding-form).
+  // Map our internal toolKey → the dashboard route slug. Public /tools/*
+  // pages use short keys (e.g. "invoice"), but dashboard routes use the
+  // long slug (e.g. "invoice-generator"). Keep this mapping authoritative.
   const dashSlugFor: Record<string, string> = {
+    "invoice": "invoice-generator",
+    "proposal": "proposal-generator",
+    "contract": "contract-generator",
+    "pricing": "pricing-calculator",
+    "portfolio": "portfolio-bio",
     "intake-form": "onboarding-form",
+    "calendar": "content-calendar",
+    "card": "business-card",
   };
   const dashSlug = toolKey ? (dashSlugFor[toolKey] || toolKey) : "";
-  const openInDashboard = () => navigate(toolKey ? `/dashboard/tools/${dashSlug}` : "/dashboard");
+  const dashHref = toolKey ? `/dashboard/tools/${dashSlug}` : "/dashboard";
+  const openInDashboard = () => navigate(dashHref);
+
+  // If a logged-in user lands on the public /tools/* surface, send them
+  // straight to the dashboard version. The public shell is a guest funnel,
+  // not an authenticated surface — no "Open in Dashboard" button needed.
+  useEffect(() => {
+    if (user && pathname.startsWith("/tools/")) {
+      navigate(dashHref, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, pathname]);
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -67,8 +86,8 @@ export function ToolDashboardShell({ children, toolKey }: { children: ReactNode;
         </div>
         <div className="ml-auto flex items-center gap-2">
           {user ? (
-            <Button size="sm" onClick={openInDashboard} className="text-xs h-8">
-              {toolKey ? "Open in Dashboard" : "Open Dashboard"} <ChevronRight className="w-3 h-3 ml-1" />
+            <Button size="sm" onClick={() => navigate("/dashboard")} className="text-xs h-8">
+              Back to Dashboard <ChevronRight className="w-3 h-3 ml-1" />
             </Button>
           ) : (
             <>
@@ -135,13 +154,6 @@ export function ToolDashboardShell({ children, toolKey }: { children: ReactNode;
           {!user ? (
             <div className="bg-muted border-b border-border text-muted-foreground text-[11px] px-4 py-1.5 text-center">
               You're using the free preview — <Link to="/signup" className="font-semibold underline">sign up</Link> to save, sync, and unlock AI.
-            </div>
-          ) : toolKey ? (
-            <div className="bg-foreground text-background text-[11px] px-4 py-1.5 flex items-center justify-center gap-3">
-              <span>You're signed in — open this tool in your dashboard for autosave, AI assists & history.</span>
-              <button onClick={openInDashboard} className="font-semibold underline hover:no-underline">
-                Open in Dashboard →
-              </button>
             </div>
           ) : null}
           {children}

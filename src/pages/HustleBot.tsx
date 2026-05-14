@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import ReactMarkdown from "react-markdown";
-import { Bot, Send, Sparkles, Loader2, Lock, Crown, Rocket, MessageCircle } from "lucide-react";
+import { Bot, Send, Sparkles, Loader2, Lock, Crown, Rocket, MessageCircle, TrendingUp, Lightbulb, Target, Calendar } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -190,7 +190,7 @@ export default function HustleBot() {
         </Badge>
       }
     >
-      <div className="max-w-4xl mx-auto w-full">
+      <div className="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-5 items-start">
         <div
           className="rounded-none sm:rounded-2xl sm:border border-slate-200 bg-white overflow-hidden flex flex-col h-[calc(100dvh-220px)] sm:h-[calc(100vh-230px)] min-h-[60vh] sm:min-h-[480px]"
         >
@@ -307,7 +307,7 @@ export default function HustleBot() {
 
         {/* Helpful chips */}
         {!isFree && (
-          <div className="mt-4 flex flex-wrap gap-2 justify-center">
+          <div className="mt-4 flex flex-wrap gap-2 justify-center lg:col-span-2 lg:mt-2">
             {[
               "Pricing strategy for my niche",
               "Cold DM script for Instagram outreach",
@@ -324,6 +324,62 @@ export default function HustleBot() {
             ))}
           </div>
         )}
+
+        {/* Desktop side rail — uses the otherwise-empty whitespace on wide
+            screens to surface helpful prompts, mentor facts and quick
+            shortcuts. Hidden on mobile to keep the chat full-width. */}
+        <aside className="hidden lg:flex flex-col gap-3 sticky top-20 self-start">
+          <div className="rounded-2xl border border-slate-200 bg-gradient-to-br from-violet-50 via-fuchsia-50 to-amber-50 p-4">
+            <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.16em] font-semibold text-fuchsia-700">
+              <Lightbulb className="w-3.5 h-3.5" /> Did you know
+            </div>
+            <p className="text-xs text-slate-700 mt-2 leading-relaxed">
+              Freelancers who niche down to <strong>one specific industry</strong> earn
+              up to <strong>2.3× more</strong> per project than generalists.
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-slate-200 bg-white p-4">
+            <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.16em] font-semibold text-slate-500 mb-3">
+              <Sparkles className="w-3.5 h-3.5" /> Try asking
+            </div>
+            <div className="space-y-2">
+              {[
+                { icon: Target,    text: "Audit my current rates vs market" },
+                { icon: TrendingUp,text: "Build me a 30-day client outreach plan" },
+                { icon: Calendar,  text: "Plan my week around 12 focused hours" },
+                { icon: MessageCircle, text: "Draft a follow-up DM that doesn't feel pushy" },
+              ].map(({ icon: Icon, text }) => (
+                <button
+                  key={text}
+                  onClick={() => setInput(text)}
+                  disabled={isFree && onboardingStep === 0}
+                  className="w-full text-left text-xs text-slate-700 px-3 py-2 rounded-lg border border-slate-200 hover:border-fuchsia-300 hover:bg-fuchsia-50/40 transition disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-start gap-2"
+                >
+                  <Icon className="w-3.5 h-3.5 mt-0.5 text-fuchsia-600 shrink-0" />
+                  <span>{text}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-slate-200 bg-slate-900 text-slate-100 p-4">
+            <div className="text-[11px] uppercase tracking-[0.16em] font-semibold text-amber-300">Mentor tip</div>
+            <p className="text-xs mt-2 leading-relaxed text-slate-200">
+              Send HustleBot your <strong>actual numbers</strong> — current rate,
+              hours/week, niche — for replies tuned to your situation, not generic advice.
+            </p>
+            {isFree && (
+              <Button
+                size="sm"
+                onClick={() => navigate("/payment")}
+                className="w-full mt-3 h-8 text-[11px] bg-gradient-to-r from-violet-500 via-fuchsia-500 to-amber-400 hover:opacity-90 text-white font-semibold"
+              >
+                <Crown className="w-3.5 h-3.5 mr-1" /> Unlock chats with Pro
+              </Button>
+            )}
+          </div>
+        </aside>
       </div>
     </AppShell>
   );
