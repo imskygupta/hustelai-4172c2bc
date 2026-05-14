@@ -9,15 +9,17 @@ import { isAppShellRoute } from "@/components/app-shell-routes";
 import { NotificationCenter } from "@/components/NotificationCenter";
 
 const navLinks = [
-  { label: "Workspaces", href: "/workspaces" },
-  { label: "Explore", href: "/explore" },
-  { label: "Free Tools", href: "/tools" },
-  { label: "Integrations", href: "/integrations" },
+  { label: "Platform", href: "/platform" },
+  { label: "How it works", href: "/how-it-works" },
+  { label: "Workspace", href: "/workspaces" },
+  { label: "Free tools", href: "/tools" },
   { label: "Pricing", href: "/pricing" },
-  { label: "Relax", href: "/relax" },
   {
     label: "More",
     children: [
+      { label: "Trust & security", href: "/trust" },
+      { label: "Integrations", href: "/integrations" },
+      { label: "Explore guides", href: "/explore" },
       { label: "Blog", href: "/blog" },
       { label: "API Docs", href: "https://docs.hustlaiapp.in", external: true },
       { label: "Compare plans", href: "/plans" },
@@ -27,7 +29,6 @@ const navLinks = [
       { label: "Affiliates", href: "/affiliates" },
       { label: "Reviews", href: "/reviews" },
       { label: "Contact", href: "/contact" },
-      { label: "Leaderboard", href: "/leaderboard" },
     ],
   },
 ];
@@ -253,7 +254,7 @@ export function Navbar() {
                         <Shield className="w-4 h-4 mr-1" /> Admin Panel
                       </Button>
                     )}
-                    <Button variant="ghost" className="w-full justify-start" onClick={() => navigate("/saved-hustles")}>My Hustles</Button>
+                    <Button variant="ghost" className="w-full justify-start" onClick={() => navigate("/saved")}>Saved guides</Button>
                     <Button variant="ghost" className="w-full justify-start" onClick={() => navigate("/profile")}>Profile</Button>
                     <Button variant="ghost" className="w-full justify-start" onClick={() => navigate("/settings/profile")}>Settings</Button>
                     <Button variant="ghost" className="w-full justify-start" onClick={() => navigate("/dashboard")}>Dashboard</Button>

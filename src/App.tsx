@@ -54,6 +54,8 @@ import Career from "./pages/Career";
 import Affiliates from "./pages/Affiliates";
 import Company from "./pages/Company";
 import Trust from "./pages/Trust";
+import Platform from "./pages/Platform";
+import HowItWorks from "./pages/HowItWorks";
 import Relax from "./pages/Relax";
 import HustleDetail from "./pages/HustleDetail";
 import RoadmapViewer from "@/pages/RoadmapViewer";
@@ -351,6 +353,8 @@ const App = () => (
             <Route path="/acceptable-use" element={<AcceptableUse />} />
             <Route path="/compliance" element={<Compliance />} />
             <Route path="/trust" element={<Trust />} />
+            <Route path="/platform" element={<Platform />} />
+            <Route path="/how-it-works" element={<HowItWorks />} />
             <Route path="/operations" element={<Operations />} />
             <Route path="/admin" element={<AdminBlock />} />
             <Route path="/imskygupta-admin" element={<AdminLogin />} />
