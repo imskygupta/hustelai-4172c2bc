@@ -22,11 +22,13 @@ const workspaceOsItems = [
   { title: "Hustle Canvas", url: "/canvas", icon: LayoutGrid },
 ];
 
-// Doc Tools — quick branded doc generators (also linked from /tools)
+// Doc Tools — quick branded doc generators. Authenticated sidebar always
+// points at the dashboard-shell version so users get autosave + AI assists,
+// not the public marketing/SEO surface.
 const docToolsItems = [
-  { title: "Invoice Generator", url: "/tools/invoice-generator", icon: Receipt },
-  { title: "Proposal Generator", url: "/tools/proposal-generator", icon: FileEdit },
-  { title: "Contract Generator", url: "/tools/contract-generator", icon: FileSignature },
+  { title: "Invoice Generator", url: "/dashboard/tools/invoice-generator", icon: Receipt },
+  { title: "Proposal Generator", url: "/dashboard/tools/proposal-generator", icon: FileEdit },
+  { title: "Contract Generator", url: "/dashboard/tools/contract-generator", icon: FileSignature },
 ];
 
 // AI Systems — high-leverage AI tools
