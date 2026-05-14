@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
@@ -41,6 +41,7 @@ export default function Login() {
   const [linkSent, setLinkSent] = useState(false);
   const { signIn } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const formRef = useRef<HTMLDivElement>(null);
   const glowRef = useRef<HTMLDivElement>(null);
@@ -64,18 +65,26 @@ export default function Login() {
     }
   }, []);
 
-  const redirectAfterLogin = async (userId: string) => {
+  const redirectAfterLogin = async (_userId: string) => {
+    const next = searchParams.get("next");
+    if (next && next.startsWith("/") && !next.startsWith("//")) {
+      navigate(next, { replace: true });
+      return;
+    }
+
+    // Normal user login must never auto-fallback into the admin surface.
+    // Admins can enter via /imskygupta-admin or the explicit Admin Panel link.
     const { data: adminRole, error } = await supabase.rpc("has_role", {
-      _user_id: userId,
+      _user_id: _userId,
       _role: "admin",
     });
 
     if (!error && adminRole) {
-      navigate("/admin-dashboard");
+      navigate("/dashboard", { replace: true });
       return;
     }
 
-    navigate("/dashboard");
+    navigate("/dashboard", { replace: true });
   };
 
   const handlePasswordSubmit = async (e: React.FormEvent) => {
