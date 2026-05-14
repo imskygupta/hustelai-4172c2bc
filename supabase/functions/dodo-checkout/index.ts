@@ -188,6 +188,16 @@ serve(async (req) => {
 
     if (!checkoutUrl) throw new Error("Dodo did not return a checkout URL");
 
+    // TEMP: live verification log (no secrets)
+    console.log(JSON.stringify({
+      tag: "[dodo-checkout:created]",
+      mode: DODO_MODE,
+      user_id: userId,
+      internal_key,
+      kind: product.kind,
+      session_id: session.subscription_id || session.payment_id || session.id || null,
+    }));
+
     // Cache the dodo_customer_id if Dodo returned one
     const newCustomerId = session.customer?.customer_id || session.customer_id;
     if (newCustomerId && newCustomerId !== profile?.dodo_customer_id) {
