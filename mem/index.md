@@ -11,3 +11,4 @@
 - [Editorial Pipeline](mem://features/editorial-pipeline) — Unified /admin/blog/pipeline timeline, auto-fix, publish-passing, route reconciliation
 - [Self-Healing Editorial](mem://features/self-healing-editorial) — AI auto-fix engine with readiness score, granular fixes, fix-with-AI preview in post editor
 - [Operational Stacks](mem://features/operational-stacks) — /systems and /stories: curated operator journeys + workflow setups
+- [UI Governance](mem://style/ui-governance) — Tokens, spacing, cards, CTA hierarchy, gradient/animation rules; one visual language for authenticated surfaces

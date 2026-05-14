@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Search, Crown, Sparkles, Rocket, Star, ChevronRight, ArrowRight, Command } from "lucide-react";
 import { VerifyEmailGate } from "@/components/VerifyEmailGate";
 import { Chatbot } from "@/components/Chatbot";
+import { HustleBotIntro } from "@/components/HustleBotIntro";
 import NotificationCenter from "@/components/workspace-os/NotificationCenter";
 import AIFillStatusBanner from "@/components/tools/AIFillStatusBanner";
 import { AsyncActivityIndicator } from "@/components/async/AsyncActivityIndicator";
@@ -255,6 +256,7 @@ export function AppShell({ children, title, breadcrumbs, actions }: AppShellProp
           </main>
         </div>
         <Chatbot />
+        <HustleBotIntro />
         <AIFillStatusBanner />
       </div>
     </SidebarProvider>
