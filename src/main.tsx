@@ -5,10 +5,11 @@ import { initAnalytics } from "./lib/analytics";
 import { initSentry } from "./lib/sentry";
 import { initYandex } from "./lib/yandex";
 import { loadServerRuntimeConfig } from "./config/runtime";
-import { initTheme } from "./components/ThemeToggle";
+import { initCalmMode } from "./components/CalmModeToggle";
 
-// Apply persisted dark/light theme before first paint
-initTheme();
+// Calm mode is a global preference (reduces motion + gradients across surfaces).
+// Dark mode, by contrast, is scoped to the authenticated AppShell — see AppShell.tsx.
+initCalmMode();
 initSentry();
 initAnalytics();
 // Lazy-init Yandex Metrica after hydration (uses requestIdleCallback inside).

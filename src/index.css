@@ -277,6 +277,39 @@
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
+/* ============================================================
+   Workspace Calm Mode — opt-in via <html class="calm">
+   Goal: reduce gradient/motion noise for long focus sessions.
+   Scope: visual only; never hides functionality.
+   ============================================================ */
+html.calm .bg-gradient-primary,
+html.calm .bg-gradient-card,
+html.calm [class*="from-"][class*="to-"] {
+  background-image: none !important;
+}
+html.calm .text-gradient,
+html.calm .text-gradient-accent {
+  background-image: none !important;
+  -webkit-background-clip: initial;
+  background-clip: initial;
+  color: hsl(var(--foreground));
+}
+html.calm .shadow-glow,
+html.calm .ops-glow::before,
+html.calm .hover-ops::after {
+  box-shadow: none !important;
+  background-image: none !important;
+  animation: none !important;
+  opacity: 0 !important;
+}
+html.calm *,
+html.calm *::before,
+html.calm *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 120ms !important;
+}
+
 /* Respect user's reduced-motion preference */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

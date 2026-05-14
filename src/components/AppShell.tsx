@@ -1,4 +1,4 @@
-import { ReactNode, useMemo, useRef, useState } from "react";
+import { ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
@@ -12,7 +12,8 @@ import { Chatbot } from "@/components/Chatbot";
 import NotificationCenter from "@/components/workspace-os/NotificationCenter";
 import AIFillStatusBanner from "@/components/tools/AIFillStatusBanner";
 import { AsyncActivityIndicator } from "@/components/async/AsyncActivityIndicator";
-import { ThemeToggle } from "@/components/ThemeToggle";
+import { ThemeToggle, getInitialTheme } from "@/components/ThemeToggle";
+import { CalmModeToggle } from "@/components/CalmModeToggle";
 
 interface AppShellProps {
   children: ReactNode;
@@ -25,6 +26,15 @@ export function AppShell({ children, title, breadcrumbs, actions }: AppShellProp
   const { profile } = useAuth();
   const navigate = useNavigate();
   const tier = (profile?.subscription_tier as string) || "free";
+
+  // Dark mode is scoped to the authenticated AppShell only — marketing pages
+  // stay in their stable light identity. Apply persisted theme on mount and
+  // tear it down on unmount so navigating away from /dashboard restores light.
+  useEffect(() => {
+    const t = getInitialTheme();
+    if (t === "dark") document.documentElement.classList.add("dark");
+    return () => { document.documentElement.classList.remove("dark"); };
+  }, []);
 
   // ---- In-app Tool Finder (distinct from hustle search) ----
   const TOOL_INDEX: { label: string; desc: string; path: string; group: string }[] = [
@@ -106,16 +116,16 @@ export function AppShell({ children, title, breadcrumbs, actions }: AppShellProp
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-slate-50/50">
+      <div className="min-h-screen flex w-full bg-background">
         <VerifyEmailGate />
         <AppSidebar />
 
         <div className="flex-1 flex flex-col min-w-0">
           {/* Top bar */}
           <header
-            className="sticky top-0 z-30 h-14 border-b border-slate-200 bg-white/90 backdrop-blur-sm flex items-center gap-2 md:gap-3 px-3 md:px-6 pt-safe"
+            className="sticky top-0 z-30 h-14 border-b border-border bg-card/90 backdrop-blur-sm flex items-center gap-2 md:gap-3 px-3 md:px-6 pt-safe"
           >
-            <SidebarTrigger className="text-slate-600 hover:text-slate-900 min-h-tap min-w-tap md:min-h-0 md:min-w-0" />
+            <SidebarTrigger className="text-muted-foreground hover:text-foreground min-h-tap min-w-tap md:min-h-0 md:min-w-0" />
 
             {breadcrumbs && breadcrumbs.length > 0 && (
               <nav className="hidden md:flex items-center gap-1 text-sm">
@@ -216,6 +226,7 @@ export function AppShell({ children, title, breadcrumbs, actions }: AppShellProp
                   Upgrade
                 </Button>
               )}
+              <CalmModeToggle />
               <ThemeToggle />
               <AsyncActivityIndicator />
               <NotificationCenter />
@@ -224,10 +235,10 @@ export function AppShell({ children, title, breadcrumbs, actions }: AppShellProp
 
           {/* Page header */}
           {(title || actions) && (
-            <div className="border-b border-slate-200 bg-white px-4 md:px-8 py-4 md:py-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+            <div className="border-b border-border bg-card px-4 md:px-8 py-4 md:py-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
               <div className="min-w-0">
                 {title && (
-                  <h1 className="text-lg md:text-2xl font-display font-bold text-slate-900 truncate">
+                  <h1 className="text-lg md:text-2xl font-display font-bold text-foreground truncate">
                     {title}
                   </h1>
                 )}
