@@ -3,7 +3,7 @@ import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
-import { AUTH_EMAIL_REDIRECT_TO } from "@/lib/auth-config";
+import { AUTH_EMAIL_REDIRECT_TO, authRedirectTo } from "@/lib/auth-config";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -116,7 +116,7 @@ export default function Login() {
       email,
       options: {
         shouldCreateUser: false,
-        emailRedirectTo: AUTH_EMAIL_REDIRECT_TO,
+        emailRedirectTo: authRedirectTo(searchParams.get("next") || "/dashboard"),
       },
     });
     setLoading(false);
@@ -285,7 +285,7 @@ export default function Login() {
                     const { data, error } = await supabase.auth.signInWithOAuth({
                       provider: "google",
                       options: {
-                        redirectTo: AUTH_EMAIL_REDIRECT_TO,
+                        redirectTo: authRedirectTo(searchParams.get("next") || "/dashboard"),
                         skipBrowserRedirect: true,
                         queryParams: { prompt: "select_account" },
                       },
@@ -296,7 +296,7 @@ export default function Login() {
                     }
                   } else {
                     const { error } = await lovable.auth.signInWithOAuth("google", {
-                      redirect_uri: AUTH_EMAIL_REDIRECT_TO,
+                        redirect_uri: authRedirectTo(searchParams.get("next") || "/dashboard"),
                       extraParams: { prompt: "select_account" },
                     });
                     if (error) throw error;
