@@ -5,7 +5,10 @@ import { initAnalytics } from "./lib/analytics";
 import { initSentry } from "./lib/sentry";
 import { initYandex } from "./lib/yandex";
 import { loadServerRuntimeConfig } from "./config/runtime";
+import { initTheme } from "./components/ThemeToggle";
 
+// Apply persisted dark/light theme before first paint
+initTheme();
 initSentry();
 initAnalytics();
 // Lazy-init Yandex Metrica after hydration (uses requestIdleCallback inside).
