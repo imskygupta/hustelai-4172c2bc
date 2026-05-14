@@ -122,6 +122,7 @@ import IntakePreview from "./pages/IntakePreview";
 import Work from "./pages/Work";
 import WorkTool from "./pages/WorkTool";
 import ClientPortal from "./pages/ClientPortal";
+import ClientSurface from "./pages/client/ClientSurface";
 import DocsLayout from "./pages/docs/DocsLayout";
 import DocsHome from "./pages/docs/DocsHome";
 import DocsArticle from "./pages/docs/DocsArticle";
@@ -359,7 +360,8 @@ const App = () => (
             {/* Surface aliases — simulate the multi-surface architecture in-app
                 until subdomains are cut over. Mental model: one purpose per surface. */}
             <Route path="/workspace" element={<Navigate to="/workspaces" replace />} />
-            <Route path="/client" element={<Navigate to="/work/clients" replace />} />
+            {/* /client is its own world (own shell, own sidebar) — see ClientSurface. */}
+            <Route path="/client" element={<RequireAuth><ClientSurface /></RequireAuth>} />
             <Route path="/ai" element={<Navigate to="/ai-tools" replace />} />
             <Route path="/admin" element={<AdminBlock />} />
             <Route path="/imskygupta-admin" element={<AdminLogin />} />

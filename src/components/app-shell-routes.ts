@@ -32,9 +32,10 @@ export const APP_SHELL_PATHS = new Set<string>([
   "/red-flag-scanner",
   "/sure-hit-jobs",
   "/relax",
+  "/client",
 ]);
 
-export const APP_SHELL_PREFIXES = ["/marketplace/", "/integrations/", "/hustle/", "/roadmap/", "/dashboard/tools", "/settings"];
+export const APP_SHELL_PREFIXES = ["/marketplace/", "/integrations/", "/hustle/", "/roadmap/", "/dashboard/tools", "/settings", "/client/"];
 
 export function isAppShellRoute(pathname: string): boolean {
   if (APP_SHELL_PATHS.has(pathname)) return true;
