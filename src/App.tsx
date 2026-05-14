@@ -53,6 +53,7 @@ import SavedHustles from "./pages/SavedHustles";
 import Career from "./pages/Career";
 import Affiliates from "./pages/Affiliates";
 import Company from "./pages/Company";
+import Trust from "./pages/Trust";
 import Relax from "./pages/Relax";
 import HustleDetail from "./pages/HustleDetail";
 import RoadmapViewer from "@/pages/RoadmapViewer";
@@ -349,6 +350,7 @@ const App = () => (
             <Route path="/data-policy" element={<DataPolicy />} />
             <Route path="/acceptable-use" element={<AcceptableUse />} />
             <Route path="/compliance" element={<Compliance />} />
+            <Route path="/trust" element={<Trust />} />
             <Route path="/operations" element={<Operations />} />
             <Route path="/admin" element={<AdminBlock />} />
             <Route path="/imskygupta-admin" element={<AdminLogin />} />
