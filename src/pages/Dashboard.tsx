@@ -60,7 +60,8 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (!loading && !user) navigate("/login");
-    if (!loading && profile && !profile.onboarding_completed) navigate("/onboarding");
+    // Note: onboarding is optional. Users can always land on the dashboard.
+    // The onboarding nudge is surfaced via in-page banner/CTA, not a hard redirect.
   }, [loading, user, profile, navigate]);
 
   useEffect(() => {
