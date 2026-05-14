@@ -14,6 +14,8 @@ import RecentNextAction from "@/components/activation/RecentNextAction";
 import WorkflowMomentum from "@/components/activation/WorkflowMomentum";
 import ResumeWorkflowCard from "@/components/activation/ResumeWorkflowCard";
 import AdaptiveCockpit from "@/components/dashboard/AdaptiveCockpit";
+import OperationalFlows from "@/components/dashboard/OperationalFlows";
+import ContextualNudge from "@/components/dashboard/ContextualNudge";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -172,10 +174,19 @@ export default function Dashboard() {
       <div className="space-y-6 max-w-7xl mx-auto w-full">
         {!emailVerified && <EmailVerificationBanner email={user!.email || ""} />}
 
+        {/* Personalised activity-aware nudge — sits above the cockpit so the
+            first thing operators see is a sentence about THEIR own state. */}
+        <ContextualNudge />
+
         {/* Intent-first cockpit — replaces the old "tool wall first" experience.
             Picks a role, surfaces ONE next action, shows only relevant modules.
             Everything else is still available below under "Show all modules". */}
         <AdaptiveCockpit />
+
+        {/* Workflow-first grouping — outcome-named flows with progressive
+            disclosure. Replaces the "five semantically-similar tool grids"
+            problem with one journey at a time. */}
+        <OperationalFlows tier={tier} />
 
         {/* KPI cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
