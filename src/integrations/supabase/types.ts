@@ -7540,6 +7540,9 @@ export type Database = {
         Args: { _issue: string; _reason: string }
         Returns: string
       }
+      operator_pulse: { Args: { _slug: string }; Returns: Json }
+      operator_pulse_global: { Args: never; Returns: Json }
+      post_performance: { Args: { _slug: string }; Returns: Json }
       queue_archive_promote: {
         Args: { _queue: string; _reason?: string; _ref_id: string }
         Returns: undefined
@@ -7580,6 +7583,13 @@ export type Database = {
           queue: string
           reason: string
           status: string
+        }[]
+      }
+      recommend_next_tools: {
+        Args: { _limit?: number; _slug: string }
+        Returns: {
+          launches: number
+          tool_slug: string
         }[]
       }
       record_capability_cost: {
