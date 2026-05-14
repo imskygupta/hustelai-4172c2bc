@@ -196,6 +196,22 @@ export default function Payment() {
       return;
     }
     setProcessing(planId);
+    // Fire-and-forget admin notification (never blocks checkout)
+    try {
+      const plan = plans.find(p => p.id === planId);
+      void supabase.functions.invoke("admin-bot-notify", {
+        body: {
+          event: "payment_initiated",
+          payload: {
+            email: user.email,
+            plan: plan?.name || planId,
+            amount: plan?.price,
+            kind: "subscription",
+            timestamp: new Date().toISOString(),
+          },
+        },
+      }).catch(() => {});
+    } catch {}
     try {
       const { data, error } = await supabase.functions.invoke("dodo-checkout", {
         body: {
@@ -233,6 +249,22 @@ export default function Payment() {
       return;
     }
     setProcessing(packId);
+    // Fire-and-forget admin notification (never blocks checkout)
+    try {
+      const pack = walletPacks.find(p => p.id === packId);
+      void supabase.functions.invoke("admin-bot-notify", {
+        body: {
+          event: "payment_initiated",
+          payload: {
+            email: user.email,
+            plan: pack ? `Wallet ${pack.label} (${pack.credits} credits)` : packId,
+            amount: pack?.price,
+            kind: "wallet_topup",
+            timestamp: new Date().toISOString(),
+          },
+        },
+      }).catch(() => {});
+    } catch {}
     try {
       const { data, error } = await supabase.functions.invoke("dodo-checkout", {
         body: {
