@@ -52,35 +52,12 @@ export function marketingUrl(path: string): string {
  * On the marketing host, hits to these paths are redirected to workspace.*.
  */
 export const WORKSPACE_PATH_PREFIXES = [
-  "/dashboard",
+  // ONLY deep operational execution surfaces belong on workspace.*
+  // Dashboard, AI tools, admin, settings, billing, etc. stay on the main app.
   "/workspaces",
   "/workspaces-legacy",
-  "/work",
   "/canvas",
-  "/clients",
   "/client",
-  "/hustlebot",
-  "/settings",
-  "/profile",
-  "/plans",
-  "/payment",
-  "/payment-status",
-  "/saved-hustles",
-  "/affiliates",
-  "/leaderboard",
-  "/knowledge-hub",
-  "/problem-leads",
-  "/proposal-draft",
-  "/skill-gap",
-  "/ai-tools",
-  "/hustle-blueprint",
-  "/resume-optimizer",
-  "/gig-arbitrage",
-  "/gig-price-calculator",
-  "/faceless-content",
-  "/red-flag-scanner",
-  "/sure-hit-jobs",
-  "/infinity-zone",
 ];
 
 export function isWorkspacePath(pathname: string): boolean {
