@@ -129,6 +129,18 @@ export default function Index() {
             <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5 text-emerald-500" /> Client portals & invoices</span>
             <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5 text-emerald-500" /> GDPR-aware data controls</span>
           </div>
+
+          <div className="gsap-fade flex flex-wrap items-center justify-center gap-2 pt-2 text-xs">
+            <a href="/platform" className="px-3 py-1.5 rounded-full border border-slate-200 bg-white text-slate-700 hover:border-emerald-300 hover:text-emerald-700 transition-colors">
+              See the platform
+            </a>
+            <a href="/how-it-works" className="px-3 py-1.5 rounded-full border border-slate-200 bg-white text-slate-700 hover:border-emerald-300 hover:text-emerald-700 transition-colors">
+              How it works
+            </a>
+            <a href="/trust" className="px-3 py-1.5 rounded-full border border-slate-200 bg-white text-slate-700 hover:border-emerald-300 hover:text-emerald-700 transition-colors">
+              Trust & security
+            </a>
+          </div>
         </div>
       </section>
 
