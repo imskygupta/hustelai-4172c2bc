@@ -126,6 +126,10 @@ import DynamicSeoPage from "./pages/seo/DynamicSeoPage";
 import SeoBlogIndex from "./pages/seo/SeoBlogIndex";
 import SeoBlogPost from "./pages/seo/SeoBlogPost";
 import SavedGuides from "./pages/SavedGuides";
+import SystemsIndex from "./pages/systems/SystemsIndex";
+import SystemDetail from "./pages/systems/SystemDetail";
+import StoriesIndex from "./pages/stories/StoriesIndex";
+import StoryDetail from "./pages/stories/StoryDetail";
 import TopicsIndex from "./pages/seo/TopicsIndex";
 import TopicHub from "./pages/seo/TopicHub";
 import AuthorPage from "./pages/seo/AuthorPage";
@@ -273,6 +277,10 @@ const App = () => (
             <Route path="/insights/category/:slug" element={<CategoryArchive />} />
             <Route path="/insights/:slug" element={<SeoBlogPost />} />
             <Route path="/saved" element={<SavedGuides />} />
+            <Route path="/systems" element={<SystemsIndex />} />
+            <Route path="/systems/:slug" element={<SystemDetail />} />
+            <Route path="/stories" element={<StoriesIndex />} />
+            <Route path="/stories/:slug" element={<StoryDetail />} />
             <Route path="/topics" element={<TopicsIndex />} />
             <Route path="/topics/:slug" element={<TopicHub />} />
             <Route path="/authors/:slug" element={<AuthorPage />} />
