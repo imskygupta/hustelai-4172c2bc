@@ -1,6 +1,8 @@
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
-import { Sparkles, ArrowRight, ExternalLink, Briefcase, Building2, Rocket, Compass, Check, RotateCcw, Layers } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import {
+  Sparkles, ArrowRight, ExternalLink, Briefcase, Building2, Rocket, Compass, Check, RotateCcw, Layers,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -30,6 +32,32 @@ function NewTabBtn({ to }: { to: string }) {
   );
 }
 
+/* ------------------------------------------------------------------ */
+/*  Gentle attention tilt — fires once after ~90 s if user is still    */
+/*  looking at this section. Pure CSS keyframe, toggled by class.    */
+/* ------------------------------------------------------------------ */
+function useAttentionTilt(delayMs = 90_000) {
+  const [tilt, setTilt] = useState(false);
+  useEffect(() => {
+    const id = setTimeout(() => setTilt(true), delayMs);
+    const vis = () => {
+      if (document.hidden) {
+        clearTimeout(id);
+      } else if (!tilt) {
+        /* restart timer when tab becomes visible again */
+        clearTimeout(id);
+        setTimeout(() => setTilt(true), delayMs);
+      }
+    };
+    document.addEventListener("visibilitychange", vis);
+    return () => {
+      clearTimeout(id);
+      document.removeEventListener("visibilitychange", vis);
+    };
+  }, [delayMs, tilt]);
+  return tilt;
+}
+
 /**
  * Intent-first cockpit. Replaces "tool wall" overload by:
  *  1. Asking "what are you trying to do?" (Operator Mode picker)
@@ -44,40 +72,81 @@ export default function AdaptiveCockpit() {
   const navigate = useNavigate();
   const { mode, meta, recipe, activeRecipe, chooseMode, chooseRecipe } = useOperatorMode();
   const [showRecipes, setShowRecipes] = useState(false);
+  const attentionTilt = useAttentionTilt(90_000);
+  const gridRef = useRef<HTMLDivElement>(null);
 
   /* ---------- Empty state: pick a mode ---------- */
   if (!mode || !meta) {
     return (
-      <section className="rounded-2xl border border-border bg-card p-6 sm:p-8 shadow-sm">
-        <div className="flex items-center gap-2 mb-2">
-          <Sparkles className="w-4 h-4 text-primary" />
-          <span className="text-[11px] uppercase tracking-[0.18em] font-semibold text-primary">Pick your cockpit</span>
+      <section className="relative rounded-2xl border border-border overflow-hidden shadow-sm">
+        {/* animated gradient mesh background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-violet-500/5 to-rose-500/5" />
+        <div className="absolute inset-0 opacity-40">
+          <div className="absolute -top-20 -left-20 w-72 h-72 rounded-full bg-emerald-400/20 blur-[80px] animate-pulse" style={{ animationDuration: "6s" }} />
+          <div className="absolute -bottom-20 -right-20 w-80 h-80 rounded-full bg-violet-400/20 blur-[90px] animate-pulse" style={{ animationDuration: "8s", animationDelay: "2s" }} />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full bg-rose-400/15 blur-[70px] animate-pulse" style={{ animationDuration: "7s", animationDelay: "1s" }} />
         </div>
-        <h2 className="font-display font-semibold text-2xl sm:text-3xl text-foreground tracking-tight">
-          What are you trying to do today?
-        </h2>
-        <p className="text-sm text-muted-foreground mt-1.5 max-w-2xl">
-          We'll restructure your workspace around it — show only what matters, hide the rest. You can change this anytime.
-        </p>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-6">
-          {OPERATOR_MODES.map((m) => {
-            const Icon = MODE_ICON[m.id];
-            return (
-              <button
-                key={m.id}
-                onClick={() => chooseMode(m.id)}
-                className="text-left rounded-xl border border-border bg-background hover:border-primary/60 hover:shadow-md hover:-translate-y-0.5 transition-all p-4 group"
-              >
-                <div className="w-9 h-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center mb-3 group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                  <Icon className="w-4 h-4" />
-                </div>
-                <p className="font-semibold text-sm text-foreground">{m.label}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">{m.tagline}</p>
-              </button>
-            );
-          })}
+        <div className="relative p-6 sm:p-8">
+          <div className="flex items-center gap-2 mb-2">
+            <Sparkles className="w-4 h-4 text-emerald-500" />
+            <span className="text-[11px] uppercase tracking-[0.18em] font-semibold text-emerald-600 dark:text-emerald-400">Pick your cockpit</span>
+          </div>
+          <h2 className="font-display font-semibold text-2xl sm:text-3xl text-foreground tracking-tight">
+            What are you trying to do today?
+          </h2>
+          <p className="text-sm text-muted-foreground mt-1.5 max-w-2xl">
+            We'll restructure your workspace around it — show only what matters, hide the rest. You can change this anytime.
+          </p>
+
+          <div ref={gridRef} className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-6 perspective-[1200px]">
+            {OPERATOR_MODES.map((m) => {
+              const Icon = MODE_ICON[m.id];
+              return (
+                <button
+                  key={m.id}
+                  onClick={() => chooseMode(m.id)}
+                  className={`
+                    text-left rounded-xl border border-border/80 bg-background/80 backdrop-blur-sm
+                    hover:border-emerald-400/60 hover:shadow-lg hover:shadow-emerald-500/10
+                    hover:-translate-y-1 hover:scale-[1.02]
+                    active:scale-[0.98]
+                    transition-all duration-300 ease-out
+                    p-4 group relative overflow-hidden
+                    ${attentionTilt ? "cockpit-card-tilt" : ""}
+                  `}
+                >
+                  {/* subtle shimmer overlay on hover */}
+                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none bg-gradient-to-tr from-emerald-500/5 via-transparent to-violet-500/5" />
+
+                  <div className="relative">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center mb-3 group-hover:bg-emerald-500 group-hover:text-white group-hover:shadow-md group-hover:shadow-emerald-500/25 transition-all duration-300">
+                      <Icon className="w-5 h-5" />
+                    </div>
+                    <p className="font-semibold text-sm text-foreground">{m.label}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{m.tagline}</p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
         </div>
+
+        {/* inline keyframe style for the delayed tilt */}
+        <style>{`
+          @keyframes cockpit-breathe {
+            0%, 100% { transform: rotateX(0deg) rotateY(0deg); }
+            25%  { transform: rotateX(2deg) rotateY(-3deg); }
+            50%  { transform: rotateX(0deg) rotateY(0deg); }
+            75%  { transform: rotateX(-2deg) rotateY(3deg); }
+          }
+          .cockpit-card-tilt {
+            animation: cockpit-breathe 4s ease-in-out infinite;
+          }
+          .cockpit-card-tilt:nth-child(2) { animation-delay: 0.3s; }
+          .cockpit-card-tilt:nth-child(3) { animation-delay: 0.6s; }
+          .cockpit-card-tilt:nth-child(4) { animation-delay: 0.9s; }
+        `}</style>
       </section>
     );
   }
