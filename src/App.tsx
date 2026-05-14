@@ -171,6 +171,7 @@ import { AppRouteShell } from "@/components/AppRouteShell";
 import { RequireAuth } from "@/components/RequireAuth";
 import { DocsSubdomainRedirect } from "@/components/DocsSubdomainRedirect";
 import { StatusSubdomainRedirect } from "@/components/StatusSubdomainRedirect";
+import { SurfaceHostRedirect } from "@/components/SurfaceHostRedirect";
 import { BlogSubdomainRouter, isBlogHost } from "@/components/blog/BlogSubdomainRouter";
 import { isMaintenance, MaintenancePage } from "@/components/MaintenanceGate";
 import { RootErrorFallback } from "@/components/RootErrorFallback";
@@ -240,6 +241,7 @@ const App = () => (
           <NewsletterCaptureAutoTrigger />
           <DocsSubdomainRedirect />
           <StatusSubdomainRedirect />
+          <SurfaceHostRedirect />
           <QuotaBoundary>
           <Suspense fallback={
             <div className="min-h-screen flex items-center justify-center bg-background">

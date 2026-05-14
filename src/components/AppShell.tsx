@@ -28,13 +28,9 @@ export function AppShell({ children, title, breadcrumbs, actions }: AppShellProp
   const navigate = useNavigate();
   const tier = (profile?.subscription_tier as string) || "free";
 
-  // Dark mode is scoped to the authenticated AppShell only — marketing pages
-  // stay in their stable light identity. Apply persisted theme on mount and
-  // tear it down on unmount so navigating away from /dashboard restores light.
+  // Dark mode is paused — keep the AppShell strictly in light identity.
   useEffect(() => {
-    const t = getInitialTheme();
-    if (t === "dark") document.documentElement.classList.add("dark");
-    return () => { document.documentElement.classList.remove("dark"); };
+    document.documentElement.classList.remove("dark");
   }, []);
 
   // ---- In-app Tool Finder (distinct from hustle search) ----

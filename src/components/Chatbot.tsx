@@ -26,10 +26,18 @@ export function Chatbot() {
   const [onboardingAnswers, setOnboardingAnswers] = useState<string[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // HustleBot now lives on a dedicated full page. Any "open-hustlebot" event
-  // simply routes there. The legacy popup is hidden.
+  // Workspace Copilot lives on a dedicated full page. Any "open-hustlebot"
+  // event routes there. If a `prefill` detail is supplied we pass it through
+  // the URL so the Copilot page can seed its input.
   useEffect(() => {
-    const openHandler = () => navigate("/hustlebot");
+    const openHandler = (e: Event) => {
+      const detail = (e as CustomEvent).detail as { prefill?: string } | undefined;
+      if (detail?.prefill) {
+        navigate(`/hustlebot?prefill=${encodeURIComponent(detail.prefill)}`);
+      } else {
+        navigate("/hustlebot");
+      }
+    };
     window.addEventListener("open-hustlebot", openHandler);
     return () => window.removeEventListener("open-hustlebot", openHandler);
   }, [navigate]);
@@ -63,7 +71,7 @@ export function Chatbot() {
         is_admin_reply: m.is_admin_reply,
       })));
     } else {
-      const name = profile?.display_name || "Hustler";
+      const name = profile?.display_name || "there";
       // First-ever chat → run a tiny profiling flow so HustleBot becomes
       // a personal "Gem" before answering generic questions.
       const bio = (profile as any)?.bio as string | undefined;
@@ -73,12 +81,12 @@ export function Chatbot() {
         setMessages([
           {
             role: "assistant",
-            content: `Hey ${name}! 👋✨ I'm **HustleBot** — but think of me as *your* personal AI mentor (like a custom Gem, tuned to you).\n\nGimme 3 quick answers and every reply I give will be tailored to your goals.\n\n**Q1/3 —** ${ONBOARDING_QUESTIONS[0]}`,
+            content: `Hi ${name} — I'm your **Workspace Copilot**. Three quick questions and I'll tailor everything to your work.\n\n**Q1/3 —** ${ONBOARDING_QUESTIONS[0]}`,
           },
         ]);
       } else {
         setMessages([
-          { role: "assistant", content: `Hey ${name}! 👋🔥 I'm **HustleBot**, your personal AI mentor. Ask me anything about freelancing, side hustles, or growing your income!` },
+          { role: "assistant", content: `Hi ${name} — I'm your **Workspace Copilot**. Ask me to draft proposals, summarise client notes, build checklists or plan your week.` },
         ]);
       }
     }
@@ -181,11 +189,11 @@ export function Chatbot() {
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             className="fixed bottom-6 right-6 z-50 w-[380px] h-[520px] glass rounded-2xl border border-primary/20 flex flex-col overflow-hidden shadow-card"
           >
-            <div className="flex items-center justify-between px-4 py-3 border-b border-border/50 bg-card/80">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-card">
               <div className="flex items-center gap-2">
                 <Bot className="w-5 h-5 text-primary" />
-                <span className="font-display font-semibold text-sm">HustleBot</span>
-                <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-semibold">AI Mentor</span>
+                <span className="font-display font-semibold text-sm">Workspace Copilot</span>
+                <span className="px-2 py-0.5 rounded-full bg-muted text-muted-foreground text-[10px] font-medium">Operations Assistant</span>
               </div>
               <button onClick={() => setOpen(false)} className="text-muted-foreground hover:text-foreground">
                 <X className="w-5 h-5" />
@@ -220,8 +228,8 @@ export function Chatbot() {
 
             <div className="p-3 border-t border-border/50">
               <form onSubmit={e => { e.preventDefault(); sendMessage(); }} className="flex gap-2">
-                <Input value={input} onChange={e => setInput(e.target.value)} placeholder="Ask HustleBot anything..." className="flex-1 h-9 text-sm" />
-                <Button type="submit" size="icon" className="bg-gradient-primary h-9 w-9" disabled={loading || !input.trim()}>
+                <Input value={input} onChange={e => setInput(e.target.value)} placeholder="Ask your Workspace Copilot…" className="flex-1 h-9 text-sm" />
+                <Button type="submit" size="icon" className="bg-primary text-primary-foreground hover:opacity-90 h-9 w-9" disabled={loading || !input.trim()}>
                   <Send className="w-4 h-4" />
                 </Button>
               </form>

@@ -38,7 +38,7 @@ export function HustleBotIntro() {
           transition={{ duration: 0.25, ease: "easeOut" }}
           className="fixed bottom-24 right-4 md:right-6 z-40 max-w-[300px] rounded-xl border border-border bg-card shadow-card p-3.5"
           role="dialog"
-          aria-label="Meet HustleBot"
+          aria-label="Meet your Workspace Copilot"
         >
           <button
             onClick={dismiss}
@@ -51,11 +51,11 @@ export function HustleBotIntro() {
             <span className="inline-flex w-7 h-7 rounded-md bg-primary/10 items-center justify-center">
               <Bot className="w-4 h-4 text-primary" />
             </span>
-            <span className="text-sm font-display font-semibold text-foreground">Meet HustleBot</span>
+            <span className="text-sm font-display font-semibold text-foreground">Workspace Copilot</span>
           </div>
           <p className="text-xs text-muted-foreground leading-relaxed">
-            Your AI co-pilot. Tap the companion in the bottom-right anytime for help with proposals,
-            pricing, leads or stuck workflows.
+            A calm operations assistant built into your workspace. Ask it to draft proposals,
+            summarise client notes, build onboarding checklists or unblock stuck workflows.
           </p>
           <div className="mt-2.5 flex items-center justify-end gap-2">
             <button onClick={dismiss} className="text-[11px] text-muted-foreground hover:text-foreground">
