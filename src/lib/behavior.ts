@@ -24,8 +24,8 @@ export function anonId(): string {
   return v;
 }
 
-function safe<T>(p: Promise<T>) {
-  return p.catch(() => undefined);
+function safe<T>(p: PromiseLike<T>): Promise<T | undefined> {
+  return Promise.resolve(p).then((v) => v).catch(() => undefined);
 }
 
 /* ---------------- Tool launches ---------------- */
