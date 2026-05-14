@@ -41,7 +41,7 @@ export function SEO({ title, description, path = "", image = DEFAULT_OG, noindex
 export const orgJsonLd = {
   "@context": "https://schema.org",
   "@type": "Organization",
-  name: "HustleAI Workspace OS",
+  name: "HustleAI Workspace",
   url: SITE,
   logo: DEFAULT_OG,
   email: "hustlaiapp@zohomail.in",
@@ -51,11 +51,11 @@ export const orgJsonLd = {
 export const softwareJsonLd = {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
-  name: "HustleAI Workspace OS",
+  name: "HustleAI Workspace",
   applicationCategory: "BusinessApplication",
   operatingSystem: "Web",
   offers: { "@type": "Offer", price: "0", priceCurrency: "INR" },
-  description: "AI-powered Workspace OS for freelancers, creators, and agencies — CRM, invoices, proposals, client portals.",
+  description: "Client operations workspace for freelancers and agencies — proposals, onboarding, invoices, projects and client portals.",
 };
 
 export const faqJsonLd = (qa: { q: string; a: string }[]) => ({
