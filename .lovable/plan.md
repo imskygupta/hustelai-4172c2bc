@@ -1,113 +1,116 @@
-## Self-Healing Editorial Pipeline
+## Goal
 
-The plan is **additive** — it builds on the existing `editorial-pipeline` edge fn and `EditorialCenter` post editor. Nothing about generation, BLOG_DB schema, or the Pipeline view changes destructively.
+Treat the app as two products served from one codebase:
 
-All work stays on **BLOG_DB** (no primary DB touched). All writes go through one new edge fn `editorial-autofix` so logic stays in one place.
+- `hustlaiapp.in` — marketing, pricing, blog, trust, SEO surfaces
+- `workspace.hustlaiapp.in` — authenticated operational cockpit (dashboard, work, CRM, documents, portals, HustleBot)
+
+Plus: pause dark mode rollout, reposition HustleBot as a calm "Workspace Copilot," and keep tightening visual noise.
 
 ---
 
-### 1. New edge function — `editorial-autofix` (BLOG_DB)
+## 1. Domain split (incremental, non-breaking)
 
-Single source of truth for all repair operations. Actions:
+Same codebase, host-aware routing — no separate deploy yet.
 
-- `analyze` — returns a structured **Readiness Report** for one post:
-  ```text
-  { readiness: 82, blockers, warnings,
-    breakdown: { seo, monetization, semantic_depth, conversion,
-                 internal_linking, cluster_authority, indexing },
-    suggestions: [ { kind, label, impact, preview } ] }
-  ```
-- `fix` — applies one OR many fix kinds (whitelist):
-  `meta`, `keyword`, `internal_links`, `tools`, `cta`, `cluster`,
-  `readability`, `screenshots`, `orphan`, `status_promotion`.
-  Returns a `diff` (before → after) so UI can show preview.
-- `bulk_optimize` — runs `fix(all)` across awaiting-review posts, then promotes passing ones to `published` via existing `blog-admin` transition.
-- `cluster_infer` — semantic match against existing clusters + confidence.
-- `tool_suggest` — semantic match against Tool Registry, returns ranked tools with contextual paragraph + CTA card payload.
+**Detection helper** `src/lib/host.ts`:
+- `isWorkspaceHost()` → host starts with `workspace.`
+- `isMarketingHost()` → root domain, `www.`, or preview/lovable hosts
+- `WORKSPACE_ORIGIN` / `MARKETING_ORIGIN` constants (env-aware, fallback to current origin in preview)
 
-Reuses existing helpers (`tool-matcher`, `blog-link-engine`, `adsense-readiness`) — does not duplicate them.
+**App-level routing** (`src/App.tsx`):
+- On `workspace.*`: only mount app-shell routes (dashboard, workspaces, clients, documents, hustlebot, work, settings, plans, payment, client portal, tools). Hitting `/`, `/about`, `/pricing`, etc. → redirect to `MARKETING_ORIGIN + path`.
+- On marketing host: keep current behavior, but redirect any app-shell route (`/dashboard`, `/work*`, `/workspaces*`, `/clients*`, `/hustlebot`, `/documents*`, `/dashboard/tools*`, `/settings*`) to `WORKSPACE_ORIGIN + path` (preserving query/hash).
+- Preview/lovable/localhost hosts: behave as today (both shells available) so devs and the in-product preview keep working.
 
-### 2. Granular status states
+**Cross-domain CTAs**:
+- `Navbar` "Open dashboard" / "Sign in" → absolute URL to workspace host when on marketing.
+- Workspace "Marketing site" / footer links → absolute URL to marketing host.
+- Helper `appUrl(path)` / `marketingUrl(path)` to centralize.
 
-Extend stage derivation (no enum migration; derived in JS like today):
-`needs_links`, `needs_tools`, `needs_keyword`, `seo_fix_needed`,
-`monetization_ready`, `awaiting_publish`, `ready_to_index`.
-Old `awaiting_review` becomes a parent bucket; sub-stage shown as a chip.
+**Auth/session continuity**:
+- Supabase session lives in `localStorage` per origin → cannot share directly across subdomains with current client config.
+- Pragmatic step now: when redirecting marketing→workspace for an authed CTA, append `#access_token` is NOT viable; instead rely on the user signing in on workspace host (login already mounted there). Add a short note in `Login.tsx` that the workspace lives on `workspace.*` and ensure post-login redirects stay on workspace host.
+- Document a follow-up: switch Supabase storage to a cookie scoped to `.hustlaiapp.in` for true SSO. Out of scope for this pass; called out in memory.
 
-### 3. Post editor — "Fix with AI" panel
+**Vercel**:
+- `vercel.json` already SPA-rewrites `/(.*)` → `/index.html`. Same build serves both hosts; no changes needed beyond confirming the `workspace.hustlaiapp.in` domain is attached to the project (user-side).
 
-In `EditorialCenter.tsx` (the editor screenshot):
+---
 
-- Replace the **Editorial checks** card with a richer panel:
-  - **Operational readiness: 82%** ring + breakdown bars
-  - List of issues, each with:
-    - inline **Fix** button (granular: Fix keyword / Add links / Inject tools / Improve CTA / Assign cluster / Optimize SEO / Improve readability)
-    - tooltip explaining what the fix will do
-  - Big **✨ Fix with AI** button → opens **Visual Fix Preview** modal:
-    ```text
-    AI will:
-    ✓ add 3 internal links
-    ✓ inject Proposal Generator CTA
-    ✓ optimize keyword density
-    ✓ assign async-workflows cluster
-    [Cancel] [Apply fixes]
-    ```
-  - On apply → calls `editorial-autofix?action=fix` then refetches post.
-- Auto-promote: if readiness ≥ threshold after fix, status moves `draft → in_review` (already exists) and surfaces an **Auto-publish** toggle.
+## 2. Dark mode pause
 
-### 4. Pipeline page — Bulk + better stages
+- `ThemeToggle`: keep the icon visible but, on click, show a toast "Dark mode is under maintenance" instead of toggling. Do not write to localStorage; do not add `dark` class.
+- `AppShell` mount effect: stop applying persisted dark theme. Force-remove `.dark` from `<html>` on mount.
+- Leave existing dark CSS tokens in place (no churn), just don't activate them.
+- Calm mode toggle stays fully functional.
 
-`EditorialPipeline.tsx`:
-- New button **"Auto-optimize all awaiting review"** → `bulk_optimize`.
-- Stage chips show new sub-stages from #2.
-- Per-row quick actions menu: same granular fixes as the editor.
+---
 
-### 5. Contextual CTA intelligence
+## 3. HustleBot → "Workspace Copilot"
 
-In `tool_suggest`:
-- Match topic → tool → produce CTA with deep link like
-  `/explore?template=proposal-system` and a workflow prompt payload.
-- Stored in `cta_blocks` with `kind: "deep_tool"` so the blog renderer can show the rich card (renderer already accepts cta_blocks, just adds new kind).
+**Positioning**:
+- Rename user-facing label everywhere visible to "Workspace Copilot" (keep internal route `/hustlebot` and code identifiers to avoid breakage; only swap copy).
+- Update: `HustleBotIntro` title/body, `Chatbot` launcher tooltip/header, sidebar entry, tool-finder entry, dashboard nudges.
 
-### 6. Article memory (lightweight)
+**Visual calm-down** (`src/components/Chatbot.tsx` + launcher):
+- Smaller floating button (h-12 w-12 → h-11 w-11), remove pulsing glow / gradient ring, use `bg-card border border-border shadow-sm` with a subtle primary dot.
+- Panel header: drop gradient, use solid `bg-card` + `border-b`.
+- Reduce entrance animation intensity (respect `html.calm`).
 
-New BLOG_DB table `editorial_preferences` (singleton row, JSONB):
-- `preferred_cta_tools`, `preferred_clusters`, `tone`, `monetization_bias`.
-- Updated automatically: when an admin accepts/rejects a suggested fix, the engine records the preference. `fix` reads it to bias choices.
+**Contextual entry points**:
+- New `<CopilotPrompt context="proposal|intake|client-notes|invoice" label="…" />` component. Fires `open-hustlebot` with a `prefill` detail.
+- `Chatbot` listens for `prefill` and seeds the input.
+- Drop instances into: `ProposalGenerator` ("Need help drafting this proposal?"), `OnboardingFormBuilder` / intake ("Generate onboarding checklist?"), `Clients` detail ("Summarize client notes?"). Small inline links, not modals.
 
-### 7. DB additions (migration)
+**Command/search integration**:
+- In `AppShell` tool finder, when query has no matches, add a second action row: "Ask Workspace Copilot about '{q}'" → opens copilot with prefill.
 
-```text
-- editorial_preferences (id, prefs jsonb, updated_at)
-- blog_posts: add readiness_score int, readiness_breakdown jsonb,
-              sub_stage text  (nullable; derived states cached)
-- editorial_fix_log (post_id, action, diff jsonb, created_at)
-```
+---
 
-No changes to enums. Soft-delete row issue stays handled by existing normalizer.
+## 4. Workspace UI cleanup (scoped, incremental)
 
-### 8. Files
+Don't refactor everything. This pass targets the highest-noise surfaces visible on the cockpit:
+
+- `AppShell` top bar: remove violet-tinted search background, use `bg-muted/40` + `border-border`. Drop the `Command` icon's hard violet, use `text-muted-foreground`.
+- Dashboard: audit `ContextualNudge` and `OperationalFlows` for hardcoded gradients; replace ambient gradient backgrounds with flat `bg-card`. Keep one accent-gradient slot for the primary CTA only.
+- Remove any oversized hero card on `/dashboard` if duplicated by the cockpit.
+
+(Deeper page-by-page normalization remains the ongoing governance task; this pass keeps it bounded.)
+
+---
+
+## 5. Memory updates
+
+- `mem://tech/workspace-subdomain.md` — host detection, redirect rules, future cookie-based SSO TODO.
+- `mem://style/ui-governance.md` — append "Dark mode paused; toggle shows maintenance toast."
+- `mem://features/ai-mentor-hustlebot.md` (existing reference in index) — append rename to "Workspace Copilot," contextual prompt pattern, calmer launcher spec.
+- Update `mem/index.md` Core to note workspace subdomain split and dark-mode pause.
+
+---
+
+## Files (planned)
 
 **New**
-- `supabase/functions/editorial-autofix/index.ts`
-- `src/components/admin/ReadinessPanel.tsx`
-- `src/components/admin/FixPreviewModal.tsx`
-- `mem/features/self-healing-editorial.md`
+- `src/lib/host.ts`
+- `src/components/copilot/CopilotPrompt.tsx`
+- `mem/tech/workspace-subdomain.md`
 
 **Edited**
-- `supabase/functions/editorial-pipeline/index.ts` (sub-stage derivation, expose readiness)
-- `src/integrations/blog/client.ts` (add `autofixApi`)
-- `src/pages/admin/EditorialCenter.tsx` (replace checks card with ReadinessPanel)
-- `src/pages/admin/EditorialPipeline.tsx` (bulk button, sub-stage chips, row quick actions)
-- `mem/index.md` (link new memory)
-
-### 9. Out of scope (intentionally)
-
-- No new blog renderer changes besides handling the new CTA kind.
-- No primary DB touched.
-- No model swap; uses existing Lovable AI helpers already wired into `tool-matcher`/`blog-link-engine`.
-- Auto-publish only flips status when explicitly enabled in preferences (safety).
+- `src/App.tsx` — host-aware route gating + cross-host redirects
+- `src/components/Navbar.tsx`, `src/components/Footer.tsx` — cross-host CTAs
+- `src/components/ThemeToggle.tsx` — maintenance toast
+- `src/components/AppShell.tsx` — drop dark mount, calmer top bar, copilot label
+- `src/components/Chatbot.tsx` — calmer launcher, "Workspace Copilot" copy, prefill listener
+- `src/components/HustleBotIntro.tsx` — rename + softer visuals
+- `src/pages/tools/ProposalGenerator.tsx`, `src/pages/tools/OnboardingFormBuilder.tsx`, `src/pages/workspace-os/Clients.tsx` — drop in `<CopilotPrompt>`
+- `src/pages/Dashboard.tsx` + `src/components/dashboard/ContextualNudge.tsx`, `OperationalFlows.tsx` — flatten gradients
+- `mem/index.md`, `mem/style/ui-governance.md`
 
 ---
 
-Approve and I'll implement in this order: migration → autofix fn → client api → ReadinessPanel + modal → editor wiring → pipeline bulk + sub-stages → memory.
+## Out of scope (called out, deferred)
+
+- True cross-subdomain SSO via `.hustlaiapp.in` cookie storage for Supabase — needs a careful auth-storage swap; documented in memory.
+- Full dark-mode rewrite — paused.
+- Dedicated workspace build/deploy split — single codebase keeps shipping both surfaces.
