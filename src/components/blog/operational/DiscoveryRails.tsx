@@ -1,6 +1,9 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, Eye, Flame, Sparkles } from "lucide-react";
+import { ArrowRight, Eye, Flame, Sparkles, Bookmark } from "lucide-react";
 import type { SeoBlogRow } from "@/lib/seo-cms";
+import { BookmarkButton } from "@/components/blog/operational/BookmarkButton";
+import { fetchBookmarkCounts } from "@/lib/behavior";
 
 function formatViews(n: number): string {
   if (!n || n < 1) return "Just published";
@@ -8,34 +11,44 @@ function formatViews(n: number): string {
   return `${(n / 1000).toFixed(1)}k operators viewed`;
 }
 
-function PostCard({ p, accent = "emerald" }: { p: SeoBlogRow; accent?: "emerald" | "violet" | "amber" }) {
+function PostCard({ p, accent = "emerald", saves }: { p: SeoBlogRow; accent?: "emerald" | "violet" | "amber"; saves?: number }) {
   const tones: Record<string, string> = {
     emerald: "hover:border-emerald-300 hover:shadow-[0_6px_24px_-12px_rgba(16,185,129,0.25)]",
     violet: "hover:border-violet-300 hover:shadow-[0_6px_24px_-12px_rgba(139,92,246,0.25)]",
     amber: "hover:border-amber-300 hover:shadow-[0_6px_24px_-12px_rgba(245,158,11,0.25)]",
   };
   return (
-    <Link
-      to={`/insights/${p.slug}`}
-      className={`group block rounded-xl border border-slate-200 bg-white p-5 transition-all ${tones[accent]}`}
-    >
-      <div className="flex items-center gap-2 mb-2 text-[10.5px] uppercase tracking-wider font-semibold text-slate-500">
-        <span>{p.category || "Operations"}</span>
-        <span className="opacity-40">·</span>
-        <span className="inline-flex items-center gap-1">
-          <Eye className="w-3 h-3" /> {formatViews((p as any).view_count ?? 0)}
-        </span>
+    <div className={`relative group rounded-xl border border-slate-200 bg-white p-5 transition-all ${tones[accent]}`}>
+      <div className="absolute top-3 right-3">
+        <BookmarkButton slug={p.slug} variant="icon" initialCount={saves} />
       </div>
-      <h3 className="font-display font-semibold text-[16.5px] leading-snug text-slate-900 mb-1.5 line-clamp-2">
-        {p.title}
-      </h3>
-      {p.excerpt && (
-        <p className="text-[13px] text-slate-500 leading-relaxed line-clamp-2 mb-3">{p.excerpt}</p>
-      )}
-      <div className="text-[12px] font-semibold text-slate-900 inline-flex items-center gap-1 group-hover:text-emerald-700 transition-colors">
-        Read guide <ArrowRight className="w-3 h-3" />
-      </div>
-    </Link>
+      <Link to={`/insights/${p.slug}`} className="block">
+        <div className="flex items-center gap-2 mb-2 text-[10.5px] uppercase tracking-wider font-semibold text-slate-500 pr-8">
+          <span>{p.category || "Operations"}</span>
+          <span className="opacity-40">·</span>
+          <span className="inline-flex items-center gap-1">
+            <Eye className="w-3 h-3" /> {formatViews((p as any).view_count ?? 0)}
+          </span>
+          {(saves ?? 0) > 0 && (
+            <>
+              <span className="opacity-40">·</span>
+              <span className="inline-flex items-center gap-1">
+                <Bookmark className="w-3 h-3" /> {saves}
+              </span>
+            </>
+          )}
+        </div>
+        <h3 className="font-display font-semibold text-[16.5px] leading-snug text-slate-900 mb-1.5 line-clamp-2">
+          {p.title}
+        </h3>
+        {p.excerpt && (
+          <p className="text-[13px] text-slate-500 leading-relaxed line-clamp-2 mb-3">{p.excerpt}</p>
+        )}
+        <div className="text-[12px] font-semibold text-slate-900 inline-flex items-center gap-1 group-hover:text-emerald-700 transition-colors">
+          Read guide <ArrowRight className="w-3 h-3" />
+        </div>
+      </Link>
+    </div>
   );
 }
 
@@ -53,6 +66,10 @@ export function DiscoveryRail({
   accent?: "emerald" | "violet" | "amber";
 }) {
   if (!posts.length) return null;
+  const [counts, setCounts] = useState<Record<string, number>>({});
+  useEffect(() => {
+    fetchBookmarkCounts(posts.map((p) => p.slug)).then(setCounts);
+  }, [posts]);
   const chip: Record<string, string> = {
     emerald: "bg-emerald-100 text-emerald-700",
     violet:  "bg-violet-100 text-violet-700",
@@ -71,7 +88,7 @@ export function DiscoveryRail({
         </div>
         <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
           {posts.slice(0, 6).map((p) => (
-            <PostCard key={p.id} p={p} accent={accent} />
+            <PostCard key={p.id} p={p} accent={accent} saves={counts[p.slug]} />
           ))}
         </div>
       </div>
