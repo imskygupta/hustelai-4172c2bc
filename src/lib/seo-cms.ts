@@ -276,6 +276,49 @@ export async function listBlogs(includeDrafts = false): Promise<SeoBlogRow[]> {
   return (data as any) ?? [];
 }
 
+/** Trending = highest time-decayed score among published guides. */
+export async function listTrendingBlogs(limit = 6): Promise<SeoBlogRow[]> {
+  const { data } = await supabase
+    .from(BLOG)
+    .select("*")
+    .eq("status", "published")
+    .order("trending_score" as any, { ascending: false })
+    .limit(limit);
+  return (data as any) ?? [];
+}
+
+/** Most-viewed = lifetime view counter. */
+export async function listMostViewedBlogs(limit = 6): Promise<SeoBlogRow[]> {
+  const { data } = await supabase
+    .from(BLOG)
+    .select("*")
+    .eq("status", "published")
+    .order("view_count" as any, { ascending: false })
+    .limit(limit);
+  return (data as any) ?? [];
+}
+
+/** Recently published guides — “new on the shelf”. */
+export async function listRecentBlogs(limit = 6): Promise<SeoBlogRow[]> {
+  const { data } = await supabase
+    .from(BLOG)
+    .select("*")
+    .eq("status", "published")
+    .order("published_at", { ascending: false, nullsFirst: false })
+    .limit(limit);
+  return (data as any) ?? [];
+}
+
+/** Fire-and-forget view counter. Safe to call from anon clients. */
+export async function bumpBlogView(slug: string, kind: "view" | "read" = "view") {
+  if (!slug) return;
+  try {
+    await supabase.rpc("bump_blog_view" as any, { _slug: slug, _kind: kind });
+  } catch {
+    /* silent — analytics shouldn't break the page */
+  }
+}
+
 export async function upsertBlog(row: Partial<SeoBlogRow>) {
   return supabase.from(BLOG).upsert(row as any, { onConflict: "slug" }).select().single();
 }
