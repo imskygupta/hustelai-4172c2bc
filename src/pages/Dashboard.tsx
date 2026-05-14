@@ -345,6 +345,8 @@ export default function Dashboard() {
           ]}
           onNavigate={navigate}
         />
+          </div>
+        </details>
 
         {/* Live ticker / market strip */}
         {feed?.stocks && (
