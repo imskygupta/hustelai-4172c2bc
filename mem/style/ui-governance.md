@@ -8,6 +8,24 @@ type: design
 Apply to every authenticated surface. Marketing pages keep their lighter,
 brighter identity but follow the same primitives.
 
+## Dark mode (paused)
+- Dark mode rollout is paused. Do not add new `dark:` variants and do not
+  expand dark-token coverage.
+- The `<ThemeToggle>` stays visible but, on click, surfaces a sonner toast
+  ("Dark mode is currently under maintenance.") instead of toggling.
+- `getInitialTheme()` always returns `"light"`; `initTheme()` strips the
+  `.dark` class. AppShell mount also force-removes `.dark`.
+- Calm mode (motion/gradient reduction) remains fully functional.
+
+## Workspace Copilot (formerly HustleBot)
+- User-facing label is **Workspace Copilot** / **Operations Assistant**.
+  Internal route (`/hustlebot`), code identifiers, and DB tables stay as-is.
+- Launcher must feel native: no pulsing glow, no oversized gradient ring.
+  Use `bg-card border border-border shadow-sm`.
+- Prefer **contextual** entry points inside tools using
+  `<CopilotPrompt prefill="…" label="…" />` over the floating launcher.
+  The Copilot listens for `open-hustlebot` events with `{ prefill }` detail.
+
 ## Tokens (semantic only — never hardcode)
 - Surfaces: `bg-background` (page), `bg-card` (elevated), `bg-muted` (recessed)
 - Text: `text-foreground`, `text-muted-foreground`
