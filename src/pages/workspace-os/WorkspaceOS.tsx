@@ -19,6 +19,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 
 import { SEO } from "@/components/SEO";
+import { VibeButton } from "@/components/workspace/VibeButton";
+import { useWorkspaceVibe, providerToTone } from "@/lib/workspace/vibe";
 
 // Calmer IA — only what an operator needs daily.
 // Main = the core operational verbs.
@@ -45,6 +47,9 @@ export default function WorkspaceOS() {
   const onWorkspaceHost = isWorkspaceHost();
   const { activeProvider, providerLoading } = useWorkspace();
   const { user } = useAuth();
+  const { vibe } = useWorkspaceVibe();
+  const providerTone = providerToTone(activeProvider?.provider);
+  const intensityBucket = vibe.intensity >= 75 ? "high" : vibe.intensity >= 40 ? "med" : vibe.intensity > 0 ? "low" : "0";
 
   const leaveWorkspace = () => {
     const href = isDualHost() ? "/workspaces" : `${MARKETING_ORIGIN}/workspaces`;
@@ -118,11 +123,19 @@ export default function WorkspaceOS() {
 
   return (
     <div className={cn(
-      "relative min-h-[calc(100vh-3rem)] text-foreground",
+      "relative min-h-[calc(100vh-3rem)] text-foreground ws-themed",
       onWorkspaceHost
-        ? "bg-gradient-to-br from-[hsl(48_85%_99%)] via-[hsl(40_75%_99.2%)] to-[hsl(30_70%_98.8%)]"
+        ? "ws-themed-bg"
         : "bg-[radial-gradient(ellipse_at_top_left,hsl(var(--primary)/0.06),transparent_55%),radial-gradient(ellipse_at_bottom_right,hsl(258_80%_64%/0.05),transparent_55%)]"
-    )}>
+    )}
+    data-ws-vibe={vibe.id}
+    data-ws-intensity={intensityBucket}
+    data-ws-focus={vibe.focus ? "true" : "false"}
+    data-ws-motion={vibe.reducedMotion ? "off" : "on"}
+    data-ws-provider={providerTone}
+    >
+      {/* AI atmosphere — provider-tinted aura, ignored when neutral */}
+      {onWorkspaceHost && <div aria-hidden className="ws-provider-aura" />}
       {/* Ambient pastel backdrop — borrows the "Pick your cockpit" gradient */}
       {onWorkspaceHost && <div aria-hidden className="ws-ambient-pastel" style={{ position: "fixed", opacity: 0.18 }} />}
       <SEO title="Workspaces | HustleAI Workspace OS" description="HustleAI Workspace OS — internal page." path="" noindex />
@@ -204,6 +217,7 @@ export default function WorkspaceOS() {
               <Search className="h-4 w-4 text-muted-foreground" />
             </button>
             <NotificationCenter />
+            {onWorkspaceHost && <VibeButton />}
             <NavLink
               to={wp("projects/new")}
               className="hidden sm:inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium text-black shadow-[0_0_30px_rgba(16,185,129,0.35)] hover:scale-[1.02] transition-transform"
