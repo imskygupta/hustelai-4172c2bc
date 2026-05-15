@@ -5,9 +5,15 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, Users as UsersIcon, ShieldAlert, ShieldCheck, Crown, Sparkles, Trash2, Eye, MessageSquare, Wallet as WalletIcon, AlertTriangle, Loader2, ChevronRight, Bot, Activity } from "lucide-react";
+import { Ban, LogOut, RefreshCcw, Receipt, ShieldOff } from "lucide-react";
 import { OpsBadge } from "@/components/admin/OpsBadge";
 import { OpsHint } from "@/components/admin/OpsHint";
 import { OperatorLink } from "@/components/admin/OperatorLink";
+import { DangerActionDialog } from "@/components/admin/DangerActionDialog";
+import { Label } from "@/components/ui/label";
+import {
+  suspendUser, unsuspendUser, forceLogoutUser, resetCredits, requestRefund,
+} from "@/lib/admin/destructiveActions";
 import { loadUserSignals, deriveUserStatus, STATUS_STYLES, type UserSignalsMap, type UserStatus } from "@/lib/admin/users-intel";
 import { cn } from "@/lib/utils";
 
@@ -15,6 +21,8 @@ type ProfileLike = {
   id: string; user_id: string; email: string | null; display_name: string | null;
   subscription_tier: string; search_count: number; created_at: string;
   phone: string | null; bio: string | null; resume_url: string | null;
+  suspended_at?: string | null;
+  suspended_reason?: string | null;
 };
 
 export type UsersPanelProps = {
