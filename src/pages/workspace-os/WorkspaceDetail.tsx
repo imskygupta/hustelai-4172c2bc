@@ -20,6 +20,8 @@ import RetainerPanel from "@/components/workspace-os/RetainerPanel";
 import RoadmapEngine from "@/components/workspace-os/RoadmapEngine";
 import { ProjectQuickActions } from "@/components/workspace/ProjectQuickActions";
 import { ProjectQuickstart } from "@/components/workspace/ProjectQuickstart";
+import { NextInFlow } from "@/components/workspace/NextInFlow";
+import { LinkedTimeline } from "@/components/workspace/LinkedTimeline";
 import { useWorkspace, PROVIDER_LABELS } from "@/lib/workspace/context";
 import { wp, wpProjectDocs } from "@/lib/workspace/paths";
 import { formatDistanceToNowStrict } from "date-fns";
@@ -161,6 +163,7 @@ export default function WorkspaceDetail() {
 
           <TabsContent value="overview" className="space-y-4">
             <ProjectQuickstart workspace={w} />
+            <NextInFlow workspaceId={w.id} />
             {w.ai_summary && (
               <section className="rounded-lg p-4 bg-gradient-to-br from-primary/[0.04] to-transparent">
                 <p className="text-sm text-foreground/85 flex gap-2">
@@ -186,6 +189,7 @@ export default function WorkspaceDetail() {
             <Link to={wpProjectDocs(w.id)} className="inline-flex items-center gap-2 text-sm text-primary hover:underline">
               <FileText className="h-4 w-4" /> Open documents
             </Link>
+            <LinkedTimeline workspaceId={w.id} />
             <p className="text-[10px] text-muted-foreground/60 pt-4">Tip: press <kbd className="px-1 py-0.5 rounded bg-muted/60 text-[10px]">1</kbd>–<kbd className="px-1 py-0.5 rounded bg-muted/60 text-[10px]">9</kbd> to switch tabs.</p>
           </TabsContent>
 
