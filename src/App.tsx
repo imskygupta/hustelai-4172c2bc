@@ -123,9 +123,7 @@ import Work from "./pages/Work";
 import WorkTool from "./pages/WorkTool";
 import ClientPortal from "./pages/ClientPortal";
 import ClientSurface from "./pages/client/ClientSurface";
-import DocsLayout from "./pages/docs/DocsLayout";
-import DocsHome from "./pages/docs/DocsHome";
-import DocsArticle from "./pages/docs/DocsArticle";
+// In-app /docs route removed — docs now live on docs.hustlaiapp.in
 import DynamicSeoPage from "./pages/seo/DynamicSeoPage";
 import SeoBlogIndex from "./pages/seo/SeoBlogIndex";
 import SeoBlogPost from "./pages/seo/SeoBlogPost";
@@ -435,10 +433,7 @@ const App = () => (
             <Route path="/p/:token" element={<WorkspacePortal />} />
             <Route path="/intake/:slug" element={<IntakeSubmit />} />
             <Route path="/intake/preview" element={<IntakePreview />} />
-            <Route path="/docs" element={<DocsLayout />}>
-              <Route index element={<DocsHome />} />
-              <Route path=":slug" element={<DocsArticle />} />
-            </Route>
+            {/* /docs route removed — see docs.hustlaiapp.in */}
             <Route path="/status" element={<Status />} />
             <Route path="/api/health" element={<Health kind="health" />} />
             <Route path="/api/status" element={<Health kind="status" />} />
