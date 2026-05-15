@@ -15,3 +15,4 @@
 - [Workspace Subdomain](mem://tech/workspace-subdomain) — workspace.hustlaiapp.in routing, SurfaceHostRedirect, dark-mode pause, Workspace Copilot rename
 - [Mass Assignment Audit](mem://security/mass-assignment-audit) — Phase 2 hardened mutation surfaces + remaining risk areas
 - [Operator Audit Log](mem://security/audit-log) — Append-only admin action trail + recordOperatorAction helper
+- [Hardening Phase 6](mem://security/hardening-phase-6) — Edge validation/rate-limit/anomaly utils, CSP/security headers, webhook checklist, storage rules
