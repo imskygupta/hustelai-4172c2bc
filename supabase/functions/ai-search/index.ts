@@ -1,12 +1,20 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { flagGuard } from "../_shared/flags/resolve.ts";
+import { parseJson, z } from "../_shared/validation.ts";
+import { enforceRateLimit } from "../_shared/rate-limit.ts";
+import { recordAnomaly } from "../_shared/anomaly.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
+
+const Body = z.object({
+  query: z.string().trim().min(2).max(500),
+  limit: z.number().int().min(1).max(5).optional(),
+});
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -39,12 +47,25 @@ serve(async (req) => {
     const blocked = await flagGuard(userId, "ai_tools.search", corsHeaders, { endpoint: "ai-search" });
     if (blocked) return blocked;
 
-    const { query, limit } = await req.json();
-    if (!query) {
-      return new Response(JSON.stringify({ error: "Query is required" }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    const serviceClient = createClient(
+      supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
+
+    // 30 AI searches/min per user is plenty above legitimate UI use.
+    const limitResult = await enforceRateLimit(serviceClient, {
+      key: `ai-search:${userId}`, windowSec: 60, max: 30,
+    });
+    if (!limitResult.ok) {
+      void recordAnomaly(serviceClient, {
+        eventType: "rate_limit.exceeded", severity: "warn",
+        userId, req, metadata: { surface: "ai-search", hits: limitResult.hits },
       });
+      return limitResult.response;
     }
+
+    const parsed = await parseJson(req, Body, { maxBytes: 8 * 1024 });
+    if (!parsed.ok) return parsed.response;
+    const { query, limit } = parsed.data;
 
     const count = Math.min(limit || 5, 5);
 

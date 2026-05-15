@@ -1,6 +1,9 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
+import { parseJson, S, z } from "../_shared/validation.ts";
+import { enforceRateLimit, ipKey } from "../_shared/rate-limit.ts";
+import { recordAnomaly } from "../_shared/anomaly.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -62,17 +65,23 @@ async function sendWithSmtpFallback(smtpEmail: string, smtpPass: string, to: str
   throw lastError instanceof Error ? lastError : new Error("SMTP send failed on all connection attempts");
 }
 
+const Body = z.object({
+  email: S.email(),
+  displayName: z.string().trim().max(80).optional(),
+});
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { email, displayName } = await req.json();
-    if (!email) throw new Error("Email is required");
-
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
+
+    const parsed = await parseJson(req, Body, { maxBytes: 4 * 1024 });
+    if (!parsed.ok) return parsed.response;
+    const { email, displayName } = parsed.data;
 
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) throw new Error("Unauthorized");
@@ -82,6 +91,28 @@ serve(async (req) => {
 
     if ((user.email || "").toLowerCase() !== String(email).toLowerCase()) {
       throw new Error("Email mismatch");
+    }
+
+    // Strict rate limit: 5 OTPs per user per 10 minutes + IP backstop 15/10min.
+    const userLimit = await enforceRateLimit(supabaseAdmin, {
+      key: `otp:user:${user.id}`, windowSec: 600, max: 5,
+    });
+    if (!userLimit.ok) {
+      void recordAnomaly(supabaseAdmin, {
+        eventType: "rate_limit.exceeded", severity: "warn",
+        userId: user.id, email, req, metadata: { surface: "send-otp-email", scope: "user" },
+      });
+      return userLimit.response;
+    }
+    const ipLimit = await enforceRateLimit(supabaseAdmin, {
+      key: `otp:ip:${ipKey(req)}`, windowSec: 600, max: 15,
+    });
+    if (!ipLimit.ok) {
+      void recordAnomaly(supabaseAdmin, {
+        eventType: "rate_limit.exceeded", severity: "warn",
+        userId: user.id, email, req, metadata: { surface: "send-otp-email", scope: "ip" },
+      });
+      return ipLimit.response;
     }
 
     let smtpEmail = Deno.env.get("SMTP_CONTACT_EMAIL") || "contact@hustlaiapp.in";

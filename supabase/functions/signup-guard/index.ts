@@ -3,6 +3,9 @@
 // Public endpoint (no JWT required) — only validates an email string.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.74.0";
 import { checkEmailPolicy } from "../_shared/email-policy.ts";
+import { parseJson, S, z, badRequest } from "../_shared/validation.ts";
+import { enforceRateLimit, ipKey } from "../_shared/rate-limit.ts";
+import { recordAnomaly } from "../_shared/anomaly.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -17,12 +20,32 @@ function admin() {
   );
 }
 
+const Body = z.object({
+  email: S.email(),
+  source: z.string().trim().max(80).optional().default(""),
+});
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   try {
-    const body = await req.json().catch(() => ({} as any));
-    const email = String(body?.email || "");
-    const source = String(body?.source || "");
+    const parsed = await parseJson(req, Body, { maxBytes: 4 * 1024 });
+    if (!parsed.ok) return parsed.response;
+    const { email, source } = parsed.data;
+
+    const sb = admin();
+
+    // Rate limit per IP — defends against signup enumeration / spam.
+    const limit = await enforceRateLimit(sb, {
+      key: `signup-guard:${ipKey(req)}`, windowSec: 600, max: 20,
+    });
+    if (!limit.ok) {
+      void recordAnomaly(sb, {
+        eventType: "rate_limit.exceeded", severity: "warn",
+        email, req, metadata: { surface: "signup-guard", hits: limit.hits },
+      });
+      return limit.response;
+    }
+
     const result = checkEmailPolicy(email);
 
     if (result.ok) {
@@ -30,7 +53,6 @@ Deno.serve(async (req) => {
     }
 
     // Log + notify (fire-and-forget)
-    const sb = admin();
     void sb.from("signup_blocked_log").insert({
       email: email.toLowerCase().trim(),
       reason: result.reason,
@@ -38,6 +60,11 @@ Deno.serve(async (req) => {
       ip: req.headers.get("x-forwarded-for") || null,
       user_agent: req.headers.get("user-agent") || null,
     }).then(() => undefined, () => undefined);
+
+    void recordAnomaly(sb, {
+      eventType: "auth.signup_blocked", severity: "warn",
+      email, req, metadata: { reason: result.reason, source },
+    });
 
     void fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/admin-bot-notify`, {
       method: "POST",

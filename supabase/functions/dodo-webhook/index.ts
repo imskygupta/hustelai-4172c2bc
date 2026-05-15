@@ -9,6 +9,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { DODO_MODE, DODO_WEBHOOK_SECRET, corsHeaders } from "../_shared/dodo.ts";
 import { emitBillingEvent } from "../_shared/notifications/emit.ts";
 import { emitWorkflowEvent } from "../_shared/workflows/emit.ts";
+import { recordAnomaly } from "../_shared/anomaly.ts";
 
 async function verifyStandardWebhook(rawBody: string, headers: Headers): Promise<boolean> {
   if (!DODO_WEBHOOK_SECRET) return false;
@@ -62,6 +63,10 @@ serve(async (req) => {
   const valid = await verifyStandardWebhook(rawBody, req.headers).catch(() => false);
   if (!valid) {
     console.error(JSON.stringify({ tag: "[dodo-webhook:invalid_signature]", mode: DODO_MODE }));
+    void recordAnomaly(supabase, {
+      eventType: "payment.webhook_invalid_signature", severity: "critical",
+      req, metadata: { provider: "dodo", mode: DODO_MODE, body_len: rawBody.length },
+    });
     return new Response(JSON.stringify({ error: "Invalid signature" }), {
       status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
