@@ -39,6 +39,10 @@ import { SeoBlogManager } from "@/components/admin/SeoBlogManager";
 import { SystemHealth } from "@/components/admin/SystemHealth";
 import { OperatorLink } from "@/components/admin/OperatorLink";
 import { UsersPanel } from "@/components/admin/UsersPanel";
+import { VerificationPanel } from "@/components/admin/VerificationPanel";
+import { RolesPanel } from "@/components/admin/RolesPanel";
+import { ForumModerationPanel } from "@/components/admin/ForumModerationPanel";
+import { PaymentsOpsPanel } from "@/components/admin/PaymentsOpsPanel";
 
 import { SEO } from "@/components/SEO";
 
@@ -1016,63 +1020,19 @@ export default function AdminDashboard() {
           {/* ===== ROLE MANAGER ===== */}
           {section === "roles" && (
             <div className="space-y-6">
-              <div className="glass rounded-xl p-6 space-y-4">
-                <h3 className="font-display font-bold flex items-center gap-2">
-                  <Shield className="w-5 h-5 text-primary" /> Assign Role
-                </h3>
-                <div className="grid md:grid-cols-3 gap-4">
-                  <Select value={roleUserId} onValueChange={setRoleUserId}>
-                    <SelectTrigger><SelectValue placeholder="Select User" /></SelectTrigger>
-                    <SelectContent>
-                      {users.map(u => (
-                        <SelectItem key={u.user_id} value={u.user_id}>
-                          {u.display_name || u.email} ({u.subscription_tier})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Select value={roleToAssign} onValueChange={setRoleToAssign}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="admin">🛡️ Admin (Full Access)</SelectItem>
-                      <SelectItem value="moderator">📝 Moderator (Blog + Forum)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Button onClick={assignRole} className="bg-gradient-primary text-primary-foreground">
-                    <Plus className="w-4 h-4 mr-1" /> Assign Role
-                  </Button>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  <strong>Admin:</strong> Full dashboard access · <strong>Moderator:</strong> Can write blogs, moderate forum posts
-                </p>
-              </div>
-
-              <div className="space-y-3">
-                <h3 className="font-display font-bold">Current Roles ({userRoles.length})</h3>
-                {userRoles.length === 0 && <p className="text-sm text-muted-foreground">No roles assigned yet.</p>}
-                {userRoles.map((r: any) => {
-                  const rUser = users.find(u => u.user_id === r.user_id);
-                  return (
-                    <div key={r.id} className="glass rounded-xl p-4 flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">
-                          {(rUser?.display_name || rUser?.email || "?")[0].toUpperCase()}
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium">{rUser?.display_name || rUser?.email || r.user_id.slice(0, 8)}</p>
-                          <p className="text-xs text-muted-foreground">{rUser?.email}</p>
-                        </div>
-                        <Badge className={r.role === "admin" ? "bg-destructive/20 text-destructive" : "bg-primary/20 text-primary"} variant="outline">
-                          {r.role === "admin" ? "🛡️" : "📝"} {r.role}
-                        </Badge>
-                      </div>
-                      <Button variant="ghost" size="sm" onClick={() => removeRole(r.id)}>
-                        <Trash2 className="w-4 h-4 text-destructive" />
-                      </Button>
-                    </div>
-                  );
-                })}
-              </div>
+              <RolesPanel
+                users={users as any}
+                roles={userRoles as any}
+                onAssign={async (uid, role) => {
+                  setRoleUserId(uid); setRoleToAssign(role);
+                  const { error } = await supabase.from("user_roles").insert({ user_id: uid, role: role as any });
+                  if (error) {
+                    if (error.code === "23505") toast({ title: "Already assigned", variant: "destructive" });
+                    else toast({ title: "Error", description: error.message, variant: "destructive" });
+                  } else { toast({ title: "Role assigned" }); loadAllData(); }
+                }}
+                onRemove={removeRole}
+              />
 
               {/* Change Password */}
               <div className="glass rounded-xl p-6 space-y-4">
@@ -1532,146 +1492,26 @@ export default function AdminDashboard() {
 
           {/* ===== VERIFICATION ===== */}
           {section === "verification" && (
-            <div className="space-y-4">
-              <h3 className="font-display font-bold">Verification Requests ({verifications.length})</h3>
-              {verifications.map((v: any) => {
-                const vUser = users.find(u => u.user_id === v.user_id);
-                return (
-                  <div key={v.id} className="glass rounded-xl p-4 flex items-start justify-between gap-4">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold text-sm">{vUser?.display_name || vUser?.email || v.user_id}</span>
-                        <Badge variant="outline" className={`text-[10px] ${v.status === "approved" ? "text-primary" : v.status === "rejected" ? "text-destructive" : "text-yellow-500"}`}>{v.status}</Badge>
-                      </div>
-                      <p className="text-xs text-muted-foreground">Submitted: {new Date(v.created_at).toLocaleString()}</p>
-                      <div className="flex gap-2 text-xs">
-                        <a href={`${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/kyc-documents/${v.id_card_url}`} target="_blank" className="text-primary underline">ID Card</a>
-                        <a href={`${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/kyc-documents/${v.photo_url}`} target="_blank" className="text-primary underline">Photo</a>
-                      </div>
-                    </div>
-                    {v.status === "pending" && (
-                      <div className="flex gap-2">
-                        <Button size="sm" className="bg-primary/20 text-primary h-8" onClick={async () => {
-                          await supabase.from("user_verifications").update({ status: "approved", reviewed_by: user!.id, reviewed_at: new Date().toISOString() } as any).eq("id", v.id);
-                          await supabase.from("profiles").update({ is_verified: true } as any).eq("user_id", v.user_id);
-                          // Award XP
-                          const { data: p } = await supabase.from("profiles").select("xp_points").eq("user_id", v.user_id).single();
-                          await supabase.from("profiles").update({ xp_points: ((p as any)?.xp_points || 0) + 50 } as any).eq("user_id", v.user_id);
-                          toast({ title: "Approved!" });
-                          loadAllData();
-                        }}>
-                          <CheckCircle className="w-3 h-3 mr-1" /> Approve
-                        </Button>
-                        <Button size="sm" variant="outline" className="text-destructive h-8" onClick={async () => {
-                          await supabase.from("user_verifications").update({ status: "rejected", reviewed_by: user!.id, reviewed_at: new Date().toISOString(), rejection_reason: "Documents unclear" } as any).eq("id", v.id);
-                          toast({ title: "Rejected" });
-                          loadAllData();
-                        }}>
-                          <XCircle className="w-3 h-3 mr-1" /> Reject
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-              {verifications.length === 0 && <p className="text-muted-foreground text-sm">No verification requests.</p>}
-            </div>
+            <VerificationPanel
+              verifications={verifications}
+              users={users as any}
+              currentUserId={user!.id}
+              onChanged={loadAllData}
+            />
           )}
 
           {/* ===== PAYMENTS ===== */}
           {section === "payments" && (
-            <div className="space-y-4">
-              <PaymentMethodsManager />
-
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                {[
-                  { label: "Total Payments", value: payments.length },
-                  { label: "Successful", value: payments.filter((p: any) => p.status === "paid").length },
-                  { label: "Revenue", value: `₹${payments.filter((p: any) => p.status === "paid").reduce((s: number, p: any) => s + Number(p.amount), 0).toLocaleString()}` },
-                  { label: "Pending", value: payments.filter((p: any) => p.status === "pending").length },
-                ].map(s => (
-                  <div key={s.label} className="glass rounded-xl p-5">
-                    <p className="text-2xl font-display font-bold">{s.value}</p>
-                    <p className="text-xs text-muted-foreground">{s.label}</p>
-                  </div>
-                ))}
-              </div>
-              <div className="glass rounded-xl overflow-hidden">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Order ID</TableHead>
-                      <TableHead>User</TableHead>
-                      <TableHead>Plan</TableHead>
-                      <TableHead>Amount</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Date</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {payments.map((p: any) => {
-                      const pUser = users.find(u => u.user_id === p.user_id);
-                      return (
-                        <TableRow key={p.id}>
-                          <TableCell className="text-xs font-mono">{p.order_id}</TableCell>
-                          <TableCell className="text-xs">{pUser?.display_name || pUser?.email || "—"}</TableCell>
-                          <TableCell><Badge variant="outline" className="text-[10px]">{p.plan}</Badge></TableCell>
-                          <TableCell>₹{p.amount}</TableCell>
-                          <TableCell>
-                            <Badge className={p.status === "paid" ? "bg-primary/20 text-primary" : p.status === "pending" ? "bg-yellow-500/20 text-yellow-500" : "bg-destructive/20 text-destructive"} variant="outline">
-                              {p.status}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-xs text-muted-foreground">{new Date(p.created_at).toLocaleString()}</TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </div>
-            </div>
+            <PaymentsOpsPanel payments={payments as any} users={users as any} />
           )}
 
           {/* ===== FORUM MODERATION ===== */}
           {section === "forum" && (
-            <div className="space-y-4">
-              <h3 className="font-display font-bold">Forum Posts ({forumPosts.length})</h3>
-              <div className="flex gap-2 mb-4">
-                <Badge variant="outline" className="text-[10px]">Pending: {forumPosts.filter((p: any) => !p.is_approved).length}</Badge>
-                <Badge variant="outline" className="text-[10px] text-primary">Approved: {forumPosts.filter((p: any) => p.is_approved).length}</Badge>
-              </div>
-              {forumPosts.filter((p: any) => !p.is_approved).map((post: any) => (
-                <div key={post.id} className="glass rounded-xl p-4 flex items-start justify-between gap-4">
-                  <div className="space-y-1 flex-1">
-                    <div className="flex items-center gap-2">
-                      {post.title && <span className="font-semibold text-sm">{post.title}</span>}
-                      <Badge variant="outline" className="text-[10px]">{post.category || "General"}</Badge>
-                      <Badge variant="outline" className="text-[10px] text-yellow-500">Pending</Badge>
-                    </div>
-                    <p className="text-xs text-muted-foreground">{post.content}</p>
-                    <p className="text-[10px] text-muted-foreground">By: {post.user_name || post.user_id.slice(0, 8)} · {new Date(post.created_at).toLocaleString()}</p>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button size="sm" className="bg-primary/20 text-primary h-8" onClick={async () => {
-                      await communityDb.from("forum_posts").update({ is_approved: true }).eq("id", post.id);
-                      setForumPosts(forumPosts.map((p: any) => p.id === post.id ? { ...p, is_approved: true } : p));
-                      toast({ title: "Approved!" });
-                    }}>
-                      <CheckCircle className="w-3 h-3 mr-1" /> Approve
-                    </Button>
-                    <Button size="sm" variant="ghost" className="text-destructive h-8" onClick={async () => {
-                      await communityDb.from("forum_posts").delete().eq("id", post.id);
-                      setForumPosts(forumPosts.filter((p: any) => p.id !== post.id));
-                    }}>
-                      <Trash2 className="w-3 h-3" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
-              {forumPosts.filter((p: any) => !p.is_approved).length === 0 && (
-                <p className="text-muted-foreground text-sm text-center py-8">All posts are approved! ✅</p>
-              )}
-            </div>
+            <ForumModerationPanel
+              posts={forumPosts}
+              users={users as any}
+              onChanged={loadAllData}
+            />
           )}
           {/* ===== COMMUNITY ===== */}
           {section === "community" && (
