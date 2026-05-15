@@ -39,6 +39,10 @@ import { SeoBlogManager } from "@/components/admin/SeoBlogManager";
 import { SystemHealth } from "@/components/admin/SystemHealth";
 import { OperatorLink } from "@/components/admin/OperatorLink";
 import { UsersPanel } from "@/components/admin/UsersPanel";
+import { VerificationPanel } from "@/components/admin/VerificationPanel";
+import { RolesPanel } from "@/components/admin/RolesPanel";
+import { ForumModerationPanel } from "@/components/admin/ForumModerationPanel";
+import { PaymentsOpsPanel } from "@/components/admin/PaymentsOpsPanel";
 
 import { SEO } from "@/components/SEO";
 
