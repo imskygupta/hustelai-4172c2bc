@@ -7008,6 +7008,54 @@ export type Database = {
         }
         Relationships: []
       }
+      workspace_outputs: {
+        Row: {
+          client_id: string | null
+          created_at: string
+          id: string
+          metadata: Json
+          model: string | null
+          project_id: string | null
+          provider: string | null
+          ref_id: string | null
+          ref_kind: string | null
+          summary: string | null
+          title: string
+          tool: string
+          user_id: string
+        }
+        Insert: {
+          client_id?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json
+          model?: string | null
+          project_id?: string | null
+          provider?: string | null
+          ref_id?: string | null
+          ref_kind?: string | null
+          summary?: string | null
+          title: string
+          tool: string
+          user_id: string
+        }
+        Update: {
+          client_id?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json
+          model?: string | null
+          project_id?: string | null
+          provider?: string | null
+          ref_id?: string | null
+          ref_kind?: string | null
+          summary?: string | null
+          title?: string
+          tool?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       workspace_payments: {
         Row: {
           amount: number
