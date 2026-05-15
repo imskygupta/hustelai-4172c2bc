@@ -119,7 +119,7 @@ export default function Signup() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const policy = checkEmailPolicy(email);
-    if (!policy.ok) {
+    if (policy.ok === false) {
       toast({ title: "Email not accepted", description: policy.message, variant: "destructive" });
       // Best-effort log to admin (do not block UX)
       try {
