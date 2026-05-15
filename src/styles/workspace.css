@@ -225,3 +225,128 @@
   background: hsl(150 70% 50%);
   animation: ws-presence-pulse 2.4s ease-out infinite;
 }
+
+/* ============================================================
+   Premiumization wave — micro-interactions, shimmer, mesh
+   ============================================================ */
+
+/* Magnetic spotlight tile.
+   Reads --mx/--my CSS vars set by MagneticTile on mousemove and renders
+   a soft radial spotlight inside the tile. GPU-friendly (no JS per frame
+   beyond a CSS variable write). */
+.ws-magnetic {
+  --mx: 50%;
+  --my: -20%;
+  position: relative;
+  isolation: isolate;
+  transition: transform var(--ws-dur-base) var(--ws-ease),
+              border-color var(--ws-dur-base) var(--ws-ease),
+              box-shadow var(--ws-dur-base) var(--ws-ease);
+}
+.ws-magnetic::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    280px circle at var(--mx) var(--my),
+    hsl(160 84% 55% / 0.18),
+    hsl(258 80% 64% / 0.10) 35%,
+    transparent 70%
+  );
+  opacity: 0;
+  transition: opacity var(--ws-dur-base) var(--ws-ease);
+  pointer-events: none;
+  z-index: 0;
+}
+.ws-magnetic:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 32px -16px hsl(258 80% 35% / 0.45);
+}
+.ws-magnetic:hover::before { opacity: 1; }
+.ws-magnetic:active { transform: translateY(0) scale(0.995); }
+.ws-magnetic > * { position: relative; z-index: 1; }
+
+/* Shimmer skeletons — replace spinners with breathing surfaces */
+@keyframes ws-shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+.ws-shimmer {
+  background: linear-gradient(
+    100deg,
+    hsl(220 14% 14% / 0.45) 20%,
+    hsl(220 14% 22% / 0.65) 50%,
+    hsl(220 14% 14% / 0.45) 80%
+  );
+  background-size: 200% 100%;
+  animation: ws-shimmer 1.6s linear infinite;
+}
+
+/* Slow drifting gradient mesh — adds subtle environmental life behind
+   the cockpit. Overlays the existing .ws-ambient at very low opacity. */
+.ws-mesh {
+  position: fixed;
+  inset: -10%;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.55;
+  background:
+    radial-gradient(35% 30% at 18% 30%, hsl(160 84% 45% / 0.10), transparent 60%),
+    radial-gradient(30% 28% at 78% 22%, hsl(258 80% 64% / 0.10), transparent 60%),
+    radial-gradient(40% 35% at 60% 80%, hsl(292 84% 62% / 0.08), transparent 60%);
+  filter: blur(8px);
+  animation: ws-mesh-drift 28s ease-in-out infinite;
+}
+@keyframes ws-mesh-drift {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50%      { transform: translate3d(-2%, -1.5%, 0) rotate(0.5deg); }
+}
+
+/* Optional very-fine grain for depth — used sparingly */
+.ws-grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.04;
+  mix-blend-mode: overlay;
+  background-image:
+    radial-gradient(rgba(255,255,255,0.6) 1px, transparent 1px),
+    radial-gradient(rgba(255,255,255,0.4) 1px, transparent 1px);
+  background-size: 3px 3px, 7px 7px;
+  background-position: 0 0, 1px 2px;
+}
+
+/* Welcome line shimmer-sweep used in the personalized header */
+@keyframes ws-headline-sweep {
+  0%   { background-position: -120% 0; }
+  60%  { background-position:  120% 0; }
+  100% { background-position:  120% 0; }
+}
+.ws-headline-sweep {
+  background-image: linear-gradient(
+    100deg,
+    hsl(0 0% 100% / 0.92) 0%,
+    hsl(0 0% 100% / 0.92) 35%,
+    hsl(160 84% 70% / 1) 50%,
+    hsl(0 0% 100% / 0.92) 65%,
+    hsl(0 0% 100% / 0.92) 100%
+  );
+  background-size: 250% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: ws-headline-sweep 5.5s ease-in-out infinite;
+}
+
+/* Reduced motion — respect users who opt out */
+@media (prefers-reduced-motion: reduce) {
+  .ws-shimmer,
+  .ws-mesh,
+  .ws-headline-sweep,
+  .ws-portal-stars,
+  .ws-portal-orb,
+  .ws-portal-bg,
+  .ws-portal-ring { animation: none !important; }
+}
