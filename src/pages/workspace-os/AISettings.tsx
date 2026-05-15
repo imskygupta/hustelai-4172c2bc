@@ -208,6 +208,45 @@ export default function AISettings() {
 
   return (
     <div className="max-w-5xl space-y-6">
+      {/* AI Fuel hero — BYOK is the workspace's strongest differentiator. */}
+      <motion.section
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+        className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-[hsl(222_40%_8%)] via-[hsl(222_45%_5%)] to-[hsl(258_50%_8%)] p-8 sm:p-10"
+      >
+        <div aria-hidden className="absolute -top-24 -right-20 h-72 w-72 rounded-full" style={{ background: "radial-gradient(circle, hsl(160 84% 45% / 0.30), transparent 60%)", filter: "blur(40px)" }} />
+        <div aria-hidden className="absolute -bottom-32 -left-16 h-72 w-72 rounded-full" style={{ background: "radial-gradient(circle, hsl(258 80% 64% / 0.30), transparent 60%)", filter: "blur(50px)" }} />
+        <div className="relative">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/[0.04] backdrop-blur-md mb-5">
+            <span className="ws-dot ws-dot--ok" />
+            <span className="text-[10px] uppercase tracking-[0.22em] text-white/70">AI Fuel · BYOK</span>
+          </div>
+          <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight text-white leading-[1.1] max-w-2xl">
+            Use your own AI power.<br />
+            <span className="ws-gradient-text">Unlimited workflows. No platform credits.</span>
+          </h1>
+          <p className="mt-4 text-sm sm:text-base text-white/60 max-w-2xl leading-relaxed">
+            HustleAI Workspace runs on <span className="text-white">your</span> provider keys.
+            Cheaper per token, faster than rate-limited platforms, and you own every byte that flows through your projects.
+          </p>
+
+          <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-2xl">
+            {[
+              { k: "Cheaper", v: "Pay providers direct" },
+              { k: "Faster", v: "No shared queue" },
+              { k: "Yours", v: "Keys never leave you" },
+              { k: "Limitless", v: "Pick any model" },
+            ].map(b => (
+              <div key={b.k} className="rounded-xl border border-white/10 bg-white/[0.03] backdrop-blur-md p-3">
+                <div className="text-[10px] uppercase tracking-wider text-emerald-300/80">{b.k}</div>
+                <div className="text-xs text-white/70 mt-0.5">{b.v}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </motion.section>
+
       <header className="flex items-end justify-between gap-4 flex-wrap">
         <div>
           <div className="flex items-center gap-2 text-muted-foreground">
