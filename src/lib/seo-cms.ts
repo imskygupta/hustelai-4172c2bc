@@ -219,6 +219,17 @@ export async function listPostsByCategory(category: string): Promise<SeoBlogRow[
   return (data as any) ?? [];
 }
 
+/** Latest published blog posts — used by dashboard Trending tab. */
+export async function listLatestPosts(limit = 9): Promise<SeoBlogRow[]> {
+  const { data } = await supabase
+    .from(BLOG)
+    .select("*")
+    .eq("status", "published")
+    .order("published_at", { ascending: false })
+    .limit(limit);
+  return (data as any) ?? [];
+}
+
 // ---- helpers
 export function extractToc(markdown: string): { level: number; text: string; slug: string }[] {
   const out: { level: number; text: string; slug: string }[] = [];
