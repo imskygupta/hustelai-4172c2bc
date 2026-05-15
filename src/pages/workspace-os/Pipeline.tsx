@@ -121,11 +121,8 @@ export default function Pipeline() {
                       <Link to={wp("projects/new")} className="text-foreground/80 hover:underline">create one →</Link>
                     </div>
                   ) : list.map(w => (
-                    <motion.div
+                    <div
                       key={w.id}
-                      layout
-                      initial={{ opacity: 0, y: 4 }}
-                      animate={{ opacity: 1, y: 0 }}
                       draggable
                       onDragStart={e => e.dataTransfer.setData("text/plain", w.id)}
                       className="group cursor-grab active:cursor-grabbing"
@@ -157,7 +154,7 @@ export default function Pipeline() {
                           </div>
                         </div>
                       </Link>
-                    </motion.div>
+                    </div>
                   ))}
                 </div>
               </motion.div>
