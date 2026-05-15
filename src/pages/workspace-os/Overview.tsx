@@ -320,7 +320,7 @@ function EmptySignal({ icon: Icon, title, hint }: { icon: any; title: string; hi
 }
 
 function ProviderPill({ provider, loading }: { provider: ActiveProvider; loading: boolean }) {
-  if (loading) return <Skeleton className="h-7 w-32 rounded-full" />;
+  if (loading) return <div className="ws-shimmer h-7 w-32 rounded-full" />;
   if (!provider) {
     return (
       <Link to={wp("providers")} className="inline-flex items-center gap-2 rounded-full border border-amber-300/60 bg-amber-50/50 px-3 py-1 text-xs font-medium text-amber-700 hover:bg-amber-100 transition">
