@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-import { Plus, Save, Trash2, Star } from "lucide-react";
+import { Plus, Save, Trash2, Star, Blocks as BlocksIcon, Sparkles } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -42,22 +42,38 @@ export default function BlocksPage() {
 
   return (
     <div className="space-y-6 max-w-5xl">
-      <header className="flex items-end justify-between gap-3">
-        <div>
-          <h2 className="text-2xl font-semibold tracking-tight">Reusable blocks</h2>
-          <p className="text-sm text-muted-foreground mt-1">
-            Save snippets once. Drop them into any quotation, agreement or proposal in one click.
-          </p>
+      {/* Hero — calm cream gradient surface, matching workspace cockpit */}
+      <motion.header
+        initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
+        className="relative overflow-hidden rounded-2xl border border-border/60 bg-gradient-to-br from-[hsl(48_85%_98%)] via-white to-[hsl(160_50%_98%)] p-6 sm:p-7"
+      >
+        <div aria-hidden className="absolute -top-20 -right-16 h-56 w-56 rounded-full" style={{ background: "radial-gradient(circle, hsl(160 84% 50% / 0.12), transparent 60%)", filter: "blur(30px)" }} />
+        <div className="relative flex items-end justify-between gap-4 flex-wrap">
+          <div className="min-w-0">
+            <span className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.2em] font-semibold text-emerald-700 mb-2">
+              <BlocksIcon className="w-3 h-3" /> Workspace assets
+            </span>
+            <h2 className="text-2xl sm:text-[28px] font-semibold tracking-tight leading-tight">Reusable blocks</h2>
+            <p className="text-sm text-muted-foreground mt-1.5 max-w-xl">
+              Save snippets once. Drop them into any quotation, agreement or proposal in one click — no more rewriting payment terms or scope.
+            </p>
+          </div>
+          <button
+            onClick={() => setEditing({ kind: "payment_terms", title: "", body: "", is_default: false })}
+            className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium text-black shadow-[0_0_24px_rgba(16,185,129,0.3)] hover:scale-[1.02] transition-transform shrink-0"
+            style={{ backgroundImage: "var(--ws-gradient)" }}
+          >
+            <Plus className="h-4 w-4" /> New block
+          </button>
         </div>
-        <button onClick={() => setEditing({ kind: "payment_terms", title: "", body: "", is_default: false })}
-          className="inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-4 py-2 text-sm font-medium shadow-lg shadow-primary/30">
-          <Plus className="h-4 w-4" /> New block
-        </button>
-      </header>
+      </motion.header>
 
       {editing && (
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-          className="rounded-2xl border border-primary/30 bg-card p-5 space-y-3">
+          className="rounded-2xl border border-emerald-300/50 bg-white shadow-[0_8px_30px_rgba(16,185,129,0.08)] p-5 space-y-3">
+          <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider text-emerald-700 font-semibold">
+            <Sparkles className="h-3 w-3" /> {editing.id ? "Edit block" : "New block"}
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-3">
             <select className="rounded-md border border-border bg-background px-3 py-2 text-sm"
               value={editing.kind} onChange={e => setEditing(p => ({ ...(p || {}), kind: e.target.value as BlockKind }))}>
@@ -73,7 +89,8 @@ export default function BlocksPage() {
             </label>
             <div className="flex gap-2">
               <button onClick={() => setEditing(null)} className="text-xs text-muted-foreground px-3 py-1.5 hover:text-foreground">Cancel</button>
-              <button onClick={save} className="inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-4 py-1.5 text-xs font-medium">
+              <button onClick={save} className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-medium text-black"
+                style={{ backgroundImage: "var(--ws-gradient)" }}>
                 <Save className="h-3 w-3" /> Save block
               </button>
             </div>
@@ -84,13 +101,21 @@ export default function BlocksPage() {
       <div className="space-y-6">
         {grouped.map(g => (
           <section key={g.value}>
-            <h3 className="text-xs uppercase tracking-wider text-muted-foreground mb-2">{g.label}</h3>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="h-1 w-1 rounded-full bg-emerald-500" />
+              <h3 className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground font-semibold">{g.label}</h3>
+              {g.blocks.length > 0 && (
+                <span className="text-[10px] text-muted-foreground/60">· {g.blocks.length}</span>
+              )}
+            </div>
             {g.blocks.length === 0 ? (
-              <p className="text-sm text-muted-foreground/70 italic">No blocks yet.</p>
+              <p className="text-xs text-muted-foreground/60 italic pl-3 py-2 border-l-2 border-dashed border-border/40">
+                No blocks yet. Click <span className="text-foreground/80">New block</span> to save your first {g.label.toLowerCase()}.
+              </p>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {g.blocks.map(b => (
-                  <div key={b.id} className="rounded-xl border border-border bg-card p-4 space-y-2 group">
+                  <div key={b.id} className="rounded-xl border border-border bg-white hover:border-emerald-300/60 hover:shadow-[0_4px_20px_rgba(16,185,129,0.06)] transition-all p-4 space-y-2 group">
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium truncate">{b.title}</p>
