@@ -115,6 +115,13 @@ function Row({ v, u, currentUserId, onChanged }: { v: V; u?: ProfileLike; curren
               await supabase.from("profiles").update({ is_verified: true } as any).eq("user_id", v.user_id);
               const { data: p } = await supabase.from("profiles").select("xp_points").eq("user_id", v.user_id).single();
               await supabase.from("profiles").update({ xp_points: ((p as any)?.xp_points || 0) + 50 } as any).eq("user_id", v.user_id);
+              void recordOperatorAction({
+                action: "verification.approve",
+                targetType: "user",
+                targetId: v.user_id,
+                targetLabel: u?.email ?? v.user_id,
+                metadata: { verification_id: v.id },
+              });
               toast({ title: "Approved" });
               onChanged();
             }}>
@@ -136,6 +143,14 @@ function Row({ v, u, currentUserId, onChanged }: { v: V; u?: ProfileLike; curren
                   <AlertDialogCancel>Cancel</AlertDialogCancel>
                   <AlertDialogAction onClick={async () => {
                     await supabase.from("user_verifications").update({ status: "rejected", reviewed_by: currentUserId, reviewed_at: new Date().toISOString(), rejection_reason: reason } as any).eq("id", v.id);
+                    void recordOperatorAction({
+                      action: "verification.reject",
+                      targetType: "user",
+                      targetId: v.user_id,
+                      targetLabel: u?.email ?? v.user_id,
+                      reason,
+                      metadata: { verification_id: v.id },
+                    });
                     toast({ title: "Rejected" });
                     onChanged();
                   }}>Reject</AlertDialogAction>
