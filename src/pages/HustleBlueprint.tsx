@@ -128,6 +128,15 @@ export default function HustleBlueprint() {
             )}
           </motion.div>
 
+          {/* Shared workspace memory — what this operator generated recently. */}
+          <RecentOutputsRail
+            tool="hustle-blueprint"
+            scopeToProject
+            limit={5}
+            emptyHint="Your past blueprints will appear here."
+            onPick={(o) => { setHustleTitle(o.title); if (o.summary) setHustleDesc(o.summary); }}
+          />
+
           {/* Input */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
             className="glass rounded-2xl p-6 md:p-8 space-y-5">
