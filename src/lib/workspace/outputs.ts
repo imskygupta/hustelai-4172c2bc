@@ -193,3 +193,77 @@ export function useRecentOutputs(opts: UseRecentOutputsOptions = {}) {
 
   return { items, loading, refresh: load, remove };
 }
+
+// ---------------------------------------------------------------------------
+// Reusable assets
+// ---------------------------------------------------------------------------
+
+/**
+ * Promote (or demote) an existing output as a reusable workspace asset.
+ * Lightweight by design — no separate `assets` table, just a flag.
+ */
+export async function setOutputAsset(
+  id: string,
+  is_asset: boolean,
+  asset_kind?: AssetKind | null,
+): Promise<boolean> {
+  try {
+    const patch: Record<string, unknown> = { is_asset };
+    if (is_asset && asset_kind !== undefined) patch.asset_kind = asset_kind;
+    if (!is_asset) patch.asset_kind = null;
+    const { error } = await (supabase as any)
+      .from("workspace_outputs")
+      .update(patch)
+      .eq("id", id);
+    return !error;
+  } catch {
+    return false;
+  }
+}
+
+export type UseAssetsOptions = {
+  kind?: AssetKind;
+  tool?: string;
+  scopeToProject?: boolean;
+  scopeToClient?: boolean;
+  /** Default 20. Max 100. */
+  limit?: number;
+};
+
+/**
+ * Hook that returns the current user's reusable assets, optionally filtered
+ * by kind / tool / active project. Tools call this when offering an
+ * "Attach an asset" picker (e.g. Canvas importing a Blueprint).
+ */
+export function useAssets(opts: UseAssetsOptions = {}) {
+  const { user } = useAuth();
+  const { activeProjectId, activeClientId } = useWorkspace();
+  const [items, setItems] = useState<WorkspaceOutput[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  const load = useCallback(async () => {
+    if (!user?.id) { setItems([]); return; }
+    setLoading(true);
+    try {
+      let q = (supabase as any)
+        .from("workspace_outputs")
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("is_asset", true)
+        .order("created_at", { ascending: false })
+        .limit(Math.min(opts.limit ?? 20, 100));
+      if (opts.kind) q = q.eq("asset_kind", opts.kind);
+      if (opts.tool) q = q.eq("tool", opts.tool);
+      if (opts.scopeToProject && activeProjectId) q = q.eq("project_id", activeProjectId);
+      if (opts.scopeToClient && activeClientId) q = q.eq("client_id", activeClientId);
+      const { data } = await q;
+      setItems((data || []) as WorkspaceOutput[]);
+    } finally {
+      setLoading(false);
+    }
+  }, [user?.id, opts.kind, opts.tool, opts.scopeToProject, opts.scopeToClient, opts.limit, activeProjectId, activeClientId]);
+
+  useEffect(() => { load(); }, [load]);
+
+  return { items, loading, refresh: load };
+}
