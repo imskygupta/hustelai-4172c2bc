@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { appUrl, MIGRATED_TO_WORKSPACE } from "@/lib/host";
 import { AppShell } from "@/components/AppShell";
+import { WorkspaceHandoff } from "@/components/workspace/WorkspaceHandoff";
 import { NotificationPopup } from "@/components/NotificationPopup";
 import { AffiliateTab } from "@/components/AffiliateTab";
 import { EmailVerificationBanner } from "@/components/EmailVerificationBanner";
@@ -55,20 +56,33 @@ interface Webinar {
 export default function Dashboard() {
   const { user, profile, loading } = useAuth();
   const navigate = useNavigate();
+  // Handoff overlay state — when launching into a workspace tool we render
+  // a brief fade-through so the cross-host hop feels intentional instead of
+  // a hard teleport. Cleared automatically once the new surface paints.
+  const [handoffTool, setHandoffTool] = useState<string | null>(null);
   // Cross-host tool launcher: migrated execution tools jump to workspace.* on
   // the production marketing host; on dual hosts (preview/localhost) and on
   // the workspace host itself, this stays a normal in-app navigate.
-  const goTool = (path: string) => {
+  const goTool = (path: string, label?: string) => {
     const base = path.split("?")[0];
     const isMigrated =
       MIGRATED_TO_WORKSPACE.has(base) ||
       Array.from(MIGRATED_TO_WORKSPACE).some((p) => base.startsWith(p + "/"));
     if (!isMigrated) return navigate(path);
     const target = appUrl(path);
+    // Show the handoff overlay for migrated tools regardless of cross-host
+    // vs in-app — the visual continuity matters even in preview.
+    setHandoffTool(label || "Launching your tool");
     if (target.startsWith("http")) {
-      window.location.assign(target);
+      // brief delay so the overlay has time to paint before the hop
+      window.setTimeout(() => window.location.assign(target), 220);
     } else {
-      navigate(target);
+      window.setTimeout(() => {
+        navigate(target);
+        // overlay auto-dismisses once the next route renders; clear after
+        // a safe upper bound in case navigate is synchronous.
+        window.setTimeout(() => setHandoffTool(null), 600);
+      }, 180);
     }
   };
   const [searchParams] = useSearchParams();
