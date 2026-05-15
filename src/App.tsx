@@ -178,10 +178,12 @@ import { isMaintenance, MaintenancePage } from "@/components/MaintenanceGate";
 import { RootErrorFallback } from "@/components/RootErrorFallback";
 import { detectSurface } from "@/config/runtime";
 import { isWorkspaceHost } from "@/lib/host";
+import { useParams } from "react-router-dom";
 const DocsLayout  = lazy(() => import("./pages/docs/DocsLayout"));
 const DocsHome    = lazy(() => import("./pages/docs/DocsHome"));
 const DocsArticle = lazy(() => import("./pages/docs/DocsArticle"));
-const WorkspaceLanding = lazy(() => import("./pages/WorkspaceLanding"));
+// WorkspaceLanding removed — workspace.* now opens directly into the cockpit.
+// The subdomain itself defines product context; no marketing landing layer.
 import Status from "./pages/Status";
 import Health from "./pages/Health";
 import AuthDebug from "./pages/AuthDebug";
@@ -218,6 +220,28 @@ const AuthorityPage = lazy(() => import("./pages/authority/AuthorityPage"));
 import { MaintenanceBanner } from "./components/flags/FeatureGate";
 import TelegramLanding from "./pages/marketing/TelegramLanding";
 import { Navigate } from "react-router-dom";
+
+// Legacy `/workspaces/*` → clean cockpit aliases (workspace host only).
+function LegacyProjectRedirect() {
+  const { id } = useParams();
+  return <Navigate to={`/projects/${id}`} replace />;
+}
+function LegacyProjectDocsRedirect() {
+  const { id } = useParams();
+  return <Navigate to={`/projects/${id}/docs`} replace />;
+}
+function LegacyProjectDocsNewRedirect() {
+  const { id, type } = useParams();
+  return <Navigate to={`/projects/${id}/docs/new/${type}`} replace />;
+}
+function LegacyProjectDocRedirect() {
+  const { id, docId } = useParams();
+  return <Navigate to={`/projects/${id}/docs/${docId}`} replace />;
+}
+function LegacyIntakeInboxRedirect() {
+  const { id } = useParams();
+  return <Navigate to={`/intake/${id}`} replace />;
+}
 
 // Helper to wrap an in-app page in the SaaS sidebar shell.
 // All shelled routes require auth — guests are redirected to /signup so they
