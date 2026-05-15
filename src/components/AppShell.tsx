@@ -231,7 +231,7 @@ export function AppShell({ children, title, breadcrumbs, actions }: AppShellProp
                 variant="ghost"
                 size="sm"
                 className="h-8 px-2 hidden sm:inline-flex"
-                onClick={() => window.open("https://docs.hustlaiapp.in/docs", "_blank", "noopener,noreferrer")}
+                onClick={() => window.open("https://docs.hustlaiapp.in", "_blank", "noopener,noreferrer")}
                 title="Documentation"
               >
                 <BookOpen className="w-4 h-4 mr-1" /> Docs
