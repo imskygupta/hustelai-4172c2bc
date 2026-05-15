@@ -30,3 +30,4 @@
 - [Workspace Polish Wave 5](mem://features/workspace-polish-wave5) — Workflow-first IntentLauncher (5 outcomes), ContinueBuilding hover quick actions, Command Palette Actions group with intent vocabulary
 - [Workspace Gateway](mem://features/workspace-gateway-handoff) — /workspaces on marketing host is a transition gateway; cockpit lives only on workspace.* with explicit "Enter Workspace" handoff
 - [Project-First Workspace](mem://features/workspace-project-first) — Overview surfaces real projects/deliverables/outputs; project detail uses 3-column operational layout with contextual AI actions rail
+- [Project Creation Wizard](mem://features/workspace-polish-wave-creation) — 5-step Linear/Notion-style new-project flow that seeds tasks, doc, reminder, activity
