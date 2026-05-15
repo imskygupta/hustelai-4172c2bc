@@ -23,7 +23,11 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { SEO } from "@/components/SEO";
-import { listLatestPosts, type SeoBlogRow } from "@/lib/seo-cms";
+import {
+  getLatestBlogPosts,
+  readLatestBlogPostsCache,
+  type LatestBlogPost,
+} from "@/integrations/blog/latest";
 
 import {
   Search, Crown, Rocket, Sparkles, Users, Video, BookOpen, TrendingUp, MessageCircle,
@@ -53,7 +57,12 @@ export default function Dashboard() {
   const [searchParams] = useSearchParams();
   const [feed, setFeed] = useState<FeedData | null>(null);
   const [webinars, setWebinars] = useState<Webinar[]>([]);
-  const [trendingPosts, setTrendingPosts] = useState<SeoBlogRow[]>([]);
+  const [trendingPosts, setTrendingPosts] = useState<LatestBlogPost[]>(
+    () => readLatestBlogPostsCache(9) ?? [],
+  );
+  const [trendingLoaded, setTrendingLoaded] = useState<boolean>(
+    () => (readLatestBlogPostsCache(9)?.length ?? 0) > 0,
+  );
   const [savedHustlesCount, setSavedHustlesCount] = useState(0);
   const [chatCount, setChatCount] = useState(0);
   const [recentActivity, setRecentActivity] = useState<any[]>([]);
@@ -69,7 +78,10 @@ export default function Dashboard() {
   useEffect(() => {
     if (user) {
       loadFeed(); loadWebinars(); loadCommandCenterData();
-      listLatestPosts(9).then(setTrendingPosts).catch(() => setTrendingPosts([]));
+      getLatestBlogPosts(9, (posts) => {
+        setTrendingPosts(posts);
+        setTrendingLoaded(true);
+      }).catch(() => setTrendingLoaded(true));
     }
   }, [user]);
 
