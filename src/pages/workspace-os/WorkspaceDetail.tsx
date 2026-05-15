@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, Link, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
@@ -60,32 +60,56 @@ export default function WorkspaceDetail() {
     return null;
   })();
 
+  const tabs = useMemo(() => ([
+    ["overview","Overview"],["roadmap","Roadmap"],["crm","CRM"],["tasks","Tasks"],
+    ["payments","Payments"],["collab","Collab"],["portal","Portal"],["files","Files"],
+    ["retainer","Retainer"],["activity","Activity"],
+  ] as [string, string][]), []);
+
+  // Keyboard shortcuts — 1..9,0 to jump tabs. Skip when typing.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement | null;
+      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      const idx = e.key === "0" ? 9 : (parseInt(e.key, 10) - 1);
+      if (idx >= 0 && idx < tabs.length) setParams({ tab: tabs[idx][0] });
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [tabs, setParams]);
+
   return (
-    <div className="space-y-5">
-      <Link to={wp("")} className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
+    <div className="space-y-4">
+      <Link to={wp("")} className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
         <ArrowLeft className="h-3.5 w-3.5" /> All projects
       </Link>
 
-      {/* Slim identity strip — no heavy gradients, no fake stats */}
-      <motion.header initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
-        className="flex items-start gap-4 pb-1">
-        <div className="h-12 w-12 shrink-0 rounded-xl bg-primary/10 flex items-center justify-center overflow-hidden ring-1 ring-primary/15">
-          {w.logo_url ? <img src={w.logo_url} alt="" className="h-full w-full object-cover" /> : <Briefcase className="h-5 w-5 text-primary" />}
+      {/* Sticky identity strip — calm presence, no fake live indicators */}
+      <motion.header
+        initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
+        className="sticky top-12 z-20 -mx-1 px-1 pt-2 pb-3 bg-background/85 backdrop-blur-md flex items-center gap-3"
+      >
+        <div className="h-10 w-10 shrink-0 rounded-lg bg-primary/10 flex items-center justify-center overflow-hidden ring-1 ring-primary/15">
+          {w.logo_url ? <img src={w.logo_url} alt="" className="h-full w-full object-cover" /> : <Briefcase className="h-4 w-4 text-primary" />}
         </div>
         <div className="flex-1 min-w-0">
-          <h2 className="text-xl md:text-2xl font-semibold tracking-tight truncate">{w.client_name}</h2>
-          <div className="flex items-center gap-2 mt-1 text-[11px] text-muted-foreground/90 flex-wrap">
-            <span className="capitalize">{(w.pipeline_stage || w.status || "—").replace(/_/g, " ")}</span>
-            {w.company_name && <><span>·</span><span className="truncate max-w-[200px]">{w.company_name}</span></>}
-            {nextDeadline && <><span>·</span><span className="inline-flex items-center gap-1"><Calendar className="h-3 w-3" />{ago(nextDeadline)}</span></>}
+          <h2 className="text-lg md:text-xl font-semibold tracking-tight truncate leading-tight">{w.client_name}</h2>
+          <div className="flex items-center gap-2 mt-0.5 text-[11px] text-muted-foreground/90 flex-wrap">
+            <span className="inline-flex items-center gap-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500/80" />
+              <span className="capitalize">{(w.pipeline_stage || w.status || "—").replace(/_/g, " ")}</span>
+            </span>
+            {w.company_name && <><span className="text-muted-foreground/40">·</span><span className="truncate max-w-[200px]">{w.company_name}</span></>}
+            {nextDeadline && <><span className="text-muted-foreground/40">·</span><span className="inline-flex items-center gap-1"><Calendar className="h-3 w-3" />{ago(nextDeadline)}</span></>}
           </div>
         </div>
       </motion.header>
 
       {/* 3-column operational layout */}
-      <div className="grid grid-cols-1 xl:grid-cols-[220px_minmax(0,1fr)_280px] gap-5">
+      <div className="grid grid-cols-1 xl:grid-cols-[210px_minmax(0,1fr)_280px] gap-6">
         {/* LEFT — identity rail */}
-        <aside className="space-y-3 xl:sticky xl:top-20 xl:self-start min-w-0">
+        <aside className="space-y-1 xl:sticky xl:top-32 xl:self-start min-w-0">
           <RailItem label="Client" value={w.client_name} />
           {w.contact_email && <RailItem label="Contact" value={w.contact_email} mono />}
           <RailItem label="Stage" value={(w.pipeline_stage || w.status || "—").replace(/_/g, " ")} cap />
@@ -101,13 +125,13 @@ export default function WorkspaceDetail() {
             <RailItem label="Value" value={`${w.pricing.currency || "₹"}${w.pricing.amount}`} />
           )}
           {w.tags?.length ? (
-            <div className="rounded-xl border border-border/50 bg-card/30 p-3">
+            <div className="px-3 py-2">
               <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-muted-foreground mb-2">
                 <Tag className="h-3 w-3" /> Tags
               </div>
               <div className="flex flex-wrap gap-1">
                 {w.tags.map((t: string) => (
-                  <span key={t} className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{t}</span>
+                  <span key={t} className="text-[10px] px-1.5 py-0.5 rounded bg-muted/60 text-muted-foreground">{t}</span>
                 ))}
               </div>
             </div>
@@ -117,14 +141,10 @@ export default function WorkspaceDetail() {
         {/* CENTER — operational tabs */}
         <Tabs value={tab} onValueChange={(v) => setParams({ tab: v })} className="space-y-4 min-w-0">
           {/* Sticky scrollable tab rail with gradient underline */}
-          <div className="sticky top-14 z-20 -mx-1 px-1 bg-background/85 backdrop-blur-md border-b border-border/60">
+          <div className="sticky top-28 z-10 -mx-1 px-1 bg-background/85 backdrop-blur-md border-b border-border/40">
             <div className="overflow-x-auto no-scrollbar">
               <TabsList className="bg-transparent p-0 h-auto gap-1 inline-flex">
-                {[
-                  ["overview","Overview"],["roadmap","Roadmap"],["crm","CRM"],["tasks","Tasks"],
-                  ["payments","Payments"],["collab","Collab"],["portal","Portal"],["files","Files"],
-                  ["retainer","Retainer"],["activity","Activity"],
-                ].map(([v,l]) => (
+                {tabs.map(([v,l]) => (
                   <TabsTrigger
                     key={v} value={v}
                     className="relative px-3 py-2 rounded-none data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none after:absolute after:inset-x-2 after:-bottom-px after:h-0.5 after:rounded-full after:bg-gradient-to-r after:from-primary after:to-violet-500 after:opacity-0 data-[state=active]:after:opacity-100 transition-colors text-muted-foreground hover:text-foreground"
@@ -140,7 +160,7 @@ export default function WorkspaceDetail() {
 
           <TabsContent value="overview" className="space-y-4">
             {w.ai_summary && (
-              <section className="rounded-xl border border-border/50 bg-card/40 p-4">
+              <section className="rounded-lg p-4 bg-gradient-to-br from-primary/[0.04] to-transparent">
                 <p className="text-sm text-foreground/85 flex gap-2">
                   <Sparkles className="h-4 w-4 text-primary mt-0.5 shrink-0" />
                   <span className="italic leading-relaxed">{w.ai_summary}</span>
@@ -148,14 +168,14 @@ export default function WorkspaceDetail() {
               </section>
             )}
             {w.project_scope && (
-              <section className="rounded-xl border border-border/50 bg-card/30 p-4">
+              <section className="py-2">
                 <h3 className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-2">Scope</h3>
                 <p className="text-sm leading-relaxed">{w.project_scope}</p>
               </section>
             )}
             {!!w.deliverables?.length && (
-              <section className="rounded-xl border border-border/50 bg-card/30 p-4">
-                <h3 className="text-sm font-medium mb-2">Deliverables</h3>
+              <section className="py-2">
+                <h3 className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-2">Deliverables</h3>
                 <ul className="space-y-1.5 text-sm">
                   {w.deliverables.map((d: string, i: number) => <li key={i} className="flex gap-2"><span className="text-primary">•</span>{d}</li>)}
                 </ul>
@@ -164,6 +184,7 @@ export default function WorkspaceDetail() {
             <Link to={wpProjectDocs(w.id)} className="inline-flex items-center gap-2 text-sm text-primary hover:underline">
               <FileText className="h-4 w-4" /> Open documents
             </Link>
+            <p className="text-[10px] text-muted-foreground/60 pt-4">Tip: press <kbd className="px-1 py-0.5 rounded bg-muted/60 text-[10px]">1</kbd>–<kbd className="px-1 py-0.5 rounded bg-muted/60 text-[10px]">9</kbd> to switch tabs.</p>
           </TabsContent>
 
           <TabsContent value="roadmap">
@@ -184,7 +205,7 @@ export default function WorkspaceDetail() {
         </Tabs>
 
         {/* RIGHT — contextual AI actions + bot rail */}
-        <aside className="min-w-0 xl:sticky xl:top-20 xl:self-start xl:max-h-[calc(100vh-6rem)] xl:overflow-y-auto space-y-4">
+        <aside className="min-w-0 xl:sticky xl:top-32 xl:self-start xl:max-h-[calc(100vh-9rem)] xl:overflow-y-auto space-y-4 no-scrollbar">
           <ProjectQuickActions workspaceId={w.id} />
           <HustleBotRail workspaceId={w.id} />
         </aside>
@@ -205,11 +226,11 @@ function RailItem({
   mono?: boolean; cap?: boolean; muted?: boolean;
 }) {
   const body = (
-    <div className={`rounded-xl border border-border/50 bg-card/30 hover:bg-card/60 transition-colors p-3 ${href ? "cursor-pointer" : ""}`}>
+    <div className={`rounded-lg hover:bg-muted/40 transition-colors px-3 py-2 ${href ? "cursor-pointer" : ""}`}>
       <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-muted-foreground">
         {Icon && <Icon className="h-3 w-3" />} {label}
       </div>
-      <p className={`text-sm mt-1 truncate ${mono ? "font-mono text-xs" : ""} ${cap ? "capitalize" : ""} ${muted ? "text-muted-foreground" : "text-foreground/90"}`}>
+      <p className={`text-sm mt-0.5 truncate ${mono ? "font-mono text-xs" : ""} ${cap ? "capitalize" : ""} ${muted ? "text-muted-foreground" : "text-foreground/90"}`}>
         {value}
       </p>
     </div>
