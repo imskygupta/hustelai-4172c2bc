@@ -63,7 +63,7 @@ export default function DocsLayout() {
   function onSearchKey(e: React.KeyboardEvent) {
     if (e.key === "Enter" && q && totalMatches > 0) {
       const first = grouped.find((g) => g.pages.length > 0)?.pages[0];
-      if (first) navigate(`/docs/${first.slug}`);
+      if (first) navigate(`/${first.slug}`);
     }
   }
 
@@ -106,7 +106,7 @@ export default function DocsLayout() {
               {g.pages.map((p) => (
                 <li key={p.id}>
                   <NavLink
-                    to={`/docs/${p.slug}`}
+                    to={`/${p.slug}`}
                     className={({ isActive }) =>
                       cn(
                         "block rounded-md px-2 py-1.5 text-foreground/70 hover:text-foreground hover:bg-muted/60 transition-colors",
@@ -150,7 +150,7 @@ export default function DocsLayout() {
       {/* Top bar — distinct dark "docs" shell */}
       <header className="sticky top-0 z-40 border-b border-white/5 bg-[hsl(222_22%_7%)]/85 backdrop-blur supports-[backdrop-filter]:bg-[hsl(222_22%_7%)]/70">
         <div className="max-w-[1400px] mx-auto px-4 lg:px-8 h-14 flex items-center justify-between gap-4">
-          <Link to="/docs" className="flex items-center gap-2 font-semibold shrink-0">
+          <Link to="/" className="flex items-center gap-2 font-semibold shrink-0">
             <div className="w-7 h-7 rounded-md bg-gradient-to-br from-primary to-primary/50 flex items-center justify-center shadow-lg shadow-primary/20">
               <BookOpen className="w-4 h-4 text-primary-foreground" />
             </div>
@@ -172,10 +172,10 @@ export default function DocsLayout() {
           </button>
 
           <nav className="hidden md:flex items-center gap-1 text-sm">
-            <DocsTopLink to="/docs" icon={LayoutGrid}>Categories</DocsTopLink>
-            <DocsTopLink to="/docs/changelog" icon={Sparkles}>Changelog</DocsTopLink>
-            <DocsTopLink to="/docs/api" icon={Code2}>API</DocsTopLink>
-            <DocsTopLink to="/docs/quickstart" icon={Compass}>Guides</DocsTopLink>
+            <DocsTopLink to="/" icon={LayoutGrid}>Categories</DocsTopLink>
+            <DocsTopLink to="/changelog" icon={Sparkles}>Changelog</DocsTopLink>
+            <DocsTopLink to="/api" icon={Code2}>API</DocsTopLink>
+            <DocsTopLink to="/quickstart" icon={Compass}>Guides</DocsTopLink>
             <a
               href="https://hustlaiapp.in"
               className="ml-1 inline-flex items-center gap-1.5 px-3 h-8 rounded-md text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
@@ -219,7 +219,7 @@ export default function DocsLayout() {
           <div>Powered by <span className="text-foreground font-medium">HustleAI Workspace OS</span></div>
           <div className="flex gap-4">
             <a href="https://hustlaiapp.in" className="hover:text-foreground">hustlaiapp.in</a>
-            <Link to="/docs" className="hover:text-foreground">Docs home</Link>
+            <Link to="/" className="hover:text-foreground">Docs home</Link>
           </div>
         </div>
       </footer>

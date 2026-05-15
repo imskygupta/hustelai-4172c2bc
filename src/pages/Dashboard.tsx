@@ -23,7 +23,11 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { SEO } from "@/components/SEO";
-import { listLatestPosts, type SeoBlogRow } from "@/lib/seo-cms";
+import {
+  getLatestBlogPosts,
+  readLatestBlogPostsCache,
+  type LatestBlogPost,
+} from "@/integrations/blog/latest";
 
 import {
   Search, Crown, Rocket, Sparkles, Users, Video, BookOpen, TrendingUp, MessageCircle,
@@ -53,7 +57,12 @@ export default function Dashboard() {
   const [searchParams] = useSearchParams();
   const [feed, setFeed] = useState<FeedData | null>(null);
   const [webinars, setWebinars] = useState<Webinar[]>([]);
-  const [trendingPosts, setTrendingPosts] = useState<SeoBlogRow[]>([]);
+  const [trendingPosts, setTrendingPosts] = useState<LatestBlogPost[]>(
+    () => readLatestBlogPostsCache(9) ?? [],
+  );
+  const [trendingLoaded, setTrendingLoaded] = useState<boolean>(
+    () => (readLatestBlogPostsCache(9)?.length ?? 0) > 0,
+  );
   const [savedHustlesCount, setSavedHustlesCount] = useState(0);
   const [chatCount, setChatCount] = useState(0);
   const [recentActivity, setRecentActivity] = useState<any[]>([]);
@@ -69,7 +78,10 @@ export default function Dashboard() {
   useEffect(() => {
     if (user) {
       loadFeed(); loadWebinars(); loadCommandCenterData();
-      listLatestPosts(9).then(setTrendingPosts).catch(() => setTrendingPosts([]));
+      getLatestBlogPosts(9, (posts) => {
+        setTrendingPosts(posts);
+        setTrendingLoaded(true);
+      }).catch(() => setTrendingLoaded(true));
     }
   }, [user]);
 
@@ -721,9 +733,19 @@ export default function Dashboard() {
               </Link>
             </div>
             {trendingPosts.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-slate-200 bg-white p-8 text-center">
-                <BookOpen className="w-5 h-5 text-slate-300 mx-auto mb-2" />
-                <p className="text-xs text-slate-500">Loading the latest stories…</p>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {[0, 1, 2].map((i) => (
+                  <div key={i} className="rounded-xl border border-slate-200 bg-white p-5 animate-pulse">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="h-4 w-20 rounded-full bg-slate-100" />
+                      <div className="h-4 w-4 rounded bg-slate-100" />
+                    </div>
+                    <div className="h-4 w-5/6 rounded bg-slate-100 mb-2" />
+                    <div className="h-4 w-3/5 rounded bg-slate-100 mb-3" />
+                    <div className="h-3 w-full rounded bg-slate-50 mb-1.5" />
+                    <div className="h-3 w-4/5 rounded bg-slate-50" />
+                  </div>
+                ))}
               </div>
             ) : (
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -747,7 +769,7 @@ export default function Dashboard() {
                       <p className="text-xs text-slate-500 leading-relaxed line-clamp-3">{p.excerpt}</p>
                     )}
                     <div className="mt-3 flex items-center gap-2 text-[10.5px] text-slate-400">
-                      {p.reading_time_minutes ? <span>{p.reading_time_minutes} min read</span> : null}
+                      {p.reading_time ? <span>{p.reading_time} min read</span> : null}
                       {p.published_at ? (
                         <>
                           <span className="opacity-50">·</span>

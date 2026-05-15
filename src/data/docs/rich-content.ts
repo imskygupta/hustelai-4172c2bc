@@ -45,9 +45,9 @@ export const DOCS_RICH: Record<string, DocsRichSection> = {
       "Press ⌘K (Cmd-K) anywhere in the app to jump to any tool.",
     ],
     related: [
-      { label: "Quickstart", href: "/docs/quickstart" },
-      { label: "Workspace OS Overview", href: "/docs/overview" },
-      { label: "Plans & Pricing", href: "/docs/plans" },
+      { label: "Quickstart", href: "/quickstart" },
+      { label: "Workspace OS Overview", href: "/overview" },
+      { label: "Plans & Pricing", href: "/plans" },
     ],
   },
 
@@ -70,9 +70,9 @@ export const DOCS_RICH: Record<string, DocsRichSection> = {
       "You can pin up to 5 favourite tools to the Work Hub home for one-tap access.",
     ],
     related: [
-      { label: "Managing Clients", href: "/docs/clients" },
-      { label: "Create an Invoice", href: "/docs/create-invoice" },
-      { label: "Share a Client Portal", href: "/docs/share-portal" },
+      { label: "Managing Clients", href: "/clients" },
+      { label: "Create an Invoice", href: "/create-invoice" },
+      { label: "Share a Client Portal", href: "/share-portal" },
     ],
   },
 
@@ -94,8 +94,8 @@ export const DOCS_RICH: Record<string, DocsRichSection> = {
       "Calm mode (top nav) hides marketing strips and trims animations for deep focus.",
     ],
     related: [
-      { label: "Managing Clients", href: "/docs/clients" },
-      { label: "What is AI Fuel?", href: "/docs/what-is-ai-fuel" },
+      { label: "Managing Clients", href: "/clients" },
+      { label: "What is AI Fuel?", href: "/what-is-ai-fuel" },
     ],
   },
 
@@ -119,9 +119,9 @@ export const DOCS_RICH: Record<string, DocsRichSection> = {
       "Elite tier unlocks Comm Log filtering by sentiment + auto-summary.",
     ],
     related: [
-      { label: "Create an Invoice", href: "/docs/create-invoice" },
-      { label: "Share a Client Portal", href: "/docs/share-portal" },
-      { label: "Public Intake Forms", href: "/docs/public-forms" },
+      { label: "Create an Invoice", href: "/create-invoice" },
+      { label: "Share a Client Portal", href: "/share-portal" },
+      { label: "Public Intake Forms", href: "/public-forms" },
     ],
   },
 
@@ -147,8 +147,8 @@ export const DOCS_RICH: Record<string, DocsRichSection> = {
       "Pro+ tier unlocks branded invoice themes and a custom 'pay via UPI' QR.",
     ],
     related: [
-      { label: "How the Proposal Generator works", href: "/docs/how-it-works" },
-      { label: "Plans & Pricing", href: "/docs/plans" },
+      { label: "How the Proposal Generator works", href: "/how-it-works" },
+      { label: "Plans & Pricing", href: "/plans" },
     ],
   },
 
@@ -173,8 +173,8 @@ export const DOCS_RICH: Record<string, DocsRichSection> = {
       "Fuel rolls over for one month before expiring.",
     ],
     related: [
-      { label: "Plans & Pricing", href: "/docs/plans" },
-      { label: "Set up your own AI keys", href: "/docs/setup" },
+      { label: "Plans & Pricing", href: "/plans" },
+      { label: "Set up your own AI keys", href: "/setup" },
     ],
   },
 
@@ -198,8 +198,8 @@ export const DOCS_RICH: Record<string, DocsRichSection> = {
       "All sent proposals live under Work Hub → Proposals with view-tracking.",
     ],
     related: [
-      { label: "Create an Invoice", href: "/docs/create-invoice" },
-      { label: "What is AI Fuel?", href: "/docs/what-is-ai-fuel" },
+      { label: "Create an Invoice", href: "/create-invoice" },
+      { label: "What is AI Fuel?", href: "/what-is-ai-fuel" },
     ],
   },
 
@@ -223,8 +223,8 @@ export const DOCS_RICH: Record<string, DocsRichSection> = {
       "Use conditional logic (Pro+) to show fields only when relevant.",
     ],
     related: [
-      { label: "Managing Clients", href: "/docs/clients" },
-      { label: "Share a Client Portal", href: "/docs/share-portal" },
+      { label: "Managing Clients", href: "/clients" },
+      { label: "Share a Client Portal", href: "/share-portal" },
     ],
   },
 
@@ -248,8 +248,8 @@ export const DOCS_RICH: Record<string, DocsRichSection> = {
       "Elite+ tier unlocks custom-domain portals (portal.yourbrand.com).",
     ],
     related: [
-      { label: "Managing Clients", href: "/docs/clients" },
-      { label: "Create an Invoice", href: "/docs/create-invoice" },
+      { label: "Managing Clients", href: "/clients" },
+      { label: "Create an Invoice", href: "/create-invoice" },
     ],
   },
 
@@ -273,8 +273,8 @@ export const DOCS_RICH: Record<string, DocsRichSection> = {
       "Wallet top-ups (₹100/200/500/1000) never expire and stack on top of monthly fuel.",
     ],
     related: [
-      { label: "What is AI Fuel?", href: "/docs/what-is-ai-fuel" },
-      { label: "Common Questions", href: "/docs/common-questions" },
+      { label: "What is AI Fuel?", href: "/what-is-ai-fuel" },
+      { label: "Common Questions", href: "/common-questions" },
     ],
   },
 
@@ -297,8 +297,8 @@ export const DOCS_RICH: Record<string, DocsRichSection> = {
       "You can revert to fuel mode anytime — toggle off, fuel meter resumes.",
     ],
     related: [
-      { label: "What is AI Fuel?", href: "/docs/what-is-ai-fuel" },
-      { label: "Plans & Pricing", href: "/docs/plans" },
+      { label: "What is AI Fuel?", href: "/what-is-ai-fuel" },
+      { label: "Plans & Pricing", href: "/plans" },
     ],
   },
 
@@ -314,8 +314,8 @@ export const DOCS_RICH: Record<string, DocsRichSection> = {
       { title: "Is there an API?", body: "Public API is in private beta — see Docs → API for the early-access form.", icon: "Code2" },
     ],
     related: [
-      { label: "Plans & Pricing", href: "/docs/plans" },
-      { label: "Introduction", href: "/docs/introduction" },
+      { label: "Plans & Pricing", href: "/plans" },
+      { label: "Introduction", href: "/introduction" },
     ],
   },
 };

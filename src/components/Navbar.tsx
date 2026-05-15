@@ -188,7 +188,7 @@ export function Navbar() {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => window.open("https://docs.hustlaiapp.in/docs", "_blank", "noopener,noreferrer")}
+                onClick={() => window.open("https://docs.hustlaiapp.in", "_blank", "noopener,noreferrer")}
                 title="Documentation"
                 className={isHome ? "text-slate-600 hover:text-slate-900 hover:bg-slate-100" : ""}
               >
