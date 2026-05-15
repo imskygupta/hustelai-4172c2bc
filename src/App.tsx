@@ -122,6 +122,7 @@ import BlocksPage from "./pages/workspace-os/Blocks";
 import ClientsPage from "./pages/workspace-os/Clients";
 import IntakeForms from "./pages/workspace-os/IntakeForms";
 import IntakeInbox from "./pages/workspace-os/IntakeInbox";
+import DocsLibrary from "./pages/workspace-os/DocsLibrary";
 import IntakeSubmit from "./pages/IntakeSubmit";
 import IntakePreview from "./pages/IntakePreview";
 import Work from "./pages/Work";
@@ -301,6 +302,7 @@ const App = () => (
                   <Route path="blocks" element={<BlocksPage />} />
                   <Route path="intake" element={<IntakeForms />} />
                   <Route path="intake/:id" element={<IntakeInbox />} />
+                  <Route path="library" element={<DocsLibrary />} />
                 </Route>
                 {/* Legacy /workspaces/* aliases — keep typed/shared URLs working */}
                 <Route path="/workspace" element={<Navigate to="/" replace />} />
