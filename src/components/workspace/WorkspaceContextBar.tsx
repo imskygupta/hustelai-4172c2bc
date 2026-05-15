@@ -11,6 +11,7 @@ import { Briefcase, Users, Cpu, Star, ChevronRight } from "lucide-react";
 import { useWorkspace, PROVIDER_LABELS } from "@/lib/workspace/context";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { wp } from "@/lib/workspace/paths";
 
 export function WorkspaceContextBar() {
   const { user } = useAuth();
@@ -66,14 +67,14 @@ export function WorkspaceContextBar() {
       )}
       {(projectName || clientName) && (activeProvider || assetCount > 0) && <Sep />}
       {activeProvider ? (
-        <Link to="/workspaces/ai-settings" className="inline-flex items-center gap-1.5 hover:text-foreground transition">
+        <Link to={wp("providers")} className="inline-flex items-center gap-1.5 hover:text-foreground transition">
           <span className="ws-dot ws-dot--ok" />
           <Cpu className="h-3 w-3" />
           <span className="font-medium text-foreground/80">{PROVIDER_LABELS[activeProvider.provider] || activeProvider.provider}</span>
           {activeProvider.model && <span className="opacity-70">· {activeProvider.model}</span>}
         </Link>
       ) : !providerLoading && (
-        <Link to="/workspaces/ai-settings" className="inline-flex items-center gap-1.5 text-amber-600 hover:text-amber-700">
+        <Link to={wp("providers")} className="inline-flex items-center gap-1.5 text-amber-600 hover:text-amber-700">
           <span className="ws-dot ws-dot--warn ws-pulse-soft" /> Connect provider
         </Link>
       )}
@@ -87,7 +88,7 @@ export function WorkspaceContextBar() {
         </>
       )}
       <span className="ml-auto" />
-      <Link to="/workspaces" className="hidden sm:inline-flex items-center gap-0.5 text-muted-foreground/60 hover:text-foreground">
+      <Link to={wp("")} className="hidden sm:inline-flex items-center gap-0.5 text-muted-foreground/60 hover:text-foreground">
         Overview <ChevronRight className="h-3 w-3" />
       </Link>
     </div>
