@@ -879,6 +879,7 @@ export default function Dashboard() {
         </Tabs>
       </div>
     </AppShell>
+    </>
   );
 }
 
