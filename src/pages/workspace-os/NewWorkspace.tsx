@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Sparkles, Loader2, ArrowLeft, ArrowRight, Check, Wand2 } from "lucide-react";
 import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
+import { wpProject } from "@/lib/workspace/paths";
 
 type Brief = {
   client_name?: string;
