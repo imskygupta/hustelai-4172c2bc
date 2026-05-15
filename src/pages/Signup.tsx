@@ -15,6 +15,7 @@ import gsap from "gsap";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 
 import { SEO } from "@/components/SEO";
+import { checkEmailPolicy } from "@/lib/auth/email-policy";
 
 const quotes = [
   "The journey of a thousand miles begins with a single step. 🏃",
@@ -117,6 +118,20 @@ export default function Signup() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const policy = checkEmailPolicy(email);
+    if (!policy.ok) {
+      toast({ title: "Email not accepted", description: policy.message, variant: "destructive" });
+      // Best-effort log to admin (do not block UX)
+      try {
+        void supabase.functions.invoke("signup-guard", {
+          body: {
+            email,
+            source: typeof window !== "undefined" ? window.location.hostname : "",
+          },
+        }).catch(() => {});
+      } catch {}
+      return;
+    }
     if (password.length < 6) {
       toast({ title: "Password too short", description: "Minimum 6 characters", variant: "destructive" });
       return;
