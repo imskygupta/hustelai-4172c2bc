@@ -8,6 +8,7 @@ import { HelmetProvider } from "react-helmet-async";
 import { AuthProvider } from "@/hooks/useAuth";
 import { WorkspaceProvider } from "@/lib/workspace/context";
 import { WorkspaceFrame } from "@/components/workspace/WorkspaceFrame";
+import { WorkspaceAuthGate } from "@/components/workspace/WorkspaceAuthGate";
 import { Sentry } from "@/lib/sentry";
 import DelightToast from "@/components/tools/DelightToast";
 import MascotCompanion from "@/components/MascotCompanion";
@@ -282,7 +283,7 @@ const App = () => (
               <Routes>
                 {/* Workspace cockpit — clean root URLs. The subdomain IS the
                     context, so we drop the redundant `/workspaces/...` prefix. */}
-                <Route path="/" element={<RequireAuth><WorkspaceOS /></RequireAuth>}>
+                <Route path="/" element={<WorkspaceAuthGate><WorkspaceOS /></WorkspaceAuthGate>}>
                   <Route index element={<WorkspaceOverview />} />
                   <Route path="projects/new" element={<NewWorkspace />} />
                   <Route path="projects/:id" element={<WorkspaceDetail />} />
