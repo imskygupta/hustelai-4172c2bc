@@ -13,6 +13,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Rocket, Loader2, Copy, Check, Sparkles, Lock, Brain, Search, Target, Map, Calendar, Zap, Download, RotateCcw, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { openBlueprintPrint } from "@/lib/blueprint-print";
+import { useRecordOutput } from "@/lib/workspace/outputs";
+import { RecentOutputsRail } from "@/components/workspace/RecentOutputsRail";
 import { getMaxUses, getUsage, bumpUsage, awardXP } from "@/lib/tool-limits";
 
 const LOADING_STAGES = [
@@ -81,6 +83,13 @@ export default function HustleBlueprint() {
         // auto-open clean branded viewer in new tab — same UX as main hustle search
         openBlueprintPrint({ title: hustleTitle, description: hustleDesc, actionScore: score, content: data.blueprint });
       }, 400);
+      // Shared workspace memory — let other tools see this generation.
+      recordOutput({
+        tool: "hustle-blueprint",
+        title: hustleTitle,
+        summary: (hustleDesc || data.blueprint || "").slice(0, 240),
+        metadata: { user_skills: userSkills, action_score: score },
+      });
       toast.success("Blueprint ready! Opening in new tab…");
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Failed to generate blueprint";
