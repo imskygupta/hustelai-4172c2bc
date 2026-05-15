@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { KeyRound, Loader2, CheckCircle2, XCircle, Zap, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
+import { useWorkspace } from "@/lib/workspace/context";
 
 const PROVIDERS = [
   {
@@ -59,6 +60,7 @@ const PROVIDERS = [
 
 export default function AISettings() {
   const { user } = useAuth();
+  const { refreshProvider } = useWorkspace();
   const [provider, setProvider] = useState<string>("gemini");
   const [apiKey, setApiKey] = useState("");
   const [model, setModel] = useState("");
@@ -108,6 +110,7 @@ export default function AISettings() {
     toast.success("AI fuel connected");
     setActive({ provider, model });
     setApiKey("");
+    refreshProvider();
   }
 
   async function disconnect() {
@@ -117,6 +120,7 @@ export default function AISettings() {
     setActive(null);
     setApiKey("");
     toast.success("Disconnected — falling back to platform AI");
+    refreshProvider();
   }
 
   const selected = PROVIDERS.find(p => p.id === provider)!;
