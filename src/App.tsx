@@ -122,6 +122,7 @@ import BlocksPage from "./pages/workspace-os/Blocks";
 import ClientsPage from "./pages/workspace-os/Clients";
 import IntakeForms from "./pages/workspace-os/IntakeForms";
 import IntakeInbox from "./pages/workspace-os/IntakeInbox";
+import DocsLibrary from "./pages/workspace-os/DocsLibrary";
 import IntakeSubmit from "./pages/IntakeSubmit";
 import IntakePreview from "./pages/IntakePreview";
 import Work from "./pages/Work";
