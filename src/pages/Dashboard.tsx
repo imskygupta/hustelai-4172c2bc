@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { appUrl, MIGRATED_TO_WORKSPACE } from "@/lib/host";
 import { AppShell } from "@/components/AppShell";
+import { WorkspaceHandoff } from "@/components/workspace/WorkspaceHandoff";
 import { NotificationPopup } from "@/components/NotificationPopup";
 import { AffiliateTab } from "@/components/AffiliateTab";
 import { EmailVerificationBanner } from "@/components/EmailVerificationBanner";
@@ -55,20 +56,33 @@ interface Webinar {
 export default function Dashboard() {
   const { user, profile, loading } = useAuth();
   const navigate = useNavigate();
+  // Handoff overlay state — when launching into a workspace tool we render
+  // a brief fade-through so the cross-host hop feels intentional instead of
+  // a hard teleport. Cleared automatically once the new surface paints.
+  const [handoffTool, setHandoffTool] = useState<string | null>(null);
   // Cross-host tool launcher: migrated execution tools jump to workspace.* on
   // the production marketing host; on dual hosts (preview/localhost) and on
   // the workspace host itself, this stays a normal in-app navigate.
-  const goTool = (path: string) => {
+  const goTool = (path: string, label?: string) => {
     const base = path.split("?")[0];
     const isMigrated =
       MIGRATED_TO_WORKSPACE.has(base) ||
       Array.from(MIGRATED_TO_WORKSPACE).some((p) => base.startsWith(p + "/"));
     if (!isMigrated) return navigate(path);
     const target = appUrl(path);
+    // Show the handoff overlay for migrated tools regardless of cross-host
+    // vs in-app — the visual continuity matters even in preview.
+    setHandoffTool(label || "Launching your tool");
     if (target.startsWith("http")) {
-      window.location.assign(target);
+      // brief delay so the overlay has time to paint before the hop
+      window.setTimeout(() => window.location.assign(target), 220);
     } else {
-      navigate(target);
+      window.setTimeout(() => {
+        navigate(target);
+        // overlay auto-dismisses once the next route renders; clear after
+        // a safe upper bound in case navigate is synchronous.
+        window.setTimeout(() => setHandoffTool(null), 600);
+      }, 180);
     }
   };
   const [searchParams] = useSearchParams();
@@ -186,6 +200,8 @@ export default function Dashboard() {
   });
 
   return (
+    <>
+    {handoffTool && <WorkspaceHandoff tool={handoffTool} />}
     <AppShell
       title={`Welcome back, ${profile.display_name || "Hustler"}`}
       breadcrumbs={[{ label: "Workspace", href: "/dashboard" }, { label: "Dashboard" }]}
@@ -485,10 +501,10 @@ export default function Dashboard() {
                     return (
                       <button
                         key={q.label}
-                        onClick={() => goTool(q.path)}
+                        onClick={() => goTool(q.path, q.label)}
                         className={`group flex items-center gap-2 px-3 py-2.5 rounded-lg border transition-all text-left ${
                           isWorkspace
-                            ? "border-violet-200 bg-violet-50/40 hover:border-violet-400 hover:bg-violet-50"
+                            ? "ws-launch-card border-violet-200 bg-violet-50/40 hover:border-violet-400 hover:bg-violet-50"
                             : "border-slate-200 hover:border-emerald-300 hover:bg-emerald-50/50"
                         }`}
                       >
@@ -702,17 +718,17 @@ export default function Dashboard() {
               {[
                 { icon: Search, label: "AI Hustle Search", desc: "Discover hustles with AI", action: () => navigate("/explore"), tier: "free", emoji: "🔍" },
                 { icon: Hammer, label: "Work — Freelancer OS", desc: "Invoices, time, clients, deadlines", action: () => navigate("/work"), tier: "free", emoji: "🛠️" },
-                { icon: Rocket, label: "Blueprint Generator", desc: "7-day action plan", action: () => goTool("/hustle-blueprint"), tier: "free", emoji: "🚀", workspace: true },
+                { icon: Rocket, label: "Blueprint Generator", desc: "7-day action plan", action: () => goTool("/hustle-blueprint", "Blueprint Generator"), tier: "free", emoji: "🚀", workspace: true },
                 { icon: FileText, label: "Resume Optimizer", desc: "Tailored CV + portfolio", action: () => navigate("/resume-optimizer"), tier: "free", emoji: "📄" },
                 { icon: DollarSign, label: "Gig Price Calc", desc: "3-tier anchor pricing", action: () => navigate("/gig-price-calculator"), tier: "free", emoji: "💰" },
                 { icon: Film, label: "Faceless Content", desc: "6-scene viral storyboards", action: () => navigate("/faceless-content"), tier: "free", emoji: "🎬" },
                 { icon: ShieldAlert, label: "Red-Flag Scanner", desc: "Spot bad clients early", action: () => navigate("/red-flag-scanner"), tier: "free", emoji: "🚦" },
                 { icon: FileText, label: "Proposal Draft AI", desc: "Win freelance gigs", action: () => navigate("/proposal-draft"), tier: "pro", emoji: "📝" },
                 { icon: Brain, label: "Skill Gap Analyzer", desc: "Personal learning roadmap", action: () => navigate("/skill-gap"), tier: "pro", emoji: "🧠" },
-                { icon: Zap, label: "AI Tool Benchmarks", desc: "Compare AI tools side-by-side", action: () => goTool("/ai-tools"), tier: "free", emoji: "⚡", workspace: true },
+                { icon: Zap, label: "AI Tool Benchmarks", desc: "Compare AI tools side-by-side", action: () => goTool("/ai-tools", "AI Tool Benchmarks"), tier: "free", emoji: "⚡", workspace: true },
                 { icon: TrendingUp, label: "Gig Arbitrage", desc: "Find platform price gaps", action: () => navigate("/gig-arbitrage"), tier: "pro", emoji: "📊" },
-                { icon: BookOpen, label: "Knowledge Hub", desc: "Save & automate prompts", action: () => goTool("/knowledge-hub"), tier: "free", emoji: "📚", workspace: true },
-                { icon: Sparkles, label: "Hustle Canvas", desc: "Visual war-room for clients & leads", action: () => goTool("/canvas"), tier: "free", emoji: "🎨", workspace: true },
+                { icon: BookOpen, label: "Knowledge Hub", desc: "Save & automate prompts", action: () => goTool("/knowledge-hub", "Knowledge Hub"), tier: "free", emoji: "📚", workspace: true },
+                { icon: Sparkles, label: "Hustle Canvas", desc: "Visual war-room for clients & leads", action: () => goTool("/canvas", "Hustle Canvas"), tier: "free", emoji: "🎨", workspace: true },
                 { icon: Briefcase, label: "🎯 Sure-Hit Jobs", desc: "Personal QC referral", action: () => navigate("/sure-hit-jobs"), tier: "pro", emoji: "🎯" },
                 { icon: Target, label: "Lead Finder", desc: "Social-media radar", action: () => navigate("/problem-leads"), tier: "elite", emoji: "🎯" },
                 { icon: Store, label: "Marketplace", desc: "Sell digital products", action: () => navigate("/marketplace"), tier: "elite", emoji: "🏪" },
@@ -863,6 +879,7 @@ export default function Dashboard() {
         </Tabs>
       </div>
     </AppShell>
+    </>
   );
 }
 
