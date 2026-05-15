@@ -217,14 +217,12 @@ export function UsersPanel({ users, onChangeTier, onImpersonate, onOpenChat, onD
                   {style.label}
                 </span>
                 {s.telegram_chat_id && (
-                  <Tooltip>
-                    <TooltipProvider>
-                      <TooltipTrigger asChild>
-                        <span className="inline-flex items-center text-[10px] text-violet-400"><Bot className="w-3 h-3" /></span>
-                      </TooltipTrigger>
-                    </TooltipProvider>
-                    <TooltipContent>Telegram linked{s.telegram_username ? ` @${s.telegram_username}` : ""}</TooltipContent>
-                  </Tooltip>
+                  <span
+                    title={`Telegram linked${s.telegram_username ? ` @${s.telegram_username}` : ""}`}
+                    className="inline-flex items-center text-[10px] text-violet-400"
+                  >
+                    <Bot className="w-3 h-3" />
+                  </span>
                 )}
                 {s.failed_orders > 0 && (
                   <span title={`${s.failed_orders} failed payments`} className="inline-flex items-center gap-0.5 text-[10px] text-amber-400">
