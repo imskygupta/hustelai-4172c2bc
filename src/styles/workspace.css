@@ -94,16 +94,18 @@
 .ws-surface {
   position: relative;
   background:
-    radial-gradient(120% 60% at 0% 0%, hsl(160 84% 45% / 0.05), transparent 60%),
-    radial-gradient(120% 60% at 100% 100%, hsl(258 80% 64% / 0.05), transparent 60%),
-    hsl(var(--card));
+    radial-gradient(120% 60% at 0% 0%, hsl(160 84% 45% / 0.04), transparent 60%),
+    radial-gradient(120% 60% at 100% 100%, hsl(258 80% 64% / 0.04), transparent 60%),
+    hsl(40 30% 98%);
+  border-color: hsl(220 14% 78%) !important;
   transition: transform var(--ws-dur-base) var(--ws-ease),
               box-shadow var(--ws-dur-base) var(--ws-ease),
               border-color var(--ws-dur-base) var(--ws-ease);
 }
 .ws-surface:hover {
   transform: translateY(-1px);
-  box-shadow: var(--ws-shadow-lift);
+  box-shadow: 0 12px 28px -16px hsl(220 30% 20% / 0.18);
+  border-color: hsl(220 14% 60%) !important;
 }
 
 .ws-dot {

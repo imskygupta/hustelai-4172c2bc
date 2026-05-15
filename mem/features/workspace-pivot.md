@@ -1,44 +1,37 @@
 ---
 name: workspace-pivot
-description: Phase 1 plan moving heavy execution tools to workspace.hustlaiapp.in; main becomes lightweight control center
+description: Workspace subdomain hosts ONLY its own cockpit; dashboard tools stay on main and open in new tab via shared cookie auth
 type: feature
 ---
 
-# Workspace pivot — Phase 1 (wave 1)
+# Architecture (final, do not regress)
 
-Strategic shift: `workspace.hustlaiapp.in` is now the primary product surface.
-Main domain (`hustlaiapp.in/dashboard`) becomes a lightweight control center
-(billing, onboarding, account, growth). Workspace becomes the AI-native execution OS.
+Two surfaces, one codebase. Auth is shared via the first-party bridge cookie
+scoped to `.hustlaiapp.in`, so a user signed in on `hustlaiapp.in` is also
+signed in on `workspace.hustlaiapp.in` automatically.
 
-## Wave 1 — what migrated
+## hustlaiapp.in (main domain)
+- Marketing, dashboard, settings, billing, admin.
+- Hosts ALL "tool" surfaces: `/hustle-blueprint`, `/ai-tools`, `/knowledge-hub`,
+  `/canvas`, `/roadmap`, etc.
+- Dashboard renders tool tiles. Clicking one opens the tool in a NEW TAB
+  pointed at the main domain (never a cross-host hop).
 
-Already moved (via `MIGRATED_TO_WORKSPACE` in `src/lib/host.ts`):
-- `/ai-tools` (AI Tool Benchmarks)
-- `/knowledge-hub` (prompts + automations)
-- `/hustle-blueprint`
-- `/canvas`
+## workspace.hustlaiapp.in (workspace cockpit)
+- ONLY mounts cockpit routes: `/`, `/projects/*`, `/clients`, `/providers`,
+  `/pipeline`, `/revenue`, `/roadmap`, `/brand-kit`, `/blocks`, `/intake`,
+  `/client`.
+- Does NOT mount `/blueprint`, `/tools`, `/canvas`, `/assets` etc. Any URL
+  that is not a cockpit path is bounced back to the marketing host by
+  `SurfaceHostRedirect` (workspace → marketing reverse redirect).
+- The marketing `<Navbar />` must NEVER appear under the workspace shell.
 
-Routes still render on BOTH hosts during the grace period — nothing deleted.
-The cross-host redirector (`SurfaceHostRedirect`) is one-way only:
-**marketing → workspace** for the whitelisted paths. Workspace → marketing
-is intentionally NOT redirected (caused session loss panic last time —
-see `mem://tech/workspace-subdomain`).
+## goTool() rule (Dashboard)
+On workspace host: `window.open(marketingUrl(path), "_blank")`.
+On main host: in-app `navigate(path)`.
+Never render the same tool inside two shells.
 
-Dashboard tool buttons use `goTool()` which calls `appUrl()`: on production
-marketing host it `window.location.assign`s to workspace.*, on dual hosts
-(preview/localhost) it stays a normal `navigate()`.
-
-## BYOK is a workspace-only surface
-
-`/workspace-os/ai-settings` now exposes 6 providers (Standard scope):
-Gemini, OpenAI, Anthropic Claude, Groq, DeepSeek, OpenRouter. BYOK is
-positioned as the workspace USP — do NOT add it to main dashboard.
-
-## Rules going forward
-
-- Never migrate everything at once. Tool-by-tool, surface-by-surface.
-- Never delete a route until the redirect has been live for at least one cycle.
-- Workspace surfaces must NOT introduce a separate auth provider or route guard.
-- BYOK and AI provider routing live ONLY in workspace.
-- Heavy editors / canvases / agent runtimes belong in workspace; admin /
-  billing / settings / onboarding stay on main.
+## Why
+Earlier we mirrored tools onto the workspace subdomain. Result: the marketing
+navbar nested under the workspace shell, double routing, confused auth
+boundaries. Tools live on main; workspace is the operations cockpit. Period.

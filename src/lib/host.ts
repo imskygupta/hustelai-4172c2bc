@@ -52,34 +52,52 @@ export function marketingUrl(path: string): string {
  * On the marketing host, hits to these paths are redirected to workspace.*.
  */
 export const WORKSPACE_PATH_PREFIXES = [
-  // ONLY deep operational execution surfaces belong on workspace.*
-  // Dashboard, AI tools, admin, settings, billing, etc. stay on the main app.
-  // NOTE: /workspaces is intentionally NOT here — on the marketing host it
-  // renders the WorkspaceGateway (transition surface), and the user explicitly
-  // clicks "Enter Workspace" to hop to workspace.hustlaiapp.in.
-  "/canvas",
+  // Workspace subdomain hosts ONLY its own cockpit surfaces. Dashboard
+  // tools (Blueprint, AI Tools, Knowledge Hub, Canvas, etc.) live on the
+  // main domain and open in a NEW TAB from dashboard — auth is shared via
+  // the bridge cookie scoped to `.hustlaiapp.in`, so no duplicate hosting.
   "/client",
-  // Phase 1 wave 1 — heavy execution tools migrating to workspace.*
-  // Routes still render on both hosts during the grace period; the redirect
-  // layer only hard-jumps marketing → workspace so direct URL hits land in
-  // the right surface. See mem://tech/workspace-subdomain.
-  "/ai-tools",
-  "/knowledge-hub",
-  "/hustle-blueprint",
-  "/roadmap",
 ];
 
 /**
- * Subset of WORKSPACE_PATH_PREFIXES that have already been *migrated* in
- * Phase 1 of the workspace pivot. Used by dashboard launcher cards to know
- * which tool buttons should cross-host link via appUrl() vs stay local.
+ * Tools live on the main domain. Dashboard launchers open them in a new
+ * tab. Kept exported for backwards compat with any importer; intentionally
+ * empty so `goTool` always routes via marketingUrl + new tab.
  */
-export const MIGRATED_TO_WORKSPACE = new Set<string>([
-  "/ai-tools",
-  "/knowledge-hub",
-  "/hustle-blueprint",
-  "/canvas",
-]);
+export const MIGRATED_TO_WORKSPACE = new Set<string>();
+
+/**
+ * Path prefixes that ARE part of the workspace cockpit. Anything outside
+ * this list, when hit on the workspace subdomain, is bounced back to the
+ * marketing host so tools never render under the workspace shell.
+ */
+export const WORKSPACE_COCKPIT_PREFIXES = [
+  "/projects",
+  "/clients",
+  "/providers",
+  "/pipeline",
+  "/revenue",
+  "/roadmap",
+  "/brand-kit",
+  "/blocks",
+  "/intake",
+  "/workspaces", // legacy aliases that redirect inside the shell
+  "/workspace",
+  "/client",      // client portal surface
+  "/login",
+  "/signup",
+  "/forgot-password",
+  "/reset-password",
+  "/auth",
+  "/logout",
+];
+
+export function isWorkspaceCockpitPath(pathname: string): boolean {
+  if (pathname === "/") return true;
+  return WORKSPACE_COCKPIT_PREFIXES.some(
+    (p) => pathname === p || pathname.startsWith(p + "/")
+  );
+}
 
 export function isWorkspacePath(pathname: string): boolean {
   return WORKSPACE_PATH_PREFIXES.some(
