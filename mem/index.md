@@ -23,3 +23,4 @@
 - [Workspace Pivot Phase 1b](mem://features/workspace-pivot-phase1b) — Dashboard renders migrated tools as violet "Open in Workspace ↗" launcher cards; tier gating moves to workspace
 - [Workspace Polish](mem://features/workspace-polish) — Shared visual tokens (src/styles/workspace.css) + WorkspaceHandoff fade-through transition for dashboard→workspace launches
 - [Product Thesis](mem://product/thesis) — HustleAI = AI Operating System for freelancers/agencies; surface roles, wave roadmap, Hustle Finder as hero, BYOK & template moats
+- [Wave 2 Priorities](mem://product/wave2-priorities) — Build order: templates → opportunity engine → shared project context → team; avoid automation-platform trap, own operational intelligence
