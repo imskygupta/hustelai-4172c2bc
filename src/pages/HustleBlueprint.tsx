@@ -63,6 +63,7 @@ export default function HustleBlueprint() {
   }, [showScore]);
 
   if (!user) { navigate("/login"); return null; }
+  const recordOutput = useRecordOutput();
 
   const generateBlueprint = async () => {
     if (atLimit) { toast.error(`Limit reached (${maxUses}). Upgrade for more!`); return; }
