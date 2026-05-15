@@ -37,6 +37,7 @@ import { UsageAnalyticsManager } from "@/components/admin/UsageAnalyticsManager"
 import { SeoLandingManager } from "@/components/admin/SeoLandingManager";
 import { SeoBlogManager } from "@/components/admin/SeoBlogManager";
 import { SystemHealth } from "@/components/admin/SystemHealth";
+import { OperatorLink } from "@/components/admin/OperatorLink";
 
 import { SEO } from "@/components/SEO";
 
