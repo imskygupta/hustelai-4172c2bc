@@ -16,3 +16,4 @@
 - [Mass Assignment Audit](mem://security/mass-assignment-audit) — Phase 2 hardened mutation surfaces + remaining risk areas
 - [Operator Audit Log](mem://security/audit-log) — Append-only admin action trail + recordOperatorAction helper
 - [Hardening Phase 6](mem://security/hardening-phase-6) — Edge validation/rate-limit/anomaly utils, CSP/security headers, webhook checklist, storage rules
+- [Workspace Pivot](mem://features/workspace-pivot) — Phase 1 migration of heavy execution tools to workspace.* + BYOK as workspace USP
