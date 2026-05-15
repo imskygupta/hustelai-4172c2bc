@@ -37,6 +37,7 @@ import { UsageAnalyticsManager } from "@/components/admin/UsageAnalyticsManager"
 import { SeoLandingManager } from "@/components/admin/SeoLandingManager";
 import { SeoBlogManager } from "@/components/admin/SeoBlogManager";
 import { SystemHealth } from "@/components/admin/SystemHealth";
+import { OperatorLink } from "@/components/admin/OperatorLink";
 
 import { SEO } from "@/components/SEO";
 
@@ -784,19 +785,36 @@ export default function AdminDashboard() {
                   <div className="space-y-0.5">
                     {group.items.map((item) => {
                       const active = item.kind === "section" && section === item.id;
-                      const onClick = () =>
-                        item.kind === "section" ? setSection(item.id) : navigate(item.href);
                       const key = item.kind === "section" ? `s:${item.id}` : `r:${item.href}`;
+                      const baseCls = `w-full flex items-center gap-3 px-3 py-2 rounded-md text-[13px] transition-all ${
+                        active
+                          ? "bg-primary/10 text-primary font-medium"
+                          : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                      }`;
+                      if (item.kind === "route") {
+                        return (
+                          <OperatorLink
+                            key={key}
+                            to={item.href}
+                            title={`${item.label} — Ctrl/Cmd-click or middle-click to open in a new tab`}
+                            className={`group ${baseCls}`}
+                          >
+                            <item.icon className="w-4 h-4 shrink-0" />
+                            {!sidebarCollapsed && (
+                              <>
+                                <span className="truncate flex-1 text-left">{item.label}</span>
+                                <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-50 transition" />
+                              </>
+                            )}
+                          </OperatorLink>
+                        );
+                      }
                       return (
                         <button
                           key={key}
-                          onClick={onClick}
+                          onClick={() => setSection(item.id)}
                           title={item.label}
-                          className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-[13px] transition-all ${
-                            active
-                              ? "bg-primary/10 text-primary font-medium"
-                              : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                          }`}
+                          className={baseCls}
                         >
                           <item.icon className="w-4 h-4 shrink-0" />
                           {!sidebarCollapsed && <span className="truncate">{item.label}</span>}
@@ -810,6 +828,14 @@ export default function AdminDashboard() {
           })}
         </nav>
         <div className="absolute bottom-0 left-0 right-0 p-2 border-t border-border space-y-1">
+          <OperatorLink
+            to="/admin-dashboard/docs"
+            title="Operator Handbook — Ctrl/Cmd-click to open in a new tab"
+            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
+          >
+            <BookOpen className="w-4 h-4 shrink-0" />
+            {!sidebarCollapsed && <span>Operator Handbook</span>}
+          </OperatorLink>
           <button onClick={() => navigate("/dashboard")} className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-muted hover:text-foreground">
             <Eye className="w-4 h-4 shrink-0" />
             {!sidebarCollapsed && <span>User View</span>}
@@ -852,13 +878,26 @@ export default function AdminDashboard() {
                   .slice(0, 12)
                   .map((item) => {
                     const key = item.kind === "section" ? `qs:${item.id}` : `qr:${item.href}`;
+                    if (item.kind === "route") {
+                      return (
+                        <OperatorLink
+                          key={key}
+                          to={item.href}
+                          onClick={() => { setNavQuery(""); setNavOpen(false); }}
+                          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-left hover:bg-muted"
+                        >
+                          <item.icon className="w-4 h-4 text-muted-foreground" />
+                          <span className="truncate flex-1">{item.label}</span>
+                          <span className="ml-auto text-[10px] uppercase tracking-wider text-muted-foreground/70">page</span>
+                        </OperatorLink>
+                      );
+                    }
                     return (
                       <button
                         key={key}
                         onMouseDown={(e) => e.preventDefault()}
                         onClick={() => {
-                          if (item.kind === "section") setSection(item.id);
-                          else navigate(item.href);
+                          setSection(item.id);
                           setNavQuery("");
                           setNavOpen(false);
                         }}
@@ -867,7 +906,7 @@ export default function AdminDashboard() {
                         <item.icon className="w-4 h-4 text-muted-foreground" />
                         <span className="truncate">{item.label}</span>
                         <span className="ml-auto text-[10px] uppercase tracking-wider text-muted-foreground/70">
-                          {item.kind === "route" ? "page" : "section"}
+                          section
                         </span>
                       </button>
                     );
