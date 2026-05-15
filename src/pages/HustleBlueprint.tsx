@@ -133,6 +133,7 @@ export default function HustleBlueprint() {
             tool="hustle-blueprint"
             scopeToProject
             limit={5}
+            pinAs="blueprint"
             emptyHint="Your past blueprints will appear here."
             onPick={(o) => { setHustleTitle(o.title); if (o.summary) setHustleDesc(o.summary); }}
           />

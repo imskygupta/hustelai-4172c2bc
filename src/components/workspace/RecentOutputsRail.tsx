@@ -8,9 +8,15 @@
  *
  * Design: minimal chrome, calm, keyboard-friendly. NO giant cards.
  */
-import { Clock, Trash2, X } from "lucide-react";
+import { Clock, Star, X } from "lucide-react";
+import { useState } from "react";
 import { formatDistanceToNowStrict } from "date-fns";
-import { useRecentOutputs, type UseRecentOutputsOptions } from "@/lib/workspace/outputs";
+import {
+  useRecentOutputs,
+  setOutputAsset,
+  type UseRecentOutputsOptions,
+  type AssetKind,
+} from "@/lib/workspace/outputs";
 import { PROVIDER_LABELS } from "@/lib/workspace/context";
 
 type Props = UseRecentOutputsOptions & {
@@ -18,6 +24,8 @@ type Props = UseRecentOutputsOptions & {
   emptyHint?: string;
   onPick?: (output: { id: string; title: string; summary: string | null; metadata: Record<string, unknown> }) => void;
   className?: string;
+  /** When set, the pin button promotes outputs to assets of this kind. */
+  pinAs?: AssetKind;
 };
 
 export function RecentOutputsRail({
@@ -25,9 +33,11 @@ export function RecentOutputsRail({
   emptyHint = "Your generations will appear here.",
   onPick,
   className = "",
+  pinAs,
   ...opts
 }: Props) {
-  const { items, loading, remove } = useRecentOutputs(opts);
+  const { items, loading, remove, refresh } = useRecentOutputs(opts);
+  const [pinning, setPinning] = useState<string | null>(null);
 
   if (!loading && items.length === 0) {
     return (
@@ -57,7 +67,10 @@ export function RecentOutputsRail({
               onClick={interactive ? () => onPick!({ id: o.id, title: o.title, summary: o.summary, metadata: o.metadata }) : undefined}
             >
               <div className="min-w-0 flex-1">
-                <p className="truncate font-medium text-foreground/90">{o.title}</p>
+                <p className="truncate font-medium text-foreground/90 inline-flex items-center gap-1.5">
+                  {o.is_asset && <Star className="h-3 w-3 fill-current text-amber-500 shrink-0" aria-label="Asset" />}
+                  <span className="truncate">{o.title}</span>
+                </p>
                 {o.summary && <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">{o.summary}</p>}
                 <div className="flex items-center gap-2 mt-1 text-[10px] uppercase tracking-wider text-muted-foreground/70">
                   <span>{o.tool}</span>
@@ -65,6 +78,23 @@ export function RecentOutputsRail({
                   {ago && <><span>·</span><span>{ago}</span></>}
                 </div>
               </div>
+              {pinAs && !o.is_asset && (
+                <button
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    setPinning(o.id);
+                    const ok = await setOutputAsset(o.id, true, pinAs);
+                    setPinning(null);
+                    if (ok) refresh();
+                  }}
+                  disabled={pinning === o.id}
+                  className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-amber-500 p-1 rounded disabled:opacity-50"
+                  aria-label="Pin as asset"
+                  title={`Pin as ${pinAs}`}
+                >
+                  <Star className="h-3 w-3" />
+                </button>
+              )}
               <button
                 onClick={(e) => { e.stopPropagation(); remove(o.id); }}
                 className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive p-1 rounded"

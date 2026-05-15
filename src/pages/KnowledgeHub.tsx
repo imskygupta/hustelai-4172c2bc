@@ -11,6 +11,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useRecordOutput } from "@/lib/workspace/outputs";
 import {
   BookOpen, FolderOpen, Plus, Search, Star, Tag, Trash2, Edit3,
   Download, Copy, FileText, MessageCircle, Zap, Settings2, Play,
@@ -96,6 +97,7 @@ function PromptHolder({ userId, dailyLimit }: { userId: string; dailyLimit: numb
   const [form, setForm] = useState({ title: "", content: "", tags: "", folder_id: "" });
   const [newFolder, setNewFolder] = useState("");
   const [todayCount, setTodayCount] = useState(0);
+  const recordOutput = useRecordOutput();
 
   useEffect(() => { loadData(); }, []);
 
@@ -136,6 +138,16 @@ function PromptHolder({ userId, dailyLimit }: { userId: string; dailyLimit: numb
       const { error } = await supabase.from("knowledge_prompts").insert(payload);
       if (error) { toast.error("Failed to save"); return; }
       toast.success("Prompt saved!");
+      // Mirror as reusable workspace asset so other tools can attach it.
+      void recordOutput({
+        tool: "knowledge-hub",
+        title: form.title,
+        summary: form.content.slice(0, 280),
+        ref_kind: "prompt",
+        asAsset: true,
+        asset_kind: "prompt",
+        metadata: { tags },
+      });
     }
     setShowForm(false);
     setEditingPrompt(null);

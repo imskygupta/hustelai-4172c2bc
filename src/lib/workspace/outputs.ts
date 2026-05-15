@@ -33,6 +33,8 @@ export type WorkspaceOutput = {
   ref_id: string | null;
   metadata: Record<string, unknown>;
   created_at: string;
+  is_asset?: boolean;
+  asset_kind?: string | null;
 };
 
 export type RecordOutputInput = {
@@ -45,6 +47,34 @@ export type RecordOutputInput = {
   ref_kind?: "export" | "doc" | "prompt" | "roadmap" | null;
   ref_id?: string | null;
   metadata?: Record<string, unknown>;
+  /** If true, the row is immediately promoted to a reusable asset. */
+  asAsset?: boolean;
+  /** e.g. "blueprint" | "prompt" | "roadmap" | "proposal" | "brief". */
+  asset_kind?: AssetKind | null;
+};
+
+/**
+ * Lightweight asset taxonomy. Intentionally a small, opinionated set —
+ * we are NOT building a Notion clone. New kinds should be discussed before
+ * being added here so the picker stays scannable.
+ */
+export type AssetKind =
+  | "blueprint"
+  | "prompt"
+  | "roadmap"
+  | "proposal"
+  | "brief"
+  | "strategy"
+  | "workflow";
+
+export const ASSET_KIND_LABELS: Record<AssetKind, string> = {
+  blueprint: "Blueprint",
+  prompt: "Prompt",
+  roadmap: "Roadmap",
+  proposal: "Proposal",
+  brief: "Client brief",
+  strategy: "AI strategy",
+  workflow: "Workflow",
 };
 
 /**
@@ -77,6 +107,8 @@ export async function recordWorkspaceOutput(
         ref_kind: input.ref_kind ?? null,
         ref_id: input.ref_id ?? null,
         metadata: input.metadata ?? {},
+        is_asset: !!input.asAsset,
+        asset_kind: input.asset_kind ?? null,
       })
       .select("id")
       .maybeSingle();
@@ -160,4 +192,78 @@ export function useRecentOutputs(opts: UseRecentOutputsOptions = {}) {
   }, []);
 
   return { items, loading, refresh: load, remove };
+}
+
+// ---------------------------------------------------------------------------
+// Reusable assets
+// ---------------------------------------------------------------------------
+
+/**
+ * Promote (or demote) an existing output as a reusable workspace asset.
+ * Lightweight by design — no separate `assets` table, just a flag.
+ */
+export async function setOutputAsset(
+  id: string,
+  is_asset: boolean,
+  asset_kind?: AssetKind | null,
+): Promise<boolean> {
+  try {
+    const patch: Record<string, unknown> = { is_asset };
+    if (is_asset && asset_kind !== undefined) patch.asset_kind = asset_kind;
+    if (!is_asset) patch.asset_kind = null;
+    const { error } = await (supabase as any)
+      .from("workspace_outputs")
+      .update(patch)
+      .eq("id", id);
+    return !error;
+  } catch {
+    return false;
+  }
+}
+
+export type UseAssetsOptions = {
+  kind?: AssetKind;
+  tool?: string;
+  scopeToProject?: boolean;
+  scopeToClient?: boolean;
+  /** Default 20. Max 100. */
+  limit?: number;
+};
+
+/**
+ * Hook that returns the current user's reusable assets, optionally filtered
+ * by kind / tool / active project. Tools call this when offering an
+ * "Attach an asset" picker (e.g. Canvas importing a Blueprint).
+ */
+export function useAssets(opts: UseAssetsOptions = {}) {
+  const { user } = useAuth();
+  const { activeProjectId, activeClientId } = useWorkspace();
+  const [items, setItems] = useState<WorkspaceOutput[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  const load = useCallback(async () => {
+    if (!user?.id) { setItems([]); return; }
+    setLoading(true);
+    try {
+      let q = (supabase as any)
+        .from("workspace_outputs")
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("is_asset", true)
+        .order("created_at", { ascending: false })
+        .limit(Math.min(opts.limit ?? 20, 100));
+      if (opts.kind) q = q.eq("asset_kind", opts.kind);
+      if (opts.tool) q = q.eq("tool", opts.tool);
+      if (opts.scopeToProject && activeProjectId) q = q.eq("project_id", activeProjectId);
+      if (opts.scopeToClient && activeClientId) q = q.eq("client_id", activeClientId);
+      const { data } = await q;
+      setItems((data || []) as WorkspaceOutput[]);
+    } finally {
+      setLoading(false);
+    }
+  }, [user?.id, opts.kind, opts.tool, opts.scopeToProject, opts.scopeToClient, opts.limit, activeProjectId, activeClientId]);
+
+  useEffect(() => { load(); }, [load]);
+
+  return { items, loading, refresh: load };
 }
