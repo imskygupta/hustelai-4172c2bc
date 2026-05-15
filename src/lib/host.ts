@@ -58,7 +58,27 @@ export const WORKSPACE_PATH_PREFIXES = [
   "/workspaces-legacy",
   "/canvas",
   "/client",
+  // Phase 1 wave 1 — heavy execution tools migrating to workspace.*
+  // Routes still render on both hosts during the grace period; the redirect
+  // layer only hard-jumps marketing → workspace so direct URL hits land in
+  // the right surface. See mem://tech/workspace-subdomain.
+  "/ai-tools",
+  "/knowledge-hub",
+  "/hustle-blueprint",
+  "/roadmap",
 ];
+
+/**
+ * Subset of WORKSPACE_PATH_PREFIXES that have already been *migrated* in
+ * Phase 1 of the workspace pivot. Used by dashboard launcher cards to know
+ * which tool buttons should cross-host link via appUrl() vs stay local.
+ */
+export const MIGRATED_TO_WORKSPACE = new Set<string>([
+  "/ai-tools",
+  "/knowledge-hub",
+  "/hustle-blueprint",
+  "/canvas",
+]);
 
 export function isWorkspacePath(pathname: string): boolean {
   return WORKSPACE_PATH_PREFIXES.some(

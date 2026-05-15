@@ -1,15 +1,33 @@
 /**
- * Cross-host redirector — DISABLED.
+ * Cross-host redirector — Phase 1 (workspace pivot).
  *
- * The workspace.hustlaiapp.in subdomain is now treated as an entirely
- * separate product surface (its own deployment + its own codebase). The
- * main app must NOT auto-redirect users into it: doing so caused the
- * Supabase session on hustlaiapp.in to appear "lost" on the subdomain,
- * which forced unexpected logouts and panic. From the main domain,
- * workspace is just an external link (like the docs button), nothing more.
+ * Behaviour is intentionally narrow and ONE-WAY:
  *
- * Component kept as a no-op so `App.tsx` keeps compiling without churn.
+ *   marketing host (hustlaiapp.in)  ──►  workspace.hustlaiapp.in
+ *     ONLY for paths in WORKSPACE_PATH_PREFIXES (heavy execution tools).
+ *
+ * We deliberately do NOT redirect workspace → marketing. Earlier that caused
+ * Supabase session loss on the subdomain and forced unexpected logouts. Auth
+ * lives on the main domain; the workspace surface relies on the first-party
+ * bridge cookie scoped to `.hustlaiapp.in`. See mem://tech/workspace-subdomain.
+ *
+ * Dual hosts (lovable preview / localhost) are no-ops so dev/preview keep
+ * rendering both surfaces without redirect loops.
  */
+import { useEffect } from "react";
+import { useLocation } from "react-router-dom";
+import { isMarketingHost, isWorkspacePath, WORKSPACE_ORIGIN } from "@/lib/host";
+
 export function SurfaceHostRedirect() {
+  const { pathname, search, hash } = useLocation();
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!isMarketingHost()) return;
+    if (!isWorkspacePath(pathname)) return;
+    // Hard hop into the workspace surface, preserving query + hash.
+    window.location.replace(`${WORKSPACE_ORIGIN}${pathname}${search}${hash}`);
+  }, [pathname, search, hash]);
+
   return null;
 }

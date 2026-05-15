@@ -31,6 +31,30 @@ const PROVIDERS = [
     color: "from-emerald-500/30 to-teal-500/20",
     placeholder: "sk-…",
   },
+  {
+    id: "anthropic",
+    name: "Anthropic Claude",
+    tagline: "Long-context reasoning. Ideal for docs & analysis.",
+    href: "https://console.anthropic.com/settings/keys",
+    color: "from-amber-500/30 to-orange-500/20",
+    placeholder: "sk-ant-…",
+  },
+  {
+    id: "groq",
+    name: "Groq",
+    tagline: "Ultra-low latency. Best for real-time agent loops.",
+    href: "https://console.groq.com/keys",
+    color: "from-rose-500/30 to-red-500/20",
+    placeholder: "gsk_…",
+  },
+  {
+    id: "deepseek",
+    name: "DeepSeek",
+    tagline: "Cost-efficient reasoning. Strong on code & math.",
+    href: "https://platform.deepseek.com/api_keys",
+    color: "from-sky-500/30 to-indigo-500/20",
+    placeholder: "sk-…",
+  },
 ] as const;
 
 export default function AISettings() {
