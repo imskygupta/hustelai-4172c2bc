@@ -759,7 +759,7 @@ export default function Dashboard() {
                       <p className="text-xs text-slate-500 leading-relaxed line-clamp-3">{p.excerpt}</p>
                     )}
                     <div className="mt-3 flex items-center gap-2 text-[10.5px] text-slate-400">
-                      {p.reading_time_minutes ? <span>{p.reading_time_minutes} min read</span> : null}
+                      {p.reading_time ? <span>{p.reading_time} min read</span> : null}
                       {p.published_at ? (
                         <>
                           <span className="opacity-50">·</span>
