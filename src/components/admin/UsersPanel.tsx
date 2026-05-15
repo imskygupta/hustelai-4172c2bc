@@ -399,42 +399,193 @@ function UserDrawer({
           <span className="text-[10px] opacity-70">{showDanger ? "Hide" : "Show"}</span>
         </button>
         {showDanger && (
-          <div className="px-4 pb-4 space-y-2">
-            <p className="text-[11px] text-muted-foreground">Destructive actions are gated and audit-logged. Triple-check before confirming.</p>
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button variant="destructive" size="sm" className="w-full">
-                  <Trash2 className="w-3.5 h-3.5 mr-1.5" /> Delete user account
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Delete {p.email || "this user"}?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This permanently removes the profile and breaks any linked auth session. Billing records are retained.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={() => onDelete(p.user_id, p.email || "")}>Delete</AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-
-            <div className="grid grid-cols-2 gap-2 pt-1">
-              <Button variant="outline" size="sm" disabled title="Coming next phase — needs auth admin RPC">
-                Force logout
-              </Button>
-              <Button variant="outline" size="sm" disabled title="Coming next phase — needs wallet RPC">
-                Reset credits
-              </Button>
-              <Button variant="outline" size="sm" disabled title="Coming next phase">Suspend</Button>
-              <Button variant="outline" size="sm" disabled title="Coming next phase">Reset integrations</Button>
-            </div>
-          </div>
+          <DangerZone p={p} s={s} onDelete={onDelete} />
         )}
       </section>
     </>
+  );
+}
+
+function DangerZone({
+  p, s, onDelete,
+}: {
+  p: ProfileLike;
+  s: import("@/lib/admin/users-intel").UserSignals;
+  onDelete: (id: string, email: string) => any;
+}) {
+  type DialogKey = null | "suspend" | "unsuspend" | "logout" | "credits" | "refund" | "delete";
+  const [open, setOpen] = useState<DialogKey>(null);
+  const [newBalance, setNewBalance] = useState<string>(String(s.wallet_balance ?? 0));
+  const [refundAmount, setRefundAmount] = useState<string>("");
+  const [refundOrder, setRefundOrder] = useState<string>("");
+  const isSuspended = !!p.suspended_at;
+
+  return (
+    <div className="px-4 pb-4 space-y-3">
+      <div className="flex items-start gap-2 text-[11px] text-muted-foreground">
+        <ShieldOff className="w-3.5 h-3.5 mt-0.5 shrink-0 text-destructive" />
+        <span>
+          Every action requires a typed confirmation phrase, a reason ≥6 chars, and is recorded in the operator audit log
+          with your identity. Suspension and force-logout are reversible; credit resets are not.
+        </span>
+      </div>
+
+      {isSuspended && (
+        <div className="text-[11px] rounded-md border border-amber-500/30 bg-amber-500/10 text-amber-300 px-2.5 py-1.5">
+          Currently suspended{p.suspended_reason ? <> — <em>"{p.suspended_reason}"</em></> : ""}.
+        </div>
+      )}
+
+      <div className="grid grid-cols-2 gap-2">
+        {isSuspended ? (
+          <Button variant="outline" size="sm" onClick={() => setOpen("unsuspend")}>
+            <ShieldCheck className="w-3.5 h-3.5 mr-1.5" /> Unsuspend
+          </Button>
+        ) : (
+          <Button variant="outline" size="sm" onClick={() => setOpen("suspend")}>
+            <Ban className="w-3.5 h-3.5 mr-1.5" /> Suspend
+          </Button>
+        )}
+        <Button variant="outline" size="sm" onClick={() => setOpen("logout")}>
+          <LogOut className="w-3.5 h-3.5 mr-1.5" /> Force logout
+        </Button>
+        <Button variant="outline" size="sm" onClick={() => setOpen("credits")}>
+          <RefreshCcw className="w-3.5 h-3.5 mr-1.5" /> Reset credits
+        </Button>
+        <Button variant="outline" size="sm" onClick={() => setOpen("refund")}>
+          <Receipt className="w-3.5 h-3.5 mr-1.5" /> Request refund
+        </Button>
+      </div>
+
+      <Button variant="destructive" size="sm" className="w-full" onClick={() => setOpen("delete")}>
+        <Trash2 className="w-3.5 h-3.5 mr-1.5" /> Delete account
+      </Button>
+
+      {/* Suspend */}
+      <DangerActionDialog
+        open={open === "suspend"} onOpenChange={(o) => setOpen(o ? "suspend" : null)}
+        title={`Suspend ${p.email || "user"}`}
+        description="The user will be unable to sign in or use the platform until unsuspended. All data is preserved."
+        effects={["Active sessions are revoked immediately", "Profile data, wallet, and history are kept intact", "Reversible by Unsuspend"]}
+        confirmPhrase="SUSPEND"
+        actionLabel="Suspend user"
+        onConfirm={async (reason) => {
+          const r = await suspendUser(p.user_id, p.email || "", reason);
+          return r.ok ? undefined : r.error;
+        }}
+      />
+
+      {/* Unsuspend */}
+      <DangerActionDialog
+        open={open === "unsuspend"} onOpenChange={(o) => setOpen(o ? "unsuspend" : null)}
+        title={`Unsuspend ${p.email || "user"}`}
+        description="The user will regain full platform access on next login."
+        effects={["Suspension flag and reason cleared", "User must sign in again to obtain a fresh session"]}
+        confirmPhrase="UNSUSPEND"
+        actionLabel="Unsuspend user"
+        actionVariant="default"
+        onConfirm={async (reason) => {
+          const r = await unsuspendUser(p.user_id, p.email || "", reason);
+          return r.ok ? undefined : r.error;
+        }}
+      />
+
+      {/* Force logout */}
+      <DangerActionDialog
+        open={open === "logout"} onOpenChange={(o) => setOpen(o ? "logout" : null)}
+        title={`Force logout ${p.email || "user"}`}
+        description="Revokes every active session and refresh token for this user. They can sign back in immediately."
+        effects={["No data is changed", "Telegram link / OAuth grants remain", "Useful after credential leak suspicion"]}
+        confirmPhrase="LOGOUT"
+        actionLabel="Revoke sessions"
+        onConfirm={async (reason) => {
+          const r = await forceLogoutUser(p.user_id, p.email || "", reason);
+          return r.ok ? undefined : r.error;
+        }}
+      />
+
+      {/* Reset credits */}
+      <DangerActionDialog
+        open={open === "credits"} onOpenChange={(o) => { if (!o) setNewBalance(String(s.wallet_balance ?? 0)); setOpen(o ? "credits" : null); }}
+        title={`Reset credits for ${p.email || "user"}`}
+        description="Sets the wallet balance to an explicit value. The delta is recorded as an admin_adjustment transaction."
+        effects={[
+          `Current balance: ${s.wallet_balance ?? 0}`,
+          "Wallet transaction row is created with your operator identity",
+          "Not reversible — to undo, reset again to the previous value",
+        ]}
+        confirmPhrase="RESET"
+        actionLabel="Apply new balance"
+        extraFields={
+          <div className="space-y-1.5">
+            <Label htmlFor="new-balance" className="text-xs">New balance</Label>
+            <Input
+              id="new-balance" type="number" min={0} step="0.01"
+              value={newBalance} onChange={(e) => setNewBalance(e.target.value)}
+              className="text-xs font-mono"
+            />
+            <p className="text-[10px] text-muted-foreground">
+              Delta: <span className={cn("font-semibold", Number(newBalance) - (s.wallet_balance ?? 0) >= 0 ? "text-emerald-500" : "text-amber-400")}>
+                {(Number(newBalance) - (s.wallet_balance ?? 0)).toFixed(2)}
+              </span>
+            </p>
+          </div>
+        }
+        onConfirm={async (reason) => {
+          const v = Number(newBalance);
+          if (!Number.isFinite(v) || v < 0) return "Enter a valid balance (≥ 0)";
+          const r = await resetCredits(p.user_id, p.email || "", v, s.wallet_balance ?? 0, reason);
+          return r.ok ? undefined : r.error;
+        }}
+      />
+
+      {/* Refund request */}
+      <DangerActionDialog
+        open={open === "refund"} onOpenChange={(o) => { if (!o) { setRefundAmount(""); setRefundOrder(""); } setOpen(o ? "refund" : null); }}
+        title={`Open refund request for ${p.email || "user"}`}
+        description="Files a refund ticket in the operator workflow. No payment-gateway call is made yet — Dodo refund execution will be wired in a later phase."
+        effects={["Status starts as 'pending'", "Visible in Refunds queue for review", "Audit entry includes amount + order id"]}
+        confirmPhrase="REFUND"
+        actionLabel="File refund request"
+        actionVariant="default"
+        extraFields={
+          <div className="space-y-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="refund-amount" className="text-xs">Amount (INR)</Label>
+              <Input id="refund-amount" type="number" min={0} step="0.01"
+                value={refundAmount} onChange={(e) => setRefundAmount(e.target.value)}
+                className="text-xs font-mono" />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="refund-order" className="text-xs">Order / payment ID (optional)</Label>
+              <Input id="refund-order" value={refundOrder} onChange={(e) => setRefundOrder(e.target.value)}
+                placeholder="dodo_xxx / order_xxx" className="text-xs font-mono" />
+            </div>
+          </div>
+        }
+        onConfirm={async (reason) => {
+          const amt = Number(refundAmount);
+          if (!Number.isFinite(amt) || amt <= 0) return "Enter a valid amount > 0";
+          const r = await requestRefund(p.user_id, p.email || "", {
+            amount: amt, currency: "INR", orderId: refundOrder.trim() || undefined, reason,
+          });
+          return r.ok ? undefined : r.error;
+        }}
+      />
+
+      {/* Delete (existing) */}
+      <DangerActionDialog
+        open={open === "delete"} onOpenChange={(o) => setOpen(o ? "delete" : null)}
+        title={`Delete ${p.email || "this user"}`}
+        description="Permanently removes the profile and breaks any linked auth session. Billing records are retained for compliance."
+        effects={["Profile + linked rows removed", "Wallet balance forfeited", "Cannot be undone — prefer Suspend if uncertain"]}
+        confirmPhrase="DELETE"
+        actionLabel="Delete account"
+        onConfirm={async (_reason) => {
+          await onDelete(p.user_id, p.email || "");
+        }}
+      />
+    </div>
   );
 }
 
