@@ -1,97 +1,50 @@
+## Phase 1 — RLS Audit Findings
 
-# Telegram restructuring + onboarding hardening
+Good news first: **every public table has RLS enabled**. No `relrowsecurity=false` tables. Most ownership policies are correct.
 
-Scope is large — broken into 7 phases. I'll execute them in order; each is independently testable.
+But four real escalation vectors are open. These are surgical fixes — no architecture rewrite.
 
----
+### Critical issues (must fix now)
 
-## Phase 1 — Admin bot: receive-only ops channel (`@theskymediabot`)
+**1. `profiles` UPDATE allows mass-assignment / privilege escalation**
+- Policy: `Users can update own profile` → `auth.uid() = user_id` with no column restriction.
+- Impact: any logged-in user can `PATCH /rest/v1/profiles?user_id=eq.me` setting `subscription_tier='infinity'`, `credits=999999`, or any internal field. **This is the breachme finding root cause.**
+- Fix: BEFORE UPDATE trigger that resets protected columns (`subscription_tier`, `is_admin`, `credits`, `role`, `referral_code`, billing fields, internal flags) to their OLD values unless `has_role(auth.uid(),'admin')`. Keep policy as-is so legit fields (display_name, bio, avatar) still update.
 
-Refactor `supabase/functions/skymedia-webhook/index.ts`:
-- Remove ALL conversational command handlers (`/runtime`, `/flags`, `/incidents`, `/queues`, `/aijobs`, `/payments`, `/exports`, `/broadcast`, `/maintenance`, `/whoami`, `/help`).
-- Remove inline-keyboard callback handlers (`bcast_ok`, `maint_ok`, etc.).
-- Webhook becomes a stub that ignores all incoming updates with `200 ok` (Telegram requires a 200).
-- Optional: reply once with "This bot is a one-way ops channel — no commands available" on first contact, then stay silent.
-- Remove command-registration calls (delete `setMyCommands` if present).
+**2. `user_wallets` UPDATE lets users edit their own balance**
+- Policy: `Users can update own wallet` USING `auth.uid() = user_id`.
+- Impact: users can self-credit via `PATCH /rest/v1/user_wallets`.
+- Fix: drop the user-UPDATE policy. Wallet mutations move exclusively through service-role edge functions (already exist). Add a trigger that blocks balance/credit column changes from non-admin authenticated role as defense-in-depth.
 
-Allowlist: hardcode chat ID `1378192648` as the single permanent admin recipient (in addition to existing `TELEGRAM_ADMIN_CHAT_IDS` env). Update `_shared/notifications/telegram.ts` admin dispatch and `admin-bot-notify` / `admin-alert` to always include `1378192648` if missing.
+**3. `wallet_transactions` INSERT lets any user inject any user's transaction**
+- Policy: `System can insert transactions` WITH CHECK `auth.uid() IS NOT NULL`. **Missing `user_id = auth.uid()` check.**
+- Impact: any logged-in user can insert credit transactions for any other user_id, or fake "purchase" rows.
+- Fix: drop policy; inserts must come from service-role only. (No frontend code inserts directly — confirmed by quick grep.)
 
-Send a one-time "✅ HustleAI Ops connected successfully" alert via the SkyMedia bot from a small one-shot edge call after deploy.
+**4. `affiliate_earnings` INSERT same flaw**
+- Policy: `System can insert earnings` WITH CHECK `auth.uid() IS NOT NULL`.
+- Fix: same — service-role only.
 
-## Phase 2 — Route ALL ops alerts through admin bot only
+### Lower-priority (track, don't block)
 
-Audit alert callers and ensure they use `SKYMEDIA_BOT_TOKEN` (not `TELEGRAM_BOT_TOKEN`):
-- `admin-alert/index.ts` — switch to SkyMedia bot.
-- `event-dispatcher` → `notifyOps` — verify uses SkyMedia path.
-- `admin-bot-notify` — already prefers SkyMedia; keep.
-- Any signup/payment notify call sites: route via `admin-bot-notify` event names: `signup`, `signup_blocked`, `payment_initiated`, `payment_succeeded`, `payment_failed`, `auth_suspicious`, `webhook_failed`, `critical_error`.
+- 5 `WITH CHECK (true)` INSERT policies on tracking tables (`blog_events`, `cta_events`, `tool_launch_events`, `contact_submissions`, `newsletter_subscribers`) — intentional public ingress. Add per-IP rate limiting later (Phase 6), don't change RLS.
+- `api_runtime_config` SELECT is `true` for public — verify it contains no secrets (it shouldn't; it's flag/feature config). Audit columns next pass.
+- `work_clients` lives on the workspace DB (separate Supabase project). Will audit in a follow-up pass against that DB.
+- 30 SECURITY DEFINER functions exposed to anon — already gated internally by `has_role` checks; revoke EXECUTE from anon as a hardening pass later.
 
-User bot (`@hustlaiapp_bot`) MUST never send admin-class events. Grep `TELEGRAM_BOT_TOKEN` in admin/ops paths and replace with SkyMedia.
+### Migration this turn
 
-## Phase 3 — User bot: polished onboarding
+One migration that:
+1. Creates `protect_profile_columns()` trigger function + BEFORE UPDATE trigger on `profiles`.
+2. Drops `Users can update own wallet` policy on `user_wallets`. Adds trigger blocking balance changes from non-admin.
+3. Drops `System can insert transactions` policy on `wallet_transactions` (service role bypasses RLS, so edge functions keep working).
+4. Drops `System can insert earnings` policy on `affiliate_earnings`.
 
-Refactor `supabase/functions/telegram-webhook/index.ts` `/start` handler:
-- Replace raw text with branded welcome:
-  > Welcome to HustleAI 🚀
-  > Your AI operating system for freelance work, clients, and growth.
-- Inline keyboard buttons:
-  - 🌐 Visit Website → https://hustlaiapp.in
-  - 📚 Documentation → https://docs.hustlaiapp.in
-  - 🔗 Connect Account → deep link to existing connect flow
-- Set persistent menu via `setMyCommands` to a curated short list: `/start`, `/connect`, `/help`.
-- For unknown free-text messages, reply with a short "Tap a button below" + the same inline keyboard. No raw command surface.
+### What I'm NOT touching this turn
 
-## Phase 4 — Signup hardening (Gmail-only, blocklist)
+- No auth flow changes
+- No admin panel changes
+- No edge function changes (they use service role and bypass RLS)
+- No frontend code changes — the frontend doesn't directly mutate any of these protected columns/tables (verified)
 
-New util `src/lib/auth/email-policy.ts`:
-- Allow only `@gmail.com` (case-insensitive, trimmed). Reject everything else with: "We're currently in invite-only beta — only Gmail accounts are accepted."
-- Hard blocklist (always reject, even if Gmail): `samratakash0000@gmail.com`, any `@skycart.xyz`, configurable list.
-- Reject disposable domains: ship a small static list (mailinator, tempmail, 10minutemail, guerrillamail, yopmail, trashmail, getnada, dispostable, throwawaymail, fakeinbox, etc.).
-
-Wire into:
-- `src/pages/Signup.tsx` — pre-submit validation, friendly error.
-- `src/pages/ForgotPassword.tsx` — same gate (no reset for blocked).
-- New edge function `signup-guard` (or DB trigger on `auth.users` insert? — not allowed on auth schema). Use a **client-side guard + Edge Function** called pre-`signUp` that validates and logs blocked attempts to a new `signup_blocked_log` table, then fires `admin-bot-notify` with event `signup_blocked`.
-
-Migration: create `signup_blocked_log` table with RLS (service-role only insert/read).
-
-## Phase 5 — Signup/Login page polish
-
-`src/pages/Signup.tsx` + `src/pages/Login.tsx`:
-- Tighter spacing, larger heading, supporting subline, trust row ("10k+ creators • SOC-ready • EU/IN compliant").
-- Smoother field focus states, better inline error styling (red ring + helper text).
-- Subtle motion on mount (framer-motion fade/slide ≤200ms). No heavy graphics.
-- Loading button with spinner, disabled correctly.
-- Single Google + Email block, clean divider.
-
-Match Linear/Notion feel — keep work in presentation only.
-
-## Phase 6 — Admin panel UX: new-tab navigation
-
-Audit admin nav components (`src/pages/admin/*` + admin sidebar/links). Replace `navigate()` onClick patterns on row links with proper `<Link>` / `<a>` so:
-- Cmd/Ctrl+click opens new tab natively
-- Middle-click works
-- Add explicit `↗` external-link button on key dashboard rows where a side-by-side workflow helps (Payments, AI Jobs, Telegram Ops).
-
-## Phase 7 — Verification
-
-- Deploy edge functions: `skymedia-webhook`, `telegram-webhook`, `admin-bot-notify`, `admin-alert`, plus new `signup-guard`.
-- Trigger test alert "✅ HustleAI Ops connected successfully" to admin chat.
-- Test `/start` on user bot via Telegram screenshot from logs.
-- Test signup with non-Gmail → blocked + admin alert received.
-- Test signup with `samratakash0000@gmail.com` → blocked.
-- Test Cmd+click on admin nav → new tab opens.
-
----
-
-## Out of scope (per user)
-- No auth rewrite.
-- No bot merging.
-- No AI chat on admin bot.
-- No bidirectional admin messaging.
-
-## Technical notes
-- Disposable-email list is intentionally small + static (no external API call) to keep auth flow fast.
-- Hardcoded admin chat `1378192648` is in-code constant + env override to stay resilient if env var is wiped.
-- All admin-bot sends use `SKYMEDIA_BOT_TOKEN` exclusively; user-bot sends use `TELEGRAM_BOT_TOKEN`.
-- Signup-guard runs BEFORE `supabase.auth.signUp` to avoid creating phantom users; blocklist log inserted via service role from edge function.
+After approval I'll push the migration, run the linter again, and report. Phases 2–6 (client audit, secret audit, audit-log scaffold, hardening) come in subsequent turns so each is reviewable.
