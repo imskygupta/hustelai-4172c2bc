@@ -279,7 +279,53 @@ const App = () => (
           ) : isWorkspaceHost() ? (
             <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-background"><div className="h-8 w-8 rounded-full border-2 border-primary/30 border-t-primary animate-spin" /></div>}>
               <Routes>
-                <Route path="*" element={<WorkspaceLanding />} />
+                {/* Workspace cockpit — clean root URLs. The subdomain IS the
+                    context, so we drop the redundant `/workspaces/...` prefix. */}
+                <Route path="/" element={<RequireAuth><WorkspaceOS /></RequireAuth>}>
+                  <Route index element={<WorkspaceOverview />} />
+                  <Route path="projects/new" element={<NewWorkspace />} />
+                  <Route path="projects/:id" element={<WorkspaceDetail />} />
+                  <Route path="projects/:id/docs" element={<DocsList />} />
+                  <Route path="projects/:id/docs/new/:type" element={<DocEditor />} />
+                  <Route path="projects/:id/docs/:docId" element={<DocEditor />} />
+                  <Route path="canvas" element={<HustleCanvas />} />
+                  <Route path="clients" element={<ClientsPage />} />
+                  <Route path="providers" element={<AISettings />} />
+                  <Route path="pipeline" element={<Pipeline />} />
+                  <Route path="revenue" element={<Revenue />} />
+                  <Route path="roadmap" element={<RoadmapCockpit />} />
+                  <Route path="brand-kit" element={<BrandKitPage />} />
+                  <Route path="blocks" element={<BlocksPage />} />
+                  <Route path="intake" element={<IntakeForms />} />
+                  <Route path="intake/:id" element={<IntakeInbox />} />
+                  <Route path="assets" element={<KnowledgeHub />} />
+                  <Route path="blueprint" element={<HustleBlueprint />} />
+                  <Route path="tools" element={<AIToolBenchmarks />} />
+                </Route>
+                {/* Legacy /workspaces/* aliases — keep typed/shared URLs working */}
+                <Route path="/workspace" element={<Navigate to="/" replace />} />
+                <Route path="/workspaces" element={<Navigate to="/" replace />} />
+                <Route path="/workspaces/new" element={<Navigate to="/projects/new" replace />} />
+                <Route path="/workspaces/ai-settings" element={<Navigate to="/providers" replace />} />
+                <Route path="/workspaces/roadmap" element={<Navigate to="/roadmap" replace />} />
+                <Route path="/workspaces/pipeline" element={<Navigate to="/pipeline" replace />} />
+                <Route path="/workspaces/revenue" element={<Navigate to="/revenue" replace />} />
+                <Route path="/workspaces/brand-kit" element={<Navigate to="/brand-kit" replace />} />
+                <Route path="/workspaces/blocks" element={<Navigate to="/blocks" replace />} />
+                <Route path="/workspaces/clients" element={<Navigate to="/clients" replace />} />
+                <Route path="/workspaces/intake" element={<Navigate to="/intake" replace />} />
+                <Route path="/workspaces/intake/:id" element={<LegacyIntakeInboxRedirect />} />
+                <Route path="/workspaces/:id" element={<LegacyProjectRedirect />} />
+                <Route path="/workspaces/:id/docs" element={<LegacyProjectDocsRedirect />} />
+                <Route path="/workspaces/:id/docs/new/:type" element={<LegacyProjectDocsNewRedirect />} />
+                <Route path="/workspaces/:id/docs/:docId" element={<LegacyProjectDocRedirect />} />
+                {/* Cross-tool aliases for legacy marketing-host URLs */}
+                <Route path="/hustle-blueprint" element={<Navigate to="/blueprint" replace />} />
+                <Route path="/knowledge-hub" element={<Navigate to="/assets" replace />} />
+                <Route path="/ai-tools" element={<Navigate to="/tools" replace />} />
+                {/* Independent surfaces that still mount on workspace.* */}
+                <Route path="/client" element={<RequireAuth><ClientSurface /></RequireAuth>} />
+                <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </Suspense>
           ) : (<>
