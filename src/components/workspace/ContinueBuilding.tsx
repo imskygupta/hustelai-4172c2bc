@@ -21,6 +21,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useWorkspace, PROVIDER_LABELS } from "@/lib/workspace/context";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDistanceToNowStrict } from "date-fns";
+import { wp, wpProject } from "@/lib/workspace/paths";
 
 type Thread = {
   id: string;
@@ -41,10 +42,10 @@ const TOOL_ICON: Record<string, typeof Sparkles> = {
 };
 
 const TOOL_HREF: Record<string, string> = {
-  "hustle-blueprint": "/hustle-blueprint",
-  "hustle-canvas": "/canvas",
-  "knowledge-hub": "/knowledge-hub",
-  "hustlebot": "/hustlebot",
+  "hustle-blueprint": wp("blueprint"),
+  "hustle-canvas":    wp("canvas"),
+  "knowledge-hub":    wp("assets"),
+  "hustlebot":        "/hustlebot",
 };
 
 export function ContinueBuilding() {
@@ -88,7 +89,7 @@ export function ContinueBuilding() {
         id: "provider-missing",
         title: "Connect AI fuel",
         hint: "Claude recommended for strategy · Gemini for free tier",
-        href: "/workspaces/ai-settings",
+        href: wp("providers"),
         icon: KeyRound,
         tone: "warn",
         meta: "Required",
@@ -98,7 +99,7 @@ export function ContinueBuilding() {
         id: "provider-broken",
         title: `${PROVIDER_LABELS[activeProvider.provider] || activeProvider.provider} test failed`,
         hint: "Re-test connection or rotate the key",
-        href: "/workspaces/ai-settings",
+        href: wp("providers"),
         icon: AlertTriangle,
         tone: "warn",
         meta: "Health",
@@ -110,7 +111,7 @@ export function ContinueBuilding() {
     for (const o of recent) {
       const Icon = TOOL_ICON[o.tool] || Sparkles;
       const ago = (() => { try { return formatDistanceToNowStrict(new Date(o.created_at), { addSuffix: true }); } catch { return ""; } })();
-      const base = TOOL_HREF[o.tool] || "/workspaces";
+      const base = TOOL_HREF[o.tool] || wp("");
       t.push({
         id: `out-${o.id}`,
         title: `Continue ${o.title}`,
@@ -119,9 +120,9 @@ export function ContinueBuilding() {
         icon: Icon,
         tone: "default",
         quick: [
-          { label: "Open in Canvas", href: "/canvas" },
-          { label: "Reuse as Blueprint", href: "/hustle-blueprint" },
-          { label: "Generate follow-up", href: "/canvas?intent=outreach" },
+          { label: "Open in Canvas",      href: wp("canvas") },
+          { label: "Reuse as Blueprint",  href: wp("blueprint") },
+          { label: "Generate follow-up",  href: wp("canvas") + "?intent=outreach" },
         ],
       });
     }
@@ -136,14 +137,14 @@ export function ContinueBuilding() {
         id: `idle-${w.id}`,
         title: `Re-engage ${w.client_name}`,
         hint: `Idle ${days}d — ping client or update scope`,
-        href: `/workspaces/${w.id}`,
+        href: wpProject(w.id),
         icon: Briefcase,
         tone: "default",
         meta: `${days}d idle`,
         quick: [
-          { label: "Open workspace", href: `/workspaces/${w.id}` },
-          { label: "Draft re-engage email", href: "/canvas?intent=outreach" },
-          { label: "Create proposal", href: "/canvas?intent=deliverables" },
+          { label: "Open workspace",         href: wpProject(w.id) },
+          { label: "Draft re-engage email",  href: wp("canvas") + "?intent=outreach" },
+          { label: "Create proposal",        href: wp("canvas") + "?intent=deliverables" },
         ],
       });
     }
@@ -155,7 +156,7 @@ export function ContinueBuilding() {
         id: `price-${noPrice.id}`,
         title: `Add pricing to ${noPrice.client_name}`,
         hint: "Pricing unlocks invoicing & revenue tracking",
-        href: `/workspaces/${noPrice.id}`,
+        href: wpProject(noPrice.id),
         icon: TrendingUp,
         tone: "primary",
       });
@@ -167,7 +168,7 @@ export function ContinueBuilding() {
         id: "cold-start",
         title: "Generate your first Blueprint",
         hint: "Turn an idea into a 7-day execution plan in one run",
-        href: "/hustle-blueprint",
+        href: wp("blueprint"),
         icon: Map,
         tone: "primary",
       });
