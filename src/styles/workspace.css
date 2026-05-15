@@ -377,11 +377,12 @@
 .ws-headline-sweep {
   background-image: linear-gradient(
     100deg,
-    hsl(0 0% 100% / 0.92) 0%,
-    hsl(0 0% 100% / 0.92) 35%,
-    hsl(160 84% 70% / 1) 50%,
-    hsl(0 0% 100% / 0.92) 65%,
-    hsl(0 0% 100% / 0.92) 100%
+    hsl(222 30% 15%) 0%,
+    hsl(222 30% 15%) 35%,
+    hsl(160 84% 38%) 50%,
+    hsl(258 80% 55%) 60%,
+    hsl(222 30% 15%) 75%,
+    hsl(222 30% 15%) 100%
   );
   background-size: 250% 100%;
   -webkit-background-clip: text;
