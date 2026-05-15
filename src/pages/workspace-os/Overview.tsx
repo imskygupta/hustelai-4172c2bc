@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import {
-  Briefcase, Sparkles, Plus, Star, ChevronRight, FolderOpen, Receipt, ArrowRight,
+  Briefcase, Sparkles, Plus, Star, ChevronRight, FolderOpen, Receipt, ArrowRight, Check, RefreshCw, Cpu,
 } from "lucide-react";
 import { useWorkspace, PROVIDER_LABELS, type ActiveProvider } from "@/lib/workspace/context";
 import { useRecentOutputs } from "@/lib/workspace/outputs";
@@ -77,19 +77,26 @@ export default function Overview() {
     return String(raw).split(/[ .]/)[0].replace(/^./, (c: string) => c.toUpperCase());
   })();
   const hour = new Date().getHours();
-  const partOfDay = hour < 5 ? "Still up" : hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : hour < 22 ? "Good evening" : "Late night";
+  const partOfDay =
+    hour < 5 ? "Welcome back" :
+    hour < 12 ? "Good morning" :
+    hour < 17 ? "Good afternoon" :
+    hour < 22 ? "Good evening" : "Welcome back";
 
   // Continue where you left off — last active project from workspace context.
   const lastActive = activeProjectId ? items.find(w => w.id === activeProjectId) : null;
 
   return (
-    <div className="space-y-10">
+    <div className="relative space-y-10">
+      {/* Pastel ambient wash — borrows the "Pick your cockpit" gradient.
+          Sits behind content with low opacity so the dark cockpit still reads. */}
+      <div aria-hidden className="ws-ambient-pastel" style={{ position: "fixed", opacity: 0.18 }} />
       {/* Personalised welcome — "this is mine" feeling */}
       <motion.section
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: [0.22, 0.61, 0.36, 1] }}
-        className="flex items-end justify-between gap-6 flex-wrap pt-2"
+        className="relative flex items-end justify-between gap-6 flex-wrap pt-2"
       >
         <div className="min-w-0">
           <p className="text-[11px] tracking-[0.18em] text-muted-foreground/70 mb-2">
@@ -97,14 +104,15 @@ export default function Overview() {
           </p>
           <h2 className="text-[34px] sm:text-[40px] leading-[1.05] font-semibold tracking-tight">
             <span className="ws-headline-sweep">
-              {items.length === 0 ? "Let's set up your first project." : "Your operational cockpit."}
+              {items.length === 0 ? "Let's set up your first project." : "Your operations, in one place."}
             </span>
           </h2>
           <p className="text-sm text-muted-foreground/80 mt-3 max-w-lg leading-relaxed">
             {items.length === 0
               ? "Workspace is project-first. Add a client and everything else flows from there."
-              : <>Continue where you left off — or press <kbd className="text-[10px] border border-border/60 rounded px-1.5 py-0.5 mx-0.5">⌘K</kbd> to jump anywhere.</>}
+              : <>Pick up where you left off — or press <kbd className="text-[10px] border border-border/60 rounded px-1.5 py-0.5 mx-0.5">⌘K</kbd> to jump anywhere.</>}
           </p>
+          <TrustBar provider={activeProvider} projectCount={items.length} outputCount={recentOutputs.length} />
         </div>
         <ProviderPill provider={activeProvider} loading={providerLoading} />
       </motion.section>
@@ -273,6 +281,34 @@ export default function Overview() {
               )}
             </div>
           </section>
+        </>
+      )}
+    </div>
+  );
+}
+
+function TrustBar({ provider, projectCount, outputCount }: { provider: ActiveProvider; projectCount: number; outputCount: number }) {
+  // Calm operational trust line — "your work is safe here" without noise.
+  return (
+    <div className="ws-trust ws-trust--light mt-4">
+      <span className="inline-flex items-center gap-1.5">
+        <Check className="h-3 w-3 text-emerald-600" /> All changes saved
+      </span>
+      <span className="sep" />
+      <span className="inline-flex items-center gap-1.5">
+        <RefreshCw className="h-3 w-3 text-emerald-600" /> Workspace synced
+      </span>
+      <span className="sep" />
+      <span className="inline-flex items-center gap-1.5">
+        <Cpu className={`h-3 w-3 ${provider ? "text-emerald-600" : "text-amber-600"}`} />
+        {provider ? "Provider connected" : "Connect provider"}
+      </span>
+      {(projectCount > 0 || outputCount > 0) && (
+        <>
+          <span className="sep" />
+          <span className="inline-flex items-center gap-1.5 text-foreground/60">
+            {projectCount} project{projectCount === 1 ? "" : "s"} · {outputCount} recent output{outputCount === 1 ? "" : "s"}
+          </span>
         </>
       )}
     </div>
