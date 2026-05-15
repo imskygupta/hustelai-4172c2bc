@@ -9,6 +9,7 @@ import { useEffect, useMemo, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Search, Briefcase, Sparkles, Star, ArrowRight, KeyRound, Layers, Map, FileText, Cpu,
+  Target, Send, Megaphone, Library, Package, Plus, Zap,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,9 +20,19 @@ type Item = {
   label: string;
   hint?: string;
   icon: typeof Sparkles;
-  group: "Workspaces" | "Outputs" | "Assets" | "Go to";
+  group: "Actions" | "Workspaces" | "Outputs" | "Assets" | "Go to";
   run: () => void;
 };
+
+const INTENT_ACTIONS = (navigate: (p: string) => void): Item[] => [
+  { id: "act-strategy",     label: "Build Client Strategy",  hint: "Blueprint · best with Claude", icon: Target,    group: "Actions", run: () => navigate("/hustle-blueprint") },
+  { id: "act-outreach",     label: "Create Outreach System", hint: "Canvas · best with GPT",       icon: Send,      group: "Actions", run: () => navigate("/canvas?intent=outreach") },
+  { id: "act-content",      label: "Generate Content Plan",  hint: "Canvas · best with Gemini",    icon: Megaphone, group: "Actions", run: () => navigate("/canvas?intent=content") },
+  { id: "act-research",     label: "Organize Research",      hint: "Knowledge Hub",                icon: Library,   group: "Actions", run: () => navigate("/knowledge-hub") },
+  { id: "act-deliverables", label: "Prepare Deliverables",   hint: "Canvas · best with Claude",    icon: Package,   group: "Actions", run: () => navigate("/canvas?intent=deliverables") },
+  { id: "act-new",          label: "New Workspace",          hint: "Start AI intake",              icon: Plus,      group: "Actions", run: () => navigate("/workspaces/new") },
+  { id: "act-providers",    label: "Switch AI Provider",     hint: "Connect or rotate keys",       icon: Zap,       group: "Actions", run: () => navigate("/workspaces/ai-settings") },
+];
 
 const NAV_ACTIONS = (navigate: (p: string) => void): Item[] => [
   { id: "nav-overview",  label: "Workspace Overview",   hint: "/workspaces",         icon: Briefcase, group: "Go to", run: () => navigate("/workspaces") },
@@ -74,6 +85,7 @@ export function WorkspaceCommandPalette() {
 
   const items: Item[] = useMemo(() => {
     const out: Item[] = [];
+    out.push(...INTENT_ACTIONS(navigate).map(it => ({ ...it, run: () => { it.run(); close(); } })));
     for (const w of workspaces) {
       out.push({
         id: `w-${w.id}`,
