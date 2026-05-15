@@ -3787,6 +3787,54 @@ export type Database = {
         }
         Relationships: []
       }
+      operator_audit_log: {
+        Row: {
+          action: string
+          actor_email: string | null
+          actor_role: string | null
+          actor_user_id: string | null
+          created_at: string
+          id: string
+          ip_hash: string | null
+          metadata: Json
+          reason: string | null
+          target_id: string | null
+          target_label: string | null
+          target_type: string | null
+          user_agent_hash: string | null
+        }
+        Insert: {
+          action: string
+          actor_email?: string | null
+          actor_role?: string | null
+          actor_user_id?: string | null
+          created_at?: string
+          id?: string
+          ip_hash?: string | null
+          metadata?: Json
+          reason?: string | null
+          target_id?: string | null
+          target_label?: string | null
+          target_type?: string | null
+          user_agent_hash?: string | null
+        }
+        Update: {
+          action?: string
+          actor_email?: string | null
+          actor_role?: string | null
+          actor_user_id?: string | null
+          created_at?: string
+          id?: string
+          ip_hash?: string | null
+          metadata?: Json
+          reason?: string | null
+          target_id?: string | null
+          target_label?: string | null
+          target_type?: string | null
+          user_agent_hash?: string | null
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
           amount: number
@@ -7571,6 +7619,54 @@ export type Database = {
         Args: { _issue: string; _reason: string }
         Returns: string
       }
+      operator_audit_for_target: {
+        Args: { _limit?: number; _target_id: string; _target_type: string }
+        Returns: {
+          action: string
+          actor_email: string | null
+          actor_role: string | null
+          actor_user_id: string | null
+          created_at: string
+          id: string
+          ip_hash: string | null
+          metadata: Json
+          reason: string | null
+          target_id: string | null
+          target_label: string | null
+          target_type: string | null
+          user_agent_hash: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "operator_audit_log"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      operator_audit_recent: {
+        Args: { _limit?: number }
+        Returns: {
+          action: string
+          actor_email: string | null
+          actor_role: string | null
+          actor_user_id: string | null
+          created_at: string
+          id: string
+          ip_hash: string | null
+          metadata: Json
+          reason: string | null
+          target_id: string | null
+          target_label: string | null
+          target_type: string | null
+          user_agent_hash: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "operator_audit_log"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       operator_pulse: { Args: { _slug: string }; Returns: Json }
       operator_pulse_global: { Args: never; Returns: Json }
       post_performance: { Args: { _slug: string }; Returns: Json }
@@ -7635,6 +7731,17 @@ export type Database = {
           _tokens_in?: number
           _tokens_out?: number
           _user: string
+        }
+        Returns: string
+      }
+      record_operator_action: {
+        Args: {
+          _action: string
+          _metadata?: Json
+          _reason?: string
+          _target_id?: string
+          _target_label?: string
+          _target_type?: string
         }
         Returns: string
       }
