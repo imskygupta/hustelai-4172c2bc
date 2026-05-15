@@ -104,7 +104,7 @@ export default function HustleDetail() {
 
     setIsGenerating(true);
     try {
-      await supabase.from("profiles").update({ search_count: profile.search_count + 1 }).eq("user_id", user.id);
+      await (supabase as any).rpc("increment_own_search_count");
       refreshProfile();
 
       const { data, error } = await supabase.functions.invoke("hustle-roadmap", {
