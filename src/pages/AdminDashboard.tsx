@@ -24,6 +24,7 @@ import {
   CreditCard as CreditCardIcon,
   Radio, Bot, Workflow, ListChecks, Megaphone,
   Search as SearchIcon, ChevronDown, Wrench, Layers, Cpu, Inbox, ShieldCheck,
+  ScrollText,
 } from "lucide-react";
 import { PaymentMethodsManager } from "@/components/admin/PaymentMethodsManager";
 import { DodoAdminPanel } from "@/components/admin/DodoAdminPanel";
