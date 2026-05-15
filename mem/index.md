@@ -25,3 +25,4 @@
 - [Product Thesis](mem://product/thesis) — HustleAI = AI Operating System for freelancers/agencies; surface roles, wave roadmap, Hustle Finder as hero, BYOK & template moats
 - [Wave 2 Priorities](mem://product/wave2-priorities) — Build order: templates → opportunity engine → shared project context → team; avoid automation-platform trap, own operational intelligence
 - [Workspace Polish Wave 2](mem://features/workspace-polish-wave2) — Overview as alive work surface: Continue Working, Recent AI Outputs, Active Provider card, Recommended Actions, Assets; new ws-surface/ws-dot tokens
+- [Workspace Polish Wave 3](mem://features/workspace-polish-wave3) — BYOK redesigned as AI Infrastructure Control Center, WorkspaceContextBar, RecentOutputsRail tool/provider icons + quick actions

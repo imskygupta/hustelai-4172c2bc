@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import NotificationCenter from "@/components/workspace-os/NotificationCenter";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { BigScreenHint } from "@/components/BigScreenHint";
+import { WorkspaceContextBar } from "@/components/workspace/WorkspaceContextBar";
 
 import { SEO } from "@/components/SEO";
 
@@ -151,8 +152,9 @@ export default function WorkspaceOS() {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35, ease: "easeOut" }}
-          className="min-w-0"
+          className="min-w-0 space-y-4"
         >
+          <WorkspaceContextBar />
           <Outlet />
         </motion.main>
       </div>

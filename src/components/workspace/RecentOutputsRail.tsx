@@ -8,8 +8,10 @@
  *
  * Design: minimal chrome, calm, keyboard-friendly. NO giant cards.
  */
-import { Clock, Star, X } from "lucide-react";
+import { Clock, Star, X, ExternalLink, Copy, Sparkles, FileText, Map, MessageSquare, Layers } from "lucide-react";
 import { useState } from "react";
+import { Link } from "react-router-dom";
+import { toast } from "sonner";
 import { formatDistanceToNowStrict } from "date-fns";
 import {
   useRecentOutputs,
@@ -18,6 +20,23 @@ import {
   type AssetKind,
 } from "@/lib/workspace/outputs";
 import { PROVIDER_LABELS } from "@/lib/workspace/context";
+
+const TOOL_ICON: Record<string, typeof Sparkles> = {
+  "hustle-blueprint": Map,
+  "hustle-canvas":    Layers,
+  "knowledge-hub":    FileText,
+  "hustlebot":        MessageSquare,
+  "roadmap":          Map,
+};
+
+const PROVIDER_DOT: Record<string, string> = {
+  anthropic:  "bg-amber-500",
+  openai:     "bg-emerald-500",
+  gemini:     "bg-sky-500",
+  groq:       "bg-rose-500",
+  deepseek:   "bg-indigo-500",
+  openrouter: "bg-violet-500",
+};
 
 type Props = UseRecentOutputsOptions & {
   title?: string;
@@ -58,6 +77,8 @@ export function RecentOutputsRail({
       <ul className="divide-y divide-border/30">
         {items.map((o) => {
           const provider = o.provider ? (PROVIDER_LABELS[o.provider] || o.provider) : null;
+          const ToolIcon = TOOL_ICON[o.tool] || Sparkles;
+          const dotClass = o.provider ? (PROVIDER_DOT[o.provider] || "bg-muted-foreground") : "bg-muted-foreground/40";
           const ago = (() => { try { return formatDistanceToNowStrict(new Date(o.created_at), { addSuffix: true }); } catch { return ""; } })();
           const interactive = !!onPick;
           return (
@@ -66,6 +87,12 @@ export function RecentOutputsRail({
               className={`group flex items-start gap-2 px-3 py-2 text-sm ${interactive ? "cursor-pointer hover:bg-muted/40" : ""}`}
               onClick={interactive ? () => onPick!({ id: o.id, title: o.title, summary: o.summary, metadata: o.metadata }) : undefined}
             >
+              <div className="h-7 w-7 shrink-0 rounded-lg bg-muted/60 flex items-center justify-center relative">
+                <ToolIcon className="h-3.5 w-3.5 text-muted-foreground" />
+                {o.provider && (
+                  <span className={`absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full ring-2 ring-background ${dotClass}`} aria-label={provider || ""} />
+                )}
+              </div>
               <div className="min-w-0 flex-1">
                 <p className="truncate font-medium text-foreground/90 inline-flex items-center gap-1.5">
                   {o.is_asset && <Star className="h-3 w-3 fill-current text-amber-500 shrink-0" aria-label="Asset" />}
@@ -77,6 +104,32 @@ export function RecentOutputsRail({
                   {provider && <><span>·</span><span>{provider}</span></>}
                   {ago && <><span>·</span><span>{ago}</span></>}
                 </div>
+              </div>
+              <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const text = `${o.title}${o.summary ? `\n\n${o.summary}` : ""}`;
+                    navigator.clipboard.writeText(text).then(
+                      () => toast.success("Copied to clipboard"),
+                      () => toast.error("Copy failed"),
+                    );
+                  }}
+                  className="text-muted-foreground hover:text-foreground p-1 rounded"
+                  aria-label="Copy summary"
+                  title="Copy summary"
+                >
+                  <Copy className="h-3 w-3" />
+                </button>
+                <Link
+                  to="/canvas"
+                  onClick={(e) => e.stopPropagation()}
+                  className="text-muted-foreground hover:text-foreground p-1 rounded"
+                  aria-label="Open in Canvas"
+                  title="Open in Canvas"
+                >
+                  <ExternalLink className="h-3 w-3" />
+                </Link>
               </div>
               {pinAs && !o.is_asset && (
                 <button
@@ -93,6 +146,23 @@ export function RecentOutputsRail({
                   title={`Pin as ${pinAs}`}
                 >
                   <Star className="h-3 w-3" />
+                </button>
+              )}
+              {pinAs && o.is_asset && (
+                <button
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    setPinning(o.id);
+                    const ok = await setOutputAsset(o.id, false);
+                    setPinning(null);
+                    if (ok) refresh();
+                  }}
+                  disabled={pinning === o.id}
+                  className="opacity-0 group-hover:opacity-100 transition-opacity text-amber-500 hover:text-muted-foreground p-1 rounded disabled:opacity-50"
+                  aria-label="Unpin asset"
+                  title="Unpin asset"
+                >
+                  <Star className="h-3 w-3 fill-current" />
                 </button>
               )}
               <button
