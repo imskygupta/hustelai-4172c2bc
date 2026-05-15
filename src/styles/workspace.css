@@ -14,17 +14,17 @@
     hsl(258 80% 64% / 0.10),
     hsl(292 84% 62% / 0.10));
 
-  /* "Pick your cockpit" pastel — pale mint → blush → peach.
-     Used as a calm ambient wash on operational surfaces so the workspace
-     feels warm and trustworthy rather than purely cinematic-dark. */
+  /* "Pick your cockpit" pastel — barely-there mint → blush → peach.
+     Industry-grade B2B: the gradient should whisper, never shout. Saturation
+     is intentionally low so dense workspace data stays the hero. */
   --ws-gradient-pastel: linear-gradient(125deg,
-    hsl(150 70% 92%) 0%,
-    hsl(330 80% 94%) 48%,
-    hsl(28 90% 92%) 100%);
+    hsl(150 50% 98%) 0%,
+    hsl(330 60% 99%) 48%,
+    hsl(28 70% 98%) 100%);
   --ws-gradient-pastel-soft: linear-gradient(125deg,
-    hsl(150 70% 60% / 0.12) 0%,
-    hsl(330 80% 70% / 0.12) 48%,
-    hsl(28 90% 70% / 0.12) 100%);
+    hsl(150 50% 60% / 0.05) 0%,
+    hsl(330 60% 70% / 0.05) 48%,
+    hsl(28 70% 70% / 0.05) 100%);
 
   --ws-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
   --ws-dur-fast: 160ms;

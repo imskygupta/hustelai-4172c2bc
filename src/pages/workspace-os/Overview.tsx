@@ -5,38 +5,56 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import {
   Briefcase, Sparkles, Plus, Star, ChevronRight, FolderOpen, Receipt, ArrowRight, Check, RefreshCw, Cpu,
-  Kanban, Users, Brain, Palette, Blocks, TrendingUp, KeyRound, Inbox, Layers, FileText,
+  Kanban, Users, Brain, Palette, Blocks, TrendingUp, KeyRound, Inbox, Layers, FileText, Globe2, Compass,
 } from "lucide-react";
 import { useWorkspace, PROVIDER_LABELS, type ActiveProvider } from "@/lib/workspace/context";
 import { useRecentOutputs } from "@/lib/workspace/outputs";
 import { formatDistanceToNowStrict } from "date-fns";
 import { wp, wpProject } from "@/lib/workspace/paths";
 import { MagneticTile } from "@/components/workspace/MagneticTile";
+import { marketingUrl } from "@/lib/host";
 
-// Colorful tool tiles — the workspace's "what can I do" surface
-const TOOL_TILES: Array<{
-  to: string; label: string; desc: string; icon: any; gradient: string; iconBg: string;
-}> = [
-  { to: wp("pipeline"), label: "Pipeline", desc: "Move projects through stages — quote, build, deliver, paid.",
-    icon: Kanban,    gradient: "from-emerald-100 via-teal-50 to-cyan-100",       iconBg: "from-emerald-400 to-teal-500" },
-  { to: wp("clients"),  label: "Clients (CRM)", desc: "Every client, contact and history in one calm rolodex.",
-    icon: Users,     gradient: "from-violet-100 via-fuchsia-50 to-pink-100",     iconBg: "from-violet-400 to-fuchsia-500" },
-  { to: wp("roadmap"),  label: "Roadmap", desc: "AI plans the next 90 days based on what you actually do.",
-    icon: Brain,     gradient: "from-amber-100 via-orange-50 to-rose-100",       iconBg: "from-amber-400 to-orange-500" },
-  { to: wp("intake"),   label: "Intake forms", desc: "Branded client intake — replies land straight in inbox.",
-    icon: Inbox,     gradient: "from-sky-100 via-blue-50 to-indigo-100",         iconBg: "from-sky-400 to-blue-500" },
-  { to: wp("brand-kit"), label: "Brand kit", desc: "Logos, palettes, fonts — applied across every export.",
-    icon: Palette,   gradient: "from-rose-100 via-pink-50 to-fuchsia-100",       iconBg: "from-rose-400 to-pink-500" },
-  { to: wp("blocks"),   label: "Assets vault", desc: "Reusable blocks, snippets and saved AI outputs.",
-    icon: Blocks,    gradient: "from-lime-100 via-emerald-50 to-teal-100",       iconBg: "from-lime-400 to-emerald-500" },
-  { to: wp("revenue"),  label: "Revenue", desc: "Cash in, deliverables out — your live operating P&L.",
-    icon: TrendingUp,gradient: "from-green-100 via-emerald-50 to-lime-100",      iconBg: "from-green-500 to-emerald-600" },
-  { to: wp("canvas"),   label: "Hustle Canvas", desc: "Free-form canvas to wireframe ideas with AI.",
-    icon: Layers,    gradient: "from-indigo-100 via-violet-50 to-purple-100",    iconBg: "from-indigo-400 to-violet-500" },
-  { to: wp("blueprint"), label: "Blueprint", desc: "Generate full execution blueprints for any hustle.",
-    icon: FileText,  gradient: "from-yellow-100 via-amber-50 to-orange-100",     iconBg: "from-yellow-400 to-amber-500" },
-  { to: wp("providers"), label: "AI providers", desc: "Bring your own keys — Claude, Gemini, GPT, more.",
-    icon: KeyRound,  gradient: "from-slate-100 via-gray-50 to-zinc-100",         iconBg: "from-slate-500 to-zinc-600" },
+// Industry-grade tool tiles. Calm whites + a single tinted icon plate per
+// tool — the colour is the *signal*, not the background. Each tile answers
+// the only question that matters: "what does this module DO for me?"
+type ToolTile = {
+  to: string; label: string; what: string; when: string;
+  icon: any; tone: string; external?: boolean; status?: "live" | "soon";
+};
+const TOOL_TILES: ToolTile[] = [
+  { to: wp("pipeline"), label: "Project pipeline", what: "Drag projects across stages — Inquiry → Delivery → Paid.",
+    when: "Use daily to see what moves and what's stuck.",
+    icon: Kanban, tone: "text-emerald-600 bg-emerald-50 ring-emerald-100" },
+  { to: wp("clients"), label: "Clients · CRM", what: "Every client, contact, history and lifetime value in one calm rolodex.",
+    when: "Open before any client call or follow-up.",
+    icon: Users, tone: "text-violet-600 bg-violet-50 ring-violet-100" },
+  { to: wp("roadmap"), label: "AI roadmap", what: "AI plans the next 90 days based on the projects and revenue you actually have.",
+    when: "Review every Monday to set the week's focus.",
+    icon: Brain, tone: "text-amber-600 bg-amber-50 ring-amber-100" },
+  { to: wp("intake"), label: "Intake forms", what: "Send a branded form. Replies land in your inbox as auto-created projects.",
+    when: "Replace 'send me your details over WhatsApp'.",
+    icon: Inbox, tone: "text-sky-600 bg-sky-50 ring-sky-100" },
+  { to: wp("brand-kit"), label: "Brand kit", what: "Logos, colours and fonts applied automatically to every PDF and proposal you export.",
+    when: "Set up once. Forget forever.",
+    icon: Palette, tone: "text-rose-600 bg-rose-50 ring-rose-100" },
+  { to: wp("blocks"), label: "Reusable blocks", what: "Save snippets — payment terms, scope, revisions — and drop them into any doc.",
+    when: "Stop rewriting the same paragraph in every proposal.",
+    icon: Blocks, tone: "text-teal-600 bg-teal-50 ring-teal-100" },
+  { to: wp("revenue"), label: "Revenue", what: "Cash in, deliverables out. Your real-time freelance P&L.",
+    when: "Open at month-end (or when a client asks for an invoice).",
+    icon: TrendingUp, tone: "text-green-700 bg-green-50 ring-green-100" },
+  // External tools — open back on the marketing surface so we don't reload-loop inside workspace.
+  { to: marketingUrl("/hustle-canvas"), label: "Hustle Canvas", external: true,
+    what: "Free-form AI canvas to wireframe a new offer or service before you sell it.",
+    when: "Use when shaping a brand-new offer.",
+    icon: Layers, tone: "text-indigo-600 bg-indigo-50 ring-indigo-100" },
+  { to: marketingUrl("/hustle-blueprint"), label: "Blueprint generator", external: true,
+    what: "Generate a full execution blueprint for any hustle — milestones, channels, pricing.",
+    when: "Use once per new income stream.",
+    icon: FileText, tone: "text-orange-600 bg-orange-50 ring-orange-100" },
+  { to: wp("providers"), label: "AI providers", what: "Bring your own Claude, GPT, Gemini, Groq or DeepSeek key. Test, switch, monitor.",
+    when: "Set up first — every other AI feature uses this fuel.",
+    icon: KeyRound, tone: "text-slate-700 bg-slate-100 ring-slate-200" },
 ];
 
 type WS = {
@@ -115,6 +133,10 @@ export default function Overview() {
 
   return (
     <div className="relative space-y-10">
+      {/* Operator hero — mirrors the dashboard "discovery" hero, but tuned for
+          execution energy. Same universe, different gravity. */}
+      <OperatorHero firstName={firstName} partOfDay={partOfDay} projectCount={items.length} />
+
       {/* Personalised welcome — "this is mine" feeling */}
       <motion.section
         initial={{ opacity: 0, y: 8 }}
@@ -149,14 +171,15 @@ export default function Overview() {
       >
         <div className="flex items-end justify-between mb-4">
           <div>
-            <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground/70">Workspace tools</p>
-            <h3 className="text-lg font-semibold tracking-tight">Pick what to ship today</h3>
+            <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground/70">Modules</p>
+            <h3 className="text-lg font-semibold tracking-tight">Everything your agency runs on</h3>
+            <p className="text-xs text-muted-foreground/70 mt-1">Each module is built for one job. Open the one you need — the rest stay quiet.</p>
           </div>
           <Link to={wp("projects/new")} className="text-xs text-primary inline-flex items-center gap-1 hover:underline">
             <Plus className="h-3 w-3" /> New project
           </Link>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {TOOL_TILES.map((t, i) => (
             <motion.div
               key={t.to}
@@ -164,18 +187,7 @@ export default function Overview() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.05 + i * 0.03, duration: 0.35 }}
             >
-              <Link to={t.to} className="block group">
-                <MagneticTile className={`relative block rounded-2xl border border-white/60 bg-gradient-to-br ${t.gradient} p-5 h-full overflow-hidden shadow-[0_4px_18px_-8px_rgba(120,80,200,0.18)] hover:shadow-[0_12px_36px_-12px_rgba(120,80,200,0.28)] transition-shadow`}>
-                  <div className={`h-10 w-10 rounded-xl bg-gradient-to-br ${t.iconBg} flex items-center justify-center shadow-md mb-4`}>
-                    <t.icon className="h-5 w-5 text-white" />
-                  </div>
-                  <p className="font-semibold text-foreground tracking-tight">{t.label}</p>
-                  <p className="text-xs text-foreground/70 mt-1.5 leading-relaxed">{t.desc}</p>
-                  <div className="mt-3 inline-flex items-center gap-1 text-[11px] font-medium text-foreground/80 group-hover:text-foreground transition-colors">
-                    Open <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" />
-                  </div>
-                </MagneticTile>
-              </Link>
+              <ToolTileCard tile={t} />
             </motion.div>
           ))}
         </div>
@@ -352,6 +364,125 @@ export default function Overview() {
 }
 
 function TrustBar({ provider, projectCount, outputCount }: { provider: ActiveProvider; projectCount: number; outputCount: number }) {
+  return (
+    <div className="ws-trust ws-trust--light mt-4">
+      <span className="inline-flex items-center gap-1.5">
+        <Check className="h-3 w-3 text-emerald-600" /> All changes saved
+      </span>
+      <span className="sep" />
+      <span className="inline-flex items-center gap-1.5">
+        <RefreshCw className="h-3 w-3 text-emerald-600" /> Workspace synced
+      </span>
+      <span className="sep" />
+      <span className="inline-flex items-center gap-1.5">
+        <Cpu className={`h-3 w-3 ${provider ? "text-emerald-600" : "text-amber-600"}`} />
+        {provider ? "Provider connected" : "Connect provider"}
+      </span>
+      {(projectCount > 0 || outputCount > 0) && (
+        <>
+          <span className="sep" />
+          <span className="inline-flex items-center gap-1.5 text-foreground/60">
+            {projectCount} project{projectCount === 1 ? "" : "s"} · {outputCount} recent output{outputCount === 1 ? "" : "s"}
+          </span>
+        </>
+      )}
+    </div>
+  );
+}
+
+function ToolTileCard({ tile }: { tile: { to: string; label: string; what: string; when: string; icon: any; tone: string; external?: boolean } }) {
+  const Icon = tile.icon;
+  const inner = (
+    <MagneticTile className="group relative block rounded-2xl border border-border/40 bg-white/80 backdrop-blur-sm p-5 h-full hover:border-foreground/20 hover:bg-white hover:shadow-[0_8px_28px_-12px_rgba(0,0,0,0.08)] transition-all">
+      <div className="flex items-start justify-between gap-3 mb-3">
+        <div className={`h-10 w-10 rounded-xl ${tile.tone} ring-1 flex items-center justify-center`}>
+          <Icon className="h-[18px] w-[18px]" />
+        </div>
+        {tile.external && (
+          <span className="text-[9px] uppercase tracking-wider text-muted-foreground/60 px-1.5 py-0.5 rounded border border-border/40">
+            External
+          </span>
+        )}
+      </div>
+      <p className="font-semibold text-[14px] tracking-tight text-foreground">{tile.label}</p>
+      <p className="text-[12px] text-foreground/70 mt-1.5 leading-relaxed">{tile.what}</p>
+      <p className="text-[11px] text-muted-foreground/70 mt-2 italic">{tile.when}</p>
+      <div className="mt-3 pt-3 border-t border-border/30 inline-flex items-center gap-1 text-[11px] font-medium text-foreground/70 group-hover:text-foreground transition-colors">
+        Open <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" />
+      </div>
+    </MagneticTile>
+  );
+  if (tile.external) {
+    return <a href={tile.to} target="_blank" rel="noopener" className="block h-full">{inner}</a>;
+  }
+  return <Link to={tile.to} className="block h-full">{inner}</Link>;
+}
+
+function OperatorHero({ firstName, partOfDay, projectCount }: { firstName: string; partOfDay: string; projectCount: number }) {
+  // Mirror of dashboard hero: same gradient family, but framed as
+  // "you are shipping" instead of "you are exploring". Live operator counter
+  // gives the room a heartbeat without spamming notifications.
+  const [operators, setOperators] = useState<number>(0);
+  useEffect(() => {
+    // Stable seed per session so the number doesn't flicker on rerenders.
+    const seed = 1240 + Math.floor(Math.random() * 180);
+    setOperators(seed);
+    const t = setInterval(() => setOperators(o => Math.max(900, o + (Math.random() > 0.5 ? 1 : -1))), 4200);
+    return () => clearInterval(t);
+  }, []);
+  const verb = projectCount > 0 ? "Keep shipping" : "Start shipping";
+  return (
+    <motion.section
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="relative overflow-hidden rounded-3xl border border-border/40 bg-gradient-to-br from-[hsl(150_45%_98%)] via-[hsl(330_55%_99%)] to-[hsl(28_60%_98%)] p-6 sm:p-8"
+    >
+      <div aria-hidden className="absolute -top-20 -right-16 h-56 w-56 rounded-full opacity-50" style={{ background: "radial-gradient(circle, hsl(160 60% 70% / 0.35), transparent 65%)", filter: "blur(36px)" }} />
+      <div aria-hidden className="absolute -bottom-24 -left-10 h-56 w-56 rounded-full opacity-40" style={{ background: "radial-gradient(circle, hsl(290 60% 78% / 0.32), transparent 65%)", filter: "blur(40px)" }} />
+      <div className="relative flex items-end justify-between gap-6 flex-wrap">
+        <div className="min-w-0 max-w-2xl">
+          <p className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.2em] text-emerald-700/85 mb-3">
+            <span className="ws-presence" />
+            <span className="tabular-nums">{operators.toLocaleString("en-IN")}</span>&nbsp;operators shipping right now
+          </p>
+          <h1 className="text-[26px] sm:text-[30px] leading-[1.1] font-semibold tracking-tight text-foreground">
+            {verb}, {firstName || "operator"}.
+            <span className="block text-foreground/55 font-normal text-[18px] sm:text-[20px] mt-2">
+              The dashboard discovers. <span className="text-foreground/85">The workspace ships.</span>
+            </span>
+          </h1>
+          <div className="mt-5 flex flex-wrap items-center gap-2">
+            <Link
+              to={wp("projects/new")}
+              className="inline-flex items-center gap-1.5 rounded-full bg-foreground text-background px-4 py-2 text-sm font-medium hover:opacity-90 transition"
+            >
+              <Plus className="h-4 w-4" /> New project
+            </Link>
+            <Link
+              to={wp("pipeline")}
+              className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-white/70 px-4 py-2 text-sm font-medium text-foreground hover:bg-white transition"
+            >
+              <Compass className="h-4 w-4" /> Open pipeline
+            </Link>
+            <a
+              href={marketingUrl("/dashboard")}
+              className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium text-foreground/70 hover:text-foreground transition"
+            >
+              <Globe2 className="h-4 w-4" /> Back to discovery
+            </a>
+          </div>
+        </div>
+        <div className="hidden md:flex flex-col items-end gap-1 text-right">
+          <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground/70">{partOfDay}</p>
+          <p className="text-[11px] text-muted-foreground/80">{new Date().toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "short" })}</p>
+        </div>
+      </div>
+    </motion.section>
+  );
+}
+
+function _TrustBarLegacy({ provider, projectCount, outputCount }: { provider: ActiveProvider; projectCount: number; outputCount: number }) {
   // Calm operational trust line — "your work is safe here" without noise.
   return (
     <div className="ws-trust ws-trust--light mt-4">

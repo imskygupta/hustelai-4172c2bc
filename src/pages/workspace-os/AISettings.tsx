@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useWorkspace } from "@/lib/workspace/context";
 
 type Speed = "instant" | "fast" | "balanced" | "deep";
@@ -33,6 +34,7 @@ const PROVIDERS: ReadonlyArray<{
   speed: Speed;
   costHint: string;
   defaultModel?: string;
+  models?: string[];     // curated model list — drives the dropdown
 }> = [
   {
     id: "anthropic",
@@ -47,7 +49,8 @@ const PROVIDERS: ReadonlyArray<{
     bestFor: ["Long-form strategy", "Client docs & briefs", "Editorial polish"],
     speed: "balanced",
     costHint: "$$$ premium",
-    defaultModel: "claude-3-5-sonnet",
+    defaultModel: "claude-3-5-sonnet-20241022",
+    models: ["claude-3-5-sonnet-20241022", "claude-3-5-haiku-20241022", "claude-3-opus-20240229", "claude-3-haiku-20240307"],
   },
   {
     id: "openai",
@@ -62,7 +65,8 @@ const PROVIDERS: ReadonlyArray<{
     bestFor: ["Mixed workloads", "Code + text", "Reliable defaults"],
     speed: "balanced",
     costHint: "$$ standard",
-    defaultModel: "gpt-5-mini",
+    defaultModel: "gpt-4o-mini",
+    models: ["gpt-4o-mini", "gpt-4o", "gpt-4-turbo", "gpt-3.5-turbo"],
   },
   {
     id: "gemini",
@@ -78,6 +82,7 @@ const PROVIDERS: ReadonlyArray<{
     speed: "fast",
     costHint: "Free tier",
     defaultModel: "gemini-2.5-flash",
+    models: ["gemini-2.5-flash", "gemini-2.5-pro", "gemini-2.5-flash-lite", "gemini-1.5-pro"],
   },
   {
     id: "groq",
@@ -92,6 +97,8 @@ const PROVIDERS: ReadonlyArray<{
     bestFor: ["Real-time agent loops", "Bulk classification", "Live UX"],
     speed: "instant",
     costHint: "$ low",
+    defaultModel: "llama-3.1-8b-instant",
+    models: ["llama-3.1-8b-instant", "llama-3.3-70b-versatile", "mixtral-8x7b-32768", "gemma2-9b-it"],
   },
   {
     id: "deepseek",
@@ -106,6 +113,8 @@ const PROVIDERS: ReadonlyArray<{
     bestFor: ["Bulk content", "Code generation", "Background jobs"],
     speed: "fast",
     costHint: "¢ ultra-low",
+    defaultModel: "deepseek-chat",
+    models: ["deepseek-chat", "deepseek-reasoner"],
   },
   {
     id: "openrouter",
@@ -120,6 +129,8 @@ const PROVIDERS: ReadonlyArray<{
     bestFor: ["Model experimentation", "Routing fallback", "Pay-as-you-go"],
     speed: "balanced",
     costHint: "$ pay-per-use",
+    defaultModel: "google/gemini-2.5-flash-lite",
+    models: ["google/gemini-2.5-flash-lite", "google/gemini-2.5-pro", "anthropic/claude-3.5-sonnet", "openai/gpt-4o-mini", "meta-llama/llama-3.1-70b-instruct"],
   },
 ] as const;
 
@@ -363,9 +374,32 @@ export default function AISettings() {
             </div>
             <div className="space-y-1.5">
               <label className="text-[11px] uppercase tracking-wider text-muted-foreground inline-flex items-center gap-1.5">
-                <Cpu className="h-3 w-3" /> Model <span className="opacity-60">(optional)</span>
+                <Cpu className="h-3 w-3" /> Model
               </label>
-              <Input value={model} onChange={e => setModel(e.target.value)} placeholder={selected.defaultModel || "default"} />
+              {selected.models && selected.models.length > 0 ? (
+                <Select value={model || selected.defaultModel || ""} onValueChange={v => { setModel(v); setTestResult(null); }}>
+                  <SelectTrigger className="text-sm">
+                    <SelectValue placeholder={selected.defaultModel || "Pick a model"} />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-72">
+                    {selected.models.map(m => (
+                      <SelectItem key={m} value={m} className="text-sm font-mono">{m}</SelectItem>
+                    ))}
+                    <SelectItem value="__custom__" className="text-xs italic text-muted-foreground">Use custom model name…</SelectItem>
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Input value={model} onChange={e => setModel(e.target.value)} placeholder={selected.defaultModel || "default"} />
+              )}
+              {model === "__custom__" && (
+                <Input
+                  autoFocus
+                  value=""
+                  onChange={e => setModel(e.target.value)}
+                  placeholder="Enter exact model id"
+                  className="mt-1.5 font-mono text-xs"
+                />
+              )}
             </div>
           </div>
 
