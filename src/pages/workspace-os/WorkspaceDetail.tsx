@@ -19,6 +19,7 @@ import PortalPanel from "@/components/workspace-os/PortalPanel";
 import RetainerPanel from "@/components/workspace-os/RetainerPanel";
 import RoadmapEngine from "@/components/workspace-os/RoadmapEngine";
 import { ProjectQuickActions } from "@/components/workspace/ProjectQuickActions";
+import { ProjectQuickstart } from "@/components/workspace/ProjectQuickstart";
 import { useWorkspace, PROVIDER_LABELS } from "@/lib/workspace/context";
 import { wp, wpProjectDocs } from "@/lib/workspace/paths";
 import { formatDistanceToNowStrict } from "date-fns";
@@ -159,6 +160,7 @@ export default function WorkspaceDetail() {
           </div>
 
           <TabsContent value="overview" className="space-y-4">
+            <ProjectQuickstart workspace={w} />
             {w.ai_summary && (
               <section className="rounded-lg p-4 bg-gradient-to-br from-primary/[0.04] to-transparent">
                 <p className="text-sm text-foreground/85 flex gap-2">
