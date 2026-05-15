@@ -2424,6 +2424,11 @@ export default function AdminDashboard() {
             <FeatureFlagsManager />
           )}
           {section === "system-health" && <SystemHealth />}
+          {section === "audit" && (
+            <div className="space-y-4">
+              <AuditLogPanel limit={200} />
+            </div>
+          )}
           {(section as AdminSectionExt) === "seo-pages" && <SeoLandingManager />}
           {(section as AdminSectionExt) === "seo-blog" && <SeoBlogManager />}
           {(section as AdminSectionExt) === "usage-analytics" && <UsageAnalyticsManager />}
