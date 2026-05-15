@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { motion, AnimatePresence } from "framer-motion";
-import { Play, Pause, Music, Sparkles, Lock, Volume2, VolumeX } from "lucide-react";
+import { Play, Pause, Music, Sparkles, Lock, Volume2, VolumeX, Headphones, CheckCircle2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 
@@ -117,6 +117,35 @@ export default function Relax() {
   const gainRef = useRef<GainNode | null>(null);
   const [vibe, setVibe] = useState<keyof typeof VIBE_SCALES>("chill");
 
+  // ----- Free preview gating -----------------------------------------
+  // Three tones. Each can be played ONCE per browser. After all three are
+  // burned (or any one is replayed), the page nudges towards upgrade.
+  const FREE_PREVIEWS = [
+    { id: "lofi-rain",   label: "Lo-Fi Rain",   emoji: "🌧️", presetIndex: 6 }, // Hip Hop Lo-Fi
+    { id: "indian-evening", label: "Indian Evening", emoji: "🪔", presetIndex: 5 }, // Indian Raga
+    { id: "moonlight",   label: "Moonlight Drift", emoji: "🌙", presetIndex: 3 }, // Moonlight
+  ] as const;
+  const PREVIEW_KEY = "hustleai_relax_previews_v1";
+  const [usedPreviews, setUsedPreviews] = useState<Set<string>>(() => {
+    try { return new Set(JSON.parse(localStorage.getItem(PREVIEW_KEY) || "[]")); } catch { return new Set(); }
+  });
+  const [previewLockOpen, setPreviewLockOpen] = useState(false);
+  const burnPreview = (id: string) => {
+    setUsedPreviews(prev => {
+      const next = new Set(prev); next.add(id);
+      try { localStorage.setItem(PREVIEW_KEY, JSON.stringify(Array.from(next))); } catch {}
+      return next;
+    });
+  };
+  const tryFreePreview = (p: typeof FREE_PREVIEWS[number]) => {
+    if (usedPreviews.has(p.id)) {
+      setPreviewLockOpen(true);
+      return;
+    }
+    burnPreview(p.id);
+    startPreset(p.presetIndex);
+  };
+
   const getAudioCtx = useCallback(() => {
     if (!audioCtxRef.current) {
       audioCtxRef.current = new AudioContext();
@@ -200,10 +229,17 @@ export default function Relax() {
   }, []);
 
   const isPremium = profile && profile.subscription_tier !== "free";
+  const allPreviewsUsed = FREE_PREVIEWS.every(p => usedPreviews.has(p.id));
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-rose-50 via-amber-50 to-emerald-50">
       <Navbar />
+      {/* ambient soft blobs */}
+      <div aria-hidden className="pointer-events-none fixed inset-0 -z-0 overflow-hidden">
+        <div className="absolute -top-32 -left-24 w-[420px] h-[420px] rounded-full bg-rose-200/40 blur-3xl" />
+        <div className="absolute top-1/3 -right-32 w-[460px] h-[460px] rounded-full bg-amber-200/40 blur-3xl" />
+        <div className="absolute bottom-0 left-1/3 w-[380px] h-[380px] rounded-full bg-emerald-200/40 blur-3xl" />
+      </div>
       <div className="pt-24 pb-12 px-4">
         <div className="container mx-auto max-w-5xl space-y-8">
           {/* Header */}
@@ -212,20 +248,89 @@ export default function Relax() {
             animate={{ opacity: 1, y: 0 }}
             className="text-center space-y-4"
           >
-            <Badge variant="outline" className="text-primary border-primary/30">
+            <Badge variant="outline" className="text-rose-700 border-rose-300 bg-white/70 backdrop-blur">
               <Music className="w-3 h-3 mr-1" /> RELAX MODE
             </Badge>
-            <h1 className="text-4xl md:text-5xl font-display font-bold">
-              Relaxing <span className="text-gradient">Beat Lab</span>
+            <h1 className="text-4xl md:text-5xl font-display font-bold text-foreground">
+              Relaxing{" "}
+              <span className="bg-gradient-to-r from-rose-500 via-amber-500 to-emerald-500 bg-clip-text text-transparent">Beat Lab</span>
             </h1>
-            <p className="text-muted-foreground max-w-xl mx-auto">
-              Tired of grinding? Create and listen to relaxing piano beats. Two octaves of keys and handcrafted preset tunes.
+            <p className="text-foreground/70 max-w-xl mx-auto">
+              Tired of grinding? Tap a free tone, breathe, and come back sharper. Three previews on the house — then your pet asks nicely.
             </p>
-            <div className="glass rounded-xl p-4 max-w-2xl mx-auto text-xs text-muted-foreground text-left">
-              <strong className="text-foreground">Why it works:</strong> Research published in <em>JAMA Network Open</em> found that
+            <div className="rounded-xl p-4 max-w-2xl mx-auto text-xs text-foreground/70 text-left bg-white/60 backdrop-blur border border-white/80">
+              <strong className="text-foreground">Why it works:</strong> Research in <em>JAMA Network Open</em> found that
               slow-tempo instrumental music significantly reduced stress and anxiety across 97 clinical trials. Taking short music breaks
               between tasks can restore focus and prevent burnout.
             </div>
+          </motion.div>
+
+          {/* Free preview tones — one play each per browser */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.05 }}
+            className="rounded-2xl bg-white/70 backdrop-blur border border-white/80 shadow-[0_8px_30px_-12px_rgba(244,114,182,0.25)] p-6 space-y-4"
+          >
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div className="flex items-center gap-2">
+                <Headphones className="w-5 h-5 text-rose-500" />
+                <h2 className="font-display font-semibold text-lg">Free preview tones</h2>
+              </div>
+              <p className="text-[11px] text-foreground/60">
+                {FREE_PREVIEWS.filter(p => !usedPreviews.has(p.id)).length} of {FREE_PREVIEWS.length} previews left
+              </p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {FREE_PREVIEWS.map(p => {
+                const used = usedPreviews.has(p.id);
+                return (
+                  <button
+                    key={p.id}
+                    onClick={() => tryFreePreview(p)}
+                    className={`relative text-left rounded-xl p-4 border transition-all ${
+                      used
+                        ? "bg-muted/40 border-border/60 opacity-70"
+                        : "bg-gradient-to-br from-rose-100 via-amber-50 to-emerald-100 border-white/80 hover:scale-[1.02] hover:shadow-md"
+                    }`}
+                  >
+                    <div className="text-2xl mb-2">{p.emoji}</div>
+                    <p className="font-medium text-foreground">{p.label}</p>
+                    <p className="text-[11px] text-foreground/60 mt-1">
+                      {used ? "Preview used — upgrade for unlimited" : "Tap to preview · plays once"}
+                    </p>
+                    {used && (
+                      <CheckCircle2 className="absolute top-2 right-2 w-4 h-4 text-emerald-500" />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            <AnimatePresence>
+              {(previewLockOpen || allPreviewsUsed) && !isPremium && (
+                <motion.div
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  className="flex items-start gap-3 rounded-xl border border-rose-200 bg-gradient-to-r from-rose-100 via-pink-50 to-amber-100 p-4"
+                >
+                  <span className="text-2xl shrink-0">🐱</span>
+                  <div className="flex-1 text-sm text-foreground/85">
+                    <p className="font-medium">That tune is on the house already 🎶</p>
+                    <p className="text-foreground/70 text-[13px] mt-0.5">
+                      Upgrade to keep me singing — unlimited tones, AI-composed melodies, and full piano on demand.
+                    </p>
+                  </div>
+                  <Button
+                    onClick={() => navigate("/payment")}
+                    className="bg-gradient-to-r from-rose-500 via-amber-500 to-emerald-500 text-white border-0 shrink-0"
+                  >
+                    <Sparkles className="w-4 h-4 mr-1" /> Upgrade
+                  </Button>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
 
           {/* Controls */}
@@ -233,7 +338,7 @@ export default function Relax() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="glass rounded-2xl p-6 space-y-6"
+            className="rounded-2xl p-6 space-y-6 bg-white/70 backdrop-blur border border-white/80 shadow-[0_8px_30px_-12px_rgba(120,80,200,0.18)]"
           >
             {/* Transport */}
             <div className="flex items-center justify-between flex-wrap gap-4">

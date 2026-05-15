@@ -115,12 +115,11 @@ export default function WorkspaceOS() {
     <div className={cn(
       "relative min-h-[calc(100vh-3rem)] text-foreground",
       onWorkspaceHost
-        ? "bg-[hsl(222_30%_4%)]"
+        ? "bg-gradient-to-br from-[hsl(150_70%_97%)] via-[hsl(330_80%_98%)] to-[hsl(28_90%_97%)]"
         : "bg-[radial-gradient(ellipse_at_top_left,hsl(var(--primary)/0.06),transparent_55%),radial-gradient(ellipse_at_bottom_right,hsl(258_80%_64%/0.05),transparent_55%)]"
     )}>
-      {/* Ambient cinematic backdrop — only on the workspace host */}
-      {onWorkspaceHost && <div aria-hidden className="ws-ambient" />}
-      {onWorkspaceHost && <div aria-hidden className="ws-mesh" />}
+      {/* Ambient pastel backdrop — borrows the "Pick your cockpit" gradient */}
+      {onWorkspaceHost && <div aria-hidden className="ws-ambient-pastel" style={{ position: "fixed", opacity: 0.55 }} />}
       <SEO title="Workspaces | HustleAI Workspace OS" description="HustleAI Workspace OS — internal page." path="" noindex />
       <BigScreenHint pageKey="workspace-os" label="Workspace OS is built for desktop" />
       <WorkspaceCommandPalette />
@@ -131,7 +130,7 @@ export default function WorkspaceOS() {
         className={cn(
           "sticky top-0 z-20 relative backdrop-blur-xl",
           onWorkspaceHost
-            ? "border-b border-white/[0.06] bg-[hsl(222_30%_4%/0.72)]"
+            ? "border-b border-border/40 bg-white/70"
             : "border-b border-border/50 bg-background/60"
         )}
       >
@@ -159,8 +158,8 @@ export default function WorkspaceOS() {
               </div>
               {onWorkspaceHost ? (
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium tracking-tight text-white/85 group-hover:text-white transition-colors">HustleAI</span>
-                  <span className="text-[10px] uppercase tracking-[0.18em] text-white/40">Workspace</span>
+                  <span className="text-sm font-medium tracking-tight text-foreground group-hover:text-foreground transition-colors">HustleAI</span>
+                  <span className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Workspace</span>
                 </div>
               ) : (
                 <div>
@@ -171,10 +170,10 @@ export default function WorkspaceOS() {
             </NavLink>
             {/* Live presence + provider chip — only on workspace host */}
             {onWorkspaceHost && (
-              <div className="hidden md:flex items-center gap-2 ml-3 pl-3 border-l border-white/10">
+              <div className="hidden md:flex items-center gap-2 ml-3 pl-3 border-l border-border/40">
                 <span className="ws-presence" aria-hidden />
-                <span className="text-[11px] text-white/55">Live</span>
-                <span className="mx-2 h-3 w-px bg-white/10" />
+                <span className="text-[11px] text-muted-foreground">Live</span>
+                <span className="mx-2 h-3 w-px bg-border/60" />
                 <ProviderChip provider={activeProvider} loading={providerLoading} />
               </div>
             )}
@@ -192,10 +191,10 @@ export default function WorkspaceOS() {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button
-                    className="relative h-9 w-9 rounded-full flex items-center justify-center bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 transition"
+                    className="relative h-9 w-9 rounded-full flex items-center justify-center bg-muted/60 hover:bg-muted border border-border/60 transition"
                     aria-label="Workspace account"
                   >
-                    <span className="text-[11px] font-medium text-white/80">
+                    <span className="text-[11px] font-medium text-foreground">
                       {(user?.email?.[0] || "•").toUpperCase()}
                     </span>
                   </button>
@@ -250,16 +249,16 @@ function ProviderChip({ provider, loading }: { provider: ReturnType<typeof useWo
   }
   if (!provider) {
     return (
-      <NavLink to={wp("providers")} className="inline-flex items-center gap-1.5 text-[11px] text-amber-300/90 hover:text-amber-200">
+      <NavLink to={wp("providers")} className="inline-flex items-center gap-1.5 text-[11px] text-amber-600 hover:text-amber-700">
         <span className="ws-dot ws-dot--warn ws-pulse-soft" /> No AI fuel
       </NavLink>
     );
   }
   const label = PROVIDER_LABELS[provider.provider] || provider.provider;
   return (
-    <NavLink to={wp("providers")} className="inline-flex items-center gap-1.5 text-[11px] text-emerald-300/90 hover:text-emerald-200">
+    <NavLink to={wp("providers")} className="inline-flex items-center gap-1.5 text-[11px] text-emerald-600 hover:text-emerald-700">
       <span className="ws-dot ws-dot--ok" /> {label}
-      {provider.model ? <span className="text-white/40">· {provider.model}</span> : null}
+      {provider.model ? <span className="text-muted-foreground">· {provider.model}</span> : null}
     </NavLink>
   );
 }

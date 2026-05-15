@@ -280,6 +280,7 @@ const App = () => (
             </Suspense>
           ) : isWorkspaceHost() ? (
             <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-background"><div className="h-8 w-8 rounded-full border-2 border-primary/30 border-t-primary animate-spin" /></div>}>
+              <MascotCompanion />
               <Routes>
                 {/* Workspace cockpit — clean root URLs. The subdomain IS the
                     context, so we drop the redundant `/workspaces/...` prefix. */}
