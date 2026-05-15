@@ -43,6 +43,8 @@ import { VerificationPanel } from "@/components/admin/VerificationPanel";
 import { RolesPanel } from "@/components/admin/RolesPanel";
 import { ForumModerationPanel } from "@/components/admin/ForumModerationPanel";
 import { PaymentsOpsPanel } from "@/components/admin/PaymentsOpsPanel";
+import { AuditLogPanel } from "@/components/admin/AuditLogPanel";
+import { recordOperatorAction } from "@/lib/audit/recordOperatorAction";
 
 import { SEO } from "@/components/SEO";
 
@@ -134,7 +136,7 @@ type AdminSection =
   | "expert" | "chatbot" | "blogs" | "analytics" | "config"
   | "verification" | "payments" | "forum" | "community" | "trending" | "newsletter" | "email-settings" | "ai-providers" | "send-email" | "orders"
   | "payment-logs" | "bonus-kits" | "social-links" | "sql-setup" | "feature-flags" | "system-health" | "dodo-payments"
-  | "email-templates" | "mailing-providers";
+  | "email-templates" | "mailing-providers" | "audit";
 type AdminSectionExt = AdminSection | "seo-pages" | "seo-blog" | "usage-analytics";
 
 const sidebarItems: { id: AdminSection; label: string; icon: any }[] = [
@@ -192,6 +194,7 @@ const NAV_GROUPS: { label: string; defaultOpen?: boolean; items: NavItem[] }[] =
       { kind: "route", href: "/admin/mission-control", label: "Mission Control", icon: Activity, keywords: "intelligence funnel cost alerts heatmap" },
       { kind: "section", id: "system-health", label: "System Health", icon: Activity },
       { kind: "route", href: "/admin/communications/telegram", label: "Telegram Ops", icon: Radio, keywords: "telegram bot delivery" },
+      { kind: "section", id: "audit", label: "Audit Log", icon: ScrollText, keywords: "audit log operator actions accountability" },
     ],
   },
   {
