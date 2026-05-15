@@ -8,23 +8,25 @@ import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/co
 import { BigScreenHint } from "@/components/BigScreenHint";
 import { WorkspaceContextBar } from "@/components/workspace/WorkspaceContextBar";
 import { WorkspaceCommandPalette } from "@/components/workspace/CommandPalette";
+import { wp } from "@/lib/workspace/paths";
+import { isWorkspaceHost } from "@/lib/host";
 
 import { SEO } from "@/components/SEO";
 
 const NAV = [
-  { to: "/workspaces", label: "Overview", icon: Briefcase, end: true },
-  { to: "/workspaces/roadmap", label: "Roadmap Engine", icon: Brain, end: false },
-  { to: "/workspaces/pipeline", label: "Pipeline", icon: Kanban, end: false },
-  { to: "/workspaces/revenue", label: "Revenue", icon: TrendingUp, end: false },
-  { to: "/workspaces/new", label: "New Workspace", icon: Plus, end: false },
-  { to: "/workspaces/ai-settings", label: "Connect AI Fuel", icon: KeyRound, end: false },
+  { to: wp(""),                label: "Overview",       icon: Briefcase,  end: true  },
+  { to: wp("roadmap"),         label: "Roadmap Engine", icon: Brain,      end: false },
+  { to: wp("pipeline"),        label: "Pipeline",       icon: Kanban,     end: false },
+  { to: wp("revenue"),         label: "Revenue",        icon: TrendingUp, end: false },
+  { to: wp("projects/new"),    label: "New Project",    icon: Plus,       end: false },
+  { to: wp("providers"),       label: "AI Providers",   icon: KeyRound,   end: false },
 ];
 
 const DOC_INFRA = [
-  { to: "/workspaces/brand-kit", label: "Brand Kit", icon: Palette },
-  { to: "/workspaces/clients", label: "Client Profiles", icon: Users },
-  { to: "/workspaces/blocks", label: "Reusable Blocks", icon: Blocks },
-  { to: "/workspaces/intake", label: "Intake OS", icon: Inbox },
+  { to: wp("brand-kit"), label: "Brand Kit",       icon: Palette },
+  { to: wp("clients"),   label: "Client Profiles", icon: Users },
+  { to: wp("blocks"),    label: "Reusable Blocks", icon: Blocks },
+  { to: wp("intake"),    label: "Intake OS",       icon: Inbox },
 ];
 
 const TOOLS = [
@@ -49,6 +51,7 @@ const SOON = [
 export default function WorkspaceOS() {
   const { pathname } = useLocation();
   const [navOpen, setNavOpen] = useState(false);
+  const onWorkspaceHost = isWorkspaceHost();
 
   const Nav = ({ onPick }: { onPick?: () => void }) => (
     <>
@@ -75,7 +78,7 @@ export default function WorkspaceOS() {
       </div>
       <div className="pt-6">
         <p className="px-3 text-[10px] uppercase tracking-wider text-muted-foreground/70 mb-2">Daily tools</p>
-        {TOOLS.map(t => (
+        {(onWorkspaceHost ? [] : TOOLS).map(t => (
           <NavLink key={t.to} to={t.to} onClick={onPick}
             className={({ isActive }) => cn(
               "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all",
@@ -99,7 +102,10 @@ export default function WorkspaceOS() {
         animate={{ opacity: 1, y: 0 }}
         className="border-b border-border/50 backdrop-blur-xl bg-background/60 sticky top-0 z-20"
       >
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+        <div className={cn(
+          "max-w-7xl mx-auto px-6 flex items-center justify-between",
+          onWorkspaceHost ? "py-2.5" : "py-4"
+        )}>
           <div className="flex items-center gap-3">
             <Sheet open={navOpen} onOpenChange={setNavOpen}>
               <SheetTrigger asChild>
@@ -108,25 +114,31 @@ export default function WorkspaceOS() {
                 </button>
               </SheetTrigger>
               <SheetContent side="left" className="w-72 overflow-y-auto">
-                <SheetHeader><SheetTitle>Workspace OS</SheetTitle></SheetHeader>
+                <SheetHeader><SheetTitle>{onWorkspaceHost ? "Menu" : "Workspace OS"}</SheetTitle></SheetHeader>
                 <div className="mt-4 space-y-1"><Nav onPick={() => setNavOpen(false)} /></div>
               </SheetContent>
             </Sheet>
-            <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-primary to-primary/40 flex items-center justify-center shadow-lg shadow-primary/20">
-              <Sparkles className="h-4 w-4 text-primary-foreground" />
-            </div>
-            <div>
-              <h1 className="text-lg font-semibold tracking-tight">Workspace OS</h1>
-              <p className="text-xs text-muted-foreground">Your freelancer cockpit</p>
-            </div>
+            <NavLink to={wp("")} className="flex items-center gap-2.5 group">
+              <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-primary/40 flex items-center justify-center shadow-md shadow-primary/20">
+                <Sparkles className="h-4 w-4 text-primary-foreground" />
+              </div>
+              {onWorkspaceHost ? (
+                <span className="text-sm font-medium tracking-tight text-foreground/80 group-hover:text-foreground transition-colors">HustleAI</span>
+              ) : (
+                <div>
+                  <h1 className="text-lg font-semibold tracking-tight leading-tight">Workspace OS</h1>
+                  <p className="text-xs text-muted-foreground">Your freelancer cockpit</p>
+                </div>
+              )}
+            </NavLink>
           </div>
           <div className="flex items-center gap-2">
             <NotificationCenter />
             <NavLink
-              to="/workspaces/new"
+              to={wp("projects/new")}
               className="hidden sm:inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-4 py-2 text-sm font-medium shadow-lg shadow-primary/30 hover:scale-[1.02] transition-transform"
             >
-              <Plus className="h-4 w-4" /> New Workspace
+              <Plus className="h-4 w-4" /> New Project
             </NavLink>
           </div>
         </div>
@@ -136,7 +148,7 @@ export default function WorkspaceOS() {
         {/* Side rail — desktop only; mobile uses the Sheet in the header */}
         <aside className="hidden lg:block space-y-1">
           <Nav />
-          <div className="pt-6">
+          {!onWorkspaceHost && <div className="pt-6">
             <p className="px-3 text-[10px] uppercase tracking-wider text-muted-foreground/70 mb-2">Coming next</p>
             {SOON.map(s => (
               <div key={s.label} className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-muted-foreground/60">
@@ -145,7 +157,7 @@ export default function WorkspaceOS() {
                 <span className="ml-auto text-[9px] uppercase tracking-wider bg-muted px-1.5 py-0.5 rounded">soon</span>
               </div>
             ))}
-          </div>
+          </div>}
         </aside>
 
         {/* Content */}
