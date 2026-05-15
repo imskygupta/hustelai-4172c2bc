@@ -480,7 +480,7 @@ export default function Dashboard() {
                   ].map(q => (
                     <button
                       key={q.label}
-                      onClick={() => navigate(q.path)}
+                      onClick={() => goTool(q.path)}
                       className="group flex items-center gap-2 px-3 py-2.5 rounded-lg border border-slate-200 hover:border-emerald-300 hover:bg-emerald-50/50 transition-all text-left"
                     >
                       <q.icon className="w-4 h-4 text-slate-500 group-hover:text-emerald-600" />
@@ -691,16 +691,16 @@ export default function Dashboard() {
               {[
                 { icon: Search, label: "AI Hustle Search", desc: "Discover hustles with AI", action: () => navigate("/explore"), tier: "free", emoji: "🔍" },
                 { icon: Hammer, label: "Work — Freelancer OS", desc: "Invoices, time, clients, deadlines", action: () => navigate("/work"), tier: "free", emoji: "🛠️" },
-                { icon: Rocket, label: "Blueprint Generator", desc: "7-day action plan", action: () => navigate("/hustle-blueprint"), tier: "free", emoji: "🚀" },
+                { icon: Rocket, label: "Blueprint Generator", desc: "7-day action plan", action: () => goTool("/hustle-blueprint"), tier: "free", emoji: "🚀" },
                 { icon: FileText, label: "Resume Optimizer", desc: "Tailored CV + portfolio", action: () => navigate("/resume-optimizer"), tier: "free", emoji: "📄" },
                 { icon: DollarSign, label: "Gig Price Calc", desc: "3-tier anchor pricing", action: () => navigate("/gig-price-calculator"), tier: "free", emoji: "💰" },
                 { icon: Film, label: "Faceless Content", desc: "6-scene viral storyboards", action: () => navigate("/faceless-content"), tier: "free", emoji: "🎬" },
                 { icon: ShieldAlert, label: "Red-Flag Scanner", desc: "Spot bad clients early", action: () => navigate("/red-flag-scanner"), tier: "free", emoji: "🚦" },
                 { icon: FileText, label: "Proposal Draft AI", desc: "Win freelance gigs", action: () => navigate("/proposal-draft"), tier: "pro", emoji: "📝" },
                 { icon: Brain, label: "Skill Gap Analyzer", desc: "Personal learning roadmap", action: () => navigate("/skill-gap"), tier: "pro", emoji: "🧠" },
-                { icon: Zap, label: "AI Tool Benchmarks", desc: "Compare AI tools side-by-side", action: () => navigate("/ai-tools"), tier: "pro", emoji: "⚡" },
+                { icon: Zap, label: "AI Tool Benchmarks", desc: "Compare AI tools side-by-side", action: () => goTool("/ai-tools"), tier: "pro", emoji: "⚡" },
                 { icon: TrendingUp, label: "Gig Arbitrage", desc: "Find platform price gaps", action: () => navigate("/gig-arbitrage"), tier: "pro", emoji: "📊" },
-                { icon: BookOpen, label: "Knowledge Hub", desc: "Save & automate prompts", action: () => navigate("/knowledge-hub"), tier: "pro", emoji: "📚" },
+                { icon: BookOpen, label: "Knowledge Hub", desc: "Save & automate prompts", action: () => goTool("/knowledge-hub"), tier: "pro", emoji: "📚" },
                 { icon: Briefcase, label: "🎯 Sure-Hit Jobs", desc: "Personal QC referral", action: () => navigate("/sure-hit-jobs"), tier: "pro", emoji: "🎯" },
                 { icon: Target, label: "Lead Finder", desc: "Social-media radar", action: () => navigate("/problem-leads"), tier: "elite", emoji: "🎯" },
                 { icon: Store, label: "Marketplace", desc: "Sell digital products", action: () => navigate("/marketplace"), tier: "elite", emoji: "🏪" },
