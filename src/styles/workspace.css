@@ -18,9 +18,9 @@
      Industry-grade B2B: the gradient should whisper, never shout. Saturation
      is intentionally low so dense workspace data stays the hero. */
   --ws-gradient-pastel: linear-gradient(125deg,
-    hsl(150 50% 98%) 0%,
-    hsl(330 60% 99%) 48%,
-    hsl(28 70% 98%) 100%);
+    hsl(48 80% 99%) 0%,
+    hsl(40 70% 99%) 48%,
+    hsl(30 65% 98.5%) 100%);
   --ws-gradient-pastel-soft: linear-gradient(125deg,
     hsl(150 50% 60% / 0.05) 0%,
     hsl(330 60% 70% / 0.05) 48%,
@@ -235,11 +235,11 @@
   z-index: 0;
   pointer-events: none;
   border-radius: inherit;
-  opacity: 0.55;
+  opacity: 0.4;
   background:
-    radial-gradient(45% 60% at 8% 0%, hsl(150 80% 75% / 0.35), transparent 65%),
-    radial-gradient(55% 55% at 55% 30%, hsl(330 85% 82% / 0.32), transparent 70%),
-    radial-gradient(50% 60% at 100% 100%, hsl(28 95% 80% / 0.32), transparent 65%);
+    radial-gradient(45% 60% at 8% 0%, hsl(48 95% 88% / 0.28), transparent 65%),
+    radial-gradient(55% 55% at 55% 30%, hsl(38 90% 90% / 0.20), transparent 70%),
+    radial-gradient(50% 60% at 100% 100%, hsl(28 95% 88% / 0.22), transparent 65%);
   animation: ws-portal-breathe 18s ease-in-out infinite;
 }
 

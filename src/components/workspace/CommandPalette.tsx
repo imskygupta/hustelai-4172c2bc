@@ -9,7 +9,7 @@ import { useEffect, useMemo, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Search, Briefcase, Sparkles, Star, ArrowRight, KeyRound, Layers, Map, FileText, Cpu,
-  Target, Send, Megaphone, Library, Package, Plus, Zap,
+  Target, Send, Megaphone, Library, Package, Plus, Zap, FileSignature, Calculator, FileEdit, Wallet, CalendarDays,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -44,6 +44,20 @@ const NAV_ACTIONS = (navigate: (p: string) => void): Item[] => [
   { id: "nav-providers", label: "AI Providers", hint: wp("providers"), icon: Cpu,    group: "Go to", run: () => navigate(wp("providers")) },
 ];
 
+// Standalone tools elsewhere in the product — surfaced here so an operator
+// can type "invoice" or "pdf" and jump straight to the right tool.
+const TOOL_ACTIONS = (navigate: (p: string) => void): Item[] => [
+  { id: "tool-invoice",   label: "Invoice generator",   hint: "Create + export PDF invoices", icon: FileSignature, group: "Tools", run: () => navigate("/tools/invoice-generator") },
+  { id: "tool-proposal",  label: "Proposal generator",  hint: "Branded client proposals",     icon: FileEdit,      group: "Tools", run: () => navigate("/tools/proposal-generator") },
+  { id: "tool-contract",  label: "Contract generator",  hint: "Draft service agreements",     icon: FileText,      group: "Tools", run: () => navigate("/tools/contract-generator") },
+  { id: "tool-pricing",   label: "Pricing calculator",  hint: "Quote your work fast",         icon: Calculator,    group: "Tools", run: () => navigate("/tools/pricing-calculator") },
+  { id: "tool-calendar",  label: "Content calendar",    hint: "Plan posts + drops",           icon: CalendarDays,  group: "Tools", run: () => navigate("/tools/content-calendar") },
+  { id: "tool-onboard",   label: "Onboarding form",     hint: "Build client intake forms",    icon: Inbox => Inbox as any, group: "Tools", run: () => navigate("/tools/onboarding-form-builder") },
+  { id: "tool-portfolio", label: "Portfolio bio",       hint: "One-page personal site",       icon: Star,          group: "Tools", run: () => navigate("/tools/portfolio-bio") },
+  { id: "tool-card",      label: "Business card",       hint: "Generate + download card",     icon: Layers,        group: "Tools", run: () => navigate("/tools/business-card-generator") },
+  { id: "tool-wallet",    label: "Wallet",              hint: "Credits + billing",            icon: Wallet,        group: "Tools", run: () => navigate("/settings/wallet") },
+];
+
 export function WorkspaceCommandPalette() {
   const { user } = useAuth();
   const { setActiveProject } = useWorkspace();
@@ -65,7 +79,12 @@ export function WorkspaceCommandPalette() {
       }
     };
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    const onCustom = () => setOpen(o => !o);
+    window.addEventListener("ws-cmdk-toggle", onCustom);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("ws-cmdk-toggle", onCustom);
+    };
   }, []);
 
   // Lazy load when opened
@@ -88,6 +107,7 @@ export function WorkspaceCommandPalette() {
   const items: Item[] = useMemo(() => {
     const out: Item[] = [];
     out.push(...INTENT_ACTIONS(navigate).map(it => ({ ...it, run: () => { it.run(); close(); } })));
+    out.push(...TOOL_ACTIONS(navigate).map(it => ({ ...it, run: () => { it.run(); close(); } })));
     for (const w of workspaces) {
       out.push({
         id: `w-${w.id}`,
