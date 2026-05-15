@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useWorkspace, PROVIDER_LABELS, type ActiveProvider } from "@/lib/workspace/context";
 import { useRecentOutputs, useAssets } from "@/lib/workspace/outputs";
 import { formatDistanceToNowStrict } from "date-fns";
+import { ContinueBuilding } from "@/components/workspace/ContinueBuilding";
 
 type WS = {
   id: string;
@@ -62,10 +63,13 @@ export default function Overview() {
       <section className="flex items-end justify-between gap-4 flex-wrap">
         <div>
           <h2 className="text-2xl font-semibold tracking-tight">Welcome back<span className="text-muted-foreground">.</span></h2>
-          <p className="text-sm text-muted-foreground mt-1">Pick up where you left off — or launch a new run.</p>
+          <p className="text-sm text-muted-foreground mt-1">Pick up where you left off — or launch a new run. <kbd className="ml-1 text-[10px] border border-border/60 rounded px-1 py-px">⌘K</kbd></p>
         </div>
         <ProviderPill provider={activeProvider} loading={providerLoading} />
       </section>
+
+      {/* Momentum panel — reads workspace signals and surfaces threads */}
+      <ContinueBuilding />
 
       {/* Continue working + Active provider */}
       <section className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -116,7 +120,7 @@ export default function Overview() {
               {[0,1,2].map(i => <Skeleton key={i} className="h-12 rounded-lg" />)}
             </div>
           ) : recentOutputs.length === 0 ? (
-            <p className="text-sm text-muted-foreground mt-3">Your AI generations will land here as you work.</p>
+            <EmptyOutputs hasProvider={!!activeProvider} />
           ) : (
             <ul className="mt-3 divide-y divide-border/30">
               {recentOutputs.map((o) => (
@@ -323,5 +327,38 @@ function EmptyState() {
         <Plus className="h-4 w-4" /> Start AI intake
       </Link>
     </motion.div>
+  );
+}
+
+function EmptyOutputs({ hasProvider }: { hasProvider: boolean }) {
+  return (
+    <div className="mt-3 rounded-xl border border-dashed border-border/60 p-4">
+      <div className="flex items-start gap-3">
+        <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+          <Sparkles className="h-4 w-4 text-primary" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-medium">No outputs yet</p>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            {hasProvider
+              ? "Generate your first Blueprint — it'll show up here and become reusable across tools."
+              : "Connect Claude (recommended for strategy) or Gemini (free tier) to start generating."}
+          </p>
+          <div className="flex items-center gap-2 mt-3">
+            {hasProvider ? (
+              <Link to="/hustle-blueprint" className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline">
+                Generate Blueprint <ArrowRight className="h-3 w-3" />
+              </Link>
+            ) : (
+              <Link to="/workspaces/ai-settings" className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline">
+                Connect provider <ArrowRight className="h-3 w-3" />
+              </Link>
+            )}
+            <span className="text-[10px] text-muted-foreground/60">·</span>
+            <Link to="/canvas" className="text-xs text-muted-foreground hover:text-foreground">Open Canvas</Link>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
