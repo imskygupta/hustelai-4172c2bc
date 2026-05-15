@@ -302,6 +302,7 @@ const App = () => (
                   <Route path="blocks" element={<BlocksPage />} />
                   <Route path="intake" element={<IntakeForms />} />
                   <Route path="intake/:id" element={<IntakeInbox />} />
+                  <Route path="library" element={<DocsLibrary />} />
                 </Route>
                 {/* Legacy /workspaces/* aliases — keep typed/shared URLs working */}
                 <Route path="/workspace" element={<Navigate to="/" replace />} />
