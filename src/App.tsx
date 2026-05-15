@@ -389,6 +389,7 @@ const App = () => (
             <Route path="/admin" element={<AdminBlock />} />
             <Route path="/imskygupta-admin" element={<AdminLogin />} />
             <Route path="/admin-dashboard" element={<AdminDashboard />} />
+            <Route path="/admin-dashboard/docs" element={<AdminDocs />} />
             <Route path="/admin/communications" element={<AdminCommunications />} />
             <Route path="/admin/communications/newsletter" element={<AdminNewsletterOps />} />
             <Route path="/admin/usage-governance" element={<AdminUsageGovernance />} />
