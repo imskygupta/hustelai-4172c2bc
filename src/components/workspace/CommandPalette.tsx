@@ -14,6 +14,7 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useWorkspace } from "@/lib/workspace/context";
+import { wp, wpProject } from "@/lib/workspace/paths";
 
 type Item = {
   id: string;
@@ -25,21 +26,22 @@ type Item = {
 };
 
 const INTENT_ACTIONS = (navigate: (p: string) => void): Item[] => [
-  { id: "act-strategy",     label: "Build Client Strategy",  hint: "Blueprint · best with Claude", icon: Target,    group: "Actions", run: () => navigate("/hustle-blueprint") },
-  { id: "act-outreach",     label: "Create Outreach System", hint: "Canvas · best with GPT",       icon: Send,      group: "Actions", run: () => navigate("/canvas?intent=outreach") },
-  { id: "act-content",      label: "Generate Content Plan",  hint: "Canvas · best with Gemini",    icon: Megaphone, group: "Actions", run: () => navigate("/canvas?intent=content") },
-  { id: "act-research",     label: "Organize Research",      hint: "Knowledge Hub",                icon: Library,   group: "Actions", run: () => navigate("/knowledge-hub") },
-  { id: "act-deliverables", label: "Prepare Deliverables",   hint: "Canvas · best with Claude",    icon: Package,   group: "Actions", run: () => navigate("/canvas?intent=deliverables") },
-  { id: "act-new",          label: "New Workspace",          hint: "Start AI intake",              icon: Plus,      group: "Actions", run: () => navigate("/workspaces/new") },
-  { id: "act-providers",    label: "Switch AI Provider",     hint: "Connect or rotate keys",       icon: Zap,       group: "Actions", run: () => navigate("/workspaces/ai-settings") },
+  { id: "act-strategy",     label: "Build Client Strategy",  hint: "Blueprint · best with Claude", icon: Target,    group: "Actions", run: () => navigate(wp("blueprint")) },
+  { id: "act-outreach",     label: "Create Outreach System", hint: "Canvas · best with GPT",       icon: Send,      group: "Actions", run: () => navigate(wp("canvas") + "?intent=outreach") },
+  { id: "act-content",      label: "Generate Content Plan",  hint: "Canvas · best with Gemini",    icon: Megaphone, group: "Actions", run: () => navigate(wp("canvas") + "?intent=content") },
+  { id: "act-research",     label: "Organize Research",      hint: "Assets",                       icon: Library,   group: "Actions", run: () => navigate(wp("assets")) },
+  { id: "act-deliverables", label: "Prepare Deliverables",   hint: "Canvas · best with Claude",    icon: Package,   group: "Actions", run: () => navigate(wp("canvas") + "?intent=deliverables") },
+  { id: "act-new",          label: "New Project",            hint: "Start AI intake",              icon: Plus,      group: "Actions", run: () => navigate(wp("projects/new")) },
+  { id: "act-providers",    label: "Switch AI Provider",     hint: "Connect or rotate keys",       icon: Zap,       group: "Actions", run: () => navigate(wp("providers")) },
 ];
 
 const NAV_ACTIONS = (navigate: (p: string) => void): Item[] => [
-  { id: "nav-overview",  label: "Workspace Overview",   hint: "/workspaces",         icon: Briefcase, group: "Go to", run: () => navigate("/workspaces") },
-  { id: "nav-canvas",    label: "Hustle Canvas",        hint: "/canvas",             icon: Layers,    group: "Go to", run: () => navigate("/canvas") },
-  { id: "nav-blueprint", label: "Blueprint Generator",  hint: "/hustle-blueprint",   icon: Map,       group: "Go to", run: () => navigate("/hustle-blueprint") },
-  { id: "nav-knowledge", label: "Knowledge Hub",        hint: "/knowledge-hub",      icon: FileText,  group: "Go to", run: () => navigate("/knowledge-hub") },
-  { id: "nav-providers", label: "AI Infrastructure",    hint: "/workspaces/ai-settings", icon: Cpu,   group: "Go to", run: () => navigate("/workspaces/ai-settings") },
+  { id: "nav-overview",  label: "Overview",  hint: wp(""),          icon: Briefcase, group: "Go to", run: () => navigate(wp("")) },
+  { id: "nav-canvas",    label: "Canvas",    hint: wp("canvas"),    icon: Layers,    group: "Go to", run: () => navigate(wp("canvas")) },
+  { id: "nav-blueprint", label: "Blueprint", hint: wp("blueprint"), icon: Map,       group: "Go to", run: () => navigate(wp("blueprint")) },
+  { id: "nav-assets",    label: "Assets",    hint: wp("assets"),    icon: FileText,  group: "Go to", run: () => navigate(wp("assets")) },
+  { id: "nav-clients",   label: "Clients",   hint: wp("clients"),   icon: Briefcase, group: "Go to", run: () => navigate(wp("clients")) },
+  { id: "nav-providers", label: "AI Providers", hint: wp("providers"), icon: Cpu,    group: "Go to", run: () => navigate(wp("providers")) },
 ];
 
 export function WorkspaceCommandPalette() {
@@ -93,7 +95,7 @@ export function WorkspaceCommandPalette() {
         hint: `Workspace · ${w.status}`,
         icon: Briefcase,
         group: "Workspaces",
-        run: () => { setActiveProject(w.id); navigate(`/workspaces/${w.id}`); close(); },
+        run: () => { setActiveProject(w.id); navigate(wpProject(w.id)); close(); },
       });
     }
     for (const o of outputs) {
@@ -103,7 +105,7 @@ export function WorkspaceCommandPalette() {
         hint: o.tool,
         icon: Sparkles,
         group: "Outputs",
-        run: () => { if (o.project_id) setActiveProject(o.project_id); navigate("/canvas"); close(); },
+        run: () => { if (o.project_id) setActiveProject(o.project_id); navigate(wp("canvas")); close(); },
       });
     }
     for (const a of assets) {
@@ -113,7 +115,7 @@ export function WorkspaceCommandPalette() {
         hint: a.asset_kind || "asset",
         icon: Star,
         group: "Assets",
-        run: () => { if (a.project_id) setActiveProject(a.project_id); navigate("/canvas"); close(); },
+        run: () => { if (a.project_id) setActiveProject(a.project_id); navigate(wp("canvas")); close(); },
       });
     }
     out.push(...NAV_ACTIONS(navigate).map(it => ({ ...it, run: () => { it.run(); close(); } })));
