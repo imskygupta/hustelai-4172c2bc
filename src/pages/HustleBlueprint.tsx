@@ -13,6 +13,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Rocket, Loader2, Copy, Check, Sparkles, Lock, Brain, Search, Target, Map, Calendar, Zap, Download, RotateCcw, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { openBlueprintPrint } from "@/lib/blueprint-print";
+import { useRecordOutput } from "@/lib/workspace/outputs";
+import { RecentOutputsRail } from "@/components/workspace/RecentOutputsRail";
 import { getMaxUses, getUsage, bumpUsage, awardXP } from "@/lib/tool-limits";
 
 const LOADING_STAGES = [
@@ -43,6 +45,7 @@ export default function HustleBlueprint() {
   const [usageCount, setUsageCount] = useState(0);
   useEffect(() => { if (user) setUsageCount(getUsage("blueprint", user.id)); }, [user]);
   const atLimit = usageCount >= maxUses;
+  const recordOutput = useRecordOutput();
 
   useEffect(() => {
     if (!loading) return;
@@ -81,6 +84,13 @@ export default function HustleBlueprint() {
         // auto-open clean branded viewer in new tab — same UX as main hustle search
         openBlueprintPrint({ title: hustleTitle, description: hustleDesc, actionScore: score, content: data.blueprint });
       }, 400);
+      // Shared workspace memory — let other tools see this generation.
+      recordOutput({
+        tool: "hustle-blueprint",
+        title: hustleTitle,
+        summary: (hustleDesc || data.blueprint || "").slice(0, 240),
+        metadata: { user_skills: userSkills, action_score: score },
+      });
       toast.success("Blueprint ready! Opening in new tab…");
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Failed to generate blueprint";
@@ -117,6 +127,15 @@ export default function HustleBlueprint() {
               </Button>
             )}
           </motion.div>
+
+          {/* Shared workspace memory — what this operator generated recently. */}
+          <RecentOutputsRail
+            tool="hustle-blueprint"
+            scopeToProject
+            limit={5}
+            emptyHint="Your past blueprints will appear here."
+            onPick={(o) => { setHustleTitle(o.title); if (o.summary) setHustleDesc(o.summary); }}
+          />
 
           {/* Input */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
