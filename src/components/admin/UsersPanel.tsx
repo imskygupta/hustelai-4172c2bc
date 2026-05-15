@@ -471,7 +471,7 @@ function DangerZone({
         actionLabel="Suspend user"
         onConfirm={async (reason) => {
           const r = await suspendUser(p.user_id, p.email || "", reason);
-          if (r.ok) return undefined; return (r as any).error;
+          return r.ok ? undefined : (r as { error: string }).error;
         }}
       />
 
@@ -486,7 +486,7 @@ function DangerZone({
         actionVariant="default"
         onConfirm={async (reason) => {
           const r = await unsuspendUser(p.user_id, p.email || "", reason);
-          if (r.ok) return undefined; return (r as any).error;
+          return r.ok ? undefined : (r as { error: string }).error;
         }}
       />
 
@@ -500,7 +500,7 @@ function DangerZone({
         actionLabel="Revoke sessions"
         onConfirm={async (reason) => {
           const r = await forceLogoutUser(p.user_id, p.email || "", reason);
-          if (r.ok) return undefined; return (r as any).error;
+          return r.ok ? undefined : (r as { error: string }).error;
         }}
       />
 
@@ -535,7 +535,7 @@ function DangerZone({
           const v = Number(newBalance);
           if (!Number.isFinite(v) || v < 0) return "Enter a valid balance (≥ 0)";
           const r = await resetCredits(p.user_id, p.email || "", v, s.wallet_balance ?? 0, reason);
-          if (r.ok) return undefined; return (r as any).error;
+          return r.ok ? undefined : (r as { error: string }).error;
         }}
       />
 
@@ -569,7 +569,7 @@ function DangerZone({
           const r = await requestRefund(p.user_id, p.email || "", {
             amount: amt, currency: "INR", orderId: refundOrder.trim() || undefined, reason,
           });
-          if (r.ok) return undefined; return (r as any).error;
+          return r.ok ? undefined : (r as { error: string }).error;
         }}
       />
 
