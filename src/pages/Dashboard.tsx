@@ -477,16 +477,27 @@ export default function Dashboard() {
                     { icon: ShieldAlert, label: "Red-Flag", path: "/red-flag-scanner" },
                     { icon: Bot, label: "HustleBot", path: "/hustlebot" },
                     { icon: Music, label: "Relax Mode", path: "/relax" },
-                  ].map(q => (
-                    <button
-                      key={q.label}
-                      onClick={() => goTool(q.path)}
-                      className="group flex items-center gap-2 px-3 py-2.5 rounded-lg border border-slate-200 hover:border-emerald-300 hover:bg-emerald-50/50 transition-all text-left"
-                    >
-                      <q.icon className="w-4 h-4 text-slate-500 group-hover:text-emerald-600" />
-                      <span className="text-sm font-medium text-slate-700">{q.label}</span>
-                    </button>
-                  ))}
+              ].map(q => {
+                    const base = q.path.split("?")[0];
+                    const isWorkspace =
+                      MIGRATED_TO_WORKSPACE.has(base) ||
+                      Array.from(MIGRATED_TO_WORKSPACE).some(p => base.startsWith(p + "/"));
+                    return (
+                      <button
+                        key={q.label}
+                        onClick={() => goTool(q.path)}
+                        className={`group flex items-center gap-2 px-3 py-2.5 rounded-lg border transition-all text-left ${
+                          isWorkspace
+                            ? "border-violet-200 bg-violet-50/40 hover:border-violet-400 hover:bg-violet-50"
+                            : "border-slate-200 hover:border-emerald-300 hover:bg-emerald-50/50"
+                        }`}
+                      >
+                        <q.icon className={`w-4 h-4 ${isWorkspace ? "text-violet-600" : "text-slate-500 group-hover:text-emerald-600"}`} />
+                        <span className="text-sm font-medium text-slate-700 flex-1">{q.label}</span>
+                        {isWorkspace && <ArrowUpRight className="w-3 h-3 text-violet-500" />}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
