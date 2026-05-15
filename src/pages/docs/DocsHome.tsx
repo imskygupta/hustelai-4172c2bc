@@ -1,8 +1,8 @@
 import { Link, useOutletContext } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import * as Icons from "lucide-react";
 import { ArrowRight, ArrowDown, Sparkles, Zap, Rocket } from "lucide-react";
 import type { DocsCategory, DocsPage } from "@/integrations/docs/client";
-import { SEO } from "@/components/SEO";
 import { CATEGORY_STYLE, DOCS_JOURNEY } from "@/data/docs/rich-content";
 
 type Ctx = { cats: DocsCategory[]; pages: DocsPage[] };
@@ -26,11 +26,11 @@ export default function DocsHome() {
 
   return (
     <div className="space-y-14">
-      <SEO
-        title="HustleAI Workspace OS — Documentation"
-        description="Learn how to use HustleAI: workspaces, CRM, invoices, AI Fuel, proposals, intake forms, client portals, billing, and more."
-        path="/"
-      />
+      <Helmet>
+        <title>HustleAI Workspace OS — Documentation</title>
+        <meta name="description" content="Learn how to use HustleAI: workspaces, CRM, invoices, AI Fuel, proposals, intake forms, client portals, billing, and more." />
+        <link rel="canonical" href="https://docs.hustlaiapp.in/" />
+      </Helmet>
 
       {/* Gradient hero */}
       <section className="relative overflow-hidden rounded-3xl border border-white/5 bg-gradient-to-br from-emerald-500/10 via-violet-500/10 to-rose-500/10 p-8 lg:p-14">

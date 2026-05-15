@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useOutletContext, useParams } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import ReactMarkdown from "react-markdown";
 import * as Icons from "lucide-react";
 import { ChevronRight, Clock, Tag, Lightbulb, ListChecks, Sparkles, Link2, ArrowRight } from "lucide-react";
@@ -8,7 +9,6 @@ import {
   type DocsCategory,
   type DocsPage,
 } from "@/integrations/docs/client";
-import { SEO } from "@/components/SEO";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DOCS_RICH } from "@/data/docs/rich-content";
 
@@ -62,11 +62,11 @@ export default function DocsArticle() {
 
   return (
     <article className="max-w-3xl">
-      <SEO
-        title={page.meta_title || `${page.title} — HustleAI Docs`}
-        description={page.meta_description || page.description}
-        path={`/${page.slug}`}
-      />
+      <Helmet>
+        <title>{page.meta_title || `${page.title} — HustleAI Docs`}</title>
+        <meta name="description" content={page.meta_description || page.description} />
+        <link rel="canonical" href={`https://docs.hustlaiapp.in/${page.slug}`} />
+      </Helmet>
 
       {/* Breadcrumbs */}
       <nav aria-label="Breadcrumb" className="text-xs text-muted-foreground mb-6">
