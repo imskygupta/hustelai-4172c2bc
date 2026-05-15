@@ -7,6 +7,7 @@ import { OperatorLink } from "./OperatorLink";
 import { ShieldCheck, CheckCircle, XCircle, FileText, AlertTriangle, Clock, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
+import { recordOperatorAction } from "@/lib/audit/recordOperatorAction";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Textarea } from "@/components/ui/textarea";
 
