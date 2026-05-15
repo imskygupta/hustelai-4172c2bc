@@ -173,6 +173,12 @@ import { SurfaceHostRedirect } from "@/components/SurfaceHostRedirect";
 import { BlogSubdomainRouter, isBlogHost } from "@/components/blog/BlogSubdomainRouter";
 import { isMaintenance, MaintenancePage } from "@/components/MaintenanceGate";
 import { RootErrorFallback } from "@/components/RootErrorFallback";
+import { detectSurface } from "@/config/runtime";
+import { isWorkspaceHost } from "@/lib/host";
+const DocsLayout  = lazy(() => import("./pages/docs/DocsLayout"));
+const DocsHome    = lazy(() => import("./pages/docs/DocsHome"));
+const DocsArticle = lazy(() => import("./pages/docs/DocsArticle"));
+const WorkspaceLanding = lazy(() => import("./pages/WorkspaceLanding"));
 import Status from "./pages/Status";
 import Health from "./pages/Health";
 import AuthDebug from "./pages/AuthDebug";
@@ -232,13 +238,28 @@ const App = () => (
         {isMaintenance() ? <MaintenancePage /> : (
         <BrowserRouter>
           <YandexRouteTracker />
-          {isBlogHost() ? <BlogSubdomainRouter /> : (<>
+          {isBlogHost() ? <BlogSubdomainRouter /> : detectSurface() === "docs" ? (
+            <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-background"><div className="h-8 w-8 rounded-full border-2 border-primary/30 border-t-primary animate-spin" /></div>}>
+              <DocsSubdomainRedirect />
+              <Routes>
+                <Route path="/" element={<DocsLayout />}>
+                  <Route index element={<DocsHome />} />
+                  <Route path=":slug" element={<DocsArticle />} />
+                </Route>
+              </Routes>
+            </Suspense>
+          ) : isWorkspaceHost() ? (
+            <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-background"><div className="h-8 w-8 rounded-full border-2 border-primary/30 border-t-primary animate-spin" /></div>}>
+              <Routes>
+                <Route path="*" element={<WorkspaceLanding />} />
+              </Routes>
+            </Suspense>
+          ) : (<>
           <ScrollToTop />
           <MaintenanceBanner />
           <DelightToast />
           <MascotCompanion />
           <NewsletterCaptureAutoTrigger />
-          <DocsSubdomainRedirect />
           <StatusSubdomainRedirect />
           <SurfaceHostRedirect />
           <QuotaBoundary>
