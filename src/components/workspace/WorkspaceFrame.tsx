@@ -17,6 +17,7 @@ import { Link } from "react-router-dom";
 import { Sparkles, KeyRound, AlertCircle, ArrowUpRight, Briefcase } from "lucide-react";
 import { isMarketingHost } from "@/lib/host";
 import { useWorkspace, PROVIDER_LABELS } from "@/lib/workspace/context";
+import { wp, wpProject } from "@/lib/workspace/paths";
 
 export function WorkspaceFrame({ children }: { children: React.ReactNode }) {
   // On the strict marketing host the SurfaceHostRedirect will hop us away.
@@ -41,7 +42,7 @@ function WorkspaceTopBar() {
   return (
     <div className="sticky top-0 z-30 border-b border-border/50 bg-background/80 backdrop-blur-xl">
       <div className="max-w-7xl mx-auto px-4 lg:px-6 h-12 flex items-center gap-3">
-        <Link to="/workspaces" className="flex items-center gap-2 text-sm font-medium text-foreground/80 hover:text-foreground">
+        <Link to={wp("")} className="flex items-center gap-2 text-sm font-medium text-foreground/80 hover:text-foreground">
           <span className="h-7 w-7 rounded-lg bg-gradient-to-br from-primary to-primary/40 flex items-center justify-center">
             <Sparkles className="h-3.5 w-3.5 text-primary-foreground" />
           </span>
@@ -52,7 +53,7 @@ function WorkspaceTopBar() {
           <>
             <span className="text-muted-foreground/40">/</span>
             <Link
-              to={`/workspaces/${activeProjectId}`}
+              to={wpProject(activeProjectId)}
               className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
             >
               <Briefcase className="h-3.5 w-3.5" />
@@ -64,7 +65,7 @@ function WorkspaceTopBar() {
         <div className="ml-auto flex items-center gap-2">
           <ProviderBadge label={label} healthy={healthy} loading={providerLoading} />
           <Link
-            to="/workspaces"
+            to={wp("")}
             className="hidden sm:inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground rounded-full border border-border/60 px-2.5 py-1"
           >
             Cockpit <ArrowUpRight className="h-3 w-3" />
@@ -87,7 +88,7 @@ function ProviderBadge({ label, healthy, loading }: { label: string | null; heal
   if (!label) {
     return (
       <Link
-        to="/workspaces/ai-settings"
+        to={wp("providers")}
         className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/40 bg-amber-500/10 px-2.5 py-1 text-xs font-medium text-amber-700 dark:text-amber-400 hover:bg-amber-500/20"
       >
         <KeyRound className="h-3 w-3" />
@@ -97,7 +98,7 @@ function ProviderBadge({ label, healthy, loading }: { label: string | null; heal
   }
   return (
     <Link
-      to="/workspaces/ai-settings"
+      to={wp("providers")}
       className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/20"
       title="Active AI provider — click to change"
     >
