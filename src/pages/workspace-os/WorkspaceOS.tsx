@@ -1,4 +1,4 @@
-import { NavLink, Outlet, useLocation } from "react-router-dom";
+import { NavLink, Outlet } from "react-router-dom";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Briefcase, Plus, Sparkles, KeyRound, Users, Kanban, Brain, Palette, Blocks, Inbox, Menu, ChevronDown, TrendingUp, LogOut, ArrowUpRight } from "lucide-react";
@@ -41,7 +41,6 @@ const SECONDARY = [
 ];
 
 export default function WorkspaceOS() {
-  const { pathname } = useLocation();
   const [navOpen, setNavOpen] = useState(false);
   const onWorkspaceHost = isWorkspaceHost();
   const { activeProvider, providerLoading } = useWorkspace();
