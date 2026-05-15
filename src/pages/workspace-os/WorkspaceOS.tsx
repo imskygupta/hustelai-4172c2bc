@@ -112,7 +112,12 @@ export default function WorkspaceOS() {
   );
 
   return (
-    <div className="relative min-h-[calc(100vh-3rem)] bg-[hsl(222_30%_4%)] text-foreground">
+    <div className={cn(
+      "relative min-h-[calc(100vh-3rem)] text-foreground",
+      onWorkspaceHost
+        ? "bg-[hsl(222_30%_4%)]"
+        : "bg-[radial-gradient(ellipse_at_top_left,hsl(var(--primary)/0.06),transparent_55%),radial-gradient(ellipse_at_bottom_right,hsl(258_80%_64%/0.05),transparent_55%)]"
+    )}>
       {/* Ambient cinematic backdrop — only on the workspace host */}
       {onWorkspaceHost && <div aria-hidden className="ws-ambient" />}
       <SEO title="Workspaces | HustleAI Workspace OS" description="HustleAI Workspace OS — internal page." path="" noindex />
