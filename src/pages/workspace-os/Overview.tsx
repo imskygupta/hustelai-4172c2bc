@@ -13,6 +13,7 @@ import { formatDistanceToNowStrict } from "date-fns";
 import { wp, wpProject } from "@/lib/workspace/paths";
 import { MagneticTile } from "@/components/workspace/MagneticTile";
 import CockpitBlock from "@/components/workspace/CockpitBlock";
+import { marketingUrl } from "@/lib/host";
 
 // Industry-grade tool tiles. Calm whites + a single tinted icon plate per
 // tool — the colour is the *signal*, not the background. Each tile answers
