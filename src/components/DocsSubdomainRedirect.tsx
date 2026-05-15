@@ -3,12 +3,9 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { detectSurface, isEnabled } from "@/config/runtime";
 
 /**
- * If the user lands on docs.hustlaiapp.in/<anything that isn't /docs>,
- * rewrite the URL to /docs/<rest> so the DocsLayout renders instead of
- * the marketing homepage.
- *
- * Pure client-side redirect — no server config needed. Lovable's SPA
- * fallback already serves index.html for every path on the subdomain.
+ * Legacy bookmark fixer: if anyone lands on docs.hustlaiapp.in/docs/<slug>
+ * (the old structure), strip the /docs prefix so it lines up with the new
+ * flat routing where docs root is /.
  */
 export function DocsSubdomainRedirect() {
   const navigate = useNavigate();
@@ -19,14 +16,10 @@ export function DocsSubdomainRedirect() {
       if (typeof window === "undefined") return;
       if (!isEnabled("ENABLE_SUBDOMAIN_ROUTING") || !isEnabled("ENABLE_DOCS")) return;
       if (detectSurface() !== "docs") return;
-      if (pathname.startsWith("/docs")) return;
-      const target =
-        pathname === "/" || pathname === ""
-          ? "/docs"
-          : `/docs${pathname.startsWith("/") ? "" : "/"}${pathname}`;
-      navigate(`${target}${search}${hash}`, { replace: true });
+      if (!pathname.startsWith("/docs")) return;
+      const stripped = pathname.replace(/^\/docs\/?/, "/") || "/";
+      navigate(`${stripped}${search}${hash}`, { replace: true });
     } catch (err) {
-      // Never break the root site if hostname parsing throws.
       console.warn("[DocsSubdomainRedirect] safe-fallback:", err);
     }
   }, [pathname, search, hash, navigate]);
