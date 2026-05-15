@@ -6,6 +6,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { AuthProvider } from "@/hooks/useAuth";
+import { WorkspaceProvider } from "@/lib/workspace/context";
+import { WorkspaceFrame } from "@/components/workspace/WorkspaceFrame";
 import { Sentry } from "@/lib/sentry";
 import DelightToast from "@/components/tools/DelightToast";
 import MascotCompanion from "@/components/MascotCompanion";
@@ -233,6 +235,7 @@ const App = () => (
   <HelmetProvider>
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
+    <WorkspaceProvider>
       <TooltipProvider>
         <Toaster />
         <Sonner />
@@ -512,6 +515,7 @@ const App = () => (
         </BrowserRouter>
         )}
       </TooltipProvider>
+    </WorkspaceProvider>
     </AuthProvider>
   </QueryClientProvider>
   </HelmetProvider>
