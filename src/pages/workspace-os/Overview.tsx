@@ -13,6 +13,7 @@ import { useRecentOutputs, useAssets } from "@/lib/workspace/outputs";
 import { formatDistanceToNowStrict } from "date-fns";
 import { ContinueBuilding } from "@/components/workspace/ContinueBuilding";
 import { IntentLauncher } from "@/components/workspace/IntentLauncher";
+import { wp, wpProject } from "@/lib/workspace/paths";
 
 type WS = {
   id: string;
@@ -51,11 +52,11 @@ export default function Overview() {
   const recs = items.slice(0, 5).flatMap((w) => {
     const out: { msg: string; href: string }[] = [];
     const idleDays = (Date.now() - new Date(w.updated_at).getTime()) / 86400000;
-    if (!w.pricing || !w.pricing.amount) out.push({ msg: `Add pricing for ${w.client_name}`, href: `/workspaces/${w.id}` });
-    if (idleDays > 3 && w.status === "active") out.push({ msg: `${w.client_name} inactive ${Math.round(idleDays)}d — send a ping`, href: `/workspaces/${w.id}` });
+    if (!w.pricing || !w.pricing.amount) out.push({ msg: `Add pricing for ${w.client_name}`, href: wpProject(w.id) });
+    if (idleDays > 3 && w.status === "active") out.push({ msg: `${w.client_name} inactive ${Math.round(idleDays)}d — send a ping`, href: wpProject(w.id) });
     return out;
   }).slice(0, 4);
-  if (!activeProvider) recs.unshift({ msg: "Connect an AI provider to fuel your workspace", href: "/workspaces/ai-settings" });
+  if (!activeProvider) recs.unshift({ msg: "Connect an AI provider to fuel your workspace", href: wp("providers") });
 
   const continueWorking = items.slice(0, 3);
 
@@ -84,13 +85,13 @@ export default function Overview() {
               {[0,1,2].map(i => <Skeleton key={i} className="h-24 rounded-xl" />)}
             </div>
           ) : continueWorking.length === 0 ? (
-            <p className="text-sm text-muted-foreground mt-3">No active workspaces yet. <Link to="/workspaces/new" className="text-primary underline">Create one</Link>.</p>
+            <p className="text-sm text-muted-foreground mt-3">No active projects yet. <Link to={wp("projects/new")} className="text-primary underline">Create one</Link>.</p>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-3">
               {continueWorking.map((w) => (
                 <Link
                   key={w.id}
-                  to={`/workspaces/${w.id}`}
+                  to={wpProject(w.id)}
                   onMouseEnter={() => setActiveProject(w.id)}
                   className="group rounded-xl border border-border/60 bg-background/40 p-3 ws-launch-card"
                 >
@@ -117,7 +118,7 @@ export default function Overview() {
             icon={Sparkles}
             title="Recent AI outputs"
             hint="across your tools"
-            action={<Link to="/canvas" className="text-xs text-primary inline-flex items-center gap-1">Open Canvas <ChevronRight className="h-3 w-3" /></Link>}
+            action={<Link to={wp("canvas")} className="text-xs text-primary inline-flex items-center gap-1">Open Canvas <ChevronRight className="h-3 w-3" /></Link>}
           />
           {outputsLoading ? (
             <div className="space-y-2 mt-3">
@@ -193,8 +194,8 @@ export default function Overview() {
       <section>
         <SectionHeader
           icon={Briefcase}
-          title="All workspaces"
-          action={<Link to="/workspaces/new" className="text-xs text-primary inline-flex items-center gap-1"><Plus className="h-3 w-3" /> New</Link>}
+          title="All projects"
+          action={<Link to={wp("projects/new")} className="text-xs text-primary inline-flex items-center gap-1"><Plus className="h-3 w-3" /> New</Link>}
         />
       </section>
       {loading ? (
@@ -213,7 +214,7 @@ export default function Overview() {
               transition={{ delay: i * 0.04 }}
             >
               <Link
-                to={`/workspaces/${w.id}`}
+                to={wpProject(w.id)}
                 onMouseEnter={() => setActiveProject(w.id)}
                 className="block rounded-2xl border border-border/60 bg-card hover:border-primary/40 transition-all p-5 h-full ws-launch-card"
               >
@@ -262,14 +263,14 @@ function ProviderPill({ provider, loading }: { provider: ActiveProvider; loading
   if (loading) return <Skeleton className="h-7 w-32 rounded-full" />;
   if (!provider) {
     return (
-      <Link to="/workspaces/ai-settings" className="inline-flex items-center gap-2 rounded-full border border-amber-300/60 bg-amber-50/50 px-3 py-1 text-xs font-medium text-amber-700 hover:bg-amber-100 transition">
+      <Link to={wp("providers")} className="inline-flex items-center gap-2 rounded-full border border-amber-300/60 bg-amber-50/50 px-3 py-1 text-xs font-medium text-amber-700 hover:bg-amber-100 transition">
         <span className="ws-dot ws-dot--warn ws-pulse-soft" /> No AI provider connected
       </Link>
     );
   }
   const label = PROVIDER_LABELS[provider.provider] || provider.provider;
   return (
-    <Link to="/workspaces/ai-settings" className="inline-flex items-center gap-2 rounded-full border border-emerald-300/40 bg-emerald-50/30 px-3 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-100/50 transition">
+    <Link to={wp("providers")} className="inline-flex items-center gap-2 rounded-full border border-emerald-300/40 bg-emerald-50/30 px-3 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-100/50 transition">
       <span className="ws-dot ws-dot--ok" /> {label}{provider.model ? ` · ${provider.model}` : ""}
     </Link>
   );
@@ -279,7 +280,7 @@ function ActiveProviderCard({ provider, loading }: { provider: ActiveProvider; l
   if (loading) return <Skeleton className="h-full min-h-[160px] rounded-2xl" />;
   if (!provider) {
     return (
-      <Link to="/workspaces/ai-settings" className="block rounded-2xl border border-dashed border-amber-300/60 bg-amber-50/30 p-5 ws-launch-card">
+      <Link to={wp("providers")} className="block rounded-2xl border border-dashed border-amber-300/60 bg-amber-50/30 p-5 ws-launch-card">
         <div className="flex items-center gap-2 text-amber-700">
           <KeyRound className="h-4 w-4" />
           <span className="text-sm font-medium">Connect AI Fuel</span>
@@ -294,7 +295,7 @@ function ActiveProviderCard({ provider, loading }: { provider: ActiveProvider; l
   const label = PROVIDER_LABELS[provider.provider] || provider.provider;
   const ok = provider.last_test_ok !== false;
   return (
-    <Link to="/workspaces/ai-settings" className="block rounded-2xl border border-border/60 ws-surface p-5">
+    <Link to={wp("providers")} className="block rounded-2xl border border-border/60 ws-surface p-5">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Cpu className="h-4 w-4 text-muted-foreground" />
@@ -325,7 +326,7 @@ function EmptyState() {
         Drop a few lines about the project. Our AI intake assistant will turn it into a structured workspace — scope, deliverables, pricing, timeline.
       </p>
       <Link
-        to="/workspaces/new"
+        to={wp("projects/new")}
         className="inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-5 py-2.5 text-sm font-medium shadow-lg shadow-primary/30"
       >
         <Plus className="h-4 w-4" /> Start AI intake
@@ -350,16 +351,16 @@ function EmptyOutputs({ hasProvider }: { hasProvider: boolean }) {
           </p>
           <div className="flex items-center gap-2 mt-3">
             {hasProvider ? (
-              <Link to="/hustle-blueprint" className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline">
+              <Link to={wp("blueprint")} className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline">
                 Generate Blueprint <ArrowRight className="h-3 w-3" />
               </Link>
             ) : (
-              <Link to="/workspaces/ai-settings" className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline">
+              <Link to={wp("providers")} className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline">
                 Connect provider <ArrowRight className="h-3 w-3" />
               </Link>
             )}
             <span className="text-[10px] text-muted-foreground/60">·</span>
-            <Link to="/canvas" className="text-xs text-muted-foreground hover:text-foreground">Open Canvas</Link>
+            <Link to={wp("canvas")} className="text-xs text-muted-foreground hover:text-foreground">Open Canvas</Link>
           </div>
         </div>
       </div>
