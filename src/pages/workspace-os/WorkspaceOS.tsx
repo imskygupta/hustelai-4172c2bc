@@ -115,11 +115,11 @@ export default function WorkspaceOS() {
     <div className={cn(
       "relative min-h-[calc(100vh-3rem)] text-foreground",
       onWorkspaceHost
-        ? "bg-gradient-to-br from-[hsl(150_70%_97%)] via-[hsl(330_80%_98%)] to-[hsl(28_90%_97%)]"
+        ? "bg-gradient-to-br from-[hsl(150_50%_99%)] via-[hsl(330_60%_99.5%)] to-[hsl(28_70%_99%)]"
         : "bg-[radial-gradient(ellipse_at_top_left,hsl(var(--primary)/0.06),transparent_55%),radial-gradient(ellipse_at_bottom_right,hsl(258_80%_64%/0.05),transparent_55%)]"
     )}>
       {/* Ambient pastel backdrop — borrows the "Pick your cockpit" gradient */}
-      {onWorkspaceHost && <div aria-hidden className="ws-ambient-pastel" style={{ position: "fixed", opacity: 0.55 }} />}
+      {onWorkspaceHost && <div aria-hidden className="ws-ambient-pastel" style={{ position: "fixed", opacity: 0.25 }} />}
       <SEO title="Workspaces | HustleAI Workspace OS" description="HustleAI Workspace OS — internal page." path="" noindex />
       <BigScreenHint pageKey="workspace-os" label="Workspace OS is built for desktop" />
       <WorkspaceCommandPalette />
