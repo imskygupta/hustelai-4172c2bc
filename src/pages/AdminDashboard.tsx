@@ -38,6 +38,7 @@ import { SeoLandingManager } from "@/components/admin/SeoLandingManager";
 import { SeoBlogManager } from "@/components/admin/SeoBlogManager";
 import { SystemHealth } from "@/components/admin/SystemHealth";
 import { OperatorLink } from "@/components/admin/OperatorLink";
+import { UsersPanel } from "@/components/admin/UsersPanel";
 
 import { SEO } from "@/components/SEO";
 
