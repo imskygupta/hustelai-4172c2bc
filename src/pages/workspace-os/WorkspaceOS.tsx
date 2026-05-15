@@ -127,7 +127,12 @@ export default function WorkspaceOS() {
       <motion.header
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
-        className="border-b border-white/[0.06] backdrop-blur-xl bg-[hsl(222_30%_4%/0.72)] sticky top-0 z-20 relative"
+        className={cn(
+          "sticky top-0 z-20 relative backdrop-blur-xl",
+          onWorkspaceHost
+            ? "border-b border-white/[0.06] bg-[hsl(222_30%_4%/0.72)]"
+            : "border-b border-border/50 bg-background/60"
+        )}
       >
         {/* gradient hairline */}
         <span aria-hidden className="absolute bottom-0 left-0 right-0 h-px opacity-60" style={{ backgroundImage: "var(--ws-gradient)" }} />
