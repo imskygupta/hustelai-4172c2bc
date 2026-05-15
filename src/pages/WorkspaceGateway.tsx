@@ -20,7 +20,7 @@ import { SEO } from "@/components/SEO";
  * .hustlaiapp.in bridge cookie (see mem://tech/workspace-subdomain).
  */
 export default function WorkspaceGateway() {
-  const { user, profile } = useAuth();
+  const { user } = useAuth();
   const [snapshot, setSnapshot] = useState<{
     workspaces: number;
     activeProviders: number;
@@ -113,7 +113,7 @@ export default function WorkspaceGateway() {
           <div className="p-8 sm:p-10 flex flex-col sm:flex-row sm:items-center justify-between gap-5">
             <div className="text-xs text-muted-foreground max-w-xs">
               {user ? (
-                <>Signed in as <span className="text-foreground">{profile?.username || user.email}</span>. Session will carry over securely.</>
+                <>Signed in as <span className="text-foreground">{user.email}</span>. Session will carry over securely.</>
               ) : (
                 <>You'll be asked to sign in before the workspace opens.</>
               )}
