@@ -785,19 +785,36 @@ export default function AdminDashboard() {
                   <div className="space-y-0.5">
                     {group.items.map((item) => {
                       const active = item.kind === "section" && section === item.id;
-                      const onClick = () =>
-                        item.kind === "section" ? setSection(item.id) : navigate(item.href);
                       const key = item.kind === "section" ? `s:${item.id}` : `r:${item.href}`;
+                      const baseCls = `w-full flex items-center gap-3 px-3 py-2 rounded-md text-[13px] transition-all ${
+                        active
+                          ? "bg-primary/10 text-primary font-medium"
+                          : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                      }`;
+                      if (item.kind === "route") {
+                        return (
+                          <OperatorLink
+                            key={key}
+                            to={item.href}
+                            title={`${item.label} — Ctrl/Cmd-click or middle-click to open in a new tab`}
+                            className={`group ${baseCls}`}
+                          >
+                            <item.icon className="w-4 h-4 shrink-0" />
+                            {!sidebarCollapsed && (
+                              <>
+                                <span className="truncate flex-1 text-left">{item.label}</span>
+                                <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-50 transition" />
+                              </>
+                            )}
+                          </OperatorLink>
+                        );
+                      }
                       return (
                         <button
                           key={key}
-                          onClick={onClick}
+                          onClick={() => setSection(item.id)}
                           title={item.label}
-                          className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-[13px] transition-all ${
-                            active
-                              ? "bg-primary/10 text-primary font-medium"
-                              : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                          }`}
+                          className={baseCls}
                         >
                           <item.icon className="w-4 h-4 shrink-0" />
                           {!sidebarCollapsed && <span className="truncate">{item.label}</span>}
