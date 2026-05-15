@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import {
-  Briefcase, ArrowRight, Sparkles, Plus, Star, ChevronRight, FolderOpen, Receipt,
+  Briefcase, Sparkles, Plus, Star, ChevronRight, FolderOpen, Receipt,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useWorkspace, PROVIDER_LABELS, type ActiveProvider } from "@/lib/workspace/context";
