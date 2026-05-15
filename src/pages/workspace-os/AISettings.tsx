@@ -156,6 +156,8 @@ export default function AISettings() {
   const [testResult, setTestResult] = useState<{ ok: boolean; msg: string; ms?: number } | null>(null);
   const [saving, setSaving] = useState(false);
   const [showKeyForm, setShowKeyForm] = useState(false);
+  // The compact "Connect / Re-key" panel sits ABOVE the provider grid so the
+  // first thing operators see is the action — paste a key — not a wall of cards.
 
   useEffect(() => {
     if (!user) return;
@@ -283,7 +285,99 @@ export default function AISettings() {
         )}
       </header>
 
-      {/* Provider grid */}
+      {/* Compact connect panel — pinned to the top so the verb (paste a key)
+          comes before the catalogue. Provider grid below is for switching. */}
+      <motion.div
+        initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
+        className="rounded-2xl border border-border/60 ws-surface p-5 space-y-4"
+      >
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className={`h-9 w-9 rounded-xl ${selected.accent} flex items-center justify-center shrink-0`}>
+              <selected.icon className="h-4 w-4" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-semibold tracking-tight truncate">
+                {active && active.provider === selected.id ? `Re-key ${selected.name}` : `Connect ${selected.name}`}
+              </p>
+              <p className="text-[11px] text-muted-foreground truncate">{selected.tagline}</p>
+            </div>
+          </div>
+          <a href={selected.href} target="_blank" rel="noreferrer" className="text-xs text-primary inline-flex items-center gap-1 hover:underline shrink-0">
+            Get a key <ExternalLink className="h-3 w-3" />
+          </a>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="space-y-1.5">
+            <label className="text-[11px] uppercase tracking-wider text-muted-foreground inline-flex items-center gap-1.5">
+              <KeyRound className="h-3 w-3" /> API key
+            </label>
+            <Input type="password" value={apiKey} onChange={e => setApiKey(e.target.value)} placeholder={selected.placeholder} />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-[11px] uppercase tracking-wider text-muted-foreground inline-flex items-center gap-1.5">
+              <Cpu className="h-3 w-3" /> Model
+            </label>
+            {selected.models && selected.models.length > 0 ? (
+              <Select value={model || selected.defaultModel || ""} onValueChange={v => { setModel(v); setTestResult(null); }}>
+                <SelectTrigger className="text-sm">
+                  <SelectValue placeholder={selected.defaultModel || "Pick a model"} />
+                </SelectTrigger>
+                <SelectContent className="max-h-72">
+                  {selected.models.map(m => (
+                    <SelectItem key={m} value={m} className="text-sm font-mono">{m}</SelectItem>
+                  ))}
+                  <SelectItem value="__custom__" className="text-xs italic text-muted-foreground">Use custom model name…</SelectItem>
+                </SelectContent>
+              </Select>
+            ) : (
+              <Input value={model} onChange={e => setModel(e.target.value)} placeholder={selected.defaultModel || "default"} />
+            )}
+          </div>
+        </div>
+
+        {testResult && (
+          <div className={`text-xs rounded-lg p-3 flex items-start gap-2 ${
+            testResult.ok ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400" : "bg-destructive/10 text-destructive"
+          }`}>
+            {testResult.ok ? <CheckCircle2 className="h-4 w-4 shrink-0 mt-0.5" /> : <XCircle className="h-4 w-4 shrink-0 mt-0.5" />}
+            <div className="min-w-0">
+              <p className="font-medium">
+                {testResult.ok ? "Connection healthy" : "Connection failed"}
+                {testResult.ms != null && <span className="ml-2 opacity-70">· {testResult.ms}ms</span>}
+              </p>
+              <p className="break-all opacity-80 mt-0.5">{testResult.msg}</p>
+            </div>
+          </div>
+        )}
+
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <p className="text-[11px] text-muted-foreground inline-flex items-center gap-1.5">
+            <ShieldCheck className="h-3 w-3" /> Stored encrypted. Used only for your workspace calls.
+          </p>
+          <div className="flex gap-2">
+            <button
+              onClick={test} disabled={testing || !apiKey}
+              className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm hover:bg-muted disabled:opacity-50"
+            >
+              {testing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" />}
+              Test connection
+            </button>
+            <button
+              onClick={save} disabled={saving || !apiKey}
+              className="inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-4 py-2 text-sm font-medium shadow-lg shadow-primary/20 disabled:opacity-50"
+            >
+              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+              Save & activate
+            </button>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Provider grid — clicking a card just retargets the panel above */}
+      <div>
+        <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground/70 mb-2">Switch provider</p>
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
         {PROVIDERS.map((p, i) => {
           const isActive = active?.provider === p.id;
@@ -299,7 +393,7 @@ export default function AISettings() {
                 setProvider(p.id);
                 setModel(p.defaultModel || "");
                 setTestResult(null);
-                setShowKeyForm(true);
+                if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
               }}
               className={`group text-left rounded-2xl border bg-card p-4 ws-launch-card transition-all ${
                 isSelected ? `ring-2 ${p.ring}` : "border-border/60 hover:border-border"
@@ -343,9 +437,10 @@ export default function AISettings() {
           );
         })}
       </div>
+      </div>
 
-      {/* Key form (slides in when a provider is picked) */}
-      {showKeyForm && (
+      {/* Legacy slide-in (kept hidden — pinned panel above replaces it) */}
+      {false && showKeyForm && (
         <motion.div
           initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
           className="rounded-2xl border border-border/60 ws-surface p-5 space-y-4"

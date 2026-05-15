@@ -12,6 +12,7 @@ import { useRecentOutputs } from "@/lib/workspace/outputs";
 import { formatDistanceToNowStrict } from "date-fns";
 import { wp, wpProject } from "@/lib/workspace/paths";
 import { MagneticTile } from "@/components/workspace/MagneticTile";
+import CockpitBlock from "@/components/workspace/CockpitBlock";
 import { marketingUrl } from "@/lib/host";
 
 // Industry-grade tool tiles. Calm whites + a single tinted icon plate per
@@ -43,15 +44,10 @@ const TOOL_TILES: ToolTile[] = [
   { to: wp("revenue"), label: "Revenue", what: "Cash in, deliverables out. Your real-time freelance P&L.",
     when: "Open at month-end (or when a client asks for an invoice).",
     icon: TrendingUp, tone: "text-green-700 bg-green-50 ring-green-100" },
-  // External tools — open back on the marketing surface so we don't reload-loop inside workspace.
-  { to: marketingUrl("/hustle-canvas"), label: "Hustle Canvas", external: true,
-    what: "Free-form AI canvas to wireframe a new offer or service before you sell it.",
-    when: "Use when shaping a brand-new offer.",
-    icon: Layers, tone: "text-indigo-600 bg-indigo-50 ring-indigo-100" },
-  { to: marketingUrl("/hustle-blueprint"), label: "Blueprint generator", external: true,
-    what: "Generate a full execution blueprint for any hustle — milestones, channels, pricing.",
-    when: "Use once per new income stream.",
-    icon: FileText, tone: "text-orange-600 bg-orange-50 ring-orange-100" },
+  // Tool-domain hygiene: anything that lives on the dashboard surface
+  // (Hustle Canvas, Blueprint generator, Knowledge Hub, AI Tools, etc.)
+  // is intentionally NOT shown here. The workspace surface only lists
+  // its own native cockpit modules — see mem://features/workspace-pivot.
   { to: wp("providers"), label: "AI providers", what: "Bring your own Claude, GPT, Gemini, Groq or DeepSeek key. Test, switch, monitor.",
     when: "Set up first — every other AI feature uses this fuel.",
     icon: KeyRound, tone: "text-slate-700 bg-slate-100 ring-slate-200" },
@@ -161,6 +157,16 @@ export default function Overview() {
           <TrustBar provider={activeProvider} projectCount={items.length} outputCount={recentOutputs.length} />
         </div>
         <ProviderPill provider={activeProvider} loading={providerLoading} />
+      </motion.section>
+
+      {/* Your cockpit — moved from dashboard. Same UI, lives here now so the
+          workspace surface owns its operational modules end-to-end. */}
+      <motion.section
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.06, duration: 0.5 }}
+      >
+        <CockpitBlock />
       </motion.section>
 
       {/* Big colorful tool tiles — the "Pick your cockpit" energy applied to workspace tools */}
