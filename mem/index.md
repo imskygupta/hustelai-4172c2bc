@@ -26,3 +26,4 @@
 - [Wave 2 Priorities](mem://product/wave2-priorities) — Build order: templates → opportunity engine → shared project context → team; avoid automation-platform trap, own operational intelligence
 - [Workspace Polish Wave 2](mem://features/workspace-polish-wave2) — Overview as alive work surface: Continue Working, Recent AI Outputs, Active Provider card, Recommended Actions, Assets; new ws-surface/ws-dot tokens
 - [Workspace Polish Wave 3](mem://features/workspace-polish-wave3) — BYOK redesigned as AI Infrastructure Control Center, WorkspaceContextBar, RecentOutputsRail tool/provider icons + quick actions
+- [Workspace Polish Wave 4](mem://features/workspace-polish-wave4) — ContinueBuilding momentum panel, ⌘K WorkspaceCommandPalette, smart EmptyOutputs state

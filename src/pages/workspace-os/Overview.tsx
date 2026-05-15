@@ -329,3 +329,36 @@ function EmptyState() {
     </motion.div>
   );
 }
+
+function EmptyOutputs({ hasProvider }: { hasProvider: boolean }) {
+  return (
+    <div className="mt-3 rounded-xl border border-dashed border-border/60 p-4">
+      <div className="flex items-start gap-3">
+        <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+          <Sparkles className="h-4 w-4 text-primary" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-medium">No outputs yet</p>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            {hasProvider
+              ? "Generate your first Blueprint — it'll show up here and become reusable across tools."
+              : "Connect Claude (recommended for strategy) or Gemini (free tier) to start generating."}
+          </p>
+          <div className="flex items-center gap-2 mt-3">
+            {hasProvider ? (
+              <Link to="/hustle-blueprint" className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline">
+                Generate Blueprint <ArrowRight className="h-3 w-3" />
+              </Link>
+            ) : (
+              <Link to="/workspaces/ai-settings" className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline">
+                Connect provider <ArrowRight className="h-3 w-3" />
+              </Link>
+            )}
+            <span className="text-[10px] text-muted-foreground/60">·</span>
+            <Link to="/canvas" className="text-xs text-muted-foreground hover:text-foreground">Open Canvas</Link>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
