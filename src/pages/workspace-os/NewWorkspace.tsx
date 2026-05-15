@@ -77,7 +77,7 @@ export default function NewWorkspace() {
       return;
     }
     toast.success("Workspace created");
-    nav(`/workspaces/${data.id}`);
+    nav(wpProject(data.id));
   }
 
   return (
