@@ -500,16 +500,31 @@ export default function AdminDashboard() {
   };
 
   const changeTier = async (userId: string, newTier: string) => {
+    const target = users.find((u) => u.user_id === userId);
+    const oldTier = target?.subscription_tier ?? "unknown";
     const { error } = await supabase.from("profiles").update({ subscription_tier: newTier as any }).eq("user_id", userId);
     if (!error) {
       toast({ title: "Updated", description: `Tier → ${newTier}` });
       setUsers(users.map(u => u.user_id === userId ? { ...u, subscription_tier: newTier } : u));
+      void recordOperatorAction({
+        action: "tier.change",
+        targetType: "user",
+        targetId: userId,
+        targetLabel: target?.email ?? target?.display_name ?? userId,
+        metadata: { from: oldTier, to: newTier },
+      });
     }
   };
 
   const impersonateUser = async (userId: string, email: string) => {
     try {
       toast({ title: "Impersonating...", description: `Logging in as ${email}` });
+      void recordOperatorAction({
+        action: "impersonation.start",
+        targetType: "user",
+        targetId: userId,
+        targetLabel: email,
+      });
       const { data, error } = await supabase.functions.invoke("admin-utils", {
         body: { action: "impersonate_user", user_id: userId, email },
       });
@@ -545,6 +560,12 @@ export default function AdminDashboard() {
       
       toast({ title: "User Deleted", description: `${email} has been removed.` });
       setUsers(users.filter(u => u.user_id !== userId));
+      void recordOperatorAction({
+        action: "user.delete",
+        targetType: "user",
+        targetId: userId,
+        targetLabel: email,
+      });
     } catch (err: any) {
       toast({ title: "Delete Failed", description: err.message, variant: "destructive" });
     }
@@ -699,15 +720,34 @@ export default function AdminDashboard() {
       else toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
       toast({ title: "Role Assigned!" });
+      const target = users.find((u) => u.user_id === roleUserId);
+      void recordOperatorAction({
+        action: "role.assign",
+        targetType: "user",
+        targetId: roleUserId,
+        targetLabel: target?.email ?? roleUserId,
+        metadata: { role: roleToAssign },
+      });
       setRoleUserId("");
       loadAllData();
     }
   };
 
   const removeRole = async (id: string) => {
+    const row = userRoles.find((r) => r.id === id);
+    const target = row ? users.find((u) => u.user_id === row.user_id) : null;
     await supabase.from("user_roles").delete().eq("id", id);
     setUserRoles(userRoles.filter(r => r.id !== id));
     toast({ title: "Role Removed" });
+    if (row) {
+      void recordOperatorAction({
+        action: "role.remove",
+        targetType: "user",
+        targetId: row.user_id,
+        targetLabel: target?.email ?? row.user_id,
+        metadata: { role: row.role },
+      });
+    }
   };
 
   const handleChangePassword = async () => {
@@ -1033,7 +1073,18 @@ export default function AdminDashboard() {
                   if (error) {
                     if (error.code === "23505") toast({ title: "Already assigned", variant: "destructive" });
                     else toast({ title: "Error", description: error.message, variant: "destructive" });
-                  } else { toast({ title: "Role assigned" }); loadAllData(); }
+                  } else {
+                    toast({ title: "Role assigned" });
+                    const target = users.find((u) => u.user_id === uid);
+                    void recordOperatorAction({
+                      action: "role.assign",
+                      targetType: "user",
+                      targetId: uid,
+                      targetLabel: target?.email ?? uid,
+                      metadata: { role },
+                    });
+                    loadAllData();
+                  }
                 }}
                 onRemove={removeRole}
               />
