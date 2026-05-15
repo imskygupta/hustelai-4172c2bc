@@ -46,7 +46,7 @@ export default function DocsArticle() {
         <p className="text-muted-foreground mb-6">
           The doc you're looking for doesn't exist or was moved.
         </p>
-        <Link to="/docs" className="text-primary hover:underline">
+        <Link to="/" className="text-primary hover:underline">
           ← Back to docs home
         </Link>
       </div>
@@ -65,14 +65,14 @@ export default function DocsArticle() {
       <SEO
         title={page.meta_title || `${page.title} — HustleAI Docs`}
         description={page.meta_description || page.description}
-        path={`/docs/${page.slug}`}
+        path={`/${page.slug}`}
       />
 
       {/* Breadcrumbs */}
       <nav aria-label="Breadcrumb" className="text-xs text-muted-foreground mb-6">
         <ol className="flex items-center flex-wrap gap-1">
           <li>
-            <Link to="/docs" className="hover:text-foreground">Docs</Link>
+            <Link to="/" className="hover:text-foreground">Docs</Link>
           </li>
           {cat && (
             <>
@@ -216,7 +216,7 @@ export default function DocsArticle() {
       <nav className="mt-12 pt-6 border-t border-border grid grid-cols-2 gap-4">
         {prev ? (
           <Link
-            to={`/docs/${prev.slug}`}
+            to={`/${prev.slug}`}
             className="rounded-lg border border-border p-4 hover:border-primary/40 transition-colors"
           >
             <div className="text-xs text-muted-foreground mb-1">← Previous</div>
@@ -227,7 +227,7 @@ export default function DocsArticle() {
         )}
         {next && (
           <Link
-            to={`/docs/${next.slug}`}
+            to={`/${next.slug}`}
             className="rounded-lg border border-border p-4 hover:border-primary/40 transition-colors text-right"
           >
             <div className="text-xs text-muted-foreground mb-1">Next →</div>

@@ -29,7 +29,7 @@ export default function DocsHome() {
       <SEO
         title="HustleAI Workspace OS — Documentation"
         description="Learn how to use HustleAI: workspaces, CRM, invoices, AI Fuel, proposals, intake forms, client portals, billing, and more."
-        path="/docs"
+        path="/"
       />
 
       {/* Gradient hero */}
@@ -50,13 +50,13 @@ export default function DocsHome() {
 
           <div className="flex flex-wrap gap-2 mt-6">
             <Link
-              to="/docs/quickstart"
+              to="/quickstart"
               className="inline-flex items-center gap-1.5 px-4 h-10 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-emerald-950 font-medium text-sm transition-colors"
             >
               <Rocket className="w-4 h-4" /> Quickstart in 10 min
             </Link>
             <Link
-              to="/docs/what-is-ai-fuel"
+              to="/what-is-ai-fuel"
               className="inline-flex items-center gap-1.5 px-4 h-10 rounded-lg border border-white/10 bg-white/[0.03] hover:bg-white/[0.06] text-foreground text-sm transition-colors"
             >
               <Zap className="w-4 h-4 text-amber-400" /> What is AI Fuel?
@@ -82,7 +82,7 @@ export default function DocsHome() {
               return (
                 <div key={slug} className="flex items-center gap-1.5">
                   <Link
-                    to={first ? `/docs/${first.slug}` : "/docs"}
+                    to={first ? `/${first.slug}` : "/"}
                     className={`group inline-flex items-center gap-1.5 px-2.5 h-8 rounded-lg border border-white/10 bg-gradient-to-br ${style.gradient} hover:ring-2 ${style.ring} hover:scale-[1.04] transition-all text-xs font-medium`}
                   >
                     <Icon className="w-3.5 h-3.5 opacity-80" />
@@ -117,7 +117,7 @@ export default function DocsHome() {
             return (
               <Link
                 key={c.id}
-                to={first ? `/docs/${first.slug}` : "/docs"}
+                to={first ? `/${first.slug}` : "/"}
                 className={`group relative overflow-hidden rounded-2xl border border-white/5 bg-gradient-to-br ${style.gradient} p-5 flex flex-col gap-3 transition-all hover:scale-[1.02] hover:border-white/15 hover:shadow-2xl hover:shadow-black/30`}
               >
                 {/* glow blob */}
