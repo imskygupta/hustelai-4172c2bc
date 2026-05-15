@@ -38,6 +38,7 @@ import { SeoLandingManager } from "@/components/admin/SeoLandingManager";
 import { SeoBlogManager } from "@/components/admin/SeoBlogManager";
 import { SystemHealth } from "@/components/admin/SystemHealth";
 import { OperatorLink } from "@/components/admin/OperatorLink";
+import { UsersPanel } from "@/components/admin/UsersPanel";
 
 import { SEO } from "@/components/SEO";
 
@@ -1003,78 +1004,13 @@ export default function AdminDashboard() {
 
           {/* ===== USERS ===== */}
           {section === "users" && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <p className="text-sm text-muted-foreground">{users.length} total users</p>
-              </div>
-              <div className="glass rounded-xl overflow-hidden">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>User</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Phone</TableHead>
-                      <TableHead>Tier</TableHead>
-                      <TableHead>Searches</TableHead>
-                      <TableHead>Bio</TableHead>
-                      <TableHead>Resume</TableHead>
-                      <TableHead>Joined</TableHead>
-                      <TableHead>Change Tier</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {users.map((u) => {
-                      const TierIcon = tierIcons[u.subscription_tier] || Sparkles;
-                      return (
-                        <TableRow key={u.id}>
-                          <TableCell className="font-medium">{u.display_name || "—"}</TableCell>
-                          <TableCell className="text-xs text-muted-foreground">{u.email}</TableCell>
-                          <TableCell className="text-xs">{u.phone || "—"}</TableCell>
-                          <TableCell>
-                            <Badge className={tierColors[u.subscription_tier] || ""}>
-                              <TierIcon className="w-3 h-3 mr-1" />{u.subscription_tier}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>{u.search_count}</TableCell>
-                          <TableCell className="text-xs max-w-[120px] truncate">{u.bio || "—"}</TableCell>
-                          <TableCell>
-                            {u.resume_url ? (
-                              <a href={u.resume_url} target="_blank" className="text-primary text-xs underline">View</a>
-                            ) : "—"}
-                          </TableCell>
-                          <TableCell className="text-xs text-muted-foreground">{new Date(u.created_at).toLocaleDateString()}</TableCell>
-                          <TableCell>
-                            <Select value={u.subscription_tier} onValueChange={(val) => changeTier(u.user_id, val)}>
-                              <SelectTrigger className="w-28 h-8 text-xs"><SelectValue /></SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="free">Free</SelectItem>
-                                <SelectItem value="pro">Pro</SelectItem>
-                                <SelectItem value="elite">Elite</SelectItem>
-                                <SelectItem value="infinity">Infinity</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex gap-1">
-                              <Button variant="ghost" size="sm" title="Impersonate" onClick={() => impersonateUser(u.user_id, u.email || "")}>
-                                <Eye className="w-3 h-3" />
-                              </Button>
-                              <Button variant="ghost" size="sm" onClick={() => { setSelectedChatUser(u.user_id); setSection("chatbot"); loadChatForUser(u.user_id); }}>
-                                <MessageSquare className="w-3 h-3" />
-                              </Button>
-                              <Button variant="ghost" size="sm" title="Delete User" onClick={() => deleteUser(u.user_id, u.email || "")}>
-                                <Trash2 className="w-3 h-3 text-destructive" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </div>
-            </div>
+            <UsersPanel
+              users={users}
+              onChangeTier={changeTier}
+              onImpersonate={impersonateUser}
+              onOpenChat={(id) => { setSelectedChatUser(id); setSection("chatbot"); loadChatForUser(id); }}
+              onDelete={deleteUser}
+            />
           )}
 
           {/* ===== ROLE MANAGER ===== */}
