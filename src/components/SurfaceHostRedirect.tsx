@@ -16,17 +16,36 @@
  */
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { isMarketingHost, isWorkspacePath, WORKSPACE_ORIGIN } from "@/lib/host";
+import {
+  isMarketingHost,
+  isWorkspaceHost,
+  isWorkspacePath,
+  isWorkspaceCockpitPath,
+  WORKSPACE_ORIGIN,
+  MARKETING_ORIGIN,
+} from "@/lib/host";
 
 export function SurfaceHostRedirect() {
   const { pathname, search, hash } = useLocation();
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (!isMarketingHost()) return;
-    if (!isWorkspacePath(pathname)) return;
-    // Hard hop into the workspace surface, preserving query + hash.
-    window.location.replace(`${WORKSPACE_ORIGIN}${pathname}${search}${hash}`);
+    // marketing → workspace: only the narrow workspace-only paths (e.g. /client)
+    if (isMarketingHost()) {
+      if (isWorkspacePath(pathname)) {
+        window.location.replace(`${WORKSPACE_ORIGIN}${pathname}${search}${hash}`);
+      }
+      return;
+    }
+    // workspace → marketing: anything that is NOT a cockpit path bounces back
+    // to the main domain. Tools (/blueprint, /hustle-blueprint, /ai-tools,
+    // /knowledge-hub, /canvas, /pricing, /blog, etc.) must NEVER render under
+    // the workspace shell. Auth is shared via the .hustlaiapp.in bridge cookie.
+    if (isWorkspaceHost()) {
+      if (!isWorkspaceCockpitPath(pathname)) {
+        window.location.replace(`${MARKETING_ORIGIN}${pathname}${search}${hash}`);
+      }
+    }
   }, [pathname, search, hash]);
 
   return null;
