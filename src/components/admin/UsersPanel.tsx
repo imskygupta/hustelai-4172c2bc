@@ -4,8 +4,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Search, Users as UsersIcon, ShieldAlert, ShieldCheck, Crown, Sparkles, Send as SendIcon, Trash2, Eye, MessageSquare, Wallet as WalletIcon, AlertTriangle, ExternalLink, Loader2, ChevronRight, Bot, Activity } from "lucide-react";
+import { Search, Users as UsersIcon, ShieldAlert, ShieldCheck, Crown, Sparkles, Trash2, Eye, MessageSquare, Wallet as WalletIcon, AlertTriangle, Loader2, ChevronRight, Bot, Activity } from "lucide-react";
 import { OpsBadge } from "@/components/admin/OpsBadge";
 import { OpsHint } from "@/components/admin/OpsHint";
 import { OperatorLink } from "@/components/admin/OperatorLink";
