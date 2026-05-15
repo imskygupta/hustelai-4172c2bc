@@ -76,7 +76,7 @@ export function ProjectQuickstart({ workspace }: { workspace: any }) {
         const { count } = await (supabase as any)
           .from("workspace_outputs")
           .select("id", { count: "exact", head: true })
-          .eq("workspace_id", workspace.id);
+          .eq("project_id", workspace.id);
         setOutputs(count ?? 0);
       } catch {
         setOutputs(0);
