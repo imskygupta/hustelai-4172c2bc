@@ -50,18 +50,45 @@ export default function WorkspaceGateway() {
     })();
   }, [user]);
 
-  const launch = () => {
+  const launch = async () => {
     setLaunching(true);
-    // Brief intentional delay so the action feels like a transition,
-    // not a redirect. Then hard-hop into the workspace surface.
-    window.setTimeout(() => {
-      if (isDualHost()) {
-        // Dev/preview can't cross subdomains — render the cockpit locally.
-        window.location.href = "/";
-      } else {
+
+    // Dev/preview can't cross subdomains — render the cockpit locally.
+    if (isDualHost()) {
+      window.setTimeout(() => { window.location.href = "/"; }, 500);
+      return;
+    }
+
+    // Real handoff: mint a fresh session, pass tokens to workspace.* in
+    // the URL hash. Supabase on the workspace host (`detectSessionInUrl`)
+    // consumes the hash, calls setSession, and clears it from history.
+    // No shared cookie, no SPA-wide auth race — workspace establishes its
+    // OWN session from the handoff payload.
+    try {
+      // Refresh first so we hand over a fresh access token (not one about
+      // to expire). If the user isn't signed in we just send them through —
+      // the workspace login flow will catch them.
+      await supabase.auth.refreshSession().catch(() => {});
+      const { data } = await supabase.auth.getSession();
+      const session = data.session;
+      if (!session) {
         window.location.href = `${WORKSPACE_ORIGIN}/`;
+        return;
       }
-    }, 650);
+      const params = new URLSearchParams({
+        access_token: session.access_token,
+        refresh_token: session.refresh_token,
+        token_type: "bearer",
+        expires_in: String(session.expires_in ?? 3600),
+        type: "recovery", // any non-empty `type` makes Supabase parse the hash
+      });
+      // Brief loading state for perceived intentionality.
+      window.setTimeout(() => {
+        window.location.href = `${WORKSPACE_ORIGIN}/#${params.toString()}`;
+      }, 500);
+    } catch {
+      window.location.href = `${WORKSPACE_ORIGIN}/`;
+    }
   };
 
   const lastActivityLabel = snapshot.lastActivity
