@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useWorkspace, PROVIDER_LABELS, type ActiveProvider } from "@/lib/workspace/context";
 import { useRecentOutputs, useAssets } from "@/lib/workspace/outputs";
 import { formatDistanceToNowStrict } from "date-fns";
+import { ContinueBuilding } from "@/components/workspace/ContinueBuilding";
 
 type WS = {
   id: string;
@@ -62,10 +63,13 @@ export default function Overview() {
       <section className="flex items-end justify-between gap-4 flex-wrap">
         <div>
           <h2 className="text-2xl font-semibold tracking-tight">Welcome back<span className="text-muted-foreground">.</span></h2>
-          <p className="text-sm text-muted-foreground mt-1">Pick up where you left off — or launch a new run.</p>
+          <p className="text-sm text-muted-foreground mt-1">Pick up where you left off — or launch a new run. <kbd className="ml-1 text-[10px] border border-border/60 rounded px-1 py-px">⌘K</kbd></p>
         </div>
         <ProviderPill provider={activeProvider} loading={providerLoading} />
       </section>
+
+      {/* Momentum panel — reads workspace signals and surfaces threads */}
+      <ContinueBuilding />
 
       {/* Continue working + Active provider */}
       <section className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -116,7 +120,7 @@ export default function Overview() {
               {[0,1,2].map(i => <Skeleton key={i} className="h-12 rounded-lg" />)}
             </div>
           ) : recentOutputs.length === 0 ? (
-            <p className="text-sm text-muted-foreground mt-3">Your AI generations will land here as you work.</p>
+            <EmptyOutputs hasProvider={!!activeProvider} />
           ) : (
             <ul className="mt-3 divide-y divide-border/30">
               {recentOutputs.map((o) => (
