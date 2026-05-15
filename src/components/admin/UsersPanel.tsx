@@ -313,16 +313,17 @@ function UserDrawer({
             <div className="text-xs font-normal text-muted-foreground truncate">{p.email}</div>
           </div>
         </SheetTitle>
-        <SheetDescription className="flex flex-wrap gap-1.5 pt-1">
-          <span className={cn("inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-wider", style.cls)}>
-            {style.label}
-          </span>
-          <TierPill tier={p.subscription_tier} />
-          {s.is_admin && <OpsBadge kind="internal">Admin</OpsBadge>}
-          {s.is_moderator && !s.is_admin && <OpsBadge kind="internal">Moderator</OpsBadge>}
-          {s.blocked_attempts > 0 && <OpsBadge kind="dangerous">{s.blocked_attempts} blocked attempts</OpsBadge>}
-        </SheetDescription>
+        <SheetDescription className="sr-only">User detail and operator controls</SheetDescription>
       </SheetHeader>
+      <div className="flex flex-wrap gap-1.5 pt-2">
+        <span className={cn("inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-wider", style.cls)}>
+          {style.label}
+        </span>
+        <TierPill tier={p.subscription_tier} />
+        {s.is_admin && <OpsBadge kind="internal">Admin</OpsBadge>}
+        {s.is_moderator && !s.is_admin && <OpsBadge kind="internal">Moderator</OpsBadge>}
+        {s.blocked_attempts > 0 && <OpsBadge kind="dangerous">{s.blocked_attempts} blocked attempts</OpsBadge>}
+      </div>
 
       {/* Quick actions */}
       <div className="mt-5 grid grid-cols-2 gap-2">
