@@ -45,6 +45,7 @@ export default function HustleBlueprint() {
   const [usageCount, setUsageCount] = useState(0);
   useEffect(() => { if (user) setUsageCount(getUsage("blueprint", user.id)); }, [user]);
   const atLimit = usageCount >= maxUses;
+  const recordOutput = useRecordOutput();
 
   useEffect(() => {
     if (!loading) return;
@@ -63,7 +64,6 @@ export default function HustleBlueprint() {
   }, [showScore]);
 
   if (!user) { navigate("/login"); return null; }
-  const recordOutput = useRecordOutput();
 
   const generateBlueprint = async () => {
     if (atLimit) { toast.error(`Limit reached (${maxUses}). Upgrade for more!`); return; }
