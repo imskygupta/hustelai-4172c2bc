@@ -1,0 +1,79 @@
+/**
+ * Shared visual / motion language between dashboard launchers and the
+ * workspace surface. Visual continuity: a tile on the dashboard and the
+ * tool it opens should read as the same product.
+ */
+
+:root {
+  --ws-gradient: linear-gradient(115deg,
+    hsl(160 84% 45%) 0%,
+    hsl(258 80% 64%) 55%,
+    hsl(292 84% 62%) 100%);
+  --ws-gradient-soft: linear-gradient(115deg,
+    hsl(160 84% 45% / 0.10),
+    hsl(258 80% 64% / 0.10),
+    hsl(292 84% 62% / 0.10));
+
+  --ws-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ws-dur-fast: 160ms;
+  --ws-dur-base: 240ms;
+  --ws-dur-slow: 420ms;
+
+  --ws-shadow-rest: 0 1px 2px hsl(222 25% 12% / 0.04);
+  --ws-shadow-lift: 0 10px 28px -12px hsl(258 80% 40% / 0.25),
+                    0 2px 8px -2px hsl(160 84% 35% / 0.15);
+}
+
+.ws-gradient-text {
+  background-image: var(--ws-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.ws-launch-card {
+  position: relative;
+  transition: transform var(--ws-dur-base) var(--ws-ease),
+              box-shadow var(--ws-dur-base) var(--ws-ease),
+              border-color var(--ws-dur-base) var(--ws-ease);
+  box-shadow: var(--ws-shadow-rest);
+}
+.ws-launch-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--ws-shadow-lift);
+}
+.ws-launch-card::after {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 1px;
+  background-image: var(--ws-gradient);
+  opacity: 0;
+  transition: opacity var(--ws-dur-base) var(--ws-ease);
+  border-radius: inherit;
+}
+.ws-launch-card:hover::after { opacity: 0.7; }
+
+@keyframes ws-shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.ws-shimmer {
+  background: linear-gradient(90deg,
+    hsl(220 14% 96% / 0) 0%,
+    hsl(220 14% 96% / 0.6) 50%,
+    hsl(220 14% 96% / 0) 100%);
+  background-size: 200% 100%;
+  animation: ws-shimmer 1.4s linear infinite;
+}
+
+@keyframes ws-handoff-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes ws-handoff-pulse {
+  0%, 100% { transform: scale(1);    opacity: 0.85; }
+  50%      { transform: scale(1.06); opacity: 1; }
+}
+.ws-handoff-enter { animation: ws-handoff-in var(--ws-dur-base) var(--ws-ease) both; }
+.ws-handoff-pulse { animation: ws-handoff-pulse 1.6s var(--ws-ease) infinite; }
