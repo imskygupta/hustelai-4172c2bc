@@ -1,116 +1,97 @@
-## Goal
 
-Treat the app as two products served from one codebase:
+# Telegram restructuring + onboarding hardening
 
-- `hustlaiapp.in` — marketing, pricing, blog, trust, SEO surfaces
-- `workspace.hustlaiapp.in` — authenticated operational cockpit (dashboard, work, CRM, documents, portals, HustleBot)
-
-Plus: pause dark mode rollout, reposition HustleBot as a calm "Workspace Copilot," and keep tightening visual noise.
+Scope is large — broken into 7 phases. I'll execute them in order; each is independently testable.
 
 ---
 
-## 1. Domain split (incremental, non-breaking)
+## Phase 1 — Admin bot: receive-only ops channel (`@theskymediabot`)
 
-Same codebase, host-aware routing — no separate deploy yet.
+Refactor `supabase/functions/skymedia-webhook/index.ts`:
+- Remove ALL conversational command handlers (`/runtime`, `/flags`, `/incidents`, `/queues`, `/aijobs`, `/payments`, `/exports`, `/broadcast`, `/maintenance`, `/whoami`, `/help`).
+- Remove inline-keyboard callback handlers (`bcast_ok`, `maint_ok`, etc.).
+- Webhook becomes a stub that ignores all incoming updates with `200 ok` (Telegram requires a 200).
+- Optional: reply once with "This bot is a one-way ops channel — no commands available" on first contact, then stay silent.
+- Remove command-registration calls (delete `setMyCommands` if present).
 
-**Detection helper** `src/lib/host.ts`:
-- `isWorkspaceHost()` → host starts with `workspace.`
-- `isMarketingHost()` → root domain, `www.`, or preview/lovable hosts
-- `WORKSPACE_ORIGIN` / `MARKETING_ORIGIN` constants (env-aware, fallback to current origin in preview)
+Allowlist: hardcode chat ID `1378192648` as the single permanent admin recipient (in addition to existing `TELEGRAM_ADMIN_CHAT_IDS` env). Update `_shared/notifications/telegram.ts` admin dispatch and `admin-bot-notify` / `admin-alert` to always include `1378192648` if missing.
 
-**App-level routing** (`src/App.tsx`):
-- On `workspace.*`: only mount app-shell routes (dashboard, workspaces, clients, documents, hustlebot, work, settings, plans, payment, client portal, tools). Hitting `/`, `/about`, `/pricing`, etc. → redirect to `MARKETING_ORIGIN + path`.
-- On marketing host: keep current behavior, but redirect any app-shell route (`/dashboard`, `/work*`, `/workspaces*`, `/clients*`, `/hustlebot`, `/documents*`, `/dashboard/tools*`, `/settings*`) to `WORKSPACE_ORIGIN + path` (preserving query/hash).
-- Preview/lovable/localhost hosts: behave as today (both shells available) so devs and the in-product preview keep working.
+Send a one-time "✅ HustleAI Ops connected successfully" alert via the SkyMedia bot from a small one-shot edge call after deploy.
 
-**Cross-domain CTAs**:
-- `Navbar` "Open dashboard" / "Sign in" → absolute URL to workspace host when on marketing.
-- Workspace "Marketing site" / footer links → absolute URL to marketing host.
-- Helper `appUrl(path)` / `marketingUrl(path)` to centralize.
+## Phase 2 — Route ALL ops alerts through admin bot only
 
-**Auth/session continuity**:
-- Supabase session lives in `localStorage` per origin → cannot share directly across subdomains with current client config.
-- Pragmatic step now: when redirecting marketing→workspace for an authed CTA, append `#access_token` is NOT viable; instead rely on the user signing in on workspace host (login already mounted there). Add a short note in `Login.tsx` that the workspace lives on `workspace.*` and ensure post-login redirects stay on workspace host.
-- Document a follow-up: switch Supabase storage to a cookie scoped to `.hustlaiapp.in` for true SSO. Out of scope for this pass; called out in memory.
+Audit alert callers and ensure they use `SKYMEDIA_BOT_TOKEN` (not `TELEGRAM_BOT_TOKEN`):
+- `admin-alert/index.ts` — switch to SkyMedia bot.
+- `event-dispatcher` → `notifyOps` — verify uses SkyMedia path.
+- `admin-bot-notify` — already prefers SkyMedia; keep.
+- Any signup/payment notify call sites: route via `admin-bot-notify` event names: `signup`, `signup_blocked`, `payment_initiated`, `payment_succeeded`, `payment_failed`, `auth_suspicious`, `webhook_failed`, `critical_error`.
 
-**Vercel**:
-- `vercel.json` already SPA-rewrites `/(.*)` → `/index.html`. Same build serves both hosts; no changes needed beyond confirming the `workspace.hustlaiapp.in` domain is attached to the project (user-side).
+User bot (`@hustlaiapp_bot`) MUST never send admin-class events. Grep `TELEGRAM_BOT_TOKEN` in admin/ops paths and replace with SkyMedia.
 
----
+## Phase 3 — User bot: polished onboarding
 
-## 2. Dark mode pause
+Refactor `supabase/functions/telegram-webhook/index.ts` `/start` handler:
+- Replace raw text with branded welcome:
+  > Welcome to HustleAI 🚀
+  > Your AI operating system for freelance work, clients, and growth.
+- Inline keyboard buttons:
+  - 🌐 Visit Website → https://hustlaiapp.in
+  - 📚 Documentation → https://docs.hustlaiapp.in
+  - 🔗 Connect Account → deep link to existing connect flow
+- Set persistent menu via `setMyCommands` to a curated short list: `/start`, `/connect`, `/help`.
+- For unknown free-text messages, reply with a short "Tap a button below" + the same inline keyboard. No raw command surface.
 
-- `ThemeToggle`: keep the icon visible but, on click, show a toast "Dark mode is under maintenance" instead of toggling. Do not write to localStorage; do not add `dark` class.
-- `AppShell` mount effect: stop applying persisted dark theme. Force-remove `.dark` from `<html>` on mount.
-- Leave existing dark CSS tokens in place (no churn), just don't activate them.
-- Calm mode toggle stays fully functional.
+## Phase 4 — Signup hardening (Gmail-only, blocklist)
 
----
+New util `src/lib/auth/email-policy.ts`:
+- Allow only `@gmail.com` (case-insensitive, trimmed). Reject everything else with: "We're currently in invite-only beta — only Gmail accounts are accepted."
+- Hard blocklist (always reject, even if Gmail): `samratakash0000@gmail.com`, any `@skycart.xyz`, configurable list.
+- Reject disposable domains: ship a small static list (mailinator, tempmail, 10minutemail, guerrillamail, yopmail, trashmail, getnada, dispostable, throwawaymail, fakeinbox, etc.).
 
-## 3. HustleBot → "Workspace Copilot"
+Wire into:
+- `src/pages/Signup.tsx` — pre-submit validation, friendly error.
+- `src/pages/ForgotPassword.tsx` — same gate (no reset for blocked).
+- New edge function `signup-guard` (or DB trigger on `auth.users` insert? — not allowed on auth schema). Use a **client-side guard + Edge Function** called pre-`signUp` that validates and logs blocked attempts to a new `signup_blocked_log` table, then fires `admin-bot-notify` with event `signup_blocked`.
 
-**Positioning**:
-- Rename user-facing label everywhere visible to "Workspace Copilot" (keep internal route `/hustlebot` and code identifiers to avoid breakage; only swap copy).
-- Update: `HustleBotIntro` title/body, `Chatbot` launcher tooltip/header, sidebar entry, tool-finder entry, dashboard nudges.
+Migration: create `signup_blocked_log` table with RLS (service-role only insert/read).
 
-**Visual calm-down** (`src/components/Chatbot.tsx` + launcher):
-- Smaller floating button (h-12 w-12 → h-11 w-11), remove pulsing glow / gradient ring, use `bg-card border border-border shadow-sm` with a subtle primary dot.
-- Panel header: drop gradient, use solid `bg-card` + `border-b`.
-- Reduce entrance animation intensity (respect `html.calm`).
+## Phase 5 — Signup/Login page polish
 
-**Contextual entry points**:
-- New `<CopilotPrompt context="proposal|intake|client-notes|invoice" label="…" />` component. Fires `open-hustlebot` with a `prefill` detail.
-- `Chatbot` listens for `prefill` and seeds the input.
-- Drop instances into: `ProposalGenerator` ("Need help drafting this proposal?"), `OnboardingFormBuilder` / intake ("Generate onboarding checklist?"), `Clients` detail ("Summarize client notes?"). Small inline links, not modals.
+`src/pages/Signup.tsx` + `src/pages/Login.tsx`:
+- Tighter spacing, larger heading, supporting subline, trust row ("10k+ creators • SOC-ready • EU/IN compliant").
+- Smoother field focus states, better inline error styling (red ring + helper text).
+- Subtle motion on mount (framer-motion fade/slide ≤200ms). No heavy graphics.
+- Loading button with spinner, disabled correctly.
+- Single Google + Email block, clean divider.
 
-**Command/search integration**:
-- In `AppShell` tool finder, when query has no matches, add a second action row: "Ask Workspace Copilot about '{q}'" → opens copilot with prefill.
+Match Linear/Notion feel — keep work in presentation only.
 
----
+## Phase 6 — Admin panel UX: new-tab navigation
 
-## 4. Workspace UI cleanup (scoped, incremental)
+Audit admin nav components (`src/pages/admin/*` + admin sidebar/links). Replace `navigate()` onClick patterns on row links with proper `<Link>` / `<a>` so:
+- Cmd/Ctrl+click opens new tab natively
+- Middle-click works
+- Add explicit `↗` external-link button on key dashboard rows where a side-by-side workflow helps (Payments, AI Jobs, Telegram Ops).
 
-Don't refactor everything. This pass targets the highest-noise surfaces visible on the cockpit:
+## Phase 7 — Verification
 
-- `AppShell` top bar: remove violet-tinted search background, use `bg-muted/40` + `border-border`. Drop the `Command` icon's hard violet, use `text-muted-foreground`.
-- Dashboard: audit `ContextualNudge` and `OperationalFlows` for hardcoded gradients; replace ambient gradient backgrounds with flat `bg-card`. Keep one accent-gradient slot for the primary CTA only.
-- Remove any oversized hero card on `/dashboard` if duplicated by the cockpit.
-
-(Deeper page-by-page normalization remains the ongoing governance task; this pass keeps it bounded.)
-
----
-
-## 5. Memory updates
-
-- `mem://tech/workspace-subdomain.md` — host detection, redirect rules, future cookie-based SSO TODO.
-- `mem://style/ui-governance.md` — append "Dark mode paused; toggle shows maintenance toast."
-- `mem://features/ai-mentor-hustlebot.md` (existing reference in index) — append rename to "Workspace Copilot," contextual prompt pattern, calmer launcher spec.
-- Update `mem/index.md` Core to note workspace subdomain split and dark-mode pause.
-
----
-
-## Files (planned)
-
-**New**
-- `src/lib/host.ts`
-- `src/components/copilot/CopilotPrompt.tsx`
-- `mem/tech/workspace-subdomain.md`
-
-**Edited**
-- `src/App.tsx` — host-aware route gating + cross-host redirects
-- `src/components/Navbar.tsx`, `src/components/Footer.tsx` — cross-host CTAs
-- `src/components/ThemeToggle.tsx` — maintenance toast
-- `src/components/AppShell.tsx` — drop dark mount, calmer top bar, copilot label
-- `src/components/Chatbot.tsx` — calmer launcher, "Workspace Copilot" copy, prefill listener
-- `src/components/HustleBotIntro.tsx` — rename + softer visuals
-- `src/pages/tools/ProposalGenerator.tsx`, `src/pages/tools/OnboardingFormBuilder.tsx`, `src/pages/workspace-os/Clients.tsx` — drop in `<CopilotPrompt>`
-- `src/pages/Dashboard.tsx` + `src/components/dashboard/ContextualNudge.tsx`, `OperationalFlows.tsx` — flatten gradients
-- `mem/index.md`, `mem/style/ui-governance.md`
+- Deploy edge functions: `skymedia-webhook`, `telegram-webhook`, `admin-bot-notify`, `admin-alert`, plus new `signup-guard`.
+- Trigger test alert "✅ HustleAI Ops connected successfully" to admin chat.
+- Test `/start` on user bot via Telegram screenshot from logs.
+- Test signup with non-Gmail → blocked + admin alert received.
+- Test signup with `samratakash0000@gmail.com` → blocked.
+- Test Cmd+click on admin nav → new tab opens.
 
 ---
 
-## Out of scope (called out, deferred)
+## Out of scope (per user)
+- No auth rewrite.
+- No bot merging.
+- No AI chat on admin bot.
+- No bidirectional admin messaging.
 
-- True cross-subdomain SSO via `.hustlaiapp.in` cookie storage for Supabase — needs a careful auth-storage swap; documented in memory.
-- Full dark-mode rewrite — paused.
-- Dedicated workspace build/deploy split — single codebase keeps shipping both surfaces.
+## Technical notes
+- Disposable-email list is intentionally small + static (no external API call) to keep auth flow fast.
+- Hardcoded admin chat `1378192648` is in-code constant + env override to stay resilient if env var is wiped.
+- All admin-bot sends use `SKYMEDIA_BOT_TOKEN` exclusively; user-bot sends use `TELEGRAM_BOT_TOKEN`.
+- Signup-guard runs BEFORE `supabase.auth.signUp` to avoid creating phantom users; blocklist log inserted via service role from edge function.
