@@ -14,6 +14,18 @@
     hsl(258 80% 64% / 0.10),
     hsl(292 84% 62% / 0.10));
 
+  /* "Pick your cockpit" pastel — pale mint → blush → peach.
+     Used as a calm ambient wash on operational surfaces so the workspace
+     feels warm and trustworthy rather than purely cinematic-dark. */
+  --ws-gradient-pastel: linear-gradient(125deg,
+    hsl(150 70% 92%) 0%,
+    hsl(330 80% 94%) 48%,
+    hsl(28 90% 92%) 100%);
+  --ws-gradient-pastel-soft: linear-gradient(125deg,
+    hsl(150 70% 60% / 0.12) 0%,
+    hsl(330 80% 70% / 0.12) 48%,
+    hsl(28 90% 70% / 0.12) 100%);
+
   --ws-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
   --ws-dur-fast: 160ms;
   --ws-dur-base: 240ms;
@@ -213,6 +225,44 @@
     radial-gradient(45% 38% at 88% 92%, hsl(258 80% 64% / 0.08), transparent 60%);
   animation: ws-portal-breathe 14s ease-in-out infinite;
 }
+
+/* Pastel ambient — warm sibling of .ws-ambient. Use on lighter operational
+   surfaces (Overview, project detail) to channel the "Pick your cockpit"
+   feel without losing depth. */
+.ws-ambient-pastel {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  opacity: 0.55;
+  background:
+    radial-gradient(45% 60% at 8% 0%, hsl(150 80% 75% / 0.35), transparent 65%),
+    radial-gradient(55% 55% at 55% 30%, hsl(330 85% 82% / 0.32), transparent 70%),
+    radial-gradient(50% 60% at 100% 100%, hsl(28 95% 80% / 0.32), transparent 65%);
+  animation: ws-portal-breathe 18s ease-in-out infinite;
+}
+
+/* Trust strip — calm horizontal status line. Tiny dots, hairline divider,
+   never noisy. Used to broadcast persistence/sync/provider state. */
+.ws-trust {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: hsl(0 0% 100% / 0.04);
+  border: 1px solid hsl(0 0% 100% / 0.06);
+  backdrop-filter: blur(8px);
+  font-size: 11px;
+  color: hsl(0 0% 100% / 0.65);
+}
+.ws-trust--light {
+  background: hsl(220 30% 99% / 0.7);
+  border-color: hsl(220 14% 90%);
+  color: hsl(220 12% 38%);
+}
+.ws-trust span.sep { width: 1px; height: 10px; background: currentColor; opacity: 0.18; }
 
 /* Presence pulse used in the elevated header */
 @keyframes ws-presence-pulse {
