@@ -22,3 +22,4 @@
 - [Workspace Assets](mem://features/workspace-assets) — Reusable assets via is_asset/asset_kind, AssetPicker, pin from rail, Canvas imports blueprints, Knowledge Hub mirrors prompts
 - [Workspace Pivot Phase 1b](mem://features/workspace-pivot-phase1b) — Dashboard renders migrated tools as violet "Open in Workspace ↗" launcher cards; tier gating moves to workspace
 - [Workspace Polish](mem://features/workspace-polish) — Shared visual tokens (src/styles/workspace.css) + WorkspaceHandoff fade-through transition for dashboard→workspace launches
+- [Product Thesis](mem://product/thesis) — HustleAI = AI Operating System for freelancers/agencies; surface roles, wave roadmap, Hustle Finder as hero, BYOK & template moats
