@@ -4,13 +4,13 @@ import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import {
-  Briefcase, Sparkles, Plus, Star, ChevronRight, FolderOpen, Receipt,
+  Briefcase, Sparkles, Plus, Star, ChevronRight, FolderOpen, Receipt, ArrowRight,
 } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useWorkspace, PROVIDER_LABELS, type ActiveProvider } from "@/lib/workspace/context";
 import { useRecentOutputs } from "@/lib/workspace/outputs";
 import { formatDistanceToNowStrict } from "date-fns";
 import { wp, wpProject } from "@/lib/workspace/paths";
+import { MagneticTile } from "@/components/workspace/MagneticTile";
 
 type WS = {
   id: string;
@@ -41,7 +41,7 @@ export default function Overview() {
   const [items, setItems] = useState<WS[]>([]);
   const [pending, setPending] = useState<Deliverable[]>([]);
   const [loading, setLoading] = useState(true);
-  const { activeProvider, providerLoading, setActiveProject } = useWorkspace();
+  const { activeProvider, providerLoading, activeProjectId, setActiveProject } = useWorkspace();
   const { items: recentOutputs, loading: outputsLoading } = useRecentOutputs({ limit: 5 });
 
   useEffect(() => {
@@ -69,28 +69,78 @@ export default function Overview() {
 
   const projectName = (id: string) => items.find(w => w.id === id)?.client_name || "—";
 
+  // Personalised greeting — first name from email/metadata; falls back gracefully.
+  const firstName = (() => {
+    const meta = (user?.user_metadata as any) || {};
+    const raw = meta.full_name || meta.name || (user?.email?.split("@")[0] ?? "");
+    if (!raw) return "";
+    return String(raw).split(/[ .]/)[0].replace(/^./, (c: string) => c.toUpperCase());
+  })();
+  const hour = new Date().getHours();
+  const partOfDay = hour < 5 ? "Still up" : hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : hour < 22 ? "Good evening" : "Late night";
+
+  // Continue where you left off — last active project from workspace context.
+  const lastActive = activeProjectId ? items.find(w => w.id === activeProjectId) : null;
+
   return (
-    <div className="space-y-8">
-      {/* Quiet header — no marketing copy, no fake stats */}
-      <section className="flex items-end justify-between gap-4 flex-wrap">
-        <div>
-          <h2 className="text-2xl font-semibold tracking-tight">
-            {items.length === 0 ? "Set up your first project" : "Your work"}
-            <span className="text-muted-foreground">.</span>
+    <div className="space-y-10">
+      {/* Personalised welcome — "this is mine" feeling */}
+      <motion.section
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: [0.22, 0.61, 0.36, 1] }}
+        className="flex items-end justify-between gap-6 flex-wrap pt-2"
+      >
+        <div className="min-w-0">
+          <p className="text-[11px] tracking-[0.18em] text-muted-foreground/70 mb-2">
+            {partOfDay}{firstName ? `, ${firstName}` : ""}
+          </p>
+          <h2 className="text-[34px] sm:text-[40px] leading-[1.05] font-semibold tracking-tight">
+            <span className="ws-headline-sweep">
+              {items.length === 0 ? "Let's set up your first project." : "Your operational cockpit."}
+            </span>
           </h2>
-          <p className="text-sm text-muted-foreground mt-1">
+          <p className="text-sm text-muted-foreground/80 mt-3 max-w-lg leading-relaxed">
             {items.length === 0
-              ? "Workspace is project-first. Add a client and everything follows."
-              : <>Pick a project to continue. <kbd className="ml-1 text-[10px] border border-border/60 rounded px-1 py-px">⌘K</kbd></>}
+              ? "Workspace is project-first. Add a client and everything else flows from there."
+              : <>Continue where you left off — or press <kbd className="text-[10px] border border-border/60 rounded px-1.5 py-0.5 mx-0.5">⌘K</kbd> to jump anywhere.</>}
           </p>
         </div>
         <ProviderPill provider={activeProvider} loading={providerLoading} />
-      </section>
+      </motion.section>
+
+      {/* Continue-where-you-left-off — only when we have a remembered project */}
+      {lastActive && (
+        <motion.section
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.05, duration: 0.45 }}
+        >
+          <Link to={wpProject(lastActive.id)} onMouseEnter={() => setActiveProject(lastActive.id)}>
+            <MagneticTile className="block rounded-2xl border border-border/50 bg-gradient-to-br from-card/80 via-card/40 to-card/20 backdrop-blur-sm p-5 sm:p-6">
+              <div className="flex items-center justify-between gap-4">
+                <div className="min-w-0">
+                  <p className="text-[10px] uppercase tracking-[0.18em] text-emerald-400/80 mb-2 inline-flex items-center gap-1.5">
+                    <span className="ws-presence" /> Continue where you left off
+                  </p>
+                  <h3 className="text-xl font-semibold tracking-tight truncate">{lastActive.client_name}</h3>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {(lastActive.pipeline_stage || lastActive.status || "—").replace(/_/g, " ")}
+                    <span className="mx-1.5 opacity-50">·</span>
+                    last touched {ago(lastActive.updated_at)}
+                  </p>
+                </div>
+                <div className="shrink-0 inline-flex items-center gap-2 text-sm text-foreground/80">
+                  Resume <ArrowRight className="h-4 w-4" />
+                </div>
+              </div>
+            </MagneticTile>
+          </Link>
+        </motion.section>
+      )}
 
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {[0,1,2,3].map(i => <Skeleton key={i} className="h-28 rounded-2xl" />)}
-        </div>
+        <ShimmerGrid />
       ) : items.length === 0 ? (
         <EmptyState />
       ) : (
@@ -113,33 +163,31 @@ export default function Overview() {
                   key={w.id}
                   initial={{ opacity: 0, y: 6 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.03 }}
+                  transition={{ delay: i * 0.04, duration: 0.35, ease: [0.22, 0.61, 0.36, 1] }}
                 >
-                  <Link
-                    to={wpProject(w.id)}
-                    onMouseEnter={() => setActiveProject(w.id)}
-                    className="block rounded-2xl border border-border/50 bg-card/50 hover:bg-card hover:border-primary/30 transition-all p-4 h-full ws-launch-card"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="font-medium leading-tight truncate">{w.client_name}</p>
-                        <div className="flex items-center gap-2 mt-1.5 text-[10px] uppercase tracking-wider text-muted-foreground/80">
-                          <span>{(w.pipeline_stage || w.status || "—").replace(/_/g, " ")}</span>
-                          <span>·</span>
-                          <span className="normal-case tracking-normal">{ago(w.updated_at)}</span>
+                  <Link to={wpProject(w.id)} onMouseEnter={() => setActiveProject(w.id)}>
+                    <MagneticTile className="block rounded-2xl border border-border/50 bg-card/50 hover:border-primary/30 p-4 h-full">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="font-medium leading-tight truncate">{w.client_name}</p>
+                          <div className="flex items-center gap-2 mt-1.5 text-[11px] text-muted-foreground/80">
+                            <span className="capitalize">{(w.pipeline_stage || w.status || "—").replace(/_/g, " ")}</span>
+                            <span className="opacity-50">·</span>
+                            <span>{ago(w.updated_at)}</span>
+                          </div>
                         </div>
+                        {w.pricing?.amount ? (
+                          <span className="text-[11px] font-medium text-muted-foreground shrink-0">
+                            {w.pricing.currency || "₹"}{w.pricing.amount}
+                          </span>
+                        ) : null}
                       </div>
-                      {w.pricing?.amount ? (
-                        <span className="text-[11px] font-medium text-muted-foreground shrink-0">
-                          {w.pricing.currency || "₹"}{w.pricing.amount}
-                        </span>
+                      {w.ai_summary || w.project_scope ? (
+                        <p className="text-xs text-muted-foreground/75 line-clamp-2 mt-3 leading-relaxed">
+                          {w.ai_summary || w.project_scope}
+                        </p>
                       ) : null}
-                    </div>
-                    {w.ai_summary || w.project_scope ? (
-                      <p className="text-xs text-muted-foreground/80 line-clamp-2 mt-3">
-                        {w.ai_summary || w.project_scope}
-                      </p>
-                    ) : null}
+                    </MagneticTile>
                   </Link>
                 </motion.div>
               ))}
@@ -158,7 +206,11 @@ export default function Overview() {
             <div className="rounded-2xl border border-border/50 bg-card/30 p-5">
               <SectionHeader icon={Receipt} title="Pending deliverables" hint={pending.length ? `${pending.length}` : undefined} />
               {pending.length === 0 ? (
-                <p className="text-xs text-muted-foreground mt-3">Nothing due. Add milestones inside a project to track them here.</p>
+                <EmptySignal
+                  icon={Receipt}
+                  title="Nothing due"
+                  hint="Add milestones inside a project to start tracking deliverables here."
+                />
               ) : (
                 <ul className="mt-3 divide-y divide-border/30">
                   {pending.map(p => (
@@ -169,12 +221,12 @@ export default function Overview() {
                       >
                         <div className="min-w-0 flex-1">
                           <p className="text-sm font-medium truncate">{p.label}</p>
-                          <div className="flex items-center gap-2 text-[10px] uppercase tracking-wider text-muted-foreground/70 mt-0.5">
+                          <div className="flex items-center gap-2 text-[11px] text-muted-foreground/70 mt-0.5">
                             <span className="truncate">{projectName(p.workspace_id)}</span>
-                            {p.due_date && <><span>·</span><span className="normal-case tracking-normal">{ago(p.due_date)}</span></>}
+                            {p.due_date && <><span className="opacity-50">·</span><span>{ago(p.due_date)}</span></>}
                           </div>
                         </div>
-                        <span className={`text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded ${
+                        <span className={`text-[10px] capitalize tracking-wide px-2 py-0.5 rounded-full ${
                           p.status === "overdue" ? "bg-red-500/10 text-red-500" :
                           p.status === "partial" ? "bg-amber-500/10 text-amber-600" :
                           "bg-muted text-muted-foreground"
@@ -189,11 +241,15 @@ export default function Overview() {
             <div className="rounded-2xl border border-border/50 bg-card/30 p-5">
               <SectionHeader icon={Sparkles} title="Recent AI outputs" hint={recentOutputs.length ? `${recentOutputs.length}` : undefined} />
               {outputsLoading ? (
-                <div className="space-y-2 mt-3">{[0,1,2].map(i => <Skeleton key={i} className="h-10 rounded-lg" />)}</div>
+                <div className="space-y-2 mt-3">
+                  {[0,1,2].map(i => <div key={i} className="ws-shimmer h-10 rounded-lg" />)}
+                </div>
               ) : recentOutputs.length === 0 ? (
-                <p className="text-xs text-muted-foreground mt-3">
-                  Outputs from inside a project will appear here. Open any project and use a contextual action like “Build Strategy.”
-                </p>
+                <EmptySignal
+                  icon={Sparkles}
+                  title="No outputs yet"
+                  hint="Open a project and run an action like “Build strategy” — your generations land here."
+                />
               ) : (
                 <ul className="mt-3 divide-y divide-border/30">
                   {recentOutputs.map(o => (
@@ -205,10 +261,10 @@ export default function Overview() {
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-medium truncate">{o.title}</p>
-                        <div className="flex items-center gap-2 text-[10px] uppercase tracking-wider text-muted-foreground/70 mt-0.5">
-                          <span>{o.tool}</span>
-                          {o.provider && <><span>·</span><span>{PROVIDER_LABELS[o.provider] || o.provider}</span></>}
-                          <span>·</span><span className="normal-case tracking-normal">{ago(o.created_at)}</span>
+                        <div className="flex items-center gap-2 text-[11px] text-muted-foreground/70 mt-0.5">
+                          <span className="capitalize">{o.tool}</span>
+                          {o.provider && <><span className="opacity-50">·</span><span>{PROVIDER_LABELS[o.provider] || o.provider}</span></>}
+                          <span className="opacity-50">·</span><span>{ago(o.created_at)}</span>
                         </div>
                       </div>
                     </li>
@@ -229,15 +285,42 @@ function SectionHeader({ icon: Icon, title, hint, action }: { icon: any; title: 
       <div className="flex items-center gap-2">
         <Icon className="h-4 w-4 text-muted-foreground" />
         <h3 className="text-sm font-medium tracking-tight">{title}</h3>
-        {hint && <span className="text-[10px] uppercase tracking-wider text-muted-foreground/70">· {hint}</span>}
+        {hint && <span className="text-[11px] text-muted-foreground/60">· {hint}</span>}
       </div>
       {action}
     </div>
   );
 }
 
+function ShimmerGrid() {
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        {[0,1,2,3].map(i => (
+          <div key={i} className="ws-shimmer h-28 rounded-2xl" />
+        ))}
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {[0,1].map(i => <div key={i} className="ws-shimmer h-44 rounded-2xl" />)}
+      </div>
+    </div>
+  );
+}
+
+function EmptySignal({ icon: Icon, title, hint }: { icon: any; title: string; hint: string }) {
+  return (
+    <div className="mt-4 rounded-xl border border-dashed border-border/50 bg-gradient-to-br from-transparent via-transparent to-muted/10 p-5 text-center">
+      <div className="h-9 w-9 rounded-xl bg-muted/40 flex items-center justify-center mx-auto mb-2.5">
+        <Icon className="h-4 w-4 text-muted-foreground/80" />
+      </div>
+      <p className="text-sm font-medium">{title}</p>
+      <p className="text-xs text-muted-foreground/75 mt-1 leading-relaxed max-w-xs mx-auto">{hint}</p>
+    </div>
+  );
+}
+
 function ProviderPill({ provider, loading }: { provider: ActiveProvider; loading: boolean }) {
-  if (loading) return <Skeleton className="h-7 w-32 rounded-full" />;
+  if (loading) return <div className="ws-shimmer h-7 w-32 rounded-full" />;
   if (!provider) {
     return (
       <Link to={wp("providers")} className="inline-flex items-center gap-2 rounded-full border border-amber-300/60 bg-amber-50/50 px-3 py-1 text-xs font-medium text-amber-700 hover:bg-amber-100 transition">

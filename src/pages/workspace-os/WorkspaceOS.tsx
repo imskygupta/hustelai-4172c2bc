@@ -1,4 +1,4 @@
-import { NavLink, Outlet, useLocation } from "react-router-dom";
+import { NavLink, Outlet } from "react-router-dom";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Briefcase, Plus, Sparkles, KeyRound, Users, Kanban, Brain, Palette, Blocks, Inbox, Menu, ChevronDown, TrendingUp, LogOut, ArrowUpRight } from "lucide-react";
@@ -8,6 +8,7 @@ import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/co
 import { BigScreenHint } from "@/components/BigScreenHint";
 import { WorkspaceContextBar } from "@/components/workspace/WorkspaceContextBar";
 import { WorkspaceCommandPalette } from "@/components/workspace/CommandPalette";
+import { PageTransition } from "@/components/workspace/PageTransition";
 import { wp } from "@/lib/workspace/paths";
 import { isWorkspaceHost, isDualHost, MARKETING_ORIGIN } from "@/lib/host";
 import { useWorkspace, PROVIDER_LABELS } from "@/lib/workspace/context";
@@ -40,7 +41,6 @@ const SECONDARY = [
 ];
 
 export default function WorkspaceOS() {
-  const { pathname } = useLocation();
   const [navOpen, setNavOpen] = useState(false);
   const onWorkspaceHost = isWorkspaceHost();
   const { activeProvider, providerLoading } = useWorkspace();
@@ -120,6 +120,7 @@ export default function WorkspaceOS() {
     )}>
       {/* Ambient cinematic backdrop — only on the workspace host */}
       {onWorkspaceHost && <div aria-hidden className="ws-ambient" />}
+      {onWorkspaceHost && <div aria-hidden className="ws-mesh" />}
       <SEO title="Workspaces | HustleAI Workspace OS" description="HustleAI Workspace OS — internal page." path="" noindex />
       <BigScreenHint pageKey="workspace-os" label="Workspace OS is built for desktop" />
       <WorkspaceCommandPalette />
@@ -232,16 +233,12 @@ export default function WorkspaceOS() {
         </aside>
 
         {/* Content */}
-        <motion.main
-          key={pathname}
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35, ease: "easeOut" }}
-          className="min-w-0 space-y-4"
-        >
+        <main className="min-w-0 space-y-4">
           <WorkspaceContextBar />
-          <Outlet />
-        </motion.main>
+          <PageTransition>
+            <Outlet />
+          </PageTransition>
+        </main>
       </div>
     </div>
   );
