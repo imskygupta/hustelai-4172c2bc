@@ -5,12 +5,39 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import {
   Briefcase, Sparkles, Plus, Star, ChevronRight, FolderOpen, Receipt, ArrowRight, Check, RefreshCw, Cpu,
+  Kanban, Users, Brain, Palette, Blocks, TrendingUp, KeyRound, Inbox, Layers, FileText,
 } from "lucide-react";
 import { useWorkspace, PROVIDER_LABELS, type ActiveProvider } from "@/lib/workspace/context";
 import { useRecentOutputs } from "@/lib/workspace/outputs";
 import { formatDistanceToNowStrict } from "date-fns";
 import { wp, wpProject } from "@/lib/workspace/paths";
 import { MagneticTile } from "@/components/workspace/MagneticTile";
+
+// Colorful tool tiles — the workspace's "what can I do" surface
+const TOOL_TILES: Array<{
+  to: string; label: string; desc: string; icon: any; gradient: string; iconBg: string;
+}> = [
+  { to: wp("pipeline"), label: "Pipeline", desc: "Move projects through stages — quote, build, deliver, paid.",
+    icon: Kanban,    gradient: "from-emerald-100 via-teal-50 to-cyan-100",       iconBg: "from-emerald-400 to-teal-500" },
+  { to: wp("clients"),  label: "Clients (CRM)", desc: "Every client, contact and history in one calm rolodex.",
+    icon: Users,     gradient: "from-violet-100 via-fuchsia-50 to-pink-100",     iconBg: "from-violet-400 to-fuchsia-500" },
+  { to: wp("roadmap"),  label: "Roadmap", desc: "AI plans the next 90 days based on what you actually do.",
+    icon: Brain,     gradient: "from-amber-100 via-orange-50 to-rose-100",       iconBg: "from-amber-400 to-orange-500" },
+  { to: wp("intake"),   label: "Intake forms", desc: "Branded client intake — replies land straight in inbox.",
+    icon: Inbox,     gradient: "from-sky-100 via-blue-50 to-indigo-100",         iconBg: "from-sky-400 to-blue-500" },
+  { to: wp("brand-kit"), label: "Brand kit", desc: "Logos, palettes, fonts — applied across every export.",
+    icon: Palette,   gradient: "from-rose-100 via-pink-50 to-fuchsia-100",       iconBg: "from-rose-400 to-pink-500" },
+  { to: wp("blocks"),   label: "Assets vault", desc: "Reusable blocks, snippets and saved AI outputs.",
+    icon: Blocks,    gradient: "from-lime-100 via-emerald-50 to-teal-100",       iconBg: "from-lime-400 to-emerald-500" },
+  { to: wp("revenue"),  label: "Revenue", desc: "Cash in, deliverables out — your live operating P&L.",
+    icon: TrendingUp,gradient: "from-green-100 via-emerald-50 to-lime-100",      iconBg: "from-green-500 to-emerald-600" },
+  { to: wp("canvas"),   label: "Hustle Canvas", desc: "Free-form canvas to wireframe ideas with AI.",
+    icon: Layers,    gradient: "from-indigo-100 via-violet-50 to-purple-100",    iconBg: "from-indigo-400 to-violet-500" },
+  { to: wp("blueprint"), label: "Blueprint", desc: "Generate full execution blueprints for any hustle.",
+    icon: FileText,  gradient: "from-yellow-100 via-amber-50 to-orange-100",     iconBg: "from-yellow-400 to-amber-500" },
+  { to: wp("providers"), label: "AI providers", desc: "Bring your own keys — Claude, Gemini, GPT, more.",
+    icon: KeyRound,  gradient: "from-slate-100 via-gray-50 to-zinc-100",         iconBg: "from-slate-500 to-zinc-600" },
+];
 
 type WS = {
   id: string;
@@ -88,9 +115,6 @@ export default function Overview() {
 
   return (
     <div className="relative space-y-10">
-      {/* Pastel ambient wash — borrows the "Pick your cockpit" gradient.
-          Sits behind content with low opacity so the dark cockpit still reads. */}
-      <div aria-hidden className="ws-ambient-pastel" style={{ position: "fixed", opacity: 0.18 }} />
       {/* Personalised welcome — "this is mine" feeling */}
       <motion.section
         initial={{ opacity: 0, y: 8 }}
@@ -115,6 +139,46 @@ export default function Overview() {
           <TrustBar provider={activeProvider} projectCount={items.length} outputCount={recentOutputs.length} />
         </div>
         <ProviderPill provider={activeProvider} loading={providerLoading} />
+      </motion.section>
+
+      {/* Big colorful tool tiles — the "Pick your cockpit" energy applied to workspace tools */}
+      <motion.section
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.08, duration: 0.5 }}
+      >
+        <div className="flex items-end justify-between mb-4">
+          <div>
+            <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground/70">Workspace tools</p>
+            <h3 className="text-lg font-semibold tracking-tight">Pick what to ship today</h3>
+          </div>
+          <Link to={wp("projects/new")} className="text-xs text-primary inline-flex items-center gap-1 hover:underline">
+            <Plus className="h-3 w-3" /> New project
+          </Link>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {TOOL_TILES.map((t, i) => (
+            <motion.div
+              key={t.to}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.05 + i * 0.03, duration: 0.35 }}
+            >
+              <Link to={t.to} className="block group">
+                <MagneticTile className={`relative block rounded-2xl border border-white/60 bg-gradient-to-br ${t.gradient} p-5 h-full overflow-hidden shadow-[0_4px_18px_-8px_rgba(120,80,200,0.18)] hover:shadow-[0_12px_36px_-12px_rgba(120,80,200,0.28)] transition-shadow`}>
+                  <div className={`h-10 w-10 rounded-xl bg-gradient-to-br ${t.iconBg} flex items-center justify-center shadow-md mb-4`}>
+                    <t.icon className="h-5 w-5 text-white" />
+                  </div>
+                  <p className="font-semibold text-foreground tracking-tight">{t.label}</p>
+                  <p className="text-xs text-foreground/70 mt-1.5 leading-relaxed">{t.desc}</p>
+                  <div className="mt-3 inline-flex items-center gap-1 text-[11px] font-medium text-foreground/80 group-hover:text-foreground transition-colors">
+                    Open <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" />
+                  </div>
+                </MagneticTile>
+              </Link>
+            </motion.div>
+          ))}
+        </div>
       </motion.section>
 
       {/* Continue-where-you-left-off — only when we have a remembered project */}
