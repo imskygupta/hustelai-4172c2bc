@@ -870,13 +870,26 @@ export default function AdminDashboard() {
                   .slice(0, 12)
                   .map((item) => {
                     const key = item.kind === "section" ? `qs:${item.id}` : `qr:${item.href}`;
+                    if (item.kind === "route") {
+                      return (
+                        <OperatorLink
+                          key={key}
+                          to={item.href}
+                          onClick={() => { setNavQuery(""); setNavOpen(false); }}
+                          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-left hover:bg-muted"
+                        >
+                          <item.icon className="w-4 h-4 text-muted-foreground" />
+                          <span className="truncate flex-1">{item.label}</span>
+                          <span className="ml-auto text-[10px] uppercase tracking-wider text-muted-foreground/70">page</span>
+                        </OperatorLink>
+                      );
+                    }
                     return (
                       <button
                         key={key}
                         onMouseDown={(e) => e.preventDefault()}
                         onClick={() => {
-                          if (item.kind === "section") setSection(item.id);
-                          else navigate(item.href);
+                          setSection(item.id);
                           setNavQuery("");
                           setNavOpen(false);
                         }}
@@ -885,7 +898,7 @@ export default function AdminDashboard() {
                         <item.icon className="w-4 h-4 text-muted-foreground" />
                         <span className="truncate">{item.label}</span>
                         <span className="ml-auto text-[10px] uppercase tracking-wider text-muted-foreground/70">
-                          {item.kind === "route" ? "page" : "section"}
+                          section
                         </span>
                       </button>
                     );
