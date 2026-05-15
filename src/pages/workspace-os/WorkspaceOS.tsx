@@ -59,15 +59,15 @@ export default function WorkspaceOS() {
   const [moreOpen, setMoreOpen] = useState(true);
   // Industry-grade nav: airier rhythm, clear section header, calm active state.
   const itemCls = ({ isActive }: { isActive: boolean }) => cn(
-    "group relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13.5px] transition-all duration-200 overflow-hidden",
+    "group relative flex items-center gap-2.5 px-2.5 py-2 rounded-md text-[12.5px] transition-all duration-200 overflow-hidden",
     isActive
       ? "text-foreground font-medium bg-foreground/[0.045] ring-1 ring-foreground/[0.06]"
       : "text-muted-foreground/85 hover:text-foreground hover:bg-foreground/[0.025]"
   );
   const Nav = ({ onPick }: { onPick?: () => void }) => (
-    <div className="space-y-5">
+    <div className="space-y-4">
       <div className="space-y-1">
-        <p className="px-3 mb-1.5 text-[10px] uppercase tracking-[0.16em] text-muted-foreground/55 font-medium">Operations</p>
+        <p className="px-2.5 mb-1 text-[9.5px] uppercase tracking-[0.18em] text-muted-foreground/55 font-medium">Operations</p>
         {MAIN.map(item => (
           <NavLink key={item.to} to={item.to} end={item.end} onClick={onPick} className={itemCls}>
             {({ isActive }) => (
