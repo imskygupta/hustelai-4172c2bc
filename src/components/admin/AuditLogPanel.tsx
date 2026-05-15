@@ -79,17 +79,16 @@ export function AuditLogPanel({ targetType, targetId, compact, limit = 100 }: Pr
             title="Operator audit log"
             count={`${rows.length} entries`}
             badges={[{ kind: "production" }]}
-            actions={
+            right={
               <Button variant="outline" size="sm" onClick={load} disabled={loading}>
                 <RefreshCw className={cn("w-3.5 h-3.5 mr-1.5", loading && "animate-spin")} /> Refresh
               </Button>
             }
           />
-          <OperatorExplainer
-            tone="info"
-            title="Append-only trail"
-            body="Every privileged action goes through record_operator_action. Entries cannot be edited or deleted. Use this when investigating incidents or reviewing escalations."
-          />
+          <OperatorExplainer tone="info" title="Append-only trail">
+            Every privileged action goes through <code>record_operator_action</code>. Entries
+            cannot be edited or deleted. Use this when investigating incidents or reviewing escalations.
+          </OperatorExplainer>
           <OperatorChips
             value={filter}
             onChange={setFilter}
@@ -116,7 +115,7 @@ export function AuditLogPanel({ targetType, targetId, compact, limit = 100 }: Pr
       {loading ? (
         <div className="text-sm text-muted-foreground py-8 text-center">Loading audit trail…</div>
       ) : filtered.length === 0 ? (
-        <OperatorEmpty title="No audit entries" body="Privileged operator actions will appear here." />
+        <OperatorEmpty title="No audit entries" hint="Privileged operator actions will appear here." />
       ) : (
         <ul className="rounded-lg border divide-y bg-card">
           {filtered.map((r) => {
