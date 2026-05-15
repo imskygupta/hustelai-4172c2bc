@@ -33,6 +33,8 @@ export type WorkspaceOutput = {
   ref_id: string | null;
   metadata: Record<string, unknown>;
   created_at: string;
+  is_asset?: boolean;
+  asset_kind?: string | null;
 };
 
 export type RecordOutputInput = {
@@ -45,6 +47,34 @@ export type RecordOutputInput = {
   ref_kind?: "export" | "doc" | "prompt" | "roadmap" | null;
   ref_id?: string | null;
   metadata?: Record<string, unknown>;
+  /** If true, the row is immediately promoted to a reusable asset. */
+  asAsset?: boolean;
+  /** e.g. "blueprint" | "prompt" | "roadmap" | "proposal" | "brief". */
+  asset_kind?: AssetKind | null;
+};
+
+/**
+ * Lightweight asset taxonomy. Intentionally a small, opinionated set —
+ * we are NOT building a Notion clone. New kinds should be discussed before
+ * being added here so the picker stays scannable.
+ */
+export type AssetKind =
+  | "blueprint"
+  | "prompt"
+  | "roadmap"
+  | "proposal"
+  | "brief"
+  | "strategy"
+  | "workflow";
+
+export const ASSET_KIND_LABELS: Record<AssetKind, string> = {
+  blueprint: "Blueprint",
+  prompt: "Prompt",
+  roadmap: "Roadmap",
+  proposal: "Proposal",
+  brief: "Client brief",
+  strategy: "AI strategy",
+  workflow: "Workflow",
 };
 
 /**
@@ -77,6 +107,8 @@ export async function recordWorkspaceOutput(
         ref_kind: input.ref_kind ?? null,
         ref_id: input.ref_id ?? null,
         metadata: input.metadata ?? {},
+        is_asset: !!input.asAsset,
+        asset_kind: input.asset_kind ?? null,
       })
       .select("id")
       .maybeSingle();
