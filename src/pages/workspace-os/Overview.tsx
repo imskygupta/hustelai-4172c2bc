@@ -393,7 +393,7 @@ function TrustBar({ provider, projectCount, outputCount }: { provider: ActivePro
 function ToolTileCard({ tile }: { tile: { to: string; label: string; what: string; when: string; icon: any; tone: string; external?: boolean } }) {
   const Icon = tile.icon;
   const inner = (
-    <MagneticTile className="group relative block rounded-2xl border border-border/40 bg-white/80 backdrop-blur-sm p-5 h-full hover:border-foreground/20 hover:bg-white hover:shadow-[0_8px_28px_-12px_rgba(0,0,0,0.08)] transition-all">
+    <MagneticTile className="group relative block rounded-2xl border border-slate-300/70 bg-[hsl(40_30%_98%)] p-5 h-full hover:border-slate-500/60 hover:bg-white hover:shadow-[0_10px_28px_-14px_rgba(15,23,42,0.18)] transition-all">
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className={`h-10 w-10 rounded-xl ${tile.tone} ring-1 flex items-center justify-center`}>
           <Icon className="h-[18px] w-[18px]" />
