@@ -4187,6 +4187,9 @@ export type Database = {
           search_count: number
           social_links: Json | null
           subscription_tier: Database["public"]["Enums"]["subscription_tier"]
+          suspended_at: string | null
+          suspended_by: string | null
+          suspended_reason: string | null
           timezone: string | null
           updated_at: string
           user_id: string
@@ -4222,6 +4225,9 @@ export type Database = {
           search_count?: number
           social_links?: Json | null
           subscription_tier?: Database["public"]["Enums"]["subscription_tier"]
+          suspended_at?: string | null
+          suspended_by?: string | null
+          suspended_reason?: string | null
           timezone?: string | null
           updated_at?: string
           user_id: string
@@ -4257,6 +4263,9 @@ export type Database = {
           search_count?: number
           social_links?: Json | null
           subscription_tier?: Database["public"]["Enums"]["subscription_tier"]
+          suspended_at?: string | null
+          suspended_by?: string | null
+          suspended_reason?: string | null
           timezone?: string | null
           updated_at?: string
           user_id?: string
@@ -4568,6 +4577,57 @@ export type Database = {
           reward_amount?: number
           reward_type?: string
           status?: string
+        }
+        Relationships: []
+      }
+      refund_requests: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          id: string
+          metadata: Json
+          notes: string | null
+          payment_order_id: string | null
+          reason: string
+          requested_by: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          target_user_id: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency?: string
+          id?: string
+          metadata?: Json
+          notes?: string | null
+          payment_order_id?: string | null
+          reason: string
+          requested_by: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          target_user_id: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          metadata?: Json
+          notes?: string | null
+          payment_order_id?: string | null
+          reason?: string
+          requested_by?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          target_user_id?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -7357,7 +7417,34 @@ export type Database = {
       }
     }
     Functions: {
+      _assert_admin_with_reason: { Args: { _reason: string }; Returns: string }
       ack_intelligence_alert: { Args: { _id: string }; Returns: undefined }
+      admin_force_logout: {
+        Args: { _reason: string; _target: string }
+        Returns: Json
+      }
+      admin_request_refund: {
+        Args: {
+          _amount: number
+          _currency: string
+          _order_id: string
+          _reason: string
+          _target: string
+        }
+        Returns: Json
+      }
+      admin_reset_credits: {
+        Args: { _new_balance: number; _reason: string; _target: string }
+        Returns: Json
+      }
+      admin_suspend_user: {
+        Args: { _reason: string; _target: string }
+        Returns: Json
+      }
+      admin_unsuspend_user: {
+        Args: { _reason: string; _target: string }
+        Returns: Json
+      }
       ai_jobs_kind_breakdown: {
         Args: { _since?: string }
         Returns: {
@@ -7648,6 +7735,7 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      is_suspended: { Args: { _user_id: string }; Returns: boolean }
       issue_telegram_link_token: {
         Args: { _bot?: string; _user: string }
         Returns: Json
