@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { PIPELINE_STAGES } from "@/lib/workspace-os/types";
-import { Plus, GripVertical, Calendar, IndianRupee, ArrowUpRight } from "lucide-react";
+import { Plus, GripVertical, Calendar, IndianRupee, ArrowUpRight, ChevronDown } from "lucide-react";
 import { wp, wpProject } from "@/lib/workspace/paths";
 import { formatDistanceToNowStrict } from "date-fns";
 
@@ -58,7 +58,7 @@ export default function Pipeline() {
           <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground/70 mb-1.5">Pipeline</p>
           <h2 className="text-[28px] font-semibold tracking-tight leading-tight">Project pipeline</h2>
           <p className="text-sm text-muted-foreground/85 mt-1.5 max-w-xl">
-            Every project, every stage, on one calm board. Drag a card to move it forward.
+            A vertical roadmap of every project. Drag a card down to advance it to the next stage.
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -79,15 +79,17 @@ export default function Pipeline() {
         </div>
       </header>
 
-      <div className="overflow-x-auto pb-6 -mx-4 lg:-mx-6 px-4 lg:px-6">
-        <div className="flex gap-4 min-w-max">
-          {PIPELINE_STAGES.map((stage, si) => {
-            const tint = STAGE_TINT[stage.id] || STAGE_TINT.inquiry;
-            const list = items.filter(w => (w.pipeline_stage || "inquiry") === stage.id);
-            const isOver = dragOver === stage.id;
-            return (
+      {/* Vertical roadmap — each stage is a horizontal lane stacked top→bottom,
+          with a soft chevron between them indicating flow direction. */}
+      <div className="space-y-3 max-w-4xl">
+        {PIPELINE_STAGES.map((stage, si) => {
+          const tint = STAGE_TINT[stage.id] || STAGE_TINT.inquiry;
+          const list = items.filter(w => (w.pipeline_stage || "inquiry") === stage.id);
+          const isOver = dragOver === stage.id;
+          const isLast = si === PIPELINE_STAGES.length - 1;
+          return (
+            <div key={stage.id}>
               <motion.div
-                key={stage.id}
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: si * 0.04 }}
@@ -98,69 +100,87 @@ export default function Pipeline() {
                   const id = e.dataTransfer.getData("text/plain");
                   if (id) move(id, stage.id);
                 }}
-                className={`w-[300px] shrink-0 rounded-2xl border transition-all ${
+                className={`rounded-2xl border transition-all ${
                   isOver
                     ? `bg-foreground/[0.04] border-foreground/30 ring-2 ${tint.ring}`
                     : `${tint.tint} border-border/40`
                 }`}
               >
-                <div className="flex items-center justify-between px-4 pt-4 pb-3">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <span className={`h-2 w-2 rounded-full ${tint.dot}`} />
-                    <span className="text-[13px] font-medium tracking-tight truncate">{stage.label}</span>
-                    <span className="text-[11px] tabular-nums text-muted-foreground/70 bg-foreground/[0.04] rounded-full px-1.5 py-0.5">{list.length}</span>
+                <div className="flex items-center justify-between px-5 pt-4 pb-3 border-b border-border/30">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <span className={`h-2.5 w-2.5 rounded-full ${tint.dot} shadow-[0_0_0_3px_rgba(255,255,255,0.6)]`} />
+                    <span className="text-[14px] font-medium tracking-tight">{stage.label}</span>
+                    <span className="text-[11px] tabular-nums text-muted-foreground/70 bg-foreground/[0.05] rounded-full px-2 py-0.5">{list.length}</span>
+                  </div>
+                  <div className="text-[11px] text-muted-foreground/60 tabular-nums">
+                    {list.reduce((s, w) => s + (Number(w.pricing?.amount) || 0), 0)
+                      ? `₹${list.reduce((s, w) => s + (Number(w.pricing?.amount) || 0), 0).toLocaleString("en-IN")}`
+                      : "—"}
                   </div>
                 </div>
 
-                <div className="px-2 pb-3 space-y-2 min-h-[120px]">
+                <div className="p-3">
                   {loading ? (
-                    <>{[0,1].map(i => <div key={i} className="ws-shimmer h-20 rounded-xl mx-2" />)}</>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                      {[0,1,2].map(i => <div key={i} className="ws-shimmer h-16 rounded-xl" />)}
+                    </div>
                   ) : list.length === 0 ? (
-                    <div className="text-[11px] text-muted-foreground/55 text-center py-8 px-3 leading-relaxed">
-                      Drop projects here or<br />
-                      <Link to={wp("projects/new")} className="text-foreground/80 hover:underline">create one →</Link>
+                    <div className="text-[12px] text-muted-foreground/60 text-center py-6 leading-relaxed">
+                      Drag a project here, or <Link to={wp("projects/new")} className="text-foreground/80 hover:underline">create one →</Link>
                     </div>
-                  ) : list.map(w => (
-                    <div
-                      key={w.id}
-                      draggable
-                      onDragStart={e => e.dataTransfer.setData("text/plain", w.id)}
-                      className="group cursor-grab active:cursor-grabbing"
-                    >
-                      <Link
-                        to={wpProject(w.id)}
-                        className="block rounded-xl border border-border/50 bg-white/90 backdrop-blur-sm p-3 hover:border-foreground/20 hover:shadow-[0_4px_16px_-8px_rgba(0,0,0,0.08)] transition-all"
-                      >
-                        <div className="flex items-start gap-2">
-                          <GripVertical className="h-3.5 w-3.5 text-muted-foreground/30 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-start justify-between gap-2">
-                              <p className="text-[13.5px] font-medium leading-snug truncate">{w.client_name}</p>
-                              <ArrowUpRight className="h-3.5 w-3.5 text-muted-foreground/40 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                      {list.map(w => (
+                        <div
+                          key={w.id}
+                          draggable
+                          onDragStart={e => e.dataTransfer.setData("text/plain", w.id)}
+                          className="group cursor-grab active:cursor-grabbing"
+                        >
+                          <Link
+                            to={wpProject(w.id)}
+                            className="block rounded-xl border border-border/50 bg-white/95 backdrop-blur-sm p-3 hover:border-foreground/25 hover:shadow-[0_6px_20px_-10px_rgba(0,0,0,0.12)] transition-all"
+                          >
+                            <div className="flex items-start gap-2">
+                              <GripVertical className="h-3.5 w-3.5 text-muted-foreground/30 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-start justify-between gap-2">
+                                  <p className="text-[13.5px] font-medium leading-snug truncate">{w.client_name}</p>
+                                  <ArrowUpRight className="h-3.5 w-3.5 text-muted-foreground/40 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                                </div>
+                                <div className="flex items-center gap-2 mt-1.5 text-[11px] text-muted-foreground/75">
+                                  {w.pricing?.amount ? (
+                                    <span className="inline-flex items-center gap-0.5 tabular-nums">
+                                      <IndianRupee className="h-3 w-3" />{Number(w.pricing.amount).toLocaleString("en-IN")}
+                                    </span>
+                                  ) : null}
+                                  {w.pricing?.amount && w.updated_at && <span className="opacity-40">·</span>}
+                                  {w.updated_at && (
+                                    <span className="inline-flex items-center gap-1">
+                                      <Calendar className="h-3 w-3" />{ago(w.updated_at)}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
                             </div>
-                            <div className="flex items-center gap-2 mt-2 text-[11px] text-muted-foreground/75">
-                              {w.pricing?.amount ? (
-                                <span className="inline-flex items-center gap-0.5 tabular-nums">
-                                  <IndianRupee className="h-3 w-3" />{Number(w.pricing.amount).toLocaleString("en-IN")}
-                                </span>
-                              ) : null}
-                              {w.pricing?.amount && w.updated_at && <span className="opacity-40">·</span>}
-                              {w.updated_at && (
-                                <span className="inline-flex items-center gap-1">
-                                  <Calendar className="h-3 w-3" />{ago(w.updated_at)}
-                                </span>
-                              )}
-                            </div>
-                          </div>
+                          </Link>
                         </div>
-                      </Link>
+                      ))}
                     </div>
-                  ))}
+                  )}
                 </div>
               </motion.div>
-            );
-          })}
-        </div>
+              {!isLast && (
+                <div className="flex items-center justify-center py-1.5" aria-hidden>
+                  <div className="flex flex-col items-center gap-0.5 text-muted-foreground/40">
+                    <span className="h-3 w-px bg-border/70" />
+                    <ChevronDown className="h-3.5 w-3.5" />
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );

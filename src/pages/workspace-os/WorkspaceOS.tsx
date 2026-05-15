@@ -1,7 +1,7 @@
 import { NavLink, Outlet } from "react-router-dom";
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Briefcase, Plus, Sparkles, KeyRound, Users, Kanban, Brain, Palette, Blocks, Inbox, Menu, ChevronDown, TrendingUp, LogOut, ArrowUpRight } from "lucide-react";
+import { Briefcase, Plus, Sparkles, KeyRound, Users, Kanban, Brain, Palette, Blocks, Inbox, Menu, ChevronDown, TrendingUp, LogOut, ArrowUpRight, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import NotificationCenter from "@/components/workspace-os/NotificationCenter";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -59,15 +59,15 @@ export default function WorkspaceOS() {
   const [moreOpen, setMoreOpen] = useState(true);
   // Industry-grade nav: airier rhythm, clear section header, calm active state.
   const itemCls = ({ isActive }: { isActive: boolean }) => cn(
-    "group relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13.5px] transition-all duration-200 overflow-hidden",
+    "group relative flex items-center gap-2.5 px-2.5 py-2 rounded-md text-[12.5px] transition-all duration-200 overflow-hidden",
     isActive
       ? "text-foreground font-medium bg-foreground/[0.045] ring-1 ring-foreground/[0.06]"
       : "text-muted-foreground/85 hover:text-foreground hover:bg-foreground/[0.025]"
   );
   const Nav = ({ onPick }: { onPick?: () => void }) => (
-    <div className="space-y-5">
+    <div className="space-y-4">
       <div className="space-y-1">
-        <p className="px-3 mb-1.5 text-[10px] uppercase tracking-[0.16em] text-muted-foreground/55 font-medium">Operations</p>
+        <p className="px-2.5 mb-1 text-[9.5px] uppercase tracking-[0.18em] text-muted-foreground/55 font-medium">Operations</p>
         {MAIN.map(item => (
           <NavLink key={item.to} to={item.to} end={item.end} onClick={onPick} className={itemCls}>
             {({ isActive }) => (
@@ -120,11 +120,11 @@ export default function WorkspaceOS() {
     <div className={cn(
       "relative min-h-[calc(100vh-3rem)] text-foreground",
       onWorkspaceHost
-        ? "bg-gradient-to-br from-[hsl(150_50%_99%)] via-[hsl(330_60%_99.5%)] to-[hsl(28_70%_99%)]"
+        ? "bg-gradient-to-br from-[hsl(48_85%_99%)] via-[hsl(40_75%_99.2%)] to-[hsl(30_70%_98.8%)]"
         : "bg-[radial-gradient(ellipse_at_top_left,hsl(var(--primary)/0.06),transparent_55%),radial-gradient(ellipse_at_bottom_right,hsl(258_80%_64%/0.05),transparent_55%)]"
     )}>
       {/* Ambient pastel backdrop — borrows the "Pick your cockpit" gradient */}
-      {onWorkspaceHost && <div aria-hidden className="ws-ambient-pastel" style={{ position: "fixed", opacity: 0.25 }} />}
+      {onWorkspaceHost && <div aria-hidden className="ws-ambient-pastel" style={{ position: "fixed", opacity: 0.18 }} />}
       <SEO title="Workspaces | HustleAI Workspace OS" description="HustleAI Workspace OS — internal page." path="" noindex />
       <BigScreenHint pageKey="workspace-os" label="Workspace OS is built for desktop" />
       <WorkspaceCommandPalette />
@@ -184,6 +184,25 @@ export default function WorkspaceOS() {
             )}
           </div>
           <div className="flex items-center gap-2">
+            {/* Global search — opens the ⌘K palette */}
+            <button
+              type="button"
+              onClick={() => window.dispatchEvent(new CustomEvent("ws-cmdk-toggle"))}
+              className="hidden md:inline-flex items-center gap-2 h-9 pl-3 pr-2 rounded-full bg-white/70 hover:bg-white border border-border/60 text-[12px] text-muted-foreground hover:text-foreground transition shadow-[0_1px_2px_rgba(0,0,0,0.03)]"
+              aria-label="Search workspace"
+            >
+              <Search className="h-3.5 w-3.5" />
+              <span className="text-foreground/70">Search anything…</span>
+              <kbd className="ml-2 hidden lg:inline-flex text-[10px] uppercase tracking-wider text-muted-foreground/70 border border-border/60 rounded px-1.5 py-px bg-background/60">⌘K</kbd>
+            </button>
+            <button
+              type="button"
+              onClick={() => window.dispatchEvent(new CustomEvent("ws-cmdk-toggle"))}
+              className="md:hidden h-9 w-9 rounded-full bg-white/70 hover:bg-white border border-border/60 flex items-center justify-center"
+              aria-label="Search"
+            >
+              <Search className="h-4 w-4 text-muted-foreground" />
+            </button>
             <NotificationCenter />
             <NavLink
               to={wp("projects/new")}
@@ -230,7 +249,7 @@ export default function WorkspaceOS() {
         </div>
       </motion.header>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-4 lg:px-6 py-6 lg:py-8 grid grid-cols-1 lg:grid-cols-[224px_1fr] gap-10">
+      <div className="relative z-10 max-w-[1480px] mx-auto px-4 lg:px-8 py-6 lg:py-8 grid grid-cols-1 lg:grid-cols-[180px_1fr] gap-8 xl:gap-12">
         {/* Side rail — desktop only; mobile uses the Sheet in the header */}
         <aside className="hidden lg:block lg:sticky lg:top-20 lg:self-start">
           <Nav />
