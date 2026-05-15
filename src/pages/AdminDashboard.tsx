@@ -828,6 +828,14 @@ export default function AdminDashboard() {
           })}
         </nav>
         <div className="absolute bottom-0 left-0 right-0 p-2 border-t border-border space-y-1">
+          <OperatorLink
+            to="/admin-dashboard/docs"
+            title="Operator Handbook — Ctrl/Cmd-click to open in a new tab"
+            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
+          >
+            <BookOpen className="w-4 h-4 shrink-0" />
+            {!sidebarCollapsed && <span>Operator Handbook</span>}
+          </OperatorLink>
           <button onClick={() => navigate("/dashboard")} className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-muted hover:text-foreground">
             <Eye className="w-4 h-4 shrink-0" />
             {!sidebarCollapsed && <span>User View</span>}
