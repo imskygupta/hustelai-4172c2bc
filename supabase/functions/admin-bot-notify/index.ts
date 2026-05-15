@@ -8,9 +8,13 @@ import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 
 // Use the SkyMedia admin bot (@theskymediabot) for ops notifications.
 // Falls back to the user-facing bot only if the admin token is missing.
-const TG_TOKEN = Deno.env.get("SKYMEDIA_BOT_TOKEN") || Deno.env.get("TELEGRAM_BOT_TOKEN") || "";
-const TG_CHATS = (Deno.env.get("TELEGRAM_ADMIN_CHAT_IDS") || Deno.env.get("TELEGRAM_ADMIN_CHAT_ID") || "")
+// Always use the SkyMedia admin bot for ops alerts. Never fall back to user bot.
+const TG_TOKEN = Deno.env.get("SKYMEDIA_BOT_TOKEN") || "";
+// Permanent owner allowlist — guarantees alerts arrive even if env var is wiped.
+const PERMANENT_ADMIN_CHATS = ["1378192648"];
+const ENV_CHATS = (Deno.env.get("TELEGRAM_ADMIN_CHAT_IDS") || Deno.env.get("TELEGRAM_ADMIN_CHAT_ID") || "")
   .split(/[,;\s]+/).map(s => s.trim()).filter(Boolean);
+const TG_CHATS = Array.from(new Set([...PERMANENT_ADMIN_CHATS, ...ENV_CHATS]));
 
 function esc(s: unknown): string {
   return String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -37,6 +41,26 @@ function fmtPayment(p: Record<string, any>): string {
   ].filter(Boolean).join("\n");
 }
 
+function fmtSignupBlocked(p: Record<string, any>): string {
+  return [
+    "🚫 <b>Signup blocked</b>",
+    `email: <code>${esc(p.email)}</code>`,
+    p.reason ? `reason: ${esc(p.reason)}` : "",
+    p.source ? `source: ${esc(p.source)}` : "",
+    `time: ${esc(p.timestamp || new Date().toISOString())}`,
+  ].filter(Boolean).join("\n");
+}
+
+function fmtAuthSuspicious(p: Record<string, any>): string {
+  return [
+    "🛡 <b>Suspicious auth attempt</b>",
+    p.email ? `email: <code>${esc(p.email)}</code>` : "",
+    p.ip ? `ip: <code>${esc(p.ip)}</code>` : "",
+    p.reason ? `reason: ${esc(p.reason)}` : "",
+    `time: ${esc(p.timestamp || new Date().toISOString())}`,
+  ].filter(Boolean).join("\n");
+}
+
 async function sendTelegram(text: string): Promise<void> {
   if (!TG_TOKEN || TG_CHATS.length === 0) return;
   await Promise.allSettled(TG_CHATS.map(chat_id =>
@@ -58,6 +82,9 @@ Deno.serve(async (req) => {
     let text = "";
     if (event === "signup") text = fmtSignup(payload);
     else if (event === "payment_initiated") text = fmtPayment(payload);
+    else if (event === "signup_blocked") text = fmtSignupBlocked(payload);
+    else if (event === "auth_suspicious") text = fmtAuthSuspicious(payload);
+    else if (event === "test") text = `✅ <b>HustleAI Ops connected successfully</b>\n${esc(payload.note || "")}`;
     else text = `ℹ️ <b>${esc(event || "unknown")}</b>\n${esc(JSON.stringify(payload).slice(0, 400))}`;
     // background dispatch
     void sendTelegram(text);

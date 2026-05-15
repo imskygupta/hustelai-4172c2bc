@@ -11,6 +11,7 @@ import { motion } from "framer-motion";
 import { ParticleBackground } from "@/components/ParticleBackground";
 
 import { SEO } from "@/components/SEO";
+import { checkEmailPolicy } from "@/lib/auth/email-policy";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
@@ -20,6 +21,11 @@ export default function ForgotPassword() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const policy = checkEmailPolicy(email);
+    if (policy.ok === false) {
+      toast({ title: "Email not accepted", description: policy.message, variant: "destructive" });
+      return;
+    }
     setLoading(true);
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: RESET_PASSWORD_REDIRECT_TO,

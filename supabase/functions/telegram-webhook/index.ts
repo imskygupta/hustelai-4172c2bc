@@ -86,7 +86,7 @@ serve(async (req) => {
         return ok();
       }
       if (!token) {
-        await sendTelegram(chatId, { title: "Hello 👋", body: "To link your HustleAI account, open Settings → Integrations and tap Connect Telegram." });
+        await sendWelcome(chatId);
         return ok();
       }
 
@@ -192,26 +192,12 @@ serve(async (req) => {
     const cmd = text.split(/\s+/)[0].toLowerCase();
 
     if (cmd === "/help" || cmd === "/ping") {
-      await sendTelegram(chatId, {
-        title: "HustleAI bot — commands",
-        body: [
-          "/files — recent exports",
-          "/latest — most recent export",
-          "/exports — alias of /files",
-          "/resume — most recent resume",
-          "/history — last 10 exports",
-          "/storage — your storage usage",
-          "/verify — show your linked chat info",
-          "/security — recent security events",
-          "/plan — your plan & usage",
-          "/disconnect — unlink this chat",
-        ].join("\n"),
-      });
+      await sendWelcome(chatId);
       return ok();
     }
 
     if (!userId) {
-      await sendTelegram(chatId, { body: "This chat isn't linked. Open HustleAI → Settings → Integrations to connect." });
+      await sendWelcome(chatId);
       return ok();
     }
 
@@ -302,7 +288,7 @@ serve(async (req) => {
       return ok();
     }
 
-    await sendTelegram(chatId, { body: "Unknown command. Send /help." });
+    await sendWelcome(chatId);
     return ok();
   } catch (e) {
     console.error("telegram-webhook error", e);
@@ -319,4 +305,21 @@ function humanBytes(n: number) {
   const u = ["B","KB","MB","GB"]; let i=0; let v=n;
   while (v >= 1024 && i < u.length-1) { v/=1024; i++; }
   return `${v.toFixed(v<10?1:0)} ${u[i]}`;
+}
+
+// Branded onboarding message with inline keyboard buttons.
+// Used for /start (no token), /help, /ping, unknown messages, and unlinked chats.
+async function sendWelcome(chatId: string) {
+  await sendTelegram(chatId, {
+    title: "Welcome to HustleAI 🚀",
+    body: "Your AI operating system for freelance work, clients, and growth.\n\nTap a button below to get started.",
+    // @ts-ignore – telegram inline keyboard
+    reply_markup: {
+      inline_keyboard: [
+        [{ text: "🌐 Visit Website", url: "https://hustlaiapp.in" }],
+        [{ text: "📚 Documentation", url: "https://docs.hustlaiapp.in" }],
+        [{ text: "🔗 Connect Account", url: "https://hustlaiapp.in/settings/integrations" }],
+      ],
+    },
+  } as any);
 }
