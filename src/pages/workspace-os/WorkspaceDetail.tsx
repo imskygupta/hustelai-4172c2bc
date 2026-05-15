@@ -205,11 +205,11 @@ function RailItem({
   mono?: boolean; cap?: boolean; muted?: boolean;
 }) {
   const body = (
-    <div className={`rounded-xl border border-border/50 bg-card/30 hover:bg-card/60 transition-colors p-3 ${href ? "cursor-pointer" : ""}`}>
+    <div className={`rounded-lg hover:bg-muted/40 transition-colors px-3 py-2 ${href ? "cursor-pointer" : ""}`}>
       <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-muted-foreground">
         {Icon && <Icon className="h-3 w-3" />} {label}
       </div>
-      <p className={`text-sm mt-1 truncate ${mono ? "font-mono text-xs" : ""} ${cap ? "capitalize" : ""} ${muted ? "text-muted-foreground" : "text-foreground/90"}`}>
+      <p className={`text-sm mt-0.5 truncate ${mono ? "font-mono text-xs" : ""} ${cap ? "capitalize" : ""} ${muted ? "text-muted-foreground" : "text-foreground/90"}`}>
         {value}
       </p>
     </div>
