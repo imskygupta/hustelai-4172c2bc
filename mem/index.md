@@ -19,3 +19,4 @@
 - [Workspace Pivot](mem://features/workspace-pivot) — Phase 1 migration of heavy execution tools to workspace.* + BYOK as workspace USP
 - [Workspace Coherence](mem://features/workspace-coherence) — Global WorkspaceProvider (active project/client/AI provider) + WorkspaceFrame top bar
 - [Workspace Memory](mem://features/workspace-memory) — Shared cross-tool execution log: workspace_outputs table + useRecordOutput / useRecentOutputs / RecentOutputsRail
+- [Workspace Assets](mem://features/workspace-assets) — Reusable assets via is_asset/asset_kind, AssetPicker, pin from rail, Canvas imports blueprints, Knowledge Hub mirrors prompts
