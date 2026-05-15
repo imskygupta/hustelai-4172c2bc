@@ -1020,63 +1020,19 @@ export default function AdminDashboard() {
           {/* ===== ROLE MANAGER ===== */}
           {section === "roles" && (
             <div className="space-y-6">
-              <div className="glass rounded-xl p-6 space-y-4">
-                <h3 className="font-display font-bold flex items-center gap-2">
-                  <Shield className="w-5 h-5 text-primary" /> Assign Role
-                </h3>
-                <div className="grid md:grid-cols-3 gap-4">
-                  <Select value={roleUserId} onValueChange={setRoleUserId}>
-                    <SelectTrigger><SelectValue placeholder="Select User" /></SelectTrigger>
-                    <SelectContent>
-                      {users.map(u => (
-                        <SelectItem key={u.user_id} value={u.user_id}>
-                          {u.display_name || u.email} ({u.subscription_tier})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Select value={roleToAssign} onValueChange={setRoleToAssign}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="admin">🛡️ Admin (Full Access)</SelectItem>
-                      <SelectItem value="moderator">📝 Moderator (Blog + Forum)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Button onClick={assignRole} className="bg-gradient-primary text-primary-foreground">
-                    <Plus className="w-4 h-4 mr-1" /> Assign Role
-                  </Button>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  <strong>Admin:</strong> Full dashboard access · <strong>Moderator:</strong> Can write blogs, moderate forum posts
-                </p>
-              </div>
-
-              <div className="space-y-3">
-                <h3 className="font-display font-bold">Current Roles ({userRoles.length})</h3>
-                {userRoles.length === 0 && <p className="text-sm text-muted-foreground">No roles assigned yet.</p>}
-                {userRoles.map((r: any) => {
-                  const rUser = users.find(u => u.user_id === r.user_id);
-                  return (
-                    <div key={r.id} className="glass rounded-xl p-4 flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">
-                          {(rUser?.display_name || rUser?.email || "?")[0].toUpperCase()}
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium">{rUser?.display_name || rUser?.email || r.user_id.slice(0, 8)}</p>
-                          <p className="text-xs text-muted-foreground">{rUser?.email}</p>
-                        </div>
-                        <Badge className={r.role === "admin" ? "bg-destructive/20 text-destructive" : "bg-primary/20 text-primary"} variant="outline">
-                          {r.role === "admin" ? "🛡️" : "📝"} {r.role}
-                        </Badge>
-                      </div>
-                      <Button variant="ghost" size="sm" onClick={() => removeRole(r.id)}>
-                        <Trash2 className="w-4 h-4 text-destructive" />
-                      </Button>
-                    </div>
-                  );
-                })}
-              </div>
+              <RolesPanel
+                users={users as any}
+                roles={userRoles as any}
+                onAssign={async (uid, role) => {
+                  setRoleUserId(uid); setRoleToAssign(role);
+                  const { error } = await supabase.from("user_roles").insert({ user_id: uid, role: role as any });
+                  if (error) {
+                    if (error.code === "23505") toast({ title: "Already assigned", variant: "destructive" });
+                    else toast({ title: "Error", description: error.message, variant: "destructive" });
+                  } else { toast({ title: "Role assigned" }); loadAllData(); }
+                }}
+                onRemove={removeRole}
+              />
 
               {/* Change Password */}
               <div className="glass rounded-xl p-6 space-y-4">
