@@ -539,7 +539,8 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* COCKPIT — Workspace OS modules at a glance */}
+            {/* COCKPIT — moved into Workspace home so each surface owns
+                its own modules. Only the AI Fuel hero remains here. */}
             <div className="rounded-xl border border-slate-200 bg-white p-5">
               {/* AI Fuel — premium hero band, sits ABOVE cockpit modules */}
               <div className="mb-5 relative overflow-hidden rounded-2xl p-[1.5px] bg-gradient-to-r from-emerald-400 via-violet-500 to-fuchsia-500 shadow-[0_0_22px_rgba(16,185,129,0.25)]">
@@ -586,51 +587,14 @@ export default function Dashboard() {
                   </div>
                 </div>
               </div>
-
-              <div className="flex items-center justify-between mb-1">
-                <h3 className="font-display font-semibold text-slate-900 flex items-center gap-2">
-                  <Layers className="w-4 h-4 text-emerald-600" /> Your cockpit
-                </h3>
-                <Button variant="ghost" size="sm" className="text-emerald-600 hover:text-emerald-700 h-7" onClick={() => navigate("/workspaces")}>
-                  Open Workspace OS <ArrowUpRight className="w-3 h-3 ml-0.5" />
-                </Button>
-              </div>
-              <p className="text-xs text-slate-500 mb-4">Every module that powers your freelance business — one cockpit, no tab-hunting.</p>
-
-              <div className="grid md:grid-cols-3 gap-4">
-                <CockpitGroup
-                  title="Client OS"
-                  desc="CRM, pipelines & retainers"
-                  accent="emerald"
-                  tools={[
-                    { icon: Users, label: "Clients (CRM)", path: "/work/clients" },
-                    { icon: Kanban, label: "Pipeline", path: "/workspaces/pipeline" },
-                    { icon: Layers, label: "Retainers", path: "/workspaces" },
-                    { icon: Mail, label: "Comm Log", path: "/work/comm" },
-                  ]}
-                />
-                <CockpitGroup
-                  title="Money OS"
-                  desc="Invoices, time & revenue"
-                  accent="amber"
-                  tools={[
-                    { icon: Receipt, label: "Invoices", path: "/work/invoices" },
-                    { icon: Clock, label: "Time Tracker", path: "/work/time" },
-                    { icon: Wallet, label: "Expenses", path: "/work/expenses" },
-                    { icon: BarChart3, label: "Revenue", path: "/workspaces/revenue" },
-                  ]}
-                />
-                <CockpitGroup
-                  title="Delivery OS"
-                  desc="Projects, files & portals"
-                  accent="violet"
-                  tools={[
-                    { icon: ClipboardList, label: "Checklists", path: "/work/checklists" },
-                    { icon: FolderOpen, label: "Files", path: "/work/files" },
-                    { icon: AlarmClock, label: "Deadlines", path: "/work/deadlines" },
-                    { icon: Globe, label: "Client Portals", path: "/work/portals" },
-                  ]}
-                />
+              <div className="text-[11px] text-slate-500 text-center pt-1">
+                The cockpit lives in the workspace now —{" "}
+                <button
+                  className="text-emerald-700 hover:underline font-medium"
+                  onClick={() => navigate("/workspaces")}
+                >
+                  open Workspace OS ↗
+                </button>
               </div>
             </div>
 
