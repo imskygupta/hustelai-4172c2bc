@@ -14,3 +14,4 @@
 - [UI Governance](mem://style/ui-governance) — Tokens, spacing, cards, CTA hierarchy, gradient/animation rules; one visual language for authenticated surfaces
 - [Workspace Subdomain](mem://tech/workspace-subdomain) — workspace.hustlaiapp.in routing, SurfaceHostRedirect, dark-mode pause, Workspace Copilot rename
 - [Mass Assignment Audit](mem://security/mass-assignment-audit) — Phase 2 hardened mutation surfaces + remaining risk areas
+- [Operator Audit Log](mem://security/audit-log) — Append-only admin action trail + recordOperatorAction helper
