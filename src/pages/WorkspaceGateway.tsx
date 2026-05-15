@@ -53,9 +53,12 @@ export default function WorkspaceGateway() {
   const launch = async () => {
     setLaunching(true);
 
-    // Dev/preview can't cross subdomains — render the cockpit locally.
+    // Dev/preview can't cross subdomains — open the cockpit locally in a new tab.
     if (isDualHost()) {
-      window.setTimeout(() => { window.location.href = "/"; }, 500);
+      window.setTimeout(() => {
+        window.open("/", "_blank", "noopener,noreferrer");
+        setLaunching(false);
+      }, 400);
       return;
     }
 
@@ -63,7 +66,8 @@ export default function WorkspaceGateway() {
     // the URL hash. Supabase on the workspace host (`detectSessionInUrl`)
     // consumes the hash, calls setSession, and clears it from history.
     // No shared cookie, no SPA-wide auth race — workspace establishes its
-    // OWN session from the handoff payload.
+    // OWN session from the handoff payload. Always opens in a new tab so
+    // the marketing surface stays where the user left it.
     try {
       // Refresh first so we hand over a fresh access token (not one about
       // to expire). If the user isn't signed in we just send them through —
@@ -72,7 +76,8 @@ export default function WorkspaceGateway() {
       const { data } = await supabase.auth.getSession();
       const session = data.session;
       if (!session) {
-        window.location.href = `${WORKSPACE_ORIGIN}/`;
+        window.open(`${WORKSPACE_ORIGIN}/`, "_blank", "noopener,noreferrer");
+        setLaunching(false);
         return;
       }
       const params = new URLSearchParams({
@@ -84,12 +89,15 @@ export default function WorkspaceGateway() {
         // call setSession() — no password-recovery side effects.
         type: "magiclink",
       });
-      // Brief loading state for perceived intentionality.
+      // Brief loading state for perceived intentionality, then open in a
+      // new tab — never replace the marketing surface.
       window.setTimeout(() => {
-        window.location.href = `${WORKSPACE_ORIGIN}/#${params.toString()}`;
-      }, 500);
+        window.open(`${WORKSPACE_ORIGIN}/#${params.toString()}`, "_blank", "noopener,noreferrer");
+        setLaunching(false);
+      }, 450);
     } catch {
-      window.location.href = `${WORKSPACE_ORIGIN}/`;
+      window.open(`${WORKSPACE_ORIGIN}/`, "_blank", "noopener,noreferrer");
+      setLaunching(false);
     }
   };
 
