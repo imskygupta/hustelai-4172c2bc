@@ -4,22 +4,10 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { dodo, DODO_MODE, corsHeaders } from "../_shared/dodo.ts";
 import { flagGuard } from "../_shared/flags/resolve.ts";
+import { enforceRateLimit, ipKey } from "../_shared/rate-limit.ts";
+import { recordAnomaly } from "../_shared/anomaly.ts";
 
 const RETURN_URL = "https://hustlaiapp.in/payment-status";
-
-// Simple in-memory rate limit (best-effort within a single isolate)
-const RATE_LIMIT: Map<string, { count: number; ts: number }> = new Map();
-function rateLimit(key: string, max = 10, windowMs = 60_000): boolean {
-  const now = Date.now();
-  const cur = RATE_LIMIT.get(key);
-  if (!cur || now - cur.ts > windowMs) {
-    RATE_LIMIT.set(key, { count: 1, ts: now });
-    return true;
-  }
-  if (cur.count >= max) return false;
-  cur.count++;
-  return true;
-}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -46,10 +34,26 @@ serve(async (req) => {
     const blockedDodo = await flagGuard(userId, "payments.dodo_checkout", corsHeaders, { endpoint: "dodo-checkout" });
     if (blockedDodo) return blockedDodo;
 
-    if (!rateLimit(`co:${userId}`, 10, 60_000)) {
-      return new Response(JSON.stringify({ error: "Too many requests, slow down." }), {
-        status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    // DB-backed rate limit (durable across isolates): 10 checkouts/user/5min + IP backstop.
+    const userLimit = await enforceRateLimit(supabase, {
+      key: `dodo-checkout:user:${userId}`, windowSec: 300, max: 10,
+    });
+    if (!userLimit.ok) {
+      void recordAnomaly(supabase, {
+        eventType: "rate_limit.exceeded", severity: "warn",
+        userId, email, req, metadata: { surface: "dodo-checkout", scope: "user" },
       });
+      return userLimit.response;
+    }
+    const ipLimit = await enforceRateLimit(supabase, {
+      key: `dodo-checkout:ip:${ipKey(req)}`, windowSec: 300, max: 30,
+    });
+    if (!ipLimit.ok) {
+      void recordAnomaly(supabase, {
+        eventType: "rate_limit.exceeded", severity: "warn",
+        userId, email, req, metadata: { surface: "dodo-checkout", scope: "ip" },
+      });
+      return ipLimit.response;
     }
 
     const body = await req.json();
