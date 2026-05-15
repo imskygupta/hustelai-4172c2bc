@@ -702,21 +702,28 @@ export default function Dashboard() {
               {[
                 { icon: Search, label: "AI Hustle Search", desc: "Discover hustles with AI", action: () => navigate("/explore"), tier: "free", emoji: "🔍" },
                 { icon: Hammer, label: "Work — Freelancer OS", desc: "Invoices, time, clients, deadlines", action: () => navigate("/work"), tier: "free", emoji: "🛠️" },
-                { icon: Rocket, label: "Blueprint Generator", desc: "7-day action plan", action: () => goTool("/hustle-blueprint"), tier: "free", emoji: "🚀" },
+                { icon: Rocket, label: "Blueprint Generator", desc: "7-day action plan", action: () => goTool("/hustle-blueprint"), tier: "free", emoji: "🚀", workspace: true },
                 { icon: FileText, label: "Resume Optimizer", desc: "Tailored CV + portfolio", action: () => navigate("/resume-optimizer"), tier: "free", emoji: "📄" },
                 { icon: DollarSign, label: "Gig Price Calc", desc: "3-tier anchor pricing", action: () => navigate("/gig-price-calculator"), tier: "free", emoji: "💰" },
                 { icon: Film, label: "Faceless Content", desc: "6-scene viral storyboards", action: () => navigate("/faceless-content"), tier: "free", emoji: "🎬" },
                 { icon: ShieldAlert, label: "Red-Flag Scanner", desc: "Spot bad clients early", action: () => navigate("/red-flag-scanner"), tier: "free", emoji: "🚦" },
                 { icon: FileText, label: "Proposal Draft AI", desc: "Win freelance gigs", action: () => navigate("/proposal-draft"), tier: "pro", emoji: "📝" },
                 { icon: Brain, label: "Skill Gap Analyzer", desc: "Personal learning roadmap", action: () => navigate("/skill-gap"), tier: "pro", emoji: "🧠" },
-                { icon: Zap, label: "AI Tool Benchmarks", desc: "Compare AI tools side-by-side", action: () => goTool("/ai-tools"), tier: "pro", emoji: "⚡" },
+                { icon: Zap, label: "AI Tool Benchmarks", desc: "Compare AI tools side-by-side", action: () => goTool("/ai-tools"), tier: "free", emoji: "⚡", workspace: true },
                 { icon: TrendingUp, label: "Gig Arbitrage", desc: "Find platform price gaps", action: () => navigate("/gig-arbitrage"), tier: "pro", emoji: "📊" },
-                { icon: BookOpen, label: "Knowledge Hub", desc: "Save & automate prompts", action: () => goTool("/knowledge-hub"), tier: "pro", emoji: "📚" },
+                { icon: BookOpen, label: "Knowledge Hub", desc: "Save & automate prompts", action: () => goTool("/knowledge-hub"), tier: "free", emoji: "📚", workspace: true },
+                { icon: Sparkles, label: "Hustle Canvas", desc: "Visual war-room for clients & leads", action: () => goTool("/canvas"), tier: "free", emoji: "🎨", workspace: true },
                 { icon: Briefcase, label: "🎯 Sure-Hit Jobs", desc: "Personal QC referral", action: () => navigate("/sure-hit-jobs"), tier: "pro", emoji: "🎯" },
                 { icon: Target, label: "Lead Finder", desc: "Social-media radar", action: () => navigate("/problem-leads"), tier: "elite", emoji: "🎯" },
                 { icon: Store, label: "Marketplace", desc: "Sell digital products", action: () => navigate("/marketplace"), tier: "elite", emoji: "🏪" },
-              ].map(tool => {
-                const locked = (tool.tier === "pro" && isFree) || (tool.tier === "elite" && !isElite);
+              ].map((tool: any) => {
+                // Workspace launchers don't gate on tier here — they hard-jump to
+                // workspace.* where the real entitlement check happens. Dashboard
+                // is the launcher; execution lives in the workspace.
+                const isWorkspace = !!tool.workspace;
+                const locked = !isWorkspace && (
+                  (tool.tier === "pro" && isFree) || (tool.tier === "elite" && !isElite)
+                );
                 return (
                   <button
                     key={tool.label}
@@ -725,24 +732,37 @@ export default function Dashboard() {
                     className={`text-left rounded-xl border p-4 transition-all ${
                       locked
                         ? "border-slate-200 bg-slate-50/50 opacity-60 cursor-not-allowed"
-                        : "border-slate-200 bg-white hover:border-emerald-300 hover:shadow-sm"
+                        : isWorkspace
+                          ? "border-violet-200 bg-gradient-to-br from-violet-50/50 to-white hover:border-violet-400 hover:shadow-sm"
+                          : "border-slate-200 bg-white hover:border-emerald-300 hover:shadow-sm"
                     }`}
                   >
                     <div className="flex items-start justify-between mb-2">
                       <span className="text-2xl">{tool.emoji}</span>
                       <div className="flex items-center gap-1.5">
-                        <Badge variant="outline" className={`text-[10px] py-0 ${
-                          tool.tier === "free" ? "border-slate-200 text-slate-500" :
-                          tool.tier === "pro" ? "border-emerald-200 text-emerald-700 bg-emerald-50" :
-                          "border-violet-200 text-violet-700 bg-violet-50"
-                        }`}>
-                          {tool.tier === "free" ? "FREE" : tool.tier === "pro" ? "PRO" : "ELITE"}
-                        </Badge>
+                        {isWorkspace ? (
+                          <Badge variant="outline" className="text-[10px] py-0 border-violet-300 text-violet-700 bg-violet-50">
+                            WORKSPACE
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className={`text-[10px] py-0 ${
+                            tool.tier === "free" ? "border-slate-200 text-slate-500" :
+                            tool.tier === "pro" ? "border-emerald-200 text-emerald-700 bg-emerald-50" :
+                            "border-violet-200 text-violet-700 bg-violet-50"
+                          }`}>
+                            {tool.tier === "free" ? "FREE" : tool.tier === "pro" ? "PRO" : "ELITE"}
+                          </Badge>
+                        )}
                         {locked && <Lock className="w-3 h-3 text-slate-400" />}
                       </div>
                     </div>
                     <h3 className="font-semibold text-sm text-slate-900 mb-0.5">{tool.label}</h3>
                     <p className="text-xs text-slate-500">{tool.desc}</p>
+                    {isWorkspace && (
+                      <p className="mt-2 text-[11px] font-medium text-violet-700 inline-flex items-center gap-0.5">
+                        Open in Workspace <ArrowUpRight className="w-3 h-3" />
+                      </p>
+                    )}
                   </button>
                 );
               })}
