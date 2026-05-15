@@ -499,10 +499,10 @@ export default function Dashboard() {
                     return (
                       <button
                         key={q.label}
-                        onClick={() => goTool(q.path)}
+                        onClick={() => goTool(q.path, q.label)}
                         className={`group flex items-center gap-2 px-3 py-2.5 rounded-lg border transition-all text-left ${
                           isWorkspace
-                            ? "border-violet-200 bg-violet-50/40 hover:border-violet-400 hover:bg-violet-50"
+                            ? "ws-launch-card border-violet-200 bg-violet-50/40 hover:border-violet-400 hover:bg-violet-50"
                             : "border-slate-200 hover:border-emerald-300 hover:bg-emerald-50/50"
                         }`}
                       >
