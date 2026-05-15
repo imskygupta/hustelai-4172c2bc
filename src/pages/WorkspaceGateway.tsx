@@ -80,7 +80,9 @@ export default function WorkspaceGateway() {
         refresh_token: session.refresh_token,
         token_type: "bearer",
         expires_in: String(session.expires_in ?? 3600),
-        type: "recovery", // any non-empty `type` makes Supabase parse the hash
+        // `magiclink` makes Supabase treat the hash as a sign-in event and
+        // call setSession() — no password-recovery side effects.
+        type: "magiclink",
       });
       // Brief loading state for perceived intentionality.
       window.setTimeout(() => {
