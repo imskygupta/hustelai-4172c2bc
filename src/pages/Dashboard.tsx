@@ -23,6 +23,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { SEO } from "@/components/SEO";
+import { listLatestPosts, type SeoBlogRow } from "@/lib/seo-cms";
 
 import {
   Search, Crown, Rocket, Sparkles, Users, Video, BookOpen, TrendingUp, MessageCircle,
@@ -52,6 +53,7 @@ export default function Dashboard() {
   const [searchParams] = useSearchParams();
   const [feed, setFeed] = useState<FeedData | null>(null);
   const [webinars, setWebinars] = useState<Webinar[]>([]);
+  const [trendingPosts, setTrendingPosts] = useState<SeoBlogRow[]>([]);
   const [savedHustlesCount, setSavedHustlesCount] = useState(0);
   const [chatCount, setChatCount] = useState(0);
   const [recentActivity, setRecentActivity] = useState<any[]>([]);
@@ -67,6 +69,7 @@ export default function Dashboard() {
   useEffect(() => {
     if (user) {
       loadFeed(); loadWebinars(); loadCommandCenterData();
+      listLatestPosts(9).then(setTrendingPosts).catch(() => setTrendingPosts([]));
     }
   }, [user]);
 
@@ -708,23 +711,54 @@ export default function Dashboard() {
 
           {/* TRENDING */}
           <TabsContent value="trending" className="mt-5 space-y-4">
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
-              {(feed?.discover || []).map((item, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
-                  className="rounded-xl border border-slate-200 bg-white p-5 hover:border-emerald-300 transition-all cursor-pointer"
-                  onClick={() => item.link && window.open(item.link, "_blank")}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-semibold">{item.category}</span>
-                    <ArrowUpRight className="w-4 h-4 text-slate-400" />
-                  </div>
-                  <h3 className="font-semibold text-sm text-slate-900 mb-1">{item.title}</h3>
-                  <p className="text-xs text-slate-500 leading-relaxed">{item.description}</p>
-                </motion.div>
-              ))}
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-display font-semibold text-slate-900 text-sm">Latest from the HustleAI blog</h3>
+                <p className="text-xs text-slate-500 mt-0.5">Fresh playbooks, market signals, and operator deep-dives.</p>
+              </div>
+              <Link to="/insights" className="text-xs font-semibold text-emerald-700 hover:text-emerald-800 inline-flex items-center gap-1">
+                Browse all <ArrowUpRight className="w-3 h-3" />
+              </Link>
             </div>
+            {trendingPosts.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-slate-200 bg-white p-8 text-center">
+                <BookOpen className="w-5 h-5 text-slate-300 mx-auto mb-2" />
+                <p className="text-xs text-slate-500">Loading the latest stories…</p>
+              </div>
+            ) : (
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {trendingPosts.map((p, i) => (
+                  <motion.button
+                    key={p.id}
+                    initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}
+                    onClick={() => navigate(`/insights/${p.slug}`)}
+                    className="group text-left rounded-xl border border-slate-200 bg-white p-5 hover:border-emerald-300 hover:shadow-[0_6px_24px_-12px_rgba(16,185,129,0.18)] transition-all"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-semibold uppercase tracking-wide">
+                        {p.category || "Insights"}
+                      </span>
+                      <ArrowUpRight className="w-4 h-4 text-slate-300 group-hover:text-emerald-500 transition-colors" />
+                    </div>
+                    <h3 className="font-semibold text-sm text-slate-900 mb-1.5 line-clamp-2 leading-snug">
+                      {p.title}
+                    </h3>
+                    {p.excerpt && (
+                      <p className="text-xs text-slate-500 leading-relaxed line-clamp-3">{p.excerpt}</p>
+                    )}
+                    <div className="mt-3 flex items-center gap-2 text-[10.5px] text-slate-400">
+                      {p.reading_time_minutes ? <span>{p.reading_time_minutes} min read</span> : null}
+                      {p.published_at ? (
+                        <>
+                          <span className="opacity-50">·</span>
+                          <span>{new Date(p.published_at).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}</span>
+                        </>
+                      ) : null}
+                    </div>
+                  </motion.button>
+                ))}
+              </div>
+            )}
           </TabsContent>
 
           {/* USAGE */}
