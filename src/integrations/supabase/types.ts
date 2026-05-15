@@ -642,6 +642,42 @@ export type Database = {
         }
         Relationships: []
       }
+      auth_anomaly_events: {
+        Row: {
+          created_at: string
+          email: string | null
+          event_type: string
+          id: string
+          ip_hash: string | null
+          metadata: Json
+          severity: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          event_type: string
+          id?: string
+          ip_hash?: string | null
+          metadata?: Json
+          severity?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          event_type?: string
+          id?: string
+          ip_hash?: string | null
+          metadata?: Json
+          severity?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       automation_rules: {
         Row: {
           action_config: Json | null
@@ -4475,6 +4511,27 @@ export type Database = {
         }
         Relationships: []
       }
+      rate_limit_buckets: {
+        Row: {
+          bucket_key: string
+          hits: number
+          last_hit: string
+          window_start: string
+        }
+        Insert: {
+          bucket_key: string
+          hits?: number
+          last_hit?: string
+          window_start: string
+        }
+        Update: {
+          bucket_key?: string
+          hits?: number
+          last_hit?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
       referrals: {
         Row: {
           commission_percent: number | null
@@ -7712,12 +7769,36 @@ export type Database = {
           status: string
         }[]
       }
+      rate_limit_hit: {
+        Args: {
+          _bucket_key: string
+          _max_hits: number
+          _window_seconds: number
+        }
+        Returns: {
+          allowed: boolean
+          hits: number
+          retry_after_seconds: number
+        }[]
+      }
       recommend_next_tools: {
         Args: { _limit?: number; _slug: string }
         Returns: {
           launches: number
           tool_slug: string
         }[]
+      }
+      record_auth_anomaly: {
+        Args: {
+          _email?: string
+          _event_type: string
+          _ip_hash?: string
+          _metadata?: Json
+          _severity?: string
+          _user_agent?: string
+          _user_id?: string
+        }
+        Returns: string
       }
       record_capability_cost: {
         Args: {
