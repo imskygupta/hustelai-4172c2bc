@@ -7,6 +7,7 @@ import NotificationCenter from "@/components/workspace-os/NotificationCenter";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { BigScreenHint } from "@/components/BigScreenHint";
 import { WorkspaceContextBar } from "@/components/workspace/WorkspaceContextBar";
+import { WorkspaceCommandPalette } from "@/components/workspace/CommandPalette";
 
 import { SEO } from "@/components/SEO";
 
@@ -91,6 +92,7 @@ export default function WorkspaceOS() {
     <div className="min-h-[calc(100vh-3rem)] bg-gradient-to-br from-background via-background to-primary/5">
       <SEO title="Workspaces | HustleAI Workspace OS" description="HustleAI Workspace OS — internal page." path="" noindex />
       <BigScreenHint pageKey="workspace-os" label="Workspace OS is built for desktop" />
+      <WorkspaceCommandPalette />
       {/* Cinematic header */}
       <motion.header
         initial={{ opacity: 0, y: -8 }}
