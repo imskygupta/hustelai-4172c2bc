@@ -159,6 +159,16 @@ export default function Overview() {
         <ProviderPill provider={activeProvider} loading={providerLoading} />
       </motion.section>
 
+      {/* Your cockpit — moved from dashboard. Same UI, lives here now so the
+          workspace surface owns its operational modules end-to-end. */}
+      <motion.section
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.06, duration: 0.5 }}
+      >
+        <CockpitBlock />
+      </motion.section>
+
       {/* Big colorful tool tiles — the "Pick your cockpit" energy applied to workspace tools */}
       <motion.section
         initial={{ opacity: 0, y: 8 }}
