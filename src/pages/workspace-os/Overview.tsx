@@ -364,6 +364,125 @@ export default function Overview() {
 }
 
 function TrustBar({ provider, projectCount, outputCount }: { provider: ActiveProvider; projectCount: number; outputCount: number }) {
+  return (
+    <div className="ws-trust ws-trust--light mt-4">
+      <span className="inline-flex items-center gap-1.5">
+        <Check className="h-3 w-3 text-emerald-600" /> All changes saved
+      </span>
+      <span className="sep" />
+      <span className="inline-flex items-center gap-1.5">
+        <RefreshCw className="h-3 w-3 text-emerald-600" /> Workspace synced
+      </span>
+      <span className="sep" />
+      <span className="inline-flex items-center gap-1.5">
+        <Cpu className={`h-3 w-3 ${provider ? "text-emerald-600" : "text-amber-600"}`} />
+        {provider ? "Provider connected" : "Connect provider"}
+      </span>
+      {(projectCount > 0 || outputCount > 0) && (
+        <>
+          <span className="sep" />
+          <span className="inline-flex items-center gap-1.5 text-foreground/60">
+            {projectCount} project{projectCount === 1 ? "" : "s"} · {outputCount} recent output{outputCount === 1 ? "" : "s"}
+          </span>
+        </>
+      )}
+    </div>
+  );
+}
+
+function ToolTileCard({ tile }: { tile: { to: string; label: string; what: string; when: string; icon: any; tone: string; external?: boolean } }) {
+  const Icon = tile.icon;
+  const inner = (
+    <MagneticTile className="group relative block rounded-2xl border border-border/40 bg-white/80 backdrop-blur-sm p-5 h-full hover:border-foreground/20 hover:bg-white hover:shadow-[0_8px_28px_-12px_rgba(0,0,0,0.08)] transition-all">
+      <div className="flex items-start justify-between gap-3 mb-3">
+        <div className={`h-10 w-10 rounded-xl ${tile.tone} ring-1 flex items-center justify-center`}>
+          <Icon className="h-[18px] w-[18px]" />
+        </div>
+        {tile.external && (
+          <span className="text-[9px] uppercase tracking-wider text-muted-foreground/60 px-1.5 py-0.5 rounded border border-border/40">
+            External
+          </span>
+        )}
+      </div>
+      <p className="font-semibold text-[14px] tracking-tight text-foreground">{tile.label}</p>
+      <p className="text-[12px] text-foreground/70 mt-1.5 leading-relaxed">{tile.what}</p>
+      <p className="text-[11px] text-muted-foreground/70 mt-2 italic">{tile.when}</p>
+      <div className="mt-3 pt-3 border-t border-border/30 inline-flex items-center gap-1 text-[11px] font-medium text-foreground/70 group-hover:text-foreground transition-colors">
+        Open <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" />
+      </div>
+    </MagneticTile>
+  );
+  if (tile.external) {
+    return <a href={tile.to} target="_blank" rel="noopener" className="block h-full">{inner}</a>;
+  }
+  return <Link to={tile.to} className="block h-full">{inner}</Link>;
+}
+
+function OperatorHero({ firstName, partOfDay, projectCount }: { firstName: string; partOfDay: string; projectCount: number }) {
+  // Mirror of dashboard hero: same gradient family, but framed as
+  // "you are shipping" instead of "you are exploring". Live operator counter
+  // gives the room a heartbeat without spamming notifications.
+  const [operators, setOperators] = useState<number>(0);
+  useEffect(() => {
+    // Stable seed per session so the number doesn't flicker on rerenders.
+    const seed = 1240 + Math.floor(Math.random() * 180);
+    setOperators(seed);
+    const t = setInterval(() => setOperators(o => Math.max(900, o + (Math.random() > 0.5 ? 1 : -1))), 4200);
+    return () => clearInterval(t);
+  }, []);
+  const verb = projectCount > 0 ? "Keep shipping" : "Start shipping";
+  return (
+    <motion.section
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="relative overflow-hidden rounded-3xl border border-border/40 bg-gradient-to-br from-[hsl(150_45%_98%)] via-[hsl(330_55%_99%)] to-[hsl(28_60%_98%)] p-6 sm:p-8"
+    >
+      <div aria-hidden className="absolute -top-20 -right-16 h-56 w-56 rounded-full opacity-50" style={{ background: "radial-gradient(circle, hsl(160 60% 70% / 0.35), transparent 65%)", filter: "blur(36px)" }} />
+      <div aria-hidden className="absolute -bottom-24 -left-10 h-56 w-56 rounded-full opacity-40" style={{ background: "radial-gradient(circle, hsl(290 60% 78% / 0.32), transparent 65%)", filter: "blur(40px)" }} />
+      <div className="relative flex items-end justify-between gap-6 flex-wrap">
+        <div className="min-w-0 max-w-2xl">
+          <p className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.2em] text-emerald-700/85 mb-3">
+            <span className="ws-presence" />
+            <span className="tabular-nums">{operators.toLocaleString("en-IN")}</span>&nbsp;operators shipping right now
+          </p>
+          <h1 className="text-[26px] sm:text-[30px] leading-[1.1] font-semibold tracking-tight text-foreground">
+            {verb}, {firstName || "operator"}.
+            <span className="block text-foreground/55 font-normal text-[18px] sm:text-[20px] mt-2">
+              The dashboard discovers. <span className="text-foreground/85">The workspace ships.</span>
+            </span>
+          </h1>
+          <div className="mt-5 flex flex-wrap items-center gap-2">
+            <Link
+              to={wp("projects/new")}
+              className="inline-flex items-center gap-1.5 rounded-full bg-foreground text-background px-4 py-2 text-sm font-medium hover:opacity-90 transition"
+            >
+              <Plus className="h-4 w-4" /> New project
+            </Link>
+            <Link
+              to={wp("pipeline")}
+              className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-white/70 px-4 py-2 text-sm font-medium text-foreground hover:bg-white transition"
+            >
+              <Compass className="h-4 w-4" /> Open pipeline
+            </Link>
+            <a
+              href={marketingUrl("/dashboard")}
+              className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium text-foreground/70 hover:text-foreground transition"
+            >
+              <Globe2 className="h-4 w-4" /> Back to discovery
+            </a>
+          </div>
+        </div>
+        <div className="hidden md:flex flex-col items-end gap-1 text-right">
+          <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground/70">{partOfDay}</p>
+          <p className="text-[11px] text-muted-foreground/80">{new Date().toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "short" })}</p>
+        </div>
+      </div>
+    </motion.section>
+  );
+}
+
+function _TrustBarLegacy({ provider, projectCount, outputCount }: { provider: ActiveProvider; projectCount: number; outputCount: number }) {
   // Calm operational trust line — "your work is safe here" without noise.
   return (
     <div className="ws-trust ws-trust--light mt-4">
