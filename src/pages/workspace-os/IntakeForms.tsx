@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Copy, Inbox, Plus, Power, Trash2 } from "lucide-react";
+import { Copy, Inbox, Plus, Power, Trash2, ExternalLink, Sparkles, ArrowUpRight } from "lucide-react";
 import { intakeApi, DEFAULT_INTAKE_FIELDS } from "@/lib/intake-os/api";
 import { INTAKE_TEMPLATES } from "@/lib/intake-os/templates";
 import { INTAKE_THEMES, IntakeThemeId } from "@/lib/intake-os/themes";
@@ -77,9 +77,20 @@ export default function IntakeForms() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-semibold tracking-tight">Client Intake OS</h2>
-        <p className="text-sm text-muted-foreground">Magic public forms → AI analysis → workspace.</p>
+      <div className="relative overflow-hidden rounded-2xl border border-border/50 bg-gradient-to-br from-amber-50/80 via-white to-rose-50/60 p-6">
+        <div className="absolute -top-10 -right-10 h-40 w-40 rounded-full bg-gradient-to-br from-amber-200/40 to-rose-200/40 blur-3xl" aria-hidden />
+        <div className="relative flex items-start gap-3">
+          <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-amber-400 to-rose-400 flex items-center justify-center shadow-sm shrink-0">
+            <Sparkles className="h-5 w-5 text-white" />
+          </div>
+          <div className="flex-1">
+            <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground/70 mb-1">Client Intake OS</p>
+            <h2 className="text-2xl font-semibold tracking-tight leading-tight">Turn cold leads into briefed projects — in one link.</h2>
+            <p className="text-sm text-muted-foreground mt-1.5 max-w-2xl">
+              Send a branded form. AI summarises the brief, scores the lead, and drops a fresh project into your pipeline. Zero copy-paste.
+            </p>
+          </div>
+        </div>
       </div>
 
       <div className="rounded-2xl border border-border bg-card p-5 space-y-3">
@@ -121,29 +132,70 @@ export default function IntakeForms() {
 
       <div className="space-y-2">
         {loading && <p className="text-sm text-muted-foreground">Loading…</p>}
-        {!loading && forms.length === 0 && <p className="text-sm text-muted-foreground">No forms yet.</p>}
-        {forms.map(f => (
-          <div key={f.id} className="rounded-xl border border-border bg-card p-4 flex items-center gap-3">
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <p className="text-sm font-medium truncate">{f.title}</p>
-                <Badge variant={f.is_active ? "default" : "secondary"}>{f.is_active ? "Live" : "Off"}</Badge>
-                <Badge variant="outline">{f.submission_count || 0} submissions</Badge>
-              </div>
-              <code className="text-[11px] text-muted-foreground">/intake/{f.slug}</code>
-            </div>
-            <Select value={f.settings?.theme || "minimal"} onValueChange={(v) => updateTheme(f, v as IntakeThemeId)}>
-              <SelectTrigger className="w-[120px] h-8 text-xs"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {INTAKE_THEMES.map(t => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            <Button size="sm" variant="outline" onClick={() => copyLink(f.slug)}><Copy className="h-3.5 w-3.5" /></Button>
-            <Link to={`/workspaces/intake/${f.id}`}><Button size="sm" variant="outline"><Inbox className="h-3.5 w-3.5" /></Button></Link>
-            <Button size="sm" variant="ghost" onClick={() => toggle(f)}><Power className="h-3.5 w-3.5" /></Button>
-            <Button size="sm" variant="ghost" onClick={() => remove(f.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
+        {!loading && forms.length === 0 && (
+          <div className="rounded-xl border border-dashed border-border bg-card/50 p-8 text-center">
+            <p className="text-sm text-muted-foreground">No intake forms yet — pick a template above to ship your first one.</p>
           </div>
-        ))}
+        )}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {forms.map(f => {
+            const theme = INTAKE_THEMES.find(t => t.id === (f.settings?.theme || "minimal"));
+            const url = `${window.location.origin}/intake/${f.slug}`;
+            return (
+              <div key={f.id} className="group relative rounded-2xl border border-border/60 bg-white hover:border-foreground/25 hover:shadow-[0_8px_28px_-14px_rgba(0,0,0,0.12)] transition-all overflow-hidden">
+                <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-amber-300 via-rose-300 to-violet-300 opacity-70" aria-hidden />
+                <div className="p-4 space-y-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[14.5px] font-semibold tracking-tight truncate">{f.title}</p>
+                      <div className="flex items-center gap-1.5 mt-1">
+                        <span className={`inline-flex items-center gap-1 text-[10.5px] font-medium px-1.5 py-0.5 rounded-full ${
+                          f.is_active ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200" : "bg-muted text-muted-foreground"
+                        }`}>
+                          <span className={`h-1.5 w-1.5 rounded-full ${f.is_active ? "bg-emerald-500 animate-pulse" : "bg-muted-foreground/50"}`} />
+                          {f.is_active ? "Live" : "Off"}
+                        </span>
+                        <span className="text-[10.5px] text-muted-foreground/80 px-1.5 py-0.5 rounded-full bg-muted/60">
+                          {f.submission_count || 0} submission{(f.submission_count || 0) === 1 ? "" : "s"}
+                        </span>
+                        {theme && <span className="text-[10.5px] text-muted-foreground/70 px-1.5 py-0.5 rounded-full bg-muted/40">{theme.name}</span>}
+                      </div>
+                    </div>
+                    <Link to={`/workspaces/intake/${f.id}`} className="opacity-60 group-hover:opacity-100 transition" aria-label="Open submissions">
+                      <ArrowUpRight className="h-4 w-4" />
+                    </Link>
+                  </div>
+
+                  <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-muted/40 border border-border/40">
+                    <code className="text-[11px] text-muted-foreground truncate flex-1">{url}</code>
+                    <button onClick={() => copyLink(f.slug)} className="text-muted-foreground hover:text-foreground transition" aria-label="Copy link">
+                      <Copy className="h-3.5 w-3.5" />
+                    </button>
+                    <a href={url} target="_blank" rel="noopener" className="text-muted-foreground hover:text-foreground transition" aria-label="Preview">
+                      <ExternalLink className="h-3.5 w-3.5" />
+                    </a>
+                  </div>
+
+                  <div className="flex items-center justify-between gap-2 pt-1">
+                    <Select value={f.settings?.theme || "minimal"} onValueChange={(v) => updateTheme(f, v as IntakeThemeId)}>
+                      <SelectTrigger className="w-[140px] h-8 text-xs"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {INTAKE_THEMES.map(t => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                    <div className="flex items-center gap-1">
+                      <Link to={`/workspaces/intake/${f.id}`}>
+                        <Button size="sm" variant="outline" className="h-8 text-xs gap-1"><Inbox className="h-3.5 w-3.5" />Inbox</Button>
+                      </Link>
+                      <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => toggle(f)} aria-label="Toggle"><Power className="h-3.5 w-3.5" /></Button>
+                      <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive" onClick={() => remove(f.id)} aria-label="Delete"><Trash2 className="h-3.5 w-3.5" /></Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
