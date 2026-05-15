@@ -8,6 +8,7 @@ import type { DocType } from "@/lib/workspace-docs/types";
 import { ArrowLeft, Plus, FileText } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { STATUS_LABELS, STATUS_TONE, type DocStatus } from "@/lib/workspace-docs/infra";
+import { wpProject, wpProjectDoc, wpProjectDocNew } from "@/lib/workspace/paths";
 
 const TYPES: DocType[] = ["quotation", "agreement", "invoice", "proposal", "service_card", "business_card"];
 
@@ -34,8 +35,8 @@ export default function DocsList() {
 
   return (
     <div className="space-y-6">
-      <Link to={`/workspaces/${id}`} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-        <ArrowLeft className="h-4 w-4" /> Back to workspace
+      <Link to={wpProject(id!)} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+        <ArrowLeft className="h-4 w-4" /> Back to project
       </Link>
 
       <div>
@@ -51,7 +52,7 @@ export default function DocsList() {
           <motion.button
             key={t}
             initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}
-            onClick={() => nav(`/workspaces/${id}/docs/new/${t}`)}
+            onClick={() => nav(wpProjectDocNew(id!, t))}
             className="rounded-2xl border border-border bg-card hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5 transition p-4 text-left group"
           >
             <div className="text-2xl mb-2">{DOC_META[t].icon}</div>
@@ -78,7 +79,7 @@ export default function DocsList() {
             {docs.map(d => (
               <Link
                 key={d.id}
-                to={`/workspaces/${id}/docs/${d.id}`}
+                to={wpProjectDoc(id!, d.id)}
                 className="flex items-center gap-3 rounded-xl border border-border bg-card hover:border-primary/40 px-4 py-3 transition"
               >
                 <div className="text-xl">{DOC_META[d.doc_type as DocType]?.icon || "📄"}</div>

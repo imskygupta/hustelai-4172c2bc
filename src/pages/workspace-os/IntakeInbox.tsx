@@ -13,6 +13,7 @@ import {
   PIPELINE_STAGES, stageMeta, computeConfidence, confidenceTone, type PipelineStage,
 } from "@/lib/intake-os/pipeline";
 import { convertSubmissionToWorkspace } from "@/lib/intake-os/convert";
+import { wp, wpProject } from "@/lib/workspace/paths";
 import { useAuth } from "@/hooks/useAuth";
 
 export default function IntakeInbox() {
@@ -77,7 +78,7 @@ export default function IntakeInbox() {
       const { workspaceId } = await convertSubmissionToWorkspace(active, user.id);
       toast.success("Workspace + draft docs created");
       load();
-      nav(`/workspaces/${workspaceId}`);
+      nav(wpProject(workspaceId));
     } catch (e: any) { toast.error(e.message); }
     finally { setConverting(false); }
   };
@@ -99,7 +100,7 @@ export default function IntakeInbox() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <Link to="/workspaces/intake" className="text-sm text-muted-foreground inline-flex items-center gap-1">
+          <Link to={wp("intake")} className="text-sm text-muted-foreground inline-flex items-center gap-1">
             <ArrowLeft className="h-4 w-4" /> All forms
           </Link>
           <h2 className="text-2xl font-semibold mt-1">Submissions</h2>
@@ -237,13 +238,13 @@ export default function IntakeInbox() {
                     <Button size="sm" variant="outline" onClick={() => nav("/proposal-draft")} className="justify-start">
                       <FileText className="h-3.5 w-3.5 mr-1.5" /> Generate Proposal
                     </Button>
-                    <Button size="sm" variant="outline" onClick={() => nav("/workspaces")} className="justify-start">
+                    <Button size="sm" variant="outline" onClick={() => nav(wp(""))} className="justify-start">
                       <Receipt className="h-3.5 w-3.5 mr-1.5" /> Send Quote
                     </Button>
-                    <Button size="sm" variant="outline" onClick={() => nav("/workspaces")} className="justify-start">
+                    <Button size="sm" variant="outline" onClick={() => nav(wp(""))} className="justify-start">
                       <FileSignature className="h-3.5 w-3.5 mr-1.5" /> Create Agreement
                     </Button>
-                    <Button size="sm" variant="outline" onClick={() => nav("/workspaces")} className="justify-start">
+                    <Button size="sm" variant="outline" onClick={() => nav(wp(""))} className="justify-start">
                       <ListChecks className="h-3.5 w-3.5 mr-1.5" /> Build Checklist
                     </Button>
                     <Button size="sm" variant="outline" onClick={generatePortal} className="justify-start">
