@@ -9,7 +9,7 @@ import { useEffect, useMemo, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Search, Briefcase, Sparkles, Star, ArrowRight, KeyRound, Layers, Map, FileText, Cpu,
-  Target, Send, Megaphone, Library, Package, Plus, Zap, FileSignature, Calculator, FileEdit, Wallet, CalendarDays,
+  Target, Send, Megaphone, Library, Package, Plus, Zap, FileSignature, Calculator, FileEdit, Wallet, CalendarDays, ClipboardList,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,7 +21,7 @@ type Item = {
   label: string;
   hint?: string;
   icon: typeof Sparkles;
-  group: "Actions" | "Workspaces" | "Outputs" | "Assets" | "Go to";
+  group: "Actions" | "Tools" | "Workspaces" | "Outputs" | "Assets" | "Go to";
   run: () => void;
 };
 
@@ -52,7 +52,7 @@ const TOOL_ACTIONS = (navigate: (p: string) => void): Item[] => [
   { id: "tool-contract",  label: "Contract generator",  hint: "Draft service agreements",     icon: FileText,      group: "Tools", run: () => navigate("/tools/contract-generator") },
   { id: "tool-pricing",   label: "Pricing calculator",  hint: "Quote your work fast",         icon: Calculator,    group: "Tools", run: () => navigate("/tools/pricing-calculator") },
   { id: "tool-calendar",  label: "Content calendar",    hint: "Plan posts + drops",           icon: CalendarDays,  group: "Tools", run: () => navigate("/tools/content-calendar") },
-  { id: "tool-onboard",   label: "Onboarding form",     hint: "Build client intake forms",    icon: Inbox => Inbox as any, group: "Tools", run: () => navigate("/tools/onboarding-form-builder") },
+  { id: "tool-onboard",   label: "Onboarding form",     hint: "Build client intake forms",    icon: ClipboardList, group: "Tools", run: () => navigate("/tools/onboarding-form-builder") },
   { id: "tool-portfolio", label: "Portfolio bio",       hint: "One-page personal site",       icon: Star,          group: "Tools", run: () => navigate("/tools/portfolio-bio") },
   { id: "tool-card",      label: "Business card",       hint: "Generate + download card",     icon: Layers,        group: "Tools", run: () => navigate("/tools/business-card-generator") },
   { id: "tool-wallet",    label: "Wallet",              hint: "Credits + billing",            icon: Wallet,        group: "Tools", run: () => navigate("/settings/wallet") },
