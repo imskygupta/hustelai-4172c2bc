@@ -200,6 +200,8 @@ export default function Dashboard() {
   });
 
   return (
+    <>
+    {handoffTool && <WorkspaceHandoff tool={handoffTool} />}
     <AppShell
       title={`Welcome back, ${profile.display_name || "Hustler"}`}
       breadcrumbs={[{ label: "Workspace", href: "/dashboard" }, { label: "Dashboard" }]}
