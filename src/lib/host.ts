@@ -54,8 +54,9 @@ export function marketingUrl(path: string): string {
 export const WORKSPACE_PATH_PREFIXES = [
   // ONLY deep operational execution surfaces belong on workspace.*
   // Dashboard, AI tools, admin, settings, billing, etc. stay on the main app.
-  "/workspaces",
-  "/workspaces-legacy",
+  // NOTE: /workspaces is intentionally NOT here — on the marketing host it
+  // renders the WorkspaceGateway (transition surface), and the user explicitly
+  // clicks "Enter Workspace" to hop to workspace.hustlaiapp.in.
   "/canvas",
   "/client",
   // Phase 1 wave 1 — heavy execution tools migrating to workspace.*

@@ -103,6 +103,7 @@ import ProductDetail from "./pages/ProductDetail";
 import HustleBot from "./pages/HustleBot";
 import Operations from "./pages/Operations";
 import Workspaces from "./pages/Workspaces";
+import WorkspaceGateway from "./pages/WorkspaceGateway";
 import HustleCanvas from "./pages/HustleCanvas";
 import WorkspaceOS from "./pages/workspace-os/WorkspaceOS";
 import WorkspaceOverview from "./pages/workspace-os/Overview";
@@ -504,23 +505,14 @@ const App = () => (
             <Route path="/products" element={<Products />} />
             <Route path="/products/:slug" element={<ProductDetail />} />
             <Route path="/hustlebot" element={Shelled(<HustleBot />)} />
-            <Route path="/workspaces" element={Shelled(<WorkspaceOS />)}>
-              <Route index element={<WorkspaceOverview />} />
-              <Route path="new" element={<NewWorkspace />} />
-              <Route path="roadmap" element={<RoadmapCockpit />} />
-              <Route path="ai-settings" element={<AISettings />} />
-              <Route path="pipeline" element={<Pipeline />} />
-              <Route path="revenue" element={<Revenue />} />
-              <Route path="brand-kit" element={<BrandKitPage />} />
-              <Route path="blocks" element={<BlocksPage />} />
-              <Route path="clients" element={<ClientsPage />} />
-              <Route path="intake" element={<IntakeForms />} />
-              <Route path="intake/:id" element={<IntakeInbox />} />
-              <Route path=":id" element={<WorkspaceDetail />} />
-              <Route path=":id/docs" element={<DocsList />} />
-              <Route path=":id/docs/new/:type" element={<DocEditor />} />
-              <Route path=":id/docs/:docId" element={<DocEditor />} />
-            </Route>
+            {/*
+              Marketing-host /workspaces is ONLY a transition gateway now.
+              All actual workspace execution lives on workspace.hustlaiapp.in.
+              Any deep /workspaces/* hit lands on the gateway too — the user
+              clicks "Enter Workspace" to hop into the real cockpit.
+            */}
+            <Route path="/workspaces" element={Shelled(<WorkspaceGateway />)} />
+            <Route path="/workspaces/*" element={Shelled(<WorkspaceGateway />)} />
             <Route path="/workspaces-legacy" element={Shelled(<Workspaces />)} />
             <Route path="/canvas" element={Shelled(<WorkspaceFrame><HustleCanvas /></WorkspaceFrame>)} />
             <Route path="/work" element={Shelled(<Work />)} />
