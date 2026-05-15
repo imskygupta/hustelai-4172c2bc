@@ -77,12 +77,23 @@ export default function ProfileSettings() {
   const save = async () => {
     if (!user) return;
     setSaving(true);
-    const { avatar_url, ...rest } = form;
-    const { error } = await supabase.from("profiles").update({
-      ...rest,
-      social_links: social as any,
-      portfolio_links: portfolio as any,
-    } as any).eq("user_id", user.id);
+    // Explicit allowlist — never spread the full form. Privileged columns
+    // (subscription_tier, credits, is_verified, search_count, dodo_*) are
+    // also blocked at the DB level via the protect_profile_columns trigger.
+    const allowed = {
+      display_name: form.display_name,
+      username: form.username,
+      headline: form.headline,
+      bio: form.bio,
+      company: form.company,
+      website: form.website,
+      timezone: form.timezone,
+      freelancer_category: form.freelancer_category,
+      phone_number: form.phone_number,
+      social_links: social,
+      portfolio_links: portfolio,
+    };
+    const { error } = await supabase.from("profiles").update(allowed as any).eq("user_id", user.id);
     setSaving(false);
     if (error) return toast.error(error.message);
     toast.success("Profile saved");
