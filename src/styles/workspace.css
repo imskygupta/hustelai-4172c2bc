@@ -403,3 +403,138 @@
   .ws-portal-bg,
   .ws-portal-ring { animation: none !important; }
 }
+
+/* ============================================================
+   WORKSPACE VIBE — per-user palette + intensity + focus + provider aura
+   ============================================================ */
+
+/* Default vibe vars (Ivory Operator). Every vibe overrides these on the
+   wrapper element via [data-ws-vibe="..."]. The cockpit chrome reads them
+   through the .ws-themed-bg utility so palette switches feel instant. */
+.ws-themed {
+  --vibe-bg-1: hsl(48 85% 99%);
+  --vibe-bg-2: hsl(40 75% 99.2%);
+  --vibe-bg-3: hsl(30 70% 98.8%);
+  --vibe-glow-1: hsl(160 84% 45% / 0.07);
+  --vibe-glow-2: hsl(258 80% 64% / 0.07);
+  --vibe-fg: hsl(222 30% 12%);
+  --vibe-intensity: 0.55;
+}
+
+[data-ws-vibe="midnight"].ws-themed {
+  --vibe-bg-1: hsl(160 30% 6%);
+  --vibe-bg-2: hsl(160 35% 8%);
+  --vibe-bg-3: hsl(170 40% 5%);
+  --vibe-glow-1: hsl(160 84% 45% / 0.18);
+  --vibe-glow-2: hsl(150 70% 55% / 0.10);
+}
+[data-ws-vibe="graphite"].ws-themed {
+  --vibe-bg-1: hsl(220 14% 8%);
+  --vibe-bg-2: hsl(220 12% 11%);
+  --vibe-bg-3: hsl(220 10% 14%);
+  --vibe-glow-1: hsl(220 14% 60% / 0.10);
+  --vibe-glow-2: hsl(220 10% 70% / 0.06);
+}
+[data-ws-vibe="aurora"].ws-themed {
+  --vibe-bg-1: hsl(225 50% 10%);
+  --vibe-bg-2: hsl(220 45% 14%);
+  --vibe-bg-3: hsl(260 40% 16%);
+  --vibe-glow-1: hsl(180 70% 55% / 0.18);
+  --vibe-glow-2: hsl(265 80% 70% / 0.18);
+}
+[data-ws-vibe="violet"].ws-themed {
+  --vibe-bg-1: hsl(265 40% 7%);
+  --vibe-bg-2: hsl(270 45% 11%);
+  --vibe-bg-3: hsl(280 50% 9%);
+  --vibe-glow-1: hsl(265 80% 65% / 0.20);
+  --vibe-glow-2: hsl(295 80% 70% / 0.12);
+}
+[data-ws-vibe="obsidian"].ws-themed {
+  --vibe-bg-1: hsl(220 10% 4%);
+  --vibe-bg-2: hsl(220 8% 6%);
+  --vibe-bg-3: hsl(220 6% 8%);
+  --vibe-glow-1: hsl(220 14% 50% / 0.08);
+  --vibe-glow-2: hsl(0 0% 100% / 0.04);
+}
+
+/* Cockpit background painter — replaces hard-coded gradients on
+   WorkspaceOS root so the vibe takes over end-to-end. */
+.ws-themed-bg {
+  background:
+    radial-gradient(60% 50% at 12% 8%, var(--vibe-glow-1), transparent 60%),
+    radial-gradient(55% 45% at 88% 92%, var(--vibe-glow-2), transparent 60%),
+    linear-gradient(135deg, var(--vibe-bg-1) 0%, var(--vibe-bg-2) 55%, var(--vibe-bg-3) 100%);
+  transition: background 600ms var(--ws-ease);
+}
+
+/* Dark-vibe inversion: when wrapper is one of the dark palettes, lighten
+   text + recolor surfaces so existing components stay legible. */
+[data-ws-vibe="midnight"].ws-themed,
+[data-ws-vibe="graphite"].ws-themed,
+[data-ws-vibe="aurora"].ws-themed,
+[data-ws-vibe="violet"].ws-themed,
+[data-ws-vibe="obsidian"].ws-themed {
+  color: hsl(220 15% 92%);
+}
+[data-ws-vibe="midnight"].ws-themed .text-foreground,
+[data-ws-vibe="graphite"].ws-themed .text-foreground,
+[data-ws-vibe="aurora"].ws-themed .text-foreground,
+[data-ws-vibe="violet"].ws-themed .text-foreground,
+[data-ws-vibe="obsidian"].ws-themed .text-foreground { color: hsl(220 15% 95%); }
+
+/* Intensity dial — controls ambient glow opacity globally */
+.ws-themed[data-ws-intensity="0"]   .ws-ambient-pastel,
+.ws-themed[data-ws-intensity="0"]   .ws-mesh { opacity: 0 !important; }
+.ws-themed[data-ws-intensity="low"] .ws-ambient-pastel { opacity: 0.10 !important; }
+.ws-themed[data-ws-intensity="med"] .ws-ambient-pastel { opacity: 0.22 !important; }
+.ws-themed[data-ws-intensity="high"].ws-ambient-pastel,
+.ws-themed[data-ws-intensity="high"] .ws-ambient-pastel { opacity: 0.38 !important; }
+
+/* Focus mode — calmer environment for deep work */
+.ws-themed[data-ws-focus="true"] .ws-ambient-pastel,
+.ws-themed[data-ws-focus="true"] .ws-mesh,
+.ws-themed[data-ws-focus="true"] .ws-portal-stars { opacity: 0.08 !important; animation-duration: 30s !important; }
+
+/* Reduced motion — hard kill */
+.ws-themed[data-ws-motion="off"] *,
+.ws-themed[data-ws-motion="off"] *::before,
+.ws-themed[data-ws-motion="off"] *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 60ms !important;
+}
+
+/* ============================================================
+   AI ATMOSPHERE — provider aura layer
+   A barely-there top-right glow tinted by the active provider.
+   ============================================================ */
+.ws-provider-aura {
+  position: fixed;
+  pointer-events: none;
+  inset: 0;
+  z-index: 0;
+  opacity: 0;
+  transition: opacity 800ms var(--ws-ease), background 800ms var(--ws-ease);
+}
+.ws-themed[data-ws-provider="claude"]   .ws-provider-aura {
+  opacity: 0.55;
+  background: radial-gradient(40% 35% at 88% 8%, hsl(28 90% 60% / 0.18), transparent 65%);
+}
+.ws-themed[data-ws-provider="groq"]     .ws-provider-aura {
+  opacity: 0.6;
+  background: radial-gradient(40% 35% at 88% 8%, hsl(0 85% 60% / 0.16), transparent 65%);
+  animation: ws-groq-pulse 2.6s var(--ws-ease) infinite;
+}
+.ws-themed[data-ws-provider="gemini"]   .ws-provider-aura {
+  opacity: 0.55;
+  background: radial-gradient(40% 35% at 88% 8%, hsl(210 85% 60% / 0.16), transparent 65%);
+}
+.ws-themed[data-ws-provider="openai"]   .ws-provider-aura {
+  opacity: 0.55;
+  background: radial-gradient(40% 35% at 88% 8%, hsl(160 70% 50% / 0.14), transparent 65%);
+}
+.ws-themed[data-ws-provider="neutral"]  .ws-provider-aura { opacity: 0; }
+@keyframes ws-groq-pulse {
+  0%, 100% { opacity: 0.50; }
+  50%      { opacity: 0.72; }
+}
