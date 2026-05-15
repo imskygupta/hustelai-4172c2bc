@@ -12,6 +12,7 @@ import { useWorkspace, PROVIDER_LABELS, type ActiveProvider } from "@/lib/worksp
 import { useRecentOutputs, useAssets } from "@/lib/workspace/outputs";
 import { formatDistanceToNowStrict } from "date-fns";
 import { ContinueBuilding } from "@/components/workspace/ContinueBuilding";
+import { IntentLauncher } from "@/components/workspace/IntentLauncher";
 
 type WS = {
   id: string;
@@ -70,6 +71,9 @@ export default function Overview() {
 
       {/* Momentum panel — reads workspace signals and surfaces threads */}
       <ContinueBuilding />
+
+      {/* Workflow-first launcher — leads with intent, not tools */}
+      <IntentLauncher />
 
       {/* Continue working + Active provider */}
       <section className="grid grid-cols-1 lg:grid-cols-3 gap-4">
