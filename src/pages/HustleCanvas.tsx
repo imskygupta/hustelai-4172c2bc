@@ -12,6 +12,7 @@ import { Sparkles, Flame, Lightbulb, Briefcase, CheckCircle2, Loader2, Plus, Tra
 import { toast } from "sonner";
 import { enforceLimit } from "@/lib/tool-limits";
 import { BigScreenHint } from "@/components/BigScreenHint";
+import { AssetPicker } from "@/components/workspace/AssetPicker";
 
 type Color = CanvasNote["color"];
 
@@ -224,6 +225,14 @@ export default function HustleCanvas() {
           <Button size="sm" onClick={tidyCanvas} disabled={aiBusy} className="bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white hover:opacity-90">
             {aiBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <><Sparkles className="w-3.5 h-3.5 mr-1" />AI tidy</>}
           </Button>
+          <AssetPicker
+            kind="blueprint"
+            onPick={(a) => {
+              const text = a.summary ? `${a.title}\n\n${a.summary}` : a.title;
+              addNote("yellow", text.slice(0, 600), 240, 240);
+              toast.success("Blueprint imported to canvas");
+            }}
+          />
         </div>
       </div>
 
