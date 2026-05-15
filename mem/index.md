@@ -24,3 +24,4 @@
 - [Workspace Polish](mem://features/workspace-polish) — Shared visual tokens (src/styles/workspace.css) + WorkspaceHandoff fade-through transition for dashboard→workspace launches
 - [Product Thesis](mem://product/thesis) — HustleAI = AI Operating System for freelancers/agencies; surface roles, wave roadmap, Hustle Finder as hero, BYOK & template moats
 - [Wave 2 Priorities](mem://product/wave2-priorities) — Build order: templates → opportunity engine → shared project context → team; avoid automation-platform trap, own operational intelligence
+- [Workspace Polish Wave 2](mem://features/workspace-polish-wave2) — Overview as alive work surface: Continue Working, Recent AI Outputs, Active Provider card, Recommended Actions, Assets; new ws-surface/ws-dot tokens
