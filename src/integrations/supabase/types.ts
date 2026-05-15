@@ -7010,9 +7010,11 @@ export type Database = {
       }
       workspace_outputs: {
         Row: {
+          asset_kind: string | null
           client_id: string | null
           created_at: string
           id: string
+          is_asset: boolean
           metadata: Json
           model: string | null
           project_id: string | null
@@ -7025,9 +7027,11 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          asset_kind?: string | null
           client_id?: string | null
           created_at?: string
           id?: string
+          is_asset?: boolean
           metadata?: Json
           model?: string | null
           project_id?: string | null
@@ -7040,9 +7044,11 @@ export type Database = {
           user_id: string
         }
         Update: {
+          asset_kind?: string | null
           client_id?: string | null
           created_at?: string
           id?: string
+          is_asset?: boolean
           metadata?: Json
           model?: string | null
           project_id?: string | null
