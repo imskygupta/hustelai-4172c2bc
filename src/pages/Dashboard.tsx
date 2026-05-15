@@ -1,7 +1,7 @@
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { appUrl, MIGRATED_TO_WORKSPACE } from "@/lib/host";
+import { appUrl, MIGRATED_TO_WORKSPACE, marketingUrl, isWorkspaceHost } from "@/lib/host";
 import { AppShell } from "@/components/AppShell";
 import { WorkspaceHandoff } from "@/components/workspace/WorkspaceHandoff";
 import { NotificationPopup } from "@/components/NotificationPopup";
@@ -66,26 +66,16 @@ export default function Dashboard() {
   // the production marketing host; on dual hosts (preview/localhost) and on
   // the workspace host itself, this stays a normal in-app navigate.
   const goTool = (path: string, label?: string) => {
-    const base = path.split("?")[0];
-    const isMigrated =
-      MIGRATED_TO_WORKSPACE.has(base) ||
-      Array.from(MIGRATED_TO_WORKSPACE).some((p) => base.startsWith(p + "/"));
-    if (!isMigrated) return navigate(path);
-    const target = appUrl(path);
-    // Show the handoff overlay for migrated tools regardless of cross-host
-    // vs in-app — the visual continuity matters even in preview.
-    setHandoffTool(label || "Launching your tool");
-    if (target.startsWith("http")) {
-      // brief delay so the overlay has time to paint before the hop
-      window.setTimeout(() => window.location.assign(target), 220);
-    } else {
-      window.setTimeout(() => {
-        navigate(target);
-        // overlay auto-dismisses once the next route renders; clear after
-        // a safe upper bound in case navigate is synchronous.
-        window.setTimeout(() => setHandoffTool(null), 600);
-      }, 180);
+    // Tools always live on the main domain. From the workspace subdomain
+    // (or anywhere else) we open them in a NEW TAB pointing at the
+    // marketing host — the .hustlaiapp.in bridge cookie keeps the user
+    // signed in, no cross-host teleport needed.
+    if (isWorkspaceHost()) {
+      window.open(marketingUrl(path), "_blank", "noopener");
+      return;
     }
+    // On the main domain itself, just navigate in-place.
+    navigate(path);
   };
   const [searchParams] = useSearchParams();
   const [feed, setFeed] = useState<FeedData | null>(null);
