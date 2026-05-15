@@ -28,3 +28,4 @@
 - [Workspace Polish Wave 3](mem://features/workspace-polish-wave3) — BYOK redesigned as AI Infrastructure Control Center, WorkspaceContextBar, RecentOutputsRail tool/provider icons + quick actions
 - [Workspace Polish Wave 4](mem://features/workspace-polish-wave4) — ContinueBuilding momentum panel, ⌘K WorkspaceCommandPalette, smart EmptyOutputs state
 - [Workspace Polish Wave 5](mem://features/workspace-polish-wave5) — Workflow-first IntentLauncher (5 outcomes), ContinueBuilding hover quick actions, Command Palette Actions group with intent vocabulary
+- [Workspace Gateway](mem://features/workspace-gateway-handoff) — /workspaces on marketing host is a transition gateway; cockpit lives only on workspace.* with explicit "Enter Workspace" handoff
