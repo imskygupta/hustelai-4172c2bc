@@ -28,6 +28,7 @@ const AdminCommunications = lazy(() => import("./pages/admin/Communications"));
 const AdminNewsletterOps = lazy(() => import("./pages/admin/NewsletterOps"));
 const AdminUsageGovernance = lazy(() => import("./pages/admin/UsageGovernance"));
 const AdminMissionControl = lazy(() => import("./pages/admin/MissionControl"));
+const AdminDocs = lazy(() => import("./pages/admin/AdminDocs"));
 import NotificationPreferences from "./pages/settings/NotificationPreferences";
 import Integrations from "./pages/settings/Integrations";
 import Exports from "./pages/settings/Exports";
