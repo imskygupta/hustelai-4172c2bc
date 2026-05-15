@@ -5256,6 +5256,36 @@ export type Database = {
         }
         Relationships: []
       }
+      signup_blocked_log: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          ip: string | null
+          reason: string
+          source: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          ip?: string | null
+          reason: string
+          source?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          ip?: string | null
+          reason?: string
+          source?: string | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       social_links: {
         Row: {
           created_at: string | null
