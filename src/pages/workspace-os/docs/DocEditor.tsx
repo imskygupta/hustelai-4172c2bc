@@ -23,6 +23,7 @@ import {
 } from "@/lib/workspace-docs/infra";
 import { BigScreenHint } from "@/components/BigScreenHint";
 import { continueWorkflow } from "@/lib/nextActions/continueWorkflow";
+import { wpProjectDoc, wpProjectDocs } from "@/lib/workspace/paths";
 
 const PAID_TIERS = ["pro", "elite", "infinity"];
 
@@ -106,7 +107,7 @@ export default function DocEditor() {
     if (res.error) return toast.error(res.error.message);
     setDocRow(res.data);
     toast.success("Saved");
-    if (!docRow) nav(`/workspaces/${id}/docs/${res.data.id}`, { replace: true });
+    if (!docRow) nav(wpProjectDoc(id!, res.data.id), { replace: true });
   }
 
   async function changeStatus(s: DocStatus) {
@@ -128,7 +129,7 @@ export default function DocEditor() {
     try {
       const row = await convertDocument(docRow.id, target);
       toast.success(`Converted to ${target}`);
-      nav(`/workspaces/${id}/docs/${row.id}`);
+      nav(wpProjectDoc(id!, row.id));
     } catch (e: any) { toast.error(e?.message || "Conversion failed"); }
     finally { setConverting(false); }
   }
@@ -194,7 +195,7 @@ export default function DocEditor() {
     <div className="space-y-5">
       <BigScreenHint pageKey="doc-editor" label="PDFs render best on desktop" />
       <div className="flex items-center justify-between gap-3 flex-wrap">
-        <button onClick={() => nav(`/workspaces/${id}/docs`)} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+        <button onClick={() => nav(wpProjectDocs(id!))} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="h-4 w-4" /> All documents
         </button>
         <div className="flex items-center gap-2">
