@@ -3,6 +3,7 @@ import { motion, AnimatePresence, useMotionValue, animate } from "framer-motion"
 import { X, EyeOff, Sparkles, Lock, MessageCircle } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { isWorkspaceHost, marketingUrl } from "@/lib/host";
 
 /**
  * Animated pet companion — sits where the old HustleBot launcher used to be
@@ -105,6 +106,8 @@ const RANDOM_LINES = [
   "Don't think too hard — pick the smallest next step.",
   "Clients love speed. AI auto-fill is right there.",
   "Save a draft — momentum beats perfection.",
+  "Want to relax dear? I can sing also 🎶 — let's hop to the relax room.",
+  "You've been at it a while — fancy a tiny tune break? 🎹",
 ];
 
 const LONG_SESSION_LINES = [
@@ -317,7 +320,25 @@ export default function MascotCompanion() {
       say("Pls free me 🙏 — upgrade to Pro to unlock pet companions and pick your own!", 7000);
       return;
     }
-    say(pickFrom(RANDOM_LINES));
+    // 1 in 3 clicks → relax suggestion (tier-agnostic, low-key)
+    if (Math.random() < 0.34) {
+      say("Want to relax dear? I can sing also 🎶 — let's go hum a tune.", 8000);
+      setRelaxCta(true);
+    } else {
+      setRelaxCta(false);
+      say(pickFrom(RANDOM_LINES));
+    }
+  };
+
+  const [relaxCta, setRelaxCta] = useState(false);
+  const goRelax = () => {
+    setBubbleOpen(false);
+    if (isWorkspaceHost()) {
+      // /relax lives on the marketing host — open in a new tab so the cockpit stays open
+      window.open(marketingUrl("/relax"), "_blank", "noopener");
+    } else {
+      navigate("/relax");
+    }
   };
 
   if (!enabled) return null;
@@ -378,6 +399,14 @@ export default function MascotCompanion() {
                     title="Sign up free"
                   >
                     <Sparkles className="w-2.5 h-2.5" /> sign up free
+                  </button>
+                ) : relaxCta ? (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); goRelax(); }}
+                    className="inline-flex items-center gap-1 text-[10px] text-rose-600 hover:text-rose-700 transition font-medium"
+                    title="Open the relax room"
+                  >
+                    <Sparkles className="w-2.5 h-2.5" /> take me to relax 🎶
                   </button>
                 ) : (
                   <button
