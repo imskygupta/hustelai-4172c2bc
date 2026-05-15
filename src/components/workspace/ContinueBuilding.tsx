@@ -30,6 +30,7 @@ type Thread = {
   icon: typeof Sparkles;
   tone: "default" | "warn" | "primary";
   meta?: string;
+  quick?: { label: string; href: string }[];
 };
 
 const TOOL_ICON: Record<string, typeof Sparkles> = {
@@ -109,13 +110,19 @@ export function ContinueBuilding() {
     for (const o of recent) {
       const Icon = TOOL_ICON[o.tool] || Sparkles;
       const ago = (() => { try { return formatDistanceToNowStrict(new Date(o.created_at), { addSuffix: true }); } catch { return ""; } })();
+      const base = TOOL_HREF[o.tool] || "/workspaces";
       t.push({
         id: `out-${o.id}`,
         title: `Continue ${o.title}`,
         hint: `${o.tool}${o.provider ? ` · ${PROVIDER_LABELS[o.provider] || o.provider}` : ""} · ${ago}`,
-        href: TOOL_HREF[o.tool] || "/workspaces",
+        href: base,
         icon: Icon,
         tone: "default",
+        quick: [
+          { label: "Open in Canvas", href: "/canvas" },
+          { label: "Reuse as Blueprint", href: "/hustle-blueprint" },
+          { label: "Generate follow-up", href: "/canvas?intent=outreach" },
+        ],
       });
     }
 
@@ -133,6 +140,11 @@ export function ContinueBuilding() {
         icon: Briefcase,
         tone: "default",
         meta: `${days}d idle`,
+        quick: [
+          { label: "Open workspace", href: `/workspaces/${w.id}` },
+          { label: "Draft re-engage email", href: "/canvas?intent=outreach" },
+          { label: "Create proposal", href: "/canvas?intent=deliverables" },
+        ],
       });
     }
 
@@ -216,6 +228,20 @@ export function ContinueBuilding() {
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium truncate">{t.title}</p>
                   <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">{t.hint}</p>
+                  {t.quick && (
+                    <div className="hidden group-hover:flex flex-wrap gap-1 mt-2">
+                      {t.quick.map((q, qi) => (
+                        <Link
+                          key={qi}
+                          to={q.href}
+                          onClick={(e) => e.stopPropagation()}
+                          className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-md border border-border/60 bg-background/60 hover:bg-muted/60 transition"
+                        >
+                          {q.label}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   {t.meta && <span className="text-[10px] uppercase tracking-wider text-muted-foreground/70">{t.meta}</span>}
