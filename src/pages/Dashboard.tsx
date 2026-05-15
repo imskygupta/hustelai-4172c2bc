@@ -55,6 +55,22 @@ interface Webinar {
 export default function Dashboard() {
   const { user, profile, loading } = useAuth();
   const navigate = useNavigate();
+  // Cross-host tool launcher: migrated execution tools jump to workspace.* on
+  // the production marketing host; on dual hosts (preview/localhost) and on
+  // the workspace host itself, this stays a normal in-app navigate.
+  const goTool = (path: string) => {
+    const base = path.split("?")[0];
+    const isMigrated =
+      MIGRATED_TO_WORKSPACE.has(base) ||
+      Array.from(MIGRATED_TO_WORKSPACE).some((p) => base.startsWith(p + "/"));
+    if (!isMigrated) return navigate(path);
+    const target = appUrl(path);
+    if (target.startsWith("http")) {
+      window.location.assign(target);
+    } else {
+      navigate(target);
+    }
+  };
   const [searchParams] = useSearchParams();
   const [feed, setFeed] = useState<FeedData | null>(null);
   const [webinars, setWebinars] = useState<Webinar[]>([]);
