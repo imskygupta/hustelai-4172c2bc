@@ -27,7 +27,7 @@ async function call<T = unknown>(
   return { ok: true, data: data as T };
 }
 
-export async function suspendUser(targetId: string, email: string, reason: string) {
+export async function suspendUser(targetId: string, email: string, reason: string): Promise<RpcResult> {
   if (reason.trim().length < 6) return err("Reason must be at least 6 characters");
   const r = await call("admin_suspend_user", { _target: targetId, _reason: reason });
   if (r.ok) await recordOperatorAction({
@@ -36,7 +36,7 @@ export async function suspendUser(targetId: string, email: string, reason: strin
   return r;
 }
 
-export async function unsuspendUser(targetId: string, email: string, reason: string) {
+export async function unsuspendUser(targetId: string, email: string, reason: string): Promise<RpcResult> {
   if (reason.trim().length < 6) return err("Reason must be at least 6 characters");
   const r = await call("admin_unsuspend_user", { _target: targetId, _reason: reason });
   if (r.ok) await recordOperatorAction({
@@ -45,7 +45,7 @@ export async function unsuspendUser(targetId: string, email: string, reason: str
   return r;
 }
 
-export async function forceLogoutUser(targetId: string, email: string, reason: string) {
+export async function forceLogoutUser(targetId: string, email: string, reason: string): Promise<RpcResult<{ sessions_revoked?: number }>> {
   if (reason.trim().length < 6) return err("Reason must be at least 6 characters");
   const r = await call<{ sessions_revoked?: number }>("admin_force_logout", {
     _target: targetId, _reason: reason,
@@ -59,7 +59,7 @@ export async function forceLogoutUser(targetId: string, email: string, reason: s
 
 export async function resetCredits(
   targetId: string, email: string, newBalance: number, previousBalance: number, reason: string,
-) {
+): Promise<RpcResult> {
   if (reason.trim().length < 6) return err("Reason must be at least 6 characters");
   if (!Number.isFinite(newBalance) || newBalance < 0) return err("Balance must be ≥ 0");
   const r = await call("admin_reset_credits", {
@@ -76,7 +76,7 @@ export async function resetCredits(
 export async function requestRefund(
   targetId: string, email: string,
   args: { orderId?: string; amount: number; currency?: string; reason: string },
-) {
+): Promise<RpcResult<{ refund_id?: string }>> {
   if (args.reason.trim().length < 6) return err("Reason must be at least 6 characters");
   if (!Number.isFinite(args.amount) || args.amount <= 0) return err("Amount must be > 0");
   const r = await call<{ refund_id?: string }>("admin_request_refund", {
