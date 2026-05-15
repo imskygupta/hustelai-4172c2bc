@@ -56,59 +56,64 @@ export default function WorkspaceOS() {
     leaveWorkspace();
   };
 
-  const [moreOpen, setMoreOpen] = useState(false);
-  // Premium nav tiles — subtle gradient stripe on active, soft hover lift.
+  const [moreOpen, setMoreOpen] = useState(true);
+  // Industry-grade nav: airier rhythm, clear section header, calm active state.
   const itemCls = ({ isActive }: { isActive: boolean }) => cn(
-    "group relative flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] transition-all duration-200 overflow-hidden",
+    "group relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13.5px] transition-all duration-200 overflow-hidden",
     isActive
-      ? "text-foreground font-medium bg-gradient-to-r from-primary/15 via-primary/5 to-transparent ring-1 ring-primary/20 shadow-sm shadow-primary/10"
-      : "text-muted-foreground hover:text-foreground hover:bg-muted/40 hover:translate-x-0.5"
+      ? "text-foreground font-medium bg-foreground/[0.045] ring-1 ring-foreground/[0.06]"
+      : "text-muted-foreground/85 hover:text-foreground hover:bg-foreground/[0.025]"
   );
   const Nav = ({ onPick }: { onPick?: () => void }) => (
-    <>
-      {MAIN.map(item => (
-        <NavLink key={item.to} to={item.to} end={item.end} onClick={onPick} className={itemCls}>
-          {({ isActive }) => (
-            <>
-              {isActive && (
-                <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-0.5 rounded-r-full bg-gradient-to-b from-primary to-violet-500" />
-              )}
-              <item.icon className={cn("h-4 w-4 transition-colors", isActive ? "text-primary" : "group-hover:text-foreground/90")} />
-              <span>{item.label}</span>
-            </>
-          )}
-        </NavLink>
-      ))}
-      <button
-        type="button"
-        onClick={() => setMoreOpen(o => !o)}
-        className="mt-4 w-full flex items-center gap-2 px-3 py-1 text-[10px] uppercase tracking-[0.14em] text-muted-foreground/70 hover:text-foreground/80"
-      >
-        <ChevronDown className={cn("h-3 w-3 transition-transform", moreOpen ? "" : "-rotate-90")} />
-        More
-      </button>
-      {moreOpen && (
-        <motion.div
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: "auto" }}
-          className="space-y-0.5 overflow-hidden"
+    <div className="space-y-5">
+      <div className="space-y-1">
+        <p className="px-3 mb-1.5 text-[10px] uppercase tracking-[0.16em] text-muted-foreground/55 font-medium">Operations</p>
+        {MAIN.map(item => (
+          <NavLink key={item.to} to={item.to} end={item.end} onClick={onPick} className={itemCls}>
+            {({ isActive }) => (
+              <>
+                {isActive && (
+                  <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[2px] rounded-r-full bg-gradient-to-b from-emerald-500 to-violet-500" />
+                )}
+                <item.icon className={cn("h-[15px] w-[15px] shrink-0 transition-colors", isActive ? "text-foreground" : "text-muted-foreground/70 group-hover:text-foreground/80")} />
+                <span className="truncate">{item.label}</span>
+              </>
+            )}
+          </NavLink>
+        ))}
+      </div>
+      <div className="space-y-1">
+        <button
+          type="button"
+          onClick={() => setMoreOpen(o => !o)}
+          className="w-full flex items-center gap-1.5 px-3 mb-1 text-[10px] uppercase tracking-[0.16em] text-muted-foreground/55 font-medium hover:text-foreground/80"
         >
-          {SECONDARY.map(t => (
-            <NavLink key={t.to} to={t.to} onClick={onPick} className={itemCls}>
-              {({ isActive }) => (
-                <>
-                  {isActive && (
-                    <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-0.5 rounded-r-full bg-gradient-to-b from-primary to-violet-500" />
-                  )}
-                  <t.icon className={cn("h-4 w-4", isActive ? "text-primary" : "")} />
-                  <span>{t.label}</span>
-                </>
-              )}
-            </NavLink>
-          ))}
-        </motion.div>
-      )}
-    </>
+          <ChevronDown className={cn("h-3 w-3 transition-transform", moreOpen ? "" : "-rotate-90")} />
+          Workspace assets
+        </button>
+        {moreOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            className="space-y-1 overflow-hidden"
+          >
+            {SECONDARY.map(t => (
+              <NavLink key={t.to} to={t.to} onClick={onPick} className={itemCls}>
+                {({ isActive }) => (
+                  <>
+                    {isActive && (
+                      <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[2px] rounded-r-full bg-gradient-to-b from-emerald-500 to-violet-500" />
+                    )}
+                    <t.icon className={cn("h-[15px] w-[15px] shrink-0", isActive ? "text-foreground" : "text-muted-foreground/70")} />
+                    <span className="truncate">{t.label}</span>
+                  </>
+                )}
+              </NavLink>
+            ))}
+          </motion.div>
+        )}
+      </div>
+    </div>
   );
 
   return (
@@ -225,9 +230,9 @@ export default function WorkspaceOS() {
         </div>
       </motion.header>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-4 lg:px-6 py-6 lg:py-8 grid grid-cols-1 lg:grid-cols-[200px_1fr] gap-8">
+      <div className="relative z-10 max-w-7xl mx-auto px-4 lg:px-6 py-6 lg:py-8 grid grid-cols-1 lg:grid-cols-[224px_1fr] gap-10">
         {/* Side rail — desktop only; mobile uses the Sheet in the header */}
-        <aside className="hidden lg:block space-y-0.5 lg:sticky lg:top-20 lg:self-start">
+        <aside className="hidden lg:block lg:sticky lg:top-20 lg:self-start">
           <Nav />
         </aside>
 
