@@ -7519,6 +7519,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_own_search_count: { Args: never; Returns: number }
       intelligence_open_alerts: {
         Args: { _limit?: number }
         Returns: {
