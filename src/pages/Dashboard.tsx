@@ -18,6 +18,8 @@ import ResumeWorkflowCard from "@/components/activation/ResumeWorkflowCard";
 import AdaptiveCockpit from "@/components/dashboard/AdaptiveCockpit";
 import OperationalFlows from "@/components/dashboard/OperationalFlows";
 import ContextualNudge from "@/components/dashboard/ContextualNudge";
+import DashboardHero from "@/components/dashboard/DashboardHero";
+import WorkspacePortalTile from "@/components/dashboard/WorkspacePortalTile";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -222,6 +224,12 @@ export default function Dashboard() {
 
       <div className="space-y-6 max-w-7xl mx-auto w-full">
         {!emailVerified && <EmailVerificationBanner email={user!.email || ""} />}
+
+        {/* Emotional entrypoint — sells possibility, sets the calm tone. */}
+        <DashboardHero />
+
+        {/* Cinematic portal into the execution OS — opens workspace in a new tab. */}
+        <WorkspacePortalTile />
 
         {/* Personalised activity-aware nudge — sits above the cockpit so the
             first thing operators see is a sentence about THEIR own state. */}
