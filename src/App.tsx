@@ -421,9 +421,9 @@ const App = () => (
             <Route path="/problem-leads" element={Shelled(<ProblemLeads />)} />
             <Route path="/proposal-draft" element={Shelled(<ProposalDraft />)} />
             <Route path="/skill-gap" element={Shelled(<SkillGap />)} />
-            <Route path="/ai-tools" element={Shelled(<AIToolBenchmarks />)} />
-            <Route path="/knowledge-hub" element={Shelled(<KnowledgeHub />)} />
-            <Route path="/hustle-blueprint" element={Shelled(<HustleBlueprint />)} />
+            <Route path="/ai-tools" element={Shelled(<WorkspaceFrame><AIToolBenchmarks /></WorkspaceFrame>)} />
+            <Route path="/knowledge-hub" element={Shelled(<WorkspaceFrame><KnowledgeHub /></WorkspaceFrame>)} />
+            <Route path="/hustle-blueprint" element={Shelled(<WorkspaceFrame><HustleBlueprint /></WorkspaceFrame>)} />
             <Route path="/resume-optimizer" element={Shelled(<ResumeOptimizer />)} />
             <Route path="/gig-arbitrage" element={Shelled(<GigArbitrage />)} />
             <Route path="/gig-price-calculator" element={Shelled(<GigPriceCalculator />)} />
@@ -452,7 +452,7 @@ const App = () => (
               <Route path=":id/docs/:docId" element={<DocEditor />} />
             </Route>
             <Route path="/workspaces-legacy" element={Shelled(<Workspaces />)} />
-            <Route path="/canvas" element={Shelled(<HustleCanvas />)} />
+            <Route path="/canvas" element={Shelled(<WorkspaceFrame><HustleCanvas /></WorkspaceFrame>)} />
             <Route path="/work" element={Shelled(<Work />)} />
             <Route path="/work/:slug" element={Shelled(<WorkTool />)} />
             <Route path="/portal/:token" element={<ClientPortal />} />
