@@ -531,6 +531,18 @@ const App = () => (
             <Route path="/workspaces" element={Shelled(<WorkspaceGateway />)} />
             <Route path="/workspaces/*" element={Shelled(<WorkspaceGateway />)} />
             <Route path="/workspaces-legacy" element={Shelled(<Workspaces />)} />
+            {/* Phase 1A — single-frontend aliases. Bare cockpit paths on the
+                marketing host forward to /workspaces/* so links written for the
+                subdomain context still land on the right page. */}
+            <Route path="/clients"    element={<Navigate to="/workspaces/clients" replace />} />
+            <Route path="/pipeline"   element={<Navigate to="/workspaces/pipeline" replace />} />
+            <Route path="/revenue"    element={<Navigate to="/workspaces/revenue" replace />} />
+            <Route path="/roadmap"    element={<Navigate to="/workspaces/roadmap" replace />} />
+            <Route path="/brand-kit"  element={<Navigate to="/workspaces/brand-kit" replace />} />
+            <Route path="/blocks"     element={<Navigate to="/workspaces/blocks" replace />} />
+            <Route path="/intake"     element={<Navigate to="/workspaces/intake" replace />} />
+            <Route path="/providers"  element={<Navigate to="/settings/integrations" replace />} />
+            <Route path="/projects/new" element={<Navigate to="/workspaces/new" replace />} />
             <Route path="/canvas" element={Shelled(<WorkspaceFrame><HustleCanvas /></WorkspaceFrame>)} />
             <Route path="/work" element={Shelled(<Work />)} />
             <Route path="/work/:slug" element={Shelled(<WorkTool />)} />

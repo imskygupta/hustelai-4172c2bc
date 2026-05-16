@@ -147,7 +147,7 @@ export default function BlogHome() {
                   </li>
                 ))}
               </ul>
-              <Link to="/category/freelancer-workflows" className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
+              <Link to="/insights/category/freelancer-workflows" className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
                 More trending workflows →
               </Link>
             </aside>

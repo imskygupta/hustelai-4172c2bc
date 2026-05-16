@@ -50,7 +50,7 @@ export default function DocsHome() {
 
           <div className="flex flex-wrap gap-2 mt-6">
             <Link
-              to="/quickstart"
+              to="/how-it-works"
               className="inline-flex items-center gap-1.5 px-4 h-10 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-emerald-950 font-medium text-sm transition-colors"
             >
               <Rocket className="w-4 h-4" /> Quickstart in 10 min

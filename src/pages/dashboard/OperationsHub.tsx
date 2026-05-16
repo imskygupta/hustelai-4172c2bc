@@ -38,7 +38,7 @@ const MODULES: Array<{
   { key: "recurring", title: "Recurring invoices", blurb: "Monthly retainer cycles, generated on autopilot.", icon: Repeat, status: "preview", to: "/dashboard/workspace-os/preview/recurring" },
   { key: "reminders", title: "Client reminders", blurb: "Quiet follow-ups: 3-day, 7-day, end of month.", icon: Bell, status: "preview", to: "/dashboard/workspace-os/preview/reminders" },
   { key: "chains", title: "Operational chains", blurb: "Save → Export → Deliver → Follow-up, in one flow.", icon: Activity, status: "preview", to: "/dashboard/workspace-os/preview/chains" },
-  { key: "library", title: "Workspace library", blurb: "Brand kit, blocks, docs and reusable assets.", icon: FolderOpen, status: "live", to: "/n" },
+  { key: "library", title: "Workspace library", blurb: "Brand kit, blocks, docs and reusable assets.", icon: FolderOpen, status: "live", to: "/workspaces" },
 ];
 
 function StatusDot({ s }: { s: "live" | "preview" | "coming" }) {
@@ -131,7 +131,7 @@ export default function OperationsHub() {
             <h2 className="text-sm font-semibold tracking-tight text-foreground inline-flex items-center gap-2">
               <FileDown className="h-4 w-4 text-muted-foreground" /> Recent exports
             </h2>
-            <Link to="/n" className="text-xs text-muted-foreground hover:text-foreground">All workspaces →</Link>
+            <Link to="/workspaces" className="text-xs text-muted-foreground hover:text-foreground">All workspaces →</Link>
           </div>
           <Card className="border-border/60 divide-y divide-border/60">
             {loading && (

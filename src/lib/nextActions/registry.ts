@@ -34,7 +34,7 @@ export const NEXT_ACTIONS: Record<NextActionTrigger, NextActionSuggestion[]> = {
     { id: "proposal.deliver_telegram", label: "Deliver to Telegram", description: "Send this proposal to your client chat instantly.", icon: Send, to: "/settings/integrations", tone: "primary" },
     { id: "proposal.create_invoice", label: "Create matching invoice", description: "Lock the deal with a branded invoice.", icon: Receipt, to: "/tools/invoice-generator" },
     { id: "proposal.save_workspace", label: "Save to workspace", description: "Keep this draft alongside your client docs.", icon: Save, to: "/dashboard/workspace-os", authedOnly: true },
-    { id: "proposal.client_handoff", label: "Start client handoff", description: "Draft an onboarding form for the client.", icon: Briefcase, to: "/tools/onboarding-form-builder" },
+    { id: "proposal.client_handoff", label: "Start client handoff", description: "Draft an onboarding form for the client.", icon: Briefcase, to: "/tools/onboarding-form" },
   ],
   invoice_exported: [
     { id: "invoice.send_client", label: "Send to client", description: "Deliver via Telegram or copy a share link.", icon: Send, to: "/settings/integrations", tone: "primary" },
