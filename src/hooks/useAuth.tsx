@@ -107,6 +107,23 @@ function hasLocalSupabaseSession() {
   }
 }
 
+async function consumeSessionHashIfPresent() {
+  if (typeof window === "undefined" || !window.location.hash.includes("access_token=")) return;
+  try {
+    const hash = new URLSearchParams(window.location.hash.slice(1));
+    const access_token = hash.get("access_token") || "";
+    const refresh_token = hash.get("refresh_token") || "";
+    if (!access_token || !refresh_token) return;
+    const { error } = await supabase.auth.setSession({ access_token, refresh_token });
+    authDebug("hash.hydrate", { ok: !error, error: error?.message, type: hash.get("type") });
+    if (!error) {
+      window.history.replaceState(null, document.title, `${window.location.pathname}${window.location.search}`);
+    }
+  } catch (err) {
+    authDebug("hash.hydrate_failed", { error: err instanceof Error ? err.message : String(err) });
+  }
+}
+
 async function hydrateFromBridgeIfNeeded() {
   if (typeof window === "undefined" || hasLocalSupabaseSession()) return;
   const raw = readCookie(AUTH_BRIDGE_COOKIE);
@@ -231,6 +248,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     (async () => {
       try {
+        await consumeSessionHashIfPresent();
         await hydrateFromBridgeIfNeeded();
         const { data: { session: initialSession }, error } = await supabase.auth.getSession();
         if (!mounted) return;
