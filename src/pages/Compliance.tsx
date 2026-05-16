@@ -12,18 +12,19 @@ export default function Compliance() {
       sections={[
         { id: "jurisdiction", title: "1. Jurisdiction",
           body: <p>{BRAND.name} is operated from India and bills customers globally through licensed payment partners. We comply with applicable Indian information-technology, data-protection, and consumer-protection regulations.</p> },
-        { id: "payments", title: "2. Payment partners",
+        { id: "payments", title: "2. Payment processing",
           body: <ul>
-            <li><strong>Cashfree</strong> — UPI, cards, and wallet flows for Indian customers.</li>
-            <li><strong>Dodo Payments</strong> — international subscriptions and merchant-of-record support.</li>
+            <li>Domestic UPI, cards, netbanking and wallets via licensed Indian payment gateways.</li>
+            <li>International subscriptions through merchant-of-record partners that handle global tax compliance.</li>
+            <li>Card details never touch our servers — all flows are tokenised at the processor.</li>
           </ul> },
-        { id: "subprocessors", title: "3. Subprocessors",
+        { id: "subprocessors", title: "3. Operational subprocessors",
           body: <ul>
-            <li>Hosting and managed databases — Supabase, Vercel.</li>
-            <li>Email — Resend, Zoho Mail, Brevo.</li>
-            <li>AI inference — Google Gemini, OpenAI, Zhipu, LongCat (routed via the Lovable AI Gateway).</li>
-            <li>Analytics — Yandex Metrica.</li>
-            <li>Error reporting — Sentry.</li>
+            <li>Tier-1 managed cloud infrastructure for hosting, databases and edge compute.</li>
+            <li>Transactional and broadcast email through audited delivery providers.</li>
+            <li>In-house AI orchestration layer routing across our own and best-in-class frontier models.</li>
+            <li>Privacy-respecting product analytics and error telemetry with PII filtering.</li>
+            <li>A current list of named subprocessors is available to enterprise customers under NDA.</li>
           </ul> },
         { id: "data-residency", title: "4. Data residency",
           body: <p>Customer workspace data is stored on managed infrastructure in regions selected for latency and durability. We do not currently offer per-customer regional pinning. Contact us if your contract requires a specific data-residency commitment.</p> },
