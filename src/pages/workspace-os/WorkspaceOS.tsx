@@ -41,6 +41,7 @@ const SECONDARY = [
   { to: wp("brand-kit"), label: "Brand Kit",    icon: Palette },
   { to: wp("blocks"),    label: "Assets",       icon: Blocks },
   { to: wp("revenue"),   label: "Revenue",      icon: TrendingUp },
+  { to: wp("automations"), label: "Automations", icon: Zap },
   { to: wp("providers"), label: "AI Providers", icon: KeyRound },
 ];
 
