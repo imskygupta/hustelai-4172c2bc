@@ -32,6 +32,7 @@ const AdminNewsletterOps = lazy(() => import("./pages/admin/NewsletterOps"));
 const AdminUsageGovernance = lazy(() => import("./pages/admin/UsageGovernance"));
 const AdminMissionControl = lazy(() => import("./pages/admin/MissionControl"));
 const AdminDocs = lazy(() => import("./pages/admin/AdminDocs"));
+const AdminMarketingPages = lazy(() => import("./pages/admin/MarketingPages"));
 import NotificationPreferences from "./pages/settings/NotificationPreferences";
 import Integrations from "./pages/settings/Integrations";
 import Exports from "./pages/settings/Exports";
@@ -52,6 +53,8 @@ import Payment from "./pages/Payment";
 import PaymentStatus from "./pages/PaymentStatus";
 import Plans from "./pages/Plans";
 import PricingPage from "./pages/PricingPage";
+import Marketing1 from "./pages/Marketing1";
+import Marketing2 from "./pages/Marketing2";
 import Leaderboard from "./pages/Leaderboard";
 import SavedHustles from "./pages/SavedHustles";
 import Career from "./pages/Career";
@@ -403,6 +406,8 @@ const App = () => (
             <Route path="/payment" element={Shelled(<Payment />)} />
             <Route path="/payment-status" element={Shelled(<PaymentStatus />)} />
             <Route path="/plans" element={<Plans />} />
+            <Route path="/marketing-1" element={<Marketing1 />} />
+            <Route path="/marketing-2" element={<Marketing2 />} />
             <Route path="/pricing" element={<PricingPage />} />
             <Route path="/leaderboard" element={Shelled(<Leaderboard />)} />
             <Route path="/saved-hustles" element={Shelled(<SavedHustles />)} />
@@ -465,6 +470,7 @@ const App = () => (
             <Route path="/admin/communications/newsletter" element={<AdminNewsletterOps />} />
             <Route path="/admin/usage-governance" element={<AdminUsageGovernance />} />
             <Route path="/admin/mission-control" element={<AdminMissionControl />} />
+            <Route path="/admin/marketing-pages" element={<AdminMarketingPages />} />
             <Route path="/admin/communications/telegram" element={<TelegramOpsCenter />} />
             <Route path="/admin/ai-jobs" element={<AdminAiJobs />} />
             <Route path="/admin/telegram" element={<TelegramOps />} />
