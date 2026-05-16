@@ -203,6 +203,7 @@ const NAV_GROUPS: { label: string; defaultOpen?: boolean; items: NavItem[] }[] =
     defaultOpen: true,
     items: [
       { kind: "route", href: "/admin/communications", label: "Broadcast Center", icon: Megaphone },
+      { kind: "route", href: "/admin/marketing-pages", label: "Marketing Pages", icon: Megaphone, keywords: "ads landing campaign marketing" },
       { kind: "section", id: "newsletter", label: "Newsletter", icon: Mail },
       { kind: "section", id: "email-templates", label: "Email Templates", icon: Mail },
       { kind: "section", id: "mailing-providers", label: "Mailing Providers", icon: Settings },
