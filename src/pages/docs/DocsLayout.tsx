@@ -173,9 +173,6 @@ export default function DocsLayout() {
 
           <nav className="hidden md:flex items-center gap-1 text-sm">
             <DocsTopLink to="/" icon={LayoutGrid}>Categories</DocsTopLink>
-            <DocsTopLink to="/changelog" icon={Sparkles}>Changelog</DocsTopLink>
-            <DocsTopLink to="/api" icon={Code2}>API</DocsTopLink>
-            <DocsTopLink to="/quickstart" icon={Compass}>Guides</DocsTopLink>
             <a
               href="https://hustlaiapp.in"
               className="ml-1 inline-flex items-center gap-1.5 px-3 h-8 rounded-md text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
