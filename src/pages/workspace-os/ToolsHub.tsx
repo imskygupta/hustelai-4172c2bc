@@ -19,7 +19,9 @@ import { IntentRunner } from "@/components/workspace/IntentRunner";
 import {
   TOOL_GROUPS, PROVIDER_DISPLAY, SPEED_DISPLAY,
   type ToolIntent, type ToolGroup,
+  findIntent,
 } from "@/lib/workspace/toolsCatalog";
+import { nextSteps } from "@/lib/workspace/chains";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -108,6 +110,8 @@ export default function ToolsHub() {
       </motion.header>
 
       {/* GROUPS */}
+      <AdaptiveRails onRun={setRunning} />
+
       {TOOL_GROUPS.map((group, gi) => (
         <Group key={group.id} group={group} index={gi} onRun={setRunning} />
       ))}
