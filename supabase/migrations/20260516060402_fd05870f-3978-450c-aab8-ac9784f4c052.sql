@@ -1,0 +1,1 @@
+UPDATE newsletter_schedules SET enabled = false;
