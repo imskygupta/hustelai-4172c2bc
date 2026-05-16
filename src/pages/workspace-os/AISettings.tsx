@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useWorkspace } from "@/lib/workspace/context";
+import { ProviderInfrastructure } from "@/components/workspace/ProviderInfrastructure";
 
 type Speed = "instant" | "fast" | "balanced" | "deep";
 
