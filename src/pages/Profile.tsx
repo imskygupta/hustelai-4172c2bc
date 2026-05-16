@@ -12,7 +12,7 @@ import { motion } from "framer-motion";
 import {
   Crown, Shield, Send, FileDown, CreditCard, Settings as Cog, Plug,
   Sparkles, ArrowRight, CheckCircle2, AlertCircle, Bell, Key, ExternalLink,
-  Clock, Zap, BadgeCheck, Receipt, Activity,
+  Clock, Zap, BadgeCheck, Receipt, Activity, MessageSquare,
 } from "lucide-react";
 
 interface ExportLite {
@@ -240,6 +240,7 @@ export default function Profile() {
                     { to: "/settings/billing",        label: "Billing & invoices",  icon: CreditCard },
                     { to: "/settings/integrations",   label: "Integrations",        icon: Plug },
                     { to: "/settings/api",            label: "API keys",            icon: Key },
+                    { to: "/settings/feedback",       label: "Send feedback",       icon: MessageSquare },
                   ].map(a => (
                     <Link key={a.to} to={a.to}
                       className="flex items-center gap-2.5 px-3 py-2 rounded-md text-sm hover:bg-muted/60 transition group">
