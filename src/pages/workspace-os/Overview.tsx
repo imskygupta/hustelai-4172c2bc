@@ -441,8 +441,21 @@ function OperatorHero({ firstName, partOfDay, projectCount }: { firstName: strin
     // Stable seed per session so the number doesn't flicker on rerenders.
     const seed = 1240 + Math.floor(Math.random() * 180);
     setOperators(seed);
-    const t = setInterval(() => setOperators(o => Math.max(900, o + (Math.random() > 0.5 ? 1 : -1))), 4200);
-    return () => clearInterval(t);
+    // Pause the random-walk heartbeat when the tab is hidden — no point
+    // re-rendering the hero off-screen. Also gives mobile battery a break.
+    let t: number | null = null;
+    const start = () => {
+      if (t != null) return;
+      t = window.setInterval(
+        () => setOperators(o => Math.max(900, o + (Math.random() > 0.5 ? 1 : -1))),
+        4200,
+      );
+    };
+    const stop = () => { if (t != null) { window.clearInterval(t); t = null; } };
+    const onVis = () => (document.hidden ? stop() : start());
+    start();
+    document.addEventListener("visibilitychange", onVis);
+    return () => { stop(); document.removeEventListener("visibilitychange", onVis); };
   }, []);
   const verb = projectCount > 0 ? "Keep shipping" : "Start shipping";
   return (
