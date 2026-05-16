@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import { Activity, Gauge, Layers, Zap, Cpu } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Activity, Gauge, Layers, Zap, Cpu, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { PROVIDER_DISPLAY } from "@/lib/workspace/toolsCatalog";
@@ -20,27 +20,44 @@ export function ProviderInfrastructure() {
   const [rows, setRows] = useState<Array<{ provider: string | null; created_at: string }>>([]);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
+  // Lightweight session cache — provider mix doesn't change second-to-second,
+  // so we keep the last fetch around for 5 min to avoid re-querying every
+  // workspace navigation. Manual refresh button below for explicit refetch.
+  const cacheKey = user?.id ? `ws_provider_mix_v1:${user.id}` : null;
+  const TTL_MS = 5 * 60_000;
+
+  const fetchRows = useCallback(async (force = false) => {
     if (!user?.id) return;
-    let cancelled = false;
-    (async () => {
-      setLoading(true);
+    if (!force && cacheKey) {
       try {
-        const since = new Date(Date.now() - 7 * 86_400_000).toISOString();
-        const { data } = await (supabase as any)
-          .from("workspace_outputs")
-          .select("provider, created_at")
-          .eq("user_id", user.id)
-          .gte("created_at", since)
-          .order("created_at", { ascending: false })
-          .limit(200);
-        if (!cancelled) setRows((data || []) as any[]);
-      } finally {
-        if (!cancelled) setLoading(false);
+        const raw = sessionStorage.getItem(cacheKey);
+        if (raw) {
+          const parsed = JSON.parse(raw) as { at: number; rows: any[] };
+          if (Date.now() - parsed.at < TTL_MS) { setRows(parsed.rows); return; }
+        }
+      } catch { /* ignore */ }
+    }
+    setLoading(true);
+    try {
+      const since = new Date(Date.now() - 7 * 86_400_000).toISOString();
+      const { data } = await (supabase as any)
+        .from("workspace_outputs")
+        .select("provider, created_at")
+        .eq("user_id", user.id)
+        .gte("created_at", since)
+        .order("created_at", { ascending: false })
+        .limit(200);
+      const next = (data || []) as any[];
+      setRows(next);
+      if (cacheKey) {
+        try { sessionStorage.setItem(cacheKey, JSON.stringify({ at: Date.now(), rows: next })); } catch { /* ignore */ }
       }
-    })();
-    return () => { cancelled = true; };
-  }, [user?.id]);
+    } finally {
+      setLoading(false);
+    }
+  }, [user?.id, cacheKey]);
+
+  useEffect(() => { fetchRows(false); }, [fetchRows]);
 
   const stats = useMemo(() => {
     const total = rows.length;
@@ -73,8 +90,20 @@ export function ProviderInfrastructure() {
           </div>
           <h3 className="text-lg font-semibold tracking-tight mt-1">Workspace load</h3>
         </div>
-        <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-300/40 bg-emerald-50/40 px-2.5 py-1 text-[10.5px] font-semibold text-emerald-700">
-          <Zap className="h-3 w-3" /> {LANE_LABEL[prof.lane]} · {prof.aiConcurrency}× concurrent
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => fetchRows(true)}
+            disabled={loading}
+            className="text-[10px] text-muted-foreground/70 hover:text-foreground inline-flex items-center gap-1 px-1.5 py-0.5 rounded disabled:opacity-50"
+            aria-label="Refresh provider mix"
+            title="Refresh"
+          >
+            <RefreshCw className={`h-3 w-3 ${loading ? "animate-spin" : ""}`} />
+          </button>
+          <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-300/40 bg-emerald-50/40 px-2.5 py-1 text-[10.5px] font-semibold text-emerald-700">
+            <Zap className="h-3 w-3" /> {LANE_LABEL[prof.lane]} · {prof.aiConcurrency}× concurrent
+          </div>
         </div>
       </header>
 
