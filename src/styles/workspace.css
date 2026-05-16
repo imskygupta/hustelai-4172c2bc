@@ -408,53 +408,98 @@
    WORKSPACE VIBE — per-user palette + intensity + focus + provider aura
    ============================================================ */
 
-/* Default vibe vars (Ivory Operator). Every vibe overrides these on the
-   wrapper element via [data-ws-vibe="..."]. The cockpit chrome reads them
-   through the .ws-themed-bg utility so palette switches feel instant. */
+/* Default = Ivory Cream. Every other vibe overrides hue family.
+   Each vibe defines a light gradient backdrop AND tile/text/border tones
+   so the cockpit retints end-to-end (no more "background-only" feel). */
 .ws-themed {
   --vibe-bg-1: hsl(48 85% 99%);
   --vibe-bg-2: hsl(40 75% 99.2%);
   --vibe-bg-3: hsl(30 70% 98.8%);
-  --vibe-glow-1: hsl(160 84% 45% / 0.07);
-  --vibe-glow-2: hsl(258 80% 64% / 0.07);
-  --vibe-fg: hsl(222 30% 12%);
-  --vibe-intensity: 0.55;
+  --vibe-glow-1: hsl(38 90% 75% / 0.30);
+  --vibe-glow-2: hsl(28 95% 78% / 0.22);
+
+  --vibe-tile-bg-1: hsl(48 90% 99.5%);
+  --vibe-tile-bg-2: hsl(40 80% 97%);
+  --vibe-tile-border: hsl(38 55% 82%);
+  --vibe-tile-border-strong: hsl(32 60% 70%);
+  --vibe-fg: hsl(28 35% 16%);
+  --vibe-fg-muted: hsl(28 18% 38%);
+  --vibe-accent: hsl(28 85% 50%);
 }
 
-[data-ws-vibe="midnight"].ws-themed {
-  --vibe-bg-1: hsl(160 30% 6%);
-  --vibe-bg-2: hsl(160 35% 8%);
-  --vibe-bg-3: hsl(170 40% 5%);
-  --vibe-glow-1: hsl(160 84% 45% / 0.18);
-  --vibe-glow-2: hsl(150 70% 55% / 0.10);
+[data-ws-vibe="mint"].ws-themed {
+  --vibe-bg-1: hsl(150 60% 97.5%);
+  --vibe-bg-2: hsl(155 55% 95%);
+  --vibe-bg-3: hsl(160 50% 96.5%);
+  --vibe-glow-1: hsl(150 70% 70% / 0.30);
+  --vibe-glow-2: hsl(170 65% 70% / 0.22);
+  --vibe-tile-bg-1: hsl(150 70% 99%);
+  --vibe-tile-bg-2: hsl(150 55% 95%);
+  --vibe-tile-border: hsl(150 40% 80%);
+  --vibe-tile-border-strong: hsl(155 45% 65%);
+  --vibe-fg: hsl(160 45% 14%);
+  --vibe-fg-muted: hsl(160 22% 36%);
+  --vibe-accent: hsl(155 70% 38%);
 }
-[data-ws-vibe="graphite"].ws-themed {
-  --vibe-bg-1: hsl(220 14% 8%);
-  --vibe-bg-2: hsl(220 12% 11%);
-  --vibe-bg-3: hsl(220 10% 14%);
-  --vibe-glow-1: hsl(220 14% 60% / 0.10);
-  --vibe-glow-2: hsl(220 10% 70% / 0.06);
+
+[data-ws-vibe="lavender"].ws-themed {
+  --vibe-bg-1: hsl(265 65% 98%);
+  --vibe-bg-2: hsl(258 60% 96%);
+  --vibe-bg-3: hsl(272 55% 97%);
+  --vibe-glow-1: hsl(265 80% 78% / 0.32);
+  --vibe-glow-2: hsl(290 70% 80% / 0.22);
+  --vibe-tile-bg-1: hsl(265 75% 99%);
+  --vibe-tile-bg-2: hsl(260 60% 96%);
+  --vibe-tile-border: hsl(260 45% 84%);
+  --vibe-tile-border-strong: hsl(262 55% 70%);
+  --vibe-fg: hsl(265 40% 18%);
+  --vibe-fg-muted: hsl(265 20% 40%);
+  --vibe-accent: hsl(262 70% 56%);
 }
-[data-ws-vibe="aurora"].ws-themed {
-  --vibe-bg-1: hsl(225 50% 10%);
-  --vibe-bg-2: hsl(220 45% 14%);
-  --vibe-bg-3: hsl(260 40% 16%);
-  --vibe-glow-1: hsl(180 70% 55% / 0.18);
-  --vibe-glow-2: hsl(265 80% 70% / 0.18);
+
+[data-ws-vibe="sky"].ws-themed {
+  --vibe-bg-1: hsl(210 70% 98%);
+  --vibe-bg-2: hsl(205 60% 96%);
+  --vibe-bg-3: hsl(215 55% 97%);
+  --vibe-glow-1: hsl(205 85% 78% / 0.32);
+  --vibe-glow-2: hsl(195 75% 80% / 0.22);
+  --vibe-tile-bg-1: hsl(210 80% 99%);
+  --vibe-tile-bg-2: hsl(208 60% 96%);
+  --vibe-tile-border: hsl(208 50% 82%);
+  --vibe-tile-border-strong: hsl(208 60% 65%);
+  --vibe-fg: hsl(215 50% 18%);
+  --vibe-fg-muted: hsl(215 22% 40%);
+  --vibe-accent: hsl(212 80% 50%);
 }
-[data-ws-vibe="violet"].ws-themed {
-  --vibe-bg-1: hsl(265 40% 7%);
-  --vibe-bg-2: hsl(270 45% 11%);
-  --vibe-bg-3: hsl(280 50% 9%);
-  --vibe-glow-1: hsl(265 80% 65% / 0.20);
-  --vibe-glow-2: hsl(295 80% 70% / 0.12);
+
+[data-ws-vibe="peach"].ws-themed {
+  --vibe-bg-1: hsl(28 90% 98%);
+  --vibe-bg-2: hsl(22 80% 96%);
+  --vibe-bg-3: hsl(35 75% 97%);
+  --vibe-glow-1: hsl(22 95% 75% / 0.32);
+  --vibe-glow-2: hsl(35 90% 78% / 0.22);
+  --vibe-tile-bg-1: hsl(28 100% 99%);
+  --vibe-tile-bg-2: hsl(22 80% 96%);
+  --vibe-tile-border: hsl(24 65% 82%);
+  --vibe-tile-border-strong: hsl(20 75% 68%);
+  --vibe-fg: hsl(20 45% 18%);
+  --vibe-fg-muted: hsl(20 22% 40%);
+  --vibe-accent: hsl(20 85% 52%);
 }
-[data-ws-vibe="obsidian"].ws-themed {
-  --vibe-bg-1: hsl(220 10% 4%);
-  --vibe-bg-2: hsl(220 8% 6%);
-  --vibe-bg-3: hsl(220 6% 8%);
-  --vibe-glow-1: hsl(220 14% 50% / 0.08);
-  --vibe-glow-2: hsl(0 0% 100% / 0.04);
+
+[data-ws-vibe="rose"].ws-themed {
+  --vibe-bg-1: hsl(350 75% 98%);
+  --vibe-bg-2: hsl(345 65% 96%);
+  --vibe-bg-3: hsl(355 60% 97%);
+  --vibe-glow-1: hsl(345 85% 80% / 0.32);
+  --vibe-glow-2: hsl(0 80% 82% / 0.22);
+  --vibe-tile-bg-1: hsl(350 90% 99%);
+  --vibe-tile-bg-2: hsl(345 65% 96%);
+  --vibe-tile-border: hsl(348 55% 84%);
+  --vibe-tile-border-strong: hsl(348 65% 70%);
+  --vibe-fg: hsl(348 40% 20%);
+  --vibe-fg-muted: hsl(348 18% 42%);
+  --vibe-accent: hsl(348 75% 55%);
 }
 
 /* Cockpit background painter — replaces hard-coded gradients on
@@ -467,20 +512,45 @@
   transition: background 600ms var(--ws-ease);
 }
 
-/* Dark-vibe inversion: when wrapper is one of the dark palettes, lighten
-   text + recolor surfaces so existing components stay legible. */
-[data-ws-vibe="midnight"].ws-themed,
-[data-ws-vibe="graphite"].ws-themed,
-[data-ws-vibe="aurora"].ws-themed,
-[data-ws-vibe="violet"].ws-themed,
-[data-ws-vibe="obsidian"].ws-themed {
-  color: hsl(220 15% 92%);
+/* ============================================================
+   Tile retinting — make the vibe drive cards, borders, and text
+   so palette switches feel like a full re-skin, not a wash.
+   Scoped to .ws-themed so it never escapes the workspace shell.
+   Uses :where() for low specificity so explicit component styles
+   (status colors, gradient buttons, etc.) still win.
+   ============================================================ */
+.ws-themed :where(.bg-white, .bg-slate-50\/40, .bg-slate-50, [class*="bg-slate-50/"], .bg-card) {
+  background-image: linear-gradient(160deg, var(--vibe-tile-bg-1), var(--vibe-tile-bg-2)) !important;
+  background-color: var(--vibe-tile-bg-1) !important;
 }
-[data-ws-vibe="midnight"].ws-themed .text-foreground,
-[data-ws-vibe="graphite"].ws-themed .text-foreground,
-[data-ws-vibe="aurora"].ws-themed .text-foreground,
-[data-ws-vibe="violet"].ws-themed .text-foreground,
-[data-ws-vibe="obsidian"].ws-themed .text-foreground { color: hsl(220 15% 95%); }
+.ws-themed :where(
+  .border-slate-200,
+  .border-slate-100,
+  .border-border,
+  .border-border\/60,
+  .border-border\/50,
+  .border-border\/40
+) {
+  border-color: var(--vibe-tile-border) !important;
+}
+.ws-themed :where(.text-slate-900, .text-slate-800, .text-foreground, .text-zinc-900) {
+  color: var(--vibe-fg) !important;
+}
+.ws-themed :where(.text-slate-700, .text-slate-600) { color: var(--vibe-fg) !important; }
+.ws-themed :where(.text-slate-500, .text-slate-400, .text-muted-foreground) {
+  color: var(--vibe-fg-muted) !important;
+}
+/* Hover tints reuse the accent so each palette feels intentional */
+.ws-themed :where(.hover\:border-emerald-300, .hover\:border-amber-300, .hover\:border-violet-300):hover {
+  border-color: var(--vibe-tile-border-strong) !important;
+}
+.ws-themed :where(
+  .hover\:bg-emerald-50\/40,
+  .hover\:bg-amber-50\/40,
+  .hover\:bg-violet-50\/40
+):hover {
+  background-image: linear-gradient(160deg, var(--vibe-tile-bg-2), var(--vibe-tile-bg-1)) !important;
+}
 
 /* Intensity dial — controls ambient glow opacity globally */
 .ws-themed[data-ws-intensity="0"]   .ws-ambient-pastel,

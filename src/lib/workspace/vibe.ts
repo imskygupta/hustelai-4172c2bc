@@ -12,12 +12,12 @@
 import { useEffect, useState, useCallback } from "react";
 
 export type VibeId =
-  | "ivory"          // default warm operator
-  | "midnight"       // midnight emerald
-  | "graphite"       // deep graphite
-  | "aurora"         // aurora pastels
-  | "violet"         // neural violet
-  | "obsidian";      // obsidian glass (near-black)
+  | "ivory"     // warm cream + soft peach
+  | "mint"      // fresh mint freelancer
+  | "lavender"  // soft violet operator
+  | "sky"       // powder blue agency
+  | "peach"     // sunrise peach
+  | "rose";     // dusty rose studio
 
 export type VibeProviderTone = "claude" | "groq" | "gemini" | "openai" | "neutral";
 
@@ -29,12 +29,12 @@ export interface Vibe {
 }
 
 export const VIBE_PRESETS: { id: VibeId; name: string; tagline: string; swatch: string[] }[] = [
-  { id: "ivory",    name: "Ivory Operator",  tagline: "Warm, calm, daylight",   swatch: ["#FFFBEF", "#FFF3D6", "#F4DCA8", "#1f2937"] },
-  { id: "midnight", name: "Midnight Emerald", tagline: "Deep green focus",       swatch: ["#06120E", "#0E2A22", "#10b981", "#34d399"] },
-  { id: "graphite", name: "Deep Graphite",    tagline: "Quiet, neutral, sharp",  swatch: ["#0E1014", "#1A1D24", "#373C46", "#94a3b8"] },
-  { id: "aurora",   name: "Aurora",           tagline: "Soft northern pastels",  swatch: ["#0B1228", "#13284A", "#5cbdb9", "#a78bfa"] },
-  { id: "violet",   name: "Neural Violet",    tagline: "Late-night invention",   swatch: ["#0B0716", "#1B1235", "#6d28d9", "#c4b5fd"] },
-  { id: "obsidian", name: "Obsidian Glass",   tagline: "Cinematic black",        swatch: ["#050507", "#0E0E12", "#1F1F26", "#e5e7eb"] },
+  { id: "ivory",    name: "Ivory Cream",   tagline: "Warm, calm, daylight",     swatch: ["#FFFBEF", "#FFF3D6", "#FDE9C2", "#F4DCA8"] },
+  { id: "mint",     name: "Fresh Mint",    tagline: "Freelancer freshness",     swatch: ["#F1FBF4", "#DDF5E4", "#BCEBC9", "#86D9A0"] },
+  { id: "lavender", name: "Soft Lavender", tagline: "Calm operator focus",      swatch: ["#F6F2FF", "#E9DEFF", "#D5C3FB", "#B89AF1"] },
+  { id: "sky",      name: "Powder Sky",    tagline: "Cool agency clarity",      swatch: ["#F0F7FF", "#DDECFF", "#BBD7FB", "#8FBCF1"] },
+  { id: "peach",    name: "Sunrise Peach", tagline: "Warm shipping energy",     swatch: ["#FFF5EC", "#FFE6D1", "#FFCDA8", "#FBA677"] },
+  { id: "rose",     name: "Dusty Rose",    tagline: "Studio-grade warmth",      swatch: ["#FFF1F4", "#FFE0E6", "#FBC4CD", "#F19BAA"] },
 ];
 
 const DEFAULT_VIBE: Vibe = { id: "ivory", intensity: 55, focus: false, reducedMotion: false };
