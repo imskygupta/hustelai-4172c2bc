@@ -128,6 +128,8 @@ import IntakeInbox from "./pages/workspace-os/IntakeInbox";
 import DocsLibrary from "./pages/workspace-os/DocsLibrary";
 import ToolsHubWS from "./pages/workspace-os/ToolsHub";
 import IntakeSubmit from "./pages/IntakeSubmit";
+import OperationsHub from "./pages/dashboard/OperationsHub";
+import AutomationsHub from "./pages/dashboard/AutomationsHub";
 import IntakePreview from "./pages/IntakePreview";
 import Work from "./pages/Work";
 import WorkTool from "./pages/WorkTool";
@@ -440,6 +442,9 @@ const App = () => (
             <Route path="/dashboard/tools/content-calendar" element={Shelled(<ContentCalendar />)} />
             <Route path="/dashboard/tools/pomodoro" element={Shelled(<PomodoroWidget />)} />
             <Route path="/dashboard/tools/business-card" element={Shelled(<BusinessCardGenerator />)} />
+            {/* Operational backbone — workspace ops + outcome-first automations */}
+            <Route path="/dashboard/workspace-os" element={Shelled(<OperationsHub />)} />
+            <Route path="/dashboard/automations" element={Shelled(<AutomationsHub />)} />
             <Route path="/hustle/:id" element={Shelled(<HustleDetail />)} />
             <Route path="/roadmap/:id" element={Shelled(<RoadmapViewer />)} />
             <Route path="/infinity-zone" element={Shelled(<InfinityZone />)} />
