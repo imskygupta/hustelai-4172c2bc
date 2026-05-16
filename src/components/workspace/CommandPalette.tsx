@@ -16,13 +16,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { useWorkspace } from "@/lib/workspace/context";
 import { wp, wpProject } from "@/lib/workspace/paths";
 import { usePinnedProjects, trackProjectVisit } from "@/lib/workspace/operator";
+import { suggestChainFromOutput } from "@/lib/workspace/operationalChains";
 
 type Item = {
   id: string;
   label: string;
   hint?: string;
   icon: typeof Sparkles;
-  group: "Actions" | "Tools" | "Pinned" | "Workspaces" | "Outputs" | "Assets" | "Go to";
+  group: "Actions" | "Tools" | "Pinned" | "Continue" | "Workspaces" | "Outputs" | "Assets" | "Go to";
   run: () => void;
 };
 
@@ -110,6 +111,35 @@ export function WorkspaceCommandPalette() {
     const out: Item[] = [];
     out.push(...INTENT_ACTIONS(navigate).map(it => ({ ...it, run: () => { it.run(); close(); } })));
     out.push(...TOOL_ACTIONS(navigate).map(it => ({ ...it, run: () => { it.run(); close(); } })));
+
+    // Continue chains — derived from the most-recent output per project.
+    // Surfaces the natural "next move" for the operator's last 4 generations.
+    const seenProjects = new Set<string>();
+    const latestPerProject = outputs.filter((o: any) => {
+      if (!o.project_id || seenProjects.has(o.project_id)) return false;
+      seenProjects.add(o.project_id);
+      return true;
+    }).slice(0, 4);
+    const projectName = (pid: string) => workspaces.find(w => w.id === pid)?.client_name || "Project";
+    for (const latest of latestPerProject) {
+      const steps = suggestChainFromOutput(latest as any, []);
+      const step = steps[0];
+      if (!step) continue;
+      out.push({
+        id: `chain-${latest.id}`,
+        label: step.label,
+        hint: `Continue · ${projectName(latest.project_id)}`,
+        icon: step.icon as any,
+        group: "Continue",
+        run: () => {
+          setActiveProject(latest.project_id);
+          trackProjectVisit(latest.project_id);
+          navigate(`${wpProject(latest.project_id)}/${step.href}?intent=${encodeURIComponent(step.intent)}`);
+          close();
+        },
+      });
+    }
+
     // Pinned projects — surfaced first for instant jump
     const pinnedSet = new Set(pinned);
     const pinnedWs = workspaces.filter(w => pinnedSet.has(w.id));
