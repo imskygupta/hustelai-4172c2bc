@@ -31,6 +31,7 @@ const AdminCommunications = lazy(() => import("./pages/admin/Communications"));
 const AdminNewsletterOps = lazy(() => import("./pages/admin/NewsletterOps"));
 const AdminUsageGovernance = lazy(() => import("./pages/admin/UsageGovernance"));
 const AdminMissionControl = lazy(() => import("./pages/admin/MissionControl"));
+const AdminOpsHealth = lazy(() => import("./pages/admin/OpsHealth"));
 const AdminDocs = lazy(() => import("./pages/admin/AdminDocs"));
 const AdminMarketingPages = lazy(() => import("./pages/admin/MarketingPages"));
 import NotificationPreferences from "./pages/settings/NotificationPreferences";
@@ -483,6 +484,7 @@ const App = () => (
             <Route path="/admin/communications/newsletter" element={<AdminNewsletterOps />} />
             <Route path="/admin/usage-governance" element={<AdminUsageGovernance />} />
             <Route path="/admin/mission-control" element={<AdminMissionControl />} />
+            <Route path="/admin/ops-health" element={<AdminOpsHealth />} />
             <Route path="/admin/marketing-pages" element={<AdminMarketingPages />} />
             <Route path="/admin/communications/telegram" element={<TelegramOpsCenter />} />
             <Route path="/admin/ai-jobs" element={<AdminAiJobs />} />
