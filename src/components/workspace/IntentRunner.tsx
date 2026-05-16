@@ -10,6 +10,7 @@ import { Link } from "react-router-dom";
 import { wp, wpProjectDocs } from "@/lib/workspace/paths";
 import { findIntent, PROVIDER_DISPLAY, SPEED_DISPLAY } from "@/lib/workspace/toolsCatalog";
 import { nextSteps } from "@/lib/workspace/chains";
+import { useOperationalMemory } from "@/lib/workspace/memory";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 /**
@@ -49,6 +50,17 @@ export function IntentRunner({
   const speed = meta ? SPEED_DISPLAY[meta.speed] : null;
   const chain = nextSteps(intent);
   const startedAt = useRef<number>(0);
+
+  // Quiet operational memory for this project — used to surface a single
+  // calm contextual line (e.g. "Prefers Claude here · You often follow with…")
+  const { memory } = useOperationalMemory({ project_id: workspace?.id, limit: 50 });
+  const memProvider = memory.preferredProvider
+    ? PROVIDER_DISPLAY[memory.preferredProvider.id]
+    : null;
+  const memChainHint = memory.topChain && memory.topChain.from.intent === intent
+    ? `You usually follow this with ${memory.topChain.to.title}.`
+    : null;
+  const intentCount = memory.topIntents.find((t) => t.tool.intent === intent)?.count || 0;
 
   // Reset when dialog opens / intent swaps
   useEffect(() => {
@@ -183,6 +195,18 @@ export function IntentRunner({
                 <span className="text-[10.5px] text-muted-foreground italic ml-1 truncate">{meta.why}</span>
               )}
             </div>
+          )}
+
+          {/* Contextual memory line — only when we actually know something */}
+          {(memProvider || memChainHint || intentCount > 1) && (
+            <p className="mt-2 text-[11px] text-muted-foreground leading-snug">
+              <span className="inline-block h-1 w-1 rounded-full bg-primary/60 align-middle mr-1.5" />
+              {intentCount > 1 && <span>Drafted this {intentCount}× for this project. </span>}
+              {memProvider && memory.preferredProvider!.id !== meta?.bestWith && (
+                <span>This project usually leans on <span className="font-semibold text-foreground/80">{memProvider.label}</span>. </span>
+              )}
+              {memChainHint && <span className="italic">{memChainHint}</span>}
+            </p>
           )}
         </div>
 
