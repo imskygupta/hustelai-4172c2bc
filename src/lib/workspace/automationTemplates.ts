@@ -31,6 +31,10 @@ export type Template = {
   category: AutomationCategory;
   recommended?: boolean;
   comingSoon?: boolean;
+  /** Minimum tier required to enable. Defaults to "free". */
+  minTier?: "free" | "pro" | "elite" | "infinity";
+  /** Operational cost class — drives the tier policy + boost suggestions. */
+  cost?: "low" | "medium" | "high";
 };
 
 export const CATEGORY_LABEL: Record<AutomationCategory, string> = {
