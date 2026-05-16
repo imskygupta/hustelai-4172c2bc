@@ -104,23 +104,28 @@ Deno.serve(async (req) => {
     }
     function escapeHtml(s: string) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'} as any)[c]); }
 
+    // ===== Unified Sunday Brief prompt (used by both manual + cron) =====
+    const SUNDAY_BRIEF_SYSTEM = `You write "The Sunday Brief" — ONE weekly email from HustleAI that blends our app (hustlaiapp.in) and our blog (blogs.hustlaiapp.in) for Indian creators, freelancers and small operators.
+
+Output ONLY valid JSON of EXACTLY this shape (4 sections, no more, no less):
+{"subject":"Short, specific subject ≤ 60 chars","preheader":"One-line teaser ≤ 90 chars","sections":[
+  {"id":"feature","title":"This week's read","body_md":"ONE featured article — 90-130 words. Hook → insight → why it matters this week. End with a markdown link to a relevant blog post on https://blogs.hustlaiapp.in/ ."},
+  {"id":"tech_pulse","title":"Tech & AI pulse","body_md":"3-5 short bullet points (use '- ' prefix). Each bullet = one concrete AI/tech/creator-economy update from this past week, India-relevant where possible. ≤ 22 words per bullet. No fluff."},
+  {"id":"tool_guide","title":"How to use it inside HustleAI","body_md":"Pick ONE tool or feature inside HustleAI (e.g. Hustle Canvas, Invoice Generator, Hustle Blueprint, Workspace OS, Proposal Generator). 80-110 words. Show a real 3-step workflow ('1. … 2. … 3. …'). End with a markdown link to that tool on https://hustlaiapp.in/ ."},
+  {"id":"cta","title":"Open the workspace","body_md":"50-70 words promoting both surfaces — the app at https://hustlaiapp.in for doing the work, and the blog at https://blogs.hustlaiapp.in for the playbooks. Warm, confident, no hype, no emojis spam."}
+]}
+
+Hard rules:
+- Markdown only inside body_md (paragraphs, '- ' bullets, [text](url) links). NO HTML.
+- Never invent product features. Stick to: Hustle Canvas, Hustle Blueprint, Invoice Generator, Proposal Generator, Contract Generator, Workspace OS, HustleBot, Intake Forms, Pricing Calculator.
+- Tone: clear, operator-grade, slightly editorial. No "🚀", no "Hey hustler!", no fake urgency.
+- This is the ONLY email subscribers get this week — make it feel complete.`;
+
     // ===== Sectioned AI draft generation (writes a newsletter_issues row) =====
     if (action === "generate_sections") {
       await requireAdmin();
-      const focus = body.focus || "weekly digest";
-      const system = `You write the HustleAI weekly digest for Indian creators and freelancers.
-Output ONLY valid JSON of shape:
-{"subject":"...","preheader":"...","sections":[
-  {"id":"ai_trends","title":"AI Trends","body_md":"..."},
-  {"id":"creator_economy","title":"Creator Economy","body_md":"..."},
-  {"id":"freelancing","title":"Freelancing","body_md":"..."},
-  {"id":"automation","title":"Automation Workflows","body_md":"..."},
-  {"id":"hustleai","title":"HustleAI Updates","body_md":"..."},
-  {"id":"tools","title":"Tool Picks","body_md":"..."},
-  {"id":"opportunities","title":"Opportunities","body_md":"..."}
-]}
-Markdown allowed: paragraphs, [text](url), and "- " bullet lists. No HTML. Keep each section under 120 words. Indian context.`;
-      const raw = await callAI(`Focus: ${focus}. Generate this week's digest.`, system);
+      const focus = body.focus || "the Sunday Brief — what changed this week in AI + side hustles in India";
+      const raw = await callAI(`Focus: ${focus}. Write this week's Sunday Brief.`, SUNDAY_BRIEF_SYSTEM);
       const cleaned = raw.replace(/```json\n?/gi, "").replace(/```/g, "").trim();
       let parsed: any;
       try { parsed = JSON.parse(cleaned); }
@@ -134,10 +139,60 @@ Markdown allowed: paragraphs, [text](url), and "- " bullet lists. No HTML. Keep 
         provider: body.provider || "brevo",
         channel: body.channel || "email",
         model: "google/gemini-2.5-flash",
-        metadata: { focus },
+        metadata: { focus, format: "sunday_brief_v1" },
       }).select().single();
       if (error) throw error;
       return new Response(JSON.stringify({ ok: true, issue }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    // ===== Manual write: admin pastes their own subject/preheader/markdown =====
+    if (action === "create_manual_issue") {
+      await requireAdmin();
+      const { subject, preheader, body_md } = body;
+      if (!subject || !body_md) {
+        return new Response(JSON.stringify({ error: "subject_and_body_required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      const { data: issue, error } = await sb.from("newsletter_issues").insert({
+        subject,
+        preheader: preheader || null,
+        sections: [{ id: "manual", title: "", body_md }],
+        status: "ready",
+        provider: "brevo",
+        channel: "email",
+        model: "manual",
+        metadata: { format: "manual_v1" },
+      }).select().single();
+      if (error) throw error;
+      return new Response(JSON.stringify({ ok: true, issue }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    // ===== Bulk add subscribers (CSV / comma / newline separated) =====
+    if (action === "bulk_add_subscribers") {
+      await requireAdmin();
+      const raw = String(body.emails || "");
+      const list = Array.from(new Set(
+        raw.split(/[\s,;]+/).map((e) => e.trim().toLowerCase())
+          .filter((e) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e))
+      ));
+      if (list.length === 0) {
+        return new Response(JSON.stringify({ error: "no_valid_emails" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      let added = 0, reactivated = 0, skipped = 0;
+      for (const email of list) {
+        const { data: existing } = await sb.from("newsletter_subscribers").select("id,status").eq("email", email).maybeSingle();
+        if (existing) {
+          if (existing.status !== "active") {
+            await sb.from("newsletter_subscribers").update({ status: "active", is_active: true, unsubscribed_at: null }).eq("id", existing.id);
+            reactivated++;
+          } else skipped++;
+        } else {
+          const { error } = await sb.from("newsletter_subscribers").insert({
+            email, source: "manual", status: "active", is_active: true,
+          });
+          if (!error) added++; else skipped++;
+        }
+      }
+      return new Response(JSON.stringify({ ok: true, added, reactivated, skipped, total: list.length }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     // ===== Regenerate a single section =====
