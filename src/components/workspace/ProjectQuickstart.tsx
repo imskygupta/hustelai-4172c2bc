@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, ArrowRight, X, Send, FileText, Search, Map as MapIcon, Receipt, Megaphone, Workflow, Brain } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { wp } from "@/lib/workspace/paths";
+import { IntentRunner } from "./IntentRunner";
 
 /**
  * ProjectQuickstart — first-action momentum panel.
@@ -17,20 +16,20 @@ import { wp } from "@/lib/workspace/paths";
  * the right tool with the project pre-bound (?workspace=&intent=).
  */
 
-type Action = { label: string; sub: string; icon: any; href: string; intent: string };
+type Action = { label: string; sub: string; icon: any; intent: string };
 
 const ACTION_BANK: Record<string, Action> = {
-  outreach:    { label: "Draft first cold email",    sub: "Personalised opener + follow-ups", icon: Send,       href: "canvas",    intent: "outreach" },
-  icp:         { label: "Generate ICP profile",      sub: "Who you're talking to",            icon: Search,     href: "canvas",    intent: "icp" },
-  content:     { label: "Generate content pillars",  sub: "3–5 themes you can publish",       icon: FileText,   href: "canvas",    intent: "content" },
-  calendar:    { label: "Build publishing plan",     sub: "30-day calendar from pillars",     icon: MapIcon,    href: "canvas",    intent: "content_calendar" },
-  proposal:    { label: "Draft first proposal",      sub: "Scope, pricing, terms",            icon: Megaphone,  href: "tools",     intent: "proposal" },
-  invoice:     { label: "Prepare first invoice",     sub: "Client-ready PDF",                 icon: Receipt,    href: "tools",     intent: "invoice" },
-  research:    { label: "Run research brief",        sub: "Sources + synthesis",              icon: Search,     href: "canvas",    intent: "research" },
-  scope:       { label: "Generate project scope",    sub: "Deliverables + milestones",        icon: MapIcon,    href: "blueprint", intent: "scope" },
-  strategy:    { label: "Build first strategy",      sub: "From goal to action plan",         icon: Brain,      href: "blueprint", intent: "strategy" },
-  automation:  { label: "Map automation flow",       sub: "Trigger → steps → output",         icon: Workflow,   href: "canvas",    intent: "automation" },
-  onboarding:  { label: "Onboarding checklist",      sub: "Kick the project off cleanly",     icon: FileText,   href: "tools",     intent: "onboarding" },
+  outreach:    { label: "Draft first cold email",    sub: "Personalised opener + follow-ups", icon: Send,       intent: "outreach" },
+  icp:         { label: "Generate ICP profile",      sub: "Who you're talking to",            icon: Search,     intent: "icp" },
+  content:     { label: "Generate content pillars",  sub: "3–5 themes you can publish",       icon: FileText,   intent: "content" },
+  calendar:    { label: "Build publishing plan",     sub: "30-day calendar from pillars",     icon: MapIcon,    intent: "content_calendar" },
+  proposal:    { label: "Draft first proposal",      sub: "Scope, pricing, terms",            icon: Megaphone,  intent: "proposal" },
+  invoice:     { label: "Prepare first invoice",     sub: "Client-ready PDF",                 icon: Receipt,    intent: "invoice" },
+  research:    { label: "Run research brief",        sub: "Sources + synthesis",              icon: Search,     intent: "research" },
+  scope:       { label: "Generate project scope",    sub: "Deliverables + milestones",        icon: MapIcon,    intent: "scope" },
+  strategy:    { label: "Build first strategy",      sub: "From goal to action plan",         icon: Brain,      intent: "strategy" },
+  automation:  { label: "Map automation flow",       sub: "Trigger → steps → output",         icon: Workflow,   intent: "automation" },
+  onboarding:  { label: "Onboarding checklist",      sub: "Kick the project off cleanly",     icon: FileText,   intent: "onboarding" },
 };
 
 function pickActions(w: any): Action[] {
@@ -67,6 +66,7 @@ function pickActions(w: any): Action[] {
 export function ProjectQuickstart({ workspace }: { workspace: any }) {
   const [outputs, setOutputs] = useState<number | null>(null);
   const [dismissed, setDismissed] = useState(false);
+  const [active, setActive] = useState<Action | null>(null);
 
   useEffect(() => {
     if (!workspace?.id) return;
@@ -95,6 +95,15 @@ export function ProjectQuickstart({ workspace }: { workspace: any }) {
 
   return (
     <AnimatePresence>
+      {active && (
+        <IntentRunner
+          open={!!active}
+          onClose={() => setActive(null)}
+          intent={active.intent}
+          label={active.label}
+          workspace={workspace}
+        />
+      )}
       <motion.section
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
@@ -137,9 +146,10 @@ export function ProjectQuickstart({ workspace }: { workspace: any }) {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.08 * i, duration: 0.3 }}
             >
-              <Link
-                to={`${wp(a.href)}?workspace=${workspace.id}&intent=${a.intent}&from=quickstart`}
-                className="group block rounded-xl border border-border/50 bg-card/60 hover:bg-card hover:border-primary/30 hover:shadow-lg hover:shadow-primary/10 hover:-translate-y-0.5 transition-all p-3.5 h-full"
+              <button
+                type="button"
+                onClick={() => setActive(a)}
+                className="group block w-full text-left rounded-xl border border-border bg-card/70 hover:bg-card hover:border-primary/40 hover:shadow-lg hover:shadow-primary/10 hover:-translate-y-0.5 transition-all p-3.5 h-full"
               >
                 <div className="flex items-center gap-2 mb-1.5">
                   <span className="inline-flex h-7 w-7 rounded-lg bg-primary/10 items-center justify-center">
@@ -147,9 +157,9 @@ export function ProjectQuickstart({ workspace }: { workspace: any }) {
                   </span>
                   <ArrowRight className="h-3 w-3 text-muted-foreground/60 ml-auto group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
                 </div>
-                <p className="text-sm font-medium leading-tight">{a.label}</p>
+                <p className="text-sm font-semibold leading-tight text-foreground">{a.label}</p>
                 <p className="text-[11px] text-muted-foreground mt-1 leading-snug">{a.sub}</p>
-              </Link>
+              </button>
             </motion.div>
           ))}
         </div>
