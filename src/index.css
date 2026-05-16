@@ -132,6 +132,31 @@
     }
   }
 
+  /* Mobile survivability: never let a stray child cause page-level
+     horizontal overflow, and prevent words from blowing out cards. */
+  @media (max-width: 767px) {
+    img, video, svg, canvas, iframe {
+      max-width: 100%;
+      height: auto;
+    }
+    pre, code {
+      word-break: break-word;
+      white-space: pre-wrap;
+    }
+    /* Calm heavy backdrop-blur on small screens — Safari has known
+       perf regressions with stacked blur layers on low-end devices. */
+    .backdrop-blur-3xl { backdrop-filter: blur(16px); }
+    .backdrop-blur-2xl { backdrop-filter: blur(12px); }
+    .blur-3xl { filter: blur(40px); }
+  }
+
+  /* Tap targets — keep buttons reachable with a thumb. */
+  @media (max-width: 767px) and (pointer: coarse) {
+    button, a[role="button"], [data-tap] {
+      min-height: 40px;
+    }
+  }
+
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Space Grotesk', sans-serif;
     letter-spacing: -0.02em;
@@ -205,6 +230,21 @@
   /* Safe-area helpers (iOS notch / Android gesture bar) */
   .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
   .pt-safe { padding-top: env(safe-area-inset-top); }
+
+  /* Dynamic viewport height — uses dvh where supported so iOS Safari's
+     collapsing toolbar never clips fixed sheets / palettes. */
+  .h-dvh { height: 100dvh; }
+  .min-h-dvh { min-height: 100dvh; }
+  .max-h-dvh { max-height: 100dvh; }
+
+  /* Mobile bottom-sheet primitive — used by command palette + future
+     action sheets. Fills width, rounds only the top, respects safe area. */
+  .mobile-sheet {
+    @apply fixed inset-x-0 bottom-0 rounded-t-2xl border-t border-border/70
+           bg-background shadow-2xl shadow-black/30 overflow-hidden;
+    padding-bottom: env(safe-area-inset-bottom);
+    max-height: 92dvh;
+  }
 
   /* Operational hover system — calm, infrastructural micro-motion.
    * Activates a subtle delivery glow on the card border + a moving
