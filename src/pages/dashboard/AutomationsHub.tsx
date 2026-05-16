@@ -1,6 +1,6 @@
 import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -8,8 +8,9 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "@/hooks/use-toast";
 import {
   Send, Repeat, Bell, FileDown, FolderOpen, Users, Mail, BarChart3,
-  ArrowRight, Sparkles, Wand2, Zap, ShieldCheck,
+  ArrowRight, Sparkles, Wand2, Zap, ShieldCheck, History, CheckCircle2,
 } from "lucide-react";
+import { useAutomations, useAutomationRuns } from "@/lib/workspace/automations";
 
 /**
  * Automations Hub — outcome-first, NOT graph-first.
@@ -39,27 +40,6 @@ const TEMPLATES: Template[] = [
   { id: "doc-library-export",  title: "Doc library sync",       blurb: "Push every export to your docs library for reuse.",                icon: FileDown,  category: "delivery", comingSoon: true },
 ];
 
-const STORE_KEY = "hustlai:automations:enabled:v1";
-
-function useEnabledSet() {
-  const [set, setSet] = useState<Set<string>>(new Set());
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORE_KEY);
-      if (raw) setSet(new Set(JSON.parse(raw)));
-    } catch {}
-  }, []);
-  const toggle = (id: string, on: boolean) => {
-    setSet(prev => {
-      const next = new Set(prev);
-      if (on) next.add(id); else next.delete(id);
-      try { localStorage.setItem(STORE_KEY, JSON.stringify([...next])); } catch {}
-      return next;
-    });
-  };
-  return { enabled: set, toggle };
-}
-
 const CATEGORY_LABEL: Record<Template["category"], string> = {
   delivery: "Delivery & exports",
   billing: "Billing & retainers",
@@ -68,14 +48,15 @@ const CATEGORY_LABEL: Record<Template["category"], string> = {
 };
 
 export default function AutomationsHub() {
-  const { enabled, toggle } = useEnabledSet();
+  const { enabledSet, toggle, loading } = useAutomations();
+  const { runs } = useAutomationRuns(8);
   const grouped = useMemo(() => {
     const g: Record<string, Template[]> = {};
     for (const t of TEMPLATES) (g[t.category] ||= []).push(t);
     return g;
   }, []);
 
-  const activeCount = enabled.size;
+  const activeCount = enabledSet.size;
 
   return (
     <div className="min-h-screen bg-background">
@@ -135,7 +116,7 @@ export default function AutomationsHub() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {items.map((t) => {
                   const Icon = t.icon;
-                  const on = enabled.has(t.id);
+                    const on = enabledSet.has(t.id);
                   return (
                     <Card key={t.id} className={`p-4 border-border/60 transition-colors ${on ? "bg-accent/30" : "bg-card"}`}>
                       <div className="flex items-start gap-3">
@@ -153,8 +134,8 @@ export default function AutomationsHub() {
                         <Switch
                           checked={on}
                           disabled={t.comingSoon}
-                          onCheckedChange={(v) => {
-                            toggle(t.id, v);
+                          onCheckedChange={async (v) => {
+                            await toggle(t.id, v);
                             toast({
                               title: v ? `${t.title} enabled` : `${t.title} paused`,
                               description: v ? "We'll run this quietly in the background." : "You can re-enable any time.",
@@ -169,6 +150,40 @@ export default function AutomationsHub() {
             </section>
           ))}
         </div>
+
+        {/* Recent runs — operational continuity */}
+        <section className="mt-10">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-semibold tracking-tight text-foreground inline-flex items-center gap-2">
+              <History className="h-4 w-4 text-muted-foreground" /> Recent runs
+            </h2>
+            <span className="text-[11px] text-muted-foreground">Last {runs.length || 0}</span>
+          </div>
+          <Card className="border-border/60 divide-y divide-border/60">
+            {runs.length === 0 && (
+              <div className="p-6 text-center text-xs text-muted-foreground">
+                No runs yet. Enable an automation above — runs will appear here.
+              </div>
+            )}
+            {runs.map((r) => {
+              const t = TEMPLATES.find(x => x.id === r.template_id);
+              return (
+                <div key={r.id} className="px-4 py-3 flex items-center justify-between text-sm">
+                  <div className="min-w-0 flex items-center gap-3">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+                    <div className="min-w-0">
+                      <div className="font-medium text-foreground truncate">{t?.title || r.template_id}</div>
+                      <div className="text-[11px] text-muted-foreground mt-0.5">{r.summary || r.status}</div>
+                    </div>
+                  </div>
+                  <div className="text-[11px] text-muted-foreground shrink-0">
+                    {new Date(r.created_at).toLocaleString()}
+                  </div>
+                </div>
+              );
+            })}
+          </Card>
+        </section>
 
         {/* Calm upgrade surface */}
         <Card className="mt-10 p-6 border-border/60 bg-gradient-to-br from-muted/40 to-background">

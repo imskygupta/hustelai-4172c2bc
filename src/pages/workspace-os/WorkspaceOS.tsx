@@ -1,7 +1,7 @@
 import { NavLink, Outlet } from "react-router-dom";
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Briefcase, Plus, Sparkles, KeyRound, Users, Kanban, Brain, Palette, Blocks, Inbox, Menu, ChevronDown, TrendingUp, LogOut, ArrowUpRight, Search, Wand2 } from "lucide-react";
+import { Briefcase, Plus, Sparkles, KeyRound, Users, Kanban, Brain, Palette, Blocks, Inbox, Menu, ChevronDown, TrendingUp, LogOut, ArrowUpRight, Search, Wand2, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import NotificationCenter from "@/components/workspace-os/NotificationCenter";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -41,6 +41,7 @@ const SECONDARY = [
   { to: wp("brand-kit"), label: "Brand Kit",    icon: Palette },
   { to: wp("blocks"),    label: "Assets",       icon: Blocks },
   { to: wp("revenue"),   label: "Revenue",      icon: TrendingUp },
+  { to: wp("automations"), label: "Automations", icon: Zap },
   { to: wp("providers"), label: "AI Providers", icon: KeyRound },
 ];
 
