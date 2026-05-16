@@ -45,7 +45,7 @@ export const DOCS_RICH: Record<string, DocsRichSection> = {
       "Press ⌘K (Cmd-K) anywhere in the app to jump to any tool.",
     ],
     related: [
-      { label: "Quickstart", href: "/quickstart" },
+      { label: "Quickstart", href: "/how-it-works" },
       { label: "Workspace OS Overview", href: "/overview" },
       { label: "Plans & Pricing", href: "/plans" },
     ],
@@ -70,7 +70,7 @@ export const DOCS_RICH: Record<string, DocsRichSection> = {
       "You can pin up to 5 favourite tools to the Work Hub home for one-tap access.",
     ],
     related: [
-      { label: "Managing Clients", href: "/clients" },
+      { label: "Managing Clients", href: "https://hustlaiapp.in/workspaces/clients" },
       { label: "Create an Invoice", href: "/create-invoice" },
       { label: "Share a Client Portal", href: "/share-portal" },
     ],
@@ -94,7 +94,7 @@ export const DOCS_RICH: Record<string, DocsRichSection> = {
       "Calm mode (top nav) hides marketing strips and trims animations for deep focus.",
     ],
     related: [
-      { label: "Managing Clients", href: "/clients" },
+      { label: "Managing Clients", href: "https://hustlaiapp.in/workspaces/clients" },
       { label: "What is AI Fuel?", href: "/what-is-ai-fuel" },
     ],
   },
@@ -223,7 +223,7 @@ export const DOCS_RICH: Record<string, DocsRichSection> = {
       "Use conditional logic (Pro+) to show fields only when relevant.",
     ],
     related: [
-      { label: "Managing Clients", href: "/clients" },
+      { label: "Managing Clients", href: "https://hustlaiapp.in/workspaces/clients" },
       { label: "Share a Client Portal", href: "/share-portal" },
     ],
   },
@@ -248,7 +248,7 @@ export const DOCS_RICH: Record<string, DocsRichSection> = {
       "Elite+ tier unlocks custom-domain portals (portal.yourbrand.com).",
     ],
     related: [
-      { label: "Managing Clients", href: "/clients" },
+      { label: "Managing Clients", href: "https://hustlaiapp.in/workspaces/clients" },
       { label: "Create an Invoice", href: "/create-invoice" },
     ],
   },
