@@ -31,6 +31,10 @@ export type Template = {
   category: AutomationCategory;
   recommended?: boolean;
   comingSoon?: boolean;
+  /** Minimum tier required to enable. Defaults to "free". */
+  minTier?: "free" | "pro" | "elite" | "infinity";
+  /** Operational cost class — drives the tier policy + boost suggestions. */
+  cost?: "low" | "medium" | "high";
 };
 
 export const CATEGORY_LABEL: Record<AutomationCategory, string> = {
@@ -69,6 +73,8 @@ export const TEMPLATES: Template[] = [
     icon: Mail,
     category: "follow-ups",
     recommended: true,
+    minTier: "pro",
+    cost: "medium",
   },
   {
     id: "telegram-relay",
@@ -82,6 +88,8 @@ export const TEMPLATES: Template[] = [
     icon: Send,
     category: "ai-delivery",
     recommended: true,
+    minTier: "free",
+    cost: "low",
   },
   {
     id: "delivery-confirm",
@@ -94,6 +102,8 @@ export const TEMPLATES: Template[] = [
     result: "Client receives a polished delivery notice — no manual typing",
     icon: Bell,
     category: "client-delivery",
+    minTier: "free",
+    cost: "low",
   },
   {
     id: "monthly-invoice",
@@ -107,6 +117,8 @@ export const TEMPLATES: Template[] = [
     icon: Repeat,
     category: "recurring",
     recommended: true,
+    minTier: "pro",
+    cost: "medium",
   },
   {
     id: "ai-archival",
@@ -119,6 +131,8 @@ export const TEMPLATES: Template[] = [
     result: "Nothing is ever lost — outputs auto-file themselves",
     icon: FolderOpen,
     category: "ai-delivery",
+    minTier: "free",
+    cost: "low",
   },
   {
     id: "client-reminder",
@@ -131,6 +145,8 @@ export const TEMPLATES: Template[] = [
     result: "A ready-to-send message lands in Telegram each week",
     icon: Users,
     category: "follow-ups",
+    minTier: "elite",
+    cost: "high",
   },
   {
     id: "project-stalled",
@@ -143,6 +159,8 @@ export const TEMPLATES: Template[] = [
     result: "A gentle prompt appears in your operations cockpit",
     icon: ShieldCheck,
     category: "project-health",
+    minTier: "elite",
+    cost: "high",
   },
   {
     id: "overdue-invoice",
@@ -155,6 +173,8 @@ export const TEMPLATES: Template[] = [
     result: "A ready-to-send message waits in your Telegram",
     icon: Calendar,
     category: "recurring",
+    minTier: "pro",
+    cost: "medium",
   },
   {
     id: "daily-digest",
@@ -168,6 +188,8 @@ export const TEMPLATES: Template[] = [
     icon: BarChart3,
     category: "digests",
     recommended: true,
+    minTier: "elite",
+    cost: "high",
   },
   {
     id: "weekly-report",
@@ -180,6 +202,8 @@ export const TEMPLATES: Template[] = [
     result: "A short report appears in your operations hub",
     icon: FileText,
     category: "digests",
+    minTier: "pro",
+    cost: "high",
   },
   {
     id: "new-intake",
@@ -193,6 +217,8 @@ export const TEMPLATES: Template[] = [
     icon: MessageSquare,
     category: "notifications",
     recommended: true,
+    minTier: "free",
+    cost: "low",
   },
   {
     id: "agency-handoff",
@@ -206,6 +232,8 @@ export const TEMPLATES: Template[] = [
     icon: Briefcase,
     category: "agency",
     comingSoon: true,
+    minTier: "infinity",
+    cost: "high",
   },
 ];
 
@@ -218,4 +246,32 @@ export function groupTemplatesByCategory(): Record<AutomationCategory, Template[
 
 export function getTemplate(id: string): Template | undefined {
   return TEMPLATES.find(t => t.id === id);
+}
+
+const TIER_RANK: Record<NonNullable<Template["minTier"]>, number> = {
+  free: 0, pro: 1, elite: 2, infinity: 3,
+};
+
+/** Whether the user's tier is high enough to enable this template. */
+export function isTemplateUnlocked(t: Template, tier?: string | null): boolean {
+  const min = t.minTier || "free";
+  const cur = (tier as keyof typeof TIER_RANK) || "free";
+  return (TIER_RANK[cur] ?? 0) >= TIER_RANK[min];
+}
+
+const TIER_LABEL: Record<NonNullable<Template["minTier"]>, string> = {
+  free: "Free", pro: "Pro", elite: "Elite", infinity: "Infinity",
+};
+
+/** Short, calm "what becomes possible" line for a locked template. */
+export function lockMessage(t: Template): string {
+  const min = t.minTier || "free";
+  if (min === "pro")      return "Available on Pro — calm operational throughput.";
+  if (min === "elite")    return "Operational on Elite — runs unlimited in background.";
+  if (min === "infinity") return "Agency-scale on Infinity — for teams handling many ops.";
+  return "Available on your current plan.";
+}
+
+export function tierLabel(t: Template): string {
+  return TIER_LABEL[t.minTier || "free"];
 }

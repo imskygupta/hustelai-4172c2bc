@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   ArrowRight, Send, Repeat, FileDown, Bell, Briefcase, FolderOpen,
-  Sparkles, ShieldCheck, Clock, Activity,
+  Sparkles, ShieldCheck, Clock, Activity, Zap,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -35,9 +35,9 @@ const MODULES: Array<{
 }> = [
   { key: "exports", title: "Exports & deliveries", blurb: "Every generated asset, traced by client and date.", icon: FileDown, status: "live" },
   { key: "telegram", title: "Telegram delivery", blurb: "Send proposals, invoices and exports straight to chats.", icon: Send, status: "live", to: "/settings/telegram" },
-  { key: "recurring", title: "Recurring invoices", blurb: "Monthly retainer cycles, generated on autopilot.", icon: Repeat, status: "preview" },
-  { key: "reminders", title: "Client reminders", blurb: "Quiet follow-ups: 3-day, 7-day, end of month.", icon: Bell, status: "preview" },
-  { key: "chains", title: "Operational chains", blurb: "Save → Export → Deliver → Follow-up, in one flow.", icon: Activity, status: "preview", to: "/dashboard/automations" },
+  { key: "recurring", title: "Recurring invoices", blurb: "Monthly retainer cycles, generated on autopilot.", icon: Repeat, status: "preview", to: "/dashboard/workspace-os/preview/recurring" },
+  { key: "reminders", title: "Client reminders", blurb: "Quiet follow-ups: 3-day, 7-day, end of month.", icon: Bell, status: "preview", to: "/dashboard/workspace-os/preview/reminders" },
+  { key: "chains", title: "Operational chains", blurb: "Save → Export → Deliver → Follow-up, in one flow.", icon: Activity, status: "preview", to: "/dashboard/workspace-os/preview/chains" },
   { key: "library", title: "Workspace library", blurb: "Brand kit, blocks, docs and reusable assets.", icon: FolderOpen, status: "live", to: "/n" },
 ];
 
@@ -177,7 +177,10 @@ export default function OperationsHub() {
           <Card className="p-4 border-border/60">
             <div className="inline-flex items-center gap-2 text-[10px] uppercase tracking-wider font-semibold text-muted-foreground"><Send className="h-3.5 w-3.5" /> Telegram</div>
             <div className="mt-1.5 text-sm font-semibold text-foreground">3 free exports / week</div>
-            <p className="mt-0.5 text-xs text-muted-foreground">Link your bot in <Link to="/settings/telegram" className="underline">settings</Link> to start delivering.</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              Link your bot in <Link to="/settings/telegram" className="underline">settings</Link>, or{" "}
+              <Link to="/dashboard/workspace-os/boosts" className="underline">add a boost pack</Link> for more bandwidth.
+            </p>
           </Card>
           <Card className="p-4 border-border/60">
             <div className="inline-flex items-center gap-2 text-[10px] uppercase tracking-wider font-semibold text-muted-foreground"><Clock className="h-3.5 w-3.5" /> Upcoming</div>
@@ -187,11 +190,18 @@ export default function OperationsHub() {
         </section>
 
         <div className="mt-10 flex items-center justify-center">
-          <Button asChild variant="outline" size="sm">
-            <Link to="/dashboard/automations" className="inline-flex items-center gap-2">
-              <Briefcase className="h-4 w-4" /> Browse operational automations
-            </Link>
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button asChild variant="outline" size="sm">
+              <Link to="/dashboard/automations" className="inline-flex items-center gap-2">
+                <Briefcase className="h-4 w-4" /> Browse operational automations
+              </Link>
+            </Button>
+            <Button asChild size="sm">
+              <Link to="/dashboard/workspace-os/boosts" className="inline-flex items-center gap-2">
+                <Zap className="h-4 w-4" /> Operations boosts
+              </Link>
+            </Button>
+          </div>
         </div>
       </div>
     </div>
