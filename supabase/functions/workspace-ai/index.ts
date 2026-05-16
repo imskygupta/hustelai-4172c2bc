@@ -26,7 +26,8 @@ async function fetchSnippet(url: string): Promise<string> {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   try {
-    const { action, url, text, client, notes } = await req.json();
+    const body = await req.json();
+    const { action, url, text, client, notes, intent, workspace } = body;
 
     if (action === "scrape") {
       const snippet = url ? await fetchSnippet(url) : (text || "");
@@ -102,15 +103,51 @@ Return STRICT JSON: { "zones": { "hot": string[], "ideation": string[], "in_prog
     }
 
     if (action === "generate_intent") {
-      // Generic AI generator for project-level intents (scope, strategy,
-      // automation, outreach, content, proposal, invoice, research, etc.)
-      // Returns markdown the caller can render + save to workspace_outputs.
-      const intent: string = (await Promise.resolve(arguments)) && (globalThis as any)._ // noop
-      // (real param destructured below)
-      const body: any = { action, url, text, client, notes };
-      // Re-read full body so we don't depend on destructure above
-      // (Deno already parsed it; reuse via closure: rebuild from req if needed)
-      return new Response("", { headers: corsHeaders });
+      const w = workspace || {};
+      const ctx = [
+        w.client_name ? `Client: ${w.client_name}` : "",
+        w.company_name ? `Company: ${w.company_name}` : "",
+        w.pipeline_stage ? `Stage: ${w.pipeline_stage}` : "",
+        w.project_scope ? `Scope: ${w.project_scope}` : "",
+        Array.isArray(w.deliverables) && w.deliverables.length ? `Deliverables: ${w.deliverables.join(", ")}` : "",
+        Array.isArray(w.tags) && w.tags.length ? `Tags: ${w.tags.join(", ")}` : "",
+        w?.pricing?.amount ? `Budget: ${w.pricing.currency || "INR"}${w.pricing.amount}` : "",
+        notes ? `Operator notes: ${notes}` : "",
+      ].filter(Boolean).join("\n");
+
+      const INTENT_PROMPTS: Record<string, { title: string; instr: string }> = {
+        scope:            { title: "Project scope",         instr: "Generate a crisp project scope: objective, in-scope deliverables, out-of-scope, milestones with target dates, success metrics, assumptions." },
+        strategy:         { title: "Strategy plan",         instr: "Produce a goal -> strategy -> action-plan document. Include 3 pillars, prioritized initiatives, 30/60/90 milestones, KPIs, risks." },
+        automation:       { title: "Automation flow",       instr: "Design an automation flow as Trigger -> Steps -> Output. List required tools, integration points, fallback handling, rollout checklist." },
+        outreach:         { title: "Cold outreach email",   instr: "Write a personalised cold outreach email (<=140 words) plus 2 short follow-ups. Include subject lines." },
+        icp:              { title: "Ideal customer profile",instr: "Write a sharp ICP: firmographics, pains, triggers, where they hang out, objections, message hooks." },
+        content:          { title: "Content pillars",       instr: "Generate 3-5 content pillars with description, sample post hooks, distribution channels per pillar." },
+        content_calendar: { title: "30-day content plan",   instr: "Generate a 30-day publishing calendar (markdown table) with date, channel, format, hook, CTA." },
+        proposal:         { title: "Client proposal",       instr: "Draft a complete client proposal: executive summary, scope, timeline, deliverables, investment, terms, next steps." },
+        invoice:          { title: "Invoice draft",         instr: "Draft an invoice summary: line items, amounts, payment terms, due date, bank/UPI placeholder." },
+        research:         { title: "Research brief",        instr: "Produce a research brief: research questions, sources to consult, hypotheses, synthesis framework." },
+        onboarding:       { title: "Onboarding checklist",  instr: "Generate an onboarding checklist: kickoff, access, expectations, comms cadence, week-1 deliverables." },
+      };
+      const meta = INTENT_PROMPTS[String(intent)] || { title: String(intent || "Output"), instr: "Generate a useful deliverable for this freelance project." };
+
+      const prompt = `You are an operator inside a freelancer's project workspace. ${meta.instr}
+
+Project context:
+${ctx || "(no extra context provided)"}
+
+Return clean markdown. Be concrete, skip preamble, use tables/lists where useful.`;
+
+      const { content } = await callAIWithFallback({
+        messages: [
+          { role: "system", content: "You are a senior freelance operator. Produce concrete, ready-to-use deliverables in markdown. No fluff." },
+          { role: "user", content: prompt },
+        ],
+        temperature: 0.6,
+        max_tokens: 1800,
+      });
+      return new Response(JSON.stringify({ title: meta.title, markdown: content }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     return new Response(JSON.stringify({ error: "unknown action" }), {
