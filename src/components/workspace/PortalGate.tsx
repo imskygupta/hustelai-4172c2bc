@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Sparkles, ArrowLeft, KeyRound } from "lucide-react";
+import { Sparkles, ArrowLeft, KeyRound, Clock } from "lucide-react";
 import { MARKETING_ORIGIN, isDualHost } from "@/lib/host";
 
 /**
@@ -9,8 +9,11 @@ import { MARKETING_ORIGIN, isDualHost } from "@/lib/host";
  * the main HustleAI portal on hustlaiapp.in.
  */
 export default function PortalGate() {
-  const next = typeof window !== "undefined" ? `${window.location.pathname}${window.location.search}` : "/";
-  const gateway = `/workspaces?next=${encodeURIComponent(next)}`;
+  const search = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : new URLSearchParams();
+  const expired = search.get("expired") === "1";
+  const rawNext = search.get("next") || (typeof window !== "undefined" ? `${window.location.pathname}${window.location.search}` : "/");
+  const safeNext = rawNext.startsWith("/") && !rawNext.startsWith("//") ? rawNext : "/";
+  const gateway = `/workspaces?next=${encodeURIComponent(safeNext)}`;
   const back = isDualHost() ? gateway : `${MARKETING_ORIGIN}${gateway}`;
   return (
     <div className="ws-portal min-h-screen relative overflow-hidden flex items-center justify-center px-6 text-foreground">
@@ -28,8 +31,10 @@ export default function PortalGate() {
         className="relative z-10 max-w-xl text-center"
       >
         <div className="inline-flex items-center gap-2 mb-6 px-3 py-1 rounded-full border border-white/10 bg-white/[0.03] backdrop-blur-md">
-          <KeyRound className="h-3 w-3 text-emerald-300/90" />
-          <span className="text-[10px] uppercase tracking-[0.22em] text-emerald-200/80">Workspace · portal access</span>
+          {expired ? <Clock className="h-3 w-3 text-amber-300/90" /> : <KeyRound className="h-3 w-3 text-emerald-300/90" />}
+          <span className="text-[10px] uppercase tracking-[0.22em] text-emerald-200/80">
+            {expired ? "Workspace · session expired" : "Workspace · portal access"}
+          </span>
         </div>
 
         <motion.div
@@ -43,14 +48,28 @@ export default function PortalGate() {
           </div>
         </motion.div>
 
-        <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight leading-tight bg-gradient-to-br from-white via-white to-white/60 bg-clip-text text-transparent">
-          Oh no dear…<br />seems you arrived without your magic powers ✨
-        </h1>
-        <p className="mt-5 text-sm sm:text-base text-white/60 leading-relaxed">
-          The workspace is your private execution kingdom — sealed behind a
-          portal access token. Return to HustleAI and open a workspace portal
-          to continue.
-        </p>
+        {expired ? (
+          <>
+            <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight leading-tight bg-gradient-to-br from-white via-white to-white/60 bg-clip-text text-transparent">
+              Your workspace session expired.
+            </h1>
+            <p className="mt-5 text-sm sm:text-base text-white/60 leading-relaxed">
+              For your security, the portal token timed out. Reconnect through
+              HustleAI and your workspace will reopen exactly where you left it.
+            </p>
+          </>
+        ) : (
+          <>
+            <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight leading-tight bg-gradient-to-br from-white via-white to-white/60 bg-clip-text text-transparent">
+              Oh no dear…<br />seems you arrived without your magic powers ✨
+            </h1>
+            <p className="mt-5 text-sm sm:text-base text-white/60 leading-relaxed">
+              The workspace is your private execution kingdom — sealed behind a
+              portal access token. Return to HustleAI and open a workspace portal
+              to continue.
+            </p>
+          </>
+        )}
 
         <div className="mt-9 flex flex-col sm:flex-row items-center justify-center gap-3">
           <a
@@ -58,9 +77,11 @@ export default function PortalGate() {
             className="group inline-flex items-center justify-center gap-2 rounded-full bg-white text-black px-6 py-3 text-sm font-medium shadow-[0_0_40px_rgba(16,185,129,0.25)] hover:scale-[1.02] transition-transform"
           >
             <ArrowLeft className="h-4 w-4 group-hover:-translate-x-0.5 transition-transform" />
-            Re-open secure portal
+            {expired ? "Return to dashboard" : "Re-open secure portal"}
           </a>
-          <span className="text-[11px] text-white/40">Keeps this project link intact.</span>
+          <span className="text-[11px] text-white/40">
+            {expired ? "Your project link is preserved." : "Keeps this project link intact."}
+          </span>
         </div>
       </motion.div>
 

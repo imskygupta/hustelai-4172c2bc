@@ -4,6 +4,9 @@ import { AUTH_EMAIL_REDIRECT_TO } from "@/lib/auth-config";
 import { identify, resetAnalytics } from "@/lib/analytics";
 import { setSentryUser, clearSentryUser } from "@/lib/sentry";
 import type { User, Session } from "@supabase/supabase-js";
+import { reportAuthAnomaly } from "@/lib/auth/telemetry";
+import { broadcastSignout, subscribeAuthBroadcast } from "@/lib/auth/crossTab";
+import { isWorkspaceHost } from "@/lib/host";
 
 interface Profile {
   id: string;
@@ -109,18 +112,39 @@ function hasLocalSupabaseSession() {
 
 async function consumeSessionHashIfPresent() {
   if (typeof window === "undefined" || !window.location.hash.includes("access_token=")) return;
+  let hadTokens = false;
+  let setOk = false;
   try {
     const hash = new URLSearchParams(window.location.hash.slice(1));
     const access_token = hash.get("access_token") || "";
     const refresh_token = hash.get("refresh_token") || "";
     if (!access_token || !refresh_token) return;
+    hadTokens = true;
     const { error } = await supabase.auth.setSession({ access_token, refresh_token });
     authDebug("hash.hydrate", { ok: !error, error: error?.message, type: hash.get("type") });
-    if (!error) {
-      window.history.replaceState(null, document.title, `${window.location.pathname}${window.location.search}`);
+    setOk = !error;
+    if (error) {
+      reportAuthAnomaly("auth.invalid_handoff", { error: error.message });
     }
   } catch (err) {
     authDebug("hash.hydrate_failed", { error: err instanceof Error ? err.message : String(err) });
+    if (hadTokens) reportAuthAnomaly("auth.invalid_handoff", { error: err instanceof Error ? err.message : String(err) });
+  } finally {
+    // ALWAYS strip the magic-link hash from the URL — even on failure — so
+    // a poisoned token never lingers in the address bar or history.
+    try {
+      if (window.location.hash.includes("access_token=")) {
+        window.history.replaceState(null, document.title, `${window.location.pathname}${window.location.search}`);
+      }
+    } catch { /* ignore */ }
+    if (hadTokens && !setOk && isWorkspaceHost()) {
+      // Bad handoff on workspace surface — bounce to expired recovery instead
+      // of looping the portal.
+      try {
+        const next = encodeURIComponent(window.location.pathname + window.location.search);
+        window.location.replace(`/?expired=1&next=${next}`);
+      } catch { /* ignore */ }
+    }
   }
 }
 
@@ -159,6 +183,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const refreshFailCount = useRef(0);
   const hydratedRef = useRef(false);
+  const signedOutTimestamps = useRef<number[]>([]);
 
   const fetchProfile = async (userId: string) => {
     try {
@@ -237,6 +262,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
 
         if (event === "SIGNED_OUT") {
+          // Login-loop detector: 4+ SIGNED_OUT events within 30s indicates a
+          // poisoned state. Fire anomaly so operators see it.
+          const now = Date.now();
+          signedOutTimestamps.current = [
+            ...signedOutTimestamps.current.filter((t) => now - t < 30_000),
+            now,
+          ];
+          if (signedOutTimestamps.current.length >= 4) {
+            reportAuthAnomaly("auth.login_loop", { count: signedOutTimestamps.current.length });
+            signedOutTimestamps.current = [];
+          }
           clearAuthState({ clearStorage: true, clearBridge: true });
           return;
         }
@@ -245,6 +281,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (hydratedRef.current) setLoading(false);
       }
     );
+
+    // Cross-tab / cross-host signout propagation. When any tab signs out,
+    // mirror the local state here without calling supabase.signOut() again
+    // (which would cascade and reload-storm).
+    const unsubBroadcast = subscribeAuthBroadcast((msg) => {
+      if (msg.type === "signout" || msg.type === "expired") {
+        clearAuthState({ clearStorage: true, clearBridge: true });
+      }
+    });
 
     (async () => {
       try {
@@ -288,8 +333,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         authDebug("token.refresh_error", { count: refreshFailCount.current, message: msg });
         if (refreshFailCount.current > 3) {
           console.warn("Too many auth refresh failures, signing out");
+          reportAuthAnomaly("auth.refresh_failure_spike", { count: refreshFailCount.current, message: msg.slice(0, 160) });
           clearAuthState({ clearStorage: true, clearBridge: true });
           supabase.auth.signOut().catch(() => {});
+          broadcastSignout();
+          // On the workspace surface, bounce to the calm recovery screen
+          // instead of letting route guards bounce to /login in a loop.
+          if (isWorkspaceHost()) {
+            try {
+              const next = encodeURIComponent(window.location.pathname + window.location.search);
+              window.location.replace(`/?expired=1&next=${next}`);
+            } catch { /* ignore */ }
+          }
         }
       }
     };
@@ -298,6 +353,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       mounted = false;
       subscription.unsubscribe();
+      unsubBroadcast();
       window.removeEventListener("unhandledrejection", handleUnhandledRejection);
     };
   }, []);
@@ -324,6 +380,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = async () => {
     await supabase.auth.signOut();
     clearAuthState({ clearStorage: true, clearBridge: true });
+    broadcastSignout();
     resetAnalytics();
     clearSentryUser();
   };
