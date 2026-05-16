@@ -293,7 +293,10 @@ export function IntentRunner({
             <>
               {/* Deliverable header — makes outputs feel client-sendable, not chat */}
               <div className="mb-5 pb-4 border-b border-border/60">
-                <p className="text-[9.5px] uppercase tracking-[0.22em] text-muted-foreground/80 font-semibold">Deliverable</p>
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-[9.5px] uppercase tracking-[0.22em] text-muted-foreground/80 font-semibold">Deliverable</p>
+                  <OutputQualityChip tier={tier} />
+                </div>
                 <h1 className="mt-1 text-[22px] font-bold tracking-tight leading-tight text-foreground">{title}</h1>
                 <div className="mt-2 flex items-center justify-between gap-3 text-[11px] text-muted-foreground">
                   <span>{workspace?.client_name ? `Prepared for ${workspace.client_name}` : "Internal draft"}</span>
@@ -334,6 +337,8 @@ export function IntentRunner({
                       );
                     })}
                   </div>
+                  {/* One calm possibility line — no paywall chrome. */}
+                  <PossibilityHint surface="intent" className="mt-4" />
                 </div>
               )}
             </>
