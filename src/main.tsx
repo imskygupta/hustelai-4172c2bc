@@ -6,12 +6,15 @@ import { initSentry } from "./lib/sentry";
 import { initYandex } from "./lib/yandex";
 import { loadServerRuntimeConfig } from "./config/runtime";
 import { initCalmMode } from "./components/CalmModeToggle";
+import { installCrashReporter } from "./lib/observability/reportCrash";
 
 // Calm mode is a global preference (reduces motion + gradients across surfaces).
 // Dark mode, by contrast, is scoped to the authenticated AppShell — see AppShell.tsx.
 initCalmMode();
 initSentry();
 initAnalytics();
+// Lightweight client-side crash signal → admin-alert (cooldown-throttled).
+installCrashReporter();
 // Lazy-init Yandex Metrica after hydration (uses requestIdleCallback inside).
 initYandex();
 // Fire-and-forget. Failures NEVER block boot — runtime falls back to defaults.
