@@ -28,6 +28,13 @@ const TASKS: Record<string, string> = {
   tool_pricing_packs: `Suggest 6 alternate pricing positioning angles for: "{{prompt}}". Return JSON: { "angles": [{ "name": string (3 words), "headline": string (8 words), "rationale": string (1 sentence) }] }`,
 };
 
+const OPENAI_COMPATIBLE: Record<string, { endpoint: string; defaultModel: string }> = {
+  openai: { endpoint: "https://api.openai.com/v1/chat/completions", defaultModel: "gpt-4o-mini" },
+  openrouter: { endpoint: "https://openrouter.ai/api/v1/chat/completions", defaultModel: "google/gemini-2.5-flash-lite" },
+  groq: { endpoint: "https://api.groq.com/openai/v1/chat/completions", defaultModel: "llama-3.1-8b-instant" },
+  deepseek: { endpoint: "https://api.deepseek.com/v1/chat/completions", defaultModel: "deepseek-chat" },
+};
+
 async function callUserKey(provider: string, apiKey: string, model: string | null, messages: any[]) {
   if (provider === "gemini") {
     const m = model || "gemini-2.5-flash";
@@ -43,10 +50,27 @@ async function callUserKey(provider: string, apiKey: string, model: string | nul
     const d = await r.json();
     return d.candidates?.[0]?.content?.parts?.[0]?.text || "";
   }
-  const endpoint = provider === "openrouter"
-    ? "https://openrouter.ai/api/v1/chat/completions"
-    : "https://api.openai.com/v1/chat/completions";
-  const m = model || (provider === "openrouter" ? "google/gemini-2.5-flash-lite" : "gpt-4o-mini");
+  if (provider === "anthropic") {
+    const m = model || "claude-3-5-sonnet-20241022";
+    const r = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "x-api-key": apiKey, "anthropic-version": "2023-06-01", "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: m,
+        max_tokens: 900,
+        temperature: 0.5,
+        system: "You output ONLY valid JSON. No prose, no markdown.",
+        messages: messages.filter(m => m.role !== "system").map(m => ({ role: m.role === "assistant" ? "assistant" : "user", content: m.content })),
+      }),
+    });
+    if (!r.ok) throw new Error(`anthropic ${r.status}: ${(await r.text()).slice(0, 200)}`);
+    const d = await r.json();
+    return d.content?.[0]?.text || "";
+  }
+  const cfg = OPENAI_COMPATIBLE[provider];
+  if (!cfg) throw new Error(`Unsupported AI provider: ${provider}`);
+  const endpoint = cfg.endpoint;
+  const m = model || cfg.defaultModel;
   const r = await fetch(endpoint, {
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },

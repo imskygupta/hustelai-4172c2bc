@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowRight, Sparkles, Loader2, KeyRound, FolderOpen, Activity, ShieldCheck } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
@@ -21,6 +22,7 @@ import { SEO } from "@/components/SEO";
  */
 export default function WorkspaceGateway() {
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
   const [snapshot, setSnapshot] = useState<{
     workspaces: number;
     activeProviders: number;
@@ -35,8 +37,8 @@ export default function WorkspaceGateway() {
       try {
         const [{ count: wsCount }, { count: provCount }, { data: recent }] = await Promise.all([
           (supabase as any).from("workspaces").select("id", { count: "exact", head: true }).eq("owner_id", user.id),
-          (supabase as any).from("workspace_ai_keys").select("id", { count: "exact", head: true }).eq("owner_id", user.id),
-          (supabase as any).from("workspace_outputs").select("created_at").eq("owner_id", user.id).order("created_at", { ascending: false }).limit(10),
+          (supabase as any).from("user_ai_keys").select("id", { count: "exact", head: true }).eq("user_id", user.id).eq("is_active", true),
+          (supabase as any).from("workspace_outputs").select("created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(10),
         ]);
         setSnapshot({
           workspaces: wsCount || 0,
@@ -52,11 +54,13 @@ export default function WorkspaceGateway() {
 
   const launch = async () => {
     setLaunching(true);
+    const rawNext = searchParams.get("next") || "/";
+    const nextPath = rawNext.startsWith("/") && !rawNext.startsWith("//") ? rawNext : "/";
 
     // Dev/preview can't cross subdomains — open the cockpit locally in a new tab.
     if (isDualHost()) {
       window.setTimeout(() => {
-        window.open("/", "_blank", "noopener,noreferrer");
+        window.open(nextPath, "_blank", "noopener,noreferrer");
         setLaunching(false);
       }, 400);
       return;
@@ -76,7 +80,7 @@ export default function WorkspaceGateway() {
       const { data } = await supabase.auth.getSession();
       const session = data.session;
       if (!session) {
-        window.open(`${WORKSPACE_ORIGIN}/`, "_blank", "noopener,noreferrer");
+        window.open(`${WORKSPACE_ORIGIN}${nextPath}`, "_blank", "noopener,noreferrer");
         setLaunching(false);
         return;
       }
@@ -92,11 +96,11 @@ export default function WorkspaceGateway() {
       // Brief loading state for perceived intentionality, then open in a
       // new tab — never replace the marketing surface.
       window.setTimeout(() => {
-        window.open(`${WORKSPACE_ORIGIN}/#${params.toString()}`, "_blank", "noopener,noreferrer");
+        window.open(`${WORKSPACE_ORIGIN}${nextPath}#${params.toString()}`, "_blank", "noopener,noreferrer");
         setLaunching(false);
       }, 450);
     } catch {
-      window.open(`${WORKSPACE_ORIGIN}/`, "_blank", "noopener,noreferrer");
+      window.open(`${WORKSPACE_ORIGIN}${nextPath}`, "_blank", "noopener,noreferrer");
       setLaunching(false);
     }
   };
