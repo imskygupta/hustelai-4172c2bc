@@ -6143,6 +6143,60 @@ export type Database = {
         }
         Relationships: []
       }
+      user_feedback: {
+        Row: {
+          category: string
+          created_at: string
+          email: string | null
+          id: string
+          message: string
+          meta: Json
+          project_id: string | null
+          reply_requested: boolean
+          route: string | null
+          screenshot_url: string | null
+          status: string
+          tier: string | null
+          user_agent: string | null
+          user_id: string | null
+          workspace_id: string | null
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          message: string
+          meta?: Json
+          project_id?: string | null
+          reply_requested?: boolean
+          route?: string | null
+          screenshot_url?: string | null
+          status?: string
+          tier?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+          workspace_id?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          message?: string
+          meta?: Json
+          project_id?: string | null
+          reply_requested?: boolean
+          route?: string | null
+          screenshot_url?: string | null
+          status?: string
+          tier?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+          workspace_id?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
