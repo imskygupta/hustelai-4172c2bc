@@ -16,20 +16,31 @@ const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 function wrapHtml(opts: { subject: string; bodyHtml: string; previewText?: string; unsubscribeUrl: string }) {
   const { subject, bodyHtml, previewText, unsubscribeUrl } = opts;
   return `<!doctype html><html><head><meta charset="utf-8"><title>${subject}</title></head>
-<body style="margin:0;padding:0;background:#f7f7f9;font-family:Inter,Arial,sans-serif;color:#111;">
+<body style="margin:0;padding:0;background:#f6f5f1;font-family:Inter,Arial,sans-serif;color:#111;">
 ${previewText ? `<div style="display:none;max-height:0;overflow:hidden">${previewText}</div>` : ""}
 <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:24px 12px;">
-<table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 6px 24px rgba(0,0,0,.06);">
-<tr><td style="background:linear-gradient(135deg,#6366f1,#8b5cf6);padding:22px 28px;color:#fff;">
-<div style="font-weight:800;font-size:20px;letter-spacing:.3px">HustleAI</div>
-<div style="opacity:.85;font-size:12px;margin-top:2px">India's AI-powered side-hustle OS</div>
+<table width="620" cellpadding="0" cellspacing="0" style="max-width:620px;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 8px 28px rgba(0,0,0,.06);border:1px solid #ececec;">
+<tr><td style="background:linear-gradient(135deg,#0f172a,#1e293b);padding:26px 30px;color:#fff;">
+<div style="font-weight:800;font-size:22px;letter-spacing:.3px">HustleAI · The Sunday Brief</div>
+<div style="opacity:.78;font-size:12px;margin-top:4px">One email a week · the app + the blog, in one place</div>
 </td></tr>
-<tr><td style="padding:28px 28px 8px 28px;font-size:15px;line-height:1.7;color:#1f2330">
+<tr><td style="padding:30px 30px 10px 30px;font-size:15.5px;line-height:1.7;color:#1f2330">
 ${bodyHtml}
 </td></tr>
-<tr><td style="padding:18px 28px 28px 28px;font-size:12px;color:#6b6f80;border-top:1px solid #eee;">
-You're getting this because you subscribed at <a href="https://hustlaiapp.in" style="color:#6366f1">hustlaiapp.in</a>.<br/>
-<a href="${unsubscribeUrl}" style="color:#6b6f80;text-decoration:underline">Unsubscribe</a> · <a href="https://hustlaiapp.in" style="color:#6b6f80;text-decoration:underline">Visit site</a>
+<tr><td style="padding:8px 30px 24px 30px;">
+<table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:separate;border-spacing:8px 0;">
+<tr>
+<td align="center" style="background:#0f172a;border-radius:10px;padding:12px 14px;">
+<a href="https://hustlaiapp.in?utm_source=newsletter&utm_medium=email&utm_campaign=sunday_brief" style="color:#fff;text-decoration:none;font-weight:600;font-size:14px;">Open the app →</a>
+</td>
+<td align="center" style="background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:12px 14px;">
+<a href="https://blogs.hustlaiapp.in?utm_source=newsletter&utm_medium=email&utm_campaign=sunday_brief" style="color:#9a3412;text-decoration:none;font-weight:600;font-size:14px;">Read the blog →</a>
+</td>
+</tr></table>
+</td></tr>
+<tr><td style="padding:14px 30px 28px 30px;font-size:12px;color:#6b6f80;border-top:1px solid #eee;">
+You subscribed at <a href="https://hustlaiapp.in" style="color:#0f172a">hustlaiapp.in</a> or <a href="https://blogs.hustlaiapp.in" style="color:#0f172a">blogs.hustlaiapp.in</a>. One email every Sunday, never more.<br/>
+<a href="${unsubscribeUrl}" style="color:#6b6f80;text-decoration:underline">Unsubscribe</a> · <a href="https://hustlaiapp.in" style="color:#6b6f80;text-decoration:underline">App</a> · <a href="https://blogs.hustlaiapp.in" style="color:#6b6f80;text-decoration:underline">Blog</a>
 </td></tr></table></td></tr></table></body></html>`;
 }
 
