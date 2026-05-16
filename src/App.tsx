@@ -127,7 +127,6 @@ import IntakeForms from "./pages/workspace-os/IntakeForms";
 import IntakeInbox from "./pages/workspace-os/IntakeInbox";
 import DocsLibrary from "./pages/workspace-os/DocsLibrary";
 import ToolsHubWS from "./pages/workspace-os/ToolsHub";
-import AutomationsHub from "./pages/dashboard/AutomationsHub";
 import IntakeSubmit from "./pages/IntakeSubmit";
 import OperationsHub from "./pages/dashboard/OperationsHub";
 import AutomationsHub from "./pages/dashboard/AutomationsHub";
