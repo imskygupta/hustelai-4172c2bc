@@ -105,12 +105,33 @@ export const TOOL_GROUPS: ToolGroup[] = [
   },
 ];
 
-export const PROVIDER_DISPLAY: Record<string, { label: string; tint: string }> = {
-  anthropic: { label: "Claude",  tint: "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30" },
-  openai:    { label: "GPT",     tint: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30" },
-  gemini:    { label: "Gemini",  tint: "bg-sky-500/10 text-sky-700 dark:text-sky-300 border-sky-500/30" },
-  groq:      { label: "Groq",    tint: "bg-fuchsia-500/10 text-fuchsia-700 dark:text-fuchsia-300 border-fuchsia-500/30" },
-  auto:      { label: "Auto",    tint: "bg-muted text-foreground/70 border-border" },
+export const PROVIDER_DISPLAY: Record<string, {
+  label: string; tint: string;
+  strength: string;          // one-liner: what it's best at
+  tradeoff: string;          // one-liner: cost / latency tradeoff
+  latencyMs: [number, number]; // typical p50–p95
+  fallback: string;          // provider id used if this one fails
+}> = {
+  anthropic: { label: "Claude",  tint: "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30",
+    strength: "Long-context, structured reasoning, persuasive long-form.",
+    tradeoff: "Higher cost. Best when the output is the deliverable.",
+    latencyMs: [1800, 5200], fallback: "openai" },
+  openai:    { label: "GPT",     tint: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30",
+    strength: "Crisp short copy, step-by-step structures, broad world knowledge.",
+    tradeoff: "Balanced cost. Solid default for most operator work.",
+    latencyMs: [900, 2800], fallback: "anthropic" },
+  gemini:    { label: "Gemini",  tint: "bg-sky-500/10 text-sky-700 dark:text-sky-300 border-sky-500/30",
+    strength: "Structured tables, calendars, multimodal context.",
+    tradeoff: "Cheapest and fastest for structured outputs.",
+    latencyMs: [500, 1800], fallback: "openai" },
+  groq:      { label: "Groq",    tint: "bg-fuchsia-500/10 text-fuchsia-700 dark:text-fuchsia-300 border-fuchsia-500/30",
+    strength: "Ultra-fast token streaming for instant drafts.",
+    tradeoff: "Speed over depth — re-run on Claude for final polish.",
+    latencyMs: [200, 900], fallback: "openai" },
+  auto:      { label: "Auto",    tint: "bg-muted text-foreground/70 border-border",
+    strength: "Workspace picks the right provider per intent automatically.",
+    tradeoff: "Optimised mix of cost, latency and quality.",
+    latencyMs: [800, 3500], fallback: "openai" },
 };
 
 export const SPEED_DISPLAY: Record<Speed, { label: string; dot: string }> = {
