@@ -179,7 +179,7 @@ export default function OperationsHub() {
             <div className="mt-1.5 text-sm font-semibold text-foreground">3 free exports / week</div>
             <p className="mt-0.5 text-xs text-muted-foreground">
               Link your bot in <Link to="/settings/telegram" className="underline">settings</Link>, or{" "}
-              <Link to="/dashboard/workspace-os/boosts" className="underline">add a boost pack</Link> for more bandwidth.
+              <Link to="/settings/wallet" className="underline">add a boost pack</Link> for more bandwidth.
             </p>
           </Card>
           <Card className="p-4 border-border/60">
@@ -197,7 +197,7 @@ export default function OperationsHub() {
               </Link>
             </Button>
             <Button asChild size="sm">
-              <Link to="/dashboard/workspace-os/boosts" className="inline-flex items-center gap-2">
+              <Link to="/settings/wallet" className="inline-flex items-center gap-2">
                 <Zap className="h-4 w-4" /> Operations boosts
               </Link>
             </Button>
