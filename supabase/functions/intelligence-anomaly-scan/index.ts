@@ -120,6 +120,126 @@ async function scan(sb: ReturnType<typeof createClient>): Promise<Anomaly[]> {
   return found;
 }
 
+async function scanOperational(sb: ReturnType<typeof createClient>): Promise<Anomaly[]> {
+  const found: Anomaly[] = [];
+  const since1h = new Date(Date.now() - 3600_000).toISOString();
+  const since10m = new Date(Date.now() - 600_000).toISOString();
+
+  // 6. Webhook failure surge (admin_alerts kind containing 'webhook')
+  const { count: webhookFails } = await sb
+    .from("admin_alerts")
+    .select("*", { count: "exact", head: true })
+    .ilike("kind", "%webhook%")
+    .in("severity", ["error", "critical"])
+    .gte("created_at", since1h);
+  if ((webhookFails ?? 0) >= 3) {
+    found.push({
+      kind: "webhook_failure_spike",
+      severity: "critical",
+      title: `Webhook failures: ${webhookFails} in 1h`,
+      message: "Inspect Cashfree / Dodo / Telegram webhook handlers.",
+      metadata: { count: webhookFails },
+    });
+  }
+
+  // 7. Auth refresh storm (telemetry alerts emitted from client)
+  const { count: authStorms } = await sb
+    .from("admin_alerts")
+    .select("*", { count: "exact", head: true })
+    .ilike("kind", "auth.%")
+    .gte("created_at", since10m);
+  if ((authStorms ?? 0) >= 10) {
+    found.push({
+      kind: "auth_refresh_storm",
+      severity: "critical",
+      title: `${authStorms} auth telemetry alerts in 10m`,
+      message: "Possible token refresh loop or invalid handoff. Inspect Auth logs.",
+      metadata: { count: authStorms },
+    });
+  }
+
+  // 8. Automation failure spike
+  const { count: autoFail } = await sb
+    .from("automation_runs")
+    .select("*", { count: "exact", head: true })
+    .eq("status", "failed")
+    .gte("created_at", since1h);
+  if ((autoFail ?? 0) >= 8) {
+    found.push({
+      kind: "automation_failure_spike",
+      severity: "warning",
+      title: `${autoFail} automation failures in 1h`,
+      message: "Check recent templates and provider availability.",
+      metadata: { count: autoFail },
+    });
+  }
+
+  // 9. Stuck automation runs (processing > 30m)
+  const since30m = new Date(Date.now() - 1_800_000).toISOString();
+  const { count: stuck } = await sb
+    .from("automation_runs")
+    .select("*", { count: "exact", head: true })
+    .eq("status", "processing")
+    .lt("created_at", since30m);
+  if ((stuck ?? 0) >= 3) {
+    found.push({
+      kind: "automation_stuck",
+      severity: "warning",
+      title: `${stuck} automations stuck >30m`,
+      message: "Inspect worker / job runner; consider manual retry.",
+      metadata: { count: stuck },
+    });
+  }
+
+  // 10. Provider degradation: any provider w/ >=3 consecutive failures
+  const { data: providers } = await sb
+    .from("api_provider_health")
+    .select("provider, consecutive_failures, success_rate, last_error, status")
+    .gte("consecutive_failures", 3);
+  for (const p of (providers || []) as any[]) {
+    found.push({
+      kind: `provider_degraded_${p.provider}`,
+      severity: p.consecutive_failures >= 6 ? "critical" : "warning",
+      title: `Provider ${p.provider} degraded (${p.consecutive_failures} consecutive failures)`,
+      message: p.last_error?.slice(0, 200) || "Fallback may be active. Inspect provider health.",
+      metadata: { provider: p.provider, success_rate: p.success_rate, status: p.status },
+    });
+  }
+
+  // 11. Feedback surge (user_feedback in last hour)
+  const { count: fbCount } = await sb
+    .from("user_feedback")
+    .select("*", { count: "exact", head: true })
+    .gte("created_at", since1h);
+  if ((fbCount ?? 0) >= 10) {
+    found.push({
+      kind: "feedback_surge",
+      severity: "warning",
+      title: `${fbCount} feedback entries in 1h`,
+      message: "Possible incident — review feedback inbox immediately.",
+      metadata: { count: fbCount },
+    });
+  }
+
+  // 12. Route crash spike (client.crash alerts)
+  const { count: crashes } = await sb
+    .from("admin_alerts")
+    .select("*", { count: "exact", head: true })
+    .eq("kind", "client.crash")
+    .gte("created_at", since1h);
+  if ((crashes ?? 0) >= 5) {
+    found.push({
+      kind: "client_crash_spike",
+      severity: "critical",
+      title: `${crashes} client crashes in 1h`,
+      message: "Check Sentry for stack traces; consider rollback.",
+      metadata: { count: crashes },
+    });
+  }
+
+  return found;
+}
+
 async function dedupe(sb: ReturnType<typeof createClient>, kind: string): Promise<boolean> {
   // Avoid duplicate open alerts of the same kind within 1 hour.
   const since = new Date(Date.now() - 3600_000).toISOString();
@@ -136,7 +256,8 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   try {
     const sb = createClient(SUPABASE_URL, SERVICE_ROLE);
-    const anomalies = await scan(sb);
+    const [base, ops] = await Promise.all([scan(sb), scanOperational(sb)]);
+    const anomalies = [...base, ...ops];
     let inserted = 0;
     for (const a of anomalies) {
       if (await dedupe(sb, a.kind)) continue;
