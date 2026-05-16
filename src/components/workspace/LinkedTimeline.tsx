@@ -5,6 +5,7 @@ import { FileText, Receipt, Send, Search, Map as MapIcon, Brain, Workflow, Calen
 import { useRecentOutputs, type WorkspaceOutput } from "@/lib/workspace/outputs";
 import { wp } from "@/lib/workspace/paths";
 import { formatDistanceToNowStrict, format, isToday, isYesterday } from "date-fns";
+import { OutputProvenance } from "@/components/workspace/OutputProvenance";
 
 /**
  * LinkedTimeline — lightweight chronological feed of AI outputs in the
@@ -98,6 +99,14 @@ export function LinkedTimeline({ workspaceId }: { workspaceId: string }) {
                             <span className="text-muted-foreground/40"> · </span>
                             <span className="text-emerald-600/70">synced</span>
                           </p>
+                          <div className="mt-1">
+                            <OutputProvenance
+                              provider={o.provider}
+                              model={o.model}
+                              metadata={o.metadata as any}
+                              refKind={o.ref_kind}
+                            />
+                          </div>
                         </div>
                       </Link>
                     </motion.li>
