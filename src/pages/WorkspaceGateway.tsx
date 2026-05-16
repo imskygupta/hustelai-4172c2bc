@@ -38,7 +38,7 @@ export default function WorkspaceGateway() {
         const [{ count: wsCount }, { count: provCount }, { data: recent }] = await Promise.all([
           (supabase as any).from("workspaces").select("id", { count: "exact", head: true }).eq("owner_id", user.id),
           (supabase as any).from("user_ai_keys").select("id", { count: "exact", head: true }).eq("user_id", user.id).eq("is_active", true),
-          (supabase as any).from("workspace_outputs").select("created_at").eq("owner_id", user.id).order("created_at", { ascending: false }).limit(10),
+          (supabase as any).from("workspace_outputs").select("created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(10),
         ]);
         setSnapshot({
           workspaces: wsCount || 0,
