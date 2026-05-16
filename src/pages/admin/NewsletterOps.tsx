@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Sparkles, Send, RefreshCw, CheckCircle2, XCircle, Mail, Clock, ArrowLeft, Loader2, Eye, AlertTriangle } from "lucide-react";
+import { Sparkles, Send, RefreshCw, CheckCircle2, XCircle, Mail, Clock, ArrowLeft, Loader2, Eye, AlertTriangle, Wand2, Upload, ShieldCheck } from "lucide-react";
 
 type Issue = {
   id: string;
@@ -57,7 +57,13 @@ export default function NewsletterOps() {
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [tab, setTab] = useState("queue");
-  const [focus, setFocus] = useState("weekly digest");
+  const [mode, setMode] = useState<"automation" | "manual">("automation");
+  const [focus, setFocus] = useState("the Sunday Brief — what changed this week in AI + side hustles in India");
+  const [manualSubject, setManualSubject] = useState("");
+  const [manualPreheader, setManualPreheader] = useState("");
+  const [manualBody, setManualBody] = useState("");
+  const [bulkEmails, setBulkEmails] = useState("");
+  const [bulkBusy, setBulkBusy] = useState(false);
   const [previewIssue, setPreviewIssue] = useState<Issue | null>(null);
   const [testEmail, setTestEmail] = useState("");
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -89,15 +95,46 @@ export default function NewsletterOps() {
   const generate = async () => {
     setGenerating(true);
     try {
-      const { data, error } = await supabase.functions.invoke("brevo-newsletter", {
-        body: { action: "generate_sections", focus, provider: "brevo", channel: "email" },
-      });
-      if (error) throw error;
-      if ((data as any)?.error) throw new Error((data as any).error);
-      toast.success("Draft generated");
+      if (mode === "manual") {
+        if (!manualSubject.trim() || !manualBody.trim()) {
+          toast.error("Subject and body are required");
+          return;
+        }
+        const { data, error } = await supabase.functions.invoke("brevo-newsletter", {
+          body: { action: "create_manual_issue", subject: manualSubject, preheader: manualPreheader, body_md: manualBody },
+        });
+        if (error) throw error;
+        if ((data as any)?.error) throw new Error((data as any).error);
+        toast.success("Manual draft created");
+        setManualSubject(""); setManualPreheader(""); setManualBody("");
+      } else {
+        const { data, error } = await supabase.functions.invoke("brevo-newsletter", {
+          body: { action: "generate_sections", focus, provider: "brevo", channel: "email" },
+        });
+        if (error) throw error;
+        if ((data as any)?.error) throw new Error((data as any).error);
+        toast.success("Sunday Brief draft generated");
+      }
       load();
     } catch (e: any) { toast.error(e.message || "Generation failed"); }
     finally { setGenerating(false); }
+  };
+
+  const bulkAdd = async () => {
+    if (!bulkEmails.trim()) { toast.error("Paste at least one email"); return; }
+    setBulkBusy(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("brevo-newsletter", {
+        body: { action: "bulk_add_subscribers", emails: bulkEmails },
+      });
+      if (error) throw error;
+      const r = data as any;
+      if (r?.error) throw new Error(r.error);
+      toast.success(`Added ${r.added} · reactivated ${r.reactivated} · skipped ${r.skipped}`);
+      setBulkEmails("");
+      load();
+    } catch (e: any) { toast.error(e.message); }
+    finally { setBulkBusy(false); }
   };
 
   const regenerate = async (issue: Issue, sectionId: string, hint: string) => {
@@ -157,7 +194,7 @@ export default function NewsletterOps() {
     finally { setBusyId(null); }
   };
   const dispatch = async (id: string) => {
-    if (!window.confirm("Dispatch this approved issue to all active subscribers?")) return;
+    if (!window.confirm("Send this issue to ALL active subscribers? Only one newsletter per 6 days is allowed.")) return;
     setBusyId(id);
     try {
       const { data, error } = await supabase.functions.invoke("brevo-newsletter", {
@@ -165,6 +202,19 @@ export default function NewsletterOps() {
       });
       if (error) throw error;
       const r = data as any;
+      if (r?.error === "throttled") {
+        const force = window.confirm(`${r.message}\n\nOverride and send anyway?`);
+        if (!force) { toast.message("Send cancelled"); return; }
+        const { data: d2, error: e2 } = await supabase.functions.invoke("brevo-newsletter", {
+          body: { action: "dispatch_issue", issue_id: id, force: true },
+        });
+        if (e2) throw e2;
+        const r2 = d2 as any;
+        if (r2?.error) throw new Error(r2.error);
+        toast.success(`Dispatched (override) · sent ${r2.sent} · failed ${r2.failed}`);
+        load();
+        return;
+      }
       if (r?.error) throw new Error(r.error);
       toast.success(`Dispatched · sent ${r.sent} · failed ${r.failed}`);
       load();
@@ -233,17 +283,68 @@ export default function NewsletterOps() {
       <div className="flex items-start justify-between gap-4 mb-6 flex-wrap">
         <div>
           <Button asChild variant="ghost" size="sm" className="mb-2 -ml-2"><Link to="/admin/communications"><ArrowLeft className="h-3.5 w-3.5 mr-1" /> Communications</Link></Button>
-          <h1 className="text-2xl font-semibold tracking-tight">Newsletter Ops</h1>
-          <p className="text-sm text-muted-foreground">AI-curated weekly digest · approval-gated · channel-agnostic.</p>
-        </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          <Input value={focus} onChange={(e) => setFocus(e.target.value)} placeholder="Focus theme" className="h-9 w-56" />
-          <Button onClick={generate} disabled={generating}>
-            {generating ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : <Sparkles className="h-4 w-4 mr-1.5" />}
-            Generate draft
-          </Button>
+          <h1 className="text-2xl font-semibold tracking-tight">The Sunday Brief · unified newsletter</h1>
+          <p className="text-sm text-muted-foreground flex items-center gap-2 flex-wrap">
+            <span>One email every Sunday · blends <strong>hustlaiapp.in</strong> + <strong>blogs.hustlaiapp.in</strong></span>
+            <span className="inline-flex items-center gap-1 text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5 text-[11px]"><ShieldCheck className="h-3 w-3" /> Hard cap: 1 send / 6 days</span>
+          </p>
         </div>
       </div>
+
+      {/* Composer — automation default, advanced manual write */}
+      <Card className="mb-5 border-slate-200">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Wand2 className="h-4 w-4 text-violet-600" /> Compose this week's brief
+            </CardTitle>
+            <div className="inline-flex rounded-md border bg-muted/40 p-0.5 text-xs">
+              <button
+                onClick={() => setMode("automation")}
+                className={`px-3 py-1.5 rounded-[5px] ${mode === "automation" ? "bg-background shadow-sm font-medium" : "text-muted-foreground"}`}
+              >Automation (default)</button>
+              <button
+                onClick={() => setMode("manual")}
+                className={`px-3 py-1.5 rounded-[5px] ${mode === "manual" ? "bg-background shadow-sm font-medium" : "text-muted-foreground"}`}
+              >Advanced · write my own</button>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {mode === "automation" ? (
+            <>
+              <Label className="text-xs text-muted-foreground">Focus / angle for this week (optional)</Label>
+              <Input value={focus} onChange={(e) => setFocus(e.target.value)} placeholder="e.g. AI side hustles trending in India this week" />
+              <div className="text-[11px] text-muted-foreground">
+                AI writes a single email with 4 blocks: one featured read, a tech & AI pulse, one HustleAI tool how-to, and a CTA to the app + blog. Approval-gated — nothing sends until you click Approve → Dispatch.
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                <div>
+                  <Label className="text-xs">Subject</Label>
+                  <Input value={manualSubject} onChange={(e) => setManualSubject(e.target.value)} placeholder="Subject line ≤ 60 chars" />
+                </div>
+                <div>
+                  <Label className="text-xs">Preheader (inbox teaser)</Label>
+                  <Input value={manualPreheader} onChange={(e) => setManualPreheader(e.target.value)} placeholder="One-line teaser ≤ 90 chars" />
+                </div>
+              </div>
+              <div>
+                <Label className="text-xs">Body (markdown)</Label>
+                <Textarea value={manualBody} onChange={(e) => setManualBody(e.target.value)} rows={8} className="font-mono text-sm" placeholder="Write the full email in markdown — headings, bullets, [links](https://...)." />
+              </div>
+            </>
+          )}
+          <div className="flex justify-end">
+            <Button onClick={generate} disabled={generating}>
+              {generating ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : <Sparkles className="h-4 w-4 mr-1.5" />}
+              {mode === "manual" ? "Save as draft" : "Generate Sunday Brief"}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
         {[
@@ -281,6 +382,22 @@ export default function NewsletterOps() {
           <TabsContent value="failed" className="space-y-2">{failed.length === 0 ? <Empty msg="No failed sends." /> : failed.map((i) => renderRow(i))}</TabsContent>
           <TabsContent value="subscribers" className="space-y-1">
             <div className="text-xs text-muted-foreground mb-2">{subStats.active} active · {subStats.unsubscribed} unsubscribed · {subStats.total} total</div>
+
+            {/* Bulk add — CSV / comma / newline separated */}
+            <Card className="mb-3 border-slate-200">
+              <CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><Upload className="h-4 w-4" /> Add subscribers in bulk</CardTitle></CardHeader>
+              <CardContent className="space-y-2">
+                <Textarea value={bulkEmails} onChange={(e) => setBulkEmails(e.target.value)} rows={4} placeholder="Paste a CSV column, or emails separated by commas / newlines / spaces — duplicates and invalids are skipped." className="font-mono text-xs" />
+                <div className="flex items-center justify-between">
+                  <div className="text-[11px] text-muted-foreground">Existing unsubscribed addresses are reactivated automatically.</div>
+                  <Button size="sm" onClick={bulkAdd} disabled={bulkBusy}>
+                    {bulkBusy ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <Upload className="h-3.5 w-3.5 mr-1.5" />}
+                    Add to list
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
             {subscribers.map((s) => (
               <div key={s.id} className="flex items-center justify-between border rounded-md px-3 py-2 text-sm">
                 <div className="min-w-0"><div className="truncate">{s.email}</div><div className="text-xs text-muted-foreground">{s.source} · {new Date(s.created_at).toLocaleDateString()}</div></div>

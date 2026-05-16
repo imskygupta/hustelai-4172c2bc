@@ -16,20 +16,31 @@ const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 function wrapHtml(opts: { subject: string; bodyHtml: string; previewText?: string; unsubscribeUrl: string }) {
   const { subject, bodyHtml, previewText, unsubscribeUrl } = opts;
   return `<!doctype html><html><head><meta charset="utf-8"><title>${subject}</title></head>
-<body style="margin:0;padding:0;background:#f7f7f9;font-family:Inter,Arial,sans-serif;color:#111;">
+<body style="margin:0;padding:0;background:#f6f5f1;font-family:Inter,Arial,sans-serif;color:#111;">
 ${previewText ? `<div style="display:none;max-height:0;overflow:hidden">${previewText}</div>` : ""}
 <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:24px 12px;">
-<table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 6px 24px rgba(0,0,0,.06);">
-<tr><td style="background:linear-gradient(135deg,#6366f1,#8b5cf6);padding:22px 28px;color:#fff;">
-<div style="font-weight:800;font-size:20px;letter-spacing:.3px">HustleAI</div>
-<div style="opacity:.85;font-size:12px;margin-top:2px">India's AI-powered side-hustle OS</div>
+<table width="620" cellpadding="0" cellspacing="0" style="max-width:620px;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 8px 28px rgba(0,0,0,.06);border:1px solid #ececec;">
+<tr><td style="background:linear-gradient(135deg,#0f172a,#1e293b);padding:26px 30px;color:#fff;">
+<div style="font-weight:800;font-size:22px;letter-spacing:.3px">HustleAI · The Sunday Brief</div>
+<div style="opacity:.78;font-size:12px;margin-top:4px">One email a week · the app + the blog, in one place</div>
 </td></tr>
-<tr><td style="padding:28px 28px 8px 28px;font-size:15px;line-height:1.7;color:#1f2330">
+<tr><td style="padding:30px 30px 10px 30px;font-size:15.5px;line-height:1.7;color:#1f2330">
 ${bodyHtml}
 </td></tr>
-<tr><td style="padding:18px 28px 28px 28px;font-size:12px;color:#6b6f80;border-top:1px solid #eee;">
-You're getting this because you subscribed at <a href="https://hustlaiapp.in" style="color:#6366f1">hustlaiapp.in</a>.<br/>
-<a href="${unsubscribeUrl}" style="color:#6b6f80;text-decoration:underline">Unsubscribe</a> · <a href="https://hustlaiapp.in" style="color:#6b6f80;text-decoration:underline">Visit site</a>
+<tr><td style="padding:8px 30px 24px 30px;">
+<table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:separate;border-spacing:8px 0;">
+<tr>
+<td align="center" style="background:#0f172a;border-radius:10px;padding:12px 14px;">
+<a href="https://hustlaiapp.in?utm_source=newsletter&utm_medium=email&utm_campaign=sunday_brief" style="color:#fff;text-decoration:none;font-weight:600;font-size:14px;">Open the app →</a>
+</td>
+<td align="center" style="background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:12px 14px;">
+<a href="https://blogs.hustlaiapp.in?utm_source=newsletter&utm_medium=email&utm_campaign=sunday_brief" style="color:#9a3412;text-decoration:none;font-weight:600;font-size:14px;">Read the blog →</a>
+</td>
+</tr></table>
+</td></tr>
+<tr><td style="padding:14px 30px 28px 30px;font-size:12px;color:#6b6f80;border-top:1px solid #eee;">
+You subscribed at <a href="https://hustlaiapp.in" style="color:#0f172a">hustlaiapp.in</a> or <a href="https://blogs.hustlaiapp.in" style="color:#0f172a">blogs.hustlaiapp.in</a>. One email every Sunday, never more.<br/>
+<a href="${unsubscribeUrl}" style="color:#6b6f80;text-decoration:underline">Unsubscribe</a> · <a href="https://hustlaiapp.in" style="color:#6b6f80;text-decoration:underline">App</a> · <a href="https://blogs.hustlaiapp.in" style="color:#6b6f80;text-decoration:underline">Blog</a>
 </td></tr></table></td></tr></table></body></html>`;
 }
 
@@ -93,23 +104,28 @@ Deno.serve(async (req) => {
     }
     function escapeHtml(s: string) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'} as any)[c]); }
 
+    // ===== Unified Sunday Brief prompt (used by both manual + cron) =====
+    const SUNDAY_BRIEF_SYSTEM = `You write "The Sunday Brief" — ONE weekly email from HustleAI that blends our app (hustlaiapp.in) and our blog (blogs.hustlaiapp.in) for Indian creators, freelancers and small operators.
+
+Output ONLY valid JSON of EXACTLY this shape (4 sections, no more, no less):
+{"subject":"Short, specific subject ≤ 60 chars","preheader":"One-line teaser ≤ 90 chars","sections":[
+  {"id":"feature","title":"This week's read","body_md":"ONE featured article — 90-130 words. Hook → insight → why it matters this week. End with a markdown link to a relevant blog post on https://blogs.hustlaiapp.in/ ."},
+  {"id":"tech_pulse","title":"Tech & AI pulse","body_md":"3-5 short bullet points (use '- ' prefix). Each bullet = one concrete AI/tech/creator-economy update from this past week, India-relevant where possible. ≤ 22 words per bullet. No fluff."},
+  {"id":"tool_guide","title":"How to use it inside HustleAI","body_md":"Pick ONE tool or feature inside HustleAI (e.g. Hustle Canvas, Invoice Generator, Hustle Blueprint, Workspace OS, Proposal Generator). 80-110 words. Show a real 3-step workflow ('1. … 2. … 3. …'). End with a markdown link to that tool on https://hustlaiapp.in/ ."},
+  {"id":"cta","title":"Open the workspace","body_md":"50-70 words promoting both surfaces — the app at https://hustlaiapp.in for doing the work, and the blog at https://blogs.hustlaiapp.in for the playbooks. Warm, confident, no hype, no emojis spam."}
+]}
+
+Hard rules:
+- Markdown only inside body_md (paragraphs, '- ' bullets, [text](url) links). NO HTML.
+- Never invent product features. Stick to: Hustle Canvas, Hustle Blueprint, Invoice Generator, Proposal Generator, Contract Generator, Workspace OS, HustleBot, Intake Forms, Pricing Calculator.
+- Tone: clear, operator-grade, slightly editorial. No "🚀", no "Hey hustler!", no fake urgency.
+- This is the ONLY email subscribers get this week — make it feel complete.`;
+
     // ===== Sectioned AI draft generation (writes a newsletter_issues row) =====
     if (action === "generate_sections") {
       await requireAdmin();
-      const focus = body.focus || "weekly digest";
-      const system = `You write the HustleAI weekly digest for Indian creators and freelancers.
-Output ONLY valid JSON of shape:
-{"subject":"...","preheader":"...","sections":[
-  {"id":"ai_trends","title":"AI Trends","body_md":"..."},
-  {"id":"creator_economy","title":"Creator Economy","body_md":"..."},
-  {"id":"freelancing","title":"Freelancing","body_md":"..."},
-  {"id":"automation","title":"Automation Workflows","body_md":"..."},
-  {"id":"hustleai","title":"HustleAI Updates","body_md":"..."},
-  {"id":"tools","title":"Tool Picks","body_md":"..."},
-  {"id":"opportunities","title":"Opportunities","body_md":"..."}
-]}
-Markdown allowed: paragraphs, [text](url), and "- " bullet lists. No HTML. Keep each section under 120 words. Indian context.`;
-      const raw = await callAI(`Focus: ${focus}. Generate this week's digest.`, system);
+      const focus = body.focus || "the Sunday Brief — what changed this week in AI + side hustles in India";
+      const raw = await callAI(`Focus: ${focus}. Write this week's Sunday Brief.`, SUNDAY_BRIEF_SYSTEM);
       const cleaned = raw.replace(/```json\n?/gi, "").replace(/```/g, "").trim();
       let parsed: any;
       try { parsed = JSON.parse(cleaned); }
@@ -123,10 +139,60 @@ Markdown allowed: paragraphs, [text](url), and "- " bullet lists. No HTML. Keep 
         provider: body.provider || "brevo",
         channel: body.channel || "email",
         model: "google/gemini-2.5-flash",
-        metadata: { focus },
+        metadata: { focus, format: "sunday_brief_v1" },
       }).select().single();
       if (error) throw error;
       return new Response(JSON.stringify({ ok: true, issue }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    // ===== Manual write: admin pastes their own subject/preheader/markdown =====
+    if (action === "create_manual_issue") {
+      await requireAdmin();
+      const { subject, preheader, body_md } = body;
+      if (!subject || !body_md) {
+        return new Response(JSON.stringify({ error: "subject_and_body_required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      const { data: issue, error } = await sb.from("newsletter_issues").insert({
+        subject,
+        preheader: preheader || null,
+        sections: [{ id: "manual", title: "", body_md }],
+        status: "ready",
+        provider: "brevo",
+        channel: "email",
+        model: "manual",
+        metadata: { format: "manual_v1" },
+      }).select().single();
+      if (error) throw error;
+      return new Response(JSON.stringify({ ok: true, issue }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    // ===== Bulk add subscribers (CSV / comma / newline separated) =====
+    if (action === "bulk_add_subscribers") {
+      await requireAdmin();
+      const raw = String(body.emails || "");
+      const list = Array.from(new Set(
+        raw.split(/[\s,;]+/).map((e) => e.trim().toLowerCase())
+          .filter((e) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e))
+      ));
+      if (list.length === 0) {
+        return new Response(JSON.stringify({ error: "no_valid_emails" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      let added = 0, reactivated = 0, skipped = 0;
+      for (const email of list) {
+        const { data: existing } = await sb.from("newsletter_subscribers").select("id,status").eq("email", email).maybeSingle();
+        if (existing) {
+          if (existing.status !== "active") {
+            await sb.from("newsletter_subscribers").update({ status: "active", is_active: true, unsubscribed_at: null }).eq("id", existing.id);
+            reactivated++;
+          } else skipped++;
+        } else {
+          const { error } = await sb.from("newsletter_subscribers").insert({
+            email, source: "manual", status: "active", is_active: true,
+          });
+          if (!error) added++; else skipped++;
+        }
+      }
+      return new Response(JSON.stringify({ ok: true, added, reactivated, skipped, total: list.length }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     // ===== Regenerate a single section =====
@@ -179,6 +245,23 @@ Markdown allowed: paragraphs, [text](url), and "- " bullet lists. No HTML. Keep 
       if (ie) throw ie;
       if (!["approved", "scheduled"].includes(issue.status)) {
         return new Response(JSON.stringify({ error: "not_approved", status: issue.status }), { status: 409, headers: corsHeaders });
+      }
+      // Hard throttle: refuse if another issue was dispatched in the last 6 days,
+      // unless the caller explicitly passes { force: true }. Prevents accidental spam.
+      if (!body.force) {
+        const sixDaysAgo = new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString();
+        const { data: recent } = await sb.from("newsletter_issues")
+          .select("id,sent_at,subject")
+          .eq("status", "sent")
+          .gte("sent_at", sixDaysAgo)
+          .order("sent_at", { ascending: false })
+          .limit(1);
+        if (recent && recent.length > 0) {
+          return new Response(JSON.stringify({
+            error: "throttled",
+            message: `Another issue ("${recent[0].subject}") was sent on ${new Date(recent[0].sent_at).toUTCString()}. Only one newsletter per 6 days. Pass force=true to override.`,
+          }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
       }
       await sb.from("newsletter_issues").update({ status: "sending" }).eq("id", issue_id);
 
@@ -400,19 +483,14 @@ Markdown allowed: paragraphs, [text](url), and "- " bullet lists. No HTML. Keep 
       }
 
       const focus = body.focus || "weekly digest for Indian creators and freelancers";
-      const system = `You write the HustleAI weekly digest for Indian creators and freelancers.
-Output ONLY valid JSON of shape:
-{"subject":"...","preheader":"...","sections":[
-  {"id":"ai_trends","title":"AI Trends","body_md":"..."},
-  {"id":"creator_economy","title":"Creator Economy","body_md":"..."},
-  {"id":"freelancing","title":"Freelancing","body_md":"..."},
-  {"id":"automation","title":"Automation Workflows","body_md":"..."},
-  {"id":"hustleai","title":"HustleAI Updates","body_md":"..."},
-  {"id":"tools","title":"Tool Picks","body_md":"..."},
-  {"id":"opportunities","title":"Opportunities","body_md":"..."}
-]}
-Markdown allowed: paragraphs, [text](url), and "- " bullet lists. No HTML. Keep each section under 120 words. Indian context.`;
-      const raw = await callAI(`Focus: ${focus}. Generate this week's digest.`, system);
+      // Skip cron generation if a Sunday Brief already exists for THIS calendar week
+      const weekAgo = new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString();
+      const { data: existingWeek } = await sb.from("newsletter_issues")
+        .select("id,status,created_at").gte("created_at", weekAgo).limit(1);
+      if (existingWeek && existingWeek.length > 0) {
+        return new Response(JSON.stringify({ ok: true, skipped: true, reason: "issue_already_this_week", issue_id: existingWeek[0].id }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      const raw = await callAI(`Focus: ${focus}. Write this week's Sunday Brief.`, SUNDAY_BRIEF_SYSTEM);
       const cleaned = raw.replace(/```json\n?/gi, "").replace(/```/g, "").trim();
       let parsed: any;
       try { parsed = JSON.parse(cleaned); }
@@ -426,7 +504,7 @@ Markdown allowed: paragraphs, [text](url), and "- " bullet lists. No HTML. Keep 
         provider: "brevo",
         channel: "email",
         model: "google/gemini-2.5-flash",
-        metadata: { focus, source: "weekly_cron" },
+        metadata: { focus, source: "weekly_cron", format: "sunday_brief_v1" },
       }).select().single();
       if (error) throw error;
 
