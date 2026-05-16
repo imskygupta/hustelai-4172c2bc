@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   ArrowRight, Send, Repeat, FileDown, Bell, Briefcase, FolderOpen,
-  Sparkles, ShieldCheck, Clock, Activity,
+  Sparkles, ShieldCheck, Clock, Activity, Zap,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -35,9 +35,9 @@ const MODULES: Array<{
 }> = [
   { key: "exports", title: "Exports & deliveries", blurb: "Every generated asset, traced by client and date.", icon: FileDown, status: "live" },
   { key: "telegram", title: "Telegram delivery", blurb: "Send proposals, invoices and exports straight to chats.", icon: Send, status: "live", to: "/settings/telegram" },
-  { key: "recurring", title: "Recurring invoices", blurb: "Monthly retainer cycles, generated on autopilot.", icon: Repeat, status: "preview" },
-  { key: "reminders", title: "Client reminders", blurb: "Quiet follow-ups: 3-day, 7-day, end of month.", icon: Bell, status: "preview" },
-  { key: "chains", title: "Operational chains", blurb: "Save → Export → Deliver → Follow-up, in one flow.", icon: Activity, status: "preview", to: "/dashboard/automations" },
+  { key: "recurring", title: "Recurring invoices", blurb: "Monthly retainer cycles, generated on autopilot.", icon: Repeat, status: "preview", to: "/dashboard/workspace-os/preview/recurring" },
+  { key: "reminders", title: "Client reminders", blurb: "Quiet follow-ups: 3-day, 7-day, end of month.", icon: Bell, status: "preview", to: "/dashboard/workspace-os/preview/reminders" },
+  { key: "chains", title: "Operational chains", blurb: "Save → Export → Deliver → Follow-up, in one flow.", icon: Activity, status: "preview", to: "/dashboard/workspace-os/preview/chains" },
   { key: "library", title: "Workspace library", blurb: "Brand kit, blocks, docs and reusable assets.", icon: FolderOpen, status: "live", to: "/n" },
 ];
 
