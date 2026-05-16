@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowRight, Sparkles, Loader2, KeyRound, FolderOpen, Activity, ShieldCheck } from "lucide-react";
+import { ArrowRight, Sparkles, Loader2, KeyRound, FolderOpen, Activity, ShieldCheck, Zap, Brain, Send, Workflow } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { WORKSPACE_ORIGIN, isDualHost } from "@/lib/host";
@@ -150,6 +150,30 @@ export default function WorkspaceGateway() {
             <Stat icon={ShieldCheck} label="Last activity" value={lastActivityLabel} small />
           </div>
 
+          {/* What Workspace gives you — calm 4-pillar explainer for first-time operators. */}
+          <div className="px-8 sm:px-10 py-7 border-b border-border/40 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Pillar
+              icon={Zap}
+              title="AI Fuel"
+              desc="Bring your own provider keys. Unlimited execution, your usage, your control."
+            />
+            <Pillar
+              icon={Brain}
+              title="Operational memory"
+              desc="Workspace remembers your clients, tone and preferences across every output."
+            />
+            <Pillar
+              icon={Workflow}
+              title="Automations"
+              desc="Chain proposals, intake, follow-ups and exports into repeatable flows."
+            />
+            <Pillar
+              icon={Send}
+              title="Telegram delivery"
+              desc="Optional — get exports and reminders pushed straight to your chat."
+            />
+          </div>
+
           {/* CTA */}
           <div className="p-8 sm:p-10 flex flex-col sm:flex-row sm:items-center justify-between gap-5">
             <div className="text-xs text-muted-foreground max-w-xs">
@@ -194,6 +218,20 @@ function Stat({ icon: Icon, label, value, small }: { icon: any; label: string; v
         <Icon className="h-3 w-3" /> {label}
       </div>
       <div className={small ? "text-xs font-medium text-foreground/90 truncate" : "text-xl font-semibold text-foreground"}>{value}</div>
+    </div>
+  );
+}
+
+function Pillar({ icon: Icon, title, desc }: { icon: any; title: string; desc: string }) {
+  return (
+    <div className="flex items-start gap-3">
+      <span className="inline-flex h-8 w-8 rounded-lg bg-primary/10 text-primary items-center justify-center shrink-0">
+        <Icon className="h-4 w-4" />
+      </span>
+      <div className="min-w-0">
+        <p className="text-sm font-medium text-foreground">{title}</p>
+        <p className="text-xs text-muted-foreground mt-0.5 leading-snug">{desc}</p>
+      </div>
     </div>
   );
 }

@@ -20,6 +20,8 @@ import OperationalFlows from "@/components/dashboard/OperationalFlows";
 import ContextualNudge from "@/components/dashboard/ContextualNudge";
 import DashboardHero from "@/components/dashboard/DashboardHero";
 import WorkspacePortalTile from "@/components/dashboard/WorkspacePortalTile";
+import FirstVisitWelcome from "@/components/onboarding/FirstVisitWelcome";
+import PostExportTelegramNudge from "@/components/onboarding/PostExportTelegramNudge";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -222,6 +224,9 @@ export default function Dashboard() {
 
       <div className="space-y-6 max-w-7xl mx-auto w-full">
         {!emailVerified && <EmailVerificationBanner email={user!.email || ""} />}
+
+        {/* Calm one-line orientation for new users — auto-hides after first project. */}
+        <FirstVisitWelcome />
 
         {/* Emotional entrypoint — sells possibility, sets the calm tone. */}
         <DashboardHero />
@@ -849,6 +854,7 @@ export default function Dashboard() {
         </Tabs>
       </div>
     </AppShell>
+    <PostExportTelegramNudge />
     </>
   );
 }
