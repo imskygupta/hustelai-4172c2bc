@@ -13,6 +13,7 @@ import { formatDistanceToNowStrict } from "date-fns";
 import { wp, wpProject } from "@/lib/workspace/paths";
 import { MagneticTile } from "@/components/workspace/MagneticTile";
 import CockpitBlock from "@/components/workspace/CockpitBlock";
+import { OperationsOverview } from "@/components/workspace/OperationsOverview";
 import { marketingUrl } from "@/lib/host";
 
 // Industry-grade tool tiles. Calm whites + a single tinted icon plate per
@@ -168,6 +169,9 @@ export default function Overview() {
       >
         <CockpitBlock />
       </motion.section>
+
+      {/* Cross-project operator overview — quiet awareness across all work */}
+      <OperationsOverview />
 
       {/* Big colorful tool tiles — the "Pick your cockpit" energy applied to workspace tools */}
       <motion.section

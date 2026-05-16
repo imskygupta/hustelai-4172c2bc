@@ -8,6 +8,7 @@ import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/co
 import { BigScreenHint } from "@/components/BigScreenHint";
 import { WorkspaceContextBar } from "@/components/workspace/WorkspaceContextBar";
 import { WorkspaceCommandPalette } from "@/components/workspace/CommandPalette";
+import { ProjectSwitcher } from "@/components/workspace/ProjectSwitcher";
 import { PageTransition } from "@/components/workspace/PageTransition";
 import { wp } from "@/lib/workspace/paths";
 import { isWorkspaceHost, isDualHost, MARKETING_ORIGIN } from "@/lib/host";
@@ -194,6 +195,8 @@ export default function WorkspaceOS() {
                 <span className="text-[11px] text-muted-foreground">Live</span>
                 <span className="mx-2 h-3 w-px bg-border/60" />
                 <ProviderChip provider={activeProvider} loading={providerLoading} />
+                <span className="mx-2 h-3 w-px bg-border/60" />
+                <ProjectSwitcher />
               </div>
             )}
           </div>
