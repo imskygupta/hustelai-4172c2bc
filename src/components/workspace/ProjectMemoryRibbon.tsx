@@ -15,6 +15,7 @@ import { Sparkles, Cpu, History, ArrowRight, Activity } from "lucide-react";
 import { useOperationalMemory } from "@/lib/workspace/memory";
 import { PROVIDER_DISPLAY } from "@/lib/workspace/toolsCatalog";
 import { IntentRunner } from "@/components/workspace/IntentRunner";
+import { PossibilityHint } from "@/components/workspace/PossibilityHint";
 
 export function ProjectMemoryRibbon({ workspace }: { workspace: any }) {
   const { memory } = useOperationalMemory({ project_id: workspace?.id, limit: 80 });
@@ -114,6 +115,12 @@ export function ProjectMemoryRibbon({ workspace }: { workspace: any }) {
           label={run.label}
           workspace={workspace}
         />
+      )}
+      {/* Memory depth, framed as possibility — never a wall. */}
+      {(memory.clippedCount > 0 || memory.windowDays > 0) && (
+        <div className="mt-2.5 pt-2.5 border-t border-border/40">
+          <PossibilityHint surface="memory" inline />
+        </div>
       )}
     </div>
   );
