@@ -48,7 +48,7 @@ export default function Marketing2() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/30 overflow-x-hidden">
-      <SEO title="Smart freelancer playbooks — HustleAI Blogs" description="AI-curated side-hustle and freelancing playbooks. Real income breakdowns. Sunday Brief in your inbox." path="/marketing-2" noIndex />
+      <SEO title="Smart freelancer playbooks — HustleAI Blogs" description="AI-curated side-hustle and freelancing playbooks. Real income breakdowns. Sunday Brief in your inbox." path="/marketing-2" noindex />
 
       <div className="pointer-events-none fixed inset-0 -z-10">
         <div className="absolute -top-40 -right-40 w-[500px] h-[500px] rounded-full bg-amber-400/15 blur-3xl animate-pulse" />

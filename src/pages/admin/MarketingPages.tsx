@@ -41,7 +41,7 @@ export default function MarketingPages() {
 
   return (
     <div className="min-h-screen bg-background p-6">
-      <SEO title="Marketing Pages — Admin" description="Ad landing page registry" path="/admin/marketing-pages" noIndex />
+      <SEO title="Marketing Pages — Admin" description="Ad landing page registry" path="/admin/marketing-pages" noindex />
       <div className="max-w-5xl mx-auto space-y-6">
         <div>
           <h1 className="text-3xl font-display font-bold">Marketing Pages</h1>
@@ -100,7 +100,7 @@ export default function MarketingPages() {
             <p>1. Pick the right page for your campaign — Page 1 for the main app, Page 2 for blog/newsletter growth.</p>
             <p>2. Copy the URL and paste it into your Google / Meta / X ads as the destination.</p>
             <p>3. Append UTM tags as needed — pages auto-fire the <code className="font-mono text-xs">marketing_page_viewed</code> analytics event.</p>
-            <p>4. These pages set <code className="font-mono text-xs">noIndex</code> so they won't appear in organic search and won't dilute your main funnel.</p>
+            <p>4. These pages set <code className="font-mono text-xs">noindex</code> so they won't appear in organic search and won't dilute your main funnel.</p>
           </CardContent>
         </Card>
       </div>

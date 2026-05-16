@@ -59,7 +59,7 @@ export default function Marketing1() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/30 overflow-x-hidden">
-      <SEO title="Run your freelance business from one cockpit — HustleAI" description="The all-in-one workspace for freelancers and agencies. CRM, invoices, portals & in-house AI. Flat ₹450/mo. No platform fees." path="/marketing-1" noIndex />
+      <SEO title="Run your freelance business from one cockpit — HustleAI" description="The all-in-one workspace for freelancers and agencies. CRM, invoices, portals & in-house AI. Flat ₹450/mo. No platform fees." path="/marketing-1" noindex />
 
       {/* Ambient bg */}
       <div className="pointer-events-none fixed inset-0 -z-10">
