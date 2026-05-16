@@ -32,7 +32,7 @@ import { formatDistanceToNowStrict } from "date-fns";
 
 export default function WorkspaceDetail() {
   const { id } = useParams();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [w, setW] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [params, setParams] = useSearchParams();
@@ -101,8 +101,11 @@ export default function WorkspaceDetail() {
           {w.logo_url ? <img src={w.logo_url} alt="" className="h-full w-full object-cover" /> : <Briefcase className="h-4 w-4 text-primary" />}
         </div>
         <div className="flex-1 min-w-0">
-          <h2 className="text-lg md:text-xl font-semibold tracking-tight truncate leading-tight">{w.client_name}</h2>
-          <div className="flex items-center gap-2 mt-0.5 text-[11px] text-muted-foreground/90 flex-wrap">
+          <div className="flex items-center gap-2 min-w-0">
+            <h2 className="text-lg md:text-xl font-bold tracking-tight truncate leading-tight">{w.client_name}</h2>
+            <TierBadge tier={profile?.subscription_tier} />
+          </div>
+          <div className="flex items-center gap-2 mt-0.5 text-[11px] text-muted-foreground flex-wrap font-medium">
             <span className="inline-flex items-center gap-1.5">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500/80" />
               <span className="capitalize">{(w.pipeline_stage || w.status || "—").replace(/_/g, " ")}</span>
@@ -148,18 +151,18 @@ export default function WorkspaceDetail() {
         {/* CENTER — operational tabs */}
         <Tabs value={tab} onValueChange={(v) => setParams({ tab: v })} className="space-y-4 min-w-0">
           {/* Sticky scrollable tab rail with gradient underline */}
-          <div className="sticky top-28 z-10 -mx-1 px-1 bg-background/85 backdrop-blur-md border-b border-border/40">
+          <div className="sticky top-28 z-10 -mx-1 px-1 bg-background/90 backdrop-blur-md border-b-2 border-border">
             <div className="overflow-x-auto no-scrollbar">
-              <TabsList className="bg-transparent p-0 h-auto gap-1 inline-flex">
+              <TabsList className="bg-transparent p-1 h-auto gap-1.5 inline-flex">
                 {tabs.map(([v,l]) => (
                   <TabsTrigger
                     key={v} value={v}
-                    className="relative px-3 py-2 rounded-none data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none after:absolute after:inset-x-2 after:-bottom-px after:h-0.5 after:rounded-full after:bg-gradient-to-r after:from-primary after:to-violet-500 after:opacity-0 data-[state=active]:after:opacity-100 transition-colors text-muted-foreground hover:text-foreground"
+                    className="relative px-3.5 py-1.5 rounded-full text-sm font-semibold border border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/60 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary/15 data-[state=active]:to-violet-500/10 data-[state=active]:text-foreground data-[state=active]:border-primary/30 data-[state=active]:shadow-sm transition-all"
                   >{l}</TabsTrigger>
                 ))}
                 <Link
                   to={wpProjectDocs(w.id)}
-                  className="px-3 py-2 text-sm text-muted-foreground hover:text-foreground inline-flex items-center"
+                  className="px-3.5 py-1.5 text-sm font-semibold text-muted-foreground hover:text-foreground inline-flex items-center rounded-full hover:bg-muted/60 transition-colors"
                 >Docs</Link>
               </TabsList>
             </div>
@@ -226,6 +229,22 @@ export default function WorkspaceDetail() {
 
 function ago(d: string) {
   try { return formatDistanceToNowStrict(new Date(d), { addSuffix: true }); } catch { return ""; }
+}
+
+const TIER_STYLES: Record<string, string> = {
+  free:     "bg-muted text-foreground/70 border-border",
+  pro:      "bg-gradient-to-r from-primary/15 to-violet-500/15 text-primary border-primary/30",
+  elite:    "bg-gradient-to-r from-amber-500/15 to-orange-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30",
+  infinity: "bg-gradient-to-r from-fuchsia-500/15 to-violet-500/20 text-fuchsia-700 dark:text-fuchsia-300 border-fuchsia-500/30",
+};
+function TierBadge({ tier }: { tier?: string | null }) {
+  const t = (tier || "free").toLowerCase();
+  const cls = TIER_STYLES[t] || TIER_STYLES.free;
+  return (
+    <span className={`shrink-0 inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${cls}`} title={`Your plan: ${t.toUpperCase()}`}>
+      <Sparkles className="h-2.5 w-2.5" /> {t}
+    </span>
+  );
 }
 
 function RailItem({
