@@ -1,7 +1,7 @@
 import { NavLink, Outlet } from "react-router-dom";
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Briefcase, Plus, Sparkles, KeyRound, Users, Kanban, Brain, Palette, Blocks, Inbox, Menu, ChevronDown, TrendingUp, LogOut, ArrowUpRight, Search } from "lucide-react";
+import { Briefcase, Plus, Sparkles, KeyRound, Users, Kanban, Brain, Palette, Blocks, Inbox, Menu, ChevronDown, TrendingUp, LogOut, ArrowUpRight, Search, Wand2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import NotificationCenter from "@/components/workspace-os/NotificationCenter";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -29,6 +29,7 @@ import { useWorkspaceVibe, providerToTone } from "@/lib/workspace/vibe";
 // is hidden from the rail by design — see mem://features/workspace-polish.
 const MAIN = [
   { to: wp(""),         label: "Overview",  icon: Briefcase, end: true },
+  { to: wp("tools"),    label: "Tools Hub", icon: Wand2 },
   { to: wp("pipeline"), label: "Projects",  icon: Kanban },
   { to: wp("clients"),  label: "Clients",   icon: Users },
   { to: wp("roadmap"),  label: "Roadmap",   icon: Brain },
