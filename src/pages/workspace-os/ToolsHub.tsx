@@ -230,3 +230,97 @@ function Tile({ tool, accent, ring, onRun }: { tool: ToolIntent; accent: string;
 function ago(d: string) {
   try { return formatDistanceToNowStrict(new Date(d), { addSuffix: true }); } catch { return ""; }
 }
+
+function AdaptiveRails({ onRun }: { onRun: (i: ToolIntent) => void }) {
+  const { items: recent } = useRecentOutputs({ scopeToProject: false, limit: 12 });
+
+  // Most-used intents (frequency over recent log)
+  const freq = new Map<string, number>();
+  for (const r of recent) {
+    const key = (r.tool || "").replace(/^intent:/, "");
+    if (!key || !findIntent(key)) continue;
+    freq.set(key, (freq.get(key) || 0) + 1);
+  }
+  const mostUsed = Array.from(freq.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 4)
+    .map(([k]) => findIntent(k)!)
+    .filter(Boolean);
+
+  // Continue the chain from the most recent output
+  const last = recent[0];
+  const lastKey = last?.tool?.replace(/^intent:/, "") || "";
+  const continuation = lastKey ? nextSteps(lastKey).slice(0, 4) : [];
+
+  if (mostUsed.length === 0 && continuation.length === 0) return null;
+
+  return (
+    <motion.section
+      initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+      className="grid grid-cols-1 lg:grid-cols-2 gap-4"
+    >
+      {continuation.length > 0 && last && (
+        <div className="rounded-2xl border border-border bg-gradient-to-br from-primary/[0.04] to-transparent p-4">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Continue the chain</div>
+              <p className="text-[12px] text-foreground/80 mt-0.5">Picking up from <span className="font-semibold">{last.title}</span></p>
+            </div>
+            <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {continuation.map((step) => {
+              const p = PROVIDER_DISPLAY[step.tool.bestWith];
+              return (
+                <button key={step.intent} onClick={() => onRun(step.tool)} className="group text-left rounded-lg border border-border bg-background hover:border-primary/40 hover:bg-primary/[0.03] transition-all p-2.5">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="font-semibold text-[12.5px] leading-tight">{step.tool.title}</div>
+                    <ArrowUpRight className="h-3 w-3 text-muted-foreground group-hover:text-primary shrink-0 mt-0.5" />
+                  </div>
+                  <p className="text-[11px] text-muted-foreground mt-1 line-clamp-2">{step.reason}</p>
+                  {p && (
+                    <span className={`mt-1.5 inline-flex items-center gap-1 text-[9.5px] font-bold px-1.5 py-0.5 rounded border ${p.tint}`}>
+                      <Cpu className="h-2.5 w-2.5" /> {p.label}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {mostUsed.length > 0 && (
+        <div className="rounded-2xl border border-border bg-gradient-to-br from-violet-500/[0.04] to-transparent p-4">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Your most-used flows</div>
+              <p className="text-[12px] text-foreground/80 mt-0.5">The workspace is learning your operational rhythm.</p>
+            </div>
+            <Zap className="h-3.5 w-3.5 text-muted-foreground" />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {mostUsed.map((tool) => {
+              const p = PROVIDER_DISPLAY[tool.bestWith];
+              const count = freq.get(tool.intent) || 0;
+              return (
+                <button key={tool.intent} onClick={() => onRun(tool)} className="group text-left rounded-lg border border-border bg-background hover:border-primary/40 hover:bg-primary/[0.03] transition-all p-2.5">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="font-semibold text-[12.5px] leading-tight">{tool.title}</div>
+                    <span className="text-[10px] font-mono text-muted-foreground shrink-0">×{count}</span>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground mt-1 line-clamp-1">{tool.hint}</p>
+                  {p && (
+                    <span className={`mt-1.5 inline-flex items-center gap-1 text-[9.5px] font-bold px-1.5 py-0.5 rounded border ${p.tint}`}>
+                      <Cpu className="h-2.5 w-2.5" /> {p.label}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </motion.section>
+  );
+}
