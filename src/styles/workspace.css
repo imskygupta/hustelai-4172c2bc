@@ -408,10 +408,6 @@
    WORKSPACE VIBE — per-user palette + intensity + focus + provider aura
    ============================================================ */
 
-/* Default vibe vars (Ivory Operator). Every vibe overrides these on the
-   wrapper element via [data-ws-vibe="..."]. The cockpit chrome reads them
-   through the .ws-themed-bg utility so palette switches feel instant. */
-.ws-themed {
 /* Default = Ivory Cream. Every other vibe overrides hue family.
    Each vibe defines a light gradient backdrop AND tile/text/border tones
    so the cockpit retints end-to-end (no more "background-only" feel). */
