@@ -7,80 +7,115 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "@/hooks/use-toast";
 import {
-  Send, Repeat, Bell, FileDown, FolderOpen, Users, Mail, BarChart3,
   ArrowRight, Sparkles, Wand2, Zap, ShieldCheck, History, CheckCircle2,
+  CircleDot, Send, FolderOpen, Mail, Briefcase, Brain,
 } from "lucide-react";
 import { useAutomations, useAutomationRuns } from "@/lib/workspace/automations";
+import {
+  TEMPLATES, CATEGORY_LABEL, CATEGORY_ORDER, DELIVERY_LABEL,
+  groupTemplatesByCategory, getTemplate, type Template,
+} from "@/lib/workspace/automationTemplates";
 
 /**
- * Automations Hub — outcome-first, NOT graph-first.
- * Curated operational automations powered by n8n templates under the hood,
- * but never expose raw n8n complexity. Phase 1 = template toggles only.
- * Storage is local-only for now; backend wiring happens in a later phase.
+ * Outcome-first automations hub.
+ * Each card answers: "What operational work does this remove?"
+ * No nodes, no graphs, no JSON. Template-driven only.
  */
 
-type Template = {
-  id: string;
-  title: string;
-  blurb: string;
-  icon: any;
-  category: "delivery" | "billing" | "client" | "reporting";
-  recommended?: boolean;
-  comingSoon?: boolean;
-};
+function DeliveryIcon({ d }: { d: Template["delivery"] }) {
+  if (d === "telegram")    return <Send className="h-3 w-3" />;
+  if (d === "doc-library") return <FolderOpen className="h-3 w-3" />;
+  if (d === "email")       return <Mail className="h-3 w-3" />;
+  return <Briefcase className="h-3 w-3" />;
+}
 
-const TEMPLATES: Template[] = [
-  { id: "proposal-followup",   title: "Proposal follow-up",     blurb: "Quiet nudge to the client 3 days after a proposal is sent.",         icon: Mail,      category: "client",    recommended: true },
-  { id: "monthly-invoice",     title: "Monthly retainer invoice", blurb: "Generate and send the same invoice on the 1st of every month.",     icon: Repeat,    category: "billing",   recommended: true },
-  { id: "telegram-relay",      title: "Telegram export relay",  blurb: "When a doc is exported, deliver it to your Telegram instantly.",    icon: Send,      category: "delivery",  recommended: true },
-  { id: "delivery-confirm",    title: "Delivery confirmation",  blurb: "Tell the client when their deliverable is ready — automatically.", icon: Bell,      category: "delivery" },
-  { id: "ai-archival",         title: "AI output archival",     blurb: "Auto-save every AI output to the right client folder.",            icon: FolderOpen, category: "delivery" },
-  { id: "client-reminder",     title: "Client check-in chain",  blurb: "Weekly tiny check-in until project status flips to delivered.",     icon: Users,     category: "client" },
-  { id: "weekly-report",       title: "Weekly operations report", blurb: "Quiet Friday summary: deliveries, exports, revenue.",             icon: BarChart3, category: "reporting" },
-  { id: "doc-library-export",  title: "Doc library sync",       blurb: "Push every export to your docs library for reuse.",                icon: FileDown,  category: "delivery", comingSoon: true },
-];
+function TemplateCard({
+  t, on, onToggle,
+}: { t: Template; on: boolean; onToggle: (v: boolean) => void | Promise<void> }) {
+  const Icon = t.icon;
+  return (
+    <Card className={`p-5 border-border/60 transition-colors ${on ? "bg-accent/20" : "bg-card hover:bg-accent/10"}`}>
+      {/* Header */}
+      <div className="flex items-start gap-3">
+        <div className="h-10 w-10 rounded-xl bg-muted flex items-center justify-center shrink-0">
+          <Icon className="h-5 w-5 text-foreground/70" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="text-sm font-semibold text-foreground">{t.title}</div>
+            {t.recommended && <Badge variant="secondary" className="text-[10px]">Recommended</Badge>}
+            {t.comingSoon && <Badge variant="outline" className="text-[10px]">Coming soon</Badge>}
+            {t.ai && <Badge variant="outline" className="text-[10px] gap-1 border-primary/30 text-primary"><Brain className="h-2.5 w-2.5" /> AI</Badge>}
+          </div>
+          <p className="mt-1.5 text-sm text-foreground/90 leading-relaxed">{t.outcome}</p>
+        </div>
+        <Switch
+          checked={on}
+          disabled={t.comingSoon}
+          onCheckedChange={onToggle}
+        />
+      </div>
 
-const CATEGORY_LABEL: Record<Template["category"], string> = {
-  delivery: "Delivery & exports",
-  billing: "Billing & retainers",
-  client: "Client communication",
-  reporting: "Reporting",
-};
+      {/* Quiet operational anatomy */}
+      <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 pl-[52px]">
+        <Row label="Trigger" value={t.trigger} />
+        <Row label="Action"  value={t.action} />
+        {t.ai && <Row label="AI" value={t.ai} />}
+        <Row
+          label="Delivery"
+          value={
+            <span className="inline-flex items-center gap-1.5">
+              <DeliveryIcon d={t.delivery} />
+              {DELIVERY_LABEL[t.delivery]}
+            </span>
+          }
+        />
+        <Row label="Result" value={t.result} className="sm:col-span-2" />
+      </div>
+    </Card>
+  );
+}
+
+function Row({ label, value, className = "" }: { label: string; value: React.ReactNode; className?: string }) {
+  return (
+    <div className={`text-[11px] leading-relaxed ${className}`}>
+      <span className="inline-block w-[60px] uppercase tracking-wider font-semibold text-muted-foreground/80">{label}</span>
+      <span className="text-foreground/80">{value}</span>
+    </div>
+  );
+}
 
 export default function AutomationsHub() {
-  const { enabledSet, toggle, loading } = useAutomations();
+  const { enabledSet, toggle } = useAutomations();
   const { runs } = useAutomationRuns(8);
-  const grouped = useMemo(() => {
-    const g: Record<string, Template[]> = {};
-    for (const t of TEMPLATES) (g[t.category] ||= []).push(t);
-    return g;
-  }, []);
-
+  const grouped = useMemo(groupTemplatesByCategory, []);
   const activeCount = enabledSet.size;
+  const aiCount = TEMPLATES.filter(t => t.ai && enabledSet.has(t.id)).length;
 
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
         <title>Operational Automations · HustleAI</title>
-        <meta name="description" content="Curated, outcome-first operational automations — proposal follow-ups, monthly invoices, Telegram delivery and more." />
+        <meta name="description" content="Outcome-first operational automations — proposal follow-ups, monthly invoices, Telegram delivery and AI-powered digests." />
       </Helmet>
 
-      <div className="mx-auto max-w-6xl px-4 md:px-8 py-8 md:py-12">
+      <div className="mx-auto max-w-5xl px-4 md:px-8 py-8 md:py-12">
         {/* Header */}
-        <header className="mb-8">
+        <header className="mb-10">
           <div className="inline-flex items-center gap-2 text-[11px] font-semibold tracking-[0.18em] text-muted-foreground uppercase mb-3">
             <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500" />
-            Operational automations
+            Operational assistants
           </div>
           <h1 className="text-3xl md:text-4xl font-semibold tracking-tight text-foreground">
-            Operations that run themselves
+            Quietly keep operations moving
           </h1>
-          <p className="mt-2 text-sm md:text-base text-muted-foreground max-w-2xl">
-            Outcome-first automations — proposals, invoices, deliveries and follow-ups handled quietly in the background. One-click setup, no node graphs.
+          <p className="mt-3 text-sm md:text-base text-muted-foreground max-w-2xl leading-relaxed">
+            Each assistant removes a specific piece of operational work — follow-ups, deliveries, recurring billing, daily digests. One-click on, calm in the background.
           </p>
 
           <div className="mt-5 flex flex-wrap items-center gap-2">
             <Badge variant="secondary" className="gap-1.5"><Zap className="h-3 w-3" /> {activeCount} active</Badge>
+            <Badge variant="outline" className="gap-1.5"><Brain className="h-3 w-3" /> {aiCount} AI-aware</Badge>
             <Badge variant="outline" className="gap-1.5"><Sparkles className="h-3 w-3" /> {TEMPLATES.length} templates</Badge>
             <Badge variant="outline" className="gap-1.5"><ShieldCheck className="h-3 w-3" /> Safe defaults</Badge>
           </div>
@@ -94,7 +129,7 @@ export default function AutomationsHub() {
                 <Wand2 className="h-4 w-4 text-foreground/70" />
               </div>
               <div className="min-w-0">
-                <div className="text-sm font-semibold text-foreground">Start with one calm automation</div>
+                <div className="text-sm font-semibold text-foreground">Start with one calm assistant</div>
                 <p className="mt-1 text-xs text-muted-foreground">
                   We recommend turning on <span className="font-medium text-foreground">Telegram export relay</span> first — instant deliveries without lifting a finger.
                 </p>
@@ -103,56 +138,45 @@ export default function AutomationsHub() {
           </Card>
         )}
 
-        {/* Template categories */}
-        <div className="space-y-8">
-          {Object.entries(grouped).map(([cat, items]) => (
-            <section key={cat}>
-              <div className="flex items-center justify-between mb-3">
-                <h2 className="text-xs font-semibold tracking-[0.16em] text-muted-foreground uppercase">
-                  {CATEGORY_LABEL[cat as Template["category"]]}
-                </h2>
-                <span className="text-[11px] text-muted-foreground">{items.length} templates</span>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {items.map((t) => {
-                  const Icon = t.icon;
+        {/* Categories — outcome-led */}
+        <div className="space-y-10">
+          {CATEGORY_ORDER.map((cat) => {
+            const items = grouped[cat];
+            if (!items.length) return null;
+            return (
+              <section key={cat}>
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="text-xs font-semibold tracking-[0.16em] text-muted-foreground uppercase">
+                    {CATEGORY_LABEL[cat]}
+                  </h2>
+                  <span className="text-[11px] text-muted-foreground">{items.length}</span>
+                </div>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                  {items.map((t) => {
                     const on = enabledSet.has(t.id);
-                  return (
-                    <Card key={t.id} className={`p-4 border-border/60 transition-colors ${on ? "bg-accent/30" : "bg-card"}`}>
-                      <div className="flex items-start gap-3">
-                        <div className="h-10 w-10 rounded-xl bg-muted flex items-center justify-center shrink-0">
-                          <Icon className="h-5 w-5 text-foreground/70" />
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <div className="text-sm font-semibold text-foreground">{t.title}</div>
-                            {t.recommended && <Badge variant="secondary" className="text-[10px]">Recommended</Badge>}
-                            {t.comingSoon && <Badge variant="outline" className="text-[10px]">Coming soon</Badge>}
-                          </div>
-                          <p className="mt-1 text-xs text-muted-foreground leading-relaxed">{t.blurb}</p>
-                        </div>
-                        <Switch
-                          checked={on}
-                          disabled={t.comingSoon}
-                          onCheckedChange={async (v) => {
-                            await toggle(t.id, v);
-                            toast({
-                              title: v ? `${t.title} enabled` : `${t.title} paused`,
-                              description: v ? "We'll run this quietly in the background." : "You can re-enable any time.",
-                            });
-                          }}
-                        />
-                      </div>
-                    </Card>
-                  );
-                })}
-              </div>
-            </section>
-          ))}
+                    return (
+                      <TemplateCard
+                        key={t.id}
+                        t={t}
+                        on={on}
+                        onToggle={async (v) => {
+                          await toggle(t.id, v);
+                          toast({
+                            title: v ? `${t.title} enabled` : `${t.title} paused`,
+                            description: v ? "Running quietly in the background." : "You can re-enable any time.",
+                          });
+                        }}
+                      />
+                    );
+                  })}
+                </div>
+              </section>
+            );
+          })}
         </div>
 
-        {/* Recent runs — operational continuity */}
-        <section className="mt-10">
+        {/* Recent runs */}
+        <section className="mt-12">
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-sm font-semibold tracking-tight text-foreground inline-flex items-center gap-2">
               <History className="h-4 w-4 text-muted-foreground" /> Recent runs
@@ -162,18 +186,21 @@ export default function AutomationsHub() {
           <Card className="border-border/60 divide-y divide-border/60">
             {runs.length === 0 && (
               <div className="p-6 text-center text-xs text-muted-foreground">
-                No runs yet. Enable an automation above — runs will appear here.
+                No runs yet. Enable an assistant above — runs will appear here.
               </div>
             )}
             {runs.map((r) => {
-              const t = TEMPLATES.find(x => x.id === r.template_id);
+              const t = getTemplate(r.template_id);
+              const ok = r.status === "success";
               return (
                 <div key={r.id} className="px-4 py-3 flex items-center justify-between text-sm">
                   <div className="min-w-0 flex items-center gap-3">
-                    <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+                    {ok
+                      ? <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+                      : <CircleDot   className="h-4 w-4 text-amber-500 shrink-0" />}
                     <div className="min-w-0">
                       <div className="font-medium text-foreground truncate">{t?.title || r.template_id}</div>
-                      <div className="text-[11px] text-muted-foreground mt-0.5">{r.summary || r.status}</div>
+                      <div className="text-[11px] text-muted-foreground mt-0.5 truncate">{r.summary || r.status}</div>
                     </div>
                   </div>
                   <div className="text-[11px] text-muted-foreground shrink-0">
@@ -186,13 +213,13 @@ export default function AutomationsHub() {
         </section>
 
         {/* Calm upgrade surface */}
-        <Card className="mt-10 p-6 border-border/60 bg-gradient-to-br from-muted/40 to-background">
+        <Card className="mt-12 p-6 border-border/60 bg-gradient-to-br from-muted/40 to-background">
           <div className="flex flex-col md:flex-row items-start md:items-center gap-4 justify-between">
             <div>
-              <div className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Need more operational bandwidth?</div>
-              <div className="mt-1 text-base font-semibold text-foreground">Unlock packs & higher delivery limits</div>
+              <div className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Need more delivery bandwidth?</div>
+              <div className="mt-1 text-base font-semibold text-foreground">Operational boost packs</div>
               <p className="mt-1 text-xs text-muted-foreground max-w-md">
-                Free plan includes 3 Telegram exports / week. Unused exports roll over. Upgrade for unlimited delivery and automation slots.
+                Free plan includes 3 Telegram deliveries per week. Unused deliveries roll over. Add a boost pack or upgrade for unlimited operational throughput.
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -201,7 +228,7 @@ export default function AutomationsHub() {
               </Button>
               <Button asChild size="sm">
                 <Link to="/pricing" className="inline-flex items-center gap-1.5">
-                  See plans <ArrowRight className="h-3.5 w-3.5" />
+                  Add boost <ArrowRight className="h-3.5 w-3.5" />
                 </Link>
               </Button>
             </div>
