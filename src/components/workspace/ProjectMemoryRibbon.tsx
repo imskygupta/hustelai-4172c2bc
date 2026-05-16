@@ -27,15 +27,20 @@ export function ProjectMemoryRibbon({ workspace }: { workspace: any }) {
   const provider = memory.preferredProvider ? PROVIDER_DISPLAY[memory.preferredProvider.id] : null;
 
   return (
-    <div className="rounded-xl border border-border bg-gradient-to-br from-primary/[0.025] via-background to-violet-500/[0.025] px-4 py-3">
+    <div className="rounded-xl border border-border bg-gradient-to-br from-emerald-500/[0.035] via-background to-slate-500/[0.025] px-4 py-3">
       <div className="flex items-center gap-2 flex-wrap text-[12.5px]">
-        <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-primary">
+        <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-emerald-600">
+          <span className="relative inline-flex h-1.5 w-1.5">
+            <span className="absolute inset-0 rounded-full bg-emerald-500/40 animate-ping" />
+            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
+          </span>
           <History className="h-3 w-3" /> Where you left off
         </span>
         <span className="text-muted-foreground">·</span>
         <span className="text-foreground/90">
           <span className="font-semibold">{last.title.replace(` — ${workspace?.client_name || "project"}`, "")}</span>
           <span className="text-muted-foreground"> {ago(last.created_at)}</span>
+          <span className="text-emerald-600/70"> · auto-saved</span>
         </span>
 
         {suggestion && (
@@ -43,12 +48,12 @@ export function ProjectMemoryRibbon({ workspace }: { workspace: any }) {
             <span className="text-muted-foreground hidden sm:inline">·</span>
             <button
               onClick={() => setRun({ intent: suggestion.tool.intent, label: suggestion.tool.title })}
-              className="group inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-primary/30 bg-primary/5 hover:bg-primary/10 text-[12px] font-semibold transition-colors"
+              className="group inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-emerald-500/30 bg-emerald-500/5 hover:bg-emerald-500/10 text-[12px] font-semibold transition-colors"
               title={suggestion.reason}
             >
-              <Sparkles className="h-3 w-3 text-primary" />
+              <Sparkles className="h-3 w-3 text-emerald-600" />
               Continue with {suggestion.tool.title}
-              <ArrowRight className="h-3 w-3 text-primary group-hover:translate-x-0.5 transition-transform" />
+              <ArrowRight className="h-3 w-3 text-emerald-600 group-hover:translate-x-0.5 transition-transform" />
             </button>
           </>
         )}
@@ -78,7 +83,7 @@ export function ProjectMemoryRibbon({ workspace }: { workspace: any }) {
                 onClick={() => setRun({ intent: it.tool.intent, label: it.tool.title })}
                 className={`inline-flex items-center gap-1 text-[10.5px] px-1.5 py-0.5 rounded border transition-colors ${
                   isLast
-                    ? "border-primary/40 bg-primary/5 text-foreground"
+                    ? "border-emerald-500/40 bg-emerald-500/5 text-foreground"
                     : "border-border bg-background hover:bg-muted/50 text-muted-foreground hover:text-foreground"
                 }`}
               >
@@ -88,8 +93,14 @@ export function ProjectMemoryRibbon({ workspace }: { workspace: any }) {
             );
           })}
           {memory.topChain && (
-            <span className="text-[10.5px] text-muted-foreground italic ml-1">
-              {memory.topChain.from.title} → {memory.topChain.to.title} ({memory.topChain.count}×)
+            <span className="text-[10.5px] text-muted-foreground inline-flex items-center gap-1 ml-1">
+              <span className="font-medium text-foreground/70">{memory.topChain.from.title}</span>
+              <span className="inline-flex items-center gap-[3px]">
+                <span className="h-[3px] w-[3px] rounded-full bg-emerald-500/70" />
+                <span className="h-px w-4 bg-gradient-to-r from-emerald-500/70 via-emerald-500/40 to-emerald-500/10" />
+              </span>
+              <span className="font-medium text-foreground/70">{memory.topChain.to.title}</span>
+              <span className="font-mono opacity-60">×{memory.topChain.count}</span>
             </span>
           )}
         </div>
