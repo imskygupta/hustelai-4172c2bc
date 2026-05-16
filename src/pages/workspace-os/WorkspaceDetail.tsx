@@ -178,6 +178,7 @@ export default function WorkspaceDetail() {
           </div>
 
           <TabsContent value="overview" className="space-y-4">
+            <ProjectPulse workspace={w} />
             <ProjectMemoryRibbon workspace={w} />
             <ProjectQuickstart workspace={w} />
             <NextInFlow workspaceId={w.id} />
