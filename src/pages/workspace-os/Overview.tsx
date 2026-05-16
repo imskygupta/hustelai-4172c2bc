@@ -14,6 +14,7 @@ import { wp, wpProject } from "@/lib/workspace/paths";
 import { MagneticTile } from "@/components/workspace/MagneticTile";
 import CockpitBlock from "@/components/workspace/CockpitBlock";
 import { OperationsOverview } from "@/components/workspace/OperationsOverview";
+import { CrossProjectTimeline } from "@/components/workspace/CrossProjectTimeline";
 import { marketingUrl } from "@/lib/host";
 
 // Industry-grade tool tiles. Calm whites + a single tinted icon plate per
@@ -172,6 +173,9 @@ export default function Overview() {
 
       {/* Cross-project operator overview — quiet awareness across all work */}
       <OperationsOverview />
+
+      {/* Cross-project operational memory — "alive with work" feed */}
+      <CrossProjectTimeline />
 
       {/* Big colorful tool tiles — the "Pick your cockpit" energy applied to workspace tools */}
       <motion.section
