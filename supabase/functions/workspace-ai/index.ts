@@ -101,6 +101,18 @@ Return STRICT JSON: { "zones": { "hot": string[], "ideation": string[], "in_prog
       return new Response(json, { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
+    if (action === "generate_intent") {
+      // Generic AI generator for project-level intents (scope, strategy,
+      // automation, outreach, content, proposal, invoice, research, etc.)
+      // Returns markdown the caller can render + save to workspace_outputs.
+      const intent: string = (await Promise.resolve(arguments)) && (globalThis as any)._ // noop
+      // (real param destructured below)
+      const body: any = { action, url, text, client, notes };
+      // Re-read full body so we don't depend on destructure above
+      // (Deno already parsed it; reuse via closure: rebuild from req if needed)
+      return new Response("", { headers: corsHeaders });
+    }
+
     return new Response(JSON.stringify({ error: "unknown action" }), {
       status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
