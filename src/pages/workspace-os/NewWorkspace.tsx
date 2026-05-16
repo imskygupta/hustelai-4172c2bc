@@ -32,6 +32,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { wpProject } from "@/lib/workspace/paths";
 import { cn } from "@/lib/utils";
+import { markMilestone } from "@/lib/onboarding/firstSession";
 
 // ───── Option catalogues ──────────────────────────────────────────
 const PROJECT_TYPES = [
@@ -211,6 +212,7 @@ export default function NewWorkspace() {
       // Tiny breath so the magic-moment animation is visible
       await new Promise(r => setTimeout(r, 700));
       toast.success("Workspace ready");
+      markMilestone("first_project");
       nav(wpProject(id));
     } catch (e: any) {
       toast.error(e?.message || "Could not generate workspace");
