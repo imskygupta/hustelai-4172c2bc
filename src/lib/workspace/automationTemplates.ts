@@ -247,3 +247,31 @@ export function groupTemplatesByCategory(): Record<AutomationCategory, Template[
 export function getTemplate(id: string): Template | undefined {
   return TEMPLATES.find(t => t.id === id);
 }
+
+const TIER_RANK: Record<NonNullable<Template["minTier"]>, number> = {
+  free: 0, pro: 1, elite: 2, infinity: 3,
+};
+
+/** Whether the user's tier is high enough to enable this template. */
+export function isTemplateUnlocked(t: Template, tier?: string | null): boolean {
+  const min = t.minTier || "free";
+  const cur = (tier as keyof typeof TIER_RANK) || "free";
+  return (TIER_RANK[cur] ?? 0) >= TIER_RANK[min];
+}
+
+const TIER_LABEL: Record<NonNullable<Template["minTier"]>, string> = {
+  free: "Free", pro: "Pro", elite: "Elite", infinity: "Infinity",
+};
+
+/** Short, calm "what becomes possible" line for a locked template. */
+export function lockMessage(t: Template): string {
+  const min = t.minTier || "free";
+  if (min === "pro")      return "Available on Pro — calm operational throughput.";
+  if (min === "elite")    return "Operational on Elite — runs unlimited in background.";
+  if (min === "infinity") return "Agency-scale on Infinity — for teams handling many ops.";
+  return "Available on your current plan.";
+}
+
+export function tierLabel(t: Template): string {
+  return TIER_LABEL[t.minTier || "free"];
+}
