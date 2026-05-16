@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { findIntent, PROVIDER_DISPLAY, type ToolIntent } from "./toolsCatalog";
 import { nextSteps } from "./chains";
+import { clipByMemoryWindow, profileOf } from "./tierIntel";
 
 export type MemoryRow = {
   id: string;
@@ -40,15 +41,23 @@ export type ProjectMemory = {
   suggestion: { tool: ToolIntent; reason: string } | null;
   /** True once at least one output has been produced in this project. */
   hasMemory: boolean;
+  /** How far back this tier's memory reaches, in days. -1 = unlimited. */
+  windowDays: number;
+  /** Number of rows hidden by the tier window (for possibility hints). */
+  clippedCount: number;
 };
 
 const EMPTY: ProjectMemory = {
   rows: [], last: null, topIntents: [], topChain: null,
   preferredProvider: null, suggestion: null, hasMemory: false,
+  windowDays: 7, clippedCount: 0,
 };
 
-function deriveMemory(rows: MemoryRow[]): ProjectMemory {
-  if (!rows.length) return EMPTY;
+function deriveMemory(allRows: MemoryRow[], tier?: string | null): ProjectMemory {
+  const profile = profileOf(tier);
+  const rows = clipByMemoryWindow(allRows, tier);
+  const clippedCount = Math.max(0, allRows.length - rows.length);
+  if (!rows.length) return { ...EMPTY, windowDays: profile.memoryDays, clippedCount };
   // Most recent first
   const sorted = [...rows].sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at));
   const last = sorted[0];
@@ -125,6 +134,8 @@ function deriveMemory(rows: MemoryRow[]): ProjectMemory {
     rows: sorted, last,
     topIntents, topChain, preferredProvider, suggestion,
     hasMemory: true,
+    windowDays: profile.memoryDays,
+    clippedCount,
   };
 }
 
@@ -137,7 +148,7 @@ export function useOperationalMemory(opts: {
   client_id?: string | null;
   limit?: number;
 } = {}) {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [rows, setRows] = useState<MemoryRow[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -164,6 +175,9 @@ export function useOperationalMemory(opts: {
     return () => { cancelled = true; };
   }, [user?.id, opts.project_id, opts.client_id, opts.limit]);
 
-  const memory = useMemo(() => deriveMemory(rows), [rows]);
+  const memory = useMemo(
+    () => deriveMemory(rows, profile?.subscription_tier),
+    [rows, profile?.subscription_tier],
+  );
   return { memory, loading };
 }

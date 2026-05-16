@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useWorkspace } from "@/lib/workspace/context";
+import { ProviderInfrastructure } from "@/components/workspace/ProviderInfrastructure";
 
 type Speed = "instant" | "fast" | "balanced" | "deep";
 
@@ -284,6 +285,9 @@ export default function AISettings() {
           </div>
         )}
       </header>
+
+      {/* Operational telemetry — workspace as infrastructure, not a generator. */}
+      <ProviderInfrastructure />
 
       {/* Compact connect panel — pinned to the top so the verb (paste a key)
           comes before the catalogue. Provider grid below is for switching. */}

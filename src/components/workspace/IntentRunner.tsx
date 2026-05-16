@@ -12,6 +12,8 @@ import { nextSteps } from "@/lib/workspace/chains";
 import { useOperationalMemory } from "@/lib/workspace/memory";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { SyncStatusPill, type SyncPhase } from "@/components/workspace/SyncStatusPill";
+import { PossibilityHint, OutputQualityChip } from "@/components/workspace/PossibilityHint";
+import { useAuth } from "@/hooks/useAuth";
 
 /**
  * IntentRunner — inline AI deliverable generator + operational chain.
@@ -44,6 +46,8 @@ export function IntentRunner({
   const [elapsed, setElapsed] = useState(0);
   const [phase, setPhase] = useState<SyncPhase>("idle");
   const record = useRecordOutput();
+  const { profile } = useAuth();
+  const tier = profile?.subscription_tier ?? "free";
   const meta = findIntent(intent);
   const provider = meta ? PROVIDER_DISPLAY[meta.bestWith] : null;
   const fallback = provider ? PROVIDER_DISPLAY[provider.fallback] : null;
@@ -289,7 +293,10 @@ export function IntentRunner({
             <>
               {/* Deliverable header — makes outputs feel client-sendable, not chat */}
               <div className="mb-5 pb-4 border-b border-border/60">
-                <p className="text-[9.5px] uppercase tracking-[0.22em] text-muted-foreground/80 font-semibold">Deliverable</p>
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-[9.5px] uppercase tracking-[0.22em] text-muted-foreground/80 font-semibold">Deliverable</p>
+                  <OutputQualityChip tier={tier} />
+                </div>
                 <h1 className="mt-1 text-[22px] font-bold tracking-tight leading-tight text-foreground">{title}</h1>
                 <div className="mt-2 flex items-center justify-between gap-3 text-[11px] text-muted-foreground">
                   <span>{workspace?.client_name ? `Prepared for ${workspace.client_name}` : "Internal draft"}</span>
@@ -330,6 +337,8 @@ export function IntentRunner({
                       );
                     })}
                   </div>
+                  {/* One calm possibility line — no paywall chrome. */}
+                  <PossibilityHint surface="intent" className="mt-4" />
                 </div>
               )}
             </>
