@@ -24,6 +24,7 @@ import RetainerPanel from "@/components/workspace-os/RetainerPanel";
 import RoadmapEngine from "@/components/workspace-os/RoadmapEngine";
 import { ProjectQuickActions } from "@/components/workspace/ProjectQuickActions";
 import { ProjectQuickstart } from "@/components/workspace/ProjectQuickstart";
+import { ProjectMemoryRibbon } from "@/components/workspace/ProjectMemoryRibbon";
 import { NextInFlow } from "@/components/workspace/NextInFlow";
 import { LinkedTimeline } from "@/components/workspace/LinkedTimeline";
 import { useWorkspace, PROVIDER_LABELS } from "@/lib/workspace/context";
@@ -169,6 +170,7 @@ export default function WorkspaceDetail() {
           </div>
 
           <TabsContent value="overview" className="space-y-4">
+            <ProjectMemoryRibbon workspace={w} />
             <ProjectQuickstart workspace={w} />
             <NextInFlow workspaceId={w.id} />
             {w.ai_summary && (
