@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useLocation } from "react-router-dom";
-import { User, Shield, Bell, Plug, CreditCard, Briefcase, FileDown, Key, Settings as SettingsIcon, Cpu, Send, Wallet as WalletIcon } from "lucide-react";
+import { User, Shield, Bell, Plug, CreditCard, Briefcase, FileDown, Key, Settings as SettingsIcon, Cpu, Send, Wallet as WalletIcon, MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const SECTIONS = [
@@ -27,6 +27,12 @@ const SECTIONS = [
       { to: "/settings/billing", label: "Billing", icon: CreditCard, status: "ok" },
       { to: "/settings/wallet", label: "Wallet & unlocks", icon: WalletIcon, status: "ok" },
       { to: "/settings/api", label: "API Keys", icon: Key, status: "soon" },
+    ],
+  },
+  {
+    label: "Direct line",
+    items: [
+      { to: "/settings/feedback", label: "Send feedback", icon: MessageSquare, status: "" },
     ],
   },
 ];
