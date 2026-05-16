@@ -4,7 +4,11 @@ import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { ArrowLeft, Briefcase, Sparkles, FileText, Calendar, Cpu, Tag } from "lucide-react";
-import { useSidebar } from "@/components/ui/sidebar";
+// useSidebar is intentionally NOT imported — this page can render on the
+// workspace subdomain where there is no SidebarProvider in the tree.
+// We optionally read the context safely below.
+import * as React from "react";
+import { SidebarContext as _SC } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import CRMPanel from "@/components/workspace-os/CRMPanel";
@@ -34,13 +38,14 @@ export default function WorkspaceDetail() {
   const [params, setParams] = useSearchParams();
   const tab = params.get("tab") || "overview";
   const { activeProvider, setActiveProject } = useWorkspace();
-  // Auto-fold the global sidebar to icon-only mode while inside a workspace
-  // — gives the cockpit more horizontal room for the rich tabs and rail.
-  const { setOpen } = useSidebar();
+  // Auto-fold the global sidebar to icon-only mode IF a SidebarProvider exists
+  // in the tree. On the workspace subdomain there is none, so we no-op.
+  const sidebarCtx = React.useContext(_SC as any) as { setOpen?: (v: boolean) => void } | null;
   useEffect(() => {
-    setOpen(false);
-    return () => setOpen(true);
-  }, [setOpen]);
+    sidebarCtx?.setOpen?.(false);
+    return () => sidebarCtx?.setOpen?.(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (!user || !id) return;
