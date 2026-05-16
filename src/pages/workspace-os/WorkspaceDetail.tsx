@@ -33,6 +33,7 @@ import { ProjectStatusBadge } from "@/components/workspace/ProjectStatusBadge";
 import { deriveProjectStatus } from "@/lib/workspace/governance";
 import { useWorkspace, PROVIDER_LABELS } from "@/lib/workspace/context";
 import { wp, wpProjectDocs } from "@/lib/workspace/paths";
+import { trackProjectVisit } from "@/lib/workspace/operator";
 import { formatDistanceToNowStrict } from "date-fns";
 
 export default function WorkspaceDetail() {
@@ -63,7 +64,7 @@ export default function WorkspaceDetail() {
       const { data } = await (supabase as any).from("workspaces").select("*").eq("id", id).maybeSingle();
       setW(data);
       setLoading(false);
-      if (data?.id) setActiveProject(data.id);
+      if (data?.id) { setActiveProject(data.id); trackProjectVisit(data.id); }
     })();
   }, [user, id, setActiveProject]);
 
