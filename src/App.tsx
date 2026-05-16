@@ -45,6 +45,7 @@ import BillingSettings from "./pages/settings/Billing";
 import ApiKeysSettings from "./pages/settings/ApiKeys";
 import TelegramSettings from "./pages/settings/Telegram";
 import Wallet from "./pages/settings/Wallet";
+import FeedbackPage from "./pages/settings/Feedback";
 import Download from "./pages/Download";
 import AdminBlock from "./pages/AdminBlock";
 import Community from "./pages/Community";
@@ -503,6 +504,7 @@ const App = () => (
               <Route path="billing" element={<BillingSettings />} />
               <Route path="api" element={<ApiKeysSettings />} />
               <Route path="wallet" element={<Wallet />} />
+              <Route path="feedback" element={<FeedbackPage />} />
             </Route>
             <Route path="/problem-leads" element={Shelled(<ProblemLeads />)} />
             <Route path="/proposal-draft" element={Shelled(<ProposalDraft />)} />
