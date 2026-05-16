@@ -854,6 +854,7 @@ export default function Dashboard() {
         </Tabs>
       </div>
     </AppShell>
+    <PostExportTelegramNudge />
     </>
   );
 }
