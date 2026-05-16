@@ -5,9 +5,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useRecordOutput } from "@/lib/workspace/outputs";
-import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
-import { wp, wpProjectDocs } from "@/lib/workspace/paths";
+import { wpProjectDocs } from "@/lib/workspace/paths";
 import { findIntent, PROVIDER_DISPLAY, SPEED_DISPLAY } from "@/lib/workspace/toolsCatalog";
 import { nextSteps } from "@/lib/workspace/chains";
 import { useOperationalMemory } from "@/lib/workspace/memory";
@@ -45,7 +44,6 @@ export function IntentRunner({
   const [elapsed, setElapsed] = useState(0);
   const [phase, setPhase] = useState<SyncPhase>("idle");
   const record = useRecordOutput();
-  const { toast } = useToast();
   const meta = findIntent(intent);
   const provider = meta ? PROVIDER_DISPLAY[meta.bestWith] : null;
   const fallback = provider ? PROVIDER_DISPLAY[provider.fallback] : null;
