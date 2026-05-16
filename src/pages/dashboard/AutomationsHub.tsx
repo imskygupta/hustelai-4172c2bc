@@ -269,7 +269,7 @@ export default function AutomationsHub() {
                 <Link to="/dashboard/workspace-os">View operations</Link>
               </Button>
               <Button asChild size="sm">
-                <Link to="/dashboard/workspace-os/boosts" className="inline-flex items-center gap-1.5">
+                <Link to="/settings/wallet" className="inline-flex items-center gap-1.5">
                   Add boost <ArrowRight className="h-3.5 w-3.5" />
                 </Link>
               </Button>
