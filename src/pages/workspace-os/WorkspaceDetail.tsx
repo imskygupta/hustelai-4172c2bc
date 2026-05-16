@@ -231,6 +231,22 @@ function ago(d: string) {
   try { return formatDistanceToNowStrict(new Date(d), { addSuffix: true }); } catch { return ""; }
 }
 
+const TIER_STYLES: Record<string, string> = {
+  free:     "bg-muted text-foreground/70 border-border",
+  pro:      "bg-gradient-to-r from-primary/15 to-violet-500/15 text-primary border-primary/30",
+  elite:    "bg-gradient-to-r from-amber-500/15 to-orange-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30",
+  infinity: "bg-gradient-to-r from-fuchsia-500/15 to-violet-500/20 text-fuchsia-700 dark:text-fuchsia-300 border-fuchsia-500/30",
+};
+function TierBadge({ tier }: { tier?: string | null }) {
+  const t = (tier || "free").toLowerCase();
+  const cls = TIER_STYLES[t] || TIER_STYLES.free;
+  return (
+    <span className={`shrink-0 inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${cls}`} title={`Your plan: ${t.toUpperCase()}`}>
+      <Sparkles className="h-2.5 w-2.5" /> {t}
+    </span>
+  );
+}
+
 function RailItem({
   label, value, icon: Icon, href, mono, cap, muted,
 }: {
