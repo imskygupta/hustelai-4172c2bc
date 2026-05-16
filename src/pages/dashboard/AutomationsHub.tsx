@@ -8,13 +8,16 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "@/hooks/use-toast";
 import {
   ArrowRight, Sparkles, Wand2, Zap, ShieldCheck, History, CheckCircle2,
-  CircleDot, Send, FolderOpen, Mail, Briefcase, Brain,
+  CircleDot, Send, FolderOpen, Mail, Briefcase, Brain, Lock, Crown,
 } from "lucide-react";
 import { useAutomations, useAutomationRuns } from "@/lib/workspace/automations";
 import {
   TEMPLATES, CATEGORY_LABEL, CATEGORY_ORDER, DELIVERY_LABEL,
-  groupTemplatesByCategory, getTemplate, type Template,
+  groupTemplatesByCategory, getTemplate, isTemplateUnlocked, lockMessage, tierLabel,
+  type Template,
 } from "@/lib/workspace/automationTemplates";
+import { useAuth } from "@/hooks/useAuth";
+import { Link as RouterLink } from "react-router-dom";
 
 /**
  * Outcome-first automations hub.
@@ -30,13 +33,28 @@ function DeliveryIcon({ d }: { d: Template["delivery"] }) {
 }
 
 function TemplateCard({
-  t, on, onToggle,
-}: { t: Template; on: boolean; onToggle: (v: boolean) => void | Promise<void> }) {
+  t, on, onToggle, unlocked,
+}: { t: Template; on: boolean; unlocked: boolean; onToggle: (v: boolean) => void | Promise<void> }) {
   const Icon = t.icon;
+  const locked = !unlocked && !t.comingSoon;
   return (
-    <Card className={`p-5 border-border/60 transition-colors ${on ? "bg-accent/20" : "bg-card hover:bg-accent/10"}`}>
+    <Card
+      className={`relative overflow-hidden p-5 border-border/60 transition-all ${
+        locked
+          ? "bg-gradient-to-br from-muted/30 via-card to-card ring-1 ring-primary/15"
+          : on
+          ? "bg-accent/20"
+          : "bg-card hover:bg-accent/10"
+      }`}
+    >
+      {locked && (
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -top-20 -right-16 h-48 w-48 rounded-full bg-primary/10 blur-3xl"
+        />
+      )}
       {/* Header */}
-      <div className="flex items-start gap-3">
+      <div className={`flex items-start gap-3 ${locked ? "opacity-90" : ""}`}>
         <div className="h-10 w-10 rounded-xl bg-muted flex items-center justify-center shrink-0">
           <Icon className="h-5 w-5 text-foreground/70" />
         </div>
@@ -46,18 +64,27 @@ function TemplateCard({
             {t.recommended && <Badge variant="secondary" className="text-[10px]">Recommended</Badge>}
             {t.comingSoon && <Badge variant="outline" className="text-[10px]">Coming soon</Badge>}
             {t.ai && <Badge variant="outline" className="text-[10px] gap-1 border-primary/30 text-primary"><Brain className="h-2.5 w-2.5" /> AI</Badge>}
+            {locked && (
+              <Badge variant="outline" className="text-[10px] gap-1 border-amber-500/40 text-amber-600 dark:text-amber-400">
+                <Crown className="h-2.5 w-2.5" /> {tierLabel(t)}
+              </Badge>
+            )}
           </div>
           <p className="mt-1.5 text-sm text-foreground/90 leading-relaxed">{t.outcome}</p>
         </div>
-        <Switch
-          checked={on}
-          disabled={t.comingSoon}
-          onCheckedChange={onToggle}
-        />
+        {locked ? (
+          <Lock className="h-4 w-4 text-muted-foreground mt-1" />
+        ) : (
+          <Switch
+            checked={on}
+            disabled={t.comingSoon}
+            onCheckedChange={onToggle}
+          />
+        )}
       </div>
 
       {/* Quiet operational anatomy */}
-      <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 pl-[52px]">
+      <div className={`mt-4 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 pl-[52px] ${locked ? "opacity-60" : ""}`}>
         <Row label="Trigger" value={t.trigger} />
         <Row label="Action"  value={t.action} />
         {t.ai && <Row label="AI" value={t.ai} />}
@@ -72,6 +99,18 @@ function TemplateCard({
         />
         <Row label="Result" value={t.result} className="sm:col-span-2" />
       </div>
+
+      {locked && (
+        <div className="mt-4 pl-[52px] flex items-center justify-between gap-3">
+          <span className="text-[11px] text-muted-foreground">{lockMessage(t)}</span>
+          <RouterLink
+            to="/pricing"
+            className="inline-flex items-center gap-1 text-[11px] font-medium text-primary hover:underline shrink-0"
+          >
+            Unlock <ArrowRight className="h-3 w-3" />
+          </RouterLink>
+        </div>
+      )}
     </Card>
   );
 }
@@ -86,6 +125,8 @@ function Row({ label, value, className = "" }: { label: string; value: React.Rea
 }
 
 export default function AutomationsHub() {
+  const { profile } = useAuth();
+  const tier = profile?.subscription_tier || "free";
   const { enabledSet, toggle } = useAutomations();
   const { runs } = useAutomationRuns(8);
   const grouped = useMemo(groupTemplatesByCategory, []);
@@ -154,11 +195,13 @@ export default function AutomationsHub() {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
                   {items.map((t) => {
                     const on = enabledSet.has(t.id);
+                    const unlocked = isTemplateUnlocked(t, tier);
                     return (
                       <TemplateCard
                         key={t.id}
                         t={t}
                         on={on}
+                        unlocked={unlocked}
                         onToggle={async (v) => {
                           await toggle(t.id, v);
                           toast({
@@ -227,7 +270,7 @@ export default function AutomationsHub() {
                 <Link to="/dashboard/workspace-os">View operations</Link>
               </Button>
               <Button asChild size="sm">
-                <Link to="/pricing" className="inline-flex items-center gap-1.5">
+                <Link to="/dashboard/workspace-os/boosts" className="inline-flex items-center gap-1.5">
                   Add boost <ArrowRight className="h-3.5 w-3.5" />
                 </Link>
               </Button>
