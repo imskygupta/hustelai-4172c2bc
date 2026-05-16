@@ -27,6 +27,10 @@ import { ProjectQuickstart } from "@/components/workspace/ProjectQuickstart";
 import { ProjectMemoryRibbon } from "@/components/workspace/ProjectMemoryRibbon";
 import { NextInFlow } from "@/components/workspace/NextInFlow";
 import { LinkedTimeline } from "@/components/workspace/LinkedTimeline";
+import { WorkspaceHealthStrip } from "@/components/workspace/WorkspaceHealthStrip";
+import { ProjectPulse } from "@/components/workspace/ProjectPulse";
+import { ProjectStatusBadge } from "@/components/workspace/ProjectStatusBadge";
+import { deriveProjectStatus } from "@/lib/workspace/governance";
 import { useWorkspace, PROVIDER_LABELS } from "@/lib/workspace/context";
 import { wp, wpProjectDocs } from "@/lib/workspace/paths";
 import { formatDistanceToNowStrict } from "date-fns";
@@ -107,12 +111,16 @@ export default function WorkspaceDetail() {
             <TierBadge tier={profile?.subscription_tier} />
           </div>
           <div className="flex items-center gap-2 mt-0.5 text-[11px] text-muted-foreground flex-wrap font-medium">
-            <span className="inline-flex items-center gap-1.5">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500/80" />
-              <span className="capitalize">{(w.pipeline_stage || w.status || "—").replace(/_/g, " ")}</span>
-            </span>
+            <ProjectStatusBadge
+              status={deriveProjectStatus({
+                status: w.status, pipeline_stage: w.pipeline_stage,
+                lastActivityAt: w.updated_at || w.created_at, archived: w.archived,
+              })}
+              size="xs"
+            />
             {w.company_name && <><span className="text-muted-foreground/40">·</span><span className="truncate max-w-[200px]">{w.company_name}</span></>}
             {nextDeadline && <><span className="text-muted-foreground/40">·</span><span className="inline-flex items-center gap-1"><Calendar className="h-3 w-3" />{ago(nextDeadline)}</span></>}
+            <span className="ml-auto"><WorkspaceHealthStrip projectId={w.id} /></span>
           </div>
         </div>
       </motion.header>
@@ -170,6 +178,7 @@ export default function WorkspaceDetail() {
           </div>
 
           <TabsContent value="overview" className="space-y-4">
+            <ProjectPulse workspace={w} />
             <ProjectMemoryRibbon workspace={w} />
             <ProjectQuickstart workspace={w} />
             <NextInFlow workspaceId={w.id} />
