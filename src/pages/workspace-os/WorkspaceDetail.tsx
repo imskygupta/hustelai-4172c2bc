@@ -111,12 +111,16 @@ export default function WorkspaceDetail() {
             <TierBadge tier={profile?.subscription_tier} />
           </div>
           <div className="flex items-center gap-2 mt-0.5 text-[11px] text-muted-foreground flex-wrap font-medium">
-            <span className="inline-flex items-center gap-1.5">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500/80" />
-              <span className="capitalize">{(w.pipeline_stage || w.status || "—").replace(/_/g, " ")}</span>
-            </span>
+            <ProjectStatusBadge
+              status={deriveProjectStatus({
+                status: w.status, pipeline_stage: w.pipeline_stage,
+                lastActivityAt: w.updated_at || w.created_at, archived: w.archived,
+              })}
+              size="xs"
+            />
             {w.company_name && <><span className="text-muted-foreground/40">·</span><span className="truncate max-w-[200px]">{w.company_name}</span></>}
             {nextDeadline && <><span className="text-muted-foreground/40">·</span><span className="inline-flex items-center gap-1"><Calendar className="h-3 w-3" />{ago(nextDeadline)}</span></>}
+            <span className="ml-auto"><WorkspaceHealthStrip projectId={w.id} /></span>
           </div>
         </div>
       </motion.header>
