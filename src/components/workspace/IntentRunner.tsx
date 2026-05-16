@@ -14,6 +14,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { SyncStatusPill, type SyncPhase } from "@/components/workspace/SyncStatusPill";
 import { PossibilityHint, OutputQualityChip } from "@/components/workspace/PossibilityHint";
 import { useAuth } from "@/hooks/useAuth";
+import { markMilestone } from "@/lib/onboarding/firstSession";
 
 /**
  * IntentRunner — inline AI deliverable generator + operational chain.
@@ -122,6 +123,8 @@ export function IntentRunner({
           if (ok) {
             setSaved(true);
             setPhase("synced");
+            // Onboarding: first successful generation + save.
+            markMilestone("first_workflow");
             // Quietly indicate memory updated a beat later.
             setTimeout(() => setPhase("memory"), 700);
           } else {
@@ -156,12 +159,14 @@ export function IntentRunner({
     const a = document.createElement("a");
     a.href = url; a.download = `${safe}.md`; a.click();
     setTimeout(() => URL.revokeObjectURL(url), 500);
+    markMilestone("first_export");
   }
 
   function handlePrint() {
     if (!markdown) return;
     const w = window.open("", "_blank", "noopener,noreferrer,width=900,height=1000");
     if (!w) return;
+    markMilestone("first_export");
     const html = document.getElementById("intent-runner-article")?.innerHTML || "";
     const client = workspace?.client_name ? `Prepared for ${workspace.client_name}` : "";
     w.document.write(`<!doctype html><html><head><meta charset="utf-8"/><title>${title}</title>
