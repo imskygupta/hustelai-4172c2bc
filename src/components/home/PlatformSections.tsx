@@ -419,9 +419,9 @@ export function FreeToolsStrip() {
     { icon: ScrollText, label: "Contract", path: "/tools/contract-generator", uses: "6.7k", badge: null, color: "sky" as const },
     { icon: Calculator, label: "Pricing", path: "/tools/pricing-calculator", uses: "4.2k", badge: null, color: "amber" as const },
     { icon: CalendarRange, label: "Content calendar", path: "/tools/content-calendar", uses: "3.8k", badge: null, color: "emerald" as const },
-    { icon: IdCard, label: "Business card", path: "/tools/business-card-generator", uses: "2.9k", badge: null, color: "sky" as const },
+    { icon: IdCard, label: "Business card", path: "/tools/business-card", uses: "2.9k", badge: null, color: "sky" as const },
     { icon: Timer, label: "Pomodoro", path: "/tools/pomodoro", uses: "2.4k", badge: null, color: "violet" as const },
-    { icon: FileSignature, label: "Intake forms", path: "/tools/onboarding-form-builder", uses: "1.9k", badge: "New", color: "amber" as const },
+    { icon: FileSignature, label: "Intake forms", path: "/tools/onboarding-form", uses: "1.9k", badge: "New", color: "amber" as const },
   ];
   // Featured (first one)
   const featured = tools[0];

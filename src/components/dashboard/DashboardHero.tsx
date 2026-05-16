@@ -116,7 +116,7 @@ export default function DashboardHero() {
             <span aria-hidden className="absolute inset-0 -z-10 rounded-full bg-gradient-to-r from-emerald-400/40 via-violet-400/40 to-fuchsia-400/40 opacity-0 blur-md transition-opacity group-hover:opacity-100" />
           </button>
           <button
-            onClick={() => navigate("/hustle-bot")}
+            onClick={() => navigate("/hustlebot")}
             className="inline-flex items-center gap-1.5 rounded-full border border-slate-200/80 bg-white/60 dark:bg-slate-900/40 dark:border-slate-700/70 px-3.5 py-2 text-[13px] text-slate-700 dark:text-slate-200 hover:bg-white dark:hover:bg-slate-900 transition-colors"
           >
             <Sparkles className="h-3.5 w-3.5 text-violet-500" />

@@ -24,7 +24,7 @@ const CATEGORIES = [
     tone: "bg-indigo-50 text-indigo-700 border-indigo-200",
     items: [
       { label: "Intake forms",       to: "/workspaces/intake" },
-      { label: "Onboarding builder", to: "/tools/onboarding-form-builder" },
+      { label: "Onboarding builder", to: "/tools/onboarding-form" },
       { label: "Client profiles",    to: "/workspaces/clients" },
       { label: "Client portals",     to: "/work/portals" },
     ],

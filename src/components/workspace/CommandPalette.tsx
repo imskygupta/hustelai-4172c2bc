@@ -54,9 +54,9 @@ const TOOL_ACTIONS = (navigate: (p: string) => void): Item[] => [
   { id: "tool-contract",  label: "Contract generator",  hint: "Draft service agreements",     icon: FileText,      group: "Tools", run: () => navigate("/tools/contract-generator") },
   { id: "tool-pricing",   label: "Pricing calculator",  hint: "Quote your work fast",         icon: Calculator,    group: "Tools", run: () => navigate("/tools/pricing-calculator") },
   { id: "tool-calendar",  label: "Content calendar",    hint: "Plan posts + drops",           icon: CalendarDays,  group: "Tools", run: () => navigate("/tools/content-calendar") },
-  { id: "tool-onboard",   label: "Onboarding form",     hint: "Build client intake forms",    icon: ClipboardList, group: "Tools", run: () => navigate("/tools/onboarding-form-builder") },
+  { id: "tool-onboard",   label: "Onboarding form",     hint: "Build client intake forms",    icon: ClipboardList, group: "Tools", run: () => navigate("/tools/onboarding-form") },
   { id: "tool-portfolio", label: "Portfolio bio",       hint: "One-page personal site",       icon: Star,          group: "Tools", run: () => navigate("/tools/portfolio-bio") },
-  { id: "tool-card",      label: "Business card",       hint: "Generate + download card",     icon: Layers,        group: "Tools", run: () => navigate("/tools/business-card-generator") },
+  { id: "tool-card",      label: "Business card",       hint: "Generate + download card",     icon: Layers,        group: "Tools", run: () => navigate("/tools/business-card") },
   { id: "tool-wallet",    label: "Wallet",              hint: "Credits + billing",            icon: Wallet,        group: "Tools", run: () => navigate("/settings/wallet") },
 ];
 
