@@ -27,6 +27,7 @@ import { ProjectQuickstart } from "@/components/workspace/ProjectQuickstart";
 import { ProjectMemoryRibbon } from "@/components/workspace/ProjectMemoryRibbon";
 import { NextInFlow } from "@/components/workspace/NextInFlow";
 import { LinkedTimeline } from "@/components/workspace/LinkedTimeline";
+import { ProjectAutomations } from "@/components/workspace/ProjectAutomations";
 import { WorkspaceHealthStrip } from "@/components/workspace/WorkspaceHealthStrip";
 import { ProjectPulse } from "@/components/workspace/ProjectPulse";
 import { ProjectStatusBadge } from "@/components/workspace/ProjectStatusBadge";
@@ -209,6 +210,7 @@ export default function WorkspaceDetail() {
               <FileText className="h-4 w-4" /> Open documents
             </Link>
             <LinkedTimeline workspaceId={w.id} />
+            <ProjectAutomations workspaceId={w.id} />
             <p className="text-[10px] text-muted-foreground/60 pt-4">Tip: press <kbd className="px-1 py-0.5 rounded bg-muted/60 text-[10px]">1</kbd>–<kbd className="px-1 py-0.5 rounded bg-muted/60 text-[10px]">9</kbd> to switch tabs.</p>
           </TabsContent>
 
