@@ -9,7 +9,9 @@ import { MARKETING_ORIGIN, isDualHost } from "@/lib/host";
  * the main HustleAI portal on hustlaiapp.in.
  */
 export default function PortalGate() {
-  const back = isDualHost() ? "/workspaces" : `${MARKETING_ORIGIN}/workspaces`;
+  const next = typeof window !== "undefined" ? `${window.location.pathname}${window.location.search}` : "/";
+  const gateway = `/workspaces?next=${encodeURIComponent(next)}`;
+  const back = isDualHost() ? gateway : `${MARKETING_ORIGIN}${gateway}`;
   return (
     <div className="ws-portal min-h-screen relative overflow-hidden flex items-center justify-center px-6 text-foreground">
       {/* Ambient cosmic field */}
@@ -56,9 +58,9 @@ export default function PortalGate() {
             className="group inline-flex items-center justify-center gap-2 rounded-full bg-white text-black px-6 py-3 text-sm font-medium shadow-[0_0_40px_rgba(16,185,129,0.25)] hover:scale-[1.02] transition-transform"
           >
             <ArrowLeft className="h-4 w-4 group-hover:-translate-x-0.5 transition-transform" />
-            Return to HustleAI
+            Re-open secure portal
           </a>
-          <span className="text-[11px] text-white/40">No login. No reset. Just the portal.</span>
+          <span className="text-[11px] text-white/40">Keeps this project link intact.</span>
         </div>
       </motion.div>
 
