@@ -54,20 +54,20 @@ export default function DashboardHero() {
 
   return (
     <section className="relative overflow-hidden rounded-2xl border border-slate-200/70 bg-gradient-to-br from-white via-emerald-50/30 to-violet-50/40 dark:border-slate-800/70 dark:from-slate-950 dark:via-slate-950 dark:to-violet-950/30">
-      {/* Soft animated mesh — lighter than workspace, single layer */}
+      {/* Soft animated mesh — hidden on mobile to keep GPU calm */}
       <motion.div
         aria-hidden
         initial={{ opacity: 0.55 }}
         animate={{ opacity: [0.45, 0.7, 0.45], x: ["-4%", "4%", "-4%"] }}
         transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }}
-        className="pointer-events-none absolute -top-24 -right-20 h-72 w-72 rounded-full bg-gradient-to-br from-emerald-300/30 via-sky-300/20 to-violet-300/30 blur-3xl"
+        className="pointer-events-none absolute -top-24 -right-20 h-72 w-72 rounded-full bg-gradient-to-br from-emerald-300/30 via-sky-300/20 to-violet-300/30 blur-3xl hidden sm:block"
       />
       <motion.div
         aria-hidden
         initial={{ opacity: 0.4 }}
         animate={{ opacity: [0.3, 0.55, 0.3], x: ["2%", "-2%", "2%"] }}
         transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
-        className="pointer-events-none absolute -bottom-28 -left-16 h-64 w-64 rounded-full bg-gradient-to-br from-violet-300/25 via-fuchsia-300/15 to-amber-200/25 blur-3xl"
+        className="pointer-events-none absolute -bottom-28 -left-16 h-64 w-64 rounded-full bg-gradient-to-br from-violet-300/25 via-fuchsia-300/15 to-amber-200/25 blur-3xl hidden sm:block"
       />
 
       {/* Algorithmic glyph — barely visible, hand-of-machine feel */}
