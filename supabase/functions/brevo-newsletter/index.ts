@@ -433,6 +433,13 @@ Hard rules:
 
     // -------- Run weekly (cron-callable) --------
     if (action === "run_scheduled") {
+      // HARD DISABLED — automated broadcast removed. All newsletter sends must be triggered
+      // manually from the admin panel (dispatch_issue with explicit force when needed).
+      return new Response(
+        JSON.stringify({ skipped: true, reason: "auto_broadcast_disabled" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+      // eslint-disable-next-line no-unreachable
       const { data: sched } = await sb.from("newsletter_schedules").select("*").limit(1).maybeSingle();
       if (!sched?.enabled) return new Response(JSON.stringify({ skipped: true, reason: "disabled" }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
