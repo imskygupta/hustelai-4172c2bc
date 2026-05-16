@@ -4,7 +4,8 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Zap, ArrowRight, Brain, CheckCircle2 } from "lucide-react";
 import { useAutomations, useAutomationRuns } from "@/lib/workspace/automations";
-import { TEMPLATES, getTemplate } from "@/lib/workspace/automationTemplates";
+import { TEMPLATES, getTemplate, isTemplateUnlocked, tierLabel } from "@/lib/workspace/automationTemplates";
+import { useAuth } from "@/hooks/useAuth";
 import { wp } from "@/lib/workspace/paths";
 
 /**
@@ -14,6 +15,8 @@ import { wp } from "@/lib/workspace/paths";
  * Stays calm — no nodes, no graphs, no config.
  */
 export function ProjectAutomations({ workspaceId }: { workspaceId: string }) {
+  const { profile } = useAuth();
+  const tier = profile?.subscription_tier || "free";
   const { enabledSet } = useAutomations();
   const { runs } = useAutomationRuns(20);
 
@@ -22,10 +25,13 @@ export function ProjectAutomations({ workspaceId }: { workspaceId: string }) {
     [runs, workspaceId]
   );
 
-  const active   = TEMPLATES.filter(t => enabledSet.has(t.id)).slice(0, 4);
+  const active = TEMPLATES.filter(t => enabledSet.has(t.id)).slice(0, 4);
   const suggested = TEMPLATES
-    .filter(t => !enabledSet.has(t.id) && !t.comingSoon && t.recommended)
+    .filter(t => !enabledSet.has(t.id) && !t.comingSoon && t.recommended && isTemplateUnlocked(t, tier))
     .slice(0, 3);
+  const lockedPossibilities = TEMPLATES
+    .filter(t => !enabledSet.has(t.id) && !t.comingSoon && t.recommended && !isTemplateUnlocked(t, tier))
+    .slice(0, 2);
 
   return (
     <Card className="p-5 border-border/60">
@@ -75,6 +81,32 @@ export function ProjectAutomations({ workspaceId }: { workspaceId: string }) {
                   <Icon className="h-3.5 w-3.5 text-foreground/60 mt-0.5 shrink-0" />
                   <div className="min-w-0">
                     <div className="font-medium text-foreground/90">{t.title}</div>
+                    <div className="text-muted-foreground text-[11px] mt-0.5">{t.outcome}</div>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
+
+      {/* Locked possibilities — calm, not nagging */}
+      {lockedPossibilities.length > 0 && (
+        <div className="mt-5 space-y-2.5">
+          <div className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Becomes possible on upgrade</div>
+          <ul className="space-y-1.5">
+            {lockedPossibilities.map((t) => {
+              const Icon = t.icon;
+              return (
+                <li key={t.id} className="flex items-start gap-2.5 text-xs opacity-80">
+                  <Icon className="h-3.5 w-3.5 text-foreground/50 mt-0.5 shrink-0" />
+                  <div className="min-w-0">
+                    <div className="font-medium text-foreground/80 inline-flex items-center gap-1.5">
+                      {t.title}
+                      <Badge variant="outline" className="text-[9px] border-amber-500/30 text-amber-600 dark:text-amber-400">
+                        {tierLabel(t)}
+                      </Badge>
+                    </div>
                     <div className="text-muted-foreground text-[11px] mt-0.5">{t.outcome}</div>
                   </div>
                 </li>
