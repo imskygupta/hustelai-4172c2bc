@@ -117,7 +117,8 @@ export default function Dashboard() {
       .from("chat_messages").select("*", { count: "exact", head: true }).eq("user_id", user.id).eq("role", "user");
     setChatCount(msgCount || 0);
     const { data: recentHustles } = await supabase
-      .from("saved_hustles").select("*, side_hustles(title)")
+      .from("saved_hustles")
+      .select("status, updated_at, side_hustles(title)")
       .eq("user_id", user.id).order("updated_at", { ascending: false }).limit(5);
     const { data: recentChats } = await supabase
       .from("chat_messages").select("content, created_at")
@@ -159,7 +160,14 @@ export default function Dashboard() {
   };
 
   const loadWebinars = async () => {
-    const { data } = await supabase.from("webinars").select("*").order("scheduled_at", { ascending: true });
+    // Only the next ~10 upcoming webinars — there's no reason to ship the
+    // entire archive to every dashboard cold-load. Past events are not shown.
+    const nowIso = new Date().toISOString();
+    const { data } = await supabase
+      .from("webinars").select("*")
+      .gte("scheduled_at", nowIso)
+      .order("scheduled_at", { ascending: true })
+      .limit(10);
     if (data) setWebinars(data as Webinar[]);
   };
 
