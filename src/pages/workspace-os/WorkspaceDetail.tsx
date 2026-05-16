@@ -38,6 +38,11 @@ export default function WorkspaceDetail() {
   const [params, setParams] = useSearchParams();
   const tab = params.get("tab") || "overview";
   const { activeProvider, setActiveProject } = useWorkspace();
+  const tabs = useMemo(() => ([
+    ["overview","Overview"],["roadmap","Roadmap"],["crm","CRM"],["tasks","Tasks"],
+    ["payments","Payments"],["collab","Collab"],["portal","Portal"],["files","Files"],
+    ["retainer","Retainer"],["activity","Activity"],
+  ] as [string, string][]), []);
   // Auto-fold the global sidebar to icon-only mode IF a SidebarProvider exists
   // in the tree. On the workspace subdomain there is none, so we no-op.
   const sidebarCtx = React.useContext(_SC as any) as { setOpen?: (v: boolean) => void } | null;
@@ -57,23 +62,6 @@ export default function WorkspaceDetail() {
     })();
   }, [user, id, setActiveProject]);
 
-  if (loading) return <Skeleton className="h-96 rounded-2xl" />;
-  if (!w) return <p className="text-muted-foreground">Workspace not found.</p>;
-
-  const nextDeadline: string | null = (() => {
-    const d = w.deadlines;
-    if (!d) return null;
-    if (Array.isArray(d) && d.length) return d[0]?.due_date || d[0]?.date || null;
-    if (typeof d === "object") return d.due_date || d.date || null;
-    return null;
-  })();
-
-  const tabs = useMemo(() => ([
-    ["overview","Overview"],["roadmap","Roadmap"],["crm","CRM"],["tasks","Tasks"],
-    ["payments","Payments"],["collab","Collab"],["portal","Portal"],["files","Files"],
-    ["retainer","Retainer"],["activity","Activity"],
-  ] as [string, string][]), []);
-
   // Keyboard shortcuts — 1..9,0 to jump tabs. Skip when typing.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -86,6 +74,17 @@ export default function WorkspaceDetail() {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [tabs, setParams]);
+
+  if (loading) return <Skeleton className="h-96 rounded-2xl" />;
+  if (!w) return <p className="text-muted-foreground">Workspace not found.</p>;
+
+  const nextDeadline: string | null = (() => {
+    const d = w.deadlines;
+    if (!d) return null;
+    if (Array.isArray(d) && d.length) return d[0]?.due_date || d[0]?.date || null;
+    if (typeof d === "object") return d.due_date || d.date || null;
+    return null;
+  })();
 
   return (
     <div className="space-y-4">
