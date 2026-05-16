@@ -246,6 +246,23 @@ Hard rules:
       if (!["approved", "scheduled"].includes(issue.status)) {
         return new Response(JSON.stringify({ error: "not_approved", status: issue.status }), { status: 409, headers: corsHeaders });
       }
+      // Hard throttle: refuse if another issue was dispatched in the last 6 days,
+      // unless the caller explicitly passes { force: true }. Prevents accidental spam.
+      if (!body.force) {
+        const sixDaysAgo = new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString();
+        const { data: recent } = await sb.from("newsletter_issues")
+          .select("id,sent_at,subject")
+          .eq("status", "sent")
+          .gte("sent_at", sixDaysAgo)
+          .order("sent_at", { ascending: false })
+          .limit(1);
+        if (recent && recent.length > 0) {
+          return new Response(JSON.stringify({
+            error: "throttled",
+            message: `Another issue ("${recent[0].subject}") was sent on ${new Date(recent[0].sent_at).toUTCString()}. Only one newsletter per 6 days. Pass force=true to override.`,
+          }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+      }
       await sb.from("newsletter_issues").update({ status: "sending" }).eq("id", issue_id);
 
       const { data: subs } = await sb.from("newsletter_subscribers")
@@ -466,19 +483,14 @@ Hard rules:
       }
 
       const focus = body.focus || "weekly digest for Indian creators and freelancers";
-      const system = `You write the HustleAI weekly digest for Indian creators and freelancers.
-Output ONLY valid JSON of shape:
-{"subject":"...","preheader":"...","sections":[
-  {"id":"ai_trends","title":"AI Trends","body_md":"..."},
-  {"id":"creator_economy","title":"Creator Economy","body_md":"..."},
-  {"id":"freelancing","title":"Freelancing","body_md":"..."},
-  {"id":"automation","title":"Automation Workflows","body_md":"..."},
-  {"id":"hustleai","title":"HustleAI Updates","body_md":"..."},
-  {"id":"tools","title":"Tool Picks","body_md":"..."},
-  {"id":"opportunities","title":"Opportunities","body_md":"..."}
-]}
-Markdown allowed: paragraphs, [text](url), and "- " bullet lists. No HTML. Keep each section under 120 words. Indian context.`;
-      const raw = await callAI(`Focus: ${focus}. Generate this week's digest.`, system);
+      // Skip cron generation if a Sunday Brief already exists for THIS calendar week
+      const weekAgo = new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString();
+      const { data: existingWeek } = await sb.from("newsletter_issues")
+        .select("id,status,created_at").gte("created_at", weekAgo).limit(1);
+      if (existingWeek && existingWeek.length > 0) {
+        return new Response(JSON.stringify({ ok: true, skipped: true, reason: "issue_already_this_week", issue_id: existingWeek[0].id }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      const raw = await callAI(`Focus: ${focus}. Write this week's Sunday Brief.`, SUNDAY_BRIEF_SYSTEM);
       const cleaned = raw.replace(/```json\n?/gi, "").replace(/```/g, "").trim();
       let parsed: any;
       try { parsed = JSON.parse(cleaned); }
@@ -492,7 +504,7 @@ Markdown allowed: paragraphs, [text](url), and "- " bullet lists. No HTML. Keep 
         provider: "brevo",
         channel: "email",
         model: "google/gemini-2.5-flash",
-        metadata: { focus, source: "weekly_cron" },
+        metadata: { focus, source: "weekly_cron", format: "sunday_brief_v1" },
       }).select().single();
       if (error) throw error;
 
