@@ -286,6 +286,9 @@ export default function AISettings() {
         )}
       </header>
 
+      {/* Operational telemetry — workspace as infrastructure, not a generator. */}
+      <ProviderInfrastructure />
+
       {/* Compact connect panel — pinned to the top so the verb (paste a key)
           comes before the catalogue. Provider grid below is for switching. */}
       <motion.div
