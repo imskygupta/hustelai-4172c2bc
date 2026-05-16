@@ -17,7 +17,6 @@ import {
   type Template,
 } from "@/lib/workspace/automationTemplates";
 import { useAuth } from "@/hooks/useAuth";
-import { Link as RouterLink } from "react-router-dom";
 
 /**
  * Outcome-first automations hub.
@@ -103,12 +102,12 @@ function TemplateCard({
       {locked && (
         <div className="mt-4 pl-[52px] flex items-center justify-between gap-3">
           <span className="text-[11px] text-muted-foreground">{lockMessage(t)}</span>
-          <RouterLink
+          <Link
             to="/pricing"
             className="inline-flex items-center gap-1 text-[11px] font-medium text-primary hover:underline shrink-0"
           >
             Unlock <ArrowRight className="h-3 w-3" />
-          </RouterLink>
+          </Link>
         </div>
       )}
     </Card>
