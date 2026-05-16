@@ -12,6 +12,8 @@ import { nextSteps } from "@/lib/workspace/chains";
 import { useOperationalMemory } from "@/lib/workspace/memory";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { SyncStatusPill, type SyncPhase } from "@/components/workspace/SyncStatusPill";
+import { PossibilityHint, OutputQualityChip } from "@/components/workspace/PossibilityHint";
+import { useAuth } from "@/hooks/useAuth";
 
 /**
  * IntentRunner — inline AI deliverable generator + operational chain.
@@ -44,6 +46,8 @@ export function IntentRunner({
   const [elapsed, setElapsed] = useState(0);
   const [phase, setPhase] = useState<SyncPhase>("idle");
   const record = useRecordOutput();
+  const { profile } = useAuth();
+  const tier = profile?.subscription_tier ?? "free";
   const meta = findIntent(intent);
   const provider = meta ? PROVIDER_DISPLAY[meta.bestWith] : null;
   const fallback = provider ? PROVIDER_DISPLAY[provider.fallback] : null;
