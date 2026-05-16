@@ -15,13 +15,14 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useWorkspace } from "@/lib/workspace/context";
 import { wp, wpProject } from "@/lib/workspace/paths";
+import { usePinnedProjects, trackProjectVisit } from "@/lib/workspace/operator";
 
 type Item = {
   id: string;
   label: string;
   hint?: string;
   icon: typeof Sparkles;
-  group: "Actions" | "Tools" | "Workspaces" | "Outputs" | "Assets" | "Go to";
+  group: "Actions" | "Tools" | "Pinned" | "Workspaces" | "Outputs" | "Assets" | "Go to";
   run: () => void;
 };
 
@@ -61,6 +62,7 @@ const TOOL_ACTIONS = (navigate: (p: string) => void): Item[] => [
 export function WorkspaceCommandPalette() {
   const { user } = useAuth();
   const { setActiveProject } = useWorkspace();
+  const { pinned } = usePinnedProjects();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
@@ -108,14 +110,28 @@ export function WorkspaceCommandPalette() {
     const out: Item[] = [];
     out.push(...INTENT_ACTIONS(navigate).map(it => ({ ...it, run: () => { it.run(); close(); } })));
     out.push(...TOOL_ACTIONS(navigate).map(it => ({ ...it, run: () => { it.run(); close(); } })));
+    // Pinned projects — surfaced first for instant jump
+    const pinnedSet = new Set(pinned);
+    const pinnedWs = workspaces.filter(w => pinnedSet.has(w.id));
+    for (const w of pinnedWs) {
+      out.push({
+        id: `p-${w.id}`,
+        label: w.client_name,
+        hint: `Pinned · ${w.status}`,
+        icon: Star,
+        group: "Pinned",
+        run: () => { setActiveProject(w.id); trackProjectVisit(w.id); navigate(wpProject(w.id)); close(); },
+      });
+    }
     for (const w of workspaces) {
+      if (pinnedSet.has(w.id)) continue;
       out.push({
         id: `w-${w.id}`,
         label: w.client_name,
         hint: `Workspace · ${w.status}`,
         icon: Briefcase,
         group: "Workspaces",
-        run: () => { setActiveProject(w.id); navigate(wpProject(w.id)); close(); },
+        run: () => { setActiveProject(w.id); trackProjectVisit(w.id); navigate(wpProject(w.id)); close(); },
       });
     }
     for (const o of outputs) {
@@ -125,7 +141,7 @@ export function WorkspaceCommandPalette() {
         hint: o.tool,
         icon: Sparkles,
         group: "Outputs",
-        run: () => { if (o.project_id) setActiveProject(o.project_id); navigate(wp("canvas")); close(); },
+        run: () => { if (o.project_id) { setActiveProject(o.project_id); trackProjectVisit(o.project_id); } navigate(wp("canvas")); close(); },
       });
     }
     for (const a of assets) {
@@ -135,14 +151,14 @@ export function WorkspaceCommandPalette() {
         hint: a.asset_kind || "asset",
         icon: Star,
         group: "Assets",
-        run: () => { if (a.project_id) setActiveProject(a.project_id); navigate(wp("canvas")); close(); },
+        run: () => { if (a.project_id) { setActiveProject(a.project_id); trackProjectVisit(a.project_id); } navigate(wp("canvas")); close(); },
       });
     }
     out.push(...NAV_ACTIONS(navigate).map(it => ({ ...it, run: () => { it.run(); close(); } })));
     if (!q.trim()) return out.slice(0, 30);
     const needle = q.toLowerCase();
     return out.filter(i => i.label.toLowerCase().includes(needle) || (i.hint || "").toLowerCase().includes(needle)).slice(0, 30);
-  }, [workspaces, outputs, assets, q, navigate, setActiveProject, close]);
+  }, [workspaces, outputs, assets, pinned, q, navigate, setActiveProject, close]);
 
   // Group for render
   const grouped = useMemo(() => {
