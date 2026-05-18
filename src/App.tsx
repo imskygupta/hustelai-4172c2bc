@@ -212,6 +212,7 @@ const AdminAiJobs = lazy(() => import("./pages/admin/AiJobs"));
 const AdminFeatureFlags = lazy(() => import("./pages/admin/FeatureFlags"));
 const RuntimeAnalytics = lazy(() => import("./pages/admin/RuntimeAnalytics"));
 const MigrationHealth = lazy(() => import("./pages/admin/MigrationHealth"));
+const Infrastructure = lazy(() => import("./pages/admin/Infrastructure"));
 const Automations = lazy(() => import("./pages/admin/Automations"));
 const BlogAdmin = lazy(() => import("./pages/admin/BlogAdmin"));
 const BlogSeoHealth = lazy(() => import("./pages/admin/BlogSeoHealth"));
@@ -565,6 +566,7 @@ const App = () => (
             <Route path="/admin/runtime/providers" element={<RuntimeProviders />} />
             <Route path="/admin/runtime/analytics" element={<RuntimeAnalytics />} />
             <Route path="/admin/runtime/migration" element={<MigrationHealth />} />
+            <Route path="/admin/infrastructure" element={<Infrastructure />} />
             <Route path="/admin/feature-flags" element={<AdminFeatureFlags />} />
             <Route path="/admin/automations" element={<Automations />} />
             <Route path="/admin/payments-review" element={<PaymentsReview />} />
