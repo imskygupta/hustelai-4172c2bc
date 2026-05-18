@@ -380,6 +380,12 @@ export default function Infrastructure() {
           <TabsContent value="rtload"><RealtimeLoadPanel /></TabsContent>
           <TabsContent value="evacuation"><TelemetryEvacuationPanel /></TabsContent>
           <TabsContent value="autopilot"><AutonomousControllerPanel /></TabsContent>
+          <TabsContent value="topology"><TopologyGraphPanel /></TabsContent>
+          <TabsContent value="blast"><BlastRadiusPanel /></TabsContent>
+          <TabsContent value="simulate"><FailureSimulationPanel /></TabsContent>
+          <TabsContent value="coupling"><CouplingFindingsPanel /></TabsContent>
+          <TabsContent value="forecast"><ExtractionForecastPanel /></TabsContent>
+          <TabsContent value="stability"><StabilityScorePanel /></TabsContent>
         </Tabs>
       </div>
     </div>
