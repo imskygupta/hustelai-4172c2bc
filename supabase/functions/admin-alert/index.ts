@@ -5,6 +5,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { dispatchToWorker, workerConfigured } from "../_shared/notifications/worker.ts";
+import { mirrorToOwned } from "../_shared/ops-routing.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -50,14 +51,16 @@ serve(async (req) => {
       for (const [k, t] of RECENT) if (now - t > DEDUPE_MS * 4) RECENT.delete(k);
     }
 
-    const { data: row, error } = await sb.from("admin_alerts").insert({
+    const insertRow = {
       kind, severity, source,
       user_id: resolvedUser,
       feature,
       message: String(message).slice(0, 500),
       meta,
-    }).select("id").single();
+    };
+    const { data: row, error } = await sb.from("admin_alerts").insert(insertRow).select("id").single();
     if (error) return j({ ok: false, error: error.message }, 500);
+    mirrorToOwned("admin_alerts", insertRow);
 
     // Forward error/critical to the external Telegram worker (Railway).
     if (workerConfigured() && (severity === "error" || severity === "critical")) {
