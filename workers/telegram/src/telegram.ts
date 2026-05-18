@@ -1,5 +1,12 @@
 import { env } from "./env.js";
 
+export type BotId = "hustleai" | "skymedia";
+
+function tokenFor(bot: BotId | undefined): string {
+  if (bot === "skymedia") return env.SKYMEDIA_BOT_TOKEN || env.TELEGRAM_BOT_TOKEN;
+  return env.TELEGRAM_BOT_TOKEN;
+}
+
 export type TelegramSendResult =
   | { ok: true; message_id: string }
   | { ok: false; error: string };
@@ -11,9 +18,9 @@ function escapeHtml(s: string): string {
     .replace(/>/g, "&gt;");
 }
 
-export async function sendTelegram(chatId: string, text: string): Promise<TelegramSendResult> {
+export async function sendTelegram(chatId: string, text: string, bot: BotId = "hustleai"): Promise<TelegramSendResult> {
   try {
-    const r = await fetch(`https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
+    const r = await fetch(`https://api.telegram.org/bot${tokenFor(bot)}/sendMessage`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
