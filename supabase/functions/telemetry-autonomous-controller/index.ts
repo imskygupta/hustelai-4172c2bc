@@ -10,6 +10,7 @@
 // controller ops (service-role internal); admin ops re-check role server-side.
 
 import { getOwned, getPrimary, getPrimaryService, ownedReady } from "../_shared/clients.ts";
+import { mirrorAsyncRuntime } from "../_shared/async-runtime.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -49,6 +50,14 @@ async function drainReplayQueue(limit: number) {
       if (insErr) throw insErr;
       await svc.rpc("replay_engine_complete", { _id: r.id, _ok: true, _err: null });
       ok++;
+      // Wave 1: mirror replay outcome into async_runtime.replay_history
+      mirrorAsyncRuntime("replay_history", {
+        stream: r.event_name,
+        outcome: "ok",
+        attempt: 1,
+        error: null,
+        payload: r.payload,
+      }, "replay_history");
     } catch (e) {
       const msg = (e as Error).message || String(e);
       const { data } = await svc
@@ -57,7 +66,21 @@ async function drainReplayQueue(limit: number) {
         .eq("id", r.id)
         .maybeSingle();
       await svc.rpc("replay_engine_complete", { _id: r.id, _ok: false, _err: msg });
-      if ((data as any)?.attempts >= 8) dead++; else fail++;
+      const attempts = (data as any)?.attempts ?? 1;
+      if (attempts >= 8) dead++; else fail++;
+      mirrorAsyncRuntime("replay_history", {
+        stream: r.event_name,
+        outcome: attempts >= 8 ? "dead_letter" : "fail",
+        attempt: attempts,
+        error: msg.slice(0, 500),
+        payload: r.payload,
+      }, "replay_history");
+      mirrorAsyncRuntime("retry_history", {
+        job_id: r.id,
+        attempt: attempts,
+        reason: msg.slice(0, 500),
+        next_retry_at: null,
+      }, "retry_history");
     }
   }
   return { processed: rows.length, ok, fail, dead };
