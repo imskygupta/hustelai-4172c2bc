@@ -46,11 +46,17 @@ async function pingSitemaps() {
 
 async function getStats() {
   const today = startOfTodayIso();
+  // Only count drafts started recently as "in flight". Older drafts stuck in
+  // `generating` (lost to function timeouts) or sitting in `ready` after
+  // already producing a post must not keep blocking new generations forever.
+  const inFlightSince = new Date(Date.now() - 2 * 3600_000).toISOString();
   const [{ count: in_review }, { count: scheduled }, { count: published_today }, { count: drafts }] = await Promise.all([
     blog.from("blog_posts").select("id", { count: "exact", head: true }).eq("status", "in_review"),
     blog.from("blog_posts").select("id", { count: "exact", head: true }).eq("status", "scheduled"),
     blog.from("blog_posts").select("id", { count: "exact", head: true }).eq("status", "published").gte("published_at", today),
-    blog.from("blog_ai_drafts").select("id", { count: "exact", head: true }).in("status", ["generating", "ready"]),
+    blog.from("blog_ai_drafts").select("id", { count: "exact", head: true })
+      .in("status", ["generating", "ready"])
+      .gte("created_at", inFlightSince),
   ]);
   const { data: lastPublished } = await blog.from("blog_posts")
     .select("published_at").eq("status", "published").order("published_at", { ascending: false }).limit(1).maybeSingle();
@@ -61,6 +67,19 @@ async function getStats() {
     drafts_in_flight: drafts ?? 0,
     last_published_at: lastPublished?.published_at ?? null,
   };
+}
+
+async function sweepStuckDrafts(): Promise<number> {
+  // Drafts older than 2h still in `generating` are orphaned (function timed
+  // out before status could be updated). Mark them failed so they stop
+  // blocking the scheduler's headroom.
+  const cutoff = new Date(Date.now() - 2 * 3600_000).toISOString();
+  const { data } = await blog.from("blog_ai_drafts")
+    .update({ status: "failed", error: "stale_generating_timeout" })
+    .eq("status", "generating")
+    .lt("created_at", cutoff)
+    .select("id");
+  return data?.length ?? 0;
 }
 
 async function publishDuePosts(): Promise<string[]> {
@@ -146,6 +165,7 @@ Deno.serve(async (req) => {
     }
 
     const published = await publishDuePosts();
+    const sweptDrafts = await sweepStuckDrafts();
     const scheduled = await promoteReadyDrafts(remainingPublish, stats.last_published_at);
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const generated = await generateDrafts(remainingGenerate, anonKey);
@@ -155,6 +175,7 @@ Deno.serve(async (req) => {
       stats: await getStats(),
       published,
       scheduled,
+      swept_drafts: sweptDrafts,
       generated,
       pings,
     });

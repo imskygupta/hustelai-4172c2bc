@@ -198,6 +198,8 @@ async function scanOperational(sb: ReturnType<typeof createClient>): Promise<Ano
     .select("provider, consecutive_failures, success_rate, last_error, status")
     .gte("consecutive_failures", 3);
   for (const p of (providers || []) as any[]) {
+    // Skip configuration gaps (missing API keys are not production incidents).
+    if ((p.last_error ?? "").toLowerCase() === "no_key") continue;
     found.push({
       kind: `provider_degraded_${p.provider}`,
       severity: p.consecutive_failures >= 6 ? "critical" : "warning",
@@ -279,11 +281,11 @@ Deno.serve(async (req) => {
         try {
           await sb.functions.invoke("admin-alert", {
             body: {
+              kind: a.kind,
               severity: a.severity,
-              title: a.title,
-              message: a.message,
+              message: a.title ? `${a.title} — ${a.message}` : a.message,
               source: "intelligence",
-              metadata: a.metadata ?? {},
+              meta: a.metadata ?? {},
             },
           });
         } catch { /* swallow */ }
