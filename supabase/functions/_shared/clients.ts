@@ -10,6 +10,11 @@
 //                    notification deliveries, broadcast/newsletter dispatch,
 //                    email send logs, telegram command/send logs.
 //   getWorkspace() → Work Hub data (clients, notes, action log).
+//   getOwned()     → Self-owned Supabase project (wguuipsikboqqinqeehv).
+//                    Used during the progressive migration off Lovable-
+//                    managed Supabase. Falls back to the primary client
+//                    when OWNED_SUPABASE_* secrets are not yet set, so
+//                    nothing breaks before the cutover.
 //
 // NEVER mix: do not write payment/auth state to analytics, do not write
 // telemetry to primary. Cross-DB joins are forbidden — issue parallel queries
@@ -136,4 +141,31 @@ export async function safeAnalyticsInsert(
     console.warn(`safeAnalyticsInsert ${table} threw:`, (err as Error).message);
     return false;
   }
+}
+
+/**
+ * Self-owned Supabase project client (service-role).
+ *
+ * Reads from OWNED_SUPABASE_URL / OWNED_SUPABASE_SERVICE_ROLE_KEY secrets.
+ * Falls back to the primary (Lovable Cloud) client when those secrets are
+ * not yet provisioned, so edge functions keep working during the staged
+ * migration. Once a table has been backfilled to the owned project, swap
+ * its call sites from getPrimaryService() to getOwned().
+ */
+export function getOwned(): SupabaseClient {
+  const url =
+    Deno.env.get("OWNED_SUPABASE_URL") ??
+    Deno.env.get("SUPABASE_URL")!;
+  const key =
+    Deno.env.get("OWNED_SUPABASE_SERVICE_ROLE_KEY") ??
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  return createClient(url, key, { auth: { persistSession: false } });
+}
+
+/** True once the owned project secrets are configured. */
+export function ownedReady(): boolean {
+  return !!(
+    Deno.env.get("OWNED_SUPABASE_URL") &&
+    Deno.env.get("OWNED_SUPABASE_SERVICE_ROLE_KEY")
+  );
 }
