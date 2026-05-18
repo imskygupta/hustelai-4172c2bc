@@ -6590,6 +6590,126 @@ export type Database = {
           },
         ]
       }
+      telemetry_autonomous_config: {
+        Row: {
+          auto_cutover_enabled: boolean
+          auto_rollback_enabled: boolean
+          last_action: string | null
+          last_action_at: string | null
+          max_fail_pct: number
+          max_lag_ms: number
+          max_replay_queue_depth: number
+          min_confidence_to_cutover: number
+          parity_max_delta_pct: number
+          soak_window_minutes: number
+          stream: string
+          updated_at: string
+        }
+        Insert: {
+          auto_cutover_enabled?: boolean
+          auto_rollback_enabled?: boolean
+          last_action?: string | null
+          last_action_at?: string | null
+          max_fail_pct?: number
+          max_lag_ms?: number
+          max_replay_queue_depth?: number
+          min_confidence_to_cutover?: number
+          parity_max_delta_pct?: number
+          soak_window_minutes?: number
+          stream: string
+          updated_at?: string
+        }
+        Update: {
+          auto_cutover_enabled?: boolean
+          auto_rollback_enabled?: boolean
+          last_action?: string | null
+          last_action_at?: string | null
+          max_fail_pct?: number
+          max_lag_ms?: number
+          max_replay_queue_depth?: number
+          min_confidence_to_cutover?: number
+          parity_max_delta_pct?: number
+          soak_window_minutes?: number
+          stream?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      telemetry_confidence_snapshots: {
+        Row: {
+          computed_at: string
+          divergence_risk: number
+          evacuation_confidence: number
+          id: number
+          inputs: Json
+          replay_pressure: number
+          rollback_risk: number
+          sink_health: number
+          stream: string
+        }
+        Insert: {
+          computed_at?: string
+          divergence_risk?: number
+          evacuation_confidence?: number
+          id?: number
+          inputs?: Json
+          replay_pressure?: number
+          rollback_risk?: number
+          sink_health?: number
+          stream: string
+        }
+        Update: {
+          computed_at?: string
+          divergence_risk?: number
+          evacuation_confidence?: number
+          id?: number
+          inputs?: Json
+          replay_pressure?: number
+          rollback_risk?: number
+          sink_health?: number
+          stream?: string
+        }
+        Relationships: []
+      }
+      telemetry_cost_trends: {
+        Row: {
+          bucket_hour: string
+          captured_at: string
+          est_billing_reduction_pct: number
+          id: number
+          iops_saved_estimate: number
+          notes: Json
+          realtime_emissions_saved: number
+          storage_bytes_avoided: number
+          writes_routed_owned: number
+          writes_routed_primary: number
+        }
+        Insert: {
+          bucket_hour: string
+          captured_at?: string
+          est_billing_reduction_pct?: number
+          id?: number
+          iops_saved_estimate?: number
+          notes?: Json
+          realtime_emissions_saved?: number
+          storage_bytes_avoided?: number
+          writes_routed_owned?: number
+          writes_routed_primary?: number
+        }
+        Update: {
+          bucket_hour?: string
+          captured_at?: string
+          est_billing_reduction_pct?: number
+          id?: number
+          iops_saved_estimate?: number
+          notes?: Json
+          realtime_emissions_saved?: number
+          storage_bytes_avoided?: number
+          writes_routed_owned?: number
+          writes_routed_primary?: number
+        }
+        Relationships: []
+      }
       telemetry_drop_counter: {
         Row: {
           bucket_hour: string
@@ -6689,6 +6809,48 @@ export type Database = {
         }
         Relationships: []
       }
+      telemetry_extraction_recommendations: {
+        Row: {
+          composite_score: number
+          computed_at: string
+          cost_reduction_score: number
+          id: string
+          rail_guarded: boolean
+          rank: number
+          rationale: string | null
+          realtime_coupling: number
+          rollback_risk: number
+          safety_score: number
+          table_name: string
+        }
+        Insert: {
+          composite_score?: number
+          computed_at?: string
+          cost_reduction_score?: number
+          id?: string
+          rail_guarded?: boolean
+          rank: number
+          rationale?: string | null
+          realtime_coupling?: number
+          rollback_risk?: number
+          safety_score?: number
+          table_name: string
+        }
+        Update: {
+          composite_score?: number
+          computed_at?: string
+          cost_reduction_score?: number
+          id?: string
+          rail_guarded?: boolean
+          rank?: number
+          rationale?: string | null
+          realtime_coupling?: number
+          rollback_risk?: number
+          safety_score?: number
+          table_name?: string
+        }
+        Relationships: []
+      }
       telemetry_health_snapshots: {
         Row: {
           estimated_cost_micro: number
@@ -6731,14 +6893,80 @@ export type Database = {
         }
         Relationships: []
       }
+      telemetry_migration_mode: {
+        Row: {
+          changed_at: string
+          changed_by: string | null
+          created_at: string
+          id: number
+          mode: string
+          reason: string | null
+        }
+        Insert: {
+          changed_at?: string
+          changed_by?: string | null
+          created_at?: string
+          id?: number
+          mode?: string
+          reason?: string | null
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string | null
+          created_at?: string
+          id?: number
+          mode?: string
+          reason?: string | null
+        }
+        Relationships: []
+      }
+      telemetry_rail_guards: {
+        Row: {
+          category: string
+          created_at: string
+          id: string
+          override: boolean
+          override_at: string | null
+          override_by: string | null
+          override_reason: string | null
+          reason: string
+          table_name: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          id?: string
+          override?: boolean
+          override_at?: string | null
+          override_by?: string | null
+          override_reason?: string | null
+          reason: string
+          table_name: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          id?: string
+          override?: boolean
+          override_at?: string | null
+          override_by?: string | null
+          override_reason?: string | null
+          reason?: string
+          table_name?: string
+        }
+        Relationships: []
+      }
       telemetry_replay_queue: {
         Row: {
           attempts: number
           created_at: string
+          dead_lettered: boolean
           event_name: string
           id: string
+          last_attempt_at: string | null
           last_error: string | null
           next_attempt_at: string
+          next_retry_at: string
           payload: Json
           status: string
           target_table: string
@@ -6747,10 +6975,13 @@ export type Database = {
         Insert: {
           attempts?: number
           created_at?: string
+          dead_lettered?: boolean
           event_name: string
           id?: string
+          last_attempt_at?: string | null
           last_error?: string | null
           next_attempt_at?: string
+          next_retry_at?: string
           payload: Json
           status?: string
           target_table: string
@@ -6759,10 +6990,13 @@ export type Database = {
         Update: {
           attempts?: number
           created_at?: string
+          dead_lettered?: boolean
           event_name?: string
           id?: string
+          last_attempt_at?: string | null
           last_error?: string | null
           next_attempt_at?: string
+          next_retry_at?: string
           payload?: Json
           status?: string
           target_table?: string
@@ -8858,6 +9092,7 @@ export type Database = {
           users: number
         }[]
       }
+      autonomous_controller_overview: { Args: never; Returns: Json }
       blog_automation_overview: { Args: never; Returns: Json }
       bookmark_count_for_post: { Args: { _slug: string }; Returns: number }
       bookmark_counts_for_posts: {
@@ -8872,6 +9107,27 @@ export type Database = {
         Returns: undefined
       }
       cancel_ai_job: { Args: { _id: string }; Returns: undefined }
+      capture_cost_trend: {
+        Args: never
+        Returns: {
+          bucket_hour: string
+          captured_at: string
+          est_billing_reduction_pct: number
+          id: number
+          iops_saved_estimate: number
+          notes: Json
+          realtime_emissions_saved: number
+          storage_bytes_avoided: number
+          writes_routed_owned: number
+          writes_routed_primary: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "telemetry_cost_trends"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       claim_ai_jobs: {
         Args: { _limit?: number }
         Returns: {
@@ -8955,6 +9211,26 @@ export type Database = {
         }
         Returns: undefined
       }
+      compute_confidence: {
+        Args: { _stream: string }
+        Returns: {
+          computed_at: string
+          divergence_risk: number
+          evacuation_confidence: number
+          id: number
+          inputs: Json
+          replay_pressure: number
+          rollback_risk: number
+          sink_health: number
+          stream: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "telemetry_confidence_snapshots"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       consume_ai_quota: {
         Args: { _feature: string; _user_id: string }
         Returns: Json
@@ -8974,6 +9250,7 @@ export type Database = {
         }
         Returns: Json
       }
+      controller_tick: { Args: never; Returns: Json }
       db_dangerous_couplings: {
         Args: never
         Returns: {
@@ -9235,6 +9512,7 @@ export type Database = {
           status: string
         }[]
       }
+      rail_guard_check: { Args: { _table: string }; Returns: Json }
       rate_limit_hit: {
         Args: {
           _bucket_key: string
@@ -9246,6 +9524,28 @@ export type Database = {
           hits: number
           retry_after_seconds: number
         }[]
+      }
+      recommend_next_extraction: {
+        Args: { _limit?: number }
+        Returns: {
+          composite_score: number
+          computed_at: string
+          cost_reduction_score: number
+          id: string
+          rail_guarded: boolean
+          rank: number
+          rationale: string | null
+          realtime_coupling: number
+          rollback_risk: number
+          safety_score: number
+          table_name: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "telemetry_extraction_recommendations"
+          isOneToOne: false
+          isSetofReturn: true
+        }
       }
       recommend_next_tools: {
         Args: { _limit?: number; _slug: string }
@@ -9292,6 +9592,34 @@ export type Database = {
         }
         Returns: string
       }
+      replay_engine_claim: {
+        Args: { _limit?: number }
+        Returns: {
+          attempts: number
+          created_at: string
+          dead_lettered: boolean
+          event_name: string
+          id: string
+          last_attempt_at: string | null
+          last_error: string | null
+          next_attempt_at: string
+          next_retry_at: string
+          payload: Json
+          status: string
+          target_table: string
+          updated_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "telemetry_replay_queue"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      replay_engine_complete: {
+        Args: { _err?: string; _id: string; _ok: boolean }
+        Returns: undefined
+      }
       replay_workflow_failure: {
         Args: { _failure_id: string }
         Returns: string
@@ -9304,6 +9632,23 @@ export type Database = {
       roll_up_analytics_events: {
         Args: { _lookback?: string }
         Returns: number
+      }
+      set_migration_mode: {
+        Args: { _mode: string; _reason?: string }
+        Returns: {
+          changed_at: string
+          changed_by: string | null
+          created_at: string
+          id: number
+          mode: string
+          reason: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "telemetry_migration_mode"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       telegram_delivery_timeline: {
         Args: { _bucket?: string; _since?: string }
