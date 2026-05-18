@@ -4,6 +4,9 @@ import { env, ADMIN_CHAT_IDS } from "./env.js";
 import { sendTelegram, getBotInfo, formatAlert, type BotId } from "./telegram.js";
 import { supabaseAdmin } from "./supabase.js";
 import { dedupeKey, isDuplicate } from "./dedupe.js";
+import { startPoller } from "./ops/poller.js";
+import { startCron } from "./ops/cron.js";
+import { startSweeper, startHeartbeat } from "./ops/sweeper.js";
 
 const app = express();
 app.use(express.json({ limit: "256kb" }));
@@ -146,6 +149,22 @@ app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
 
 app.listen(env.PORT, () => {
   console.log(`[telegram-worker] listening on :${env.PORT} (chats=${ADMIN_CHAT_IDS.length})`);
+
+  // --- ops loops (opt-in via OPS_WORKER_ENABLED=true) ---
+  if (String(process.env.OPS_WORKER_ENABLED ?? "false").toLowerCase() === "true") {
+    const workerId = process.env.OPS_WORKER_ID || `ops-${process.pid}-${Math.random().toString(36).slice(2, 6)}`;
+    const queues: Array<"telegram" | "cleanup" | "cron"> = ["telegram", "cleanup", "cron"];
+    const ctl = new AbortController();
+    process.on("SIGTERM", () => ctl.abort());
+    process.on("SIGINT", () => ctl.abort());
+    for (const q of queues) startPoller(q, workerId, ctl.signal);
+    startCron(ctl.signal);
+    startSweeper(workerId, queues, ctl.signal);
+    startHeartbeat(workerId, queues, ctl.signal);
+    console.log(`[ops-worker] enabled — id=${workerId} queues=${queues.join(",")}`);
+  } else {
+    console.log(`[ops-worker] disabled (set OPS_WORKER_ENABLED=true to enable)`);
+  }
 });
 
 process.on("unhandledRejection", (r) => console.error("[unhandledRejection]", r));
