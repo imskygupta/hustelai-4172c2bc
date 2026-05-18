@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, RefreshCw, Database, Network, Activity, Send, Train, Shield, AlertTriangle, Users, Flag, Settings, KeyRound, Radar, Gauge, Newspaper, Lock } from "lucide-react";
+import { ArrowLeft, RefreshCw, Database, Network, Activity, Send, Train, Shield, AlertTriangle, Users, Flag, Settings, KeyRound, Radar, Gauge, Newspaper, Lock, Flame, BarChart3, TrendingUp, Target, Wifi } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { RecipientsPanel, OpsFlagsPanel, RuntimeConfigPanel, SecretsInventoryPanel, DiscoveryPanel } from "./InfrastructureControl";
 import { TelemetryPlanePanel, BlogAutomationPanel } from "./TelemetryPanels";
 import { ExecutionAuthorityPanel } from "./ExecutionAuthorityPanel";
+import { DBHeatmapPanel, QueryPressurePanel, GrowthTrendsPanel, ExtractionCandidatesPanel, RealtimeLoadPanel } from "./DBHeatmapPanels";
 
 type Project = {
   id: string; name: string; purpose: string; environment: string; project_ref: string; project_url: string | null;
@@ -176,6 +177,11 @@ export default function Infrastructure() {
             <TabsTrigger value="telemetry"><Gauge className="h-4 w-4 mr-1" />Telemetry Plane</TabsTrigger>
             <TabsTrigger value="blog"><Newspaper className="h-4 w-4 mr-1" />Blog Automation</TabsTrigger>
             <TabsTrigger value="authority"><Lock className="h-4 w-4 mr-1" />Execution Authority</TabsTrigger>
+            <TabsTrigger value="heatmap"><Flame className="h-4 w-4 mr-1" />DB Heatmap</TabsTrigger>
+            <TabsTrigger value="pressure"><BarChart3 className="h-4 w-4 mr-1" />Query Pressure</TabsTrigger>
+            <TabsTrigger value="growth"><TrendingUp className="h-4 w-4 mr-1" />Growth Trends</TabsTrigger>
+            <TabsTrigger value="candidates"><Target className="h-4 w-4 mr-1" />Extraction Candidates</TabsTrigger>
+            <TabsTrigger value="rtload"><Wifi className="h-4 w-4 mr-1" />Realtime Load</TabsTrigger>
           </TabsList>
 
           <TabsContent value="registry">
@@ -356,6 +362,11 @@ export default function Infrastructure() {
           <TabsContent value="telemetry"><TelemetryPlanePanel /></TabsContent>
           <TabsContent value="blog"><BlogAutomationPanel /></TabsContent>
           <TabsContent value="authority"><ExecutionAuthorityPanel /></TabsContent>
+          <TabsContent value="heatmap"><DBHeatmapPanel /></TabsContent>
+          <TabsContent value="pressure"><QueryPressurePanel /></TabsContent>
+          <TabsContent value="growth"><GrowthTrendsPanel /></TabsContent>
+          <TabsContent value="candidates"><ExtractionCandidatesPanel /></TabsContent>
+          <TabsContent value="rtload"><RealtimeLoadPanel /></TabsContent>
         </Tabs>
       </div>
     </div>
