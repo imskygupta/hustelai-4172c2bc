@@ -34,6 +34,17 @@ function recordMetric(stream: string, outcome: "owned"|"mirror"|"fail", n = 1, b
   } catch { /* tolerate */ }
 }
 
+function recordFallback(stream: string, reason: string): void {
+  try {
+    const primary = getPrimaryService();
+    void primary.rpc("runtime_record_fallback" as any, {
+      _stream: stream,
+      _reason: reason.slice(0, 300),
+      _expires_in_seconds: 600,
+    });
+  } catch { /* tolerate */ }
+}
+
 /**
  * Mirror a single row into the owned async_runtime schema.
  * - `table` is the bare table name inside the async_runtime schema.
@@ -47,6 +58,7 @@ export function mirrorAsyncRuntime(
   const streamName = stream || table;
   if (!ownedReady()) {
     recordMetric(streamName, "fail", 1, 0);
+    recordFallback(streamName, "owned_not_ready");
     return;
   }
   void (async () => {
@@ -55,12 +67,14 @@ export function mirrorAsyncRuntime(
       const { error } = await owned.schema("async_runtime").from(table).insert(row);
       if (error) {
         recordMetric(streamName, "fail", 1, 0);
+        recordFallback(streamName, error.message || "owned_insert_error");
         return;
       }
       const bytes = EST_BYTES[table] ?? 256;
       recordMetric(streamName, "owned", 1, bytes);
-    } catch {
+    } catch (e) {
       recordMetric(streamName, "fail", 1, 0);
+      recordFallback(streamName, (e as Error)?.message || "owned_exception");
     }
   })();
 }
@@ -75,6 +89,7 @@ export function mirrorAsyncRuntimeBatch(
   const streamName = stream || table;
   if (!ownedReady()) {
     recordMetric(streamName, "fail", rows.length, 0);
+    recordFallback(streamName, "owned_not_ready");
     return;
   }
   void (async () => {
@@ -83,12 +98,14 @@ export function mirrorAsyncRuntimeBatch(
       const { error } = await owned.schema("async_runtime").from(table).insert(rows);
       if (error) {
         recordMetric(streamName, "fail", rows.length, 0);
+        recordFallback(streamName, error.message || "owned_insert_error");
         return;
       }
       const bytes = (EST_BYTES[table] ?? 256) * rows.length;
       recordMetric(streamName, "owned", rows.length, bytes);
-    } catch {
+    } catch (e) {
       recordMetric(streamName, "fail", rows.length, 0);
+      recordFallback(streamName, (e as Error)?.message || "owned_exception");
     }
   })();
 }
