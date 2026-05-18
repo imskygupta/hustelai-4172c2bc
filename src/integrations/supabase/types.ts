@@ -1504,6 +1504,201 @@ export type Database = {
         }
         Relationships: []
       }
+      db_extraction_scores: {
+        Row: {
+          computed_at: string
+          cost_reduction_score: number
+          dependency_count: number
+          migration_safety_score: number
+          notes: string | null
+          rank_position: number | null
+          realtime_risk: number
+          rollback_difficulty: number
+          table_name: string
+          total_score: number
+          write_intensity: number
+        }
+        Insert: {
+          computed_at?: string
+          cost_reduction_score?: number
+          dependency_count?: number
+          migration_safety_score?: number
+          notes?: string | null
+          rank_position?: number | null
+          realtime_risk?: number
+          rollback_difficulty?: number
+          table_name: string
+          total_score?: number
+          write_intensity?: number
+        }
+        Update: {
+          computed_at?: string
+          cost_reduction_score?: number
+          dependency_count?: number
+          migration_safety_score?: number
+          notes?: string | null
+          rank_position?: number | null
+          realtime_risk?: number
+          rollback_difficulty?: number
+          table_name?: string
+          total_score?: number
+          write_intensity?: number
+        }
+        Relationships: []
+      }
+      db_heatmap_snapshots: {
+        Row: {
+          captured_at: string
+          dead_rows: number
+          id: number
+          idx_scan: number
+          index_bytes: number
+          last_autovacuum: string | null
+          last_vacuum: string | null
+          live_rows: number
+          n_tup_del: number
+          n_tup_ins: number
+          n_tup_upd: number
+          schema_name: string
+          seq_scan: number
+          table_bytes: number
+          table_name: string
+          total_bytes: number
+        }
+        Insert: {
+          captured_at?: string
+          dead_rows: number
+          id?: number
+          idx_scan: number
+          index_bytes: number
+          last_autovacuum?: string | null
+          last_vacuum?: string | null
+          live_rows: number
+          n_tup_del: number
+          n_tup_ins: number
+          n_tup_upd: number
+          schema_name: string
+          seq_scan: number
+          table_bytes: number
+          table_name: string
+          total_bytes: number
+        }
+        Update: {
+          captured_at?: string
+          dead_rows?: number
+          id?: number
+          idx_scan?: number
+          index_bytes?: number
+          last_autovacuum?: string | null
+          last_vacuum?: string | null
+          live_rows?: number
+          n_tup_del?: number
+          n_tup_ins?: number
+          n_tup_upd?: number
+          schema_name?: string
+          seq_scan?: number
+          table_bytes?: number
+          table_name?: string
+          total_bytes?: number
+        }
+        Relationships: []
+      }
+      db_realtime_subscriptions_snapshots: {
+        Row: {
+          captured_at: string
+          id: number
+          publication: string
+          schema_name: string
+          table_name: string
+        }
+        Insert: {
+          captured_at?: string
+          id?: number
+          publication: string
+          schema_name: string
+          table_name: string
+        }
+        Update: {
+          captured_at?: string
+          id?: number
+          publication?: string
+          schema_name?: string
+          table_name?: string
+        }
+        Relationships: []
+      }
+      db_rpc_pressure_snapshots: {
+        Row: {
+          calls: number
+          captured_at: string
+          function_name: string
+          id: number
+          self_ms: number
+          total_ms: number
+        }
+        Insert: {
+          calls: number
+          captured_at?: string
+          function_name: string
+          id?: number
+          self_ms: number
+          total_ms: number
+        }
+        Update: {
+          calls?: number
+          captured_at?: string
+          function_name?: string
+          id?: number
+          self_ms?: number
+          total_ms?: number
+        }
+        Relationships: []
+      }
+      db_table_attribution: {
+        Row: {
+          cost_bucket: string
+          dependent_pages: string[]
+          dependent_runtimes: string[]
+          extraction_difficulty: number
+          is_async_safe: boolean
+          is_auth_critical: boolean
+          notes: string | null
+          owning_module: string
+          primary_runtime: string
+          realtime_enabled: boolean
+          table_name: string
+          updated_at: string
+        }
+        Insert: {
+          cost_bucket: string
+          dependent_pages?: string[]
+          dependent_runtimes?: string[]
+          extraction_difficulty?: number
+          is_async_safe?: boolean
+          is_auth_critical?: boolean
+          notes?: string | null
+          owning_module: string
+          primary_runtime: string
+          realtime_enabled?: boolean
+          table_name: string
+          updated_at?: string
+        }
+        Update: {
+          cost_bucket?: string
+          dependent_pages?: string[]
+          dependent_runtimes?: string[]
+          extraction_difficulty?: number
+          is_async_safe?: boolean
+          is_auth_critical?: boolean
+          notes?: string | null
+          owning_module?: string
+          primary_runtime?: string
+          realtime_enabled?: boolean
+          table_name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       doc_blocks: {
         Row: {
           body: string
@@ -8417,6 +8612,53 @@ export type Database = {
         }
         Relationships: []
       }
+      v_db_extraction_ranking: {
+        Row: {
+          cost_bucket: string | null
+          cost_reduction_score: number | null
+          dependency_count: number | null
+          is_async_safe: boolean | null
+          is_auth_critical: boolean | null
+          migration_safety_score: number | null
+          owning_module: string | null
+          primary_runtime: string | null
+          rank_position: number | null
+          realtime_enabled: boolean | null
+          realtime_risk: number | null
+          rollback_difficulty: number | null
+          table_name: string | null
+          total_score: number | null
+          write_intensity: number | null
+        }
+        Relationships: []
+      }
+      v_db_heatmap_latest: {
+        Row: {
+          captured_at: string | null
+          cost_bucket: string | null
+          dead_rows: number | null
+          dependent_pages: string[] | null
+          dependent_runtimes: string[] | null
+          extraction_difficulty: number | null
+          idx_scan: number | null
+          index_bytes: number | null
+          is_async_safe: boolean | null
+          is_auth_critical: boolean | null
+          live_rows: number | null
+          n_tup_del: number | null
+          n_tup_ins: number | null
+          n_tup_upd: number | null
+          owning_module: string | null
+          primary_runtime: string | null
+          realtime_enabled: boolean | null
+          schema_name: string | null
+          seq_scan: number | null
+          table_bytes: number | null
+          table_name: string | null
+          total_bytes: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       _assert_admin_with_reason: { Args: { _reason: string }; Returns: string }
@@ -8624,6 +8866,17 @@ export type Database = {
         }
         Returns: Json
       }
+      db_dangerous_couplings: {
+        Args: never
+        Returns: {
+          detail: string
+          kind: string
+          severity: string
+          target: string
+        }[]
+      }
+      db_extraction_recompute: { Args: never; Returns: number }
+      db_heatmap_capture: { Args: never; Returns: Json }
       enqueue_ai_job: {
         Args: {
           _dedupe_key?: string
