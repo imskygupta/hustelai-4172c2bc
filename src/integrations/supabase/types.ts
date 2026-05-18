@@ -5646,47 +5646,65 @@ export type Database = {
       }
       runtime_extraction_streams: {
         Row: {
+          authority_state: string
           category: string
           confidence: number
           created_at: string
           critical: boolean
           est_bytes_per_write: number
           est_writes_per_hour: number
+          fallback_enabled: boolean
           id: string
           notes: string | null
           owner_db: string | null
+          parity_status: string
           posture: string
+          primary_write_disabled_at: string | null
           rail_guarded: boolean
+          replay_pressure: number
+          rollback_risk: string
           stream: string
           updated_at: string
         }
         Insert: {
+          authority_state?: string
           category: string
           confidence?: number
           created_at?: string
           critical?: boolean
           est_bytes_per_write?: number
           est_writes_per_hour?: number
+          fallback_enabled?: boolean
           id?: string
           notes?: string | null
           owner_db?: string | null
+          parity_status?: string
           posture?: string
+          primary_write_disabled_at?: string | null
           rail_guarded?: boolean
+          replay_pressure?: number
+          rollback_risk?: string
           stream: string
           updated_at?: string
         }
         Update: {
+          authority_state?: string
           category?: string
           confidence?: number
           created_at?: string
           critical?: boolean
           est_bytes_per_write?: number
           est_writes_per_hour?: number
+          fallback_enabled?: boolean
           id?: string
           notes?: string | null
           owner_db?: string | null
+          parity_status?: string
           posture?: string
+          primary_write_disabled_at?: string | null
           rail_guarded?: boolean
+          replay_pressure?: number
+          rollback_risk?: string
           stream?: string
           updated_at?: string
         }
@@ -10167,6 +10185,10 @@ export type Database = {
           _outcome: string
           _stream: string
         }
+        Returns: undefined
+      }
+      runtime_set_authority: {
+        Args: { _state: string; _stream: string }
         Returns: undefined
       }
       set_migration_mode: {

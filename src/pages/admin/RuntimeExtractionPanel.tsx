@@ -10,6 +10,7 @@ import { RefreshCw, ShieldAlert, Activity, Database, AlertTriangle, Zap, DollarS
 type Overview = {
   primary_dependency_pct: number;
   operational_independence_pct: number;
+  operational_db_independence_pct?: number;
   writes_avoided_per_hour: number;
   writes_to_primary_per_hour: number;
   projected_monthly_savings_usd: number;
@@ -17,12 +18,20 @@ type Overview = {
   unsafe_direct_write_count: number;
   total_streams: number;
   evacuated_streams: number;
+  authoritative_streams?: number;
+  still_primary_streams?: number;
+  permanent_dual_write_risk?: number;
+  primary_writes_removed_streams?: number;
+  primary_writes_removed_per_hour?: number;
 };
 
 type Stream = {
   id: string; stream: string; category: string; posture: string;
   owner_db: string | null; confidence: number; rail_guarded: boolean;
   critical: boolean; est_writes_per_hour: number; notes: string | null;
+  authority_state?: string; parity_status?: string; fallback_enabled?: boolean;
+  replay_pressure?: number; rollback_risk?: string;
+  primary_write_disabled_at?: string | null;
 };
 type Finding = {
   id: string; kind: string; location: string; detail: string | null;
@@ -47,6 +56,14 @@ type VerifyStream = {
 type Verify = { owned_db_ready: boolean; generated_at: string; streams: VerifyStream[] };
 
 const POSTURES = ["primary","owned","mirror","shadow","rollback","blocked"];
+const AUTHORITY_STATES = ["primary","mirror","owned_authoritative","primary_fallback_only","primary_disabled"];
+const authorityVariant: Record<string, "default"|"destructive"|"secondary"|"outline"> = {
+  primary: "destructive",
+  mirror: "secondary",
+  owned_authoritative: "default",
+  primary_fallback_only: "outline",
+  primary_disabled: "default",
+};
 const postureVariant: Record<string, "default"|"destructive"|"secondary"|"outline"> = {
   primary: "destructive", rollback: "destructive", blocked: "outline",
   owned: "default", mirror: "secondary", shadow: "secondary",
@@ -110,6 +127,20 @@ export function RuntimeExtractionPanel() {
         .from("runtime_extraction_streams")
         .update({ posture, updated_at: new Date().toISOString() })
         .eq("id", s.id);
+      if (error) throw error;
+      await load();
+    } catch (e: any) { setError(e?.message || String(e)); }
+    finally { setBusy(false); }
+  }, [load]);
+
+  const setAuthority = useCallback(async (s: Stream, state: string) => {
+    if (s.rail_guarded && (state === "owned_authoritative" || state === "primary_disabled")) {
+      setError(`${s.stream} is rail-guarded — cannot promote authority`);
+      return;
+    }
+    setBusy(true);
+    try {
+      const { error } = await supabase.rpc("runtime_set_authority" as any, { _stream: s.stream, _state: state });
       if (error) throw error;
       await load();
     } catch (e: any) { setError(e?.message || String(e)); }
@@ -212,18 +243,22 @@ export function RuntimeExtractionPanel() {
           <Kpi icon={Database} label="Primary dep" value={`${overview.primary_dependency_pct}%`}
                sub={`${overview.total_streams - overview.evacuated_streams}/${overview.total_streams} streams`}
                tone={overview.primary_dependency_pct > 50 ? "text-destructive" : ""}/>
-          <Kpi icon={Activity} label="Independence" value={`${overview.operational_independence_pct}%`}
-               sub={`${overview.evacuated_streams} evacuated`}
-               tone={overview.operational_independence_pct >= 50 ? "text-emerald-500" : ""}/>
+          <Kpi icon={Activity} label="Op DB independence" value={`${overview.operational_db_independence_pct ?? overview.operational_independence_pct}%`}
+               sub={`${overview.authoritative_streams ?? 0} authoritative / ${overview.total_streams}`}
+               tone={(overview.operational_db_independence_pct ?? 0) >= 50 ? "text-emerald-500" : ""}/>
           <Kpi icon={Zap} label="Writes avoided/hr" value={overview.writes_avoided_per_hour.toLocaleString()}
                sub={`primary: ${overview.writes_to_primary_per_hour.toLocaleString()}/hr`}/>
           <Kpi icon={DollarSign} label="Monthly savings" value={`$${overview.projected_monthly_savings_usd}`}
                sub="projected at current rate"/>
-          <Kpi icon={ShieldAlert} label="Critical deps" value={overview.critical_dependency_count}
-               sub="rail-guarded on primary" tone="text-amber-500"/>
-          <Kpi icon={AlertTriangle} label="Unsafe writes" value={overview.unsafe_direct_write_count}
-               sub="direct-write findings"
-               tone={overview.unsafe_direct_write_count > 0 ? "text-destructive" : ""}/>
+          <Kpi icon={CheckCircle2} label="Primary writes removed" value={overview.primary_writes_removed_streams ?? 0}
+               sub={`${(overview.primary_writes_removed_per_hour ?? 0).toLocaleString()} writes/hr avoided`}
+               tone={(overview.primary_writes_removed_streams ?? 0) > 0 ? "text-emerald-500" : ""}/>
+          <Kpi icon={AlertTriangle} label="Dual-write risk" value={overview.permanent_dual_write_risk ?? 0}
+               sub="streams still mirroring"
+               tone={(overview.permanent_dual_write_risk ?? 0) > 4 ? "text-amber-500" : ""}/>
+          <Kpi icon={ShieldAlert} label="Still primary-bound" value={overview.still_primary_streams ?? 0}
+               sub={`${overview.critical_dependency_count} rail-guarded · ${overview.unsafe_direct_write_count} unsafe`}
+               tone={(overview.still_primary_streams ?? 0) > 0 ? "text-destructive" : ""}/>
         </div>
       )}
 
@@ -233,8 +268,8 @@ export function RuntimeExtractionPanel() {
           <TableHeader>
             <TableRow>
               <TableHead>Stream</TableHead><TableHead>Category</TableHead>
-              <TableHead>Posture</TableHead><TableHead>Owner DB</TableHead>
-              <TableHead>Confidence</TableHead><TableHead>Est w/hr</TableHead>
+              <TableHead>Posture</TableHead><TableHead>Authority</TableHead>
+              <TableHead>Parity</TableHead><TableHead>Est w/hr</TableHead>
               <TableHead>Guarded</TableHead>
             </TableRow>
           </TableHeader>
@@ -252,9 +287,34 @@ export function RuntimeExtractionPanel() {
                       {POSTURES.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
                     </SelectContent>
                   </Select>
+                  <div className="mt-1">
+                    <Badge variant={postureVariant[s.posture] || "outline"} className="text-[10px]">{s.posture}</Badge>
+                  </div>
                 </TableCell>
-                <TableCell className="font-mono text-xs">{s.owner_db || "—"}</TableCell>
-                <TableCell><Badge variant={s.confidence >= 80 ? "default" : "outline"}>{s.confidence}</Badge></TableCell>
+                <TableCell>
+                  <Select value={s.authority_state || "primary"} onValueChange={(v) => setAuthority(s, v)} disabled={busy || s.rail_guarded}>
+                    <SelectTrigger className="h-7 w-44 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {AUTHORITY_STATES.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  <div className="mt-1">
+                    <Badge variant={authorityVariant[s.authority_state || "primary"] || "outline"} className="text-[10px]">
+                      {s.authority_state || "primary"}
+                    </Badge>
+                    {s.fallback_enabled === false && (
+                      <Badge variant="default" className="ml-1 text-[10px]">no-fallback</Badge>
+                    )}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <Badge variant={s.parity_status === "healthy" ? "default" : "outline"} className="text-[10px]">
+                    {s.parity_status || "unknown"}
+                  </Badge>
+                  <div className="text-[10px] text-muted-foreground mt-1">risk: {s.rollback_risk || "low"}</div>
+                </TableCell>
                 <TableCell className="text-xs">{s.est_writes_per_hour.toLocaleString()}</TableCell>
                 <TableCell>
                   {s.rail_guarded
