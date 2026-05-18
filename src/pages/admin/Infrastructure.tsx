@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, RefreshCw, Database, Network, Activity, Send, Train, Shield, AlertTriangle } from "lucide-react";
+import { ArrowLeft, RefreshCw, Database, Network, Activity, Send, Train, Shield, AlertTriangle, Users, Flag, Settings, KeyRound, Radar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { RecipientsPanel, OpsFlagsPanel, RuntimeConfigPanel, SecretsInventoryPanel, DiscoveryPanel } from "./InfrastructureControl";
 
 type Project = {
   id: string; name: string; purpose: string; environment: string; project_ref: string; project_url: string | null;
@@ -165,6 +166,11 @@ export default function Infrastructure() {
             <TabsTrigger value="telegram"><Send className="h-4 w-4 mr-1" />Telegram</TabsTrigger>
             <TabsTrigger value="railway"><Train className="h-4 w-4 mr-1" />Railway</TabsTrigger>
             <TabsTrigger value="extraction"><Shield className="h-4 w-4 mr-1" />Extraction Readiness</TabsTrigger>
+            <TabsTrigger value="recipients"><Users className="h-4 w-4 mr-1" />Recipients</TabsTrigger>
+            <TabsTrigger value="opsflags"><Flag className="h-4 w-4 mr-1" />Ops Flags</TabsTrigger>
+            <TabsTrigger value="runtime"><Settings className="h-4 w-4 mr-1" />Runtime Config</TabsTrigger>
+            <TabsTrigger value="secrets"><KeyRound className="h-4 w-4 mr-1" />Secrets</TabsTrigger>
+            <TabsTrigger value="discovery"><Radar className="h-4 w-4 mr-1" />Discovery</TabsTrigger>
           </TabsList>
 
           <TabsContent value="registry">
@@ -336,6 +342,12 @@ export default function Infrastructure() {
               </Table>
             </Card>
           </TabsContent>
+
+          <TabsContent value="recipients"><RecipientsPanel /></TabsContent>
+          <TabsContent value="opsflags"><OpsFlagsPanel /></TabsContent>
+          <TabsContent value="runtime"><RuntimeConfigPanel /></TabsContent>
+          <TabsContent value="secrets"><SecretsInventoryPanel /></TabsContent>
+          <TabsContent value="discovery"><DiscoveryPanel /></TabsContent>
         </Tabs>
       </div>
     </div>

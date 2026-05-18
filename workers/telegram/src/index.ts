@@ -7,6 +7,7 @@ import { dedupeKey, isDuplicate } from "./dedupe.js";
 import { startPoller } from "./ops/poller.js";
 import { startCron } from "./ops/cron.js";
 import { startSweeper, startHeartbeat } from "./ops/sweeper.js";
+import { startConfigPoller, getAdminChats, isFlagEnabled, snapshotInfo } from "./config/remote.js";
 
 const app = express();
 app.use(express.json({ limit: "256kb" }));
@@ -30,8 +31,28 @@ app.get("/health", async (_req, res) => {
     bot_reachable: !!bot,
     bot_username: bot?.username || null,
     admin_chats: ADMIN_CHAT_IDS.length,
+    remote_config: snapshotInfo(),
     env: env.NODE_ENV,
     ts: new Date().toISOString(),
+  });
+});
+
+// --- Ops self-awareness endpoints (admin/probe consumption) ---
+app.get("/ops/dedupe-stats", requireWorkerSecret, (_req, res) => {
+  res.json({ ok: true, snapshot: snapshotInfo() });
+});
+
+app.get("/ops/env-fingerprint", requireWorkerSecret, (_req, res) => {
+  const required = ["TELEGRAM_BOT_TOKEN", "TELEGRAM_ADMIN_CHAT_IDS", "SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY", "WORKER_SHARED_SECRET"];
+  const optional = ["SKYMEDIA_BOT_TOKEN", "OPS_CONFIG_URL", "OPS_WORKER_ENABLED"];
+  const present = (k: string) => !!process.env[k];
+  res.json({
+    ok: true,
+    required_present: required.filter(present),
+    required_missing: required.filter((k) => !present(k)),
+    optional_present: optional.filter(present),
+    node_env: env.NODE_ENV,
+    uptime_s: Math.round(process.uptime()),
   });
 });
 
@@ -117,7 +138,11 @@ app.post("/send-alert", requireWorkerSecret, async (req, res) => {
           user_id: a.user_id ?? null,
           meta: a.meta ?? null,
         });
-    const targets = effectiveChat ? [effectiveChat] : ADMIN_CHAT_IDS;
+    // Master kill via DB-backed flag (defaults to true when offline).
+    if (!isFlagEnabled("telegram.dispatch_enabled", true)) {
+      return res.json({ ok: true, alert_id: alertId, telegram_attempted: false, suppressed: "flag" });
+    }
+    const targets = effectiveChat ? [effectiveChat] : getAdminChats(effectiveBot);
     for (const chat of targets) {
       const r = await sendTelegram(chat, text, effectiveBot);
       results.push({ chat, ...r } as any);
@@ -149,6 +174,7 @@ app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
 
 app.listen(env.PORT, () => {
   console.log(`[telegram-worker] listening on :${env.PORT} (chats=${ADMIN_CHAT_IDS.length})`);
+  startConfigPoller();
 
   // --- ops loops (opt-in via OPS_WORKER_ENABLED=true) ---
   if (String(process.env.OPS_WORKER_ENABLED ?? "false").toLowerCase() === "true") {

@@ -2806,6 +2806,156 @@ export type Database = {
         }
         Relationships: []
       }
+      infra_discovery_findings: {
+        Row: {
+          confidence: number
+          first_seen_at: string
+          id: string
+          identifier: string
+          kind: string
+          last_seen_at: string
+          metadata: Json | null
+          notes: string | null
+          registered: boolean
+          source_path: string | null
+        }
+        Insert: {
+          confidence?: number
+          first_seen_at?: string
+          id?: string
+          identifier: string
+          kind: string
+          last_seen_at?: string
+          metadata?: Json | null
+          notes?: string | null
+          registered?: boolean
+          source_path?: string | null
+        }
+        Update: {
+          confidence?: number
+          first_seen_at?: string
+          id?: string
+          identifier?: string
+          kind?: string
+          last_seen_at?: string
+          metadata?: Json | null
+          notes?: string | null
+          registered?: boolean
+          source_path?: string | null
+        }
+        Relationships: []
+      }
+      infra_extraction_milestones: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          evidence: string | null
+          id: string
+          milestone: string
+          notes: string | null
+          project_ref: string
+          target_date: string | null
+          updated_at: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          evidence?: string | null
+          id?: string
+          milestone: string
+          notes?: string | null
+          project_ref: string
+          target_date?: string | null
+          updated_at?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          evidence?: string | null
+          id?: string
+          milestone?: string
+          notes?: string | null
+          project_ref?: string
+          target_date?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      infra_extraction_snapshots: {
+        Row: {
+          criticality: string | null
+          dependency_count: number | null
+          est_daily_writes: number | null
+          est_storage_mb: number | null
+          extraction_readiness: number | null
+          id: string
+          lovable_dependency_score: number | null
+          project_ref: string
+          sampled_at: string
+        }
+        Insert: {
+          criticality?: string | null
+          dependency_count?: number | null
+          est_daily_writes?: number | null
+          est_storage_mb?: number | null
+          extraction_readiness?: number | null
+          id?: string
+          lovable_dependency_score?: number | null
+          project_ref: string
+          sampled_at?: string
+        }
+        Update: {
+          criticality?: string | null
+          dependency_count?: number | null
+          est_daily_writes?: number | null
+          est_storage_mb?: number | null
+          extraction_readiness?: number | null
+          id?: string
+          lovable_dependency_score?: number | null
+          project_ref?: string
+          sampled_at?: string
+        }
+        Relationships: []
+      }
+      infra_feature_flags: {
+        Row: {
+          created_at: string
+          description: string | null
+          enabled: boolean
+          environments: string[]
+          flag_key: string
+          maintenance: boolean
+          message: string | null
+          rollout_pct: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          enabled?: boolean
+          environments?: string[]
+          flag_key: string
+          maintenance?: boolean
+          message?: string | null
+          rollout_pct?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          enabled?: boolean
+          environments?: string[]
+          flag_key?: string
+          maintenance?: boolean
+          message?: string | null
+          rollout_pct?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       infra_railway_services: {
         Row: {
           active_workers: number | null
@@ -2860,6 +3010,39 @@ export type Database = {
         }
         Relationships: []
       }
+      infra_runtime_config: {
+        Row: {
+          created_at: string
+          description: string | null
+          env: string
+          key: string
+          scope: string
+          updated_at: string
+          updated_by: string | null
+          value: Json
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          env?: string
+          key: string
+          scope?: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: Json
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          env?: string
+          key?: string
+          scope?: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: Json
+        }
+        Relationships: []
+      }
       infra_runtime_health: {
         Row: {
           auth_healthy: boolean | null
@@ -2899,6 +3082,42 @@ export type Database = {
           reachable?: boolean | null
           recent_errors?: Json
           sampled_at?: string
+        }
+        Relationships: []
+      }
+      infra_service_secrets_meta: {
+        Row: {
+          created_at: string
+          expected_format: string | null
+          last_rotated_at: string | null
+          location: string
+          notes: string | null
+          owner_service: string
+          required_by: string[]
+          secret_name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          expected_format?: string | null
+          last_rotated_at?: string | null
+          location?: string
+          notes?: string | null
+          owner_service: string
+          required_by?: string[]
+          secret_name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          expected_format?: string | null
+          last_rotated_at?: string | null
+          location?: string
+          notes?: string | null
+          owner_service?: string
+          required_by?: string[]
+          secret_name?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -4204,30 +4423,45 @@ export type Database = {
           chat_id: string
           created_at: string
           created_by: string | null
+          deprecated: boolean
           enabled: boolean
           id: string
           label: string | null
+          muted_until: string | null
           role: string
+          routing_role: string
+          severity_min: string
+          updated_at: string
         }
         Insert: {
           bot?: string
           chat_id: string
           created_at?: string
           created_by?: string | null
+          deprecated?: boolean
           enabled?: boolean
           id?: string
           label?: string | null
+          muted_until?: string | null
           role?: string
+          routing_role?: string
+          severity_min?: string
+          updated_at?: string
         }
         Update: {
           bot?: string
           chat_id?: string
           created_at?: string
           created_by?: string | null
+          deprecated?: boolean
           enabled?: boolean
           id?: string
           label?: string | null
+          muted_until?: string | null
           role?: string
+          routing_role?: string
+          severity_min?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -6680,6 +6914,42 @@ export type Database = {
           status?: string
           target_tier?: string
           title?: string
+        }
+        Relationships: []
+      }
+      worker_deployments: {
+        Row: {
+          commit_sha: string | null
+          deployed_at: string
+          env_fingerprint: Json | null
+          id: string
+          reported_at: string
+          service: string
+          source: string | null
+          uptime_reset: boolean | null
+          version: string | null
+        }
+        Insert: {
+          commit_sha?: string | null
+          deployed_at?: string
+          env_fingerprint?: Json | null
+          id?: string
+          reported_at?: string
+          service: string
+          source?: string | null
+          uptime_reset?: boolean | null
+          version?: string | null
+        }
+        Update: {
+          commit_sha?: string | null
+          deployed_at?: string
+          env_fingerprint?: Json | null
+          id?: string
+          reported_at?: string
+          service?: string
+          source?: string | null
+          uptime_reset?: boolean | null
+          version?: string | null
         }
         Relationships: []
       }
