@@ -2776,6 +2776,270 @@ export type Database = {
         }
         Relationships: []
       }
+      infra_dependencies: {
+        Row: {
+          created_at: string
+          id: string
+          notes: string | null
+          source_name: string
+          source_type: string
+          target_kind: string
+          target_project_ref: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          source_name: string
+          source_type: string
+          target_kind: string
+          target_project_ref: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          source_name?: string
+          source_type?: string
+          target_kind?: string
+          target_project_ref?: string
+        }
+        Relationships: []
+      }
+      infra_railway_services: {
+        Row: {
+          active_workers: number | null
+          created_at: string
+          domain: string | null
+          env_dependencies: string[]
+          health_url: string | null
+          id: string
+          is_active: boolean
+          last_seen_at: string | null
+          notes: string | null
+          purpose: string
+          restart_count: number | null
+          service_name: string
+          status: string | null
+          updated_at: string
+          uptime_pct: number | null
+        }
+        Insert: {
+          active_workers?: number | null
+          created_at?: string
+          domain?: string | null
+          env_dependencies?: string[]
+          health_url?: string | null
+          id?: string
+          is_active?: boolean
+          last_seen_at?: string | null
+          notes?: string | null
+          purpose: string
+          restart_count?: number | null
+          service_name: string
+          status?: string | null
+          updated_at?: string
+          uptime_pct?: number | null
+        }
+        Update: {
+          active_workers?: number | null
+          created_at?: string
+          domain?: string | null
+          env_dependencies?: string[]
+          health_url?: string | null
+          id?: string
+          is_active?: boolean
+          last_seen_at?: string | null
+          notes?: string | null
+          purpose?: string
+          restart_count?: number | null
+          service_name?: string
+          status?: string | null
+          updated_at?: string
+          uptime_pct?: number | null
+        }
+        Relationships: []
+      }
+      infra_runtime_health: {
+        Row: {
+          auth_healthy: boolean | null
+          functions_responding: boolean | null
+          id: string
+          last_cron_at: string | null
+          last_write_at: string | null
+          latency_ms: number | null
+          paused: boolean | null
+          project_ref: string
+          reachable: boolean | null
+          recent_errors: Json
+          sampled_at: string
+        }
+        Insert: {
+          auth_healthy?: boolean | null
+          functions_responding?: boolean | null
+          id?: string
+          last_cron_at?: string | null
+          last_write_at?: string | null
+          latency_ms?: number | null
+          paused?: boolean | null
+          project_ref: string
+          reachable?: boolean | null
+          recent_errors?: Json
+          sampled_at?: string
+        }
+        Update: {
+          auth_healthy?: boolean | null
+          functions_responding?: boolean | null
+          id?: string
+          last_cron_at?: string | null
+          last_write_at?: string | null
+          latency_ms?: number | null
+          paused?: boolean | null
+          project_ref?: string
+          reachable?: boolean | null
+          recent_errors?: Json
+          sampled_at?: string
+        }
+        Relationships: []
+      }
+      infra_supabase_projects: {
+        Row: {
+          connected_domains: string[]
+          connected_modules: string[]
+          created_at: string
+          criticality: string
+          edge_functions_count: number | null
+          environment: string
+          est_daily_writes: number | null
+          est_storage_mb: number | null
+          extraction_readiness: number | null
+          failover_notes: string | null
+          id: string
+          is_active: boolean
+          last_db_activity_at: string | null
+          last_function_call_at: string | null
+          lovable_dependency_score: number | null
+          migration_state: string
+          name: string
+          notes: string | null
+          owner_category: string
+          project_ref: string
+          project_url: string | null
+          purpose: string
+          risk_if_primary_dies: string | null
+          safe_to_isolate: boolean | null
+          tables_count: number | null
+          updated_at: string
+        }
+        Insert: {
+          connected_domains?: string[]
+          connected_modules?: string[]
+          created_at?: string
+          criticality: string
+          edge_functions_count?: number | null
+          environment?: string
+          est_daily_writes?: number | null
+          est_storage_mb?: number | null
+          extraction_readiness?: number | null
+          failover_notes?: string | null
+          id?: string
+          is_active?: boolean
+          last_db_activity_at?: string | null
+          last_function_call_at?: string | null
+          lovable_dependency_score?: number | null
+          migration_state?: string
+          name: string
+          notes?: string | null
+          owner_category: string
+          project_ref: string
+          project_url?: string | null
+          purpose: string
+          risk_if_primary_dies?: string | null
+          safe_to_isolate?: boolean | null
+          tables_count?: number | null
+          updated_at?: string
+        }
+        Update: {
+          connected_domains?: string[]
+          connected_modules?: string[]
+          created_at?: string
+          criticality?: string
+          edge_functions_count?: number | null
+          environment?: string
+          est_daily_writes?: number | null
+          est_storage_mb?: number | null
+          extraction_readiness?: number | null
+          failover_notes?: string | null
+          id?: string
+          is_active?: boolean
+          last_db_activity_at?: string | null
+          last_function_call_at?: string | null
+          lovable_dependency_score?: number | null
+          migration_state?: string
+          name?: string
+          notes?: string | null
+          owner_category?: string
+          project_ref?: string
+          project_url?: string | null
+          purpose?: string
+          risk_if_primary_dies?: string | null
+          safe_to_isolate?: boolean | null
+          tables_count?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      infra_telegram_registry: {
+        Row: {
+          bot_label: string
+          bot_username: string | null
+          chat_ids: string[]
+          created_at: string
+          delivery_success_pct_24h: number | null
+          env_dependencies: string[]
+          id: string
+          is_active: boolean
+          last_message_at: string | null
+          notes: string | null
+          routing_role: string
+          updated_at: string
+          webhook_target: string | null
+          worker_owner: string | null
+        }
+        Insert: {
+          bot_label: string
+          bot_username?: string | null
+          chat_ids?: string[]
+          created_at?: string
+          delivery_success_pct_24h?: number | null
+          env_dependencies?: string[]
+          id?: string
+          is_active?: boolean
+          last_message_at?: string | null
+          notes?: string | null
+          routing_role: string
+          updated_at?: string
+          webhook_target?: string | null
+          worker_owner?: string | null
+        }
+        Update: {
+          bot_label?: string
+          bot_username?: string | null
+          chat_ids?: string[]
+          created_at?: string
+          delivery_success_pct_24h?: number | null
+          env_dependencies?: string[]
+          id?: string
+          is_active?: boolean
+          last_message_at?: string | null
+          notes?: string | null
+          routing_role?: string
+          updated_at?: string
+          webhook_target?: string | null
+          worker_owner?: string | null
+        }
+        Relationships: []
+      }
       intelligence_alerts: {
         Row: {
           acknowledged_at: string | null
@@ -3931,6 +4195,39 @@ export type Database = {
           target_label?: string | null
           target_type?: string | null
           user_agent_hash?: string | null
+        }
+        Relationships: []
+      }
+      ops_telegram_recipients: {
+        Row: {
+          bot: string
+          chat_id: string
+          created_at: string
+          created_by: string | null
+          enabled: boolean
+          id: string
+          label: string | null
+          role: string
+        }
+        Insert: {
+          bot?: string
+          chat_id: string
+          created_at?: string
+          created_by?: string | null
+          enabled?: boolean
+          id?: string
+          label?: string | null
+          role?: string
+        }
+        Update: {
+          bot?: string
+          chat_id?: string
+          created_at?: string
+          created_by?: string | null
+          enabled?: boolean
+          id?: string
+          label?: string | null
+          role?: string
         }
         Relationships: []
       }
