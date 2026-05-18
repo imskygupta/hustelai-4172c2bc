@@ -1,8 +1,8 @@
-// Fire-and-forget operational alerts to Telegram (primary) + email (fallback).
+// Fire-and-forget operational alerts via the Railway Telegram worker
+// (primary) + email (fallback). Never throws.
 // MUST never throw — callers should not be impacted by ops alert failures.
+import { dispatchToWorker, workerConfigured } from "./notifications/worker.ts";
 
-const TELEGRAM_BOT_TOKEN = Deno.env.get("TELEGRAM_BOT_TOKEN") || "";
-const TELEGRAM_ADMIN_CHAT_ID = Deno.env.get("TELEGRAM_ADMIN_CHAT_ID") || "";
 const FALLBACK_EMAIL = Deno.env.get("OPS_FALLBACK_EMAIL") || Deno.env.get("SMTP_SUPPORT_EMAIL") || "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 
@@ -45,18 +45,18 @@ export function notifyOps(event: OpsEvent, payload: Record<string, any> = {}): P
   // fire-and-forget: schedule but do not await
   const task = (async () => {
     try {
-      if (TELEGRAM_BOT_TOKEN && TELEGRAM_ADMIN_CHAT_ID) {
-        await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            chat_id: TELEGRAM_ADMIN_CHAT_ID,
-            text: fmt(event, payload),
-            parse_mode: "HTML",
-            disable_web_page_preview: true,
-          }),
-        }).catch(() => {});
-        return;
+      if (workerConfigured()) {
+        const r = await dispatchToWorker({
+          bot: "hustleai",
+          message: fmt(event, payload),
+          source: `notify-ops:${event}`,
+          severity: event === "webhook_failed" || event === "duplicate_payment_detected" ? "error" : "info",
+          force_telegram: true,
+          dedupe_key: `notify-ops:${event}:${payload.payment_id || payload.user_email || ""}`,
+          meta: payload,
+        });
+        if (r.ok) return;
+        // fall through to email fallback on worker failure
       }
       // Fallback: Resend email if available
       if (RESEND_API_KEY && FALLBACK_EMAIL) {

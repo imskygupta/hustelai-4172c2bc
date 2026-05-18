@@ -1,7 +1,7 @@
 import express, { Request, Response, NextFunction } from "express";
 import { z } from "zod";
 import { env, ADMIN_CHAT_IDS } from "./env.js";
-import { sendTelegram, getBotInfo, formatAlert } from "./telegram.js";
+import { sendTelegram, getBotInfo, formatAlert, type BotId } from "./telegram.js";
 import { supabaseAdmin } from "./supabase.js";
 import { dedupeKey, isDuplicate } from "./dedupe.js";
 
@@ -34,7 +34,12 @@ app.get("/health", async (_req, res) => {
 
 // --- Send alert ---
 const AlertSchema = z.object({
-  kind: z.string().min(1).max(120),
+  // Simple payload mode: { bot, message, chatId } — used by the Lovable Cloud
+  // edge-function fan-out. Either `message` (simple) or `kind`+`message` (full)
+  // is accepted.
+  bot: z.enum(["hustleai", "skymedia"]).optional(),
+  chatId: z.string().max(60).nullable().optional(),
+  kind: z.string().min(1).max(120).optional(),
   severity: z.enum(["info", "warning", "error", "critical"]).default("warning"),
   source: z.string().max(120).default("worker"),
   user_id: z.string().uuid().nullable().optional(),
@@ -45,7 +50,7 @@ const AlertSchema = z.object({
   force_telegram: z.boolean().optional(),
   // Optional explicit dedupe override
   dedupe_key: z.string().max(240).nullable().optional(),
-  // Optional override chat (defaults to all ADMIN_CHAT_IDS)
+  // Legacy alias for chatId
   chat_id: z.string().max(60).nullable().optional(),
 });
 
@@ -55,8 +60,15 @@ app.post("/send-alert", requireWorkerSecret, async (req, res) => {
     return res.status(400).json({ ok: false, error: "invalid payload", details: parsed.error.flatten() });
   }
   const a = parsed.data;
+  const effectiveBot: BotId = a.bot ?? "hustleai";
+  const effectiveChat = a.chatId ?? a.chat_id ?? null;
+  // In simple mode (no `kind`), default to forced telegram + a synthetic kind
+  // so we still record the alert and always deliver.
+  const isSimpleMode = !a.kind;
+  const kind = a.kind ?? `worker.${a.source || "msg"}`;
+  const forceSend = a.force_telegram === true || isSimpleMode;
 
-  const key = a.dedupe_key || dedupeKey([a.kind, a.user_id, a.message.slice(0, 80)]);
+  const key = a.dedupe_key || dedupeKey([kind, effectiveBot, a.user_id, a.message.slice(0, 80)]);
   if (isDuplicate(key)) {
     return res.json({ ok: true, deduped: true });
   }
@@ -67,13 +79,13 @@ app.post("/send-alert", requireWorkerSecret, async (req, res) => {
     const { data, error } = await supabaseAdmin
       .from("admin_alerts")
       .insert({
-        kind: a.kind,
+        kind,
         severity: a.severity,
         source: a.source,
         user_id: a.user_id ?? null,
         feature: a.feature ?? null,
         message: a.message.slice(0, 500),
-        meta: a.meta ?? {},
+        meta: { ...(a.meta ?? {}), bot: effectiveBot },
       })
       .select("id")
       .single();
@@ -85,24 +97,26 @@ app.post("/send-alert", requireWorkerSecret, async (req, res) => {
 
   // 2. Telegram fan-out
   const shouldSend =
-    a.force_telegram === true ||
+    forceSend ||
     a.severity === "error" ||
     a.severity === "critical";
 
   const results: Array<{ chat: string; ok: boolean; error?: string; message_id?: string }> = [];
 
   if (shouldSend) {
-    const text = formatAlert({
-      kind: a.kind,
-      severity: a.severity,
-      message: a.message,
-      feature: a.feature ?? null,
-      user_id: a.user_id ?? null,
-      meta: a.meta ?? null,
-    });
-    const targets = a.chat_id ? [a.chat_id] : ADMIN_CHAT_IDS;
+    const text = isSimpleMode
+      ? a.message
+      : formatAlert({
+          kind,
+          severity: a.severity,
+          message: a.message,
+          feature: a.feature ?? null,
+          user_id: a.user_id ?? null,
+          meta: a.meta ?? null,
+        });
+    const targets = effectiveChat ? [effectiveChat] : ADMIN_CHAT_IDS;
     for (const chat of targets) {
-      const r = await sendTelegram(chat, text);
+      const r = await sendTelegram(chat, text, effectiveBot);
       results.push({ chat, ...r } as any);
     }
     const anyOk = results.some((r) => r.ok);

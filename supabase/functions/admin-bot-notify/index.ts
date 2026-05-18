@@ -5,16 +5,13 @@
 // Intentionally NOT coupled to event-dispatcher / notification routes / queues.
 // Keep this surface tiny so it cannot affect auth, payments, or middleware.
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+import { dispatchToWorker } from "../_shared/notifications/worker.ts";
 
-// Use the SkyMedia admin bot (@theskymediabot) for ops notifications.
-// Falls back to the user-facing bot only if the admin token is missing.
-// Always use the SkyMedia admin bot for ops alerts. Never fall back to user bot.
-const TG_TOKEN = Deno.env.get("SKYMEDIA_BOT_TOKEN") || "";
-// Permanent owner allowlist — guarantees alerts arrive even if env var is wiped.
+// All Telegram delivery now goes through the Railway worker. The "skymedia"
+// bot routing is handled there via SKYMEDIA_BOT_TOKEN.
+// Permanent owner allowlist still applied so alerts reach the operator even
+// if the worker's admin chat list is wiped.
 const PERMANENT_ADMIN_CHATS = ["1378192648"];
-const ENV_CHATS = (Deno.env.get("TELEGRAM_ADMIN_CHAT_IDS") || Deno.env.get("TELEGRAM_ADMIN_CHAT_ID") || "")
-  .split(/[,;\s]+/).map(s => s.trim()).filter(Boolean);
-const TG_CHATS = Array.from(new Set([...PERMANENT_ADMIN_CHATS, ...ENV_CHATS]));
 
 function esc(s: unknown): string {
   return String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -61,15 +58,27 @@ function fmtAuthSuspicious(p: Record<string, any>): string {
   ].filter(Boolean).join("\n");
 }
 
-async function sendTelegram(text: string): Promise<void> {
-  if (!TG_TOKEN || TG_CHATS.length === 0) return;
-  await Promise.allSettled(TG_CHATS.map(chat_id =>
-    fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ chat_id, text, parse_mode: "HTML", disable_web_page_preview: true }),
-    }).catch(() => undefined)
-  ));
+async function sendViaWorker(text: string, event: string): Promise<void> {
+  // Default fan-out (no chatId) → worker uses its ADMIN_CHAT_IDS list.
+  await dispatchToWorker({
+    bot: "skymedia",
+    message: text,
+    source: `admin-bot-notify:${event}`,
+    force_telegram: true,
+  });
+  // Belt & suspenders: explicit fan-out to permanent owner chat(s).
+  await Promise.allSettled(
+    PERMANENT_ADMIN_CHATS.map((chatId) =>
+      dispatchToWorker({
+        bot: "skymedia",
+        message: text,
+        chatId,
+        source: `admin-bot-notify:${event}:owner`,
+        force_telegram: true,
+        dedupe_key: `bot-notify:${event}:${chatId}:${text.slice(0, 80)}`,
+      }),
+    ),
+  );
 }
 
 Deno.serve(async (req) => {
@@ -87,7 +96,7 @@ Deno.serve(async (req) => {
     else if (event === "test") text = `✅ <b>HustleAI Ops connected successfully</b>\n${esc(payload.note || "")}`;
     else text = `ℹ️ <b>${esc(event || "unknown")}</b>\n${esc(JSON.stringify(payload).slice(0, 400))}`;
     // background dispatch
-    void sendTelegram(text);
+    void sendViaWorker(text, event || "unknown");
   } catch {
     // swallow
   }

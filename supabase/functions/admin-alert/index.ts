@@ -4,15 +4,12 @@
 // from edge contexts; client calls are recorded via the user's JWT.
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { sendTelegram } from "../_shared/notifications/telegram.ts";
+import { dispatchToWorker, workerConfigured } from "../_shared/notifications/worker.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
-
-const TG_ADMIN = (Deno.env.get("TELEGRAM_ADMIN_CHAT_IDS") || Deno.env.get("TELEGRAM_ADMIN_CHAT_ID") || "")
-  .split(/[,;\s]+/).map((s) => s.trim()).filter(Boolean);
 
 const RECENT = new Map<string, number>();
 const DEDUPE_MS = 30_000;
@@ -62,10 +59,10 @@ serve(async (req) => {
     }).select("id").single();
     if (error) return j({ ok: false, error: error.message }, 500);
 
-    // Push to Telegram admin chat for error/critical
-    if (TG_ADMIN.length && (severity === "error" || severity === "critical")) {
+    // Forward error/critical to the external Telegram worker (Railway).
+    if (workerConfigured() && (severity === "error" || severity === "critical")) {
       const sevIcon = severity === "critical" ? "🚨" : "⚠️";
-      const lines = [
+      const text = [
         `${sevIcon} <b>${escape(kind)}</b>`,
         escape(message),
         feature ? `Feature: <code>${escape(feature)}</code>` : null,
@@ -73,14 +70,19 @@ serve(async (req) => {
         meta?.context ? `Context: <code>${escape(String(meta.context))}</code>` : null,
         meta?.raw ? `Raw: <code>${escape(String(meta.raw).slice(0, 200))}</code>` : null,
       ].filter(Boolean).join("\n");
-      let sentAny = false;
-      for (const chat of TG_ADMIN) {
-        try {
-          const r = await sendTelegram(chat, { title: "", body: lines });
-          if (r.ok) sentAny = true;
-        } catch { /* ignore */ }
-      }
-      if (sentAny) {
+      const r = await dispatchToWorker({
+        bot: "hustleai",
+        message: text,
+        kind,
+        severity,
+        source,
+        user_id: resolvedUser,
+        feature,
+        meta,
+        force_telegram: true,
+        dedupe_key: `admin-alert:${kind}:${(resolvedUser || "anon")}:${String(message).slice(0, 80)}`,
+      });
+      if (r.ok) {
         await sb.from("admin_alerts").update({ telegram_sent: true }).eq("id", row.id);
       }
     }
