@@ -2,6 +2,7 @@
 // Aggregates last 24h: signups, paid conversions, exports, AI generations,
 // automation runs, provider mix, failures, feedback count. Idempotent per day.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { dispatchToWorker } from "../_shared/notifications/worker.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -89,19 +90,14 @@ Deno.serve(async (req) => {
       },
     });
 
-    // Force-send digest to Telegram even though severity=info
-    const TG_BOT = Deno.env.get("TELEGRAM_BOT_TOKEN") || "";
-    const TG_CHATS = (Deno.env.get("TELEGRAM_ADMIN_CHAT_IDS") || Deno.env.get("TELEGRAM_ADMIN_CHAT_ID") || "")
-      .split(/[,;\s]+/).map((s) => s.trim()).filter(Boolean);
-    if (TG_BOT && TG_CHATS.length) {
-      for (const chat of TG_CHATS) {
-        await fetch(`https://api.telegram.org/bot${TG_BOT}/sendMessage`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ chat_id: chat, text: message, disable_web_page_preview: true }),
-        }).catch(() => {});
-      }
-    }
+    // Force-send digest to Telegram via Railway worker (even though severity=info)
+    await dispatchToWorker({
+      bot: "hustleai",
+      message,
+      source: "ops-daily-digest",
+      force_telegram: true,
+      dedupe_key: `ops-daily-digest:${new Date().toISOString().slice(0, 10)}`,
+    });
 
     return new Response(JSON.stringify({ ok: true }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
