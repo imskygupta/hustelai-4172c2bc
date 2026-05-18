@@ -6617,6 +6617,78 @@ export type Database = {
         }
         Relationships: []
       }
+      telemetry_evacuation_checks: {
+        Row: {
+          check_kind: string
+          checked_at: string
+          delta_pct: number | null
+          details: Json
+          id: string
+          lag_ms: number | null
+          owned_count: number | null
+          primary_count: number | null
+          status: string
+          stream: string
+        }
+        Insert: {
+          check_kind: string
+          checked_at?: string
+          delta_pct?: number | null
+          details?: Json
+          id?: string
+          lag_ms?: number | null
+          owned_count?: number | null
+          primary_count?: number | null
+          status: string
+          stream: string
+        }
+        Update: {
+          check_kind?: string
+          checked_at?: string
+          delta_pct?: number | null
+          details?: Json
+          id?: string
+          lag_ms?: number | null
+          owned_count?: number | null
+          primary_count?: number | null
+          status?: string
+          stream?: string
+        }
+        Relationships: []
+      }
+      telemetry_evacuation_toggles: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          mirror_to_primary: boolean
+          notes: string | null
+          owned_enabled: boolean
+          stream: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          mirror_to_primary?: boolean
+          notes?: string | null
+          owned_enabled?: boolean
+          stream: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          mirror_to_primary?: boolean
+          notes?: string | null
+          owned_enabled?: boolean
+          stream?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       telemetry_health_snapshots: {
         Row: {
           estimated_cost_micro: number
@@ -6770,6 +6842,42 @@ export type Database = {
           sample_rate?: number
           updated_at?: string
           updated_by?: string | null
+        }
+        Relationships: []
+      }
+      telemetry_traffic_counters: {
+        Row: {
+          bucket_hour: string
+          failed: number
+          id: number
+          last_at: string
+          mirrored: number
+          replayed: number
+          routed_owned: number
+          routed_primary: number
+          stream: string
+        }
+        Insert: {
+          bucket_hour: string
+          failed?: number
+          id?: number
+          last_at?: string
+          mirrored?: number
+          replayed?: number
+          routed_owned?: number
+          routed_primary?: number
+          stream: string
+        }
+        Update: {
+          bucket_hour?: string
+          failed?: number
+          id?: number
+          last_at?: string
+          mirrored?: number
+          replayed?: number
+          routed_owned?: number
+          routed_primary?: number
+          stream?: string
         }
         Relationships: []
       }
@@ -9215,10 +9323,39 @@ export type Database = {
           reason: string
         }[]
       }
+      telemetry_evacuation_overview: { Args: never; Returns: Json }
       telemetry_health_overview: { Args: never; Returns: Json }
       telemetry_record_drop: {
         Args: { _count?: number; _event_name: string; _reason: string }
         Returns: undefined
+      }
+      telemetry_record_route: {
+        Args: { _count?: number; _outcome: string; _stream: string }
+        Returns: undefined
+      }
+      telemetry_set_evacuation_toggle: {
+        Args: {
+          _field: string
+          _notes?: string
+          _stream: string
+          _value: boolean
+        }
+        Returns: {
+          created_at: string
+          enabled: boolean
+          mirror_to_primary: boolean
+          notes: string | null
+          owned_enabled: boolean
+          stream: string
+          updated_at: string
+          updated_by: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "telemetry_evacuation_toggles"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       toggle_bookmark: { Args: { _slug: string }; Returns: Json }
       track_cta_event: {
