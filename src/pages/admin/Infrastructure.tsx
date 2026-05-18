@@ -342,6 +342,12 @@ export default function Infrastructure() {
               </Table>
             </Card>
           </TabsContent>
+
+          <TabsContent value="recipients"><RecipientsPanel /></TabsContent>
+          <TabsContent value="opsflags"><OpsFlagsPanel /></TabsContent>
+          <TabsContent value="runtime"><RuntimeConfigPanel /></TabsContent>
+          <TabsContent value="secrets"><SecretsInventoryPanel /></TabsContent>
+          <TabsContent value="discovery"><DiscoveryPanel /></TabsContent>
         </Tabs>
       </div>
     </div>
