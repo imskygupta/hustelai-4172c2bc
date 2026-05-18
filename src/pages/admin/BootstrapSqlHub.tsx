@@ -2,11 +2,17 @@ import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { blogApi, conversionApi } from "@/integrations/blog/client";
+// Static bundling of owned-DB bootstrap scripts so admins can copy/paste
+// straight into the owned project's SQL editor (no edge round-trip).
+// eslint-disable-next-line import/no-unresolved
+import asyncRuntimeSql from "../../../supabase/owned-db-bootstrap/async_runtime.sql?raw";
+// eslint-disable-next-line import/no-unresolved
+import productionStabilitySql from "../../../supabase/owned-db-bootstrap/production_stability.sql?raw";
 
 type Source = {
   id: string;
   title: string;
-  db: "BLOG_DB" | "PRIMARY_DB" | "COMMUNITY_DB" | "WORK_DB";
+  db: "BLOG_DB" | "PRIMARY_DB" | "COMMUNITY_DB" | "WORK_DB" | "OWNED_DB";
   description: string;
   load: () => Promise<{ sql: string }>;
 };
@@ -33,6 +39,20 @@ const SOURCES: Source[] = [
     description: "Bootstraps the tool_registry, narrative_runs and supporting tables.",
     load: async () => ({ sql: ((await blogApi.registryBootstrapSql()) as any).sql ?? ((await blogApi.registryBootstrapSql()) as any).bootstrap }),
   },
+  {
+    id: "async-runtime",
+    title: "Async Runtime DB (Wave 1)",
+    db: "OWNED_DB",
+    description: "Creates async_runtime schema: notification_deliveries, telegram_send_log, queue_archive, replay_history, retry_history, runtime_health_sweeps, incident_history + 90-day purge. Run on the owned project (wguuipsikboqqinqeehv).",
+    load: async () => ({ sql: asyncRuntimeSql as unknown as string }),
+  },
+  {
+    id: "production-stability",
+    title: "Production Stability (ops schema)",
+    db: "OWNED_DB",
+    description: "Creates ops.production_incidents, runtime_health_sweeps, shared_link_audit, explore_dependency_traces. Run on the owned project.",
+    load: async () => ({ sql: productionStabilitySql as unknown as string }),
+  },
 ];
 
 const DB_LABEL: Record<Source["db"], { color: string; href?: string; help: string }> = {
@@ -40,6 +60,7 @@ const DB_LABEL: Record<Source["db"], { color: string; href?: string; help: strin
   PRIMARY_DB: { color: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/40", help: "Primary HustleAI runtime DB. Be careful." },
   COMMUNITY_DB: { color: "bg-violet-500/15 text-violet-700 dark:text-violet-300 border-violet-500/40", help: "Community / Discord forums DB." },
   WORK_DB: { color: "bg-sky-500/15 text-sky-700 dark:text-sky-300 border-sky-500/40", help: "Workspace / Work-OS DB." },
+  OWNED_DB: { color: "bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/40", help: "Owned async runtime DB (wguuipsikboqqinqeehv)." },
 };
 
 export default function BootstrapSqlHub() {
