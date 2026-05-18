@@ -52,24 +52,39 @@ function j(body: unknown, status = 200): Response {
 }
 
 async function tableStats(owned: any, table: string, ts_col: string) {
-  const since1h = new Date(Date.now() - 60 * 60_000).toISOString();
-  const since24h = new Date(Date.now() - 24 * 60 * 60_000).toISOString();
-  const sch = owned.schema("async_runtime");
+  // Primary path: call the public.async_runtime_table_stats RPC on the owned
+  // project. The `async_runtime` schema is NOT exposed via PostgREST by
+  // design, so direct `.schema("async_runtime")` calls fail with PGRST106.
   try {
-    const [tot, h1, h24, latest] = await Promise.all([
-      sch.from(table).select("*", { count: "exact", head: true }),
-      sch.from(table).select("*", { count: "exact", head: true }).gte(ts_col, since1h),
-      sch.from(table).select("*", { count: "exact", head: true }).gte(ts_col, since24h),
-      sch.from(table).select(ts_col).order(ts_col, { ascending: false }).limit(1),
-    ]);
+    const { data, error } = await owned.rpc("async_runtime_table_stats", {
+      _table: table,
+      _ts_col: ts_col,
+    });
+    if (!error && data) {
+      return {
+        table,
+        schema_present: (data as any).schema_present === true,
+        rows_total: Number((data as any).rows_total ?? 0),
+        rows_1h:    Number((data as any).rows_1h ?? 0),
+        rows_24h:   Number((data as any).rows_24h ?? 0),
+        latest_at:  (data as any).latest_at ?? null,
+        error: null,
+      };
+    }
+    // Fallback: try direct schema access (works only if async_runtime is exposed).
+    const sch = owned.schema("async_runtime");
+    const tot = await sch.from(table).select("*", { count: "exact", head: true });
+    if (tot.error) {
+      return {
+        table, schema_present: false, rows_total: 0, rows_1h: 0, rows_24h: 0,
+        latest_at: null,
+        error: error?.message || tot.error.message || "rpc_and_direct_failed",
+      };
+    }
     return {
-      table,
-      schema_present: !tot.error,
-      rows_total: tot.count ?? 0,
-      rows_1h: h1.count ?? 0,
-      rows_24h: h24.count ?? 0,
-      latest_at: (latest.data?.[0] as any)?.[ts_col] ?? null,
-      error: tot.error?.message || null,
+      table, schema_present: true,
+      rows_total: tot.count ?? 0, rows_1h: 0, rows_24h: 0, latest_at: null,
+      error: "rpc_missing — bootstrap async_runtime.sql for accurate stats",
     };
   } catch (e) {
     return { table, schema_present: false, rows_total: 0, rows_1h: 0, rows_24h: 0, latest_at: null, error: (e as Error).message };
