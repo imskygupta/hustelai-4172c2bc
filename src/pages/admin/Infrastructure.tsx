@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, RefreshCw, Database, Network, Activity, Send, Train, Shield, AlertTriangle, Users, Flag, Settings, KeyRound, Radar, Gauge, Newspaper } from "lucide-react";
+import { ArrowLeft, RefreshCw, Database, Network, Activity, Send, Train, Shield, AlertTriangle, Users, Flag, Settings, KeyRound, Radar, Gauge, Newspaper, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -11,6 +11,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { RecipientsPanel, OpsFlagsPanel, RuntimeConfigPanel, SecretsInventoryPanel, DiscoveryPanel } from "./InfrastructureControl";
 import { TelemetryPlanePanel, BlogAutomationPanel } from "./TelemetryPanels";
+import { ExecutionAuthorityPanel } from "./ExecutionAuthorityPanel";
 
 type Project = {
   id: string; name: string; purpose: string; environment: string; project_ref: string; project_url: string | null;
@@ -174,6 +175,7 @@ export default function Infrastructure() {
             <TabsTrigger value="discovery"><Radar className="h-4 w-4 mr-1" />Discovery</TabsTrigger>
             <TabsTrigger value="telemetry"><Gauge className="h-4 w-4 mr-1" />Telemetry Plane</TabsTrigger>
             <TabsTrigger value="blog"><Newspaper className="h-4 w-4 mr-1" />Blog Automation</TabsTrigger>
+            <TabsTrigger value="authority"><Lock className="h-4 w-4 mr-1" />Execution Authority</TabsTrigger>
           </TabsList>
 
           <TabsContent value="registry">
@@ -353,6 +355,7 @@ export default function Infrastructure() {
           <TabsContent value="discovery"><DiscoveryPanel /></TabsContent>
           <TabsContent value="telemetry"><TelemetryPlanePanel /></TabsContent>
           <TabsContent value="blog"><BlogAutomationPanel /></TabsContent>
+          <TabsContent value="authority"><ExecutionAuthorityPanel /></TabsContent>
         </Tabs>
       </div>
     </div>
