@@ -10,6 +10,11 @@
 //                    notification deliveries, broadcast/newsletter dispatch,
 //                    email send logs, telegram command/send logs.
 //   getWorkspace() → Work Hub data (clients, notes, action log).
+//   getOwned()     → Self-owned Supabase project (wguuipsikboqqinqeehv).
+//                    Used during the progressive migration off Lovable-
+//                    managed Supabase. Falls back to the primary client
+//                    when OWNED_SUPABASE_* secrets are not yet set, so
+//                    nothing breaks before the cutover.
 //
 // NEVER mix: do not write payment/auth state to analytics, do not write
 // telemetry to primary. Cross-DB joins are forbidden — issue parallel queries
