@@ -1,6 +1,7 @@
 // Telegram provider. Supports both admin ops alerts (via TELEGRAM_ADMIN_CHAT_ID)
 // and per-user notifications (via integration.provider_chat_id).
 import type { NotificationProvider, NotificationMessage, DeliveryResult, IntegrationRow } from "./types.ts";
+import { mirrorAsyncRuntime } from "../async-runtime.ts";
 
 const TG_TOKEN = Deno.env.get("TELEGRAM_BOT_TOKEN") || "";
 
@@ -16,8 +17,21 @@ function escape(s: string): string {
 }
 
 export async function sendTelegram(chatId: string, msg: NotificationMessage): Promise<DeliveryResult> {
-  if (!TG_TOKEN) return { ok: false, error: "TELEGRAM_BOT_TOKEN not set" };
-  if (!chatId) return { ok: false, error: "no chat_id" };
+  if (!TG_TOKEN) {
+    mirrorAsyncRuntime("telegram_send_log", {
+      bot_label: "default", chat_id: chatId || "", kind: "sendMessage",
+      status: "skipped", error: "TELEGRAM_BOT_TOKEN not set",
+      payload: { title: msg.title || null },
+    });
+    return { ok: false, error: "TELEGRAM_BOT_TOKEN not set" };
+  }
+  if (!chatId) {
+    mirrorAsyncRuntime("telegram_send_log", {
+      bot_label: "default", chat_id: "", kind: "sendMessage",
+      status: "skipped", error: "no chat_id",
+    });
+    return { ok: false, error: "no chat_id" };
+  }
   try {
     const r = await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`, {
       method: "POST",
@@ -31,9 +45,26 @@ export async function sendTelegram(chatId: string, msg: NotificationMessage): Pr
       }),
     });
     const j = await r.json().catch(() => ({}));
-    if (!r.ok || !j.ok) return { ok: false, error: j.description || `HTTP ${r.status}` };
+    if (!r.ok || !j.ok) {
+      mirrorAsyncRuntime("telegram_send_log", {
+        bot_label: "default", chat_id: chatId, kind: "sendMessage",
+        status: "failed", http_status: r.status,
+        error: j.description || `HTTP ${r.status}`,
+        payload: { title: msg.title || null },
+      });
+      return { ok: false, error: j.description || `HTTP ${r.status}` };
+    }
+    mirrorAsyncRuntime("telegram_send_log", {
+      bot_label: "default", chat_id: chatId, kind: "sendMessage",
+      status: "sent", http_status: r.status,
+      payload: { title: msg.title || null, message_id: j.result?.message_id || null },
+    });
     return { ok: true, external_message_id: String(j.result?.message_id || "") };
   } catch (e: any) {
+    mirrorAsyncRuntime("telegram_send_log", {
+      bot_label: "default", chat_id: chatId, kind: "sendMessage",
+      status: "failed", error: String(e?.message || e),
+    });
     return { ok: false, error: String(e?.message || e) };
   }
 }

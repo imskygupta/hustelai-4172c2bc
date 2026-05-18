@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { RefreshCw, ShieldAlert, Activity, Database, AlertTriangle, Zap, DollarSign } from "lucide-react";
+import { RefreshCw, ShieldAlert, Activity, Database, AlertTriangle, Zap, DollarSign, CheckCircle2, XCircle } from "lucide-react";
 
 type Overview = {
   primary_dependency_pct: number;
@@ -38,6 +38,14 @@ type Circuit = {
   current_count: number; cools_at: string | null; notes: string | null;
 };
 
+type VerifyStream = {
+  table: string; stream: string;
+  owned: { table: string; schema_present: boolean; rows_total: number; rows_1h: number; rows_24h: number; latest_at: string | null; error: string | null };
+  parity: { primary: number; owned: number; mirror: number; shadow: number; replay: number; fail: number; avoided: number } | null;
+  primary_write_reduction_pct: number | null;
+};
+type Verify = { owned_db_ready: boolean; generated_at: string; streams: VerifyStream[] };
+
 const POSTURES = ["primary","owned","mirror","shadow","rollback","blocked"];
 const postureVariant: Record<string, "default"|"destructive"|"secondary"|"outline"> = {
   primary: "destructive", rollback: "destructive", blocked: "outline",
@@ -62,18 +70,20 @@ export function RuntimeExtractionPanel() {
   const [findings, setFindings] = useState<Finding[]>([]);
   const [sweepers, setSweepers] = useState<Sweeper[]>([]);
   const [circuits, setCircuits] = useState<Circuit[]>([]);
+  const [verify, setVerify] = useState<Verify | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setBusy(true); setError(null);
     try {
-      const [ov, st, fd, sw, ci] = await Promise.all([
+      const [ov, st, fd, sw, ci, vf] = await Promise.all([
         supabase.rpc("runtime_extraction_overview"),
         supabase.from("runtime_extraction_streams").select("*").order("category").order("stream"),
         supabase.from("runtime_hard_dependency_findings").select("*").order("severity", { ascending: false }).order("first_seen_at", { ascending: false }).limit(100),
         supabase.from("runtime_sweeper_registry").select("*").order("sweeper_name"),
         supabase.from("runtime_recovery_circuits").select("*").order("circuit"),
+        supabase.functions.invoke("runtime-extraction-verify"),
       ]);
       if (ov.error) throw ov.error;
       setOverview(ov.data as any);
@@ -81,6 +91,7 @@ export function RuntimeExtractionPanel() {
       setFindings((fd.data as any) || []);
       setSweepers((sw.data as any) || []);
       setCircuits((ci.data as any) || []);
+      setVerify((vf.data as Verify) || null);
     } catch (e: any) {
       setError(e?.message || String(e));
     } finally { setBusy(false); }
@@ -143,6 +154,58 @@ export function RuntimeExtractionPanel() {
       </div>
 
       {error && <Card className="p-3 border-destructive text-destructive text-sm">{error}</Card>}
+
+      {verify && (
+        <Card className="overflow-auto">
+          <div className="px-4 py-3 border-b border-border flex items-center justify-between">
+            <div className="font-medium text-sm flex items-center gap-2">
+              Live owned-DB verification
+              {verify.owned_db_ready
+                ? <Badge variant="default" className="text-xs"><CheckCircle2 className="h-3 w-3 mr-1" />owned ready</Badge>
+                : <Badge variant="destructive" className="text-xs"><XCircle className="h-3 w-3 mr-1" />OWNED_SUPABASE_* not set</Badge>}
+            </div>
+            <span className="text-xs text-muted-foreground">as of {new Date(verify.generated_at).toLocaleTimeString()}</span>
+          </div>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>async_runtime.*</TableHead><TableHead>Schema</TableHead>
+                <TableHead>Rows 1h</TableHead><TableHead>Rows 24h</TableHead>
+                <TableHead>Total</TableHead><TableHead>Latest</TableHead>
+                <TableHead>Reduction %</TableHead><TableHead>Replay</TableHead><TableHead>Fail</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {verify.streams.map((s) => (
+                <TableRow key={s.table}>
+                  <TableCell className="font-mono text-xs">{s.table}</TableCell>
+                  <TableCell>
+                    {s.owned.schema_present
+                      ? <Badge>present</Badge>
+                      : <Badge variant="destructive" title={s.owned.error || ""}>missing</Badge>}
+                  </TableCell>
+                  <TableCell className="text-xs">{s.owned.rows_1h.toLocaleString()}</TableCell>
+                  <TableCell className="text-xs">{s.owned.rows_24h.toLocaleString()}</TableCell>
+                  <TableCell className="text-xs">{s.owned.rows_total.toLocaleString()}</TableCell>
+                  <TableCell className="text-xs">{s.owned.latest_at ? new Date(s.owned.latest_at).toLocaleTimeString() : "—"}</TableCell>
+                  <TableCell>
+                    {s.primary_write_reduction_pct == null
+                      ? <span className="text-xs text-muted-foreground">—</span>
+                      : <Badge variant={s.primary_write_reduction_pct >= 50 ? "default" : "outline"}>{s.primary_write_reduction_pct}%</Badge>}
+                  </TableCell>
+                  <TableCell className="text-xs">{s.parity?.replay ?? 0}</TableCell>
+                  <TableCell className={`text-xs ${s.parity && s.parity.fail > 0 ? "text-destructive" : ""}`}>{s.parity?.fail ?? 0}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+          {!verify.owned_db_ready && (
+            <div className="px-4 py-3 text-xs text-muted-foreground border-t border-border">
+              Set <code>OWNED_SUPABASE_URL</code>, <code>OWNED_SUPABASE_SERVICE_ROLE_KEY</code>, and <code>OWNED_SUPABASE_ENABLED=1</code> in Supabase Edge secrets to activate real traffic mirroring. Then run <code>supabase/owned-db-bootstrap/async_runtime.sql</code> on the owned project.
+            </div>
+          )}
+        </Card>
+      )}
 
       {overview && (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
