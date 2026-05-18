@@ -175,6 +175,11 @@ export default function AdminRuntime() {
               className="border-white/10 text-zinc-300">
               <Activity className="h-3.5 w-3.5 mr-1.5" /> Runtime analytics
             </Button>
+            <Button size="sm" variant="outline"
+              onClick={() => navigate("/admin/runtime/migration")}
+              className="border-white/10 text-zinc-300">
+              <ShieldCheck className="h-3.5 w-3.5 mr-1.5" /> Migration health
+            </Button>
             <Button size="sm" variant="outline" onClick={refresh} className="border-white/10 text-zinc-300">
               <RefreshCw className="h-3.5 w-3.5 mr-1.5" /> Refresh
             </Button>

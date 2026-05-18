@@ -23,7 +23,13 @@ export interface WorkerDispatchInput {
   dedupe_key?: string | null;
 }
 
-const WORKER_URL = (Deno.env.get("TELEGRAM_WORKER_URL") || "").replace(/\/+$/, "");
+const RAW_WORKER_URL = (Deno.env.get("TELEGRAM_WORKER_URL") || "").trim().replace(/\/+$/, "");
+// Operators sometimes save the Railway host without a scheme (e.g.
+// "airy-adventure.up.railway.app"). Deno's fetch rejects schemeless URLs,
+// which silently kills all Telegram delivery. Normalize defensively.
+const WORKER_URL = RAW_WORKER_URL
+  ? (/^https?:\/\//i.test(RAW_WORKER_URL) ? RAW_WORKER_URL : `https://${RAW_WORKER_URL}`)
+  : "";
 const WORKER_SECRET = Deno.env.get("TELEGRAM_WORKER_SECRET") || "";
 
 export function workerConfigured(): boolean {
