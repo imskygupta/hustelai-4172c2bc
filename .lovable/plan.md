@@ -1,60 +1,112 @@
-## Infrastructure Control Plane — `/admin/infrastructure`
 
-Build an additive, read-only observability + registry layer. No production rewrites, no auth changes, no removal of env fallbacks.
+# Dependency-Reduction Phase — Implementation Plan
 
-### 1. Database (additive only)
+Scope: additive only. No auth migration, no frontend redesign, no new vendors, no queue rewrite. Worker behavior becomes centrally manageable from `/admin/infrastructure` while env vars remain a fallback.
 
-New tables on the **primary Lovable Supabase** (admin-only RLS via `has_role('admin')`):
+---
 
-- `infra_supabase_projects` — registry rows (name, purpose, env, project_ref, url, owner_category, criticality, migration_state, failover_notes, connected_domains[], connected_modules[], tables_count, edge_functions_count, last_db_activity_at, last_function_call_at, est_daily_writes, est_storage_mb, lovable_dependency_score, extraction_readiness, risk_if_primary_dies, notes, is_active).
-- `infra_dependencies` — edges (source_type: edge_function|cron|worker|domain|module, source_name, target_project_ref, target_kind: db|function|storage|auth, notes).
-- `infra_runtime_health` — rolling samples (project_ref, reachable, paused, auth_healthy, functions_responding, last_cron_at, last_write_at, recent_errors jsonb, sampled_at).
-- `infra_telegram_registry` — bots, worker ownership, webhook target, routing role (admin|relay|ops|storage), chat_ids[], last_message_at, delivery_success_pct_24h, env_dependencies[].
-- `infra_railway_services` — service_name, purpose, domain, health_url, uptime_pct, status, restart_count, env_dependencies[], last_seen_at.
-- `ops_telegram_recipients` — **prep table** for future DB-backed admin routing: bot, chat_id, label, role (admin|ops|relay), enabled, created_by, created_at. Not yet read by the worker; reserved for cutover. Env var remains the source of truth.
+## Phase 1 — DB-backed operational config
 
-Seed `infra_supabase_projects` with: primary Lovable DB, owned ops DB (wguuipsikboqqinqeehv), blogs.hustlai, docs.hustlai, community/sicor (qeswhaytgvosfzzgraef), api.hustlai, work DB, intake-os DB2 — based on existing `src/integrations/*/client.ts`.
+**New tables (primary Lovable DB, admin-only RLS):**
 
-Seed `infra_telegram_registry` with: hustleai bot, skymedia bot, current admin chat, removed storage relay (marked deprecated).
+- `infra_runtime_config` — `(key text pk, value jsonb, scope text, env text, description, updated_by, updated_at)`. Worker reads on demand, env wins only if DB row missing.
+- `infra_feature_flags` — `(flag_key pk, enabled bool, rollout_pct, env[], maintenance bool, message text, updated_by, updated_at)`. Distinct from existing `feature_flags` (user-facing); these are *operational* (e.g. `telegram.dispatch_enabled`, `anomaly_scan.enabled`, `mirror_to_owned.enabled`).
+- `infra_service_secrets_meta` — `(secret_name pk, owner_service, location: env|vault|supabase_secret, last_rotated_at, expected_format, required_by[], notes)`. **Metadata only — never raw values.**
+- Extend existing `ops_telegram_recipients` with `muted_until`, `severity_min`, `routing_role` (already has bot/chat/label/role/enabled).
 
-Seed `infra_railway_services` with: telegram worker.
+**New edge function:** `ops-config-read` (worker-authed via `X-Worker-Secret`) — returns merged config snapshot `{recipients, flags, runtime_config}`. Workers poll every 60s and cache; fall through to env on failure.
 
-### 2. Edge function — `infrastructure-probe` (admin-only)
+**Worker change (`workers/telegram/`):** add `src/config/remote.ts` that fetches the snapshot, merges with `env` (DB wins where present), exposes `getAdminChats()`, `isMuted(kind)`, `flagEnabled(key)`. Existing `ADMIN_CHAT_IDS` becomes the fallback when remote unreachable. `/send-alert` filters targets through `getAdminChats()` + mute check.
 
-Read-only diagnostic aggregator. For each registered project:
-- ping `migration_mirror_log`/any known table for reachability + latency
-- read cached counts from registry (no schema introspection of foreign projects)
-- ping Railway `/health` for each `infra_railway_services` row
-- compute delivery_success_pct_24h from `admin_alerts` + `notification_deliveries`
-- write a fresh `infra_runtime_health` sample
+**Admin UI:** new tabs under `/admin/infrastructure`:
+- *Recipients* — toggle enabled, mute N minutes, change role, mark deprecated.
+- *Runtime Config* — kv editor with description + env scope.
+- *Ops Flags* — kill/maintenance toggles per ops subsystem.
+- *Secrets Inventory* — read-only metadata, rotation reminders, "required by" map.
 
-### 3. Admin UI — `/admin/infrastructure`
+---
 
-New page `src/pages/admin/Infrastructure.tsx` with tabs:
+## Phase 2 — Railway self-awareness
 
-1. **Supabase Registry** — table of `infra_supabase_projects` with criticality/owner badges, edit drawer, runtime status pill.
-2. **Dependency Map** — searchable table of `infra_dependencies` + simple force-free graph (grouped columns: projects → dependents). No new graph library; render as grouped lists + SVG lines.
-3. **Runtime Health** — latest sample per project + warning banners (inactive >7d, paused, missing secrets, duplicated schedulers, orphaned functions). "Refresh" button calls `infrastructure-probe`.
-4. **Telegram Infra** — registry table + delivery stats + last message timestamp.
-5. **Railway** — service health cards.
-6. **Extraction Readiness** — computed scorecard per project (Lovable dependency / extraction readiness / safe-to-isolate / risk-if-primary-dies), sortable.
+Extend `infrastructure-probe` edge function + `infra_railway_services` rows:
 
-Add to `src/App.tsx` under admin-protected routes. Link from existing `/admin/runtime`.
+- `worker_deployments` table — `(service, deployed_at, commit_sha, version, source)`. Worker reports on boot via `POST /ops/deploy-ping` (new endpoint, secret-authed).
+- `worker_restarts` table — boot pings include `uptime_reset=true` detection; computed restart count + last restart in dashboard.
+- *Env drift detection*: worker exposes `/ops/env-fingerprint` returning `{required_present[], required_missing[], optional_present[], hash}`. Probe compares against `infra_service_secrets_meta.required_by`.
+- *Webhook mismatch*: probe calls Telegram `getWebhookInfo` for each bot in `telegram_bots`, compares to expected edge-function URL, flags mismatches.
+- *Inactive bots*: any bot with no `admin_alerts` activity in 7d → flagged.
 
-### 4. Final delivery
+Dashboard: new *Railway* sub-tab showing deployment timeline, restart graph, drift warnings (red rows), webhook health.
 
-Report:
-- full infra inventory (seeded rows)
-- dependency map (seeded edges from code grep)
-- dormant systems (notifications-broadcast, inngest, telegram-bot-health)
-- duplicated schedulers (pg_cron vs railway ops loops for cleanup/queue_purge)
-- env-dependent systems (worker → TELEGRAM_ADMIN_CHAT_IDS)
-- highest-risk SPOFs (primary Lovable DB, hustleai bot token)
-- recommended extraction order
-- systems safe to pause/delete
+---
 
-### Constraints respected
-- additive only, no auth changes, no frontend redesign of existing pages
-- env fallback for Telegram preserved; `ops_telegram_recipients` created but unread
-- no Redis/Kafka, no new infra dependencies
-- read-only probe, no destructive ops
+## Phase 3 — Operational resilience visibility
+
+Reuse existing queues — only add visibility:
+
+- *Fallback delivery*: if `dispatchToWorker` returns `!ok`, insert into existing `notification_deliveries` with `provider='telegram_fallback'`. A new cron `telegram-fallback-retry` (every 5 min) retries via worker, then via direct Bot API as last resort using `TELEGRAM_BOT_TOKEN` from primary DB function secrets.
+- *Dedupe visibility*: surface worker's in-memory dedupe stats via new `/ops/dedupe-stats` endpoint → dashboard panel.
+- *DLQ panel*: read `queue_dead_letter` (already exists), expose replay button calling existing `queue_replay` RPC.
+- *Retry visibility*: read `queue_replay_audit`, show recent replays.
+- *Queue inspection*: read `queue_health_overview()` RPC (already exists), render depth + oldest age per queue.
+
+No worker architecture changes — only new read endpoints + admin reads.
+
+---
+
+## Phase 4 — Extraction sequencing engine
+
+Tables:
+- `infra_extraction_snapshots` — daily snapshot per `project_ref` of `{dependency_count, lovable_dependency_score, est_daily_writes, est_storage_mb, criticality}`. Computed by extending `infrastructure-probe` to write a row on each run.
+- `infra_extraction_milestones` — `(project_ref, milestone, target_date, completed_at, evidence)`.
+
+Dashboard *Extraction* tab:
+- **Score evolution** sparkline per project (30/90 day).
+- **Progress tracker** — checklist per project (DB exported, edge functions ported, secrets rotated, traffic cutover, DNS moved).
+- **"Safe to isolate" simulation** — for selected project, compute: # external deps in `infra_dependencies` still pointing at it, # edge fns importing it, # cron jobs. Green when all zero except declared boundary.
+- **Projected load reduction** — sum of `est_daily_writes` + `est_storage_mb` if extracted, expressed as % of primary DB totals.
+- **Cost impact** — uses configurable `infra_runtime_config` rate cards (`cost.supabase.write_per_million`, etc.) to multiply.
+
+---
+
+## Phase 5 — Autonomous infra discovery
+
+New edge function `infra-discovery-scan` (admin-triggered + nightly cron):
+
+Scans:
+- `supabase/functions/**/*.ts` for hardcoded `https://*.supabase.co` refs, `*.railway.app` hosts, `t.me/` bot usernames.
+- `src/integrations/*/client.ts` for project refs.
+- `.env` keys cross-referenced with `infra_service_secrets_meta.required_by`.
+- `pg_cron.job` table → cron jobs not referenced in `infra_dependencies`.
+- All edge function names from filesystem vs. those appearing as `source` in `admin_alerts` last 30 days → orphaned list.
+- `telegram_bots` rows with no recent webhook hits → inactive bots.
+
+Output → upserts into `infra_discovery_findings` table `(kind, identifier, first_seen, last_seen, confidence, registered bool, notes)`. Operator can "Accept → register" which inserts into `infra_supabase_projects` / `infra_railway_services` / `infra_dependencies`.
+
+---
+
+## Technical execution order
+
+1. Migration: 5 new tables + RLS (admin-only).
+2. Edge functions: `ops-config-read`, extend `infrastructure-probe`, add `infra-discovery-scan`, `telegram-fallback-retry` (cron).
+3. Worker patch: `src/config/remote.ts`, `/ops/deploy-ping`, `/ops/env-fingerprint`, `/ops/dedupe-stats`. Existing `/send-alert` unchanged except for filter pass.
+4. Admin UI: add 5 new tabs to `/admin/infrastructure` (Recipients, Runtime Config, Ops Flags, Secrets Inventory, Discovery). Extend existing Railway + Extraction tabs.
+5. Seed: insert known runtime_config keys, ops flags (all enabled), service secrets metadata for `TELEGRAM_BOT_TOKEN`, `SKYMEDIA_BOT_TOKEN`, `TELEGRAM_WORKER_SECRET`, `TELEGRAM_WORKER_URL`, `TELEGRAM_ADMIN_CHAT_IDS`, Supabase service-role keys.
+
+## Constraints honored
+
+- Env vars remain authoritative fallback everywhere.
+- Worker code change is additive — no signature or routing changes when remote config empty.
+- No schema redesign of existing tables.
+- No new infra vendor; reuses existing Supabase + Railway + edge functions.
+- Frontend changes are purely additive admin panels.
+
+## Final deliverables after build
+
+- Remaining env SPOFs list (`TELEGRAM_BOT_TOKEN`, `WORKER_SHARED_SECRET`, Supabase service role).
+- Systems fully centralized via DB (recipients, mute rules, ops flags, runtime config).
+- Systems still manually configured (raw secrets, Railway service plan).
+- Extraction readiness delta vs. prior baseline.
+- Estimated Lovable DB load-reduction path (per-project % shift).
+- Remaining dangerous couplings (worker → primary DB service role, edge fns → primary DB).
+- Next safest extraction boundary recommendation.
