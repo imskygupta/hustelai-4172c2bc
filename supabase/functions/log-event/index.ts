@@ -5,7 +5,7 @@
 // pre-auth funnel events can land. Heavy validation by category enum.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.74.0";
 import { getAnalytics } from "../_shared/clients.ts";
-import { dualWriteOps } from "../_shared/ops-routing.ts";
+import { mirrorToOwned } from "../_shared/ops-routing.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -79,7 +79,7 @@ Deno.serve(async (req) => {
       await analytics.from("event_log").insert(row);
       // Phase 2 Tier-1 mirror to owned project (inert unless
       // MIGRATE_OPS_DUAL_WRITE=1 and OWNED_SUPABASE_ENABLED=1).
-      void dualWriteOps("event_log", row);
+      mirrorToOwned("event_log", row);
 
       // Fan-out to dispatcher (best-effort)
       const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
