@@ -3,6 +3,7 @@ import { z } from "zod";
 
 const schema = z.object({
   TELEGRAM_BOT_TOKEN: z.string().min(10, "TELEGRAM_BOT_TOKEN required"),
+  SKYMEDIA_BOT_TOKEN: z.string().min(10).optional(),
   TELEGRAM_ADMIN_CHAT_IDS: z.string().min(1, "TELEGRAM_ADMIN_CHAT_IDS required"),
   SUPABASE_URL: z.string().url(),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(20),
