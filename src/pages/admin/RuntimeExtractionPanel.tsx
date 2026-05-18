@@ -32,6 +32,12 @@ type Stream = {
   authority_state?: string; parity_status?: string; fallback_enabled?: boolean;
   replay_pressure?: number; rollback_risk?: string;
   primary_write_disabled_at?: string | null;
+  primary_writes_disabled?: boolean;
+  fallback_activated_at?: string | null;
+  fallback_expires_at?: string | null;
+  fallback_reason?: string | null;
+  fallback_count_1h?: number;
+  fallback_total?: number;
 };
 type Finding = {
   id: string; kind: string; location: string; detail: string | null;
@@ -54,6 +60,30 @@ type VerifyStream = {
   primary_write_reduction_pct: number | null;
 };
 type Verify = { owned_db_ready: boolean; generated_at: string; streams: VerifyStream[] };
+
+type Violation = {
+  id: string; violating_function: string; violating_table: string;
+  violating_runtime: string | null; stream: string | null;
+  estimated_writes_per_hour: number; severity: string;
+  last_seen_at: string;
+};
+
+type Countdown = {
+  remaining_writes_per_hour: number;
+  remaining_operational_tables: number;
+  total_streams: number;
+  primary_disabled_streams: number;
+  owned_authoritative_streams: number;
+  projected_days_to_independence: number | null;
+  top_offenders: Array<{ stream: string; writes_1h: number; authority_state: string; parity_status: string; fallback_count_1h: number }>;
+  realtime_savings: {
+    realtime_emissions_avoided_1h: number;
+    wal_bytes_avoided_1h: number;
+    replication_bytes_avoided_1h: number;
+    storage_bytes_avoided_1h: number;
+  };
+  direct_write_violations: Violation[];
+};
 
 const POSTURES = ["primary","owned","mirror","shadow","rollback","blocked"];
 const AUTHORITY_STATES = ["primary","mirror","owned_authoritative","primary_fallback_only","primary_disabled"];
@@ -88,19 +118,23 @@ export function RuntimeExtractionPanel() {
   const [sweepers, setSweepers] = useState<Sweeper[]>([]);
   const [circuits, setCircuits] = useState<Circuit[]>([]);
   const [verify, setVerify] = useState<Verify | null>(null);
+  const [countdown, setCountdown] = useState<Countdown | null>(null);
+  const [finalizing, setFinalizing] = useState(false);
+  const [lastFinalize, setLastFinalize] = useState<any>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setBusy(true); setError(null);
     try {
-      const [ov, st, fd, sw, ci, vf] = await Promise.all([
+      const [ov, st, fd, sw, ci, vf, cd] = await Promise.all([
         supabase.rpc("runtime_extraction_overview"),
         supabase.from("runtime_extraction_streams").select("*").order("category").order("stream"),
         supabase.from("runtime_hard_dependency_findings").select("*").order("severity", { ascending: false }).order("first_seen_at", { ascending: false }).limit(100),
         supabase.from("runtime_sweeper_registry").select("*").order("sweeper_name"),
         supabase.from("runtime_recovery_circuits").select("*").order("circuit"),
         supabase.functions.invoke("runtime-extraction-verify"),
+        supabase.functions.invoke("runtime-authority-finalizer", { body: { op: "countdown" } }),
       ]);
       if (ov.error) throw ov.error;
       setOverview(ov.data as any);
@@ -109,6 +143,7 @@ export function RuntimeExtractionPanel() {
       setSweepers((sw.data as any) || []);
       setCircuits((ci.data as any) || []);
       setVerify((vf.data as Verify) || null);
+      setCountdown((cd.data as Countdown) || null);
     } catch (e: any) {
       setError(e?.message || String(e));
     } finally { setBusy(false); }
@@ -131,6 +166,17 @@ export function RuntimeExtractionPanel() {
       await load();
     } catch (e: any) { setError(e?.message || String(e)); }
     finally { setBusy(false); }
+  }, [load]);
+
+  const runFinalizer = useCallback(async () => {
+    setFinalizing(true); setError(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("runtime-authority-finalizer", { body: {} });
+      if (error) throw error;
+      setLastFinalize(data);
+      await load();
+    } catch (e: any) { setError(e?.message || String(e)); }
+    finally { setFinalizing(false); }
   }, [load]);
 
   const setAuthority = useCallback(async (s: Stream, state: string) => {
@@ -175,6 +221,10 @@ export function RuntimeExtractionPanel() {
           <p className="text-xs text-muted-foreground">Systematic evacuation of operational workloads off the Lovable-owned primary.</p>
         </div>
         <div className="flex gap-2">
+          <Button variant="default" size="sm" onClick={runFinalizer} disabled={finalizing || busy}>
+            <Zap className={`h-4 w-4 mr-1 ${finalizing ? "animate-pulse" : ""}`} />
+            Run authority finalizer
+          </Button>
           <Button variant="outline" size="sm" onClick={runScan} disabled={busy}>
             <ShieldAlert className="h-4 w-4 mr-1" />Run hard-dep scan
           </Button>
@@ -185,6 +235,94 @@ export function RuntimeExtractionPanel() {
       </div>
 
       {error && <Card className="p-3 border-destructive text-destructive text-sm">{error}</Card>}
+
+      {countdown && (
+        <Card className="p-4">
+          <div className="flex items-center justify-between mb-3">
+            <div className="font-medium text-sm flex items-center gap-2">
+              <Activity className="h-4 w-4" /> Primary dependency countdown
+            </div>
+            <div className="text-xs text-muted-foreground">
+              {countdown.projected_days_to_independence == null
+                ? "projection: insufficient data"
+                : countdown.projected_days_to_independence === 0
+                  ? "operational independence reached"
+                  : `~${countdown.projected_days_to_independence} days to operational independence`}
+            </div>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <Kpi icon={Database} label="Primary writes/hr remaining"
+                 value={countdown.remaining_writes_per_hour.toLocaleString()}
+                 sub={`${countdown.remaining_operational_tables} operational tables still on primary`}
+                 tone={countdown.remaining_writes_per_hour > 0 ? "text-amber-500" : "text-emerald-500"} />
+            <Kpi icon={CheckCircle2} label="Owned-authoritative"
+                 value={countdown.owned_authoritative_streams}
+                 sub={`${countdown.primary_disabled_streams} fully disabled · ${countdown.total_streams} total`} />
+            <Kpi icon={Zap} label="Realtime emissions avoided/hr"
+                 value={countdown.realtime_savings.realtime_emissions_avoided_1h.toLocaleString()}
+                 sub={`WAL: ${(countdown.realtime_savings.wal_bytes_avoided_1h/1024).toFixed(1)} KB · repl: ${(countdown.realtime_savings.replication_bytes_avoided_1h/1024).toFixed(1)} KB`} />
+            <Kpi icon={AlertTriangle} label="Direct-write violations"
+                 value={countdown.direct_write_violations.length}
+                 sub="rogue writes bypassing router"
+                 tone={countdown.direct_write_violations.length > 0 ? "text-destructive" : "text-emerald-500"} />
+          </div>
+
+          {countdown.top_offenders.length > 0 && (
+            <div className="mt-4">
+              <div className="text-xs text-muted-foreground mb-2">Top remaining offenders (last 1h)</div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                {countdown.top_offenders.slice(0, 6).map((o) => (
+                  <div key={o.stream} className="flex items-center justify-between text-xs border border-border rounded px-3 py-2">
+                    <span className="font-mono">{o.stream}</span>
+                    <span className="flex items-center gap-2">
+                      <Badge variant="outline" className="text-[10px]">{o.authority_state}</Badge>
+                      <Badge variant={o.parity_status === "healthy" ? "default" : "outline"} className="text-[10px]">{o.parity_status}</Badge>
+                      {o.fallback_count_1h > 0 && <Badge variant="destructive" className="text-[10px]">fb×{o.fallback_count_1h}</Badge>}
+                      <span className="font-mono">{o.writes_1h.toLocaleString()}/hr</span>
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {countdown.direct_write_violations.length > 0 && (
+            <div className="mt-4">
+              <div className="text-xs text-muted-foreground mb-2">Direct-write violations</div>
+              <Table>
+                <TableHeader><TableRow>
+                  <TableHead>Severity</TableHead><TableHead>Function</TableHead>
+                  <TableHead>Table</TableHead><TableHead>Runtime</TableHead>
+                  <TableHead>Writes/hr</TableHead><TableHead>Last seen</TableHead>
+                </TableRow></TableHeader>
+                <TableBody>
+                  {countdown.direct_write_violations.slice(0, 15).map((v) => (
+                    <TableRow key={v.id}>
+                      <TableCell>
+                        <Badge variant={v.severity === "high" ? "destructive" : "outline"} className="text-[10px]">{v.severity}</Badge>
+                      </TableCell>
+                      <TableCell className="font-mono text-xs">{v.violating_function}</TableCell>
+                      <TableCell className="font-mono text-xs">{v.violating_table}</TableCell>
+                      <TableCell className="text-xs">{v.violating_runtime || "—"}</TableCell>
+                      <TableCell className="text-xs">{v.estimated_writes_per_hour}</TableCell>
+                      <TableCell className="text-xs">{new Date(v.last_seen_at).toLocaleTimeString()}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+
+          {lastFinalize && (
+            <div className="mt-3 text-[11px] text-muted-foreground border-t border-border pt-2">
+              Last finalizer pass at {new Date(lastFinalize.ran_at).toLocaleTimeString()} —
+              {" "}promotions: {Array.isArray(lastFinalize.promotions) ? lastFinalize.promotions.length : 0},
+              {" "}fallbacks expired: {lastFinalize.fallback_expired?.expired ?? 0},
+              {" "}violations recorded: {lastFinalize.violation_scan?.recorded ?? 0}
+            </div>
+          )}
+        </Card>
+      )}
 
       {verify && (
         <Card className="overflow-auto">
