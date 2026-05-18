@@ -62,6 +62,46 @@ const rateCounters = new Map<string, { bucket: number; count: number }>();
 const dedupeCache = new Map<string, number>(); // key -> expires_at
 const SAMPLING_TTL_MS = 60_000;
 
+// Per-stream evacuation toggles (cached 30s).
+type ToggleRow = {
+  stream: string;
+  enabled: boolean;
+  owned_enabled: boolean;
+  mirror_to_primary: boolean;
+};
+const toggleCache = new Map<string, { row: ToggleRow; fetchedAt: number }>();
+const TOGGLE_TTL_MS = 30_000;
+
+async function getToggle(stream: string): Promise<ToggleRow> {
+  const c = toggleCache.get(stream);
+  if (c && Date.now() - c.fetchedAt < TOGGLE_TTL_MS) return c.row;
+  const fallback: ToggleRow = {
+    stream, enabled: true, owned_enabled: false, mirror_to_primary: false,
+  };
+  try {
+    const primary = getPrimaryService();
+    const { data } = await primary
+      .from("telemetry_evacuation_toggles")
+      .select("stream,enabled,owned_enabled,mirror_to_primary")
+      .eq("stream", stream)
+      .maybeSingle();
+    const row = (data as ToggleRow | null) ?? fallback;
+    toggleCache.set(stream, { row, fetchedAt: Date.now() });
+    return row;
+  } catch {
+    toggleCache.set(stream, { row: fallback, fetchedAt: Date.now() });
+    return fallback;
+  }
+}
+
+async function recordRoute(stream: string, outcome: "owned"|"primary"|"mirror"|"replay"|"fail", count: number) {
+  if (count <= 0) return;
+  try {
+    const primary = getPrimaryService();
+    await primary.rpc("telemetry_record_route", { _stream: stream, _outcome: outcome, _count: count });
+  } catch { /* tolerate */ }
+}
+
 async function getSampling(eventName: string): Promise<SamplingRow | null> {
   const cached = samplingCache.get(eventName);
   if (cached && Date.now() - cached.fetchedAt < SAMPLING_TTL_MS) return cached.row;
