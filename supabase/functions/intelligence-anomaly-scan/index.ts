@@ -1,6 +1,7 @@
 // Periodic anomaly scanner — emits intelligence_alerts for ops-worthy signals.
 // Cron-driven (every 5 min). Sends Telegram admin alerts for critical anomalies.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { mirrorToOwned } from "../_shared/ops-routing.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -261,7 +262,7 @@ Deno.serve(async (req) => {
     let inserted = 0;
     for (const a of anomalies) {
       if (await dedupe(sb, a.kind)) continue;
-      await sb.from("intelligence_alerts").insert({
+      const alertRow = {
         kind: a.kind,
         severity: a.severity,
         title: a.title,
@@ -269,7 +270,9 @@ Deno.serve(async (req) => {
         source: "anomaly_scanner",
         capability: a.capability ?? null,
         metadata: a.metadata ?? {},
-      });
+      };
+      await sb.from("intelligence_alerts").insert(alertRow);
+      mirrorToOwned("intelligence_alerts", alertRow);
       inserted++;
       // Forward critical/warning to Telegram admin alerts
       if (a.severity !== "info") {
