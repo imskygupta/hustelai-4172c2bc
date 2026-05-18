@@ -7,6 +7,7 @@
 //   - Reads from primary are read-only (no inserts on primary).
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.74.0";
 import { getOwned, getPrimaryService } from "../_shared/clients.ts";
+import { mirrorAsyncRuntimeBatch } from "../_shared/async-runtime.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -107,6 +108,17 @@ Deno.serve(async (req) => {
       rows.push({ target_kind: "rpc", target_name: `explore:${e.table}`, ok: e.ok, latency_ms: e.latency_ms, error_class: e.ok ? null : "query-failed", detail: { error: e.error } });
     }
     if (rows.length) await owned.from("ops.runtime_health_sweeps").insert(rows);
+    // Wave 1: mirror runtime sweeps into async_runtime stream (real traffic)
+    if (rows.length) {
+      mirrorAsyncRuntimeBatch("runtime_health_sweeps", rows.map((r: any) => ({
+        surface: r.target_kind,
+        component: r.target_name,
+        status: r.ok ? "ok" : "fail",
+        latency_ms: r.latency_ms ?? null,
+        error: r.error_class,
+        metadata: r.detail ?? {},
+      })), "runtime_health_sweeps");
+    }
 
     // Open incidents for failures
     const failures: any[] = [];
