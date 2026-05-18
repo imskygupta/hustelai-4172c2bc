@@ -55,3 +55,20 @@ export async function dualWriteOps(
   if (error) return { ok: false, error: error.message };
   return { ok: true };
 }
+
+/**
+ * Fire-and-forget mirror write to the owned project ONLY.
+ * Use for tables whose legacy home is NOT the primary DB (e.g. event_log
+ * lives in the analytics DB). Caller is responsible for the legacy write.
+ * No-op unless MIGRATE_OPS_DUAL_WRITE=1 AND OWNED_SUPABASE_ENABLED=1.
+ */
+export function mirrorToOwned(table: string, row: Record<string, unknown>): void {
+  if (Deno.env.get("MIGRATE_OPS_DUAL_WRITE") !== "1") return;
+  if (!ownedReady()) return;
+  void getOwned()
+    .from(table)
+    .insert(row)
+    .then(({ error }) => {
+      if (error) console.warn(`mirrorToOwned ${table}: ${error.message}`);
+    });
+}
