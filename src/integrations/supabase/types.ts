@@ -3264,6 +3264,36 @@ export type Database = {
         }
         Relationships: []
       }
+      migration_mirror_log: {
+        Row: {
+          created_at: string
+          error: string | null
+          id: number
+          latency_ms: number | null
+          outcome: string
+          sampled: boolean
+          table_name: string
+        }
+        Insert: {
+          created_at?: string
+          error?: string | null
+          id?: number
+          latency_ms?: number | null
+          outcome: string
+          sampled?: boolean
+          table_name: string
+        }
+        Update: {
+          created_at?: string
+          error?: string | null
+          id?: number
+          latency_ms?: number | null
+          outcome?: string
+          sampled?: boolean
+          table_name?: string
+        }
+        Relationships: []
+      }
       newsletter_capture_dismissals: {
         Row: {
           anon_id: string | null
@@ -7915,6 +7945,20 @@ export type Database = {
         Returns: Json
       }
       mark_expired_exports: { Args: never; Returns: number }
+      migration_mirror_health: {
+        Args: { _since?: string }
+        Returns: {
+          avg_latency_ms: number
+          failure_count: number
+          last_error: string
+          last_failure_at: string
+          last_success_at: string
+          p95_latency_ms: number
+          skipped_count: number
+          success_count: number
+          table_name: string
+        }[]
+      }
       most_launched_tools: {
         Args: { _limit?: number; _since?: string }
         Returns: {
