@@ -142,3 +142,30 @@ export async function safeAnalyticsInsert(
     return false;
   }
 }
+
+/**
+ * Self-owned Supabase project client (service-role).
+ *
+ * Reads from OWNED_SUPABASE_URL / OWNED_SUPABASE_SERVICE_ROLE_KEY secrets.
+ * Falls back to the primary (Lovable Cloud) client when those secrets are
+ * not yet provisioned, so edge functions keep working during the staged
+ * migration. Once a table has been backfilled to the owned project, swap
+ * its call sites from getPrimaryService() to getOwned().
+ */
+export function getOwned(): SupabaseClient {
+  const url =
+    Deno.env.get("OWNED_SUPABASE_URL") ??
+    Deno.env.get("SUPABASE_URL")!;
+  const key =
+    Deno.env.get("OWNED_SUPABASE_SERVICE_ROLE_KEY") ??
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  return createClient(url, key, { auth: { persistSession: false } });
+}
+
+/** True once the owned project secrets are configured. */
+export function ownedReady(): boolean {
+  return !!(
+    Deno.env.get("OWNED_SUPABASE_URL") &&
+    Deno.env.get("OWNED_SUPABASE_SERVICE_ROLE_KEY")
+  );
+}
