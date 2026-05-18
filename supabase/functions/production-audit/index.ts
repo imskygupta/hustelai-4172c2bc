@@ -129,6 +129,11 @@ Deno.serve(async (req) => {
         _failure_class: r.error_class, _evidence: r.detail,
         _impacted: [r.name], _user_facing: true, _suggested_rollback: "redeploy or check secrets",
       });
+      mirrorAsyncRuntime("incident_history", {
+        surface: "edge-fn", component: r.name, severity: "degraded",
+        failure_class: r.error_class, message: `edge-fn ${r.name} degraded`,
+        metadata: r.detail ?? {},
+      }, "incident_history");
     }
     for (const e of explore.filter((x) => !x.ok)) {
       failures.push({ surface: "explore", component: e.table, failure_class: "query-failed" });
@@ -137,6 +142,11 @@ Deno.serve(async (req) => {
         _failure_class: "query-failed", _evidence: { error: e.error },
         _impacted: ["/explore"], _user_facing: true, _suggested_rollback: "verify RLS + table exists on primary",
       });
+      mirrorAsyncRuntime("incident_history", {
+        surface: "explore", component: e.table, severity: "critical",
+        failure_class: "query-failed", message: e.error ?? "explore probe failed",
+        metadata: { table: e.table },
+      }, "incident_history");
     }
 
     const totals = {
