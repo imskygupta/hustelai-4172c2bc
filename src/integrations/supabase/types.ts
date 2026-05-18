@@ -5602,6 +5602,231 @@ export type Database = {
         }
         Relationships: []
       }
+      runtime_extraction_metrics: {
+        Row: {
+          avg_confidence: number | null
+          bucket_minute: string
+          failed: number
+          id: number
+          replayed: number
+          routed_mirror: number
+          routed_owned: number
+          routed_primary: number
+          routed_shadow: number
+          stream: string
+          writes_avoided: number
+        }
+        Insert: {
+          avg_confidence?: number | null
+          bucket_minute?: string
+          failed?: number
+          id?: number
+          replayed?: number
+          routed_mirror?: number
+          routed_owned?: number
+          routed_primary?: number
+          routed_shadow?: number
+          stream: string
+          writes_avoided?: number
+        }
+        Update: {
+          avg_confidence?: number | null
+          bucket_minute?: string
+          failed?: number
+          id?: number
+          replayed?: number
+          routed_mirror?: number
+          routed_owned?: number
+          routed_primary?: number
+          routed_shadow?: number
+          stream?: string
+          writes_avoided?: number
+        }
+        Relationships: []
+      }
+      runtime_extraction_streams: {
+        Row: {
+          category: string
+          confidence: number
+          created_at: string
+          critical: boolean
+          est_bytes_per_write: number
+          est_writes_per_hour: number
+          id: string
+          notes: string | null
+          owner_db: string | null
+          posture: string
+          rail_guarded: boolean
+          stream: string
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          confidence?: number
+          created_at?: string
+          critical?: boolean
+          est_bytes_per_write?: number
+          est_writes_per_hour?: number
+          id?: string
+          notes?: string | null
+          owner_db?: string | null
+          posture?: string
+          rail_guarded?: boolean
+          stream: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          confidence?: number
+          created_at?: string
+          critical?: boolean
+          est_bytes_per_write?: number
+          est_writes_per_hour?: number
+          id?: string
+          notes?: string | null
+          owner_db?: string | null
+          posture?: string
+          rail_guarded?: boolean
+          stream?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      runtime_hard_dependency_findings: {
+        Row: {
+          detail: string | null
+          first_seen_at: string
+          id: string
+          kind: string
+          last_seen_at: string
+          location: string
+          resolution_notes: string | null
+          resolved: boolean
+          resolved_at: string | null
+          severity: string
+        }
+        Insert: {
+          detail?: string | null
+          first_seen_at?: string
+          id?: string
+          kind: string
+          last_seen_at?: string
+          location: string
+          resolution_notes?: string | null
+          resolved?: boolean
+          resolved_at?: string | null
+          severity?: string
+        }
+        Update: {
+          detail?: string | null
+          first_seen_at?: string
+          id?: string
+          kind?: string
+          last_seen_at?: string
+          location?: string
+          resolution_notes?: string | null
+          resolved?: boolean
+          resolved_at?: string | null
+          severity?: string
+        }
+        Relationships: []
+      }
+      runtime_recovery_circuits: {
+        Row: {
+          circuit: string
+          cooldown_seconds: number
+          cools_at: string | null
+          current_count: number
+          id: string
+          notes: string | null
+          state: string
+          threshold: number
+          tripped_at: string | null
+          updated_at: string
+          window_seconds: number
+        }
+        Insert: {
+          circuit: string
+          cooldown_seconds?: number
+          cools_at?: string | null
+          current_count?: number
+          id?: string
+          notes?: string | null
+          state?: string
+          threshold?: number
+          tripped_at?: string | null
+          updated_at?: string
+          window_seconds?: number
+        }
+        Update: {
+          circuit?: string
+          cooldown_seconds?: number
+          cools_at?: string | null
+          current_count?: number
+          id?: string
+          notes?: string | null
+          state?: string
+          threshold?: number
+          tripped_at?: string | null
+          updated_at?: string
+          window_seconds?: number
+        }
+        Relationships: []
+      }
+      runtime_sweeper_registry: {
+        Row: {
+          authority_owner: string
+          created_at: string
+          enabled: boolean
+          id: string
+          kind: string
+          last_error: string | null
+          last_status: string | null
+          last_tick_at: string | null
+          lease_key: string | null
+          notes: string | null
+          replay_aware: boolean
+          schedule: string | null
+          sweeper_name: string
+          target_db: string | null
+          updated_at: string
+        }
+        Insert: {
+          authority_owner: string
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          kind: string
+          last_error?: string | null
+          last_status?: string | null
+          last_tick_at?: string | null
+          lease_key?: string | null
+          notes?: string | null
+          replay_aware?: boolean
+          schedule?: string | null
+          sweeper_name: string
+          target_db?: string | null
+          updated_at?: string
+        }
+        Update: {
+          authority_owner?: string
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          kind?: string
+          last_error?: string | null
+          last_status?: string | null
+          last_tick_at?: string | null
+          lease_key?: string | null
+          notes?: string | null
+          replay_aware?: boolean
+          schedule?: string | null
+          sweeper_name?: string
+          target_db?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       saved_hustles: {
         Row: {
           created_at: string
@@ -9932,6 +10157,17 @@ export type Database = {
       roll_up_analytics_events: {
         Args: { _lookback?: string }
         Returns: number
+      }
+      runtime_extraction_overview: { Args: never; Returns: Json }
+      runtime_record_route: {
+        Args: {
+          _bytes_avoided?: number
+          _confidence?: number
+          _count?: number
+          _outcome: string
+          _stream: string
+        }
+        Returns: undefined
       }
       set_migration_mode: {
         Args: { _mode: string; _reason?: string }
