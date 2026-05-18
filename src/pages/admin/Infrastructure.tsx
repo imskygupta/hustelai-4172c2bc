@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, RefreshCw, Database, Network, Activity, Send, Train, Shield, AlertTriangle, Users, Flag, Settings, KeyRound, Radar, Gauge, Newspaper, Lock, Flame, BarChart3, TrendingUp, Target, Wifi } from "lucide-react";
+import { ArrowLeft, RefreshCw, Database, Network, Activity, Send, Train, Shield, AlertTriangle, Users, Flag, Settings, KeyRound, Radar, Gauge, Newspaper, Lock, Flame, BarChart3, TrendingUp, Target, Wifi, ArrowRightLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -13,6 +13,7 @@ import { RecipientsPanel, OpsFlagsPanel, RuntimeConfigPanel, SecretsInventoryPan
 import { TelemetryPlanePanel, BlogAutomationPanel } from "./TelemetryPanels";
 import { ExecutionAuthorityPanel } from "./ExecutionAuthorityPanel";
 import { DBHeatmapPanel, QueryPressurePanel, GrowthTrendsPanel, ExtractionCandidatesPanel, RealtimeLoadPanel } from "./DBHeatmapPanels";
+import { TelemetryEvacuationPanel } from "./TelemetryEvacuationPanel";
 
 type Project = {
   id: string; name: string; purpose: string; environment: string; project_ref: string; project_url: string | null;
@@ -182,6 +183,7 @@ export default function Infrastructure() {
             <TabsTrigger value="growth"><TrendingUp className="h-4 w-4 mr-1" />Growth Trends</TabsTrigger>
             <TabsTrigger value="candidates"><Target className="h-4 w-4 mr-1" />Extraction Candidates</TabsTrigger>
             <TabsTrigger value="rtload"><Wifi className="h-4 w-4 mr-1" />Realtime Load</TabsTrigger>
+            <TabsTrigger value="evacuation"><ArrowRightLeft className="h-4 w-4 mr-1" />Telemetry Evacuation</TabsTrigger>
           </TabsList>
 
           <TabsContent value="registry">
@@ -367,6 +369,7 @@ export default function Infrastructure() {
           <TabsContent value="growth"><GrowthTrendsPanel /></TabsContent>
           <TabsContent value="candidates"><ExtractionCandidatesPanel /></TabsContent>
           <TabsContent value="rtload"><RealtimeLoadPanel /></TabsContent>
+          <TabsContent value="evacuation"><TelemetryEvacuationPanel /></TabsContent>
         </Tabs>
       </div>
     </div>
