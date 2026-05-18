@@ -9,8 +9,7 @@
 //
 // No writes. Read-only. Falls back gracefully when owned DB is not yet
 // provisioned so the panel can still render.
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.74.0";
-import { getOwned, getPrimaryService, ownedReady } from "../_shared/clients.ts";
+import { getOwned, getPrimary, getPrimaryService, ownedReady } from "../_shared/clients.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -34,16 +33,16 @@ const TABLES: Array<{ table: string; ts_col: string; stream: string }> = [
 async function isAdmin(authHeader: string | null): Promise<boolean> {
   if (!authHeader?.startsWith("Bearer ")) return false;
   try {
-    const url = Deno.env.get("SUPABASE_URL")!;
-    const anon = Deno.env.get("SUPABASE_ANON_KEY")!;
-    const sb = createClient(url, anon, { global: { headers: { Authorization: authHeader } } });
-    const { data } = await sb.auth.getClaims(authHeader.slice(7));
-    const uid = (data?.claims?.sub as string) ?? null;
-    if (!uid) return false;
-    const svc = createClient(url, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
-    const { data: role } = await svc.rpc("has_role", { _user_id: uid, _role: "admin" });
+    const sb = getPrimary(authHeader);
+    const { data: { user } } = await sb.auth.getUser();
+    if (!user) return false;
+    const svc = getPrimaryService();
+    const { data: role } = await svc.rpc("has_role", { _user_id: user.id, _role: "admin" });
     return role === true;
-  } catch { return false; }
+  } catch (e) {
+    console.error("isAdmin error:", (e as Error).message);
+    return false;
+  }
 }
 
 function j(body: unknown, status = 200): Response {
