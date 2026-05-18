@@ -171,3 +171,49 @@ BEGIN
   DELETE FROM async_runtime.runtime_health_sweeps WHERE swept_at    < now() - make_interval(days => days);
 END;
 $$;
+
+-- 5) PostgREST-exposed verification helpers ------------------------------
+-- The `async_runtime` schema is intentionally NOT added to PostgREST's
+-- exposed schemas (keeps it write-only from edge functions via service
+-- role). To allow the admin panel verification probe to count rows
+-- without exposing the schema, we publish small `public` RPCs that
+-- aggregate stats over async_runtime tables. Service-role can call these
+-- safely; they only return counts + latest timestamps, never row data.
+CREATE OR REPLACE FUNCTION public.async_runtime_table_stats(_table text, _ts_col text)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = async_runtime, public
+AS $$
+DECLARE
+  v_total bigint := 0;
+  v_1h    bigint := 0;
+  v_24h   bigint := 0;
+  v_latest timestamptz;
+  v_exists boolean;
+BEGIN
+  SELECT EXISTS (
+    SELECT 1 FROM information_schema.tables
+     WHERE table_schema = 'async_runtime' AND table_name = _table
+  ) INTO v_exists;
+  IF NOT v_exists THEN
+    RETURN jsonb_build_object('schema_present', false, 'rows_total', 0, 'rows_1h', 0, 'rows_24h', 0, 'latest_at', null);
+  END IF;
+
+  EXECUTE format('SELECT count(*) FROM async_runtime.%I', _table) INTO v_total;
+  EXECUTE format('SELECT count(*) FROM async_runtime.%I WHERE %I > now() - interval ''1 hour''', _table, _ts_col) INTO v_1h;
+  EXECUTE format('SELECT count(*) FROM async_runtime.%I WHERE %I > now() - interval ''24 hours''', _table, _ts_col) INTO v_24h;
+  EXECUTE format('SELECT max(%I) FROM async_runtime.%I', _ts_col, _table) INTO v_latest;
+
+  RETURN jsonb_build_object(
+    'schema_present', true,
+    'rows_total', v_total,
+    'rows_1h', v_1h,
+    'rows_24h', v_24h,
+    'latest_at', v_latest
+  );
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.async_runtime_table_stats(text, text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.async_runtime_table_stats(text, text) TO service_role;
