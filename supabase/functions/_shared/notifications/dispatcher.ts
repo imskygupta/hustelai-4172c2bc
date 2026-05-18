@@ -4,6 +4,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import type { NotificationMessage, ProviderId, NotificationProvider } from "./types.ts";
 import { telegramProvider } from "./telegram.ts";
 import { emailProvider, sendEmailFallback } from "./email.ts";
+import { mirrorAsyncRuntime } from "../async-runtime.ts";
 
 const PROVIDERS: Record<string, NotificationProvider> = {
   telegram: telegramProvider,
@@ -103,6 +104,17 @@ export function dispatchNotification(input: DispatchInput): void {
           attempt_count: 1,
         }).select().single();
 
+        // Mirror to owned async runtime DB (real Wave 1 traffic).
+        mirrorAsyncRuntime("notification_deliveries", {
+          user_id: input.user_id,
+          channel: integ.provider,
+          template: input.event_key,
+          status: "queued",
+          provider: integ.provider,
+          payload: input.message.payload || {},
+          attempts: 1,
+        });
+
         const result = await provider.send(integ as any, input.message);
         if (result.ok) anyOk = true;
         await sb.from("notification_deliveries").update({
@@ -111,6 +123,20 @@ export function dispatchNotification(input: DispatchInput): void {
           external_message_id: result.external_message_id || null,
           delivered_at: result.ok ? new Date().toISOString() : null,
         }).eq("id", del!.id);
+
+        // Mirror final delivery state.
+        mirrorAsyncRuntime("notification_deliveries", {
+          user_id: input.user_id,
+          channel: integ.provider,
+          template: input.event_key,
+          status: result.ok ? "sent" : (result.skipped ? "skipped" : "failed"),
+          provider: integ.provider,
+          provider_message_id: result.external_message_id || null,
+          error: result.error || null,
+          attempts: 1,
+          sent_at: result.ok ? new Date().toISOString() : null,
+          payload: input.message.payload || {},
+        });
 
         if (result.ok) {
           await sb.from("notification_integrations").update({
@@ -133,6 +159,16 @@ export function dispatchNotification(input: DispatchInput): void {
             attempt_count: 1,
             last_error: r.error || null,
             delivered_at: r.ok ? new Date().toISOString() : null,
+          });
+          mirrorAsyncRuntime("notification_deliveries", {
+            user_id: input.user_id,
+            channel: "email",
+            template: input.event_key,
+            status: r.ok ? "sent" : "failed",
+            provider: "email-fallback",
+            error: r.error || null,
+            attempts: 1,
+            sent_at: r.ok ? new Date().toISOString() : null,
           });
         }
       }
