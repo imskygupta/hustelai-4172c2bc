@@ -9,6 +9,12 @@ import { supabase } from "@/integrations/supabase/client";
  * - Bookmarks: auth-aware persistence via toggle_bookmark RPC + a local
  *   fallback set so guests can still "save" things and we can reconcile
  *   on signup (future work).
+ *
+ * Telemetry plane (Phase A): track* helpers now batch-route through the
+ * `telemetry-router` edge function, which writes to the OWNED telemetry DB
+ * (wguuipsikboqqinqeehv). On any router failure the SDK transparently falls
+ * back to the legacy RPC path so dashboards keep working during cutover.
+ * Toggle off by setting `localStorage.ha_telemetry_router = "off"`.
  */
 
 const ANON_KEY = "ha_anon_id";
@@ -28,6 +34,95 @@ function safe<T>(p: PromiseLike<T>): Promise<T | undefined> {
   return Promise.resolve(p).then((v) => v).catch(() => undefined);
 }
 
+/* ---------------- Telemetry router (batched, fire-and-forget) ---------------- */
+
+type TelemetryEvent = {
+  name: string;
+  payload: Record<string, unknown>;
+  anon_id?: string | null;
+  user_id?: string | null;
+  dedupe_key?: string | null;
+  ts?: string;
+};
+
+const TELEMETRY_BUFFER: TelemetryEvent[] = [];
+const TELEMETRY_BATCH_MS = 1500;
+const TELEMETRY_MAX_BATCH = 25;
+let telemetryTimer: ReturnType<typeof setTimeout> | null = null;
+
+function telemetryEnabled(): boolean {
+  if (typeof window === "undefined") return false;
+  try { return localStorage.getItem("ha_telemetry_router") !== "off"; }
+  catch { return true; }
+}
+
+function scheduleFlush() {
+  if (telemetryTimer) return;
+  telemetryTimer = setTimeout(() => { telemetryTimer = null; void flushTelemetry(); }, TELEMETRY_BATCH_MS);
+}
+
+async function flushTelemetry() {
+  if (TELEMETRY_BUFFER.length === 0) return;
+  const batch = TELEMETRY_BUFFER.splice(0, TELEMETRY_MAX_BATCH);
+  try {
+    const { error } = await supabase.functions.invoke("telemetry-router", { body: { events: batch } });
+    if (error) throw error;
+  } catch {
+    // Router unavailable → fall back to legacy RPCs so production never loses signal.
+    for (const ev of batch) await legacyFallback(ev);
+  }
+  if (TELEMETRY_BUFFER.length > 0) scheduleFlush();
+}
+
+async function legacyFallback(ev: TelemetryEvent) {
+  try {
+    if (ev.name === "tool_launch") {
+      await supabase.rpc("track_tool_launch" as any, {
+        _tool_slug: ev.payload.tool_slug,
+        _source_kind: ev.payload.source_kind ?? "direct",
+        _source_slug: ev.payload.source_slug ?? null,
+        _cta_id: ev.payload.cta_id ?? null,
+        _persona: ev.payload.persona ?? null,
+        _anon_id: ev.anon_id ?? null,
+        _metadata: ev.payload.metadata ?? {},
+      });
+    } else if (ev.name === "cta_impression" || ev.name === "cta_click") {
+      await supabase.rpc("track_cta_event" as any, {
+        _cta_id: ev.payload.cta_id,
+        _kind: ev.name === "cta_impression" ? "impression" : "click",
+        _source_slug: ev.payload.source_slug ?? null,
+        _target_slug: ev.payload.target_slug ?? null,
+        _persona: ev.payload.persona ?? null,
+        _anon_id: ev.anon_id ?? null,
+        _metadata: ev.payload.metadata ?? {},
+      });
+    }
+    // blog_event_* writes have no legacy client-side path; silently drop.
+  } catch { /* ignore */ }
+}
+
+function enqueueTelemetry(ev: TelemetryEvent) {
+  if (!telemetryEnabled()) { void legacyFallback(ev); return; }
+  TELEMETRY_BUFFER.push({
+    ...ev,
+    anon_id: ev.anon_id ?? anonId(),
+    ts: ev.ts ?? new Date().toISOString(),
+  });
+  if (TELEMETRY_BUFFER.length >= TELEMETRY_MAX_BATCH) {
+    if (telemetryTimer) { clearTimeout(telemetryTimer); telemetryTimer = null; }
+    void flushTelemetry();
+  } else {
+    scheduleFlush();
+  }
+}
+
+// Flush on tab hide so we don't lose end-of-session events.
+if (typeof window !== "undefined") {
+  window.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") void flushTelemetry();
+  });
+}
+
 /* ---------------- Tool launches ---------------- */
 
 export interface ToolLaunchAttribution {
@@ -40,17 +135,18 @@ export interface ToolLaunchAttribution {
 }
 
 export function trackToolLaunch(a: ToolLaunchAttribution) {
-  return safe(
-    supabase.rpc("track_tool_launch" as any, {
-      _tool_slug: a.toolSlug,
-      _source_kind: a.sourceKind ?? "direct",
-      _source_slug: a.sourceSlug ?? null,
-      _cta_id: a.ctaId ?? null,
-      _persona: a.persona ?? null,
-      _anon_id: anonId(),
-      _metadata: a.metadata ?? {},
-    }),
-  );
+  enqueueTelemetry({
+    name: "tool_launch",
+    payload: {
+      tool_slug: a.toolSlug,
+      source_kind: a.sourceKind ?? "direct",
+      source_slug: a.sourceSlug ?? null,
+      cta_id: a.ctaId ?? null,
+      persona: a.persona ?? null,
+      metadata: a.metadata ?? {},
+    },
+  });
+  return Promise.resolve(undefined);
 }
 
 /* ---------------- CTA events ---------------- */
@@ -65,17 +161,22 @@ export interface CtaEvent {
 }
 
 export function trackCta(e: CtaEvent) {
-  return safe(
-    supabase.rpc("track_cta_event" as any, {
-      _cta_id: e.ctaId,
-      _kind: e.kind,
-      _source_slug: e.sourceSlug ?? null,
-      _target_slug: e.targetSlug ?? null,
-      _persona: e.persona ?? null,
-      _anon_id: anonId(),
-      _metadata: e.metadata ?? {},
-    }),
-  );
+  // CTA impressions are deduped server-side; provide a soft key.
+  const dedupe = e.kind === "impression"
+    ? `${e.ctaId}:${e.sourceSlug ?? ""}:${anonId()}`
+    : null;
+  enqueueTelemetry({
+    name: e.kind === "impression" ? "cta_impression" : "cta_click",
+    payload: {
+      cta_id: e.ctaId,
+      source_slug: e.sourceSlug ?? null,
+      target_slug: e.targetSlug ?? null,
+      persona: e.persona ?? null,
+      metadata: e.metadata ?? {},
+    },
+    dedupe_key: dedupe,
+  });
+  return Promise.resolve(undefined);
 }
 
 /* ---------------- Bookmarks ---------------- */

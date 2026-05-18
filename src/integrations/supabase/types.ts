@@ -756,6 +756,54 @@ export type Database = {
         }
         Relationships: []
       }
+      blog_automation_health_snapshots: {
+        Row: {
+          details: Json
+          drafts_in_flight: number
+          failed_drafts_24h: number
+          id: string
+          in_review: number
+          last_published_at: string | null
+          next_scheduled_at: string | null
+          provider_errors_24h: number
+          published_today: number
+          sampled_at: string
+          scheduled: number
+          scheduler_last_run_at: string | null
+          sitemap_last_pinged_at: string | null
+        }
+        Insert: {
+          details?: Json
+          drafts_in_flight?: number
+          failed_drafts_24h?: number
+          id?: string
+          in_review?: number
+          last_published_at?: string | null
+          next_scheduled_at?: string | null
+          provider_errors_24h?: number
+          published_today?: number
+          sampled_at?: string
+          scheduled?: number
+          scheduler_last_run_at?: string | null
+          sitemap_last_pinged_at?: string | null
+        }
+        Update: {
+          details?: Json
+          drafts_in_flight?: number
+          failed_drafts_24h?: number
+          id?: string
+          in_review?: number
+          last_published_at?: string | null
+          next_scheduled_at?: string | null
+          provider_errors_24h?: number
+          published_today?: number
+          sampled_at?: string
+          scheduled?: number
+          scheduler_last_run_at?: string | null
+          sitemap_last_pinged_at?: string | null
+        }
+        Relationships: []
+      }
       blog_bookmarks: {
         Row: {
           anon_id: string | null
@@ -6347,6 +6395,189 @@ export type Database = {
           },
         ]
       }
+      telemetry_drop_counter: {
+        Row: {
+          bucket_hour: string
+          count: number
+          event_name: string
+          id: string
+          last_at: string
+          reason: string
+        }
+        Insert: {
+          bucket_hour: string
+          count?: number
+          event_name: string
+          id?: string
+          last_at?: string
+          reason: string
+        }
+        Update: {
+          bucket_hour?: string
+          count?: number
+          event_name?: string
+          id?: string
+          last_at?: string
+          reason?: string
+        }
+        Relationships: []
+      }
+      telemetry_health_snapshots: {
+        Row: {
+          estimated_cost_micro: number
+          events_dropped_1m: number
+          events_ingested_1m: number
+          events_received_1m: number
+          events_replayed_1m: number
+          id: string
+          ingestion_lag_ms: number | null
+          notes: string | null
+          sampled_at: string
+          sink_reachable: boolean
+          table_growth_24h: Json
+        }
+        Insert: {
+          estimated_cost_micro?: number
+          events_dropped_1m?: number
+          events_ingested_1m?: number
+          events_received_1m?: number
+          events_replayed_1m?: number
+          id?: string
+          ingestion_lag_ms?: number | null
+          notes?: string | null
+          sampled_at?: string
+          sink_reachable?: boolean
+          table_growth_24h?: Json
+        }
+        Update: {
+          estimated_cost_micro?: number
+          events_dropped_1m?: number
+          events_ingested_1m?: number
+          events_received_1m?: number
+          events_replayed_1m?: number
+          id?: string
+          ingestion_lag_ms?: number | null
+          notes?: string | null
+          sampled_at?: string
+          sink_reachable?: boolean
+          table_growth_24h?: Json
+        }
+        Relationships: []
+      }
+      telemetry_replay_queue: {
+        Row: {
+          attempts: number
+          created_at: string
+          event_name: string
+          id: string
+          last_error: string | null
+          next_attempt_at: string
+          payload: Json
+          status: string
+          target_table: string
+          updated_at: string
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          event_name: string
+          id?: string
+          last_error?: string | null
+          next_attempt_at?: string
+          payload: Json
+          status?: string
+          target_table: string
+          updated_at?: string
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          event_name?: string
+          id?: string
+          last_error?: string | null
+          next_attempt_at?: string
+          payload?: Json
+          status?: string
+          target_table?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      telemetry_router_state: {
+        Row: {
+          consecutive_failures: number
+          last_error: string | null
+          last_failure_at: string | null
+          last_success_at: string | null
+          stream: string
+          total_dropped: number
+          total_ingested: number
+          updated_at: string
+        }
+        Insert: {
+          consecutive_failures?: number
+          last_error?: string | null
+          last_failure_at?: string | null
+          last_success_at?: string | null
+          stream: string
+          total_dropped?: number
+          total_ingested?: number
+          updated_at?: string
+        }
+        Update: {
+          consecutive_failures?: number
+          last_error?: string | null
+          last_failure_at?: string | null
+          last_success_at?: string | null
+          stream?: string
+          total_dropped?: number
+          total_ingested?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      telemetry_sampling_config: {
+        Row: {
+          created_at: string
+          dedupe_window_seconds: number
+          enabled: boolean
+          event_name: string
+          id: string
+          max_events_per_minute: number
+          notes: string | null
+          retention_days: number
+          sample_rate: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          dedupe_window_seconds?: number
+          enabled?: boolean
+          event_name: string
+          id?: string
+          max_events_per_minute?: number
+          notes?: string | null
+          retention_days?: number
+          sample_rate?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          dedupe_window_seconds?: number
+          enabled?: boolean
+          event_name?: string
+          id?: string
+          max_events_per_minute?: number
+          notes?: string | null
+          retention_days?: number
+          sample_rate?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       tier_limits: {
         Row: {
           created_at: string
@@ -8277,6 +8508,7 @@ export type Database = {
           users: number
         }[]
       }
+      blog_automation_overview: { Args: never; Returns: Json }
       bookmark_count_for_post: { Args: { _slug: string }; Returns: number }
       bookmark_counts_for_posts: {
         Args: { _slugs: string[] }
@@ -8729,6 +8961,11 @@ export type Database = {
           last_at: string
           reason: string
         }[]
+      }
+      telemetry_health_overview: { Args: never; Returns: Json }
+      telemetry_record_drop: {
+        Args: { _count?: number; _event_name: string; _reason: string }
+        Returns: undefined
       }
       toggle_bookmark: { Args: { _slug: string }; Returns: Json }
       track_cta_event: {
