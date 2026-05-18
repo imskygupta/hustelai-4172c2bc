@@ -260,22 +260,56 @@ async function ingestBatch(events: any[]): Promise<{ ingested: number; dropped: 
     buckets.get(key)!.rows.push(row);
   }
 
-  const useOwned = ownedReady();
-  const sink = useOwned ? getOwned() : getPrimaryService();
+  const ownedAvailable = ownedReady();
+  const ownedClient = ownedAvailable ? getOwned() : null;
+  const primaryClient = getPrimaryService();
 
   for (const [, b] of buckets) {
-    const target = useOwned ? b.owned : b.primary;
+    const toggle = await getToggle(b.stream);
+    if (!toggle.enabled) {
+      bump(b.stream, "dropped", b.rows.length);
+      await recordDrop(b.stream, "stream_disabled", b.rows.length);
+      continue;
+    }
+    const wantOwned = ownedAvailable && toggle.owned_enabled;
+    const wantMirror = wantOwned && toggle.mirror_to_primary;
+    const target = wantOwned ? b.owned : b.primary;
+    const sink = wantOwned ? ownedClient! : primaryClient;
+
     try {
       const { error } = await sink.from(target).insert(b.rows);
       if (error) throw error;
       bump(b.stream, "ingested", b.rows.length);
       void bumpRouterState(b.stream, b.rows.length, 0);
+      void recordRoute(b.stream, wantOwned ? "owned" : "primary", b.rows.length);
+
+      // Optional dual-write for cutover verification.
+      if (wantMirror) {
+        try {
+          const { error: mErr } = await primaryClient.from(b.primary).insert(b.rows);
+          if (mErr) throw mErr;
+          void recordRoute(b.stream, "mirror", b.rows.length);
+        } catch {
+          void recordRoute(b.stream, "fail", b.rows.length);
+        }
+      }
     } catch (e) {
       const msg = (e as Error).message || String(e);
-      // enqueue replay on PRIMARY
+      // Owned-sink failure → automatic fallback to primary (no data loss).
+      if (wantOwned) {
+        try {
+          const { error: fbErr } = await primaryClient.from(b.primary).insert(b.rows);
+          if (!fbErr) {
+            bump(b.stream, "ingested", b.rows.length);
+            void recordRoute(b.stream, "primary", b.rows.length);
+            void bumpRouterState(b.stream, b.rows.length, 0, `owned_fallback:${msg.slice(0,120)}`);
+            continue;
+          }
+        } catch { /* fall through to replay */ }
+      }
+      // Enqueue replay on PRIMARY
       try {
-        const primary = getPrimaryService();
-        await primary.from("telemetry_replay_queue").insert(
+        await primaryClient.from("telemetry_replay_queue").insert(
           b.rows.map((r) => ({
             event_name: b.stream,
             target_table: b.owned,
@@ -283,9 +317,11 @@ async function ingestBatch(events: any[]): Promise<{ ingested: number; dropped: 
             last_error: msg.slice(0, 500),
           })),
         );
+        void recordRoute(b.stream, "replay", b.rows.length);
       } catch { /* tolerate */ }
       bump(b.stream, "dropped", b.rows.length);
       await recordDrop(b.stream, "sink_unavailable", b.rows.length);
+      void recordRoute(b.stream, "fail", b.rows.length);
       void bumpRouterState(b.stream, 0, b.rows.length, msg);
     }
   }
