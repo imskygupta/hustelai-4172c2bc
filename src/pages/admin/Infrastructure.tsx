@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, RefreshCw, Database, Network, Activity, Send, Train, Shield, AlertTriangle, Users, Flag, Settings, KeyRound, Radar, Gauge, Newspaper, Lock, Flame, BarChart3, TrendingUp, Target, Wifi, ArrowRightLeft, Bot, GitBranch, Bomb, Link2, Crosshair, Sparkles, AlertOctagon } from "lucide-react";
+import { ArrowLeft, RefreshCw, Database, Network, Activity, Send, Train, Shield, AlertTriangle, Users, Flag, Settings, KeyRound, Radar, Gauge, Newspaper, Lock, Flame, BarChart3, TrendingUp, Target, Wifi, ArrowRightLeft, Bot, GitBranch, Bomb, Link2, Crosshair, Sparkles, AlertOctagon, Waves } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -17,6 +17,7 @@ import { TelemetryEvacuationPanel } from "./TelemetryEvacuationPanel";
 import { AutonomousControllerPanel } from "./AutonomousControllerPanel";
 import { TopologyGraphPanel, BlastRadiusPanel, FailureSimulationPanel, CouplingFindingsPanel, ExtractionForecastPanel, StabilityScorePanel } from "./TopologyPanels";
 import { ProductionIncidentsPanel } from "./ProductionStabilityPanels";
+import { RuntimeExtractionPanel } from "./RuntimeExtractionPanel";
 
 type Project = {
   id: string; name: string; purpose: string; environment: string; project_ref: string; project_url: string | null;
@@ -195,6 +196,7 @@ export default function Infrastructure() {
             <TabsTrigger value="forecast"><Target className="h-4 w-4 mr-1" />Extraction Forecast</TabsTrigger>
             <TabsTrigger value="stability"><Sparkles className="h-4 w-4 mr-1" />Stability Score</TabsTrigger>
             <TabsTrigger value="noc"><AlertOctagon className="h-4 w-4 mr-1" />Production NOC</TabsTrigger>
+            <TabsTrigger value="wave1"><Waves className="h-4 w-4 mr-1" />Runtime Extraction</TabsTrigger>
           </TabsList>
 
           <TabsContent value="registry">
@@ -389,6 +391,7 @@ export default function Infrastructure() {
           <TabsContent value="forecast"><ExtractionForecastPanel /></TabsContent>
           <TabsContent value="stability"><StabilityScorePanel /></TabsContent>
           <TabsContent value="noc"><ProductionIncidentsPanel /></TabsContent>
+          <TabsContent value="wave1"><RuntimeExtractionPanel /></TabsContent>
         </Tabs>
       </div>
     </div>
