@@ -5602,18 +5602,64 @@ export type Database = {
         }
         Relationships: []
       }
+      runtime_direct_write_violations: {
+        Row: {
+          detected_at: string
+          estimated_writes_per_hour: number
+          id: string
+          last_seen_at: string
+          metadata: Json
+          resolved_at: string | null
+          severity: string
+          stream: string | null
+          violating_function: string
+          violating_runtime: string | null
+          violating_table: string
+        }
+        Insert: {
+          detected_at?: string
+          estimated_writes_per_hour?: number
+          id?: string
+          last_seen_at?: string
+          metadata?: Json
+          resolved_at?: string | null
+          severity?: string
+          stream?: string | null
+          violating_function: string
+          violating_runtime?: string | null
+          violating_table: string
+        }
+        Update: {
+          detected_at?: string
+          estimated_writes_per_hour?: number
+          id?: string
+          last_seen_at?: string
+          metadata?: Json
+          resolved_at?: string | null
+          severity?: string
+          stream?: string | null
+          violating_function?: string
+          violating_runtime?: string | null
+          violating_table?: string
+        }
+        Relationships: []
+      }
       runtime_extraction_metrics: {
         Row: {
           avg_confidence: number | null
           bucket_minute: string
           failed: number
           id: number
+          realtime_emissions_avoided: number
           replayed: number
+          replication_bytes_avoided: number
           routed_mirror: number
           routed_owned: number
           routed_primary: number
           routed_shadow: number
+          storage_bytes_avoided: number
           stream: string
+          wal_bytes_avoided: number
           writes_avoided: number
         }
         Insert: {
@@ -5621,12 +5667,16 @@ export type Database = {
           bucket_minute?: string
           failed?: number
           id?: number
+          realtime_emissions_avoided?: number
           replayed?: number
+          replication_bytes_avoided?: number
           routed_mirror?: number
           routed_owned?: number
           routed_primary?: number
           routed_shadow?: number
+          storage_bytes_avoided?: number
           stream: string
+          wal_bytes_avoided?: number
           writes_avoided?: number
         }
         Update: {
@@ -5634,12 +5684,16 @@ export type Database = {
           bucket_minute?: string
           failed?: number
           id?: number
+          realtime_emissions_avoided?: number
           replayed?: number
+          replication_bytes_avoided?: number
           routed_mirror?: number
           routed_owned?: number
           routed_primary?: number
           routed_shadow?: number
+          storage_bytes_avoided?: number
           stream?: string
+          wal_bytes_avoided?: number
           writes_avoided?: number
         }
         Relationships: []
@@ -5647,19 +5701,28 @@ export type Database = {
       runtime_extraction_streams: {
         Row: {
           authority_state: string
+          auto_promote_enabled: boolean
           category: string
           confidence: number
           created_at: string
           critical: boolean
           est_bytes_per_write: number
           est_writes_per_hour: number
+          fallback_activated_at: string | null
+          fallback_count_1h: number
           fallback_enabled: boolean
+          fallback_expires_at: string | null
+          fallback_reason: string | null
+          fallback_total: number
           id: string
           notes: string | null
+          owned_authoritative_at: string | null
           owner_db: string | null
           parity_status: string
           posture: string
+          primary_disabled_at: string | null
           primary_write_disabled_at: string | null
+          primary_writes_disabled: boolean
           rail_guarded: boolean
           replay_pressure: number
           rollback_risk: string
@@ -5668,19 +5731,28 @@ export type Database = {
         }
         Insert: {
           authority_state?: string
+          auto_promote_enabled?: boolean
           category: string
           confidence?: number
           created_at?: string
           critical?: boolean
           est_bytes_per_write?: number
           est_writes_per_hour?: number
+          fallback_activated_at?: string | null
+          fallback_count_1h?: number
           fallback_enabled?: boolean
+          fallback_expires_at?: string | null
+          fallback_reason?: string | null
+          fallback_total?: number
           id?: string
           notes?: string | null
+          owned_authoritative_at?: string | null
           owner_db?: string | null
           parity_status?: string
           posture?: string
+          primary_disabled_at?: string | null
           primary_write_disabled_at?: string | null
+          primary_writes_disabled?: boolean
           rail_guarded?: boolean
           replay_pressure?: number
           rollback_risk?: string
@@ -5689,19 +5761,28 @@ export type Database = {
         }
         Update: {
           authority_state?: string
+          auto_promote_enabled?: boolean
           category?: string
           confidence?: number
           created_at?: string
           critical?: boolean
           est_bytes_per_write?: number
           est_writes_per_hour?: number
+          fallback_activated_at?: string | null
+          fallback_count_1h?: number
           fallback_enabled?: boolean
+          fallback_expires_at?: string | null
+          fallback_reason?: string | null
+          fallback_total?: number
           id?: string
           notes?: string | null
+          owned_authoritative_at?: string | null
           owner_db?: string | null
           parity_status?: string
           posture?: string
+          primary_disabled_at?: string | null
           primary_write_disabled_at?: string | null
+          primary_writes_disabled?: boolean
           rail_guarded?: boolean
           replay_pressure?: number
           rollback_risk?: string
@@ -10176,7 +10257,21 @@ export type Database = {
         Args: { _lookback?: string }
         Returns: number
       }
+      runtime_authority_countdown: { Args: never; Returns: Json }
+      runtime_auto_promote_streams: {
+        Args: never
+        Returns: {
+          from_state: string
+          reason: string
+          stream: string
+          to_state: string
+        }[]
+      }
       runtime_extraction_overview: { Args: never; Returns: Json }
+      runtime_record_fallback: {
+        Args: { _expires_in_seconds?: number; _reason: string; _stream: string }
+        Returns: undefined
+      }
       runtime_record_route: {
         Args: {
           _bytes_avoided?: number
@@ -10184,6 +10279,17 @@ export type Database = {
           _count?: number
           _outcome: string
           _stream: string
+        }
+        Returns: undefined
+      }
+      runtime_record_violation: {
+        Args: {
+          _function: string
+          _runtime?: string
+          _severity?: string
+          _stream?: string
+          _table: string
+          _writes_per_hour?: number
         }
         Returns: undefined
       }
