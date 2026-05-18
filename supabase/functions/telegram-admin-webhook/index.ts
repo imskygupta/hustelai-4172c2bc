@@ -3,6 +3,7 @@
 // Authorizes by Telegram chat ID (telegram_admin_users) AND optionally a
 // linked profiles row with admin role. Audits every command attempt.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.74.0";
+import { mirrorToOwned } from "../_shared/ops-routing.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -73,15 +74,19 @@ Deno.serve(async (req) => {
     const args = text.split(/\s+/).slice(1);
 
     // Audit attempt
-    await sb.from("telegram_admin_audit").insert({
-      bot_id: (bot as any)?.id || null,
-      telegram_chat_id: fromId,
-      telegram_username: fromUsername,
-      command: cmd,
-      args: args.join(" ") || null,
-      allowed,
-      reason: allowed ? (adminRow ? "admin_user_row" : "env_chat_id") : "not_authorized",
-    });
+    {
+      const auditRow = {
+        bot_id: (bot as any)?.id || null,
+        telegram_chat_id: fromId,
+        telegram_username: fromUsername,
+        command: cmd,
+        args: args.join(" ") || null,
+        allowed,
+        reason: allowed ? (adminRow ? "admin_user_row" : "env_chat_id") : "not_authorized",
+      };
+      await sb.from("telegram_admin_audit").insert(auditRow);
+      mirrorToOwned("telegram_admin_audit", auditRow);
+    }
 
     if (!allowed) {
       await send(chatId,
@@ -216,12 +221,16 @@ Deno.serve(async (req) => {
         // Confirmation flow: send buttons
         const conf = `bcast:${audience}:${Date.now()}`;
         // Stash temporarily in audit row
-        await sb.from("telegram_admin_audit").insert({
-          bot_id: (bot as any)?.id || null, telegram_chat_id: fromId,
-          telegram_username: fromUsername, command: "broadcast.draft",
-          args: JSON.stringify({ audience, message }),
-          allowed: true, reason: "draft",
-        });
+        {
+          const draftRow = {
+            bot_id: (bot as any)?.id || null, telegram_chat_id: fromId,
+            telegram_username: fromUsername, command: "broadcast.draft",
+            args: JSON.stringify({ audience, message }),
+            allowed: true, reason: "draft",
+          };
+          await sb.from("telegram_admin_audit").insert(draftRow);
+          mirrorToOwned("telegram_admin_audit", draftRow);
+        }
         await send(chatId, `<b>📣 Confirm broadcast</b>\nAudience: <b>${audience}</b>\nMessage:\n${escape(message)}`, {
           reply_markup: { inline_keyboard: [[
             { text: "✅ Send", callback_data: `bcast_ok:${audience}` },
@@ -304,12 +313,16 @@ Deno.serve(async (req) => {
     }
 
     // Audit final outcome (separate row from attempt for clarity)
-    await sb.from("telegram_admin_audit").insert({
-      bot_id: (bot as any)?.id || null, telegram_chat_id: fromId,
-      telegram_username: fromUsername, command: cmd + ".result",
-      args: args.join(" ") || null, allowed: true, reason: "executed",
-      result,
-    });
+    {
+      const resultRow = {
+        bot_id: (bot as any)?.id || null, telegram_chat_id: fromId,
+        telegram_username: fromUsername, command: cmd + ".result",
+        args: args.join(" ") || null, allowed: true, reason: "executed",
+        result,
+      };
+      await sb.from("telegram_admin_audit").insert(resultRow);
+      mirrorToOwned("telegram_admin_audit", resultRow);
+    }
 
     return ok();
   } catch (e) {
