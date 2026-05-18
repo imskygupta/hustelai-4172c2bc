@@ -7187,6 +7187,306 @@ export type Database = {
         }
         Relationships: []
       }
+      topology_blast_radius: {
+        Row: {
+          affected_keys: string[]
+          ai_impact: boolean
+          auth_impact: boolean
+          billing_impact: boolean
+          computed_at: string
+          direct_dependents: number
+          export_impact: boolean
+          node_key: string
+          notification_impact: boolean
+          transitive_dependents: number
+          user_facing_severity: string
+        }
+        Insert: {
+          affected_keys?: string[]
+          ai_impact?: boolean
+          auth_impact?: boolean
+          billing_impact?: boolean
+          computed_at?: string
+          direct_dependents?: number
+          export_impact?: boolean
+          node_key: string
+          notification_impact?: boolean
+          transitive_dependents?: number
+          user_facing_severity?: string
+        }
+        Update: {
+          affected_keys?: string[]
+          ai_impact?: boolean
+          auth_impact?: boolean
+          billing_impact?: boolean
+          computed_at?: string
+          direct_dependents?: number
+          export_impact?: boolean
+          node_key?: string
+          notification_impact?: boolean
+          transitive_dependents?: number
+          user_facing_severity?: string
+        }
+        Relationships: []
+      }
+      topology_coupling_findings: {
+        Row: {
+          detected_at: string
+          evidence: string | null
+          finding_type: string
+          id: string
+          recommendation: string | null
+          severity: string
+          source_kind: string | null
+          source_name: string | null
+          status: string
+        }
+        Insert: {
+          detected_at?: string
+          evidence?: string | null
+          finding_type: string
+          id?: string
+          recommendation?: string | null
+          severity?: string
+          source_kind?: string | null
+          source_name?: string | null
+          status?: string
+        }
+        Update: {
+          detected_at?: string
+          evidence?: string | null
+          finding_type?: string
+          id?: string
+          recommendation?: string | null
+          severity?: string
+          source_kind?: string | null
+          source_name?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
+      topology_edges: {
+        Row: {
+          created_at: string
+          criticality: string
+          id: string
+          notes: string | null
+          relation: string
+          source_key: string
+          target_key: string
+        }
+        Insert: {
+          created_at?: string
+          criticality?: string
+          id?: string
+          notes?: string | null
+          relation: string
+          source_key: string
+          target_key: string
+        }
+        Update: {
+          created_at?: string
+          criticality?: string
+          id?: string
+          notes?: string | null
+          relation?: string
+          source_key?: string
+          target_key?: string
+        }
+        Relationships: []
+      }
+      topology_extraction_forecasts: {
+        Row: {
+          auth_coupling: number
+          blast_radius: number
+          computed_at: string
+          estimated_savings_pct: number
+          id: string
+          queue_instability: number
+          realtime_impact: number
+          recommendation: string | null
+          replay_risk: number
+          rollback_difficulty: number
+          target_kind: string
+          target_name: string
+        }
+        Insert: {
+          auth_coupling?: number
+          blast_radius?: number
+          computed_at?: string
+          estimated_savings_pct?: number
+          id?: string
+          queue_instability?: number
+          realtime_impact?: number
+          recommendation?: string | null
+          replay_risk?: number
+          rollback_difficulty?: number
+          target_kind: string
+          target_name: string
+        }
+        Update: {
+          auth_coupling?: number
+          blast_radius?: number
+          computed_at?: string
+          estimated_savings_pct?: number
+          id?: string
+          queue_instability?: number
+          realtime_impact?: number
+          recommendation?: string | null
+          replay_risk?: number
+          rollback_difficulty?: number
+          target_kind?: string
+          target_name?: string
+        }
+        Relationships: []
+      }
+      topology_nodes: {
+        Row: {
+          created_at: string
+          criticality: string
+          current_authority: string | null
+          db_dependency: string | null
+          display_name: string
+          extraction_state: string
+          failure_impact: string | null
+          id: string
+          is_active: boolean
+          last_heartbeat_at: string | null
+          metadata: Json
+          node_key: string
+          node_type: string
+          owner: string
+          runtime: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          criticality?: string
+          current_authority?: string | null
+          db_dependency?: string | null
+          display_name: string
+          extraction_state?: string
+          failure_impact?: string | null
+          id?: string
+          is_active?: boolean
+          last_heartbeat_at?: string | null
+          metadata?: Json
+          node_key: string
+          node_type: string
+          owner?: string
+          runtime?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          criticality?: string
+          current_authority?: string | null
+          db_dependency?: string | null
+          display_name?: string
+          extraction_state?: string
+          failure_impact?: string | null
+          id?: string
+          is_active?: boolean
+          last_heartbeat_at?: string | null
+          metadata?: Json
+          node_key?: string
+          node_type?: string
+          owner?: string
+          runtime?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      topology_outage_simulations: {
+        Row: {
+          dry_run: boolean
+          duplicate_exec_prevented: boolean | null
+          finished_at: string | null
+          id: string
+          latency_impact_ms: number | null
+          notes: string | null
+          predicted_impact: Json
+          queue_pressure_pct: number | null
+          replay_recovered: boolean | null
+          rollback_correct: boolean | null
+          scenario: string
+          started_at: string
+          target_node_key: string | null
+        }
+        Insert: {
+          dry_run?: boolean
+          duplicate_exec_prevented?: boolean | null
+          finished_at?: string | null
+          id?: string
+          latency_impact_ms?: number | null
+          notes?: string | null
+          predicted_impact?: Json
+          queue_pressure_pct?: number | null
+          replay_recovered?: boolean | null
+          rollback_correct?: boolean | null
+          scenario: string
+          started_at?: string
+          target_node_key?: string | null
+        }
+        Update: {
+          dry_run?: boolean
+          duplicate_exec_prevented?: boolean | null
+          finished_at?: string | null
+          id?: string
+          latency_impact_ms?: number | null
+          notes?: string | null
+          predicted_impact?: Json
+          queue_pressure_pct?: number | null
+          replay_recovered?: boolean | null
+          rollback_correct?: boolean | null
+          scenario?: string
+          started_at?: string
+          target_node_key?: string | null
+        }
+        Relationships: []
+      }
+      topology_stability_scores: {
+        Row: {
+          captured_at: string
+          extraction_safety_pct: number
+          id: string
+          infra_fragmentation_pct: number
+          notes: string | null
+          operational_independence_pct: number
+          overall_score: number
+          recovery_readiness_pct: number
+          replay_resilience_pct: number
+          runtime_confidence_pct: number
+          single_point_dependency_pct: number
+        }
+        Insert: {
+          captured_at?: string
+          extraction_safety_pct?: number
+          id?: string
+          infra_fragmentation_pct?: number
+          notes?: string | null
+          operational_independence_pct?: number
+          overall_score?: number
+          recovery_readiness_pct?: number
+          replay_resilience_pct?: number
+          runtime_confidence_pct?: number
+          single_point_dependency_pct?: number
+        }
+        Update: {
+          captured_at?: string
+          extraction_safety_pct?: number
+          id?: string
+          infra_fragmentation_pct?: number
+          notes?: string | null
+          operational_independence_pct?: number
+          overall_score?: number
+          recovery_readiness_pct?: number
+          replay_resilience_pct?: number
+          runtime_confidence_pct?: number
+          single_point_dependency_pct?: number
+        }
+        Relationships: []
+      }
       trending_links: {
         Row: {
           category: string | null
@@ -9650,6 +9950,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      stability_score_snapshot: { Args: never; Returns: string }
       telegram_delivery_timeline: {
         Args: { _bucket?: string; _since?: string }
         Returns: {
@@ -9703,6 +10004,7 @@ export type Database = {
         }
       }
       toggle_bookmark: { Args: { _slug: string }; Returns: Json }
+      topology_compute_blast_radius: { Args: never; Returns: number }
       track_cta_event: {
         Args: {
           _anon_id?: string
