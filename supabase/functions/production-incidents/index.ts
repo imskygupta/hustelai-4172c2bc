@@ -3,6 +3,7 @@
 // Never touches the primary except to verify caller is an admin.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.74.0";
 import { getOwned } from "../_shared/clients.ts";
+import { mirrorAsyncRuntime } from "../_shared/async-runtime.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -55,12 +56,27 @@ Deno.serve(async (req) => {
     if (op === "ack") {
       const id = String(body.id);
       await owned.from("ops.production_incidents").update({ status: "acknowledged", acknowledged_by: uid }).eq("id", id);
+      mirrorAsyncRuntime("incident_history", {
+        source_incident_id: id,
+        severity: "acknowledged",
+        failure_class: "ack",
+        message: `acknowledged by ${uid}`,
+        metadata: { uid },
+      }, "incident_history");
       return j({ ok: true });
     }
     if (op === "resolve") {
       const id = String(body.id);
       const notes = body.notes ? String(body.notes) : null;
       await owned.from("ops.production_incidents").update({ status: "resolved", resolved_at: new Date().toISOString(), resolution_notes: notes }).eq("id", id);
+      mirrorAsyncRuntime("incident_history", {
+        source_incident_id: id,
+        severity: "resolved",
+        failure_class: "resolve",
+        message: notes ?? "resolved",
+        closed_at: new Date().toISOString(),
+        metadata: { uid },
+      }, "incident_history");
       return j({ ok: true });
     }
     return j({ error: "unknown op" }, 400);
