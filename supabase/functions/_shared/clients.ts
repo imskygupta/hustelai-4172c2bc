@@ -164,6 +164,10 @@ export function getOwned(): SupabaseClient {
 
 /** True once the owned project secrets are configured. */
 export function ownedReady(): boolean {
+  // Hard gate: never route to owned project unless explicitly enabled.
+  if ((Deno.env.get("OWNED_SUPABASE_ENABLED") ?? "").toLowerCase() !== "1") {
+    return false;
+  }
   return !!(
     Deno.env.get("OWNED_SUPABASE_URL") &&
     Deno.env.get("OWNED_SUPABASE_SERVICE_ROLE_KEY")
