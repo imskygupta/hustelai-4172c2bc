@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, RefreshCw, Database, Network, Activity, Send, Train, Shield, AlertTriangle, Users, Flag, Settings, KeyRound, Radar } from "lucide-react";
+import { ArrowLeft, RefreshCw, Database, Network, Activity, Send, Train, Shield, AlertTriangle, Users, Flag, Settings, KeyRound, Radar, Gauge, Newspaper } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -10,6 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { RecipientsPanel, OpsFlagsPanel, RuntimeConfigPanel, SecretsInventoryPanel, DiscoveryPanel } from "./InfrastructureControl";
+import { TelemetryPlanePanel, BlogAutomationPanel } from "./TelemetryPanels";
 
 type Project = {
   id: string; name: string; purpose: string; environment: string; project_ref: string; project_url: string | null;
@@ -171,6 +172,8 @@ export default function Infrastructure() {
             <TabsTrigger value="runtime"><Settings className="h-4 w-4 mr-1" />Runtime Config</TabsTrigger>
             <TabsTrigger value="secrets"><KeyRound className="h-4 w-4 mr-1" />Secrets</TabsTrigger>
             <TabsTrigger value="discovery"><Radar className="h-4 w-4 mr-1" />Discovery</TabsTrigger>
+            <TabsTrigger value="telemetry"><Gauge className="h-4 w-4 mr-1" />Telemetry Plane</TabsTrigger>
+            <TabsTrigger value="blog"><Newspaper className="h-4 w-4 mr-1" />Blog Automation</TabsTrigger>
           </TabsList>
 
           <TabsContent value="registry">
@@ -348,6 +351,8 @@ export default function Infrastructure() {
           <TabsContent value="runtime"><RuntimeConfigPanel /></TabsContent>
           <TabsContent value="secrets"><SecretsInventoryPanel /></TabsContent>
           <TabsContent value="discovery"><DiscoveryPanel /></TabsContent>
+          <TabsContent value="telemetry"><TelemetryPlanePanel /></TabsContent>
+          <TabsContent value="blog"><BlogAutomationPanel /></TabsContent>
         </Tabs>
       </div>
     </div>
