@@ -26,6 +26,9 @@ type StreamCfg = {
   rail_guarded: boolean;
   critical: boolean;
   est_bytes_per_write: number;
+  authority_state?: string;
+  primary_writes_disabled?: boolean;
+  fallback_enabled?: boolean;
 };
 
 const streamCache = new Map<string, { cfg: StreamCfg; fetchedAt: number }>();
@@ -38,7 +41,7 @@ async function loadStream(name: string): Promise<StreamCfg | null> {
     const primary = getPrimaryService();
     const { data } = await primary
       .from("runtime_extraction_streams")
-      .select("stream,posture,owner_db,confidence,rail_guarded,critical,est_bytes_per_write")
+      .select("stream,posture,owner_db,confidence,rail_guarded,critical,est_bytes_per_write,authority_state,primary_writes_disabled,fallback_enabled")
       .eq("stream", name)
       .maybeSingle();
     if (!data) return null;
@@ -79,6 +82,17 @@ async function enqueueReplay(stream: string, target: string, rows: Record<string
   } catch { /* tolerate */ }
 }
 
+async function recordFallback(stream: string, reason: string, ttlSec = 600) {
+  try {
+    const primary = getPrimaryService();
+    await primary.rpc("runtime_record_fallback" as any, {
+      _stream: stream,
+      _reason: reason.slice(0, 300),
+      _expires_in_seconds: ttlSec,
+    });
+  } catch { /* tolerate */ }
+}
+
 async function checkCircuit(stream: string): Promise<boolean> {
   // returns true if blocked (open)
   try {
@@ -114,6 +128,14 @@ async function handleIngest(body: any): Promise<Response> {
   let posture: Posture = cfg.posture;
   if (cfg.rail_guarded && (posture !== "primary" && posture !== "rollback")) {
     posture = "primary";
+  }
+  // Authority finalization: once primary writes are disabled or owned is
+  // authoritative, force the route onto owned regardless of posture.
+  if (!cfg.rail_guarded &&
+      (cfg.primary_writes_disabled === true ||
+       cfg.authority_state === "owned_authoritative" ||
+       cfg.authority_state === "primary_disabled")) {
+    posture = "owned";
   }
   if (posture === "blocked") {
     await recordRoute(stream, "fail", rows.length, cfg.confidence, 0);
@@ -175,6 +197,13 @@ async function handleIngest(body: any): Promise<Response> {
     }
 
     // primary or rollback
+    if (cfg.primary_writes_disabled === true && posture !== "rollback") {
+      // Hard block: primary writes are disabled and owned is unavailable.
+      await enqueueReplay(stream, target, rows, "primary_disabled_owned_unavailable");
+      await recordRoute(stream, "replay", rows.length, cfg.confidence, 0);
+      await recordFallback(stream, "primary_disabled_owned_unavailable", 60);
+      return json({ ok: false, deferred: true, reason: "primary_disabled" }, 202);
+    }
     const { error } = await primary.from(target).insert(rows);
     if (error) throw error;
     await recordRoute(stream, "primary", rows.length, cfg.confidence, 0);
@@ -182,11 +211,12 @@ async function handleIngest(body: any): Promise<Response> {
   } catch (e) {
     const msg = (e as Error).message || String(e);
     // Automatic fallback to primary when owned sink fails
-    if (wantOwned && posture !== "shadow") {
+    if (wantOwned && posture !== "shadow" && cfg.primary_writes_disabled !== true && cfg.fallback_enabled !== false) {
       try {
         const { error: fbErr } = await primary.from(target).insert(rows);
         if (!fbErr) {
           await recordRoute(stream, "primary", rows.length, cfg.confidence, 0);
+          await recordFallback(stream, msg, 600);
           return json({ ok: true, posture: "primary_fallback", rows: rows.length, owned_error: msg });
         }
       } catch { /* fall through */ }
@@ -194,6 +224,7 @@ async function handleIngest(body: any): Promise<Response> {
     await enqueueReplay(stream, target, rows, msg);
     await recordRoute(stream, "replay", rows.length, cfg.confidence, 0);
     await recordRoute(stream, "fail", rows.length, cfg.confidence, 0);
+    await recordFallback(stream, msg, 600);
     return json({ ok: false, replayed: true, error: msg }, 202);
   }
 }
