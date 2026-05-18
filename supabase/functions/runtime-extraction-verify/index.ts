@@ -9,8 +9,7 @@
 //
 // No writes. Read-only. Falls back gracefully when owned DB is not yet
 // provisioned so the panel can still render.
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.74.0";
-import { getOwned, getPrimaryService, ownedReady } from "../_shared/clients.ts";
+import { getOwned, getPrimary, getPrimaryService, ownedReady } from "../_shared/clients.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -34,16 +33,16 @@ const TABLES: Array<{ table: string; ts_col: string; stream: string }> = [
 async function isAdmin(authHeader: string | null): Promise<boolean> {
   if (!authHeader?.startsWith("Bearer ")) return false;
   try {
-    const url = Deno.env.get("SUPABASE_URL")!;
-    const anon = Deno.env.get("SUPABASE_ANON_KEY")!;
-    const sb = createClient(url, anon, { global: { headers: { Authorization: authHeader } } });
-    const { data } = await sb.auth.getClaims(authHeader.slice(7));
-    const uid = (data?.claims?.sub as string) ?? null;
-    if (!uid) return false;
-    const svc = createClient(url, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
-    const { data: role } = await svc.rpc("has_role", { _user_id: uid, _role: "admin" });
+    const sb = getPrimary(authHeader);
+    const { data: { user } } = await sb.auth.getUser();
+    if (!user) return false;
+    const svc = getPrimaryService();
+    const { data: role } = await svc.rpc("has_role", { _user_id: user.id, _role: "admin" });
     return role === true;
-  } catch { return false; }
+  } catch (e) {
+    console.error("isAdmin error:", (e as Error).message);
+    return false;
+  }
 }
 
 function j(body: unknown, status = 200): Response {
@@ -53,24 +52,39 @@ function j(body: unknown, status = 200): Response {
 }
 
 async function tableStats(owned: any, table: string, ts_col: string) {
-  const since1h = new Date(Date.now() - 60 * 60_000).toISOString();
-  const since24h = new Date(Date.now() - 24 * 60 * 60_000).toISOString();
-  const sch = owned.schema("async_runtime");
+  // Primary path: call the public.async_runtime_table_stats RPC on the owned
+  // project. The `async_runtime` schema is NOT exposed via PostgREST by
+  // design, so direct `.schema("async_runtime")` calls fail with PGRST106.
   try {
-    const [tot, h1, h24, latest] = await Promise.all([
-      sch.from(table).select("*", { count: "exact", head: true }),
-      sch.from(table).select("*", { count: "exact", head: true }).gte(ts_col, since1h),
-      sch.from(table).select("*", { count: "exact", head: true }).gte(ts_col, since24h),
-      sch.from(table).select(ts_col).order(ts_col, { ascending: false }).limit(1),
-    ]);
+    const { data, error } = await owned.rpc("async_runtime_table_stats", {
+      _table: table,
+      _ts_col: ts_col,
+    });
+    if (!error && data) {
+      return {
+        table,
+        schema_present: (data as any).schema_present === true,
+        rows_total: Number((data as any).rows_total ?? 0),
+        rows_1h:    Number((data as any).rows_1h ?? 0),
+        rows_24h:   Number((data as any).rows_24h ?? 0),
+        latest_at:  (data as any).latest_at ?? null,
+        error: null,
+      };
+    }
+    // Fallback: try direct schema access (works only if async_runtime is exposed).
+    const sch = owned.schema("async_runtime");
+    const tot = await sch.from(table).select("*", { count: "exact", head: true });
+    if (tot.error) {
+      return {
+        table, schema_present: false, rows_total: 0, rows_1h: 0, rows_24h: 0,
+        latest_at: null,
+        error: error?.message || tot.error.message || "rpc_and_direct_failed",
+      };
+    }
     return {
-      table,
-      schema_present: !tot.error,
-      rows_total: tot.count ?? 0,
-      rows_1h: h1.count ?? 0,
-      rows_24h: h24.count ?? 0,
-      latest_at: (latest.data?.[0] as any)?.[ts_col] ?? null,
-      error: tot.error?.message || null,
+      table, schema_present: true,
+      rows_total: tot.count ?? 0, rows_1h: 0, rows_24h: 0, latest_at: null,
+      error: "rpc_missing — bootstrap async_runtime.sql for accurate stats",
     };
   } catch (e) {
     return { table, schema_present: false, rows_total: 0, rows_1h: 0, rows_24h: 0, latest_at: null, error: (e as Error).message };
