@@ -33,3 +33,4 @@
 - [Project Creation Wizard](mem://features/workspace-polish-wave-creation) — 5-step Linear/Notion-style new-project flow that seeds tasks, doc, reminder, activity
 - [Workspace Premium OS](mem://features/workspace-premium-os) — Cinematic portal-gate auth, dark cockpit, AI Fuel/BYOK hero on workspace.*
 - [Sunday Brief Newsletter](mem://features/newsletter-sunday-brief) — Unified 1/week blog+app newsletter, 6-day throttle, bulk add
+- [Docs Content Recovery](mem://transfer/docs-content-recovery) — Audit: Admin DB docs tables empty; legacy fallback wired in docs-read-public; backfill plan ready
