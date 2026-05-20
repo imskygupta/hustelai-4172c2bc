@@ -169,7 +169,10 @@ Deno.serve(async (req) => {
     const probes = await runProbes();
     const { data: existing } = await supabase
       .from("api_provider_health")
-      .select("provider,consecutive_failures,consecutive_successes,total_checks,total_failures,manually_disabled,disabled_until");
+      // Phase 5: include columns used by the materially-changed gate below,
+      // otherwise prev.status/latency_ms/success_rate are always undefined and
+      // EVERY cron tick writes (observed: 31k UPDATEs in 72h despite gate).
+      .select("provider,status,latency_ms,success_rate,last_error,consecutive_failures,consecutive_successes,total_checks,total_failures,manually_disabled,disabled_until");
 
     const byProvider = new Map((existing ?? []).map((r: any) => [r.provider, r]));
     const now = new Date();
