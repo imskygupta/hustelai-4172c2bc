@@ -582,6 +582,7 @@ const App = () => {
             <Route path="/admin/runtime/migration" element={<MigrationHealth />} />
             <Route path="/admin/infrastructure" element={<Infrastructure />} />
             <Route path="/admin/operations" element={<AdminOperations />} />
+            <Route path="/admin/incident-mode" element={<AdminIncidentMode />} />
             <Route path="/admin/feature-flags" element={<AdminFeatureFlags />} />
             <Route path="/admin/automations" element={<Automations />} />
             <Route path="/admin/payments-review" element={<PaymentsReview />} />
