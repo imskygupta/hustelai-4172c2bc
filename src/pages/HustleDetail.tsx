@@ -1,3 +1,4 @@
+import { blogDb } from "@/integrations/blog/db";
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -66,7 +67,7 @@ export default function HustleDetail() {
     if (cached) {
       setHustle(JSON.parse(cached) as HustleData);
     } else {
-      const { data } = await supabase.from("side_hustles").select("*").eq("id", id).single();
+      const { data } = await blogDb.from("side_hustles").select("*").eq("id", id).single();
       if (data) {
         const h = data as HustleData;
         setHustle(h);

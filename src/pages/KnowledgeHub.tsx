@@ -295,8 +295,9 @@ function ChatExportBriefings({ userId, dailyLimit }: { userId: string; dailyLimi
   useEffect(() => { loadData(); }, []);
 
   const loadData = async () => {
+    const { aiDb } = await import("@/integrations/ai/db");
     const [{ data: msgs }, { data: exp }] = await Promise.all([
-      supabase.from("chat_messages").select("*").eq("user_id", userId).order("created_at", { ascending: true }).limit(100),
+      aiDb.from("chat_messages").select("*").eq("user_id", userId).order("created_at", { ascending: true }).limit(100),
       supabase.from("knowledge_exports").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
     ]);
     setChatMessages(msgs || []);

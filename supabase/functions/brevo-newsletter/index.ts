@@ -6,6 +6,7 @@ const corsHeaders = {
 };
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { getBlogs } from "../_shared/clients.ts";
 
 const BREVO_API = "https://api.brevo.com/v3";
 const BREVO_KEY = Deno.env.get("BREVO_API_KEY")!;
@@ -73,6 +74,8 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   const sb = createClient(SUPABASE_URL, SERVICE_KEY);
+  // Phase 7C.3: all newsletter_* tables live on Blogs DB. Hard fail if not configured.
+  const blogs = getBlogs();
   try {
     const body = await req.json();
     const action = body.action as string;

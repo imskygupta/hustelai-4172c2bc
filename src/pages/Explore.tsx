@@ -1,3 +1,4 @@
+import { blogDb } from "@/integrations/blog/db";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -53,7 +54,7 @@ export default function Explore() {
 
   // Load top liked cards for display
   useEffect(() => {
-    supabase.from("side_hustles").select("*").order("likes", { ascending: false }).limit(6)
+    blogDb.from("side_hustles").select("*").order("likes", { ascending: false }).limit(6)
       .then(({ data }) => { if (data) setTrendingCards(data.map(mapDbResult)); });
   }, []);
 
@@ -165,7 +166,7 @@ export default function Explore() {
             likes: 0,
             dislikes: 0,
           };
-          const { data: inserted } = await supabase.from("side_hustles").insert(insertData as any).select("*").single();
+          const { data: inserted } = await blogDb.from("side_hustles").insert(insertData as any).select("*").single();
           if (inserted) {
             savedResults.push(mapDbResult(inserted));
           } else {
@@ -192,7 +193,7 @@ export default function Explore() {
 
   const dbSearch = async (query: string): Promise<FreelanceResult[]> => {
     const keywords = query.toLowerCase().split(/\s+/).filter(w => w.length > 2);
-    let request = supabase.from("side_hustles").select("*");
+    let request = blogDb.from("side_hustles").select("*");
     if (keywords.length > 0) {
       const orFilters = keywords.flatMap(kw => [
         `title.ilike.%${kw}%`,

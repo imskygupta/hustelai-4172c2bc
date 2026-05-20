@@ -1,3 +1,4 @@
+import { blogDb } from "@/integrations/blog/db";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,7 +25,7 @@ export function EmailTemplatesPanel() {
   const [loading, setLoading] = useState(false);
 
   const load = async () => {
-    const { data } = await supabase.from("email_templates" as any).select("*").order("category").order("name");
+    const { data } = await blogDb.from("email_templates" as any).select("*").order("category").order("name");
     setTemplates((data as any) || []);
   };
   useEffect(() => { load(); }, []);
@@ -44,8 +45,8 @@ export function EmailTemplatesPanel() {
       try { payload.variables = JSON.parse(payload.variables); } catch { payload.variables = []; }
     }
     const { error } = editing.id
-      ? await supabase.from("email_templates" as any).update(payload).eq("id", editing.id)
-      : await supabase.from("email_templates" as any).insert(payload);
+      ? await blogDb.from("email_templates" as any).update(payload).eq("id", editing.id)
+      : await blogDb.from("email_templates" as any).insert(payload);
     setLoading(false);
     if (error) toast.error(error.message);
     else { toast.success("Saved"); setEditing(null); load(); }
@@ -53,7 +54,7 @@ export function EmailTemplatesPanel() {
 
   const remove = async (id: string) => {
     if (!confirm("Delete this template?")) return;
-    const { error } = await supabase.from("email_templates" as any).delete().eq("id", id);
+    const { error } = await blogDb.from("email_templates" as any).delete().eq("id", id);
     if (error) toast.error(error.message); else { toast.success("Deleted"); load(); }
   };
 

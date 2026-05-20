@@ -1,3 +1,4 @@
+import { blogDb } from "@/integrations/blog/db";
 import { supabase } from "@/integrations/supabase/client";
 
 const ANON_KEY = "nlc:anon";
@@ -31,7 +32,7 @@ export function isDismissed(surface: string): boolean {
 export function markDismissed(surface: string) {
   try { localStorage.setItem(DISMISS_KEY(surface), String(Date.now())); } catch {}
   // Best-effort server log (ignore failures)
-  void supabase.from("newsletter_capture_dismissals" as any).insert({
+  void blogDb.from("newsletter_capture_dismissals" as any).insert({
     anon_id: getAnonId(), surface,
   } as any);
 }

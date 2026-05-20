@@ -1,3 +1,4 @@
+import { blogDb } from "@/integrations/blog/db";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,7 +27,7 @@ export default function AdminCommunications() {
   const load = async () => {
     const { data: c } = await supabase.from("email_campaigns" as any).select("*").order("created_at", { ascending: false }).limit(50);
     setCampaigns((c as any) || []);
-    const { data: l } = await supabase.from("email_logs" as any).select("*").order("created_at", { ascending: false }).limit(100);
+    const { data: l } = await blogDb.from("email_logs" as any).select("*").order("created_at", { ascending: false }).limit(100);
     setLogs((l as any) || []);
   };
   useEffect(() => { load(); }, []);

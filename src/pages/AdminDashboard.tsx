@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { communityDb } from "@/integrations/community/client";
+import { blogDb } from "@/integrations/blog/db";
+import { aiDb } from "@/integrations/ai/db";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -426,10 +428,10 @@ export default function AdminDashboard() {
       supabase.from("notifications").select("*").order("created_at", { ascending: false }),
       supabase.from("webinars").select("*").order("created_at", { ascending: false }),
       supabase.from("expert_assignments").select("*").order("created_at", { ascending: false }),
-      supabase.from("blog_posts").select("*").order("created_at", { ascending: false }),
-      supabase.from("newsletter_subscribers").select("*", { count: "exact" }),
+      blogDb.from("blog_posts").select("*").order("created_at", { ascending: false }),
+      blogDb.from("newsletter_subscribers").select("*", { count: "exact" }),
       supabase.from("contact_submissions").select("id", { count: "exact", head: true }),
-      supabase.from("chat_messages").select("*").order("created_at", { ascending: false }).limit(500),
+      aiDb.from("chat_messages").select("*").order("created_at", { ascending: false }).limit(500),
       supabase.from("user_verifications").select("*").order("created_at", { ascending: false }),
       supabase.from("payments").select("*").order("created_at", { ascending: false }),
       communityDb.from("forum_posts").select("*").order("created_at", { ascending: false }).limit(100),
@@ -671,13 +673,13 @@ export default function AdminDashboard() {
 
   const loadChatForUser = async (userId: string) => {
     setSelectedChatUser(userId);
-    const { data } = await supabase.from("chat_messages").select("*").eq("user_id", userId).order("created_at", { ascending: true });
+    const { data } = await aiDb.from("chat_messages").select("*").eq("user_id", userId).order("created_at", { ascending: true });
     if (data) setChatMessages(data);
   };
 
   const sendAdminChatReply = async () => {
     if (!adminReply.trim() || !selectedChatUser) return;
-    const { error } = await supabase.from("chat_messages").insert({
+    const { error } = await aiDb.from("chat_messages").insert({
       user_id: selectedChatUser, role: "assistant", content: adminReply.trim(),
       is_admin_reply: true, admin_id: user!.id,
     });
@@ -689,7 +691,7 @@ export default function AdminDashboard() {
 
   const addBlogPost = async () => {
     if (!blogTitle || !blogContent) return;
-    const { error } = await supabase.from("blog_posts").insert({
+    const { error } = await blogDb.from("blog_posts").insert({
       title: blogTitle, content: blogContent, excerpt: blogExcerpt || null,
       category: blogCategory, author_name: profile?.display_name || "Admin",
       is_published: true, created_by: user!.id,
@@ -702,12 +704,12 @@ export default function AdminDashboard() {
   };
 
   const toggleBlogPublish = async (id: string, current: boolean) => {
-    await supabase.from("blog_posts").update({ is_published: !current }).eq("id", id);
+    await blogDb.from("blog_posts").update({ is_published: !current }).eq("id", id);
     setBlogPosts(blogPosts.map(b => b.id === id ? { ...b, is_published: !current } : b));
   };
 
   const deleteBlog = async (id: string) => {
-    await supabase.from("blog_posts").delete().eq("id", id);
+    await blogDb.from("blog_posts").delete().eq("id", id);
     setBlogPosts(blogPosts.filter(b => b.id !== id));
   };
 

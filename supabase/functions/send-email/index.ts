@@ -129,7 +129,10 @@ serve(async (req) => {
     }
 
     if (action === "send_newsletter") {
-      const { data: subs } = await supabaseAdmin.from("newsletter_subscribers").select("email");
+      // Phase 7C.3: newsletter_subscribers lives on Blogs DB.
+      const { getBlogs: _getBlogs } = await import("../_shared/clients.ts");
+      const blogs = _getBlogs();
+      const { data: subs } = await blogs.from("newsletter_subscribers").select("email");
       const allRecipients = (subs || []).map((s: { email: string }) => s.email).filter(Boolean);
       if (allRecipients.length === 0) throw new Error("No subscribers found");
 

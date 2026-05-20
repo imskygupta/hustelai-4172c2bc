@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { flagGuard } from "../_shared/flags/resolve.ts";
+import { getApi } from "../_shared/clients.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -70,10 +71,11 @@ serve(async (req) => {
 - Location: ${profile.address || "Not set"}`;
       }
 
-      // Save user messages to chat_messages for admin visibility
+      // Phase 7D.3: chat_messages now lives on the AI/API DB (no fallback).
+      const aiDb = getApi();
       const lastUserMsg = messages[messages.length - 1];
       if (lastUserMsg?.role === "user") {
-        await serviceClient.from("chat_messages").insert({
+        await aiDb.from("chat_messages").insert({
           user_id: userId, role: "user", content: lastUserMsg.content,
         });
       }
@@ -133,10 +135,10 @@ Format responses with markdown. Keep responses concise but valuable. Use emojis 
     const data = await response.json();
     const reply = data.choices?.[0]?.message?.content || "I couldn't generate a response. Please try again!";
 
-    // Save assistant reply
+    // Save assistant reply on AI/API DB
     try {
-      const serviceClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
-      await serviceClient.from("chat_messages").insert({
+      const aiDb = getApi();
+      await aiDb.from("chat_messages").insert({
         user_id: userId, role: "assistant", content: reply,
       });
     } catch (e) {

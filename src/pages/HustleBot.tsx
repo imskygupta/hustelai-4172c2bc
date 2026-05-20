@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { aiDb } from "@/integrations/ai/db";
 import { TIER_LIMITS } from "@/lib/tool-limits";
 import { PETS, PetKey, setMascotPet } from "@/components/MascotCompanion";
 
@@ -64,7 +65,7 @@ export default function HustleBot() {
   }, [messages, loading]);
 
   const loadHistory = async () => {
-    const { data } = await supabase
+    const { data } = await aiDb
       .from("chat_messages")
       .select("*")
       .eq("user_id", user!.id)

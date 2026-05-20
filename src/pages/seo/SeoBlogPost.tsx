@@ -1,3 +1,4 @@
+import { blogDb } from "@/integrations/blog/db";
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
@@ -81,11 +82,11 @@ export default function SeoBlogPost({ preview = false }: { preview?: boolean }) 
         if (!isPreview) bumpBlogView(r.slug, "read");
       }, 30_000);
       const topicRow = r.topic_id
-        ? ((await supabase.from("seo_topics" as any).select("*").eq("id", r.topic_id).maybeSingle()).data as any) ?? null
+        ? ((await blogDb.from("seo_topics" as any).select("*").eq("id", r.topic_id).maybeSingle()).data as any) ?? null
         : null;
       const [a, rel, tl, fw, ln] = await Promise.all([
         r.author_id
-          ? supabase.from("seo_authors" as any).select("*").eq("id", r.author_id).maybeSingle().then((x) => (x.data as any) ?? null)
+          ? blogDb.from("seo_authors" as any).select("*").eq("id", r.author_id).maybeSingle().then((x) => (x.data as any) ?? null)
           : Promise.resolve(null),
         fetchPostsByIds(r.related_post_ids ?? []),
         fetchToolsByIds(r.related_tool_ids ?? []),
