@@ -310,9 +310,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     (async () => {
       try {
-        await consumeSessionHashIfPresent();
-        await hydrateFromBridgeIfNeeded();
-        const { data: { session: initialSession }, error } = await supabase.auth.getSession();
+        await failOpen(() => consumeSessionHashIfPresent(), undefined, "auth.consumeSessionHash", { timeoutMs: 5_000, retries: 0 });
+        await failOpen(() => hydrateFromBridgeIfNeeded(), undefined, "auth.hydrateBridge", { timeoutMs: 5_000, retries: 0 });
+        const { data: { session: initialSession }, error } = await failOpen(
+          () => retryWithTimeout(() => supabase.auth.getSession(), "auth.getSession", { timeoutMs: 5_000, retries: 1 }),
+          { data: { session: null }, error: new Error("Auth session unavailable") } as any,
+          "auth.getSession",
+        );
         if (!mounted) return;
 
         authDebug("token.read", {
