@@ -1,10 +1,57 @@
-// Mirror helper — writes a row into the owned async_runtime schema on the
-// owned Supabase project (wguuipsikboqqinqeehv), then bumps the runtime
-// extraction metrics so the admin panel reflects real production traffic.
+// Operational write router + mirror helper.
 //
-// Fire-and-forget. Never throws. Safe to call from any edge function on a
-// hot request path.
+// Two entrypoints:
+//   - mirrorAsyncRuntime(table, row, stream?) — legacy, owned-only mirror.
+//   - writeOperational({ stream, table, owned, primary }) — Phase 3 router.
+//     Consults runtime_extraction_streams.authority_state and conditionally
+//     skips the primary write once the stream is owned-authoritative.
+//
+// All paths are fire-and-forget on the owned side and never throw on the hot
+// request path. The primary callback IS awaited because callers usually need
+// the inserted row id back (e.g. dispatcher uses it for a follow-up update).
 import { getOwned, getPrimaryService, ownedReady } from "./clients.ts";
+
+// -------------------- authority cache --------------------
+type AuthorityRow = {
+  authority_state: "primary" | "mirror" | "owned_authoritative" | "primary_disabled";
+  parity_status: string | null;
+  rail_guarded: boolean;
+  primary_writes_disabled: boolean;
+  fetched_at: number;
+};
+const AUTHORITY_TTL_MS = 60_000;
+const authorityCache = new Map<string, AuthorityRow>();
+
+async function getAuthority(stream: string): Promise<AuthorityRow> {
+  const cached = authorityCache.get(stream);
+  const now = Date.now();
+  if (cached && now - cached.fetched_at < AUTHORITY_TTL_MS) return cached;
+  try {
+    const { data } = await getPrimaryService()
+      .rpc("runtime_get_authority" as any, { _stream: stream });
+    const row = Array.isArray(data) ? data[0] : data;
+    const result: AuthorityRow = {
+      authority_state: (row?.authority_state ?? "primary") as AuthorityRow["authority_state"],
+      parity_status: row?.parity_status ?? null,
+      rail_guarded: !!row?.rail_guarded,
+      primary_writes_disabled: !!row?.primary_writes_disabled,
+      fetched_at: now,
+    };
+    authorityCache.set(stream, result);
+    return result;
+  } catch {
+    // Default to safest behavior: primary remains authoritative.
+    const result: AuthorityRow = {
+      authority_state: "primary",
+      parity_status: null,
+      rail_guarded: false,
+      primary_writes_disabled: false,
+      fetched_at: now,
+    };
+    authorityCache.set(stream, result);
+    return result;
+  }
+}
 
 const EST_BYTES: Record<string, number> = {
   notification_deliveries: 384,
@@ -41,6 +88,19 @@ function recordFallback(stream: string, reason: string): void {
       _stream: stream,
       _reason: reason.slice(0, 300),
       _expires_in_seconds: 600,
+    });
+  } catch { /* tolerate */ }
+}
+
+function recordPrimary(stream: string, n = 1): void {
+  try {
+    const primary = getPrimaryService();
+    void primary.rpc("runtime_record_route", {
+      _stream: stream,
+      _outcome: "primary",
+      _count: n,
+      _confidence: null,
+      _bytes_avoided: 0,
     });
   } catch { /* tolerate */ }
 }
@@ -108,4 +168,80 @@ export function mirrorAsyncRuntimeBatch(
       recordFallback(streamName, (e as Error)?.message || "owned_exception");
     }
   })();
+}
+
+// -------------------- Phase 3: authority-aware writer --------------------
+
+export interface OperationalWriteOptions<TPrimaryResult> {
+  /** runtime_extraction_streams.stream label, e.g. "notification_deliveries". */
+  stream: string;
+  /** Bare table name inside owned async_runtime schema. */
+  ownedTable: string;
+  /** Row to insert into the owned async_runtime table. */
+  ownedRow: Record<string, unknown>;
+  /**
+   * Callback that performs the primary-DB insert. Called only when the
+   * authority state still requires writes to primary (states: primary, mirror).
+   * Skipped entirely for owned_authoritative + primary_disabled. The return
+   * value is bubbled back to the caller so it can still chain follow-up
+   * UPDATEs by row id (or null if primary was skipped).
+   */
+  primaryInsert: () => Promise<TPrimaryResult | null>;
+}
+
+export interface OperationalWriteResult<TPrimaryResult> {
+  primary: TPrimaryResult | null;
+  primarySkipped: boolean;
+  authority: AuthorityRow["authority_state"];
+}
+
+/**
+ * Phase 3 router. Routes an operational write according to the stream's
+ * current authority_state in runtime_extraction_streams.
+ *
+ *   primary | mirror               → write BOTH (primary awaited, owned async)
+ *   owned_authoritative            → write OWNED only, primary insert skipped
+ *   primary_disabled               → write OWNED only, hard fail if owned errors
+ *
+ * Always records measured outcomes via runtime_record_route so the admin
+ * panel + parity refresher can act on real traffic.
+ */
+export async function writeOperational<T>(
+  opts: OperationalWriteOptions<T>,
+): Promise<OperationalWriteResult<T>> {
+  const auth = await getAuthority(opts.stream);
+  const skipPrimary =
+    auth.authority_state === "owned_authoritative" ||
+    auth.authority_state === "primary_disabled" ||
+    auth.primary_writes_disabled;
+
+  // 1) Primary write (awaited, callers need the id).
+  let primaryResult: T | null = null;
+  if (!skipPrimary) {
+    try {
+      primaryResult = await opts.primaryInsert();
+      recordPrimary(opts.stream, 1);
+    } catch (e) {
+      // Primary insert failure on a still-authoritative stream is the
+      // caller's problem; surface metric but don't crash.
+      recordMetric(opts.stream, "fail", 1, 0);
+      recordFallback(opts.stream, `primary_insert_failed: ${(e as Error).message ?? "unknown"}`);
+      throw e;
+    }
+  }
+
+  // 2) Owned mirror (always — fire-and-forget).
+  mirrorAsyncRuntime(opts.ownedTable, opts.ownedRow, opts.stream);
+
+  return {
+    primary: primaryResult,
+    primarySkipped: skipPrimary,
+    authority: auth.authority_state,
+  };
+}
+
+/** Manual cache bust (e.g. after toggling authority via finalizer). */
+export function clearAuthorityCache(stream?: string): void {
+  if (stream) authorityCache.delete(stream);
+  else authorityCache.clear();
 }

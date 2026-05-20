@@ -10269,6 +10269,15 @@ export type Database = {
         }[]
       }
       runtime_extraction_overview: { Args: never; Returns: Json }
+      runtime_get_authority: {
+        Args: { _stream: string }
+        Returns: {
+          authority_state: string
+          parity_status: string
+          primary_writes_disabled: boolean
+          rail_guarded: boolean
+        }[]
+      }
       runtime_record_fallback: {
         Args: { _expires_in_seconds?: number; _reason: string; _stream: string }
         Returns: undefined
@@ -10293,6 +10302,17 @@ export type Database = {
           _writes_per_hour?: number
         }
         Returns: undefined
+      }
+      runtime_refresh_parity_status: {
+        Args: never
+        Returns: {
+          failures: number
+          new_status: string
+          old_status: string
+          owned_writes: number
+          primary_writes: number
+          stream: string
+        }[]
       }
       runtime_set_authority: {
         Args: { _state: string; _stream: string }
