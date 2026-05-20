@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { RefreshCw, Shield, Database, HardDrive, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { failOpen, INFRA_SAFE_MODE, retryWithTimeout } from "@/lib/async/timeout";
 
 type Finding = { kind: string; detail: string; severity: string; scanned_at: string };
 type BackupRun = { db_role: string; kind: string; started_at: string; finished_at: string | null; verify_ok: boolean | null; bytes: number | null };
@@ -56,11 +57,22 @@ export function PlatformHardeningPanel() {
   const [busy, setBusy] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null);
+  const [degraded, setDegraded] = useState<string | null>(INFRA_SAFE_MODE ? "Infra safe mode enabled; Phase 9 polling is paused." : null);
 
   const load = useCallback(async () => {
+    if (INFRA_SAFE_MODE) return;
     setBusy(true);
     try {
-      const r = await supabase.functions.invoke("platform-hardening-status", { body: {} });
+      setDegraded(null);
+      const r = await failOpen(
+        () => retryWithTimeout(
+          () => supabase.functions.invoke("platform-hardening-status", { body: {} }),
+          "infra.platformHardeningStatus",
+        ),
+        { data: {}, error: new Error("Platform hardening status unavailable") } as any,
+        "infra.platformHardeningStatus",
+      );
+      if ((r as any)?.error) setDegraded((r as any).error.message ?? "Platform hardening status unavailable");
       const d: any = r?.data ?? {};
       setFindings(d.findings ?? []);
       setBackups(d.backups ?? []);
@@ -70,14 +82,24 @@ export function PlatformHardeningPanel() {
   }, []);
 
   const runScan = useCallback(async () => {
+    if (INFRA_SAFE_MODE) return;
     setScanning(true);
     try {
-      await supabase.functions.invoke("platform-drift-scan", { body: {} });
+      await failOpen(
+        () => retryWithTimeout(() => supabase.functions.invoke("platform-drift-scan", { body: {} }), "infra.platformDriftScan"),
+        null,
+        "infra.platformDriftScan",
+      );
       await load();
     } finally { setScanning(false); }
   }, [load]);
 
-  useEffect(() => { load(); const i = setInterval(load, 60_000); return () => clearInterval(i); }, [load]);
+  useEffect(() => {
+    if (INFRA_SAFE_MODE) return;
+    load();
+    const i = setInterval(load, 60_000);
+    return () => clearInterval(i);
+  }, [load]);
 
   const latestByRole = new Map<string, HealthSnap>();
   for (const h of health) if (!latestByRole.has(h.db_role)) latestByRole.set(h.db_role, h);
@@ -104,7 +126,7 @@ export function PlatformHardeningPanel() {
               </Badge>
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              {updatedAt ? `Updated ${updatedAt.toLocaleTimeString()}` : "Loading…"} ·
+              {degraded ? degraded : updatedAt ? `Updated ${updatedAt.toLocaleTimeString()}` : "Waiting for background refresh…"} ·
               {" "}{criticalCount} critical · {findings.length} total findings
             </p>
           </div>
