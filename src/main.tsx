@@ -7,10 +7,13 @@ import { initYandex } from "./lib/yandex";
 import { loadServerRuntimeConfig } from "./config/runtime";
 import { initCalmMode } from "./components/CalmModeToggle";
 import { installCrashReporter } from "./lib/observability/reportCrash";
+import { installPrimaryGuard } from "./integrations/supabase/primary-guard";
 
 // Calm mode is a global preference (reduces motion + gradients across surfaces).
 // Dark mode, by contrast, is scoped to the authenticated AppShell — see AppShell.tsx.
 initCalmMode();
+// Phase 7F: hard-fail any access to extracted tables on the primary client.
+installPrimaryGuard();
 initSentry();
 initAnalytics();
 // Lightweight client-side crash signal → admin-alert (cooldown-throttled).
