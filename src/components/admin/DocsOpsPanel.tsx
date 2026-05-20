@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { RefreshCw, FileText } from "lucide-react";
 import { failOpen } from "@/lib/async/timeout";
 import { TimedSection, DegradedCard } from "@/components/runtime/Loaders";
-import { docsDb } from "@/integrations/docs/client";
+import { listDocsCategories, listDocsPages } from "@/integrations/docs/client";
 
 type Counts = { categories: number; pages: number; lastUpdated: string | null };
 
@@ -18,21 +18,19 @@ export default function DocsOpsPanel() {
   const [counts, setCounts] = useState<Counts | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [cache, setCache] = useState<{ ok: boolean; ageMs?: number; status?: number } | null>(null);
+  const [cache, setCache] = useState<{ ok: boolean; status: number; ageMs: number | null } | null>(null);
 
   async function load() {
     setLoading(true); setError(null);
     const out = await failOpen(
       async () => {
-        const [cats, pages] = await Promise.all([
-          (docsDb as any).from("docs_categories").select("id", { count: "exact", head: true }),
-          (docsDb as any).from("docs_pages").select("id, updated_at", { count: "exact" }).order("updated_at", { ascending: false }).limit(1),
-        ]);
-        return {
-          categories: cats?.count ?? 0,
-          pages: pages?.count ?? 0,
-          lastUpdated: pages?.data?.[0]?.updated_at ?? null,
-        } as Counts;
+        const [cats, pages] = await Promise.all([listDocsCategories(), listDocsPages()]);
+        const newest = pages
+          .map((p) => p.updated_at)
+          .filter(Boolean)
+          .sort()
+          .pop() ?? null;
+        return { categories: cats.length, pages: pages.length, lastUpdated: newest } as Counts;
       },
       null,
       "admin.docs_ops.counts",
@@ -46,10 +44,12 @@ export default function DocsOpsPanel() {
     const probed = await failOpen(
       async () => {
         const start = performance.now();
-        const r = await fetch(url, { headers: { apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? "" } });
+        const r = await fetch(url, {
+          headers: { apikey: (import.meta.env as any).VITE_SUPABASE_PUBLISHABLE_KEY ?? "" },
+        });
         return { ok: r.ok, status: r.status, ageMs: performance.now() - start };
       },
-      { ok: false, status: 0 },
+      { ok: false, status: 0, ageMs: null },
       "admin.docs_ops.edge",
       { timeoutMs: 3_000, retries: 0 },
     );
