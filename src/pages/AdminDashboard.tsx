@@ -431,8 +431,8 @@ export default function AdminDashboard() {
 
   const loadAllData = async () => {
     setLoadingData(true);
-    const q = <T,>(label: string, run: () => Promise<T> | PromiseLike<T>, fallback: any = { data: [], count: 0 }) =>
-      failOpen(() => retryWithTimeout(run, label), fallback as T, label);
+    const q = (label: string, run: () => Promise<any> | PromiseLike<any>, fallback: any = { data: [], count: 0 }): Promise<any> =>
+      failOpen(() => retryWithTimeout(run, label), fallback, label);
     const [usersRes, notifsRes, webRes, expertRes, blogRes, nlRes, contactRes, chatRes, verifRes, payRes, forumRes, rolesRes, groupsRes, trendRes, ordersRes] = await Promise.all([
       q("admin.profiles", () => supabase.from("profiles").select("*").order("created_at", { ascending: false })),
       q("admin.notifications", () => supabase.from("notifications").select("*").order("created_at", { ascending: false })),
