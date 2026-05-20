@@ -165,24 +165,32 @@ export function dispatchNotification(input: DispatchInput): void {
           || (await sb.from("profiles").select("email").eq("user_id", input.user_id).maybeSingle()).data?.email;
         if (fallbackEmail) {
           const r = await sendEmailFallback(fallbackEmail, input.message);
-          await sb.from("notification_deliveries").insert({
-            event_id: ev?.id,
-            user_id: input.user_id,
-            provider: "email",
-            status: r.ok ? "sent" : "failed",
-            attempt_count: 1,
-            last_error: r.error || null,
-            delivered_at: r.ok ? new Date().toISOString() : null,
-          });
-          mirrorAsyncRuntime("notification_deliveries", {
-            user_id: input.user_id,
-            channel: "email",
-            template: input.event_key,
-            status: r.ok ? "sent" : "failed",
-            provider: "email-fallback",
-            error: r.error || null,
-            attempts: 1,
-            sent_at: r.ok ? new Date().toISOString() : null,
+          // Phase 4: authority-aware fallback insert (no more naked primary write).
+          await writeOperational({
+            stream: "notification_deliveries",
+            ownedTable: "notification_deliveries",
+            ownedRow: {
+              user_id: input.user_id,
+              channel: "email",
+              template: input.event_key,
+              status: r.ok ? "sent" : "failed",
+              provider: "email-fallback",
+              error: r.error || null,
+              attempts: 1,
+              sent_at: r.ok ? new Date().toISOString() : null,
+            },
+            primaryInsert: async () => {
+              await sb.from("notification_deliveries").insert({
+                event_id: ev?.id,
+                user_id: input.user_id,
+                provider: "email",
+                status: r.ok ? "sent" : "failed",
+                attempt_count: 1,
+                last_error: r.error || null,
+                delivered_at: r.ok ? new Date().toISOString() : null,
+              });
+              return null;
+            },
           });
         }
       }
