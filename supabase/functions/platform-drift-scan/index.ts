@@ -46,7 +46,7 @@ Deno.serve(async (req) => {
       scanned_at: new Date().toISOString(),
     });
 
-    // 4. Alert if anything critical
+    // 3. Alert if anything critical
     const critical = stamped.filter((f) => f.severity === "critical");
     if (critical.length) {
       const url = Deno.env.get("SUPABASE_URL")!;
