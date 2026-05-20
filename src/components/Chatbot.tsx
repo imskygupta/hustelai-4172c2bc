@@ -96,7 +96,7 @@ export function Chatbot() {
   // Listen for admin replies via realtime
   useEffect(() => {
     if (!user) return;
-    const channel = supabase
+    const channel = aiDb
       .channel("chat-realtime")
       .on("postgres_changes", {
         event: "INSERT",
@@ -113,7 +113,7 @@ export function Chatbot() {
         }
       })
       .subscribe();
-    return () => { supabase.removeChannel(channel); };
+    return () => { aiDb.removeChannel(channel); };
   }, [user]);
 
   useEffect(() => {

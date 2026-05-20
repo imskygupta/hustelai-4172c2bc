@@ -112,17 +112,18 @@ export default function Dashboard() {
 
   const loadCommandCenterData = async () => {
     if (!user) return;
+    const { aiDb } = await import("@/integrations/ai/db");
     const { count: hustleCount } = await supabase
       .from("saved_hustles").select("*", { count: "exact", head: true }).eq("user_id", user.id);
     setSavedHustlesCount(hustleCount || 0);
-    const { count: msgCount } = await supabase
+    const { count: msgCount } = await aiDb
       .from("chat_messages").select("*", { count: "exact", head: true }).eq("user_id", user.id).eq("role", "user");
     setChatCount(msgCount || 0);
     const { data: recentHustles } = await supabase
       .from("saved_hustles")
       .select("status, updated_at, side_hustles(title)")
       .eq("user_id", user.id).order("updated_at", { ascending: false }).limit(5);
-    const { data: recentChats } = await supabase
+    const { data: recentChats } = await aiDb
       .from("chat_messages").select("content, created_at")
       .eq("user_id", user.id).eq("role", "user").order("created_at", { ascending: false }).limit(5);
     const activities: any[] = [];
