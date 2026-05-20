@@ -138,13 +138,17 @@ function render(template: Template, data: Record<string, any> = {}) {
   }
 }
 
-import { safeAnalyticsInsert } from "../_shared/clients.ts";
+import { safeAnalyticsInsert, getBlogs } from "../_shared/clients.ts";
 
-// Dual-write: keep primary email_logs (admin reads from it) and mirror into
-// the analytics DB so we can later cut the primary write entirely. Both
-// sides swallow errors — sends must never fail because logging failed.
-async function logEmail(sb: any, row: any) {
-  try { await sb.from("email_logs").insert(row); } catch (_) {}
+// Phase 7C.3: email_logs lives on Blogs DB. NO primary fallback. Send must
+// never fail because logging failed — both sides swallow errors.
+async function logEmail(_sb: any, row: any) {
+  try {
+    const blogs = getBlogs();
+    await blogs.from("email_logs").insert(row);
+  } catch (e) {
+    console.warn("email_logs blogs insert failed (dropped):", (e as Error).message);
+  }
   void safeAnalyticsInsert("email_logs", { ...row, source: "workspace-email" });
 }
 
