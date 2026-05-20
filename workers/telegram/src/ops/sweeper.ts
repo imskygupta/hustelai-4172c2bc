@@ -6,7 +6,12 @@ import os from "node:os";
 export function startSweeper(workerId: string, queues: string[], signal: AbortSignal) {
   const hostname = os.hostname();
   const identity = `${workerId}@${hostname}`;
+  // Phase 2: exponential backoff when nothing was swept. 60s -> 600s cap.
+  // Resets to 60s the moment we actually unstick a job.
+  const SWEEP_MIN_MS = 60_000;
+  const SWEEP_MAX_MS = 600_000;
   const loop = async () => {
+    let sleepMs = SWEEP_MIN_MS;
     while (!signal.aborted) {
       try {
         // Singleton lease: only one runtime may execute queue.sweep at a time.
@@ -16,7 +21,12 @@ export function startSweeper(workerId: string, queues: string[], signal: AbortSi
         if (lease) {
           try {
             const n = await sweep();
-            if (n > 0) console.log(`[sweeper] unstuck ${n} job(s) fence=${lease.fence}`);
+            if (n > 0) {
+              console.log(`[sweeper] unstuck ${n} job(s) fence=${lease.fence}`);
+              sleepMs = SWEEP_MIN_MS;
+            } else {
+              sleepMs = Math.min(sleepMs * 2, SWEEP_MAX_MS);
+            }
           } finally {
             await lease.release().catch(() => {});
           }
@@ -27,8 +37,7 @@ export function startSweeper(workerId: string, queues: string[], signal: AbortSi
       } catch (e) {
         console.error("[sweeper]", (e as Error).message);
       }
-      // Cost stabilization: sweeper 15s -> 60s (idle churn reduction).
-      await wait(60_000, signal);
+      await wait(sleepMs, signal);
     }
   };
   void loop();

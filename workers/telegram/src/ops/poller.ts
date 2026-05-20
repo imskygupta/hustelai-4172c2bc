@@ -5,17 +5,25 @@ import { claim, complete, fail, heartbeat, type Queue } from "./queue.js";
 import { getHandler } from "./handlers.js";
 
 const HEARTBEAT_MS = 20_000;
-// Cost stabilization: empty-queue backoff 2s -> 10s. SKIP LOCKED + lease
-// fencing + queue semantics unchanged; only idle poll cadence relaxed.
-const IDLE_MS = 10_000;
+// Phase 2: exponential backoff when queue is idle. Starts at 5s, doubles up
+// to 60s cap on every consecutive empty claim, resets to 5s on first job.
+// SKIP LOCKED + lease fencing + queue semantics unchanged.
+const IDLE_MIN_MS = 5_000;
+const IDLE_MAX_MS = 60_000;
 const ERROR_MS = 5_000;
 
 export function startPoller(queue: Queue, workerId: string, signal: AbortSignal) {
   const loop = async () => {
+    let idleMs = IDLE_MIN_MS;
     while (!signal.aborted) {
       try {
         const job = await claim(queue, workerId, 60);
-        if (!job) { await wait(IDLE_MS, signal); continue; }
+        if (!job) {
+          await wait(idleMs, signal);
+          idleMs = Math.min(idleMs * 2, IDLE_MAX_MS);
+          continue;
+        }
+        idleMs = IDLE_MIN_MS; // reset on real work
         await runJob(queue, job, workerId);
       } catch (e) {
         console.error(`[poller:${queue}]`, (e as Error).message);
