@@ -22,9 +22,11 @@
 //                    alias.
 //   getOwned()     → wguuipsikboqqinqeehv — operational telemetry mirror.
 //
-// getAnalytics()/getAsync() are LEGACY aliases that now route to getApi().
-// safeAsyncInsert/safeAnalyticsInsert are NO-OPs unless API_PLATFORM_* is set
-// — they MUST NOT silently fall back to the primary DB.
+// Phase 8F.1 — legacy aliases purged:
+//   getAnalytics() / getAsync() / safeAsyncInsert() — REMOVED. Call getApi()
+//   directly. `safeAnalyticsInsert()` is the only remaining fire-and-forget
+//   helper and routes exclusively to the API/AI DB (no primary fallback).
+//   COMMUNITY_SUPABASE_* env fallbacks — REMOVED. Use REALTIME_SUPABASE_*.
 //
 // NEVER mix: do not write payment/auth state to analytics, do not write
 // telemetry to primary. Cross-DB joins are forbidden — issue parallel queries
@@ -105,11 +107,6 @@ export function getApi(): SupabaseClient {
   return createClient(url, key, { auth: { persistSession: false } });
 }
 
-/** Legacy alias — routes to API/AI DB. */
-export function getAnalytics(): SupabaseClient {
-  return getApi();
-}
-
 /**
  * Admin/Ops control plane DB (rqqiujmiagauzohdqjmi). Service-role.
  * Holds operator handbook, runtime extraction streams, admin alerts,
@@ -143,14 +140,11 @@ export function getBlogs(): SupabaseClient {
  */
 export function getCommunity(): SupabaseClient {
   const url =
-    Deno.env.get("COMMUNITY_SUPABASE_URL") ??
     Deno.env.get("REALTIME_SUPABASE_URL") ??
     "https://qeswhaytgvosfzzgraef.supabase.co";
-  const key =
-    Deno.env.get("COMMUNITY_SUPABASE_SERVICE_ROLE_KEY") ??
-    Deno.env.get("REALTIME_SUPABASE_SERVICE_ROLE_KEY");
+  const key = Deno.env.get("REALTIME_SUPABASE_SERVICE_ROLE_KEY");
   if (!key) {
-    throw new Error("Realtime/Community DB service role key missing. Set REALTIME_SUPABASE_SERVICE_ROLE_KEY (or COMMUNITY_SUPABASE_SERVICE_ROLE_KEY).");
+    throw new Error("Realtime DB service role key missing. Set REALTIME_SUPABASE_SERVICE_ROLE_KEY.");
   }
   return createClient(url, key, { auth: { persistSession: false } });
 }
@@ -171,47 +165,6 @@ export function getWorkspace(): SupabaseClient {
     );
   }
   return createClient(url, key, { auth: { persistSession: false } });
-}
-
-/**
- * Async/queue DB client. Holds workflow runs, AI job state, retries, cron
- * checkpoints and notification/email/telegram delivery logs.
- *
- * Falls back to the primary URL until ASYNC_SUPABASE_URL is provisioned, so
- * callers always get a usable client during the progressive cutover. Use
- * `safeAsyncInsert()` for fire-and-forget writes that must not break the
- * primary code path.
- */
-/** Legacy alias — async/queue workloads now live on the API/AI DB. */
-export function getAsync(): SupabaseClient {
-  return getApi();
-}
-
-/**
- * Fire-and-forget insert into the async DB. Never throws — queue/delivery
- * writes must not break the primary path. Returns true on success. If the
- * Async DB is not yet provisioned, falls through to the primary service
- * client so existing tables keep working during the migration.
- */
-export async function safeAsyncInsert(
-  table: string,
-  row: Record<string, unknown>,
-): Promise<boolean> {
-  try {
-    // Hard guard: never silently fall back to primary. If API/AI DB isn't
-    // configured, drop the row instead of polluting primary WAL.
-    if (!Deno.env.get("API_PLATFORM_SUPABASE_SERVICE_ROLE_KEY")) return false;
-    const sb = getApi();
-    const { error } = await sb.from(table).insert(row);
-    if (error) {
-      console.warn(`safeAsyncInsert ${table}:`, error.message);
-      return false;
-    }
-    return true;
-  } catch (err) {
-    console.warn(`safeAsyncInsert ${table} threw:`, (err as Error).message);
-    return false;
-  }
 }
 
 /**

@@ -4,10 +4,9 @@
 // holds the only Admin-DB-aware service-role credential.
 import { supabase } from "@/integrations/supabase/client";
 
-/** @deprecated retained for legacy imports; throws on first use. */
-export const docsDb: never = new Proxy({} as any, {
-  get: () => { throw new Error("docsDb is retired — use listDocsCategories/listDocsPages/fetchDocsPage which proxy to docs-read-public."); },
-}) as never;
+// Phase 8F.1 — `docsDb` proxy export removed. Docs reads MUST go through the
+// `docs-read-public` edge function (Admin DB-aware). Only helper functions
+// below remain in this module.
 
 export type DocsCategory = {
   id: string;

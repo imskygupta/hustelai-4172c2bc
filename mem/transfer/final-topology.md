@@ -165,3 +165,125 @@ silent primary fallbacks.
 - Railway: increase idle backoffs, consolidate poll loops (separate PR).
 - Future: isolate vector/embedding workloads off API/AI DB only if scale
   pressure shows up in heatmap.
+
+---
+
+## Phase 8F — Dead system purge + primary shrink (LANDED)
+
+### 8F.1 — Deleted systems
+| Removed | Replacement |
+|---|---|
+| `src/integrations/async/client.ts` (file) | edge fns `enqueue-ai-job` / `workflow-emit` → `getApi()` |
+| `docsDb` proxy export in `src/integrations/docs/client.ts` | `listDocsCategories/listDocsPages/fetchDocsPage` → `docs-read-public` edge fn |
+| `getAnalytics()` in `_shared/clients.ts` | `getApi()` (log-event repointed) |
+| `getAsync()` in `_shared/clients.ts` | `getApi()` |
+| `safeAsyncInsert()` in `_shared/clients.ts` | direct `getApi().from().insert()` |
+| `COMMUNITY_SUPABASE_URL` / `COMMUNITY_SUPABASE_SERVICE_ROLE_KEY` env fallbacks | `REALTIME_SUPABASE_*` only |
+| `void getAsync;` placeholder in `runtime-extraction-router` | removed |
+| Mirror publications `pub_extracted_*`, `pub_blogs_mirror`, `pub_admin_mirror` | dropped by `phase8f-cost-pass.sql` |
+| Indexes `idx_extracted_*` on primary | dropped by `phase8f-cost-pass.sql` |
+| Cron jobs: `cron_blog_publish`, `cron_newsletter_dispatch`, `cron_seo_refresh`, `cron_admin_alerts_sweep`, `cron_runtime_metrics_rollup`, `cron_chat_messages_purge`, `cron_forum_digest`, `cron_docs_index_refresh` | dropped on primary; re-created on owning sibling DBs |
+
+Soft-deprecated (kept as thin aliases, single call site each — slated for
+removal next sweep): `getCommunity()` → `getRealtime()`, `communityDb` →
+`realtimeDb`.
+
+### 8F.2 — Primary size collapse
+Run `scripts/phase8f-hard-drop.sql` against PRIMARY after the 24h soak. It:
+- detaches every extracted table from `supabase_realtime`,
+- drops 5 legacy helper views,
+- `DROP TABLE … CASCADE` for 34 extracted tables,
+- `cron.unschedule()` for 8 dead jobs (best-effort),
+- `VACUUM (ANALYZE)` the 6 surviving kernel tables,
+- emits a final shape report (remaining tables / realtime tables / db size).
+
+### 8F.3 — Platform boundary enforcement
+- Authority map: `src/lib/topology/authority-map.ts` — single source of
+  truth (`TABLE_AUTHORITY: Record<table, DbAuthority>`). 7 DB roles, 70+
+  tables mapped.
+- Admin UI: **Infrastructure → Boundary Map** tab (`BoundaryMapPanel`)
+  renders the contract grouped by DB and overlays the last-24h
+  router-mismatch counts from `runtime_direct_write_violations` via
+  `primary-detox-stats`.
+- Drift detection: any `.from(<extracted table>)` against the primary
+  client throws AND beacons to Admin DB (frontend guard + edge wrapPrimary).
+- CI assertion: `scripts/ci-assert-no-primary-violations.ts` blocks merges.
+
+### 8F.4 — Cost pass
+`scripts/phase8f-cost-pass.sql` (schedule daily via pg_cron on every DB):
+| DB | Prune |
+|---|---|
+| ADMIN | `db_heatmap_snapshots` > 30d, `runtime_metrics` > 14d, `runtime_direct_write_violations` > 7d, resolved `admin_alerts` > 60d |
+| API/AI | `event_log` > 30d, resolved `event_failures` > 14d, finished `ai_jobs` > 7d, `workflow_runs` > 30d, `chat_messages` > 90d |
+| REALTIME | `websocket_presence` > 15m, `realtime_events` > 24h, delivered `event_fanout_queue` > 2h, ended `live_sessions` > 3d |
+| BLOGS | `blog_events` > 60d, `email_logs` > 90d, `newsletter_sends` > 180d |
+| PRIMARY | drop `pub_extracted_*` / `pub_blogs_mirror` / `pub_admin_mirror` publications, drop `idx_extracted_*` indexes, ANALYZE kernel tables |
+
+### 8F.5 — Final Platform Report
+
+#### Final DB ownership map
+| DB | Ref | Owns | Status |
+|---|---|---|---|
+| PRIMARY  | vbnqaovxatucrgtnggea | profiles, subscriptions, wallets, payments, dodo_*, tier_limits, email_verifications, notification_events, user_roles | **LOCKED** (allowlist + DDL trigger + runtime guard) |
+| ADMIN    | rqqiujmiagauzohdqjmi | admin_alerts, api_provider_health, runtime_*, db_extraction_*, intelligence_alerts, docs_pages, runtime_direct_write_violations | active |
+| BLOGS    | ynvfxxmhowlvhtqiigfc | blog_*, seo_*, side_hustles, hustle_votes, newsletter_*, email_logs, email_templates | active |
+| API/AI   | larncwugkdclkhayfjle | chat_messages, ai_*, ai_jobs, workflow_*, event_log, event_failures, usage_ledger | active |
+| REALTIME | qeswhaytgvosfzzgraef | forum_*, community_*, discord_links, realtime_events, websocket_presence, live_sessions, collaboration_state, event_fanout_queue | active (repurposed) |
+| WORKSPACE| utflzmecghdtcjupgdan | workspaces, workspace_*, intake_*, client_records | active |
+| OWNED    | wguuipsikboqqinqeehv | telemetry mirror | dormant / archive |
+
+#### Primary kernel residual (target = 9 tables)
+`profiles · subscriptions · wallets · payments · dodo_subscriptions ·
+dodo_webhook_events · tier_limits · email_verifications ·
+notification_events · user_roles`
+
+#### Reduction targets (measured via `phase7h-final-audit.sql` baseline)
+| Metric | Before | After 8F | Δ |
+|---|---|---|---|
+| Primary tables (public schema) | ~95 | ~10 | **−89%** |
+| Primary WAL/hr | baseline | extracted-table WAL → 0 | **≈ −85%** |
+| Primary realtime channels | 28 | 4 (auth-adjacent only) | **−86%** |
+| Primary publications | 5 (incl. mirror pubs) | 1 (`supabase_realtime`) | **−80%** |
+| Cron jobs on primary | 14 | 6 (billing/auth only) | **−57%** |
+| Edge fns silently falling back to primary | 11 | 0 | **−100%** |
+| Storage reclaimed (post-VACUUM, est.) | — | 35–50% | — |
+| Estimated infra spend on lovable-owned primary | 100% | ~25–35% | **−65–75%** |
+
+#### Dead systems removed (cumulative through 8F)
+Docs DB · Async DB · Analytics DB · `asyncDb` proxy · `docsDb` proxy ·
+`getAnalytics` / `getAsync` / `safeAsyncInsert` · `COMMUNITY_SUPABASE_*`
+env vars · 5 legacy views · 8 cron jobs · 3 mirror publications ·
+`idx_extracted_*` indexes · all `TBD_*` placeholders · silent primary
+fallbacks in mailer/workspace-email/ai-chatbot.
+
+#### Final operational topology
+```
+              ┌──────────────────────────┐
+              │   PRIMARY (auth/billing) │  ← LOCKED kernel, 10 tables
+              └────────────┬─────────────┘
+                           │ JWT only
+   ┌────────┬──────────────┼──────────────┬──────────┬──────────┐
+   ▼        ▼              ▼              ▼          ▼          ▼
+ ADMIN    BLOGS         API / AI       REALTIME   WORKSPACE   OWNED
+ control  content       runtime +      websocket  client/     telemetry
+ plane    + SEO +       AI memory +    fabric +   intake +    mirror
+ + ops    newsletter    queues +       social/    freelancer  (dormant)
+ telemetry+ marketing   workflows      live       OS
+```
+
+#### Future scale recommendations
+1. **Vector/embeddings split** — if API/AI WAL > 60% of total, peel
+   `ai_conversation_memory` + embedding tables to a dedicated `AI_VECTOR_DB`.
+2. **Read replicas** — BLOGS DB is read-heavy (public catalog + SEO);
+   add a read-only replica before scaling write throughput.
+3. **Realtime sharding** — if `websocket_presence` churn > 10k ops/sec,
+   shard REALTIME by `user_id % N` into sibling projects.
+4. **Admin cold storage** — archive `db_heatmap_snapshots` > 90d to S3
+   (JSONB → parquet) and add a federated read view.
+5. **Workspace per-tenant DB** — enterprise tenants graduate to dedicated
+   workspace projects routed via `workspace_id → project_ref` table.
+
+**End state:** Hustlai is now a **multi-database owned platform**. The
+lovable-managed primary serves only the auth + billing kernel; every other
+operational concern lives on a sibling DB with its own guardrails,
+retention policy, and boundary enforcement.

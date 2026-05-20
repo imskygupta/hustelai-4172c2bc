@@ -15,7 +15,7 @@
 //   open/close/trip a recovery circuit
 
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
-import { getOwned, getPrimaryService, ownedReady, getAsync } from "../_shared/clients.ts";
+import { getOwned, getPrimaryService, ownedReady } from "../_shared/clients.ts";
 
 type Posture = "primary" | "owned" | "mirror" | "shadow" | "rollback" | "blocked";
 type StreamCfg = {
@@ -291,9 +291,6 @@ function json(payload: unknown, status = 200): Response {
     headers: { ...corsHeaders, "content-type": "application/json" },
   });
 }
-
-// Silence unused warnings for clients reserved for future drain ops.
-void getAsync;
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
