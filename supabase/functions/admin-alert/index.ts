@@ -6,6 +6,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { dispatchToWorker, workerConfigured } from "../_shared/notifications/worker.ts";
 import { mirrorToOwned } from "../_shared/ops-routing.ts";
+import { getAdmin } from "../_shared/clients.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -18,7 +19,13 @@ const DEDUPE_MS = 30_000;
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   try {
+    // Primary client used only to resolve user from JWT.
     const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    // Phase 7A.2: admin_alerts now lives on Admin DB. Zero primary writes.
+    let admin;
+    try { admin = getAdmin(); } catch (e: any) {
+      return j({ ok: false, error: `Admin DB not configured: ${e?.message}` }, 500);
+    }
     const body = await req.json().catch(() => ({}));
     const {
       kind = "client.unknown",
@@ -58,7 +65,7 @@ serve(async (req) => {
       message: String(message).slice(0, 500),
       meta,
     };
-    const { data: row, error } = await sb.from("admin_alerts").insert(insertRow).select("id").single();
+    const { data: row, error } = await admin.from("admin_alerts").insert(insertRow).select("id").single();
     if (error) return j({ ok: false, error: error.message }, 500);
     mirrorToOwned("admin_alerts", insertRow);
 
@@ -86,7 +93,7 @@ serve(async (req) => {
         dedupe_key: `admin-alert:${kind}:${(resolvedUser || "anon")}:${String(message).slice(0, 80)}`,
       });
       if (r.ok) {
-        await sb.from("admin_alerts").update({ telegram_sent: true }).eq("id", row.id);
+        await admin.from("admin_alerts").update({ telegram_sent: true }).eq("id", row.id);
       }
     }
 

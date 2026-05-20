@@ -1,17 +1,13 @@
-// Quaternary Supabase client — Docs OS only (public read).
-// Isolated from auth/billing, workspace, and community DBs.
-import { createClient } from "@supabase/supabase-js";
+// Phase 7B: Docs/Handbook now lives on Admin DB (rqqiujmiagauzohdqjmi).
+// Standalone Docs DB (rnyllarpzgamrkvgcjbg) is RETIRED.
+// Frontend reads go through the `docs-read-public` edge function which
+// holds the only Admin-DB-aware service-role credential.
+import { supabase } from "@/integrations/supabase/client";
 
-const URL = "https://rnyllarpzgamrkvgcjbg.supabase.co";
-const PUBLISHABLE_KEY = "sb_publishable_ahNYzemWxt8KC4hzFbLDNA_mKFSYtZm";
-
-export const docsDb = createClient(URL, PUBLISHABLE_KEY, {
-  auth: {
-    persistSession: false,
-    autoRefreshToken: false,
-    storageKey: "hustlai-docs-anon",
-  },
-});
+/** @deprecated retained for legacy imports; throws on first use. */
+export const docsDb: never = new Proxy({} as any, {
+  get: () => { throw new Error("docsDb is retired — use listDocsCategories/listDocsPages/fetchDocsPage which proxy to docs-read-public."); },
+}) as never;
 
 export type DocsCategory = {
   id: string;
@@ -42,28 +38,25 @@ export type DocsPage = {
   updated_at: string;
 };
 
+async function call(op: string, slug?: string) {
+  try {
+    const qs = new URLSearchParams({ op, ...(slug ? { slug } : {}) }).toString();
+    const { data, error } = await supabase.functions.invoke(`docs-read-public?${qs}`, { method: "GET" });
+    if (error) return null;
+    return (data as any)?.data ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export async function listDocsCategories(): Promise<DocsCategory[]> {
-  const { data } = await docsDb
-    .from("docs_categories")
-    .select("*")
-    .order("sort_order");
-  return (data as any) ?? [];
+  return ((await call("categories")) as DocsCategory[]) ?? [];
 }
 
 export async function listDocsPages(): Promise<DocsPage[]> {
-  const { data } = await docsDb
-    .from("docs_pages")
-    .select("*")
-    .eq("is_published", true)
-    .order("sort_order");
-  return (data as any) ?? [];
+  return ((await call("pages")) as DocsPage[]) ?? [];
 }
 
 export async function fetchDocsPage(slug: string): Promise<DocsPage | null> {
-  const { data } = await docsDb
-    .from("docs_pages")
-    .select("*")
-    .eq("slug", slug)
-    .maybeSingle();
-  return (data as any) ?? null;
+  return ((await call("page", slug)) as DocsPage | null) ?? null;
 }
