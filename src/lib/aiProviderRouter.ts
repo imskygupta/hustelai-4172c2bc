@@ -17,6 +17,11 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 
+// Phase 7A: provider health lives on Admin DB. Frontend reads through the
+// cached `provider-health-public` edge function instead of hitting primary.
+let _cache: { at: number; data: ProviderHealth[] } | null = null;
+const _TTL = 30_000;
+
 export type Priority = "reliable" | "cheapest" | "fastest";
 export type ProviderName = "lovable" | "gemini" | "longcat" | "openai" | "zhipu";
 
@@ -38,11 +43,16 @@ export interface ProviderHealth {
 }
 
 export async function fetchProviderHealth(): Promise<ProviderHealth[]> {
-  const { data, error } = await (supabase as any)
-    .from("api_provider_health")
-    .select("*");
-  if (error || !data) return [];
-  return data as ProviderHealth[];
+  if (_cache && Date.now() - _cache.at < _TTL) return _cache.data;
+  try {
+    const { data, error } = await supabase.functions.invoke("provider-health-public");
+    if (error) return _cache?.data ?? [];
+    const rows = ((data as any)?.data ?? []) as ProviderHealth[];
+    _cache = { at: Date.now(), data: rows };
+    return rows;
+  } catch {
+    return _cache?.data ?? [];
+  }
 }
 
 function isUsable(h: ProviderHealth): boolean {
