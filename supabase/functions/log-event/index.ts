@@ -4,7 +4,7 @@
 // Public-ish: accepts anonymous events too (they get user_id=null) so
 // pre-auth funnel events can land. Heavy validation by category enum.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.74.0";
-import { getAnalytics } from "../_shared/clients.ts";
+import { getApi } from "../_shared/clients.ts";
 import { mirrorToOwned } from "../_shared/ops-routing.ts";
 
 const corsHeaders = {
@@ -64,7 +64,7 @@ Deno.serve(async (req) => {
     }
 
     try {
-      const analytics = getAnalytics();
+      const analytics = getApi();
       const row = {
         user_id: userId,
         category,
