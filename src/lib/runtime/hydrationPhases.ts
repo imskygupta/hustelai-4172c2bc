@@ -8,7 +8,7 @@
  * Components opt into a phase via `useHydrationPhase(>= 'B')`. The phase
  * machine is local-state only — it never awaits sibling DBs.
  */
-import { useEffect, useState, useSyncExternalStore } from "react";
+import React, { useEffect, useState, useSyncExternalStore } from "react";
 
 export type HydrationPhase = "A" | "B" | "C";
 
@@ -79,5 +79,5 @@ export function GatedByPhase({
   useEffect(() => {
     if (ready) setMounted(true);
   }, [ready]);
-  return <>{mounted ? children : fallback}</>;
+  return React.createElement(React.Fragment, null, mounted ? children : fallback);
 }
