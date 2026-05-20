@@ -36,8 +36,9 @@ if (real) {
 
 function emptyQueryStub() {
   const empty = { data: [], count: 0, error: null };
+  let proxy: any;
   const callable = () => proxy;
-  const proxy: any = new Proxy(callable, {
+  proxy = new Proxy(callable, {
     get(_target, prop) {
       if (prop === "then") {
         return (resolve: any, reject: any) => {
