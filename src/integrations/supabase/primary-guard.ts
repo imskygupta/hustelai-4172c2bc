@@ -165,7 +165,6 @@ export function installPrimaryGuard() {
     ch.on = (event: string, filter: any, cb: any) => {
       const t = filter?.table;
       if (typeof t === "string" && PRIMARY_FORBIDDEN_TABLES.has(t)) {
-        const originalSubscribe = ch.subscribe.bind(ch);
         ch.subscribe = (...args: any[]) => {
           reportViolation(`realtime:${t}`);
           throw new Error(
