@@ -4,7 +4,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import type { NotificationMessage, ProviderId, NotificationProvider } from "./types.ts";
 import { telegramProvider } from "./telegram.ts";
 import { emailProvider, sendEmailFallback } from "./email.ts";
-import { mirrorAsyncRuntime } from "../async-runtime.ts";
+import { mirrorAsyncRuntime, writeOperational } from "../async-runtime.ts";
 
 const PROVIDERS: Record<string, NotificationProvider> = {
   telegram: telegramProvider,
@@ -96,33 +96,47 @@ export function dispatchNotification(input: DispatchInput): void {
       for (const integ of integrations || []) {
         const provider = PROVIDERS[integ.provider];
         if (!provider) continue;
-        const { data: del } = await sb.from("notification_deliveries").insert({
-          event_id: ev?.id,
-          user_id: input.user_id,
-          provider: integ.provider,
-          status: "queued",
-          attempt_count: 1,
-        }).select().single();
-
-        // Mirror to owned async runtime DB (real Wave 1 traffic).
-        mirrorAsyncRuntime("notification_deliveries", {
-          user_id: input.user_id,
-          channel: integ.provider,
-          template: input.event_key,
-          status: "queued",
-          provider: integ.provider,
-          payload: input.message.payload || {},
-          attempts: 1,
+        // Phase 3: route the delivery row through the authority-aware writer.
+        // Primary insert is skipped once the stream is owned-authoritative.
+        const queuedWrite = await writeOperational<{ id: string }>({
+          stream: "notification_deliveries",
+          ownedTable: "notification_deliveries",
+          ownedRow: {
+            user_id: input.user_id,
+            channel: integ.provider,
+            template: input.event_key,
+            status: "queued",
+            provider: integ.provider,
+            payload: input.message.payload || {},
+            attempts: 1,
+          },
+          primaryInsert: async () => {
+            const { data } = await sb.from("notification_deliveries").insert({
+              event_id: ev?.id,
+              user_id: input.user_id,
+              provider: integ.provider,
+              status: "queued",
+              attempt_count: 1,
+            }).select("id").single();
+            return data as { id: string } | null;
+          },
         });
+        const del = queuedWrite.primary;
 
         const result = await provider.send(integ as any, input.message);
         if (result.ok) anyOk = true;
-        await sb.from("notification_deliveries").update({
-          status: result.ok ? "sent" : (result.skipped ? "skipped" : "failed"),
-          last_error: result.error || null,
-          external_message_id: result.external_message_id || null,
-          delivered_at: result.ok ? new Date().toISOString() : null,
-        }).eq("id", del!.id);
+        // Primary UPDATE only when a primary row exists (i.e. we actually
+        // wrote one this call). Once the stream goes owned-authoritative we
+        // never touch primary again — the owned mirror below carries the
+        // final state for downstream consumers.
+        if (del?.id) {
+          await sb.from("notification_deliveries").update({
+            status: result.ok ? "sent" : (result.skipped ? "skipped" : "failed"),
+            last_error: result.error || null,
+            external_message_id: result.external_message_id || null,
+            delivered_at: result.ok ? new Date().toISOString() : null,
+          }).eq("id", del.id);
+        }
 
         // Mirror final delivery state.
         mirrorAsyncRuntime("notification_deliveries", {
