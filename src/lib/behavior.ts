@@ -1,3 +1,4 @@
+import { blogDb } from "@/integrations/blog/db";
 import { supabase } from "@/integrations/supabase/client";
 
 /**
@@ -205,7 +206,7 @@ export async function toggleBookmark(slug: string): Promise<{ saved: boolean; co
     if (saved) set.add(slug); else set.delete(slug);
     setLocalBookmarks(set);
     safe(
-      supabase.from("blog_events" as any).insert({
+      blogDb.from("blog_events" as any).insert({
         post_slug: slug,
         anon_id: anonId(),
         kind: saved ? "bookmark_local" : "unbookmark_local",

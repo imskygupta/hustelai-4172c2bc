@@ -1,3 +1,4 @@
+import { blogDb } from "@/integrations/blog/db";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -36,7 +37,7 @@ export function FreelanceCard({ result, index }: { result: FreelanceResult; inde
 
   useEffect(() => {
     if (!user || !result.id) return;
-    supabase.from("hustle_votes").select("vote_type").eq("user_id", user.id).eq("hustle_id", result.id).maybeSingle()
+    blogDb.from("hustle_votes").select("vote_type").eq("user_id", user.id).eq("hustle_id", result.id).maybeSingle()
       .then(({ data }) => { if (data) setUserVote(data.vote_type as "like" | "dislike"); });
   }, [user, result.id]);
 
@@ -53,33 +54,33 @@ export function FreelanceCard({ result, index }: { result: FreelanceResult; inde
     
     if (previousVote === voteType) {
       // Remove vote
-      await supabase.from("hustle_votes").delete().eq("user_id", user.id).eq("hustle_id", result.id);
+      await blogDb.from("hustle_votes").delete().eq("user_id", user.id).eq("hustle_id", result.id);
       setUserVote(null);
       if (voteType === "like") {
         setLikeCount(c => c - 1);
-        await supabase.from("side_hustles").update({ likes: Math.max(0, likeCount - 1) } as any).eq("id", result.id);
+        await blogDb.from("side_hustles").update({ likes: Math.max(0, likeCount - 1) } as any).eq("id", result.id);
       } else {
         setDislikeCount(c => c - 1);
-        await supabase.from("side_hustles").update({ dislikes: Math.max(0, dislikeCount - 1) } as any).eq("id", result.id);
+        await blogDb.from("side_hustles").update({ dislikes: Math.max(0, dislikeCount - 1) } as any).eq("id", result.id);
       }
     } else {
       // Upsert vote
-      await supabase.from("hustle_votes").upsert({ user_id: user.id, hustle_id: result.id, vote_type: voteType } as any, { onConflict: "user_id,hustle_id" });
+      await blogDb.from("hustle_votes").upsert({ user_id: user.id, hustle_id: result.id, vote_type: voteType } as any, { onConflict: "user_id,hustle_id" });
       setUserVote(voteType);
       
       if (voteType === "like") {
         setLikeCount(c => c + 1);
-        await supabase.from("side_hustles").update({ likes: likeCount + 1 } as any).eq("id", result.id);
+        await blogDb.from("side_hustles").update({ likes: likeCount + 1 } as any).eq("id", result.id);
         if (previousVote === "dislike") {
           setDislikeCount(c => c - 1);
-          await supabase.from("side_hustles").update({ dislikes: Math.max(0, dislikeCount - 1) } as any).eq("id", result.id);
+          await blogDb.from("side_hustles").update({ dislikes: Math.max(0, dislikeCount - 1) } as any).eq("id", result.id);
         }
       } else {
         setDislikeCount(c => c + 1);
-        await supabase.from("side_hustles").update({ dislikes: dislikeCount + 1 } as any).eq("id", result.id);
+        await blogDb.from("side_hustles").update({ dislikes: dislikeCount + 1 } as any).eq("id", result.id);
         if (previousVote === "like") {
           setLikeCount(c => c - 1);
-          await supabase.from("side_hustles").update({ likes: Math.max(0, likeCount - 1) } as any).eq("id", result.id);
+          await blogDb.from("side_hustles").update({ likes: Math.max(0, likeCount - 1) } as any).eq("id", result.id);
         }
       }
     }

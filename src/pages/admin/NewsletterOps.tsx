@@ -1,3 +1,4 @@
+import { blogDb } from "@/integrations/blog/db";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -157,7 +158,7 @@ export default function NewsletterOps() {
     const next = { ...issue, sections };
     setPreviewIssue(next);
     setIssues((prev) => prev.map((i) => (i.id === issue.id ? next : i)));
-    await supabase.from("newsletter_issues" as any).update({ sections } as any).eq("id", issue.id);
+    await blogDb.from("newsletter_issues" as any).update({ sections } as any).eq("id", issue.id);
   };
 
   const approve = async (id: string) => {

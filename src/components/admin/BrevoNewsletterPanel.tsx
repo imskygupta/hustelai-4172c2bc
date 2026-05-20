@@ -1,3 +1,4 @@
+import { blogDb } from "@/integrations/blog/db";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -32,9 +33,9 @@ export function BrevoNewsletterPanel() {
   useEffect(() => { load(); }, []);
   async function load() {
     const [{ data: subs }, { data: camps }, { data: sched }] = await Promise.all([
-      supabase.from("newsletter_subscribers").select("*").order("subscribed_at", { ascending: false }).limit(500),
+      blogDb.from("newsletter_subscribers").select("*").order("subscribed_at", { ascending: false }).limit(500),
       supabase.from("email_campaigns").select("*").order("created_at", { ascending: false }).limit(50),
-      supabase.from("newsletter_schedules").select("*").limit(1).maybeSingle(),
+      blogDb.from("newsletter_schedules").select("*").limit(1).maybeSingle(),
     ]);
     setSubscribers(subs || []);
     setCampaigns(camps || []);
@@ -92,7 +93,7 @@ export function BrevoNewsletterPanel() {
 
   async function saveSchedule() {
     if (!schedule) return;
-    const { error } = await supabase.from("newsletter_schedules").update({
+    const { error } = await blogDb.from("newsletter_schedules").update({
       enabled: schedule.enabled, frequency: schedule.frequency, send_day: schedule.send_day,
       send_hour: schedule.send_hour, ai_prompt: schedule.ai_prompt,
       from_name: schedule.from_name, from_email: schedule.from_email,

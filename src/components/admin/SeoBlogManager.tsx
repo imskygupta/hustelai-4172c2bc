@@ -1,3 +1,4 @@
+import { blogDb } from "@/integrations/blog/db";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -21,7 +22,7 @@ const empty: Partial<SeoBlogRow> = {
 };
 
 async function listAll(): Promise<SeoBlogRow[]> {
-  const { data } = await supabase.from("seo_blog_posts" as any).select("*").order("updated_at", { ascending: false });
+  const { data } = await blogDb.from("seo_blog_posts" as any).select("*").order("updated_at", { ascending: false });
   return (data as any) ?? [];
 }
 
