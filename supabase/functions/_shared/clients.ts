@@ -1,20 +1,26 @@
 // Shared multi-DB client factory for edge functions.
 //
-// Routing rules (enforce by choosing the right getter):
-//   getPrimary()   → auth, profiles, subscriptions, payments, wallets,
-//                    entitlements, current-day quota counters.
-//   getAnalytics() → telemetry, audit logs, event queue, email logs, AI
-//                    generation history, provider metrics, status history,
-//                    activity streams, export history.
-//   getAsync()     → workflow runs, AI job state, retries, cron checkpoints,
-//                    notification deliveries, broadcast/newsletter dispatch,
-//                    email send logs, telegram command/send logs.
-//   getWorkspace() → Work Hub data (clients, notes, action log).
-//   getOwned()     → Self-owned Supabase project (wguuipsikboqqinqeehv).
-//                    Used during the progressive migration off Lovable-
-//                    managed Supabase. Falls back to the primary client
-//                    when OWNED_SUPABASE_* secrets are not yet set, so
-//                    nothing breaks before the cutover.
+// FINAL TOPOLOGY (Phase 7):
+//   getPrimary()   → vbnqaovxatucrgtnggea — auth, profiles, payments,
+//                    subscriptions, wallets, entitlements ONLY.
+//   getAdmin()     → rqqiujmiagauzohdqjmi — admin/ops control plane,
+//                    operator handbook, runtime extraction streams,
+//                    admin alerts, infra registry, docs_pages.
+//   getApi()       → larncwugkdclkhayfjle — AI/Async/Queues/Analytics:
+//                    workflow runs, AI job state, telemetry, audit logs,
+//                    event queue, email logs, provider metrics, notification
+//                    deliveries, broadcast/newsletter dispatch, telegram logs.
+//   getBlogs()     → ynvfxxmhowlvhtqiigfc — blog posts, CMS, SEO pages,
+//                    newsletter subscribers, side_hustles catalog.
+//   getWorkspace() → utflzmecghdtcjupgdan — Work Hub, client portal,
+//                    intake forms, freelancer OS.
+//   getCommunity() → qeswhaytgvosfzzgraef — forum posts, chat messages,
+//                    hustle votes, discord-link store.
+//   getOwned()     → wguuipsikboqqinqeehv — operational telemetry mirror.
+//
+// getAnalytics()/getAsync() are LEGACY aliases that now route to getApi().
+// safeAsyncInsert/safeAnalyticsInsert are NO-OPs unless API_PLATFORM_* is set
+// — they MUST NOT silently fall back to the primary DB.
 //
 // NEVER mix: do not write payment/auth state to analytics, do not write
 // telemetry to primary. Cross-DB joins are forbidden — issue parallel queries
@@ -36,19 +42,62 @@ export function getPrimaryService(): SupabaseClient {
   return createClient(url, key, { auth: { persistSession: false } });
 }
 
+/**
+ * AI/Async/Queues/Analytics DB (larncwugkdclkhayfjle). Service-role.
+ * Absorbs the legacy "analytics" and "async" placeholders.
+ */
+export function getApi(): SupabaseClient {
+  const url = Deno.env.get("API_PLATFORM_SUPABASE_URL");
+  const key = Deno.env.get("API_PLATFORM_SUPABASE_SERVICE_ROLE_KEY");
+  if (!url || !key) {
+    throw new Error("API/AI DB not configured. Set API_PLATFORM_SUPABASE_URL + SERVICE_ROLE_KEY.");
+  }
+  return createClient(url, key, { auth: { persistSession: false } });
+}
+
+/** Legacy alias — routes to API/AI DB. */
 export function getAnalytics(): SupabaseClient {
-  // Falls back to community DB until ANALYTICS_* secrets are provisioned.
+  return getApi();
+}
+
+/**
+ * Admin/Ops control plane DB (rqqiujmiagauzohdqjmi). Service-role.
+ * Holds operator handbook, runtime extraction streams, admin alerts,
+ * infra registry, docs_pages.
+ */
+export function getAdmin(): SupabaseClient {
+  const url = Deno.env.get("ADMIN_SUPABASE_URL");
+  const key = Deno.env.get("ADMIN_SUPABASE_SERVICE_ROLE_KEY");
+  if (!url || !key) {
+    throw new Error("Admin DB not configured. Set ADMIN_SUPABASE_URL + SERVICE_ROLE_KEY.");
+  }
+  return createClient(url, key, { auth: { persistSession: false } });
+}
+
+/**
+ * Blogs/CMS DB (ynvfxxmhowlvhtqiigfc). Service-role.
+ * Holds blog posts, SEO pages, newsletter subscribers, side_hustles catalog.
+ */
+export function getBlogs(): SupabaseClient {
+  const url = Deno.env.get("BLOG_SUPABASE_URL");
+  const key = Deno.env.get("BLOG_SUPABASE_SERVICE_ROLE");
+  if (!url || !key) {
+    throw new Error("Blogs DB not configured. Set BLOG_SUPABASE_URL + BLOG_SUPABASE_SERVICE_ROLE.");
+  }
+  return createClient(url, key, { auth: { persistSession: false } });
+}
+
+/**
+ * Community DB (qeswhaytgvosfzzgraef). Service-role.
+ * Forum posts, chat messages, hustle votes, discord-link store.
+ */
+export function getCommunity(): SupabaseClient {
   const url =
-    Deno.env.get("ANALYTICS_SUPABASE_URL") ??
+    Deno.env.get("COMMUNITY_SUPABASE_URL") ??
     "https://qeswhaytgvosfzzgraef.supabase.co";
-  const key =
-    Deno.env.get("ANALYTICS_SUPABASE_SERVICE_ROLE_KEY") ??
-    Deno.env.get("API_PLATFORM_SUPABASE_SERVICE_ROLE_KEY") ??
-    "";
+  const key = Deno.env.get("COMMUNITY_SUPABASE_SERVICE_ROLE_KEY");
   if (!key) {
-    throw new Error(
-      "Analytics DB service role key missing. Set ANALYTICS_SUPABASE_SERVICE_ROLE_KEY.",
-    );
+    throw new Error("Community DB service role key missing. Set COMMUNITY_SUPABASE_SERVICE_ROLE_KEY.");
   }
   return createClient(url, key, { auth: { persistSession: false } });
 }
@@ -75,14 +124,9 @@ export function getWorkspace(): SupabaseClient {
  * `safeAsyncInsert()` for fire-and-forget writes that must not break the
  * primary code path.
  */
+/** Legacy alias — async/queue workloads now live on the API/AI DB. */
 export function getAsync(): SupabaseClient {
-  const url =
-    Deno.env.get("ASYNC_SUPABASE_URL") ??
-    Deno.env.get("SUPABASE_URL")!;
-  const key =
-    Deno.env.get("ASYNC_SUPABASE_SERVICE_ROLE_KEY") ??
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-  return createClient(url, key, { auth: { persistSession: false } });
+  return getApi();
 }
 
 /**
@@ -96,7 +140,10 @@ export async function safeAsyncInsert(
   row: Record<string, unknown>,
 ): Promise<boolean> {
   try {
-    const sb = getAsync();
+    // Hard guard: never silently fall back to primary. If API/AI DB isn't
+    // configured, drop the row instead of polluting primary WAL.
+    if (!Deno.env.get("API_PLATFORM_SUPABASE_SERVICE_ROLE_KEY")) return false;
+    const sb = getApi();
     const { error } = await sb.from(table).insert(row);
     if (error) {
       console.warn(`safeAsyncInsert ${table}:`, error.message);
@@ -122,15 +169,8 @@ export async function safeAnalyticsInsert(
   row: Record<string, unknown>,
 ): Promise<boolean> {
   try {
-    const url =
-      Deno.env.get("ANALYTICS_SUPABASE_URL") ??
-      "https://qeswhaytgvosfzzgraef.supabase.co";
-    const key =
-      Deno.env.get("ANALYTICS_SUPABASE_SERVICE_ROLE_KEY") ??
-      Deno.env.get("API_PLATFORM_SUPABASE_SERVICE_ROLE_KEY") ??
-      "";
-    if (!key) return false;
-    const sb = createClient(url, key, { auth: { persistSession: false } });
+    if (!Deno.env.get("API_PLATFORM_SUPABASE_SERVICE_ROLE_KEY")) return false;
+    const sb = getApi();
     const { error } = await sb.from(table).insert(row);
     if (error) {
       console.warn(`safeAnalyticsInsert ${table}:`, error.message);
