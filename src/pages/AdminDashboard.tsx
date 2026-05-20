@@ -407,33 +407,36 @@ export default function AdminDashboard() {
 
   const checkAdmin = async (userId: string) => {
     setCheckingAdmin(true);
-    const { data, error } = await failOpen(
-      () => retryWithTimeout(
-        () => supabase.rpc("has_role", { _user_id: userId, _role: "admin" as any }),
+    try {
+      const { data, error } = await failOpen(
+        () => retryWithTimeout(
+          () => supabase.rpc("has_role", { _user_id: userId, _role: "admin" as any }),
+          "admin.roleCheck",
+        ),
+        { data: false, error: new Error("Admin role check unavailable") } as any,
         "admin.roleCheck",
-      ),
-      { data: false, error: new Error("Admin role check unavailable") } as any,
-      "admin.roleCheck",
-    );
+      );
 
-    if (error || !data) {
-      setIsAdmin(false);
-      toast({ title: "Access Denied", variant: "destructive" });
-      navigate("/dashboard", { replace: true });
+      if (error || !data) {
+        setIsAdmin(false);
+        toast({ title: "Access Denied", variant: "destructive" });
+        navigate("/dashboard", { replace: true });
+        return;
+      }
+
+      setIsAdmin(true);
+      await loadAllData();
+    } finally {
       setCheckingAdmin(false);
-      return;
     }
-
-    setIsAdmin(true);
-    await loadAllData();
-    setCheckingAdmin(false);
   };
 
   const loadAllData = async () => {
     setLoadingData(true);
-    const q = (label: string, run: () => Promise<any> | PromiseLike<any>, fallback: any = { data: [], count: 0 }): Promise<any> =>
-      failOpen(() => retryWithTimeout(run, label), fallback, label);
-    const [usersRes, notifsRes, webRes, expertRes, blogRes, nlRes, contactRes, chatRes, verifRes, payRes, forumRes, rolesRes, groupsRes, trendRes, ordersRes] = await Promise.all([
+    try {
+      const q = (label: string, run: () => Promise<any> | PromiseLike<any>, fallback: any = { data: [], count: 0 }): Promise<any> =>
+        failOpen(() => retryWithTimeout(run, label), fallback, label);
+      const [usersRes, notifsRes, webRes, expertRes, blogRes, nlRes, contactRes, chatRes, verifRes, payRes, forumRes, rolesRes, groupsRes, trendRes, ordersRes] = await Promise.all([
       q("admin.profiles", () => supabase.from("profiles").select("*").order("created_at", { ascending: false })),
       q("admin.notifications", () => supabase.from("notifications").select("*").order("created_at", { ascending: false })),
       q("admin.webinars", () => supabase.from("webinars").select("*").order("created_at", { ascending: false })),
@@ -449,7 +452,7 @@ export default function AdminDashboard() {
       q("admin.communityGroups", () => communityDb.from("community_groups").select("*").order("created_at")),
       q("admin.trendingLinks", () => supabase.from("trending_links").select("*").order("sort_order")),
       q("admin.orders", () => supabase.from("orders").select("*").order("created_at", { ascending: false })),
-    ]);
+      ]);
     if (usersRes.data) setUsers(usersRes.data as UserProfile[]);
     if (notifsRes.data) setNotifications(notifsRes.data as Notification[]);
     if (webRes.data) setWebinars(webRes.data as Webinar[]);
@@ -489,7 +492,7 @@ export default function AdminDashboard() {
         );
       }
     } catch {}
-    if (chatRes.data) {
+      if (chatRes.data) {
       const userMap = new Map<string, ChatUser>();
       for (const msg of chatRes.data) {
         if (!userMap.has(msg.user_id)) {
@@ -503,9 +506,11 @@ export default function AdminDashboard() {
           });
         }
       }
-      setChatUsers(Array.from(userMap.values()));
+        setChatUsers(Array.from(userMap.values()));
+      }
+    } finally {
+      setLoadingData(false);
     }
-    setLoadingData(false);
   };
 
   const changeTier = async (userId: string, newTier: string) => {
