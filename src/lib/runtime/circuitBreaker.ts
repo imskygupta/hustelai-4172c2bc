@@ -17,6 +17,8 @@ type State = {
   trips: number;
 };
 
+import { pushEvent } from "./eventStream";
+
 const breakers = new Map<string, State>();
 const listeners = new Set<() => void>();
 
@@ -38,9 +40,19 @@ export function isOpen(key: string): boolean {
 
 export function recordSuccess(key: string) {
   const s = get(key);
+  const wasOpen = s.openedAt !== null;
   s.failures = 0;
   s.openedAt = null;
   s.cooldownMs = BASE_COOLDOWN_MS;
+  if (wasOpen) {
+    pushEvent({
+      category: "recovery",
+      severity: "info",
+      title: `${key} recovered`,
+      detail: "Circuit breaker auto-closed after successful probe.",
+      subject: key,
+    });
+  }
   listeners.forEach((l) => l());
 }
 
@@ -53,6 +65,13 @@ export function recordFailure(key: string, err?: unknown) {
     s.trips += 1;
     s.cooldownMs = Math.min(MAX_COOLDOWN_MS, s.cooldownMs * 2);
     console.warn(`[circuit-breaker] OPEN ${key} (cooldown ${s.cooldownMs}ms): ${s.lastError}`);
+    pushEvent({
+      category: "breaker",
+      severity: "degraded",
+      title: `${key} circuit opened`,
+      detail: `${s.failures} consecutive failures · cooldown ${Math.round(s.cooldownMs / 1000)}s · ${s.lastError ?? ""}`,
+      subject: key,
+    });
   }
   listeners.forEach((l) => l());
 }
