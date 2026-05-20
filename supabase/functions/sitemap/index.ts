@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { getBlogs } from "../_shared/clients.ts";
 
 const SITE = "https://hustlaiapp.in";
 
@@ -85,10 +86,17 @@ function urlEntry(loc: string, lastmod: string, changefreq: string, priority: nu
 }
 
 Deno.serve(async () => {
-  const supabase = createClient(
-    Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_ANON_KEY")!,
-  );
+  // Phase 7C.2: all seo_* reads now come from the Blogs DB.
+  // Falls back to primary anon during staged cutover.
+  let supabase: ReturnType<typeof createClient>;
+  try {
+    supabase = getBlogs() as any;
+  } catch {
+    supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+    );
+  }
 
   const now = new Date().toISOString();
   const parts: string[] = [];
