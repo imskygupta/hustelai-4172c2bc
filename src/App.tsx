@@ -631,6 +631,7 @@ const App = () => {
   </QueryClientProvider>
   </HelmetProvider>
   </Sentry.ErrorBoundary>
-);
+  );
+};
 
 export default App;
