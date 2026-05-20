@@ -8,12 +8,20 @@ import { loadServerRuntimeConfig } from "./config/runtime";
 import { initCalmMode } from "./components/CalmModeToggle";
 import { installCrashReporter } from "./lib/observability/reportCrash";
 import { installPrimaryGuard } from "./integrations/supabase/primary-guard";
+import { getActiveBootTasks, INFRA_SAFE_MODE } from "./lib/async/timeout";
 
 // Calm mode is a global preference (reduces motion + gradients across surfaces).
 // Dark mode, by contrast, is scoped to the authenticated AppShell — see AppShell.tsx.
 initCalmMode();
 // Phase 7F: hard-fail any access to extracted tables on the primary client.
 installPrimaryGuard();
+setTimeout(() => {
+  const active = getActiveBootTasks();
+  if (active.length > 0) {
+    console.warn("[boot-watchdog] app boot exceeded 4s; rendering remains fail-open", active);
+  }
+}, 4_000);
+console.info(`[infra-safe-mode] ${INFRA_SAFE_MODE ? "enabled" : "disabled"}`);
 initSentry();
 initAnalytics();
 // Lightweight client-side crash signal → admin-alert (cooldown-throttled).

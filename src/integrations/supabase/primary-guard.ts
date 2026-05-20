@@ -62,6 +62,20 @@ export const PRIMARY_FORBIDDEN_TABLES: ReadonlySet<string> = new Set([
   "event_fanout_queue",
 ]);
 
+const PRIMARY_BOOT_ALLOWLIST = new Set([
+  "profiles",
+  "user_roles",
+  "api_runtime_config",
+  "feature_flags",
+  "webinars",
+  "notifications",
+  "payments",
+  "orders",
+  "wallets",
+  "unlock_packs",
+  "social_links",
+]);
+
 const VIOLATION_ENDPOINT = `${
   // Read project ref from generated client URL.
   (supabase as any).supabaseUrl ?? ""
@@ -105,6 +119,17 @@ function reportViolation(table: string) {
   }
 }
 
+function wrapForbiddenExecution(target: any, fail: () => never): any {
+  return new Proxy(target, {
+    get(innerTarget, prop, receiver) {
+      if (prop === "then" || prop === "catch" || prop === "finally" || prop === "subscribe") fail();
+      const value = Reflect.get(innerTarget, prop, receiver);
+      if (typeof value !== "function") return value;
+      return (...args: any[]) => wrapForbiddenExecution(value.apply(innerTarget, args), fail);
+    },
+  });
+}
+
 export function installPrimaryGuard() {
   const sb = supabase as any;
   if (sb.__primaryGuardInstalled) return;
@@ -112,7 +137,15 @@ export function installPrimaryGuard() {
 
   const originalFrom = sb.from.bind(sb);
   sb.from = (table: string, ...rest: unknown[]) => {
-    if (typeof table === "string" && PRIMARY_FORBIDDEN_TABLES.has(table)) {
+    const query = originalFrom(table, ...rest);
+    if (typeof table !== "string" || !PRIMARY_FORBIDDEN_TABLES.has(table)) {
+      if (typeof table === "string" && PRIMARY_BOOT_ALLOWLIST.has(table)) {
+        console.debug(`[primary-guard] allowed bootstrap table: ${table}`);
+      }
+      return query;
+    }
+
+    const fail = () => {
       reportViolation(table);
       throw new Error(
         `[primary-guard] Table "${table}" has been extracted off the primary ` +
@@ -120,8 +153,8 @@ export function installPrimaryGuard() {
           `(aiDb / blogDb / realtimeDb / workspaceDb / admin edge fn). ` +
           `See src/integrations/supabase/primary-guard.ts.`,
       );
-    }
-    return originalFrom(table, ...rest);
+    };
+    return wrapForbiddenExecution(query, fail);
   };
 
   // Block legacy realtime subscriptions on migrated tables too.
@@ -132,11 +165,13 @@ export function installPrimaryGuard() {
     ch.on = (event: string, filter: any, cb: any) => {
       const t = filter?.table;
       if (typeof t === "string" && PRIMARY_FORBIDDEN_TABLES.has(t)) {
-        reportViolation(`realtime:${t}`);
-        throw new Error(
-          `[primary-guard] Realtime subscription on extracted table "${t}" ` +
-            `is forbidden on primary. Use the correct sibling DB client.`,
-        );
+        ch.subscribe = (...args: any[]) => {
+          reportViolation(`realtime:${t}`);
+          throw new Error(
+            `[primary-guard] Realtime subscription on extracted table "${t}" ` +
+              `is forbidden on primary. Use the correct sibling DB client.`,
+          );
+        };
       }
       return originalOn(event, filter, cb);
     };

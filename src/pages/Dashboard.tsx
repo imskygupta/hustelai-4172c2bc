@@ -34,6 +34,7 @@ import {
   readLatestBlogPostsCache,
   type LatestBlogPost,
 } from "@/integrations/blog/latest";
+import { failOpen, retryWithTimeout } from "@/lib/async/timeout";
 
 import {
   Search, Crown, Rocket, Sparkles, Users, Video, BookOpen, TrendingUp, MessageCircle,
@@ -103,29 +104,51 @@ export default function Dashboard() {
   useEffect(() => {
     if (user) {
       loadFeed(); loadWebinars(); loadCommandCenterData();
-      getLatestBlogPosts(9, (posts) => {
+      failOpen(() => getLatestBlogPosts(9, (posts) => {
         setTrendingPosts(posts);
         setTrendingLoaded(true);
-      }).catch(() => setTrendingLoaded(true));
+      }), undefined, "dashboard.blogLatest", { timeoutMs: 5_000, retries: 0 })
+        .finally(() => setTrendingLoaded(true));
     }
   }, [user]);
 
   const loadCommandCenterData = async () => {
     if (!user) return;
     const { aiDb } = await import("@/integrations/ai/db");
-    const { count: hustleCount } = await supabase
-      .from("saved_hustles").select("*", { count: "exact", head: true }).eq("user_id", user.id);
+    const { count: hustleCount } = await failOpen(
+      () => retryWithTimeout(
+        () => supabase.from("saved_hustles").select("*", { count: "exact", head: true }).eq("user_id", user.id),
+        "dashboard.savedHustlesCount",
+      ),
+      { count: 0 } as any,
+      "dashboard.savedHustlesCount",
+    );
     setSavedHustlesCount(hustleCount || 0);
-    const { count: msgCount } = await aiDb
-      .from("chat_messages").select("*", { count: "exact", head: true }).eq("user_id", user.id).eq("role", "user");
+    const { count: msgCount } = await failOpen(
+      () => retryWithTimeout(
+        () => aiDb.from("chat_messages").select("*", { count: "exact", head: true }).eq("user_id", user.id).eq("role", "user"),
+        "dashboard.chatCount",
+      ),
+      { count: 0 } as any,
+      "dashboard.chatCount",
+    );
     setChatCount(msgCount || 0);
-    const { data: recentHustles } = await supabase
-      .from("saved_hustles")
-      .select("status, updated_at, side_hustles(title)")
-      .eq("user_id", user.id).order("updated_at", { ascending: false }).limit(5);
-    const { data: recentChats } = await aiDb
-      .from("chat_messages").select("content, created_at")
-      .eq("user_id", user.id).eq("role", "user").order("created_at", { ascending: false }).limit(5);
+    const { data: recentHustles } = await failOpen(
+      () => retryWithTimeout(
+        () => supabase.from("saved_hustles").select("status, updated_at, side_hustles(title)").eq("user_id", user.id).order("updated_at", { ascending: false }).limit(5),
+        "dashboard.recentHustles",
+      ),
+      { data: [] } as any,
+      "dashboard.recentHustles",
+    );
+    const { data: recentChats } = await failOpen(
+      () => retryWithTimeout(
+        () => aiDb.from("chat_messages").select("content, created_at").eq("user_id", user.id).eq("role", "user").order("created_at", { ascending: false }).limit(5),
+        "dashboard.recentChats",
+      ),
+      { data: [] } as any,
+      "dashboard.recentChats",
+    );
     const activities: any[] = [];
     (recentHustles || []).forEach((h: any) => activities.push({
       type: "hustle", title: h.side_hustles?.title || "Saved Hustle", time: h.updated_at, status: h.status,
@@ -139,7 +162,10 @@ export default function Dashboard() {
 
   const loadFeed = async () => {
     try {
-      const { data, error } = await supabase.functions.invoke("dashboard-feed");
+      const { data, error } = await retryWithTimeout(
+        () => supabase.functions.invoke("dashboard-feed"),
+        "dashboard.feed",
+      );
       if (error) throw error;
       setFeed(data);
     } catch {
@@ -166,11 +192,14 @@ export default function Dashboard() {
     // Only the next ~10 upcoming webinars — there's no reason to ship the
     // entire archive to every dashboard cold-load. Past events are not shown.
     const nowIso = new Date().toISOString();
-    const { data } = await supabase
-      .from("webinars").select("*")
-      .gte("scheduled_at", nowIso)
-      .order("scheduled_at", { ascending: true })
-      .limit(10);
+    const { data } = await failOpen(
+      () => retryWithTimeout(
+        () => supabase.from("webinars").select("*").gte("scheduled_at", nowIso).order("scheduled_at", { ascending: true }).limit(10),
+        "dashboard.webinars",
+      ),
+      { data: [] } as any,
+      "dashboard.webinars",
+    );
     if (data) setWebinars(data as Webinar[]);
   };
 

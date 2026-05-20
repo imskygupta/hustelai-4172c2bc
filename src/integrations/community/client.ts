@@ -22,6 +22,8 @@ export const realtimeDb = createClient(URL, PUBLISHABLE_KEY, {
   },
 });
 
+console.info("Realtime DB connected");
+
 // Back-compat alias. Existing call sites keep working; new code should use
 // `realtimeDb`. Slated for removal once all imports are migrated.
 export const communityDb = realtimeDb;

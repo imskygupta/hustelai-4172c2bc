@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { RefreshCw, ShieldCheck, ShieldAlert, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { PRIMARY_FORBIDDEN_TABLES } from "@/integrations/supabase/primary-guard";
+import { failOpen, INFRA_SAFE_MODE, retryWithTimeout } from "@/lib/async/timeout";
 
 type Stats = {
   ok: boolean;
@@ -30,12 +31,18 @@ export function PrimaryDetoxStatusPanel() {
   const [err, setErr] = useState<string | null>(null);
 
   const load = useCallback(async () => {
+    if (INFRA_SAFE_MODE) return;
     setLoading(true);
     setErr(null);
     try {
-      const { data, error } = await supabase.functions.invoke("primary-detox-stats", {
-        method: "GET",
-      });
+      const { data, error } = await failOpen(
+        () => retryWithTimeout(
+          () => supabase.functions.invoke("primary-detox-stats", { method: "GET" }),
+          "infra.primaryDetoxStats",
+        ),
+        { data: null, error: new Error("Primary detox stats unavailable") } as any,
+        "infra.primaryDetoxStats",
+      );
       if (error) throw error;
       setStats(data as Stats);
     } catch (e) {
@@ -46,6 +53,7 @@ export function PrimaryDetoxStatusPanel() {
   }, []);
 
   useEffect(() => {
+    if (INFRA_SAFE_MODE) return;
     load();
     const id = setInterval(load, 60_000);
     return () => clearInterval(id);
@@ -77,6 +85,12 @@ export function PrimaryDetoxStatusPanel() {
       {err && (
         <div className="flex items-center gap-2 text-sm text-destructive">
           <AlertTriangle className="h-4 w-4" /> {err}
+        </div>
+      )}
+
+      {INFRA_SAFE_MODE && (
+        <div className="text-sm text-muted-foreground rounded-md border p-3">
+          Infra safe mode is enabled. Detox polling is paused and this widget is running degraded.
         </div>
       )}
 

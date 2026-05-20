@@ -7,6 +7,7 @@ import type { User, Session } from "@supabase/supabase-js";
 import { reportAuthAnomaly } from "@/lib/auth/telemetry";
 import { broadcastSignout, subscribeAuthBroadcast } from "@/lib/auth/crossTab";
 import { isWorkspaceHost } from "@/lib/host";
+import { failOpen, retryWithTimeout } from "@/lib/async/timeout";
 
 interface Profile {
   id: string;
@@ -185,13 +186,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const hydratedRef = useRef(false);
   const signedOutTimestamps = useRef<number[]>([]);
 
-  const fetchProfile = async (userId: string) => {
+  const fetchProfile = async (userId: string, email?: string | null) => {
+    const fallbackProfile: Profile = {
+      id: userId,
+      user_id: userId,
+      display_name: email?.split("@")[0] ?? "Hustler",
+      email: email ?? null,
+      subscription_tier: "free",
+      search_count: 0,
+      is_verified: false,
+      xp_points: 0,
+      onboarding_completed: true,
+    };
     try {
-      const { data } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("user_id", userId)
-        .single();
+      const { data } = await failOpen(
+        () => retryWithTimeout(
+          () => supabase.from("profiles").select("*").eq("user_id", userId).single(),
+          "auth.fetchProfile",
+          { timeoutMs: 5_000, retries: 1 },
+        ),
+        { data: fallbackProfile } as any,
+        "auth.fetchProfile",
+        { timeoutMs: 5_000, retries: 0 },
+      );
       if (data) {
         setProfile(data as Profile);
         identify(userId, {
@@ -206,7 +223,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const refreshProfile = async () => {
-    if (user) await fetchProfile(user.id);
+    if (user) await fetchProfile(user.id, user.email);
   };
 
   const applySession = (nextSession: Session | null, source: string) => {
@@ -221,7 +238,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (nextSession?.user) {
       writeBridgeSession(nextSession);
-      setTimeout(() => fetchProfile(nextSession.user.id), 0);
+      setTimeout(() => fetchProfile(nextSession.user.id, nextSession.user.email), 0);
     } else {
       setProfile(null);
     }
@@ -293,9 +310,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     (async () => {
       try {
-        await consumeSessionHashIfPresent();
-        await hydrateFromBridgeIfNeeded();
-        const { data: { session: initialSession }, error } = await supabase.auth.getSession();
+        await failOpen(() => consumeSessionHashIfPresent(), undefined, "auth.consumeSessionHash", { timeoutMs: 5_000, retries: 0 });
+        await failOpen(() => hydrateFromBridgeIfNeeded(), undefined, "auth.hydrateBridge", { timeoutMs: 5_000, retries: 0 });
+        const { data: { session: initialSession }, error } = await failOpen(
+          () => retryWithTimeout(() => supabase.auth.getSession(), "auth.getSession", { timeoutMs: 5_000, retries: 1 }),
+          { data: { session: null }, error: new Error("Auth session unavailable") } as any,
+          "auth.getSession",
+        );
         if (!mounted) return;
 
         authDebug("token.read", {

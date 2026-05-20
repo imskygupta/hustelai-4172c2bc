@@ -48,6 +48,7 @@ import { ForumModerationPanel } from "@/components/admin/ForumModerationPanel";
 import { PaymentsOpsPanel } from "@/components/admin/PaymentsOpsPanel";
 import { AuditLogPanel } from "@/components/admin/AuditLogPanel";
 import { recordOperatorAction } from "@/lib/audit/recordOperatorAction";
+import { failOpen, retryWithTimeout } from "@/lib/async/timeout";
 
 import { SEO } from "@/components/SEO";
 
@@ -406,40 +407,52 @@ export default function AdminDashboard() {
 
   const checkAdmin = async (userId: string) => {
     setCheckingAdmin(true);
-    const { data, error } = await supabase.rpc("has_role", { _user_id: userId, _role: "admin" as any });
+    try {
+      const { data, error } = await failOpen(
+        () => retryWithTimeout(
+          () => supabase.rpc("has_role", { _user_id: userId, _role: "admin" as any }),
+          "admin.roleCheck",
+        ),
+        { data: false, error: new Error("Admin role check unavailable") } as any,
+        "admin.roleCheck",
+      );
 
-    if (error || !data) {
-      setIsAdmin(false);
-      toast({ title: "Access Denied", variant: "destructive" });
-      navigate("/dashboard", { replace: true });
+      if (error || !data) {
+        setIsAdmin(false);
+        toast({ title: "Access Denied", variant: "destructive" });
+        navigate("/dashboard", { replace: true });
+        return;
+      }
+
+      setIsAdmin(true);
+      await loadAllData();
+    } finally {
       setCheckingAdmin(false);
-      return;
     }
-
-    setIsAdmin(true);
-    await loadAllData();
-    setCheckingAdmin(false);
   };
 
   const loadAllData = async () => {
     setLoadingData(true);
-    const [usersRes, notifsRes, webRes, expertRes, blogRes, nlRes, contactRes, chatRes, verifRes, payRes, forumRes, rolesRes, groupsRes, trendRes, ordersRes] = await Promise.all([
-      supabase.from("profiles").select("*").order("created_at", { ascending: false }),
-      supabase.from("notifications").select("*").order("created_at", { ascending: false }),
-      supabase.from("webinars").select("*").order("created_at", { ascending: false }),
-      supabase.from("expert_assignments").select("*").order("created_at", { ascending: false }),
-      blogDb.from("blog_posts").select("*").order("created_at", { ascending: false }),
-      blogDb.from("newsletter_subscribers").select("*", { count: "exact" }),
-      supabase.from("contact_submissions").select("id", { count: "exact", head: true }),
-      aiDb.from("chat_messages").select("*").order("created_at", { ascending: false }).limit(500),
-      supabase.from("user_verifications").select("*").order("created_at", { ascending: false }),
-      supabase.from("payments").select("*").order("created_at", { ascending: false }),
-      communityDb.from("forum_posts").select("*").order("created_at", { ascending: false }).limit(100),
-      supabase.from("user_roles").select("*").order("created_at", { ascending: false }),
-      communityDb.from("community_groups").select("*").order("created_at"),
-      supabase.from("trending_links").select("*").order("sort_order"),
-      supabase.from("orders").select("*").order("created_at", { ascending: false }),
-    ]);
+    try {
+      const q = (label: string, run: () => Promise<any> | PromiseLike<any>, fallback: any = { data: [], count: 0 }): Promise<any> =>
+        failOpen(() => retryWithTimeout(run, label), fallback, label);
+      const [usersRes, notifsRes, webRes, expertRes, blogRes, nlRes, contactRes, chatRes, verifRes, payRes, forumRes, rolesRes, groupsRes, trendRes, ordersRes] = await Promise.all([
+      q("admin.profiles", () => supabase.from("profiles").select("*").order("created_at", { ascending: false })),
+      q("admin.notifications", () => supabase.from("notifications").select("*").order("created_at", { ascending: false })),
+      q("admin.webinars", () => supabase.from("webinars").select("*").order("created_at", { ascending: false })),
+      q("admin.expertAssignments", () => supabase.from("expert_assignments").select("*").order("created_at", { ascending: false })),
+      q("admin.blogPosts", () => blogDb.from("blog_posts").select("*").order("created_at", { ascending: false })),
+      q("admin.newsletterSubscribers", () => blogDb.from("newsletter_subscribers").select("*", { count: "exact" })),
+      q("admin.contactCount", () => supabase.from("contact_submissions").select("id", { count: "exact", head: true })),
+      q("admin.chatMessages", () => aiDb.from("chat_messages").select("*").order("created_at", { ascending: false }).limit(500)),
+      q("admin.verifications", () => supabase.from("user_verifications").select("*").order("created_at", { ascending: false })),
+      q("admin.payments", () => supabase.from("payments").select("*").order("created_at", { ascending: false })),
+      q("admin.forumPosts", () => communityDb.from("forum_posts").select("*").order("created_at", { ascending: false }).limit(100)),
+      q("admin.userRoles", () => supabase.from("user_roles").select("*").order("created_at", { ascending: false })),
+      q("admin.communityGroups", () => communityDb.from("community_groups").select("*").order("created_at")),
+      q("admin.trendingLinks", () => supabase.from("trending_links").select("*").order("sort_order")),
+      q("admin.orders", () => supabase.from("orders").select("*").order("created_at", { ascending: false })),
+      ]);
     if (usersRes.data) setUsers(usersRes.data as UserProfile[]);
     if (notifsRes.data) setNotifications(notifsRes.data as Notification[]);
     if (webRes.data) setWebinars(webRes.data as Webinar[]);
@@ -456,21 +469,17 @@ export default function AdminDashboard() {
     if (trendRes.data) setTrendingLinks(trendRes.data);
     if (ordersRes.data) setOrders(ordersRes.data);
     // Load email settings
-    const { data: emailData } = await supabase.from("email_settings").select("*").order("created_at");
+    const { data: emailData } = await q("admin.emailSettings", () => supabase.from("email_settings").select("*").order("created_at"));
     if (emailData) setEmailSettings(emailData);
-    const { data: aiData } = await supabase.from("ai_provider_keys").select("*").order("priority");
+    const { data: aiData } = await q("admin.aiProviders", () => supabase.from("ai_provider_keys").select("*").order("priority"));
     if (aiData) setAiProviders(aiData);
     // Load bonus kits, social links, payment logs
-    const { data: bonusData } = await supabase.from("bonus_kits" as any).select("*").order("created_at", { ascending: false });
+    const { data: bonusData } = await q("admin.bonusKits", () => supabase.from("bonus_kits" as any).select("*").order("created_at", { ascending: false }));
     if (bonusData) setBonusKits(bonusData as any);
-    const { data: socialData } = await supabase.from("social_links" as any).select("*").order("display_order");
+    const { data: socialData } = await q("admin.socialLinks", () => supabase.from("social_links" as any).select("*").order("display_order"));
     if (socialData) setSocialLinks(socialData as any);
     try {
-      const { data: logsData } = await supabase
-        .from("dodo_events")
-        .select("id, event_type, status, user_id, created_at, error")
-        .order("created_at", { ascending: false })
-        .limit(100);
+      const { data: logsData } = await q("admin.dodoEvents", () => supabase.from("dodo_events").select("id, event_type, status, user_id, created_at, error").order("created_at", { ascending: false }).limit(100));
       if (logsData) {
         setPaymentLogs(
           logsData.map((e: any) => ({
@@ -483,7 +492,7 @@ export default function AdminDashboard() {
         );
       }
     } catch {}
-    if (chatRes.data) {
+      if (chatRes.data) {
       const userMap = new Map<string, ChatUser>();
       for (const msg of chatRes.data) {
         if (!userMap.has(msg.user_id)) {
@@ -497,9 +506,11 @@ export default function AdminDashboard() {
           });
         }
       }
-      setChatUsers(Array.from(userMap.values()));
+        setChatUsers(Array.from(userMap.values()));
+      }
+    } finally {
+      setLoadingData(false);
     }
-    setLoadingData(false);
   };
 
   const changeTier = async (userId: string, newTier: string) => {
