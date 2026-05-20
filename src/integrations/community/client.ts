@@ -1,19 +1,30 @@
-// Tertiary Supabase client — community / forum / discord-link data only.
-// Auth, profiles, billing stay on the primary Lovable Cloud client.
-// User identity is taken from the primary client's auth.uid() and passed in
-// as `user_id` (same pattern as the Work Hub secondary DB).
+// Realtime / Event Fabric DB client (Phase 7D).
+//
+// Project: qeswhaytgvosfzzgraef.
+// Repurposed from "community" → realtime isolation + websocket fanout +
+// live collaboration + notification fanout buffers. Still hosts the existing
+// forum/chat/votes/discord-link tables since those are realtime social
+// workloads and belong on this fabric.
+//
+// DO NOT route AI queues, admin telemetry, billing, or blog/CMS data here.
+// Auth + identity stay on the primary Lovable Cloud client; pass user_id
+// explicitly when writing.
 import { createClient } from "@supabase/supabase-js";
 
 const URL = "https://qeswhaytgvosfzzgraef.supabase.co";
 const PUBLISHABLE_KEY = "sb_publishable_MfXLYdThZHM45f6V9DyNsw_ADD2HqIv";
 
-export const communityDb = createClient(URL, PUBLISHABLE_KEY, {
+export const realtimeDb = createClient(URL, PUBLISHABLE_KEY, {
   auth: {
     persistSession: false,
     autoRefreshToken: false,
-    storageKey: "hustlai-community-anon", // separate from primary + workspace clients
+    storageKey: "hustlai-realtime-anon", // separate from primary + workspace clients
   },
 });
+
+// Back-compat alias. Existing call sites keep working; new code should use
+// `realtimeDb`. Slated for removal once all imports are migrated.
+export const communityDb = realtimeDb;
 
 export type DiscordLink = {
   id: string;
