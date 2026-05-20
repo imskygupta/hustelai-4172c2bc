@@ -14,6 +14,8 @@ export const workspaceDb = createClient(URL, PUBLISHABLE_KEY, {
   },
 });
 
+console.info("Workspace DB connected");
+
 export type WorkspaceClient = {
   id: string;
   owner_id: string;
