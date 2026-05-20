@@ -169,3 +169,79 @@ export function mirrorAsyncRuntimeBatch(
     }
   })();
 }
+
+// -------------------- Phase 3: authority-aware writer --------------------
+
+export interface OperationalWriteOptions<TPrimaryResult> {
+  /** runtime_extraction_streams.stream label, e.g. "notification_deliveries". */
+  stream: string;
+  /** Bare table name inside owned async_runtime schema. */
+  ownedTable: string;
+  /** Row to insert into the owned async_runtime table. */
+  ownedRow: Record<string, unknown>;
+  /**
+   * Callback that performs the primary-DB insert. Called only when the
+   * authority state still requires writes to primary (states: primary, mirror).
+   * Skipped entirely for owned_authoritative + primary_disabled. The return
+   * value is bubbled back to the caller so it can still chain follow-up
+   * UPDATEs by row id (or null if primary was skipped).
+   */
+  primaryInsert: () => Promise<TPrimaryResult | null>;
+}
+
+export interface OperationalWriteResult<TPrimaryResult> {
+  primary: TPrimaryResult | null;
+  primarySkipped: boolean;
+  authority: AuthorityRow["authority_state"];
+}
+
+/**
+ * Phase 3 router. Routes an operational write according to the stream's
+ * current authority_state in runtime_extraction_streams.
+ *
+ *   primary | mirror               → write BOTH (primary awaited, owned async)
+ *   owned_authoritative            → write OWNED only, primary insert skipped
+ *   primary_disabled               → write OWNED only, hard fail if owned errors
+ *
+ * Always records measured outcomes via runtime_record_route so the admin
+ * panel + parity refresher can act on real traffic.
+ */
+export async function writeOperational<T>(
+  opts: OperationalWriteOptions<T>,
+): Promise<OperationalWriteResult<T>> {
+  const auth = await getAuthority(opts.stream);
+  const skipPrimary =
+    auth.authority_state === "owned_authoritative" ||
+    auth.authority_state === "primary_disabled" ||
+    auth.primary_writes_disabled;
+
+  // 1) Primary write (awaited, callers need the id).
+  let primaryResult: T | null = null;
+  if (!skipPrimary) {
+    try {
+      primaryResult = await opts.primaryInsert();
+      recordPrimary(opts.stream, 1);
+    } catch (e) {
+      // Primary insert failure on a still-authoritative stream is the
+      // caller's problem; surface metric but don't crash.
+      recordMetric(opts.stream, "fail", 1, 0);
+      recordFallback(opts.stream, `primary_insert_failed: ${(e as Error).message ?? "unknown"}`);
+      throw e;
+    }
+  }
+
+  // 2) Owned mirror (always — fire-and-forget).
+  mirrorAsyncRuntime(opts.ownedTable, opts.ownedRow, opts.stream);
+
+  return {
+    primary: primaryResult,
+    primarySkipped: skipPrimary,
+    authority: auth.authority_state,
+  };
+}
+
+/** Manual cache bust (e.g. after toggling authority via finalizer). */
+export function clearAuthorityCache(stream?: string): void {
+  if (stream) authorityCache.delete(stream);
+  else authorityCache.clear();
+}
