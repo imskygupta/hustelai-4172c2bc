@@ -1,4 +1,7 @@
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, useEffect } from "react";
+import DebugRuntimeOverlay from "@/components/runtime/DebugRuntimeOverlay";
+import { bootstrapHydration } from "@/lib/runtime/hydrationPhases";
+import { refreshFeatureFlagsFromAdmin } from "@/lib/runtime/featureFlags";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -270,7 +273,15 @@ const Shelled = (el: React.ReactNode) => (
 
 const queryClient = new QueryClient();
 
-const App = () => (
+const App = () => {
+  useEffect(() => {
+    // Phase 9.2: advance hydration phases after first paint, then lazily
+    // refresh runtime feature flags from the Admin DB (fail-open).
+    bootstrapHydration();
+    const t = setTimeout(() => { void refreshFeatureFlagsFromAdmin(); }, 1_500);
+    return () => clearTimeout(t);
+  }, []);
+  return (
   <Sentry.ErrorBoundary fallback={<RootErrorFallback />}>
   <HelmetProvider>
   <QueryClientProvider client={queryClient}>
@@ -279,6 +290,7 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
+        <DebugRuntimeOverlay />
         {isMaintenance() ? <MaintenancePage /> : (
         <BrowserRouter>
           <YandexRouteTracker />
