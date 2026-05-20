@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { getBlogs } from "../_shared/clients.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -30,10 +31,18 @@ Deno.serve(async (req) => {
       return json({ error: "invalid_email" }, 400);
     }
 
-    const sb = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-    );
+    // Phase 7C.2: newsletter_subscribers lives on the Blogs DB.
+    // Falls back to primary only if Blogs DB secrets are not yet provisioned
+    // (during the staged cutover).
+    let sb: ReturnType<typeof createClient>;
+    try {
+      sb = getBlogs() as any;
+    } catch {
+      sb = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+      );
+    }
 
     // Try to attach to logged-in user (best-effort via auth header)
     let user_id: string | null = null;
