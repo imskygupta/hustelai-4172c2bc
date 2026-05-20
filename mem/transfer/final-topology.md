@@ -107,3 +107,61 @@ as separate refs. The retired-placeholder list above is the canonical source.
   runtime_projections). Repoint of writers pending edge fn updates.
 - Final residual heatmap: run `scripts/phase7-final-heatmap.sql` against
   PRIMARY for top reads/writes/realtime/WAL + extraction completeness %.
+
+## Phase 8 — Soak, Decommission, Kernel Lock
+
+### 8A — Live soak monitoring
+- Admin card: **Infrastructure → Primary Detox** (`PrimaryDetoxStatusPanel`).
+  Polls every 60s. Surfaces violations/hr, realtime attempts, forbidden
+  table count, top offending tables/paths.
+- Backed by edge fn `primary-detox-stats` → Admin DB
+  `runtime_direct_write_violations` (24h window).
+- Soak gate for 8B: card must read **0 violations / 24h** before executing
+  step 2 of `scripts/primary-detox.sql`.
+
+### 8B — Hard decommission checklist (run after clean soak)
+1. `psql $PRIMARY -f scripts/primary-detox.sql` (uncomment step 2 first).
+2. Verify dropped tables no longer in `pg_tables` on primary.
+3. Re-run `scripts/phase7h-final-audit.sql` — expect ~0 WAL from extracted
+   tables and extraction completeness ≥ 95%.
+4. Delete any remaining mirror/fallback adapters (search:
+   `silentFallback`, `legacyPrimary`, retired docs/async/community
+   wrappers).
+5. Remove dead env vars: `COMMUNITY_*` aliases (keep `REALTIME_*`),
+   deprecated `ASYNC_*` placeholders, any `TBD_*` refs.
+
+### 8C — Primary kernel lock (immutable safeguards)
+- DB-side: `scripts/primary-kernel-allowlist.sql` installs a DDL event
+  trigger on PRIMARY that REJECTS any `CREATE TABLE public.<x>` not in:
+  `profiles, subscriptions, wallets, payments, dodo_*, tier_limits,
+  email_verifications, notification_events, user_roles`.
+- Runtime-side: `primary-guard.ts` + edge `wrapPrimary()` already block
+  reads/writes/realtime on extracted tables.
+- CI-side: `scripts/ci-assert-no-primary-violations.ts` (Deno) scans
+  `src/**` + `supabase/functions/**` for forbidden `.from("<table>")`
+  calls not preceded by a sibling client identifier. Wire into CI:
+  `deno run --allow-read scripts/ci-assert-no-primary-violations.ts`.
+
+### 8D — Final infra freeze
+| DB | Ref | Role | Status |
+|---|---|---|---|
+| PRIMARY | vbnqaovxatucrgtnggea | auth + billing kernel | LOCKED (allowlist + guards) |
+| ADMIN | rqqiujmiagauzohdqjmi | control plane + telemetry | active |
+| BLOGS | ynvfxxmhowlvhtqiigfc | content/SEO/newsletters | active |
+| API/AI | larncwugkdclkhayfjle | AI runtime, chat memory, async queues | active |
+| REALTIME | qeswhaytgvosfzzgraef | websocket fanout, presence, social/live | active (repurposed from Community) |
+| WORKSPACE | utflzmecghdtcjupgdan | client/work hub, intake, CRM | active |
+| OWNED | wguuipsikboqqinqeehv | telemetry mirror | dormant/archive |
+
+Removed/retired: legacy Docs DB, legacy Async DB, legacy Analytics DB,
+legacy Community-only DB (repurposed), all `TBD_*` placeholders, all
+silent primary fallbacks.
+
+### 8E — Cost & scale follow-ups (non-blocking)
+- Disable realtime on tables that no longer need fanout (handled per
+  table via `ALTER PUBLICATION supabase_realtime DROP TABLE …`).
+- Archive `db_heatmap_snapshots` > 30d to JSONB cold storage on Admin DB.
+- Reduce cron cadence on `phase7h-final-audit` style scans to daily.
+- Railway: increase idle backoffs, consolidate poll loops (separate PR).
+- Future: isolate vector/embedding workloads off API/AI DB only if scale
+  pressure shows up in heatmap.
