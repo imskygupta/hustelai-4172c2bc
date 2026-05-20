@@ -426,10 +426,10 @@ export default function AdminDashboard() {
       supabase.from("notifications").select("*").order("created_at", { ascending: false }),
       supabase.from("webinars").select("*").order("created_at", { ascending: false }),
       supabase.from("expert_assignments").select("*").order("created_at", { ascending: false }),
-      supabase.from("blog_posts").select("*").order("created_at", { ascending: false }),
-      supabase.from("newsletter_subscribers").select("*", { count: "exact" }),
+      blogDb.from("blog_posts").select("*").order("created_at", { ascending: false }),
+      blogDb.from("newsletter_subscribers").select("*", { count: "exact" }),
       supabase.from("contact_submissions").select("id", { count: "exact", head: true }),
-      supabase.from("chat_messages").select("*").order("created_at", { ascending: false }).limit(500),
+      aiDb.from("chat_messages").select("*").order("created_at", { ascending: false }).limit(500),
       supabase.from("user_verifications").select("*").order("created_at", { ascending: false }),
       supabase.from("payments").select("*").order("created_at", { ascending: false }),
       communityDb.from("forum_posts").select("*").order("created_at", { ascending: false }).limit(100),
@@ -671,13 +671,13 @@ export default function AdminDashboard() {
 
   const loadChatForUser = async (userId: string) => {
     setSelectedChatUser(userId);
-    const { data } = await supabase.from("chat_messages").select("*").eq("user_id", userId).order("created_at", { ascending: true });
+    const { data } = await aiDb.from("chat_messages").select("*").eq("user_id", userId).order("created_at", { ascending: true });
     if (data) setChatMessages(data);
   };
 
   const sendAdminChatReply = async () => {
     if (!adminReply.trim() || !selectedChatUser) return;
-    const { error } = await supabase.from("chat_messages").insert({
+    const { error } = await aiDb.from("chat_messages").insert({
       user_id: selectedChatUser, role: "assistant", content: adminReply.trim(),
       is_admin_reply: true, admin_id: user!.id,
     });
