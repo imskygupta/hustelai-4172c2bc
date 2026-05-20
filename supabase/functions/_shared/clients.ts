@@ -31,19 +31,65 @@
 // and merge in code.
 import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.74.0";
 
+// Phase 7F — Edge-side primary forbidden-table guard. Mirror of the
+// frontend src/integrations/supabase/primary-guard.ts. Any edge function
+// that calls getPrimary*().from(<extracted table>) throws immediately and
+// reports the regression to the Admin DB so we can fix the caller.
+const PRIMARY_FORBIDDEN_TABLES: ReadonlySet<string> = new Set([
+  "chat_messages","ai_conversation_memory","ai_context_windows","ai_session_state",
+  "side_hustles","hustle_votes",
+  "newsletter_subscribers","newsletter_issues","newsletter_sends",
+  "newsletter_schedules","newsletter_capture_dismissals",
+  "email_logs","email_templates",
+  "blog_posts","blog_events","blog_categories",
+  "seo_pages","seo_topics","seo_authors","seo_blog_posts","seo_redirects",
+  "api_provider_health","admin_alerts","runtime_extraction_streams",
+  "runtime_metrics","db_extraction_scores","db_heatmap_snapshots",
+  "intelligence_alerts","runtime_projections","docs_pages",
+  "forum_posts","forum_replies","forum_votes","community_groups","discord_links",
+]);
+
+function wrapPrimary(sb: SupabaseClient): SupabaseClient {
+  const originalFrom = sb.from.bind(sb);
+  (sb as any).from = (table: string, ...rest: unknown[]) => {
+    if (typeof table === "string" && PRIMARY_FORBIDDEN_TABLES.has(table)) {
+      // Best-effort async report; never block the throw.
+      try {
+        const url = Deno.env.get("ADMIN_SUPABASE_URL");
+        const key = Deno.env.get("ADMIN_SUPABASE_SERVICE_ROLE_KEY");
+        if (url && key) {
+          const admin = createClient(url, key, { auth: { persistSession: false } });
+          void admin.from("runtime_direct_write_violations").insert({
+            table_name: table,
+            stack: new Error().stack?.slice(0, 4000) ?? "",
+            source: "edge",
+          });
+        }
+      } catch (_) { /* ignore */ }
+      throw new Error(
+        `[primary-guard:edge] Table "${table}" is extracted off the primary ` +
+          `auth/billing DB. Use getApi() / getBlogs() / getAdmin() / ` +
+          `getRealtime() / getWorkspace() instead.`,
+      );
+    }
+    return (originalFrom as any)(table, ...rest);
+  };
+  return sb;
+}
+
 export function getPrimary(authHeader?: string | null): SupabaseClient {
   const url = Deno.env.get("SUPABASE_URL")!;
   const key = Deno.env.get("SUPABASE_ANON_KEY")!;
-  return createClient(url, key, {
+  return wrapPrimary(createClient(url, key, {
     global: authHeader ? { headers: { Authorization: authHeader } } : undefined,
     auth: { persistSession: false },
-  });
+  }));
 }
 
 export function getPrimaryService(): SupabaseClient {
   const url = Deno.env.get("SUPABASE_URL")!;
   const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-  return createClient(url, key, { auth: { persistSession: false } });
+  return wrapPrimary(createClient(url, key, { auth: { persistSession: false } }));
 }
 
 /**
