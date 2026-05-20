@@ -56,20 +56,31 @@ async function withAuth<T>(fn: (sb: NonNullable<typeof realClient>) => Promise<T
 
 export const aiDbReady = CONFIGURED;
 
+function emptyQueryStub(table: string) {
+  const empty = { data: [], count: 0, error: null };
+  const callable = () => proxy;
+  const proxy: any = new Proxy(callable, {
+    get(_target, prop) {
+      if (prop === "then") {
+        return (resolve: any, reject: any) => {
+          console.warn(`API DB query skipped for ${table}: missing publishable key`);
+          return Promise.resolve(empty).then(resolve, reject);
+        };
+      }
+      if (prop === "catch") return Promise.resolve(empty).catch.bind(Promise.resolve(empty));
+      if (prop === "finally") return Promise.resolve(empty).finally.bind(Promise.resolve(empty));
+      return proxy;
+    },
+    apply() { return proxy; },
+  });
+  return proxy;
+}
+
 // Thin facade — same API surface as supabase client for the bits we use.
 export const aiDb = {
   from(table: string) {
     if (!realClient) {
-      // Return a chainable stub that hard-fails on terminal calls.
-      const fail = () => {
-        throw new Error(
-          `AI/API DB not configured — cannot access '${table}'. ` +
-            "No silent primary fallback.",
-        );
-      };
-      const stub: any = new Proxy({}, { get: () => stub });
-      stub.then = fail;
-      return stub;
+      return emptyQueryStub(table);
     }
     // Sync attach of current session token (best-effort) for non-await callers.
     primary.auth.getSession().then(({ data }) => {
