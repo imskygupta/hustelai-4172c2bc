@@ -10094,6 +10094,7 @@ export type Database = {
       operator_pulse: { Args: { _slug: string }; Returns: Json }
       operator_pulse_global: { Args: never; Returns: Json }
       post_performance: { Args: { _slug: string }; Returns: Json }
+      purge_stale_telemetry: { Args: never; Returns: Json }
       queue_archive_promote: {
         Args: { _queue: string; _reason?: string; _ref_id: string }
         Returns: undefined
