@@ -18,6 +18,7 @@ import { AutonomousControllerPanel } from "./AutonomousControllerPanel";
 import { TopologyGraphPanel, BlastRadiusPanel, FailureSimulationPanel, CouplingFindingsPanel, ExtractionForecastPanel, StabilityScorePanel } from "./TopologyPanels";
 import { ProductionIncidentsPanel } from "./ProductionStabilityPanels";
 import { RuntimeExtractionPanel } from "./RuntimeExtractionPanel";
+import { PrimaryDetoxStatusPanel } from "./PrimaryDetoxStatus";
 
 type Project = {
   id: string; name: string; purpose: string; environment: string; project_ref: string; project_url: string | null;
