@@ -198,6 +198,7 @@ export default function Infrastructure() {
             <TabsTrigger value="stability"><Sparkles className="h-4 w-4 mr-1" />Stability Score</TabsTrigger>
             <TabsTrigger value="noc"><AlertOctagon className="h-4 w-4 mr-1" />Production NOC</TabsTrigger>
             <TabsTrigger value="wave1"><Waves className="h-4 w-4 mr-1" />Runtime Extraction</TabsTrigger>
+            <TabsTrigger value="detox"><Shield className="h-4 w-4 mr-1" />Primary Detox</TabsTrigger>
           </TabsList>
 
           <TabsContent value="registry">
