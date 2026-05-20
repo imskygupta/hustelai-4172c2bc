@@ -37,6 +37,7 @@ const AdminMissionControl = lazy(() => import("./pages/admin/MissionControl"));
 const AdminOpsHealth = lazy(() => import("./pages/admin/OpsHealth"));
 const AdminDocs = lazy(() => import("./pages/admin/AdminDocs"));
 const AdminMarketingPages = lazy(() => import("./pages/admin/MarketingPages"));
+const AdminOperations = lazy(() => import("./pages/admin/Operations"));
 import NotificationPreferences from "./pages/settings/NotificationPreferences";
 import Integrations from "./pages/settings/Integrations";
 import Exports from "./pages/settings/Exports";
