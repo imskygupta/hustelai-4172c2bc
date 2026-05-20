@@ -1,10 +1,57 @@
-// Mirror helper — writes a row into the owned async_runtime schema on the
-// owned Supabase project (wguuipsikboqqinqeehv), then bumps the runtime
-// extraction metrics so the admin panel reflects real production traffic.
+// Operational write router + mirror helper.
 //
-// Fire-and-forget. Never throws. Safe to call from any edge function on a
-// hot request path.
+// Two entrypoints:
+//   - mirrorAsyncRuntime(table, row, stream?) — legacy, owned-only mirror.
+//   - writeOperational({ stream, table, owned, primary }) — Phase 3 router.
+//     Consults runtime_extraction_streams.authority_state and conditionally
+//     skips the primary write once the stream is owned-authoritative.
+//
+// All paths are fire-and-forget on the owned side and never throw on the hot
+// request path. The primary callback IS awaited because callers usually need
+// the inserted row id back (e.g. dispatcher uses it for a follow-up update).
 import { getOwned, getPrimaryService, ownedReady } from "./clients.ts";
+
+// -------------------- authority cache --------------------
+type AuthorityRow = {
+  authority_state: "primary" | "mirror" | "owned_authoritative" | "primary_disabled";
+  parity_status: string | null;
+  rail_guarded: boolean;
+  primary_writes_disabled: boolean;
+  fetched_at: number;
+};
+const AUTHORITY_TTL_MS = 60_000;
+const authorityCache = new Map<string, AuthorityRow>();
+
+async function getAuthority(stream: string): Promise<AuthorityRow> {
+  const cached = authorityCache.get(stream);
+  const now = Date.now();
+  if (cached && now - cached.fetched_at < AUTHORITY_TTL_MS) return cached;
+  try {
+    const { data } = await getPrimaryService()
+      .rpc("runtime_get_authority" as any, { _stream: stream });
+    const row = Array.isArray(data) ? data[0] : data;
+    const result: AuthorityRow = {
+      authority_state: (row?.authority_state ?? "primary") as AuthorityRow["authority_state"],
+      parity_status: row?.parity_status ?? null,
+      rail_guarded: !!row?.rail_guarded,
+      primary_writes_disabled: !!row?.primary_writes_disabled,
+      fetched_at: now,
+    };
+    authorityCache.set(stream, result);
+    return result;
+  } catch {
+    // Default to safest behavior: primary remains authoritative.
+    const result: AuthorityRow = {
+      authority_state: "primary",
+      parity_status: null,
+      rail_guarded: false,
+      primary_writes_disabled: false,
+      fetched_at: now,
+    };
+    authorityCache.set(stream, result);
+    return result;
+  }
+}
 
 const EST_BYTES: Record<string, number> = {
   notification_deliveries: 384,
@@ -41,6 +88,19 @@ function recordFallback(stream: string, reason: string): void {
       _stream: stream,
       _reason: reason.slice(0, 300),
       _expires_in_seconds: 600,
+    });
+  } catch { /* tolerate */ }
+}
+
+function recordPrimary(stream: string, n = 1): void {
+  try {
+    const primary = getPrimaryService();
+    void primary.rpc("runtime_record_route", {
+      _stream: stream,
+      _outcome: "primary",
+      _count: n,
+      _confidence: null,
+      _bytes_avoided: 0,
     });
   } catch { /* tolerate */ }
 }
