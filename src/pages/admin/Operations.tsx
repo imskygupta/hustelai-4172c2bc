@@ -10,6 +10,7 @@ import { Link } from "react-router-dom";
 import {
   Activity, Database, Network, Shield, Flag, Radio, HardDrive, DollarSign,
   AlertTriangle, Gauge, Workflow, FileText, ArrowLeft, ShieldAlert, ListTree,
+  BookOpenCheck,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -34,11 +35,13 @@ const PlatformHardeningPanel = lazy(() =>
   import("./PlatformHardeningPanel").then((m) => ({ default: m.PlatformHardeningPanel })),
 );
 const DocsOpsPanel = lazy(() => import("@/components/admin/DocsOpsPanel"));
+const DocsIntegrityPanel = lazy(() => import("@/components/admin/DocsIntegrityPanel"));
 const SystemEventsPanel = lazy(() => import("@/components/admin/SystemEventsPanel"));
 
 type SectionKey =
   | "overview" | "databases" | "stability" | "security"
-  | "ai_runtime" | "realtime" | "backups" | "cost" | "flags" | "docs_ops" | "topology" | "events";
+  | "ai_runtime" | "realtime" | "backups" | "cost" | "flags"
+  | "docs_ops" | "docs_integrity" | "topology" | "events";
 
 const NAV: { key: SectionKey; label: string; icon: any }[] = [
   { key: "overview",   label: "Overview",        icon: Activity },
@@ -52,6 +55,7 @@ const NAV: { key: SectionKey; label: string; icon: any }[] = [
   { key: "cost",       label: "Utilization",     icon: DollarSign },
   { key: "flags",      label: "Feature Flags",   icon: Flag },
   { key: "docs_ops",   label: "Operator Docs",   icon: FileText },
+  { key: "docs_integrity", label: "Docs Integrity", icon: BookOpenCheck },
   { key: "topology",   label: "Service Boundaries", icon: Network },
 ];
 
@@ -296,6 +300,12 @@ export default function Operations() {
             {section === "docs_ops" && (
               <Suspense fallback={<PanelSkeleton rows={6} />}>
                 <DocsOpsPanel />
+              </Suspense>
+            )}
+
+            {section === "docs_integrity" && (
+              <Suspense fallback={<PanelSkeleton rows={6} />}>
+                <DocsIntegrityPanel />
               </Suspense>
             )}
           </main>
