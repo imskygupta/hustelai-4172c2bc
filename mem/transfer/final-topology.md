@@ -5,6 +5,7 @@
 | Primary (auth+billing ONLY) | vbnqaovxatucrgtnggea | SUPABASE_* | getPrimary / getPrimaryService | @/integrations/supabase/client |
 | Admin/Ops control plane | rqqiujmiagauzohdqjmi | ADMIN_SUPABASE_* | getAdmin | TBD adminDb (admin-only) |
 | AI/Async/Queues/Analytics | larncwugkdclkhayfjle | API_PLATFORM_SUPABASE_* | getApi / getAsync / getAnalytics | none (edge-only) |
+|   ↳ chat_messages, ai_conversation_memory, ai_context_windows, ai_session_state live here (Phase 7D.3) | | | | `aiDb` (`src/integrations/ai/db.ts`) |
 | Blogs/CMS/SEO/Newsletter | ynvfxxmhowlvhtqiigfc | BLOG_SUPABASE_* (URL+SERVICE) | getBlogs | @/integrations/blog/client |
 | Workspace/ClientOps/Intake | utflzmecghdtcjupgdan | WORKSPACE_SUPABASE_* | getWorkspace | @/integrations/workspace/client |
 | Realtime / Event Fabric (forums/chat/votes + fanout/presence/collab) | qeswhaytgvosfzzgraef | REALTIME_SUPABASE_* (or legacy COMMUNITY_SUPABASE_*) | getRealtime / getCommunity (alias) | @/integrations/community/client (`realtimeDb`, `communityDb` alias) |
@@ -44,3 +45,19 @@ Frontend: `realtimeDb` (preferred) or `communityDb` (alias).
 Primary owns ONLY: auth, profiles, subscriptions, payments, wallets,
 billing identity, tier limits, auth-adjacent verification flows
 (email_verifications, OTPs). Everything else extracted per the table above.
+
+## Phase 7C.3 / 7D.3 / 7A.3 — Hard-fail cutover complete
+- `aiDb` (frontend) + `getApi()` (edge) own chat_messages and AI memory tables.
+  Bootstrap: `scripts/ai-db-bootstrap.sql`. ai-chatbot edge fn writes there.
+  Frontend: Chatbot, HustleBot, Dashboard, KnowledgeHub, AdminDashboard chat
+  reads/realtime repointed. NO primary fallback (proxy throws).
+- `blogDb` is now HARD-FAIL: proxy throws if anon key not set. All frontend
+  side_hustles / seo_* / newsletter_* / hustle_votes / email_templates /
+  email_logs / blog_posts / blog_events reads go through it.
+- Mailer + workspace-email no longer fall back to primary for email_logs.
+- brevo-newsletter, send-email, ai-chatbot deployed with new routing.
+- Admin telemetry bootstrap: `scripts/admin-db-extraction-telemetry.sql`
+  (db_extraction_scores, db_heatmap_snapshots, intelligence_alerts,
+  runtime_projections). Repoint of writers pending edge fn updates.
+- Final residual heatmap: run `scripts/phase7-final-heatmap.sql` against
+  PRIMARY for top reads/writes/realtime/WAL + extraction completeness %.
