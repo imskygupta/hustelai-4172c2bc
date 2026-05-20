@@ -691,7 +691,7 @@ export default function AdminDashboard() {
 
   const addBlogPost = async () => {
     if (!blogTitle || !blogContent) return;
-    const { error } = await supabase.from("blog_posts").insert({
+    const { error } = await blogDb.from("blog_posts").insert({
       title: blogTitle, content: blogContent, excerpt: blogExcerpt || null,
       category: blogCategory, author_name: profile?.display_name || "Admin",
       is_published: true, created_by: user!.id,
@@ -704,12 +704,12 @@ export default function AdminDashboard() {
   };
 
   const toggleBlogPublish = async (id: string, current: boolean) => {
-    await supabase.from("blog_posts").update({ is_published: !current }).eq("id", id);
+    await blogDb.from("blog_posts").update({ is_published: !current }).eq("id", id);
     setBlogPosts(blogPosts.map(b => b.id === id ? { ...b, is_published: !current } : b));
   };
 
   const deleteBlog = async (id: string) => {
-    await supabase.from("blog_posts").delete().eq("id", id);
+    await blogDb.from("blog_posts").delete().eq("id", id);
     setBlogPosts(blogPosts.filter(b => b.id !== id));
   };
 
