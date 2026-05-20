@@ -1,3 +1,0 @@
-# Phase 7F note: runtime-violation-log must run with verify_jwt = false so
-# sendBeacon from any auth state can report regressions. Defaults already
-# allow this on Lovable-managed functions; no config.toml override needed.
