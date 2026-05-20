@@ -6,6 +6,7 @@ const corsHeaders = {
 };
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { getBlogs } from "../_shared/clients.ts";
 
 const BREVO_API = "https://api.brevo.com/v3";
 const BREVO_KEY = Deno.env.get("BREVO_API_KEY")!;
