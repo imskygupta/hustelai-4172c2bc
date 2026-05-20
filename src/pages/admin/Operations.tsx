@@ -9,7 +9,7 @@ import { lazy, Suspense, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Activity, Database, Network, Shield, Flag, Radio, HardDrive, DollarSign,
-  AlertTriangle, Gauge, Workflow, FileText, ArrowLeft,
+  AlertTriangle, Gauge, Workflow, FileText, ArrowLeft, ShieldAlert, ListTree,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -34,23 +34,25 @@ const PlatformHardeningPanel = lazy(() =>
   import("./PlatformHardeningPanel").then((m) => ({ default: m.PlatformHardeningPanel })),
 );
 const DocsOpsPanel = lazy(() => import("@/components/admin/DocsOpsPanel"));
+const SystemEventsPanel = lazy(() => import("@/components/admin/SystemEventsPanel"));
 
 type SectionKey =
   | "overview" | "databases" | "stability" | "security"
-  | "ai_runtime" | "realtime" | "backups" | "cost" | "flags" | "docs_ops" | "topology";
+  | "ai_runtime" | "realtime" | "backups" | "cost" | "flags" | "docs_ops" | "topology" | "events";
 
 const NAV: { key: SectionKey; label: string; icon: any }[] = [
   { key: "overview",   label: "Overview",        icon: Activity },
-  { key: "databases",  label: "Databases",       icon: Database },
-  { key: "stability",  label: "Stability",       icon: Gauge },
-  { key: "security",   label: "Security",        icon: Shield },
+  { key: "events",     label: "System Events",   icon: ListTree },
+  { key: "databases",  label: "DB Health",       icon: Database },
+  { key: "stability",  label: "Platform Stability", icon: Gauge },
+  { key: "security",   label: "Runtime Integrity", icon: Shield },
   { key: "ai_runtime", label: "AI Runtime",      icon: Workflow },
-  { key: "realtime",   label: "Realtime Fabric", icon: Radio },
-  { key: "backups",    label: "Backups / DR",    icon: HardDrive },
-  { key: "cost",       label: "Cost Control",    icon: DollarSign },
+  { key: "realtime",   label: "Traffic Isolation", icon: Radio },
+  { key: "backups",    label: "Backups",         icon: HardDrive },
+  { key: "cost",       label: "Utilization",     icon: DollarSign },
   { key: "flags",      label: "Feature Flags",   icon: Flag },
-  { key: "docs_ops",   label: "Docs Ops",        icon: FileText },
-  { key: "topology",   label: "Topology",        icon: Network },
+  { key: "docs_ops",   label: "Operator Docs",   icon: FileText },
+  { key: "topology",   label: "Service Boundaries", icon: Network },
 ];
 
 function OverviewSection() {
@@ -189,8 +191,15 @@ export default function Operations() {
             <Link to="/admin-dashboard"><ArrowLeft className="h-4 w-4 mr-1" /> Admin</Link>
           </Button>
           <h1 className="text-xl font-semibold">Operations</h1>
-          <Badge variant="outline" className="ml-2">control plane</Badge>
-          {INFRA_SAFE_MODE && <Badge variant="secondary">safe-mode</Badge>}
+          {INFRA_SAFE_MODE && <Badge variant="secondary" className="ml-2">safe-mode</Badge>}
+          <div className="ml-auto">
+            <Button variant="outline" size="sm" asChild>
+              <Link to="/admin/incident-mode">
+                <ShieldAlert className="h-4 w-4 mr-1.5 text-rose-500" />
+                Incident Mode
+              </Link>
+            </Button>
+          </div>
         </div>
 
         <div className="grid gap-4 md:grid-cols-[200px_1fr]">
@@ -220,6 +229,12 @@ export default function Operations() {
 
           <main className="space-y-4 min-w-0">
             {section === "overview" && <OverviewSection />}
+
+            {section === "events" && (
+              <Suspense fallback={<PanelSkeleton rows={6} />}>
+                <SystemEventsPanel />
+              </Suspense>
+            )}
 
             {section === "flags" && <FlagsSection />}
 

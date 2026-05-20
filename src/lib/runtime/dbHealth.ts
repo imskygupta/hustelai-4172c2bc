@@ -5,6 +5,7 @@
  * modules that depend on it. Never throws.
  */
 import { useSyncExternalStore } from "react";
+import { pushEvent } from "./eventStream";
 
 export type DbId = "primary" | "admin" | "blogs" | "api_ai" | "realtime" | "workspace" | "community" | "docs";
 
@@ -27,14 +28,31 @@ const status: Record<DbId, "healthy" | "degraded" | "unknown"> = {
 const listeners = new Set<() => void>();
 
 export function markDbHealthy(db: DbId) {
-  if (status[db] === "healthy") return;
+  const prev = status[db];
+  if (prev === "healthy") return;
   status[db] = "healthy";
+  if (prev === "degraded") {
+    pushEvent({
+      category: "recovery",
+      severity: "info",
+      title: `${db} DB recovered`,
+      detail: "Auto-cleared degraded state after successful probe.",
+      subject: db,
+    });
+  }
   listeners.forEach((l) => l());
 }
 export function markDbDegraded(db: DbId, reason?: string) {
   if (status[db] === "degraded") return;
   status[db] = "degraded";
   console.warn(`[db-health] ${db} degraded${reason ? `: ${reason}` : ""}`);
+  pushEvent({
+    category: "db",
+    severity: "degraded",
+    title: `${db} DB degraded`,
+    detail: reason,
+    subject: db,
+  });
   listeners.forEach((l) => l());
 }
 export function getDbStatus(db: DbId) {
