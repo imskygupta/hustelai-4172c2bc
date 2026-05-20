@@ -14,8 +14,12 @@
 //                    newsletter subscribers, side_hustles catalog.
 //   getWorkspace() → utflzmecghdtcjupgdan — Work Hub, client portal,
 //                    intake forms, freelancer OS.
-//   getCommunity() → qeswhaytgvosfzzgraef — forum posts, chat messages,
-//                    hustle votes, discord-link store.
+//   getRealtime()  → qeswhaytgvosfzzgraef — Realtime / Event Fabric DB.
+//                    Hosts forum/chat/votes/discord-link AND realtime_events,
+//                    websocket_presence, live_sessions, collaboration_state,
+//                    event_fanout_queue. Isolates websocket/realtime churn
+//                    from AI/API workloads. getCommunity() is a back-compat
+//                    alias.
 //   getOwned()     → wguuipsikboqqinqeehv — operational telemetry mirror.
 //
 // getAnalytics()/getAsync() are LEGACY aliases that now route to getApi().
@@ -94,12 +98,20 @@ export function getBlogs(): SupabaseClient {
 export function getCommunity(): SupabaseClient {
   const url =
     Deno.env.get("COMMUNITY_SUPABASE_URL") ??
+    Deno.env.get("REALTIME_SUPABASE_URL") ??
     "https://qeswhaytgvosfzzgraef.supabase.co";
-  const key = Deno.env.get("COMMUNITY_SUPABASE_SERVICE_ROLE_KEY");
+  const key =
+    Deno.env.get("COMMUNITY_SUPABASE_SERVICE_ROLE_KEY") ??
+    Deno.env.get("REALTIME_SUPABASE_SERVICE_ROLE_KEY");
   if (!key) {
-    throw new Error("Community DB service role key missing. Set COMMUNITY_SUPABASE_SERVICE_ROLE_KEY.");
+    throw new Error("Realtime/Community DB service role key missing. Set REALTIME_SUPABASE_SERVICE_ROLE_KEY (or COMMUNITY_SUPABASE_SERVICE_ROLE_KEY).");
   }
   return createClient(url, key, { auth: { persistSession: false } });
+}
+
+/** Preferred Phase 7D name for the realtime/event fabric DB. */
+export function getRealtime(): SupabaseClient {
+  return getCommunity();
 }
 
 export function getWorkspace(): SupabaseClient {
