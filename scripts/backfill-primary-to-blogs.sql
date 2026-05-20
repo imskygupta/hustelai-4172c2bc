@@ -1,0 +1,54 @@
+-- ───────────────────────────────────────────────────────────────────────────
+-- Phase 7C — Backfill helper template (primary → Blogs DB)
+--
+-- DO NOT run as a single migration. This is a reference template you run
+-- from the Lovable shell using two psql sessions:
+--   1) export PRIMARY_PG_URI=... BLOG_PG_URI=...
+--   2) Use `\copy ... to stdout` from primary, pipe to `\copy ... from stdin`
+--      on the blog DB.
+--
+-- Idempotent upsert keys are chosen so re-running is safe.
+-- ───────────────────────────────────────────────────────────────────────────
+
+-- ── side_hustles ──────────────────────────────────────────────────────────
+-- On PRIMARY (read):
+--   \copy (
+--     select id, slug, title, subtitle, summary, body_md, category, tags,
+--            difficulty, income_potential, time_to_first_dollar, hero_image,
+--            status, meta_title, meta_description, focus_keyword, featured,
+--            published_at, created_at, updated_at
+--       from public.side_hustles
+--   ) to '/tmp/side_hustles.csv' with csv header;
+--
+-- On BLOG (write — temp staging then upsert by slug):
+--   create temp table _stage (like public.side_hustles including all);
+--   \copy _stage from '/tmp/side_hustles.csv' with csv header;
+--   insert into public.side_hustles as t
+--     select * from _stage
+--   on conflict (slug) do update set
+--     title=excluded.title, subtitle=excluded.subtitle, summary=excluded.summary,
+--     body_md=excluded.body_md, category=excluded.category, tags=excluded.tags,
+--     difficulty=excluded.difficulty, income_potential=excluded.income_potential,
+--     time_to_first_dollar=excluded.time_to_first_dollar,
+--     hero_image=excluded.hero_image, status=excluded.status,
+--     meta_title=excluded.meta_title, meta_description=excluded.meta_description,
+--     focus_keyword=excluded.focus_keyword, featured=excluded.featured,
+--     published_at=excluded.published_at, updated_at=now();
+
+-- ── newsletter_subscribers ────────────────────────────────────────────────
+-- Conflict key: email. status field decides current state.
+
+-- ── email_templates / email_logs / editorial_queue / campaign_events ──────
+-- email_logs and campaign_events are append-only; copy in batches via
+-- created_at cursor to avoid lock contention.
+--
+-- Example batched cursor (run repeatedly, advancing :cursor):
+--   \copy (
+--     select * from public.campaign_events
+--      where created_at > :cursor
+--      order by created_at asc
+--      limit 10000
+--   ) to stdout with csv header
+--
+-- After backfill: flip frontend reads to /functions/v1/blog-* + blogDb client,
+-- then schedule a final delta sync + drop tables on primary in Phase 7E.
