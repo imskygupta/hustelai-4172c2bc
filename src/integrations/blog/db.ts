@@ -12,10 +12,10 @@ import { createClient } from "@supabase/supabase-js";
 
 const URL = "https://ynvfxxmhowlvhtqiigfc.supabase.co";
 // Anon publishable key. If/when rotated, update here only.
-const PUBLISHABLE_KEY = "sb_publishable_blog_replace_me";
+const PUBLISHABLE_KEY: string = "sb_publishable_blog_replace_me";
 
 export const blogDbReady =
-  PUBLISHABLE_KEY !== "sb_publishable_blog_replace_me" &&
+  (PUBLISHABLE_KEY as string) !== "sb_publishable_blog_replace_me" &&
   PUBLISHABLE_KEY.length > 20;
 
 const real = blogDbReady

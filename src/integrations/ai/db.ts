@@ -14,10 +14,10 @@ import { supabase as primary } from "@/integrations/supabase/client";
 
 const URL = "https://larncwugkdclkhayfjle.supabase.co";
 // Anon publishable key for the AI/API project. Replace once provisioned.
-const PUBLISHABLE_KEY = "sb_publishable_ai_replace_me";
+const PUBLISHABLE_KEY: string = "sb_publishable_ai_replace_me";
 
 const CONFIGURED =
-  PUBLISHABLE_KEY !== "sb_publishable_ai_replace_me" &&
+  (PUBLISHABLE_KEY as string) !== "sb_publishable_ai_replace_me" &&
   PUBLISHABLE_KEY.length > 20;
 
 const realClient = CONFIGURED
