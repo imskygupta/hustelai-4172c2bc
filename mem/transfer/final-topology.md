@@ -1,5 +1,11 @@
 # Phase 7 — Final DB Topology (locked)
 
+**Status (Phase 7G LOCK):** Architecture frozen. New tables MUST be created
+on the correct sibling DB. Adding tables back to the primary auth/billing
+kernel is forbidden without a migration RFC. The `src/integrations/supabase/
+primary-guard.ts` and edge `_shared/clients.ts` wrapPrimary() guards block
+regressions automatically and log them to `admin.runtime_direct_write_violations`.
+
 | Role | Ref | Secret prefix | Getter (edge) | Frontend client |
 |---|---|---|---|---|
 | Primary (auth+billing ONLY) | vbnqaovxatucrgtnggea | SUPABASE_* | getPrimary / getPrimaryService | @/integrations/supabase/client |
@@ -22,6 +28,10 @@
 - safeAsyncInsert / safeAnalyticsInsert MUST NOT fall back to primary. They no-op if API_PLATFORM_* missing.
 - Frontend never writes directly to analytics/async/admin DBs. All writes go through edge functions.
 - Cross-DB joins are forbidden. Parallel queries + in-code merge only.
+- New `PRIMARY_FORBIDDEN_TABLES` registry in
+  `src/integrations/supabase/primary-guard.ts` (mirrored in
+  `supabase/functions/_shared/clients.ts`). Adding a table here automatically
+  blocks every direct primary call site at runtime — frontend and edge.
 
 ## Phase 7C — Blogs DB (ynvfxxmhowlvhtqiigfc)
 Bootstrap: `scripts/blogs-db-bootstrap.sql` (idempotent). Tables: side_hustles,
@@ -45,6 +55,42 @@ Frontend: `realtimeDb` (preferred) or `communityDb` (alias).
 Primary owns ONLY: auth, profiles, subscriptions, payments, wallets,
 billing identity, tier limits, auth-adjacent verification flows
 (email_verifications, OTPs). Everything else extracted per the table above.
+
+## Phase 7F — Primary Detox (LANDED)
+- Client guard: `installPrimaryGuard()` wired in `src/main.tsx`. Throws on
+  `supabase.from(<extracted>)` and on realtime subscriptions to extracted
+  tables. Sends violation beacons to `runtime-violation-log` edge fn.
+- Edge guard: `wrapPrimary()` in `supabase/functions/_shared/clients.ts`
+  wraps `getPrimary` + `getPrimaryService`. Throws and writes to Admin DB.
+- New edge fn: `supabase/functions/runtime-violation-log/index.ts` (public,
+  service-role into Admin DB).
+- New Admin DB table: `runtime_direct_write_violations` — bootstrap with
+  `scripts/admin-db-violation-log.sql`.
+- Primary detox SQL: `scripts/primary-detox.sql` — step 1 drops extracted
+  tables from `supabase_realtime` publication (safe). Step 2 (DROP TABLE)
+  stays commented until 24h zero-violation soak.
+
+## Phase 7G — Final Topology Lock
+| DB | Ref | Owns |
+|---|---|---|
+| PRIMARY | vbnqaovxatucrgtnggea | auth, profiles, subscriptions, wallets, billing, payments, tier_limits, email_verifications, notification_events |
+| ADMIN | rqqiujmiagauzohdqjmi | admin, infra, telemetry, extraction, runtime health, docs/operator handbook, provider health, alerts, topology, runtime_direct_write_violations |
+| BLOGS | ynvfxxmhowlvhtqiigfc | blogs, seo, newsletters, campaigns, marketing catalog, side_hustles, hustle_votes, email_templates, email_logs |
+| API/AI | larncwugkdclkhayfjle | AI jobs, AI chat memory (chat_messages + context/session), async queues, workflows, retries, automation runtime |
+| REALTIME | qeswhaytgvosfzzgraef | websocket presence, live events, fanout queues, realtime collaboration, social/live systems (forums/chat/votes/discord) |
+| WORKSPACE | utflzmecghdtcjupgdan | workspaces, projects, uploads, CRM, intake, freelancer ops |
+| OWNED | wguuipsikboqqinqeehv | operational telemetry mirror |
+
+No more `TBD-*` placeholders. No more "Docs DB". No more "Analytics/Async DB"
+as separate refs. The retired-placeholder list above is the canonical source.
+
+## Phase 7H — Final Residual Audit
+- Audit script: `scripts/phase7h-final-audit.sql` (run on PRIMARY).
+- Drilldowns: `scripts/phase7-final-heatmap.sql`.
+- Violation drilldown (run on ADMIN): query
+  `runtime_direct_write_violations` grouped by `table_name` over last 24h.
+- After 24h zero-violation soak: uncomment STEP 2 of `primary-detox.sql`
+  and execute to drop the extracted tables from primary permanently.
 
 ## Phase 7C.3 / 7D.3 / 7A.3 — Hard-fail cutover complete
 - `aiDb` (frontend) + `getApi()` (edge) own chat_messages and AI memory tables.
