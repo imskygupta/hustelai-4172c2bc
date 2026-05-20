@@ -213,11 +213,39 @@ Deno.serve(async (req) => {
       };
     });
 
+    // Cost stabilization: only UPDATE when something materially changed.
+    // Skip pure timestamp/latency-jitter writes to kill WAL + realtime churn
+    // on this 5-row table (previously ~31k UPDATEs / 72h).
+    const latencyBucket = (ms: number) => {
+      if (ms <= 0) return 0;
+      if (ms < 250) return 1;
+      if (ms < 500) return 2;
+      if (ms < 1000) return 3;
+      if (ms < 2500) return 4;
+      if (ms < 5000) return 5;
+      return 6;
+    };
+    let written = 0;
+    let skipped = 0;
     for (const u of updates) {
+      const prev: any = byProvider.get(u.provider) ?? null;
+      const materiallyChanged =
+        !prev ||
+        prev.status !== u.status ||
+        latencyBucket(prev.latency_ms ?? 0) !== latencyBucket(u.latency_ms) ||
+        (prev.consecutive_failures ?? 0) !== u.consecutive_failures ||
+        (prev.consecutive_successes === 0) !== (u.consecutive_successes === 0) ||
+        (prev.disabled_until ?? null) !== (u.disabled_until ?? null) ||
+        Math.abs((prev.success_rate ?? 0) - u.success_rate) >= 1; // >=1% delta
+      if (!materiallyChanged) {
+        skipped++;
+        continue;
+      }
       await supabase.from("api_provider_health").upsert(u, { onConflict: "provider" });
+      written++;
     }
 
-    return new Response(JSON.stringify({ ok: true, results: updates }), {
+    return new Response(JSON.stringify({ ok: true, written, skipped, results: updates }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e: any) {

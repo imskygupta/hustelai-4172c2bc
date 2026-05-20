@@ -5,7 +5,9 @@ import { claim, complete, fail, heartbeat, type Queue } from "./queue.js";
 import { getHandler } from "./handlers.js";
 
 const HEARTBEAT_MS = 20_000;
-const IDLE_MS = 2_000;
+// Cost stabilization: empty-queue backoff 2s -> 10s. SKIP LOCKED + lease
+// fencing + queue semantics unchanged; only idle poll cadence relaxed.
+const IDLE_MS = 10_000;
 const ERROR_MS = 5_000;
 
 export function startPoller(queue: Queue, workerId: string, signal: AbortSignal) {
