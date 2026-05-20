@@ -6,34 +6,12 @@
 //
 // Deploy: lovable automatically — verify_jwt defaults to false.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.74.0";
-import { getAdmin, getPrimary } from "../_shared/clients.ts";
+import { getAdmin } from "../_shared/clients.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
-
-const FORBIDDEN_TABLES = [
-  "chat_messages","ai_conversation_memory","ai_context_windows","ai_session_state",
-  "side_hustles","hustle_votes",
-  "newsletter_subscribers","newsletter_issues","newsletter_sends",
-  "newsletter_schedules","newsletter_capture_dismissals",
-  "email_logs","email_templates",
-  "blog_posts","blog_events","blog_categories",
-  "seo_pages","seo_topics","seo_authors","seo_blog_posts","seo_redirects",
-  "api_provider_health","admin_alerts","runtime_extraction_streams",
-  "runtime_metrics","db_extraction_scores","db_heatmap_snapshots",
-  "intelligence_alerts","runtime_projections","docs_pages",
-  "forum_posts","forum_replies","forum_votes","community_groups","discord_links",
-  "realtime_events","websocket_presence","live_sessions",
-  "collaboration_state","event_fanout_queue",
-];
-
-const PRIMARY_ALLOWED = new Set([
-  "profiles","subscriptions","payments","wallets","dodo_subscriptions",
-  "dodo_webhook_events","tier_limits","email_verifications",
-  "notification_events","user_roles","schema_migrations",
-]);
 
 type Finding = { kind: string; detail: string; severity: "info"|"warning"|"critical" };
 
@@ -41,25 +19,11 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   const findings: Finding[] = [];
   try {
-    const primary = getPrimary();
     const admin = getAdmin();
 
-    // 1. Forbidden tables on primary
-    const { data: tables } = await primary
-      .from("pg_tables" as any)
-      .select("tablename")
-      .eq("schemaname", "public");
-    const present = new Set((tables ?? []).map((t: any) => t.tablename));
-    for (const t of FORBIDDEN_TABLES) {
-      if (present.has(t)) findings.push({ kind: "forbidden_table_resurrection", detail: t, severity: "critical" });
-    }
-    for (const t of present) {
-      if (!PRIMARY_ALLOWED.has(t as string) && !FORBIDDEN_TABLES.includes(t as string)) {
-        findings.push({ kind: "unmapped_primary_table", detail: t as string, severity: "warning" });
-      }
-    }
-
-    // 2. Recent direct-write violations (rolling 24h)
+    // 1. Recent direct-write violations (rolling 24h) — runtime signal.
+    //    (Schema-level checks live in scripts/phase9-drift-detector.sql,
+    //    triggered separately via pg_cron on the Primary DB.)
     const since = new Date(Date.now() - 86_400_000).toISOString();
     const { count: vio } = await admin
       .from("runtime_direct_write_violations")
@@ -69,7 +33,7 @@ Deno.serve(async (req) => {
       findings.push({ kind: "direct_write_violations_24h", detail: String(vio), severity: "critical" });
     }
 
-    // 3. Persist findings
+    // 2. Persist findings
     const stamped = findings.map((f) => ({ ...f, scanned_at: new Date().toISOString() }));
     if (stamped.length) {
       await admin.from("platform_drift_findings").insert(stamped);
