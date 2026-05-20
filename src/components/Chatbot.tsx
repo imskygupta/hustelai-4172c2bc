@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { X, Send, Loader2, Bot } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
+import { aiDb } from "@/integrations/ai/db";
 import { useAuth } from "@/hooks/useAuth";
 import ReactMarkdown from "react-markdown";
 
@@ -57,7 +58,7 @@ export function Chatbot() {
   ];
 
   const loadExistingMessages = async () => {
-    const { data } = await supabase
+    const { data } = await aiDb
       .from("chat_messages")
       .select("*")
       .eq("user_id", user!.id)
