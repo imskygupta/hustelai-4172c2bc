@@ -394,6 +394,7 @@ export default function Infrastructure() {
           <TabsContent value="stability"><StabilityScorePanel /></TabsContent>
           <TabsContent value="noc"><ProductionIncidentsPanel /></TabsContent>
           <TabsContent value="wave1"><RuntimeExtractionPanel /></TabsContent>
+          <TabsContent value="detox"><PrimaryDetoxStatusPanel /></TabsContent>
         </Tabs>
       </div>
     </div>
