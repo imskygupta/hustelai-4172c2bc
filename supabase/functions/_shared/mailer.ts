@@ -5,12 +5,13 @@ import { safeAnalyticsInsert, getBlogs } from "./clients.ts";
 // Phase 7C.2: email_logs primary owner is the Blogs DB. Falls back to the
 // caller's client during the staged cutover. Sends MUST NOT fail because
 // logging failed — every path swallows errors.
-async function logEmail(sb: ReturnType<typeof createClient>, row: Record<string, unknown>) {
+async function logEmail(_sb: ReturnType<typeof createClient>, row: Record<string, unknown>) {
+  // Phase 7C.3: email_logs lives on Blogs DB only. No primary fallback.
   try {
     const blogs = getBlogs();
     await blogs.from("email_logs").insert(row as any);
-  } catch (_) {
-    try { await sb.from("email_logs").insert(row as any); } catch (_) {}
+  } catch (e) {
+    console.warn("email_logs blogs insert failed (dropped, no fallback):", (e as Error).message);
   }
   void safeAnalyticsInsert("email_logs", { ...row, source: "mailer" });
 }
@@ -65,12 +66,9 @@ export async function sendTemplated(opts: {
   providerOverride?: "brevo" | "mailersend" | "auto";
 }) {
   const sb = createClient(SUPABASE_URL, SERVICE_KEY);
-  // Phase 7C.2: email_templates lives on the Blogs DB. Fall back to primary
-  // only if Blogs DB secrets are not yet provisioned.
-  let blogs: ReturnType<typeof createClient> | null = null;
-  try { blogs = getBlogs() as any; } catch { blogs = null; }
-  const tplSrc = blogs ?? sb;
-  const { data: tpl } = await tplSrc.from("email_templates").select("*").eq("slug", opts.templateSlug).eq("is_active", true).maybeSingle();
+  // Phase 7C.3: email_templates lives on Blogs DB. HARD FAIL — no fallback.
+  const blogs = getBlogs();
+  const { data: tpl } = await blogs.from("email_templates").select("*").eq("slug", opts.templateSlug).eq("is_active", true).maybeSingle();
   if (!tpl) throw new Error(`template_not_found:${opts.templateSlug}`);
   // mailing_provider_config stays on primary (admin-owned config table).
   const { data: cfg } = await sb.from("mailing_provider_config").select("*").eq("id", 1).maybeSingle();
