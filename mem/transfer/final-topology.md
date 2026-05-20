@@ -7,7 +7,7 @@
 | AI/Async/Queues/Analytics | larncwugkdclkhayfjle | API_PLATFORM_SUPABASE_* | getApi / getAsync / getAnalytics | none (edge-only) |
 | Blogs/CMS/SEO/Newsletter | ynvfxxmhowlvhtqiigfc | BLOG_SUPABASE_* (URL+SERVICE) | getBlogs | @/integrations/blog/client |
 | Workspace/ClientOps/Intake | utflzmecghdtcjupgdan | WORKSPACE_SUPABASE_* | getWorkspace | @/integrations/workspace/client |
-| Community (forums/chat/votes) | qeswhaytgvosfzzgraef | COMMUNITY_SUPABASE_* | getCommunity | @/integrations/community/client |
+| Realtime / Event Fabric (forums/chat/votes + fanout/presence/collab) | qeswhaytgvosfzzgraef | REALTIME_SUPABASE_* (or legacy COMMUNITY_SUPABASE_*) | getRealtime / getCommunity (alias) | @/integrations/community/client (`realtimeDb`, `communityDb` alias) |
 | Owned Ops mirror (telemetry) | wguuipsikboqqinqeehv | OWNED_SUPABASE_* | getOwned | none |
 
 ## Retired placeholders (do NOT recreate)
@@ -21,3 +21,26 @@
 - safeAsyncInsert / safeAnalyticsInsert MUST NOT fall back to primary. They no-op if API_PLATFORM_* missing.
 - Frontend never writes directly to analytics/async/admin DBs. All writes go through edge functions.
 - Cross-DB joins are forbidden. Parallel queries + in-code merge only.
+
+## Phase 7C — Blogs DB (ynvfxxmhowlvhtqiigfc)
+Bootstrap: `scripts/blogs-db-bootstrap.sql` (idempotent). Tables: side_hustles,
+seo_pages, seo_topics, seo_redirects, blog_categories, newsletter_subscribers,
+email_templates, email_logs, editorial_queue, campaign_events.
+Backfill template: `scripts/backfill-primary-to-blogs.sql`.
+Frontend reads: `blogDb` (`src/integrations/blog/db.ts`) for public catalog +
+SEO; admin/write paths continue via `blogApi` edge proxies.
+Keep on primary: email_verifications, auth/billing email flows ONLY.
+
+## Phase 7D — Realtime / Event Fabric DB (qeswhaytgvosfzzgraef)
+Repurposed from "Community". Bootstrap: `scripts/realtime-fabric-db-bootstrap.sql`.
+New tables: realtime_events, websocket_presence, live_sessions,
+collaboration_state, event_fanout_queue (+ janitor function).
+Existing forum/chat/votes/discord-link tables STAY here — they are realtime
+social workloads. No AI queues, no admin telemetry, no billing here.
+Edge: `getRealtime()` (preferred) or `getCommunity()` (alias).
+Frontend: `realtimeDb` (preferred) or `communityDb` (alias).
+
+## Phase 7E — Target steady state for primary
+Primary owns ONLY: auth, profiles, subscriptions, payments, wallets,
+billing identity, tier limits, auth-adjacent verification flows
+(email_verifications, OTPs). Everything else extracted per the table above.
