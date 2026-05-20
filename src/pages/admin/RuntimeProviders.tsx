@@ -72,14 +72,10 @@ export default function RuntimeProviders() {
     setBusy(p.provider);
     try {
       const next = !p.manually_disabled;
-      const { error } = await (supabase as any)
-        .from("api_provider_health")
-        .update({
-          manually_disabled: next,
-          status: next ? "disabled" : "unknown",
-          disabled_until: next ? null : null,
-        })
-        .eq("provider", p.provider);
+      // Phase 7A: routed through edge function → Admin DB. No primary write.
+      const { error } = await supabase.functions.invoke("provider-health-toggle", {
+        body: { provider: p.provider, disabled: next },
+      });
       if (error) throw error;
       toast({ title: `${p.provider}: ${next ? "Disabled" : "Re-enabled"}` });
       await refresh();
