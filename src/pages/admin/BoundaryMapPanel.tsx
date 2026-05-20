@@ -12,6 +12,7 @@ import {
   tablesByAuthority,
   type DbAuthority,
 } from "@/lib/topology/authority-map";
+import { failOpen, INFRA_SAFE_MODE, retryWithTimeout } from "@/lib/async/timeout";
 
 const DB_TONE: Record<DbAuthority, string> = {
   primary: "destructive",
@@ -28,10 +29,18 @@ export function BoundaryMapPanel() {
   const [violations, setViolations] = useState<{ table: string; count: number }[]>([]);
 
   useEffect(() => {
+    if (INFRA_SAFE_MODE) return;
     let cancelled = false;
     (async () => {
       try {
-        const { data } = await supabase.functions.invoke("primary-detox-stats", { method: "GET" });
+        const { data } = await failOpen(
+          () => retryWithTimeout(
+            () => supabase.functions.invoke("primary-detox-stats", { method: "GET" }),
+            "infra.boundaryMapViolations",
+          ),
+          { data: { by_table: [] } } as any,
+          "infra.boundaryMapViolations",
+        );
         if (cancelled) return;
         const rows = (data as any)?.by_table ?? [];
         setViolations(rows.map((r: any) => ({ table: r.table, count: r.count })));
@@ -81,7 +90,7 @@ export function BoundaryMapPanel() {
           <div>
             <h3 className="font-semibold">Router Mismatch · last 24h</h3>
             <p className="text-xs text-muted-foreground">
-              Forbidden-cross-DB writes attempted against the primary kernel.
+              {INFRA_SAFE_MODE ? "Infra safe mode enabled; live polling paused." : "Forbidden-cross-DB writes attempted against the primary kernel."}
             </p>
           </div>
           <Badge variant={violations.length === 0 ? "default" : "destructive"}>
