@@ -20,6 +20,7 @@ import { ProductionIncidentsPanel } from "./ProductionStabilityPanels";
 import { RuntimeExtractionPanel } from "./RuntimeExtractionPanel";
 import { PrimaryDetoxStatusPanel } from "./PrimaryDetoxStatus";
 import { BoundaryMapPanel } from "./BoundaryMapPanel";
+import { PlatformHardeningPanel } from "./PlatformHardeningPanel";
 
 type Project = {
   id: string; name: string; purpose: string; environment: string; project_ref: string; project_url: string | null;
@@ -201,6 +202,7 @@ export default function Infrastructure() {
             <TabsTrigger value="wave1"><Waves className="h-4 w-4 mr-1" />Runtime Extraction</TabsTrigger>
             <TabsTrigger value="detox"><Shield className="h-4 w-4 mr-1" />Primary Detox</TabsTrigger>
             <TabsTrigger value="boundary"><Lock className="h-4 w-4 mr-1" />Boundary Map</TabsTrigger>
+            <TabsTrigger value="hardening"><Sparkles className="h-4 w-4 mr-1" />Phase 9 Hardening</TabsTrigger>
           </TabsList>
 
           <TabsContent value="registry">
@@ -398,6 +400,7 @@ export default function Infrastructure() {
           <TabsContent value="wave1"><RuntimeExtractionPanel /></TabsContent>
           <TabsContent value="detox"><PrimaryDetoxStatusPanel /></TabsContent>
           <TabsContent value="boundary"><BoundaryMapPanel /></TabsContent>
+          <TabsContent value="hardening"><PlatformHardeningPanel /></TabsContent>
         </Tabs>
       </div>
     </div>
