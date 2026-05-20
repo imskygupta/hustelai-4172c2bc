@@ -34,20 +34,33 @@ if (real) {
   console.warn("Blogs DB unavailable: missing publishable key");
 }
 
+function emptyQueryStub() {
+  const empty = { data: [], count: 0, error: null };
+  const callable = () => proxy;
+  const proxy: any = new Proxy(callable, {
+    get(_target, prop) {
+      if (prop === "then") {
+        return (resolve: any, reject: any) => {
+          console.warn("Blogs DB query skipped: publishable key missing");
+          return Promise.resolve(empty).then(resolve, reject);
+        };
+      }
+      if (prop === "catch") return Promise.resolve(empty).catch.bind(Promise.resolve(empty));
+      if (prop === "finally") return Promise.resolve(empty).finally.bind(Promise.resolve(empty));
+      return proxy;
+    },
+    apply() { return proxy; },
+  });
+  return proxy;
+}
+
 // Fail-open facade — no silent primary fallback, but also no boot deadlocks.
 export const blogDb: any = real ?? new Proxy(
   {},
   {
     get(_t, prop) {
       if (prop === "from" || prop === "rpc" || prop === "channel") {
-        return (..._args: any[]) => {
-          const stub: any = new Proxy({}, { get: () => stub });
-          stub.then = (resolve: any) => {
-            console.warn("Blogs DB query skipped: publishable key missing");
-            return Promise.resolve({ data: [], count: 0, error: null }).then(resolve);
-          };
-          return stub;
-        };
+        return () => emptyQueryStub();
       }
       return () => {
         console.warn("Blogs DB operation skipped: publishable key missing");
