@@ -19,6 +19,7 @@ import { TopologyGraphPanel, BlastRadiusPanel, FailureSimulationPanel, CouplingF
 import { ProductionIncidentsPanel } from "./ProductionStabilityPanels";
 import { RuntimeExtractionPanel } from "./RuntimeExtractionPanel";
 import { PrimaryDetoxStatusPanel } from "./PrimaryDetoxStatus";
+import { BoundaryMapPanel } from "./BoundaryMapPanel";
 
 type Project = {
   id: string; name: string; purpose: string; environment: string; project_ref: string; project_url: string | null;
@@ -199,6 +200,7 @@ export default function Infrastructure() {
             <TabsTrigger value="noc"><AlertOctagon className="h-4 w-4 mr-1" />Production NOC</TabsTrigger>
             <TabsTrigger value="wave1"><Waves className="h-4 w-4 mr-1" />Runtime Extraction</TabsTrigger>
             <TabsTrigger value="detox"><Shield className="h-4 w-4 mr-1" />Primary Detox</TabsTrigger>
+            <TabsTrigger value="boundary"><Lock className="h-4 w-4 mr-1" />Boundary Map</TabsTrigger>
           </TabsList>
 
           <TabsContent value="registry">
@@ -395,6 +397,7 @@ export default function Infrastructure() {
           <TabsContent value="noc"><ProductionIncidentsPanel /></TabsContent>
           <TabsContent value="wave1"><RuntimeExtractionPanel /></TabsContent>
           <TabsContent value="detox"><PrimaryDetoxStatusPanel /></TabsContent>
+          <TabsContent value="boundary"><BoundaryMapPanel /></TabsContent>
         </Tabs>
       </div>
     </div>
