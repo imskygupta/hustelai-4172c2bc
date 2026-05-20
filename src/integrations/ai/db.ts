@@ -30,6 +30,12 @@ const realClient = CONFIGURED
     })
   : null;
 
+if (realClient) {
+  console.info("API DB connected");
+} else {
+  console.warn("API DB unavailable: missing AI/API publishable key");
+}
+
 // Inject the current primary session JWT into AI DB requests so RLS works.
 async function withAuth<T>(fn: (sb: NonNullable<typeof realClient>) => Promise<T>): Promise<T> {
   if (!realClient) {
@@ -76,7 +82,12 @@ export const aiDb = {
   },
   channel(name: string) {
     if (!realClient) {
-      throw new Error("AI/API DB not configured — realtime channel unavailable.");
+      console.warn(`API DB realtime disabled for ${name}: missing publishable key`);
+      return {
+        on() { return this; },
+        subscribe() { return this; },
+        unsubscribe() { return Promise.resolve("ok"); },
+      } as any;
     }
     return realClient.channel(name);
   },
