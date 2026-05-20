@@ -1,13 +1,17 @@
 // Unified mailer: Brevo (default) + MailerSend (fallback). Renders DB templates.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { safeAnalyticsInsert } from "./clients.ts";
+import { safeAnalyticsInsert, getBlogs } from "./clients.ts";
 
-// Fire-and-forget dual write: keep primary email_logs (admin UI reads it)
-// while also mirroring to ANALYTICS so the table can be cut over later
-// without redeploying the mailer. Both paths swallow errors — sends MUST NOT
-// fail because logging failed.
+// Phase 7C.2: email_logs primary owner is the Blogs DB. Falls back to the
+// caller's client during the staged cutover. Sends MUST NOT fail because
+// logging failed — every path swallows errors.
 async function logEmail(sb: ReturnType<typeof createClient>, row: Record<string, unknown>) {
-  try { await sb.from("email_logs").insert(row as any); } catch (_) {}
+  try {
+    const blogs = getBlogs();
+    await blogs.from("email_logs").insert(row as any);
+  } catch (_) {
+    try { await sb.from("email_logs").insert(row as any); } catch (_) {}
+  }
   void safeAnalyticsInsert("email_logs", { ...row, source: "mailer" });
 }
 
