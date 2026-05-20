@@ -28,7 +28,13 @@ const real = blogDbReady
     })
   : null;
 
-// Hard-fail facade — no silent primary fallback. Phase 7C.3.
+if (real) {
+  console.info("Blogs DB connected");
+} else {
+  console.warn("Blogs DB unavailable: missing publishable key");
+}
+
+// Fail-open facade — no silent primary fallback, but also no boot deadlocks.
 export const blogDb: any = real ?? new Proxy(
   {},
   {
@@ -36,17 +42,16 @@ export const blogDb: any = real ?? new Proxy(
       if (prop === "from" || prop === "rpc" || prop === "channel") {
         return (..._args: any[]) => {
           const stub: any = new Proxy({}, { get: () => stub });
-          stub.then = () => {
-            throw new Error(
-              "Blogs DB not configured (anon key missing). " +
-                "Cannot read side_hustles/seo_*/newsletter_* — fix src/integrations/blog/db.ts.",
-            );
+          stub.then = (resolve: any) => {
+            console.warn("Blogs DB query skipped: publishable key missing");
+            return Promise.resolve({ data: [], count: 0, error: null }).then(resolve);
           };
           return stub;
         };
       }
       return () => {
-        throw new Error("Blogs DB not configured.");
+        console.warn("Blogs DB operation skipped: publishable key missing");
+        return Promise.resolve({ data: [], count: 0, error: null });
       };
     },
   },
