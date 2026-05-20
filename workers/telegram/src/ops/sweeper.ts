@@ -27,7 +27,8 @@ export function startSweeper(workerId: string, queues: string[], signal: AbortSi
       } catch (e) {
         console.error("[sweeper]", (e as Error).message);
       }
-      await wait(15_000, signal);
+      // Cost stabilization: sweeper 15s -> 60s (idle churn reduction).
+      await wait(60_000, signal);
     }
   };
   void loop();
@@ -43,7 +44,8 @@ export function startHeartbeat(workerId: string, queues: string[], signal: Abort
       } catch (e) {
         console.error("[heartbeat]", (e as Error).message);
       }
-      await wait(30_000, signal);
+      // Cost stabilization: heartbeat 30s -> 90s.
+      await wait(90_000, signal);
     }
   };
   void loop();
