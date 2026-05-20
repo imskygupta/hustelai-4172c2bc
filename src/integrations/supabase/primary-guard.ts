@@ -119,6 +119,17 @@ function reportViolation(table: string) {
   }
 }
 
+function wrapForbiddenExecution(target: any, fail: () => never): any {
+  return new Proxy(target, {
+    get(innerTarget, prop, receiver) {
+      if (prop === "then" || prop === "catch" || prop === "finally" || prop === "subscribe") fail();
+      const value = Reflect.get(innerTarget, prop, receiver);
+      if (typeof value !== "function") return value;
+      return (...args: any[]) => wrapForbiddenExecution(value.apply(innerTarget, args), fail);
+    },
+  });
+}
+
 export function installPrimaryGuard() {
   const sb = supabase as any;
   if (sb.__primaryGuardInstalled) return;
@@ -143,25 +154,7 @@ export function installPrimaryGuard() {
           `See src/integrations/supabase/primary-guard.ts.`,
       );
     };
-    return new Proxy(query as any, {
-      get(target, prop, receiver) {
-        if (prop === "then" || prop === "catch" || prop === "finally") fail();
-        const value = Reflect.get(target, prop, receiver);
-        if (typeof value !== "function") return value;
-        return (...args: any[]) => {
-          const result = value.apply(target, args);
-          if (["select", "insert", "upsert", "update", "delete"].includes(String(prop))) {
-            return new Proxy(result as any, {
-              get(nextTarget, nextProp, nextReceiver) {
-                if (nextProp === "then" || nextProp === "catch" || nextProp === "finally") fail();
-                return Reflect.get(nextTarget, nextProp, nextReceiver);
-              },
-            });
-          }
-          return result;
-        };
-      },
-    });
+    return wrapForbiddenExecution(query, fail);
   };
 
   // Block legacy realtime subscriptions on migrated tables too.
@@ -172,11 +165,14 @@ export function installPrimaryGuard() {
     ch.on = (event: string, filter: any, cb: any) => {
       const t = filter?.table;
       if (typeof t === "string" && PRIMARY_FORBIDDEN_TABLES.has(t)) {
-        reportViolation(`realtime:${t}`);
-        throw new Error(
-          `[primary-guard] Realtime subscription on extracted table "${t}" ` +
-            `is forbidden on primary. Use the correct sibling DB client.`,
-        );
+        const originalSubscribe = ch.subscribe.bind(ch);
+        ch.subscribe = (...args: any[]) => {
+          reportViolation(`realtime:${t}`);
+          throw new Error(
+            `[primary-guard] Realtime subscription on extracted table "${t}" ` +
+              `is forbidden on primary. Use the correct sibling DB client.`,
+          );
+        };
       }
       return originalOn(event, filter, cb);
     };
