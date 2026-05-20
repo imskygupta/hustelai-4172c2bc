@@ -1,4 +1,4 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { getAdmin } from "../_shared/clients.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -160,10 +160,15 @@ function classify(consecFailures: number, latency: number, ok: boolean) {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
-  const supabase = createClient(
-    Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-  );
+  // Phase 7A: writes go to Admin DB (rqqiujmiagauzohdqjmi). Zero primary WAL.
+  let supabase;
+  try {
+    supabase = getAdmin();
+  } catch (e: any) {
+    return new Response(JSON.stringify({ ok: false, error: `Admin DB not configured: ${e?.message}` }), {
+      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
 
   try {
     const probes = await runProbes();
@@ -246,6 +251,15 @@ Deno.serve(async (req) => {
       }
       await supabase.from("api_provider_health").upsert(u, { onConflict: "provider" });
       written++;
+      // Append-only history (cheap, indexed by provider+time).
+      await supabase.from("provider_health_history").insert({
+        provider: u.provider,
+        status: u.status,
+        latency_ms: u.latency_ms,
+        success_rate: u.success_rate,
+        ok: u.status === "healthy" || u.status === "degraded",
+        error: u.last_error,
+      }).then(() => {}, () => {});
     }
 
     return new Response(JSON.stringify({ ok: true, written, skipped, results: updates }), {

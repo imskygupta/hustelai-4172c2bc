@@ -192,12 +192,18 @@ async function scanOperational(sb: ReturnType<typeof createClient>): Promise<Ano
     });
   }
 
-  // 10. Provider degradation: any provider w/ >=3 consecutive failures
-  const { data: providers } = await sb
-    .from("api_provider_health")
-    .select("provider, consecutive_failures, success_rate, last_error, status")
-    .gte("consecutive_failures", 3);
-  for (const p of (providers || []) as any[]) {
+  // 10. Provider degradation — read from Admin DB (Phase 7A).
+  let providers: any[] = [];
+  try {
+    const { getAdmin } = await import("../_shared/clients.ts");
+    const admin = getAdmin();
+    const { data } = await admin
+      .from("api_provider_health")
+      .select("provider, consecutive_failures, success_rate, last_error, status")
+      .gte("consecutive_failures", 3);
+    providers = data ?? [];
+  } catch { /* Admin DB not ready yet — skip */ }
+  for (const p of providers as any[]) {
     // Skip configuration gaps (missing API keys are not production incidents).
     if ((p.last_error ?? "").toLowerCase() === "no_key") continue;
     found.push({

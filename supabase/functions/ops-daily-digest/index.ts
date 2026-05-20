@@ -2,6 +2,7 @@
 // Aggregates last 24h: signups, paid conversions, exports, AI generations,
 // automation runs, provider mix, failures, feedback count. Idempotent per day.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { getAdmin } from "../_shared/clients.ts";
 import { dispatchToWorker } from "../_shared/notifications/worker.ts";
 
 const corsHeaders = {
@@ -43,11 +44,16 @@ Deno.serve(async (req) => {
       count(sb, "admin_alerts", (q) => q.eq("kind", "client.crash").gte("created_at", since)),
     ]);
 
-    // Provider mix from health table
-    const { data: providers } = await sb
-      .from("api_provider_health")
-      .select("provider, status, success_rate, consecutive_failures")
-      .order("success_rate", { ascending: false });
+    // Provider mix from Admin DB (Phase 7A — was primary).
+    let providers: any[] = [];
+    try {
+      const admin = getAdmin();
+      const { data } = await admin
+        .from("api_provider_health")
+        .select("provider, status, success_rate, consecutive_failures")
+        .order("success_rate", { ascending: false });
+      providers = data ?? [];
+    } catch { /* Admin DB not bootstrapped yet — skip provider line */ }
     const providerLine = (providers || [])
       .slice(0, 4)
       .map((p: any) => `${p.provider}:${Math.round(Number(p.success_rate))}%`)

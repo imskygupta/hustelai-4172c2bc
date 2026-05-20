@@ -55,11 +55,13 @@ async function loadHealth(): Promise<Category[]> {
     countSafe("payments", (q) => q.eq("status", "paid").gte("created_at", since1h)),
     countSafe("payments", (q) => q.in("status", ["failed", "cancelled"]).gte("created_at", since1h)),
     countSafe("ai_jobs", (q) => q.in("status", ["queued", "processing"])),
-    (supabase as any).from("api_provider_health")
-      .select("provider, status, success_rate, consecutive_failures, last_check_at")
-      .order("success_rate", { ascending: true })
-      .limit(20)
-      .then((r: any) => r.data || []),
+    // Phase 7A: provider health on Admin DB, read via cached edge function.
+    supabase.functions.invoke("provider-health-public")
+      .then((r: any) => ((r?.data?.data ?? []) as any[])
+        .slice()
+        .sort((a, b) => (Number(a.success_rate ?? 0)) - (Number(b.success_rate ?? 0)))
+        .slice(0, 20))
+      .catch(() => []),
   ]);
 
   // Auth
