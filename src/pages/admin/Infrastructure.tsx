@@ -21,6 +21,7 @@ import { RuntimeExtractionPanel } from "./RuntimeExtractionPanel";
 import { PrimaryDetoxStatusPanel } from "./PrimaryDetoxStatus";
 import { BoundaryMapPanel } from "./BoundaryMapPanel";
 import { PlatformHardeningPanel } from "./PlatformHardeningPanel";
+import { failOpen, INFRA_SAFE_MODE, retryWithTimeout } from "@/lib/async/timeout";
 
 type Project = {
   id: string; name: string; purpose: string; environment: string; project_ref: string; project_url: string | null;
@@ -65,7 +66,14 @@ export default function Infrastructure() {
     if (loading) return;
     if (!user) { navigate("/imskygupta-admin"); return; }
     (async () => {
-      const { data } = await supabase.from("user_roles").select("role").eq("user_id", user.id);
+      const { data } = await failOpen(
+        () => retryWithTimeout(
+          () => supabase.from("user_roles").select("role").eq("user_id", user.id),
+          "infrastructure.roleCheck",
+        ),
+        { data: [] } as any,
+        "infrastructure.roleCheck",
+      );
       const admin = (data || []).some((r) => r.role === "admin");
       setIsAdmin(admin);
       if (!admin) navigate("/imskygupta-admin");
@@ -75,12 +83,14 @@ export default function Infrastructure() {
   const load = useCallback(async () => {
     setBusy(true); setError(null);
     try {
+      const q = (label: string, run: () => Promise<any> | PromiseLike<any>) =>
+        failOpen(() => retryWithTimeout(run, label), { data: [] } as any, label);
       const [p, d, h, t, r] = await Promise.all([
-        supabase.from("infra_supabase_projects").select("*").order("criticality").order("name"),
-        supabase.from("infra_dependencies").select("*").order("source_type").order("source_name"),
-        supabase.from("infra_runtime_health").select("*").order("sampled_at", { ascending: false }).limit(200),
-        supabase.from("infra_telegram_registry").select("*").order("routing_role"),
-        supabase.from("infra_railway_services").select("*").order("service_name"),
+        q("infrastructure.projects", () => supabase.from("infra_supabase_projects").select("*").order("criticality").order("name")),
+        q("infrastructure.dependencies", () => supabase.from("infra_dependencies").select("*").order("source_type").order("source_name")),
+        q("infrastructure.health", () => supabase.from("infra_runtime_health").select("*").order("sampled_at", { ascending: false }).limit(200)),
+        q("infrastructure.telegram", () => supabase.from("infra_telegram_registry").select("*").order("routing_role")),
+        q("infrastructure.railway", () => supabase.from("infra_railway_services").select("*").order("service_name")),
       ]);
       if (p.error) throw p.error;
       setProjects((p.data as any) || []);
