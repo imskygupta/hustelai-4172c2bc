@@ -287,3 +287,79 @@ fallbacks in mailer/workspace-email/ai-chatbot.
 lovable-managed primary serves only the auth + billing kernel; every other
 operational concern lives on a sibling DB with its own guardrails,
 retention policy, and boundary enforcement.
+
+---
+
+## Phase 9 — Hardening + Operations (FREEZE SNAPSHOT)
+
+Status: **Topology FROZEN.** Extraction program complete. The platform now
+operates as a stable distributed multi-DB AI SaaS. Future work is operations
+(monitoring, backups, scale tuning) — **not** new migrations.
+
+### 9A — Observability consolidation
+- Admin DB is the **permanent operational nerve center**.
+- New tables (see `scripts/admin-db-phase9.sql`):
+  `platform_drift_findings`, `platform_backup_runs`, `platform_health_snapshots`.
+- Single pane: `/admin/infrastructure` → "Phase 9 Hardening" tab
+  (`src/pages/admin/PlatformHardeningPanel.tsx`) renders DB heartbeats,
+  drift findings, and backup status across all 7 owned DBs.
+- Read path: `supabase/functions/platform-hardening-status` (Admin-DB-only).
+
+### 9B — Automated drift detection
+- Hourly cron → `supabase/functions/platform-drift-scan`:
+  - flags forbidden tables resurfacing on PRIMARY
+  - flags unmapped primary tables (drift from authority-map)
+  - counts 24h direct-write violations
+  - heartbeat row every run so panel shows "last scan ok"
+- Critical findings auto-fire `admin-alert` → Telegram.
+- Boundary panel surfaces every finding alongside the authority map.
+- SQL companion: `scripts/phase9-drift-detector.sql` (manual / cron).
+
+### 9C — Backup + Disaster recovery
+- `scripts/phase9-backup-dr.sh`:
+  - daily schema dump per DB (30d retention)
+  - weekly logical full + on-demand `--full` (90d retention)
+  - PRIMARY full kept 365d
+  - sha256 manifest + restore round-trip verification
+- Results recorded into `platform_backup_runs` and shown in the panel.
+
+### 9D — Scale hardening (`scripts/phase9-scale-hardening.sql`)
+- API/AI: `ai_jobs` backoff columns + index, `prune_ai_memory()` archives
+  conversations idle > 60d into `ai_conversation_memory_archive`.
+- Realtime Fabric: `realtime_janitor()` (10-min cron) prunes
+  `websocket_presence` > 15m, `realtime_events` > 24h,
+  `live_sessions` > 7d, delivered `event_fanout_queue` > 1d.
+- Blogs: `seo_page_cache` materialization table + composite newsletter
+  fanout index.
+- Workspace: `archived_at` column + `archive_idle_projects()` (>180d),
+  `workspace_asset_lifecycle` for storage TTL.
+
+### 9E — Security hardening (`scripts/phase9-security-audit.sql`)
+- Per-DB audit: RLS-disabled tables, `USING true` policies, anon writes,
+  public buckets, storage policy coverage, secret rotation overdue (>180d).
+- Rotate quarterly: service-role keys, Railway secrets, deprecated env vars.
+
+### 9F — Monolith detection system
+- Build-time: `scripts/ci-assert-no-primary-violations.ts` (already wired).
+- Schema-time: `scripts/primary-kernel-allowlist.sql` event trigger rejects
+  any `CREATE TABLE` outside the auth/billing allowlist on PRIMARY.
+- Runtime: `primary-guard.ts` (frontend) + `wrapPrimary()` (edge) throw on
+  any direct primary write to an extracted table.
+- Telemetry: `platform-drift-scan` → `admin_alerts` → Telegram + panel.
+
+### 9G — Platform freeze snapshot
+| Concern | Status |
+|---|---|
+| Extraction program | **COMPLETE** |
+| Primary detox | **COMPLETE** (auth + billing kernel only) |
+| Topology stabilized | **YES** (locked & enforced) |
+| Dead systems removed | **YES** (8F purge + 9D pruning) |
+| Owned infra authoritative | **YES** (6 sibling DBs + telemetry mirror) |
+| Drift detection | **LIVE** (hourly cron + admin panel) |
+| Backup + DR | **LIVE** (`phase9-backup-dr.sh` + admin panel) |
+| Monolith regression guards | **ACTIVE** (CI + event trigger + runtime) |
+
+Hustlai is no longer "a Lovable app using extra DBs". It is a
+**distributed multi-database AI SaaS platform** with the lovable-owned
+primary reduced to an identity/billing kernel only. All further platform
+work is operational — observe, back up, tune, secure — **not** structural.
