@@ -471,16 +471,12 @@ export default function AdminDashboard() {
     const { data: aiData } = await q("admin.aiProviders", () => supabase.from("ai_provider_keys").select("*").order("priority"));
     if (aiData) setAiProviders(aiData);
     // Load bonus kits, social links, payment logs
-    const { data: bonusData } = await supabase.from("bonus_kits" as any).select("*").order("created_at", { ascending: false });
+    const { data: bonusData } = await q("admin.bonusKits", () => supabase.from("bonus_kits" as any).select("*").order("created_at", { ascending: false }));
     if (bonusData) setBonusKits(bonusData as any);
-    const { data: socialData } = await supabase.from("social_links" as any).select("*").order("display_order");
+    const { data: socialData } = await q("admin.socialLinks", () => supabase.from("social_links" as any).select("*").order("display_order"));
     if (socialData) setSocialLinks(socialData as any);
     try {
-      const { data: logsData } = await supabase
-        .from("dodo_events")
-        .select("id, event_type, status, user_id, created_at, error")
-        .order("created_at", { ascending: false })
-        .limit(100);
+      const { data: logsData } = await q("admin.dodoEvents", () => supabase.from("dodo_events").select("id, event_type, status, user_id, created_at, error").order("created_at", { ascending: false }).limit(100));
       if (logsData) {
         setPaymentLogs(
           logsData.map((e: any) => ({
