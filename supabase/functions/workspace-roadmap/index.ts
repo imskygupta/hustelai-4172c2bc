@@ -4,6 +4,7 @@
 // Classification JSON. Falls back gracefully to heuristic on AI failure.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { callAIWithFallback } from "../_shared/ai-fallback.ts";
+import { requireVerifiedUser as __requireVerifiedUser } from "../_shared/require-verified.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -27,6 +28,8 @@ const SCHEMA = `Return JSON exactly:
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  const __gate = await __requireVerifiedUser(req, { denialEvent: "verification_blocked_ai", fn: "workspace-roadmap" });
+  if (!__gate.ok) return __gate.response;
   try {
     const auth = req.headers.get("Authorization") || "";
     const userClient = createClient(

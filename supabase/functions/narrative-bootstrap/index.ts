@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { requireVerifiedUser as __requireVerifiedUser } from "../_shared/require-verified.ts";
 
 /**
  * One-shot bootstrap for the Product Narrative Engine.
@@ -128,6 +129,8 @@ create table if not exists public.tool_media (
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
+  const __gate = await __requireVerifiedUser(req, { denialEvent: "verification_blocked_ai", fn: "narrative-bootstrap" });
+  if (!__gate.ok) return __gate.response;
   try {
     const url = new URL(req.url);
     const action = url.searchParams.get("action") ?? "bootstrap";

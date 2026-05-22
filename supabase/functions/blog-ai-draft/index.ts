@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { requireVerifiedUser as __requireVerifiedUser } from "../_shared/require-verified.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -50,6 +51,8 @@ async function callAI(topic: string, angle: string, keyword: string): Promise<an
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
+  const __gate = await __requireVerifiedUser(req, { denialEvent: "verification_blocked_ai", fn: "blog-ai-draft" });
+  if (!__gate.ok) return __gate.response;
   try {
     let topic = "", angle = "", keyword = "", auto = false;
     if (req.method === "POST") {

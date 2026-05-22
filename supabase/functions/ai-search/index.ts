@@ -4,6 +4,7 @@ import { flagGuard } from "../_shared/flags/resolve.ts";
 import { parseJson, z } from "../_shared/validation.ts";
 import { enforceRateLimit } from "../_shared/rate-limit.ts";
 import { recordAnomaly } from "../_shared/anomaly.ts";
+import { requireVerifiedUser as __requireVerifiedUser } from "../_shared/require-verified.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -18,6 +19,8 @@ const Body = z.object({
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  const __gate = await __requireVerifiedUser(req, { denialEvent: "verification_blocked_ai", fn: "ai-search" });
+  if (!__gate.ok) return __gate.response;
 
   try {
     // === AUTH CHECK ===

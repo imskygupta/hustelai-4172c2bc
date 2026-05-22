@@ -1,6 +1,7 @@
 // Workspace AI helper: infers client niche/budget/vibe from a URL or text,
 // and drafts personalized follow-up emails. Uses the shared AI fallback chain.
 import { callAIWithFallback } from "../_shared/ai-fallback.ts";
+import { requireVerifiedUser as __requireVerifiedUser } from "../_shared/require-verified.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -25,6 +26,8 @@ async function fetchSnippet(url: string): Promise<string> {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  const __gate = await __requireVerifiedUser(req, { denialEvent: "verification_blocked_ai", fn: "workspace-ai" });
+  if (!__gate.ok) return __gate.response;
   try {
     const body = await req.json();
     const { action, url, text, client, notes, intent, workspace } = body;

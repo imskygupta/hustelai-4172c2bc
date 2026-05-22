@@ -1,6 +1,7 @@
 // Hustle Templates CRUD on BLOG_DB.
 // Public GET by slug for the live site, admin CRUD for everything else.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { requireVerifiedUser as __requireVerifiedUser } from "../_shared/require-verified.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -79,6 +80,8 @@ where not exists (select 1 from public.hustle_templates limit 1);
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
+  const __gate = await __requireVerifiedUser(req, { denialEvent: "verification_blocked_ai", fn: "hustle-templates" });
+  if (!__gate.ok) return __gate.response;
   try {
     const url = new URL(req.url);
     const action = url.searchParams.get("action") ?? "list";
