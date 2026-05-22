@@ -244,7 +244,7 @@ const AuthorityPage = lazy(() => import("./pages/authority/AuthorityPage"));
 import { MaintenanceBanner } from "./components/flags/FeatureGate";
 import TelegramLanding from "./pages/marketing/TelegramLanding";
 import { Navigate } from "react-router-dom";
-import { assertRestrictedRuntimeBoundary, markFullRuntimeBootStarted, registerRuntimeMount } from "@/lib/runtime/safetyCounters";
+import { markFullRuntimeBootStarted, registerRuntimeMount } from "@/lib/runtime/safetyCounters";
 
 // Legacy `/workspaces/*` → clean cockpit aliases (workspace host only).
 function LegacyProjectRedirect() {
