@@ -341,7 +341,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // Defer so we don't block the listener.
           setTimeout(() => {
             void verifyAuthLinkage(tok).then((res) => {
-              if (!res.ok && res.action === "force_signout") {
+              if (res.ok === false && res.action === "force_signout") {
                 reportAuthAnomaly("auth.provider_collision", { reason: res.reason });
                 void supabase.auth.signOut({ scope: "global" } as any).catch(() => {});
                 broadcastSignout();
