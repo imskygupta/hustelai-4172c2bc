@@ -27,6 +27,16 @@ export default function Login() {
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
 
+  const reasonCode = searchParams.get("reason") || "";
+  const reasonMessage =
+    reasonCode === "provider_collision"
+      ? "We detected a sign-in conflict on this account. Please sign in again to continue securely."
+      : reasonCode === "ownership_migrated"
+        ? "Account ownership was transferred to Google. Please sign in with Google to continue."
+        : reasonCode === "ownership_review_required"
+          ? "This account is under ownership review. Please sign in with the original verified method."
+          : "";
+
   const redirectAfterLogin = async () => {
     const next = searchParams.get("next");
     if (next && next.startsWith("/") && !next.startsWith("//")) {
@@ -131,6 +141,12 @@ export default function Login() {
               Sign in to your AI Operating System for freelancers.
             </p>
           </div>
+
+          {reasonMessage && (
+            <div className="mt-4 text-xs rounded-md border border-amber-500/30 bg-amber-500/10 text-amber-200 px-3 py-2">
+              {reasonMessage}
+            </div>
+          )}
 
           <div className="mt-6 inline-flex w-full rounded-lg bg-muted/50 p-1">
             <button

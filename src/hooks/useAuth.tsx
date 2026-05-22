@@ -10,6 +10,7 @@ import { isWorkspaceHost } from "@/lib/host";
 import { failOpen, retryWithTimeout } from "@/lib/async/timeout";
 import { resolveTrustState, type TrustState } from "@/lib/auth/restriction";
 import { recordAuthListenerEvent } from "@/lib/runtime/safetyCounters";
+import { verifyAuthLinkage } from "@/lib/auth/verifyLinkage";
 
 interface Profile {
   id: string;
@@ -333,6 +334,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         applySession(nextSession, `event:${event}`, { fetchProfile: event !== "TOKEN_REFRESHED" });
         if (hydratedRef.current) setLoading(false);
+
+        // Post-signin identity verification (one-shot per SIGNED_IN).
+        if (event === "SIGNED_IN" && nextSession?.access_token) {
+          const tok = nextSession.access_token;
+          // Defer so we don't block the listener.
+          setTimeout(() => {
+            void verifyAuthLinkage(tok).then((res) => {
+              if (res.ok === false && res.action === "force_signout") {
+                reportAuthAnomaly("auth.provider_collision", { reason: res.reason });
+                void supabase.auth.signOut({ scope: "global" } as any).catch(() => {});
+                broadcastSignout();
+                clearAuthState({ clearStorage: true, clearBridge: true });
+                try {
+                  window.location.replace(`/login?reason=${encodeURIComponent(res.reason || "ownership_review")}`);
+                } catch { /* ignore */ }
+              }
+            }).catch(() => { /* fail-open — never lock user out on network blips */ });
+          }, 0);
+        }
       }
     );
 

@@ -28,7 +28,8 @@ export type AuthAnomalyKind =
   | "auth.workspace_reconnect_loop"
   | "auth.session_mismatch"
   | "auth.invalid_handoff"
-  | "auth.login_loop";
+  | "auth.login_loop"
+  | "auth.provider_collision";
 
 export function reportAuthAnomaly(
   kind: AuthAnomalyKind,
