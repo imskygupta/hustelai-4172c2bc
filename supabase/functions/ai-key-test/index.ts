@@ -1,4 +1,5 @@
 // Quick ping to verify a user-supplied AI key works.
+import { requireVerifiedUser as __requireVerifiedUser } from "../_shared/require-verified.ts";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -23,6 +24,8 @@ function classifyError(status: number, body: string): string {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  const __gate = await __requireVerifiedUser(req, { denialEvent: "verification_blocked_ai", fn: "ai-key-test" });
+  if (!__gate.ok) return __gate.response;
   try {
     const { provider, api_key, model } = await req.json();
     if (!provider || !api_key) {
