@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { flagGuard } from "../_shared/flags/resolve.ts";
 import { getApi } from "../_shared/clients.ts";
+import { requireVerifiedUser as __requireVerifiedUser } from "../_shared/require-verified.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -11,6 +12,8 @@ const corsHeaders = {
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  const __gate = await __requireVerifiedUser(req, { denialEvent: "verification_blocked_ai", fn: "ai-chatbot" });
+  if (!__gate.ok) return __gate.response;
 
   try {
     // === AUTH CHECK ===

@@ -2,6 +2,7 @@
 // Returns STRICT JSON only. BYO key first, platform fallback.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { callAIWithFallback } from "../_shared/ai-fallback.ts";
+import { requireVerifiedUser as __requireVerifiedUser } from "../_shared/require-verified.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -83,6 +84,8 @@ async function callUserKey(provider: string, apiKey: string, model: string | nul
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  const __gate = await __requireVerifiedUser(req, { denialEvent: "verification_blocked_ai", fn: "workspace-doc-ai" });
+  if (!__gate.ok) return __gate.response;
   try {
     const auth = req.headers.get("Authorization") || "";
     const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);

@@ -1,6 +1,7 @@
 // Tool matcher: ranks tool_registry entries against a draft.
 // BLOG_DB only.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { requireVerifiedUser as __requireVerifiedUser } from "../_shared/require-verified.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -49,6 +50,8 @@ function rankTools(tools: any[], draftText: string, focus: string, cluster?: str
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
+  const __gate = await __requireVerifiedUser(req, { denialEvent: "verification_blocked_ai", fn: "tool-matcher" });
+  if (!__gate.ok) return __gate.response;
   try {
     const url = new URL(req.url);
     const action = url.searchParams.get("action") ?? "match";

@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { isFeatureEnabledServer } from "../_shared/flags/resolve.ts";
+import { requireVerifiedUser as __requireVerifiedUser } from "../_shared/require-verified.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -8,6 +9,8 @@ const cors = {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
+  const __gate = await __requireVerifiedUser(req, { denialEvent: "verification_blocked_ai", fn: "ai-job-enqueue" });
+  if (!__gate.ok) return __gate.response;
   try {
     const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
     const auth = req.headers.get("Authorization");
