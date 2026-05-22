@@ -11,6 +11,7 @@ export type RestrictionReason =
   | "suspended"
   | "flagged"
   | "expired"
+  | "security_review"
   | "profile_missing";
 
 export type TrustState = Readonly<{
@@ -30,6 +31,7 @@ export function getRestrictionReason(user: User | null, profile: ProfileLike, pr
   if (!profile) return profileLoading ? null : "profile_missing";
 
   const status = profile.verification_status ?? "pending";
+  if (status === "restricted_security_review") return "security_review";
   if (status !== "verified") {
     if (status === "pending" && profile.verification_deadline && new Date(profile.verification_deadline).getTime() < Date.now()) {
       return "expired";

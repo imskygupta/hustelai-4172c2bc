@@ -117,12 +117,26 @@ async function evaluate(
           user_email: userEmail,
           identity_verified: identVerified,
         });
+        await logEvent(sb, userId, userEmail, "oauth_collision_detected", "critical", {
+          provider: ident.provider,
+        });
         await sb.rpc("revoke_user_sessions", { _user_id: userId });
+        await logEvent(sb, userId, userEmail, "forced_session_revocation", "critical", {
+          provider: ident.provider,
+        });
         try {
           await sb.from("profiles").update({
             restricted_pending_ownership_review: true,
             restricted_reason: "provider_collision",
+            verification_status: "restricted_security_review",
           }).eq("user_id", userId);
+        } catch { /* best effort */ }
+        try {
+          await sb.rpc("enqueue_identity_conflict", {
+            _user_id: userId,
+            _kind: "provider_collision",
+            _evidence: { provider: ident.provider, identity_email: identEmail, user_email: userEmail },
+          });
         } catch { /* best effort */ }
         return json({ ok: false, action: "force_signout", reason: "provider_collision" });
       }
@@ -144,6 +158,8 @@ async function evaluate(
         _user_id: userId,
         _provider: claimant.provider,
       });
+      // Open 24h cooldown on provider/email changes after ownership migration.
+      await sb.rpc("start_ownership_cooldown", { _user_id: userId });
       // Revoke older sessions (Supabase will keep the current one alive via refresh).
       // We accept that the current OAuth session is also revoked — client will re-authenticate.
       await sb.rpc("revoke_user_sessions", { _user_id: userId });

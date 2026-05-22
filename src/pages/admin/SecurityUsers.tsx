@@ -10,7 +10,7 @@ import { toast } from "sonner";
 type Row = {
   user_id: string;
   email: string | null;
-  verification_status: "pending" | "verified" | "suspended" | "flagged";
+  verification_status: "pending" | "verified" | "suspended" | "flagged" | "restricted_security_review";
   verification_deadline: string | null;
   verified_at: string | null;
   restricted_reason: string | null;
@@ -28,11 +28,22 @@ type Event = {
   created_at: string;
 };
 
+type Conflict = {
+  id: string;
+  user_id: string;
+  kind: string;
+  evidence: any;
+  detected_at: string;
+  resolved_at: string | null;
+  resolution: string | null;
+};
+
 const statusColors: Record<Row["verification_status"], string> = {
   verified: "bg-emerald-500/10 text-emerald-600 border-emerald-500/30",
   pending: "bg-amber-500/10 text-amber-600 border-amber-500/30",
   suspended: "bg-destructive/10 text-destructive border-destructive/30",
   flagged: "bg-purple-500/10 text-purple-600 border-purple-500/30",
+  restricted_security_review: "bg-rose-500/10 text-rose-600 border-rose-500/30",
 };
 
 function fmt(ts: string | null) {
@@ -55,6 +66,8 @@ export default function SecurityUsers() {
   const { profile } = useAuth();
   const [rows, setRows] = useState<Row[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
+  const [conflicts, setConflicts] = useState<Conflict[]>([]);
+  const [audit, setAudit] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [working, setWorking] = useState<string | null>(null);
 
@@ -62,13 +75,13 @@ export default function SecurityUsers() {
 
   const load = async () => {
     setLoading(true);
-    const [{ data: p }, { data: e }] = await Promise.all([
+    const [{ data: p }, { data: e }, { data: c }, { data: a }] = await Promise.all([
       supabase
         .from("profiles")
         .select(
           "user_id, email, verification_status, verification_deadline, verified_at, restricted_reason, subscription_tier, created_at",
         )
-        .in("verification_status", ["pending", "suspended", "flagged"])
+        .in("verification_status", ["pending", "suspended", "flagged", "restricted_security_review"])
         .order("created_at", { ascending: false })
         .limit(200),
       supabase
@@ -76,9 +89,18 @@ export default function SecurityUsers() {
         .select("*")
         .order("created_at", { ascending: false })
         .limit(50),
+      (supabase as any)
+        .from("identity_conflict_queue")
+        .select("*")
+        .is("resolved_at", null)
+        .order("detected_at", { ascending: false })
+        .limit(100),
+      (supabase as any).rpc("get_security_audit_summary"),
     ]);
     setRows((p as Row[]) ?? []);
     setEvents((e as Event[]) ?? []);
+    setConflicts((c as Conflict[]) ?? []);
+    setAudit(a ?? null);
     setLoading(false);
   };
 
@@ -137,6 +159,35 @@ export default function SecurityUsers() {
     if (error) return toast.error(error.message);
     toast.success(`Suspended ${data ?? 0} stale accounts`);
     load();
+  };
+
+  const resolveConflict = async (id: string, userId: string, action: "mark_safe" | "revoke_sessions" | "force_reset") => {
+    setWorking(id);
+    try {
+      if (action === "revoke_sessions" || action === "force_reset") {
+        await supabase.rpc("revoke_user_sessions", { _user_id: userId });
+      }
+      if (action === "force_reset") {
+        await supabase
+          .from("profiles")
+          .update({
+            restricted_pending_ownership_review: true,
+            restricted_reason: "admin_force_ownership_reset",
+            verification_status: "restricted_security_review",
+          })
+          .eq("user_id", userId);
+      }
+      await (supabase as any)
+        .from("identity_conflict_queue")
+        .update({ resolved_at: new Date().toISOString(), resolution: action })
+        .eq("id", id);
+      toast.success("Conflict updated");
+      load();
+    } catch (e: any) {
+      toast.error(e?.message || "Failed to update conflict");
+    } finally {
+      setWorking(null);
+    }
   };
 
   return (
@@ -275,7 +326,75 @@ export default function SecurityUsers() {
             )}
           </CardContent>
         </Card>
+
+        {audit && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">Post-hardening audit snapshot</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                <Stat label="Multi-provider emails" value={audit.multi_provider_emails ?? 0} />
+                <Stat label="Orphan password accounts" value={audit.orphan_password_accounts ?? 0} />
+                <Stat label="Suspended / review" value={audit.suspended_shells ?? 0} />
+                <Stat label="Repeat collision users" value={audit.repeat_collision_users ?? 0} />
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <ShieldAlert className="h-4 w-4 text-destructive" /> Identity conflicts
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {conflicts.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-4 text-center">No open conflicts.</p>
+            ) : (
+              <ul className="divide-y divide-border/40">
+                {conflicts.map((c) => (
+                  <li key={c.id} className="py-3 flex items-start justify-between gap-3 text-sm">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="destructive" className="text-[10px]">{c.kind}</Badge>
+                        <span className="text-xs text-muted-foreground">{fmt(c.detected_at)}</span>
+                      </div>
+                      <div className="text-[11px] text-muted-foreground font-mono mt-1 truncate max-w-[480px]">
+                        user_id={c.user_id} · {JSON.stringify(c.evidence)}
+                      </div>
+                    </div>
+                    <div className="flex gap-1 shrink-0">
+                      <Button size="sm" variant="outline" disabled={working === c.id}
+                        onClick={() => resolveConflict(c.id, c.user_id, "revoke_sessions")}>
+                        Revoke sessions
+                      </Button>
+                      <Button size="sm" variant="outline" disabled={working === c.id}
+                        onClick={() => resolveConflict(c.id, c.user_id, "force_reset")}>
+                        Force reset
+                      </Button>
+                      <Button size="sm" variant="ghost" disabled={working === c.id}
+                        onClick={() => resolveConflict(c.id, c.user_id, "mark_safe")}>
+                        Mark safe
+                      </Button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
       </div>
+    </div>
+  );
+}
+
+function Stat({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="rounded-md border border-border/40 p-3">
+      <div className="text-2xl font-semibold">{value}</div>
+      <div className="text-xs text-muted-foreground mt-1">{label}</div>
     </div>
   );
 }

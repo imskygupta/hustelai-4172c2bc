@@ -1,30 +1,30 @@
 ---
-name: OAuth Account Linking Hardening
-description: P0 defense against OAuth pre-account takeover. Blocks silent same-email linking, requires verified ownership before activation, and migrates ownership safely via auth-link-verify.
+name: OAuth account-linking hardening
+description: Layered defenses against pre-account takeover and silent identity merges
 type: feature
 ---
-# OAuth Pre-Account Takeover — Hardening
 
-## Threat
-Attacker pre-registers `victim@gmail.com` with password (unconfirmed). Victim later signs in with Google. Without defenses, Supabase may auto-link the OAuth identity to the attacker's shell account via matching email.
+# OAuth account-linking hardening
 
-## Defense layers
-1. **Auth config** — `auto_confirm_email=false`, `password_hibp_enabled=true`, `external_anonymous_users_enabled=false`. Manual "Account Linking → Manual only" toggle must be set in Cloud → Auth.
-2. **`signup-guard`** — rejects email/password signup when any `auth.users` row exists for the email. Confirmed → `email_already_registered`. Unconfirmed → `verification_pending`; stale shells (>24h) are suspended via `auto_suspend_unverified()` before rejection.
-3. **`handle_new_user`** — populates `auth_provider`, `email_verified`, `account_origin`, `oauth_linked_at`. OAuth → `verified`. Email/password → `pending` with 24h deadline.
-4. **`handle_user_identity_change` trigger** — on `auth.identities` insert. If existing profile is unverified, sets `restricted_pending_ownership_review=true` and logs `oauth_conflict_detected` (critical). Otherwise logs `oauth_link_attempt`.
-5. **`auth-link-verify` edge function** — invoked from `useAuth` after every `SIGNED_IN`. Validates all identities agree on email + verification. On collision → revokes sessions, locks profile, signs user out globally. On valid OAuth claim of a locked profile → calls `claim_account_ownership()`, revokes sessions, forces re-auth.
+## Defense layers (deployed)
+1. **Platform** — Supabase `Account Linking = Manual only` (user must toggle in Cloud → Auth)
+2. **DB triggers** — `handle_user_identity_change` flags OAuth-on-unverified as `restricted_security_review` + enqueues conflict
+3. **Pre-signup** — `signup-guard` blocks new password rows for existing emails, suspends stale shells, IP rate-limited
+4. **Post sign-in** — `auth-link-verify` validates identities every SIGNED_IN, force-signout on collision, ownership claim on locked shells, 24h cooldown after migration
+5. **User UX** — passive overlay; "Linked sign-in methods" + "Recent security events" surfaced in Settings → Security
+6. **Admin UX** — Identity Conflicts queue + post-hardening audit snapshot in `/admin/security/users`
 
-## Conflict audit
-`security_account_conflicts` view (admin-only via `get_security_account_conflicts()` RPC) surfaces duplicates, mixed-provider, stale unverified, ownership-review locked.
+## Password reset rule
+Direct password reset is allowed only if `password_enabled = true` OR `auth_provider = 'password'`. Otherwise the flow returns `password_auth_not_enabled` and guides the user to "Enable password login" inside Security.
 
-## Security events
-`account.created`, `account.verified`, `account.suspended`, `auth.signup_blocked`, `oauth_link_attempt`, `oauth_conflict_detected`, `provider_merge_blocked`, `provider_ownership_migrated`, `forced_session_revocation`.
+## Notifications matrix (security_auth_events → admin alerts)
+- new provider linked → `oauth_link_attempt` (warn)
+- ownership migrated → `provider_ownership_migrated` (critical)
+- session revoked → `forced_session_revocation` (critical)
+- collision detected → `oauth_collision_detected` / `provider_merge_blocked` (critical)
+- password enabled → `password_enabled` (critical)
+- email changed → `account.email_changed` (warn)
 
-## Not done automatically
-- No auto-revoke of existing mixed-provider accounts (manual review only).
-- No `auth.users`/`auth.identities` schema mutations.
-- No parallel identity table; `auth.identities` is source of truth, profiles only annotate.
-
-## Rollback
-`scripts/security/oauth-takeover-rollback.sql`.
+## Rate limits
+- `signup-guard` — 20/IP/10min (existing `_shared/rate-limit`)
+- `rl_hit` RPC available for future use on ownership claim / resend / password reset
