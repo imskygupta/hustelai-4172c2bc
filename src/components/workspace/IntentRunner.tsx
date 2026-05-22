@@ -3,7 +3,6 @@ import ReactMarkdown from "react-markdown";
 import { Loader2, Sparkles, Copy, Check, ArrowUpRight, Cpu, ArrowRight, Info, Zap, Download, Printer } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
 import { useRecordOutput } from "@/lib/workspace/outputs";
 import { Link } from "react-router-dom";
 import { wpProjectDocs } from "@/lib/workspace/paths";

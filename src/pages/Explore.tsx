@@ -11,7 +11,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Filter, X, Zap, Sparkles, ChefHat, Compass, Rocket, Activity, ArrowRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import { SignupCTADialog } from "@/components/SignupCTADialog";
 import { useRequireVerifiedEmail } from "@/components/VerifyEmailGate";
 import { CategoryGrid, type CategoryDef } from "@/components/explore/CategoryGrid";
