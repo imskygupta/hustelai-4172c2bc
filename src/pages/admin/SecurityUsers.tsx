@@ -28,6 +28,16 @@ type Event = {
   created_at: string;
 };
 
+type Conflict = {
+  id: string;
+  user_id: string;
+  kind: string;
+  evidence: any;
+  detected_at: string;
+  resolved_at: string | null;
+  resolution: string | null;
+};
+
 const statusColors: Record<Row["verification_status"], string> = {
   verified: "bg-emerald-500/10 text-emerald-600 border-emerald-500/30",
   pending: "bg-amber-500/10 text-amber-600 border-amber-500/30",
@@ -55,6 +65,8 @@ export default function SecurityUsers() {
   const { profile } = useAuth();
   const [rows, setRows] = useState<Row[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
+  const [conflicts, setConflicts] = useState<Conflict[]>([]);
+  const [audit, setAudit] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [working, setWorking] = useState<string | null>(null);
 
@@ -62,13 +74,13 @@ export default function SecurityUsers() {
 
   const load = async () => {
     setLoading(true);
-    const [{ data: p }, { data: e }] = await Promise.all([
+    const [{ data: p }, { data: e }, { data: c }, { data: a }] = await Promise.all([
       supabase
         .from("profiles")
         .select(
           "user_id, email, verification_status, verification_deadline, verified_at, restricted_reason, subscription_tier, created_at",
         )
-        .in("verification_status", ["pending", "suspended", "flagged"])
+        .in("verification_status", ["pending", "suspended", "flagged", "restricted_security_review"])
         .order("created_at", { ascending: false })
         .limit(200),
       supabase
@@ -76,9 +88,18 @@ export default function SecurityUsers() {
         .select("*")
         .order("created_at", { ascending: false })
         .limit(50),
+      (supabase as any)
+        .from("identity_conflict_queue")
+        .select("*")
+        .is("resolved_at", null)
+        .order("detected_at", { ascending: false })
+        .limit(100),
+      (supabase as any).rpc("get_security_audit_summary"),
     ]);
     setRows((p as Row[]) ?? []);
     setEvents((e as Event[]) ?? []);
+    setConflicts((c as Conflict[]) ?? []);
+    setAudit(a ?? null);
     setLoading(false);
   };
 
