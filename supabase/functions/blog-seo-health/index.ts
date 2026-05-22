@@ -33,6 +33,71 @@ function wordCount(md: string) {
   return (md ?? "").trim().split(/\s+/).filter(Boolean).length;
 }
 
+// ──────────────────────────────────────────────────────────────────────────
+// Single-URL crawlability validator. Fetches the URL once and parses the
+// <head> with regex (no DOM dep in Deno). Returns shape consumed by the
+// indexing-dispatcher + indexing_audit table.
+// ──────────────────────────────────────────────────────────────────────────
+async function validateUrl(target: string) {
+  const issues: { code: string; detail?: string }[] = [];
+  let http_status = 0;
+  let html = "";
+  try {
+    const ctl = new AbortController();
+    const t = setTimeout(() => ctl.abort(), 10_000);
+    const r = await fetch(target, {
+      method: "GET",
+      headers: { "user-agent": "HustleAI-IndexingValidator/1.0" },
+      signal: ctl.signal,
+    });
+    clearTimeout(t);
+    http_status = r.status;
+    html = await r.text();
+  } catch (e) {
+    issues.push({ code: "fetch_failed", detail: String(e).slice(0, 200) });
+  }
+  if (http_status && (http_status < 200 || http_status >= 400)) {
+    issues.push({ code: "non_2xx", detail: String(http_status) });
+  }
+  const head = (html.match(/<head[^>]*>([\s\S]*?)<\/head>/i)?.[1] ?? html).slice(0, 200_000);
+  const canonical = head.match(/<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)["']/i)?.[1] ?? null;
+  const robots    = head.match(/<meta[^>]+name=["']robots["'][^>]+content=["']([^"']+)["']/i)?.[1] ?? "";
+  const noindex   = /noindex/i.test(robots);
+  const has_og    = /<meta[^>]+property=["']og:(title|description|url|type)["']/i.test(head);
+  const jsonldBlocks = [...head.matchAll(/<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)].map(m => m[1]);
+  const has_jsonld = jsonldBlocks.length > 0;
+  const has_article_schema = jsonldBlocks.some(b => /"@type"\s*:\s*"(Article|BlogPosting|NewsArticle)"/.test(b));
+
+  if (!canonical) issues.push({ code: "missing_canonical" });
+  if (noindex)    issues.push({ code: "noindex_present" });
+  if (!has_og)    issues.push({ code: "missing_og" });
+  if (!has_jsonld) issues.push({ code: "missing_jsonld" });
+  else if (!has_article_schema) issues.push({ code: "missing_article_schema" });
+
+  // Sitemap membership check — single fetch of the posts sitemap.
+  let in_sitemap = false;
+  try {
+    const sm = await fetch("https://blogs.hustlaiapp.in/sitemap.xml", { method: "GET" });
+    if (sm.ok) {
+      const xml = await sm.text();
+      in_sitemap = xml.includes(`<loc>${target}</loc>`);
+      if (!in_sitemap) issues.push({ code: "missing_from_sitemap" });
+    }
+  } catch { /* skip */ }
+
+  return {
+    ok: issues.length === 0 && http_status >= 200 && http_status < 400,
+    http_status,
+    canonical,
+    noindex,
+    has_og,
+    has_jsonld,
+    has_article_schema,
+    in_sitemap,
+    issues,
+  };
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   // Service-role short-circuit so indexing-dispatcher can call validate_url
