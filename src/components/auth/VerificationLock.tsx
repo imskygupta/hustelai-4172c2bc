@@ -31,6 +31,7 @@ export function VerificationLock() {
   const { user, profile, signOut, refreshProfile } = useAuth();
   const [now, setNow] = useState(() => Date.now());
   const [resending, setResending] = useState(false);
+  const [forcedOpen, setForcedOpen] = useState(false);
   const [cooldownUntil, setCooldownUntil] = useState<number>(() => {
     try {
       const raw = localStorage.getItem(RESEND_COOLDOWN_KEY);
@@ -43,9 +44,20 @@ export function VerificationLock() {
   const status = profile?.verification_status;
   const open =
     !!user &&
-    !!profile &&
-    status !== "verified" &&
-    status !== undefined;
+    ((!!profile && status !== "verified" && status !== undefined) || forcedOpen);
+
+  useEffect(() => {
+    const onDenied = () => {
+      setForcedOpen(true);
+      refreshProfile().catch(() => undefined);
+    };
+    window.addEventListener("hai:verification-denied", onDenied);
+    return () => window.removeEventListener("hai:verification-denied", onDenied);
+  }, [refreshProfile]);
+
+  useEffect(() => {
+    if (status === "verified") setForcedOpen(false);
+  }, [status]);
 
   useEffect(() => {
     if (!open) return;

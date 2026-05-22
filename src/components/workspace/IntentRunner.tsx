@@ -3,7 +3,6 @@ import ReactMarkdown from "react-markdown";
 import { Loader2, Sparkles, Copy, Check, ArrowUpRight, Cpu, ArrowRight, Info, Zap, Download, Printer } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
 import { useRecordOutput } from "@/lib/workspace/outputs";
 import { Link } from "react-router-dom";
 import { wpProjectDocs } from "@/lib/workspace/paths";
@@ -15,6 +14,8 @@ import { SyncStatusPill, type SyncPhase } from "@/components/workspace/SyncStatu
 import { PossibilityHint, OutputQualityChip } from "@/components/workspace/PossibilityHint";
 import { useAuth } from "@/hooks/useAuth";
 import { markMilestone } from "@/lib/onboarding/firstSession";
+import { invokeWithTrust } from "@/lib/auth/verificationDenied";
+import { runWithDeadline } from "@/lib/async/timeout";
 
 /**
  * IntentRunner — inline AI deliverable generator + operational chain.
@@ -55,6 +56,7 @@ export function IntentRunner({
   const speed = meta ? SPEED_DISPLAY[meta.speed] : null;
   const chain = nextSteps(intent);
   const startedAt = useRef<number>(0);
+  const runSeq = useRef(0);
 
   // Quiet operational memory for this project — used to surface a single
   // calm contextual line (e.g. "Prefers Claude here · You often follow with…")
@@ -76,29 +78,36 @@ export function IntentRunner({
   // Generate on intent change
   useEffect(() => {
     if (!open) return;
+    const seq = ++runSeq.current;
     setMarkdown(""); setError(null); setSaved(false); setTitle(label); setElapsed(0); setPhase("drafting");
     startedAt.current = Date.now();
     const tick = setInterval(() => setElapsed(Math.round((Date.now() - startedAt.current) / 100) / 10), 100);
     (async () => {
       setLoading(true);
       try {
-        const { data, error } = await supabase.functions.invoke("workspace-ai", {
-          body: {
-            action: "generate_intent",
-            intent,
-            workspace: {
-              id: workspace?.id,
-              client_name: workspace?.client_name,
-              company_name: workspace?.company_name,
-              pipeline_stage: workspace?.pipeline_stage,
-              project_scope: workspace?.project_scope,
-              deliverables: workspace?.deliverables,
-              tags: workspace?.tags,
-              pricing: workspace?.pricing,
-            },
+        const { data, ok, denied, timedOut, error } = await invokeWithTrust<any>("workspace-ai", {
+          action: "generate_intent",
+          intent,
+          workspace: {
+            id: workspace?.id,
+            client_name: workspace?.client_name,
+            company_name: workspace?.company_name,
+            pipeline_stage: workspace?.pipeline_stage,
+            project_scope: workspace?.project_scope,
+            deliverables: workspace?.deliverables,
+            tags: workspace?.tags,
+            pricing: workspace?.pricing,
           },
         });
-        if (error) throw error;
+        if (seq !== runSeq.current) return;
+        if (!ok) {
+          const msg = denied
+            ? "Verify your email to generate AI deliverables."
+            : timedOut
+              ? "Generation took too long, so it was stopped to keep the workspace responsive."
+              : (error as any)?.message || "Generation is unavailable right now.";
+          throw new Error(msg);
+        }
         const md = data?.markdown || "";
         setMarkdown(md);
         if (data?.title) setTitle(data.title);
@@ -107,39 +116,46 @@ export function IntentRunner({
         if (md && workspace?.id) {
           setPhase("saving");
           const newTitle = data?.title || label;
-          const ok = await record({
-            tool: `intent:${intent}`,
-            title: `${newTitle} — ${workspace?.client_name || "project"}`,
-            summary: md.slice(0, 240),
-            project_id: workspace?.id,
-            metadata: { intent, markdown: md, chain_origin: initialIntent, auto: true },
-            asAsset: true,
-            asset_kind: (intent === "proposal" ? "proposal"
-              : intent === "scope" ? "brief"
-              : intent === "strategy" ? "strategy"
-              : intent === "automation" ? "workflow"
-              : "prompt") as any,
-          });
+          const ok = await runWithDeadline(
+            () => record({
+              tool: `intent:${intent}`,
+              title: `${newTitle} — ${workspace?.client_name || "project"}`,
+              summary: md.slice(0, 240),
+              project_id: workspace?.id,
+              metadata: { intent, markdown: md, chain_origin: initialIntent, auto: true },
+              asAsset: true,
+              asset_kind: (intent === "proposal" ? "proposal"
+                : intent === "scope" ? "brief"
+                : intent === "strategy" ? "strategy"
+                : intent === "automation" ? "workflow"
+                : "prompt") as any,
+            }),
+            "intentRunner.recordOutput",
+            { timeoutMs: 5_000 },
+          ).catch(() => false);
+          if (seq !== runSeq.current) return;
           if (ok) {
             setSaved(true);
             setPhase("synced");
             // Onboarding: first successful generation + save.
             markMilestone("first_workflow");
             // Quietly indicate memory updated a beat later.
-            setTimeout(() => setPhase("memory"), 700);
+            setTimeout(() => { if (seq === runSeq.current) setPhase("memory"); }, 700);
           } else {
             setPhase("error");
           }
         }
       } catch (e: any) {
+        if (seq !== runSeq.current) return;
         setError(e?.message || "Generation failed. Try again.");
         setPhase("error");
       } finally {
+        if (seq !== runSeq.current) return;
         setLoading(false);
         clearInterval(tick);
       }
     })();
-    return () => clearInterval(tick);
+    return () => { runSeq.current += 1; clearInterval(tick); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, intent, workspace?.id]);
 

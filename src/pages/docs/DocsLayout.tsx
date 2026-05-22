@@ -23,8 +23,13 @@ export default function DocsLayout() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    listDocsCategories().then(setCats);
-    listDocsPages().then(setPages);
+    let cancelled = false;
+    Promise.allSettled([listDocsCategories(), listDocsPages()]).then(([catRes, pageRes]) => {
+      if (cancelled) return;
+      setCats(catRes.status === "fulfilled" ? catRes.value : []);
+      setPages(pageRes.status === "fulfilled" ? pageRes.value : []);
+    });
+    return () => { cancelled = true; };
   }, []);
 
   useEffect(() => {

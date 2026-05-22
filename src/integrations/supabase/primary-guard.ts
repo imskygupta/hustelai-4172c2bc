@@ -12,6 +12,7 @@
 // Import this module exactly once, from src/main.tsx, before any feature
 // code runs.
 import { supabase } from "./client";
+import { runWithDeadline } from "@/lib/async/timeout";
 
 // Tables that have been extracted off the primary. Adding here automatically
 // blocks all `supabase.from("<table>")` regressions across the codebase.
@@ -177,4 +178,21 @@ export function installPrimaryGuard() {
     };
     return ch;
   };
+
+  const originalInvoke = sb.functions?.invoke?.bind(sb.functions);
+  if (originalInvoke && !sb.functions.__runtimeInvokeGuardInstalled) {
+    sb.functions.__runtimeInvokeGuardInstalled = true;
+    sb.functions.invoke = async (name: string, options?: any) => {
+      const timeoutMs = typeof options?.timeoutMs === "number" ? options.timeoutMs : 8_000;
+      try {
+        return await runWithDeadline(
+          () => originalInvoke(name, options),
+          `functions.${name}`,
+          { timeoutMs },
+        );
+      } catch (error) {
+        return { data: null, error };
+      }
+    };
+  }
 }

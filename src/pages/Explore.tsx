@@ -1,5 +1,5 @@
 import { blogDb } from "@/integrations/blog/db";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -11,12 +11,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Filter, X, Zap, Sparkles, ChefHat, Compass, Rocket, Activity, ArrowRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import { SignupCTADialog } from "@/components/SignupCTADialog";
 import { useRequireVerifiedEmail } from "@/components/VerifyEmailGate";
 import { CategoryGrid, type CategoryDef } from "@/components/explore/CategoryGrid";
 import { ActionStack } from "@/components/explore/ActionStack";
 import { OperationalTools, ExecutionPipeline } from "@/components/explore/OperationalTools";
+import { invokeWithTrust } from "@/lib/auth/verificationDenied";
+import { runWithDeadline, TimeoutError } from "@/lib/async/timeout";
 
 const categories = ["All", "Tech", "Creative", "Freelance", "Marketing", "Education", "Service", "E-Commerce", "Finance", "Gig Economy", "Gaming", "Admin"];
 const difficulties = ["All", "Beginner", "Intermediate", "Advanced"];
@@ -51,11 +52,32 @@ export default function Explore() {
   const [trendingCards, setTrendingCards] = useState<FreelanceResult[]>([]);
   const [showSignupCTA, setShowSignupCTA] = useState(false);
   const [activeContext, setActiveContext] = useState<string>("");
+  const [searchNotice, setSearchNotice] = useState<string | null>(null);
+  const searchSeq = useRef(0);
 
   // Load top liked cards for display
   useEffect(() => {
-    blogDb.from("side_hustles").select("*").order("likes", { ascending: false }).limit(6)
-      .then(({ data }) => { if (data) setTrendingCards(data.map(mapDbResult)); });
+    let cancelled = false;
+    runWithDeadline(
+      () => blogDb.from("side_hustles").select("*").order("likes", { ascending: false }).limit(6),
+      "explore.trending",
+    ).then(({ data }: any) => { if (!cancelled && data) setTrendingCards(data.map(mapDbResult)); }).catch(() => undefined);
+    return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => {
+    const stop = () => {
+      searchSeq.current += 1;
+      setIsLoading(false);
+      setIsAiCooking(false);
+      setSearchNotice("AI is temporarily unavailable. Showing cached and database results instead.");
+    };
+    window.addEventListener("hai:verification-denied", stop);
+    window.addEventListener("hai:runtime-deadlock", stop);
+    return () => {
+      window.removeEventListener("hai:verification-denied", stop);
+      window.removeEventListener("hai:runtime-deadlock", stop);
+    };
   }, []);
 
   // Preload from blog conversion deep-link: /explore?template=<slug>
@@ -63,9 +85,14 @@ export default function Explore() {
     const tplSlug = searchParams.get("template");
     if (!tplSlug) return;
     const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/hustle-templates?action=get&slug=${encodeURIComponent(tplSlug)}`;
-    fetch(url, { headers: { apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string } })
+    let cancelled = false;
+    runWithDeadline(
+      (signal) => fetch(url, { signal, headers: { apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string } }),
+      "explore.template",
+    )
       .then((r) => r.json())
       .then((j) => {
+        if (cancelled) return;
         const tpl = j?.template;
         if (!tpl) return;
         const seedQuery: string = tpl.prompt_system?.prompt || tpl.title;
@@ -73,12 +100,15 @@ export default function Explore() {
         handleSearch(seedQuery);
       })
       .catch(() => {});
+    return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
   const handleSearch = async (query: string) => {
     if (user && !requireVerified()) return;
+    const seq = ++searchSeq.current;
     setIsLoading(true);
+    setSearchNotice(null);
     setLastQuery(query);
     setActiveContext(query);
 
@@ -93,7 +123,8 @@ export default function Explore() {
 
     try {
       // Step 1: Always search DB first
-      const dbResults = await dbSearch(query);
+      const dbResults = await runWithDeadline(() => dbSearch(query), "explore.dbSearch");
+      if (seq !== searchSeq.current) return;
 
       // Step 2: Check if DB results actually match the query keywords
       const keywords = query.toLowerCase().split(/\s+/).filter(w => w.length > 2);
@@ -143,10 +174,14 @@ export default function Explore() {
 
       const needed = Math.min(3, 5 - matchingResults.length);
       try {
-        const { data, error } = await supabase.functions.invoke("ai-search", {
-          body: { query, limit: needed },
-        });
-        if (error) throw error;
+        const { data, ok, denied, timedOut, error } = await invokeWithTrust<any>("ai-search", { query, limit: needed });
+        if (!ok) {
+          if (denied) setSearchNotice("Verify your email to unlock AI-generated opportunity expansion.");
+          else if (timedOut) setSearchNotice("AI took too long. Showing database matches so the page stays responsive.");
+          else setSearchNotice((error as any)?.message || "AI is unavailable. Showing database matches.");
+          return;
+        }
+        if (seq !== searchSeq.current) return;
         const aiResults: FreelanceResult[] = (data?.results || []).slice(0, needed);
 
         // Save AI results to DB
@@ -166,7 +201,12 @@ export default function Explore() {
             likes: 0,
             dislikes: 0,
           };
-          const { data: inserted } = await blogDb.from("side_hustles").insert(insertData as any).select("*").single();
+          const insertResult = await runWithDeadline<any>(
+            () => blogDb.from("side_hustles").insert(insertData as any).select("*").single(),
+            "explore.saveAiResult",
+            { timeoutMs: 3_000 },
+          ).catch(() => ({ data: null } as any));
+          const inserted = insertResult?.data;
           if (inserted) {
             savedResults.push(mapDbResult(inserted));
           } else {
@@ -175,17 +215,21 @@ export default function Explore() {
         }
 
         const combined = [...matchingResults, ...savedResults].slice(0, 5);
+        if (seq !== searchSeq.current) return;
         setResults(combined);
         sessionStorage.setItem(cacheKey, JSON.stringify(combined));
-      } catch {
+      } catch (e) {
         // AI failed, keep DB results
+        setSearchNotice(e instanceof TimeoutError ? "AI timed out. Showing database matches." : "AI is unavailable. Showing database matches.");
       } finally {
         setIsAiCooking(false);
       }
 
       return;
     } catch (err: any) {
-      toast({ title: "Search failed", description: err.message, variant: "destructive" });
+      setResults([]);
+      setSearchNotice(err instanceof TimeoutError ? "Search timed out. Try a narrower query." : "Search is temporarily unavailable.");
+      toast({ title: "Search degraded", description: err.message || "Showing fallback state.", variant: "destructive" });
     } finally {
       setIsLoading(false);
     }

@@ -12,6 +12,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { aiDb } from "@/integrations/ai/db";
 import { TIER_LIMITS } from "@/lib/tool-limits";
 import { PETS, PetKey, setMascotPet } from "@/components/MascotCompanion";
+import { invokeWithTrust } from "@/lib/auth/verificationDenied";
+import { runWithDeadline } from "@/lib/async/timeout";
 
 import { SEO } from "@/components/SEO";
 
@@ -65,12 +67,15 @@ export default function HustleBot() {
   }, [messages, loading]);
 
   const loadHistory = async () => {
-    const { data } = await aiDb
-      .from("chat_messages")
-      .select("*")
-      .eq("user_id", user!.id)
-      .order("created_at", { ascending: true })
-      .limit(80);
+    const { data } = await runWithDeadline<any>(
+      () => aiDb
+        .from("chat_messages")
+        .select("*")
+        .eq("user_id", user!.id)
+        .order("created_at", { ascending: true })
+        .limit(80),
+      "hustlebot.loadHistory",
+    ).catch(() => ({ data: [] }));
 
     // Count messages this calendar month
     const startOfMonth = new Date();
@@ -154,10 +159,18 @@ export default function HustleBot() {
     setInput("");
     setLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke("ai-chatbot", {
-        body: { messages: newMessages.map(m => ({ role: m.role, content: m.content })) },
+      const { data, ok, denied, timedOut, error } = await invokeWithTrust<any>("ai-chatbot", {
+        messages: newMessages.map(m => ({ role: m.role, content: m.content })),
       });
-      if (error) throw error;
+      if (!ok) {
+        const msg = denied
+          ? "Verify your email to unlock HustleBot."
+          : timedOut
+            ? "HustleBot took too long, so I stopped waiting to keep the page responsive."
+            : (error as any)?.message || "HustleBot is unavailable right now.";
+        setMessages([...newMessages, { role: "assistant", content: `⚠️ ${msg}` }]);
+        return;
+      }
       if (data?.error) {
         setMessages([...newMessages, { role: "assistant", content: `⚠️ ${data.error}` }]);
       } else {

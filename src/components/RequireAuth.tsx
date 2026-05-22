@@ -1,4 +1,4 @@
-import { ReactNode, useEffect } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Loader2 } from "lucide-react";
@@ -26,14 +26,21 @@ export function RequireAuth({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [loadingExpired, setLoadingExpired] = useState(false);
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (!loading) { setLoadingExpired(false); return; }
+    const t = window.setTimeout(() => setLoadingExpired(true), 8_000);
+    return () => window.clearTimeout(t);
+  }, [loading]);
+
+  useEffect(() => {
+    if ((!loading || loadingExpired) && !user) {
       const next = encodeURIComponent(location.pathname + location.search);
-      logGuardFailure(location.pathname + location.search, "missing_user_after_hydration");
+      logGuardFailure(location.pathname + location.search, loadingExpired ? "auth_loading_timeout" : "missing_user_after_hydration");
       navigate(`/login?next=${next}`, { replace: true });
     }
-  }, [loading, user, navigate, location]);
+  }, [loading, loadingExpired, user, navigate, location]);
 
   if (loading || !user) {
     return (

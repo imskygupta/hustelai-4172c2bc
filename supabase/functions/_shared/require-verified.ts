@@ -47,6 +47,20 @@ function trustTierFor(
   return 2;
 }
 
+async function withDeadline<T>(p: PromiseLike<T>, label: string, ms = 8_000): Promise<T> {
+  let timer: number | undefined;
+  try {
+    return await Promise.race([
+      Promise.resolve(p),
+      new Promise<T>((_, reject) => {
+        timer = setTimeout(() => reject(new Error(`${label}_timeout`)), ms);
+      }),
+    ]);
+  } finally {
+    if (timer !== undefined) clearTimeout(timer);
+  }
+}
+
 export async function requireVerifiedUser(
   req: Request,
   opts: {
@@ -92,7 +106,7 @@ export async function requireVerifiedUser(
     global: { headers: { Authorization: auth } },
     auth: { persistSession: false, autoRefreshToken: false },
   });
-  const { data: u, error: ue } = await authed.auth.getUser();
+  const { data: u, error: ue } = await withDeadline(authed.auth.getUser(), "auth_get_user");
   if (ue || !u?.user) {
     return {
       ok: false,
@@ -108,13 +122,16 @@ export async function requireVerifiedUser(
   const admin = createClient(url, service, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
-  const { data: profile, error: pe } = await admin
-    .from("profiles")
-    .select(
-      "verification_status, verification_deadline, verified_at, restricted_reason, subscription_tier",
-    )
-    .eq("user_id", user.id)
-    .maybeSingle();
+  const { data: profile, error: pe } = await withDeadline(
+    admin
+      .from("profiles")
+      .select(
+        "verification_status, verification_deadline, verified_at, restricted_reason, subscription_tier",
+      )
+      .eq("user_id", user.id)
+      .maybeSingle(),
+    "profile_lookup",
+  );
 
   if (pe || !profile) {
     await maybeLogDenial(url, service, opts, req, {
@@ -224,7 +241,7 @@ async function maybeLogDenial(
     const admin = createClient(url, service, {
       auth: { persistSession: false, autoRefreshToken: false },
     });
-    await admin.rpc("log_security_auth_event", {
+    await withDeadline(admin.rpc("log_security_auth_event", {
       _user_id: ctx.userId ?? null,
       _email: ctx.email ?? null,
       _event_type: opts.denialEvent,
@@ -236,7 +253,7 @@ async function maybeLogDenial(
         reason: ctx.reason,
         current_tier: ctx.currentTier ?? null,
       },
-    });
+    }), "denial_event_log", 2_000);
   } catch {
     /* never fail the gate because logging failed */
   }
@@ -256,7 +273,7 @@ export async function logSecurityAuthEvent(
   },
 ) {
   try {
-    await admin.rpc("log_security_auth_event", {
+    await withDeadline(admin.rpc("log_security_auth_event", {
       _user_id: args.userId ?? null,
       _email: args.email ?? null,
       _event_type: args.eventType,
@@ -264,7 +281,7 @@ export async function logSecurityAuthEvent(
       _ip: args.req?.headers.get("x-forwarded-for") ?? null,
       _user_agent: args.req?.headers.get("user-agent") ?? null,
       _metadata: args.metadata ?? {},
-    });
+    }), "security_event_log", 2_000);
   } catch {
     /* fail open on logging */
   }

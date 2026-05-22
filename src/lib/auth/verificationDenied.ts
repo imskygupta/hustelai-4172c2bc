@@ -8,6 +8,7 @@
 // <VerificationLock /> via a profile refresh — never spin forever.
 
 import { supabase } from "@/integrations/supabase/client";
+import { runWithDeadline, TimeoutError } from "@/lib/async/timeout";
 
 export interface VerificationDeniedPayload {
   error: string;
@@ -27,7 +28,7 @@ export function isVerificationDenied(payload: unknown): payload is VerificationD
   );
 }
 
-let pendingRefresh: Promise<void> | null = null;
+let lastDeniedAt = 0;
 
 /**
  * Call this when an edge-function response indicates the user failed
@@ -38,6 +39,9 @@ let pendingRefresh: Promise<void> | null = null;
  * Idempotent: safe to call from many call sites concurrently.
  */
 export async function handleVerificationDenied(payload?: unknown) {
+  const now = Date.now();
+  if (now - lastDeniedAt < 750) return;
+  lastDeniedAt = now;
   try {
     window.dispatchEvent(
       new CustomEvent("hai:verification-denied", { detail: payload ?? null }),
@@ -45,21 +49,6 @@ export async function handleVerificationDenied(payload?: unknown) {
   } catch {
     /* no window in SSR */
   }
-  if (!pendingRefresh) {
-    pendingRefresh = (async () => {
-      try {
-        await supabase.auth.refreshSession();
-      } catch {
-        /* refresh failures handled elsewhere */
-      } finally {
-        // brief debounce so a burst of denied calls collapses to one refresh
-        setTimeout(() => {
-          pendingRefresh = null;
-        }, 1500);
-      }
-    })();
-  }
-  return pendingRefresh;
 }
 
 /**
@@ -70,14 +59,39 @@ export async function handleVerificationDenied(payload?: unknown) {
 export async function invokeWithTrust<T = unknown>(
   name: string,
   body?: unknown,
-): Promise<{ ok: boolean; data: T | null; denied: boolean; error: unknown }> {
-  const { data, error } = await supabase.functions.invoke<T>(name, { body });
+  options: { timeoutMs?: number } = {},
+): Promise<{ ok: boolean; data: T | null; denied: boolean; timedOut: boolean; error: unknown }> {
+  let data: T | null = null;
+  let error: unknown = null;
+  try {
+    const res = await runWithDeadline(
+      () => supabase.functions.invoke<T>(name, { body }),
+      `functions.${name}`,
+      { timeoutMs: options.timeoutMs ?? 8_000 },
+    );
+    data = (res.data as T) ?? null;
+    error = res.error;
+  } catch (err) {
+    error = err;
+  }
   // supabase-js surfaces HTTP errors via `error`, but the body may still be
   // attached. We inspect both.
-  const candidate = (error as { context?: { body?: unknown } } | null)?.context?.body ?? data;
+  const candidate = await extractErrorBody(error) ?? data;
   if (isVerificationDenied(candidate)) {
-    await handleVerificationDenied(candidate);
-    return { ok: false, data: null, denied: true, error };
+    void handleVerificationDenied(candidate);
+    return { ok: false, data: null, denied: true, timedOut: false, error };
   }
-  return { ok: !error, data: (data as T) ?? null, denied: false, error };
+  return { ok: !error, data: (data as T) ?? null, denied: false, timedOut: error instanceof TimeoutError, error };
+}
+
+async function extractErrorBody(error: unknown): Promise<unknown> {
+  const ctx = (error as { context?: { body?: unknown; json?: () => Promise<unknown> } } | null)?.context;
+  if (!ctx) return null;
+  if (ctx.body !== undefined) return ctx.body;
+  if (typeof ctx.json !== "function") return null;
+  try {
+    return await runWithDeadline(() => ctx.json!(), "functions.errorBody", { timeoutMs: 1_000 });
+  } catch {
+    return null;
+  }
 }

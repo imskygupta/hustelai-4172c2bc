@@ -8,6 +8,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { aiDb } from "@/integrations/ai/db";
 import { useAuth } from "@/hooks/useAuth";
 import ReactMarkdown from "react-markdown";
+import { invokeWithTrust } from "@/lib/auth/verificationDenied";
+import { runWithDeadline } from "@/lib/async/timeout";
 
 interface Message {
   role: "user" | "assistant";
@@ -26,6 +28,11 @@ export function Chatbot() {
   const [onboardingStep, setOnboardingStep] = useState<number>(0);
   const [onboardingAnswers, setOnboardingAnswers] = useState<string[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const mountedRef = useRef(true);
+
+  useEffect(() => {
+    return () => { mountedRef.current = false; };
+  }, []);
 
   // Workspace Copilot lives on a dedicated full page. Any "open-hustlebot"
   // event routes there. If a `prefill` detail is supplied we pass it through
@@ -58,12 +65,16 @@ export function Chatbot() {
   ];
 
   const loadExistingMessages = async () => {
-    const { data } = await aiDb
-      .from("chat_messages")
-      .select("*")
-      .eq("user_id", user!.id)
-      .order("created_at", { ascending: true })
-      .limit(50);
+    const { data } = await runWithDeadline<any>(
+      () => aiDb
+        .from("chat_messages")
+        .select("*")
+        .eq("user_id", user!.id)
+        .order("created_at", { ascending: true })
+        .limit(50),
+      "chatbot.loadMessages",
+    ).catch(() => ({ data: [] }));
+    if (!mountedRef.current) return;
 
     if (data && data.length > 0) {
       setMessages(data.map((m: any) => ({
@@ -159,12 +170,18 @@ export function Chatbot() {
     setLoading(true);
 
     try {
-      const { data, error } = await supabase.functions.invoke("ai-chatbot", {
-        body: {
-          messages: newMessages.map(m => ({ role: m.role, content: m.content })),
-        },
+      const { data, ok, denied, timedOut, error } = await invokeWithTrust<any>("ai-chatbot", {
+        messages: newMessages.map(m => ({ role: m.role, content: m.content })),
       });
-      if (error) throw error;
+      if (!ok) {
+        const msg = denied
+          ? "Verify your email to unlock the AI copilot."
+          : timedOut
+            ? "The AI response took too long, so I stopped waiting to keep the app responsive."
+            : (error as any)?.message || "AI is unavailable right now.";
+        setMessages([...newMessages, { role: "assistant", content: `⚠️ ${msg}` }]);
+        return;
+      }
       if (data.error) {
         setMessages([...newMessages, { role: "assistant", content: `⚠️ ${data.error}` }]);
       } else {
