@@ -30,8 +30,18 @@ Deno.serve(async (req) => {
     const { kind, input = {}, feature, priority = 100, max_attempts = 3, dedupe_key, scheduled_at } = body || {};
     if (!kind) return new Response(JSON.stringify({ error: "kind required" }), { status: 400, headers: cors });
 
+    // Snapshot the creator's verification context onto the job payload.
+    // The runner re-checks current status at execute time and aborts if the
+    // user has since been suspended, but the snapshot lets us audit drift.
+    const trustSnapshot = {
+      verification_status: __gate.profile?.verification_status ?? "unknown",
+      trust_tier: __gate.trustTier ?? null,
+      snapshot_at: new Date().toISOString(),
+    };
+    const enrichedInput = { ...input, _trust: trustSnapshot };
+
     const { data, error } = await sb.rpc("enqueue_ai_job", {
-      _kind: kind, _input: input, _user: user.id, _feature: feature ?? null,
+      _kind: kind, _input: enrichedInput, _user: user.id, _feature: feature ?? null,
       _priority: priority, _max_attempts: max_attempts,
       _dedupe_key: dedupe_key ?? null,
       _scheduled_at: scheduled_at ?? new Date().toISOString(),
