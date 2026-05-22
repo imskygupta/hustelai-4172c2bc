@@ -27,6 +27,33 @@ export default function ForgotPassword() {
       return;
     }
     setLoading(true);
+
+    // P0 hardening — gate reset against accounts without password auth enabled.
+    try {
+      const { data: guard } = await supabase.functions.invoke("password-reset-guard", {
+        body: { email },
+      });
+      if (guard && guard.allowed === false) {
+        setLoading(false);
+        if (guard.reason === "password_auth_not_enabled") {
+          const msg = "This account signs in with Google. Password reset isn't available — use \"Continue with Google\" instead.";
+          setInlineError(msg);
+          toast({ title: "Password reset unavailable", description: msg, variant: "destructive" });
+          return;
+        }
+        if (guard.reason === "rate_limited") {
+          const msg = "Too many reset attempts. Please wait a few minutes and try again.";
+          setInlineError(msg);
+          toast({ title: "Slow down", description: msg, variant: "destructive" });
+          return;
+        }
+        if (guard.reason === "invalid_email") {
+          setInlineError("Enter a valid email address.");
+          return;
+        }
+      }
+    } catch { /* fail open — never block the user on guard infra error */ }
+
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: RESET_PASSWORD_REDIRECT_TO,
     });
