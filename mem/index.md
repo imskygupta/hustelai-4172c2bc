@@ -46,3 +46,5 @@
 - [AI Runtime Experience](mem://product/ai-runtime-experience) — Perceived speed, trust, resumability, ⌘K palette contract
 - [OAuth Linking Hardening](mem://security/oauth-account-linking-hardening) — Pre-takeover defense, signup-guard, auth-link-verify, ownership migration
 - [Account Ownership Model](mem://security/account-ownership-model) — Profile provenance columns and lifecycle state machine
+- [SEO Indexing Audit](mem://seo/indexing-pipeline-audit) — Phase A: current publish→sitemap→indexing flow, gaps, root cause for low Google indexed count
+- [Automated Indexing Plan](mem://seo/automated-indexing-architecture) — Phase B: post-publish dispatcher, GSC API, IndexNow autopilot, no new routes
