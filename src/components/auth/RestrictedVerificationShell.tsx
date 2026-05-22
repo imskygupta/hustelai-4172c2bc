@@ -10,6 +10,14 @@ const AUTH_DEBUG_KEY = "hustleai_auth_debug";
 const RESEND_COOLDOWN_KEY = "hai_verify_resend_at";
 const COOLDOWN_SECONDS = 60;
 
+function getCooldownLeft() {
+  try {
+    return Math.max(0, Number(localStorage.getItem(RESEND_COOLDOWN_KEY) || 0) - Date.now());
+  } catch {
+    return 0;
+  }
+}
+
 function logRestricted(event: string, details: Record<string, unknown> = {}) {
   try {
     if (localStorage.getItem(AUTH_DEBUG_KEY) !== "1") return;
@@ -26,14 +34,6 @@ export function RestrictedVerificationShell() {
   const { user, profile, trustState, refreshProfile, signOut } = useAuth();
   const [resending, setResending] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [cooldownUntil, setCooldownUntil] = useState<number>(() => {
-    try {
-      const raw = localStorage.getItem(RESEND_COOLDOWN_KEY);
-      return raw ? Number(raw) : 0;
-    } catch {
-      return 0;
-    }
-  });
 
   useEffect(() => {
     logRestricted("shell_mounted", {
@@ -43,14 +43,18 @@ export function RestrictedVerificationShell() {
     });
   }, [profile?.verification_status, trustState.reason, trustState.verificationStatus, user?.id]);
 
-  const cooldownLeft = Math.max(0, cooldownUntil - Date.now());
   const deadlineLabel = useMemo(() => {
     if (!profile?.verification_deadline) return null;
     return new Date(profile.verification_deadline).toLocaleString();
   }, [profile?.verification_deadline]);
 
   const onResend = async () => {
-    if (!user?.email || cooldownLeft > 0) return;
+    if (!user?.email) return;
+    const cooldownLeft = getCooldownLeft();
+    if (cooldownLeft > 0) {
+      toast.info(`Try again in ${Math.ceil(cooldownLeft / 1000)}s.`);
+      return;
+    }
     setResending(true);
     try {
       const { error } = await supabase.auth.resend({
@@ -60,7 +64,6 @@ export function RestrictedVerificationShell() {
       });
       if (error) throw error;
       const until = Date.now() + COOLDOWN_SECONDS * 1000;
-      setCooldownUntil(until);
       try { localStorage.setItem(RESEND_COOLDOWN_KEY, String(until)); } catch { /* ignore */ }
       toast.success("Verification email sent. Check your inbox.");
     } catch (e: any) {
@@ -100,9 +103,9 @@ export function RestrictedVerificationShell() {
           {deadlineLabel && <div>Deadline: {deadlineLabel}</div>}
         </div>
         <div className="w-full flex flex-col gap-2">
-          <Button onClick={onResend} disabled={resending || cooldownLeft > 0} className="w-full">
+          <Button onClick={onResend} disabled={resending} className="w-full">
             {resending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Mail className="h-4 w-4 mr-2" />}
-            {cooldownLeft > 0 ? `Resend in ${Math.ceil(cooldownLeft / 1000)}s` : "Resend verification email"}
+            Resend verification email
           </Button>
           <Button variant="outline" onClick={onManualRefresh} disabled={refreshing} className="w-full">
             {refreshing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-2" />}
