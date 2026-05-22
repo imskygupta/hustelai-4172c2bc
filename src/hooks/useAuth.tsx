@@ -10,6 +10,7 @@ import { isWorkspaceHost } from "@/lib/host";
 import { failOpen, retryWithTimeout } from "@/lib/async/timeout";
 import { resolveTrustState, type TrustState } from "@/lib/auth/restriction";
 import { recordAuthListenerEvent } from "@/lib/runtime/safetyCounters";
+import { verifyAuthLinkage } from "@/lib/auth/verifyLinkage";
 
 interface Profile {
   id: string;
