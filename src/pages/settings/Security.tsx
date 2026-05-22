@@ -101,6 +101,7 @@ export default function SecuritySettings() {
   if (loading) return <div className="flex items-center justify-center py-20"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>;
 
   return (
+    <>
     <div className="space-y-6">
       <SettingsSection title="Telegram authentication" description="Linked Telegram chat used for OTP and delivery.">
         <SettingsRow
