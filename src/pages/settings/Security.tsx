@@ -107,6 +107,74 @@ export default function SecuritySettings() {
           </Badge>
         </SettingsRow>
       </SettingsSection>
+
+      <SettingsSection
+        title="Linked sign-in methods"
+        description="Every identity that can sign into this account. Unlinking requires re-authentication."
+      >
+        {identities.length === 0 ? (
+          <p className="text-sm text-muted-foreground py-4 text-center">No identities linked.</p>
+        ) : (
+          <div className="space-y-2">
+            {identities.map((id: any) => (
+              <SettingsRow
+                key={id.identity_id || id.id}
+                label={
+                  <span className="flex items-center gap-2">
+                    {id.provider === "email" ? <KeyRound className="h-4 w-4" /> : <LogIn className="h-4 w-4" />}
+                    <span className="capitalize">{id.provider}</span>
+                  </span>
+                }
+                description={
+                  id.last_sign_in_at
+                    ? `Last used ${formatDistanceToNow(new Date(id.last_sign_in_at))} ago`
+                    : id.created_at ? `Linked ${formatDistanceToNow(new Date(id.created_at))} ago` : "—"
+                }
+              >
+                <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30">
+                  Connected
+                </Badge>
+              </SettingsRow>
+            ))}
+          </div>
+        )}
+      </SettingsSection>
+
+      <SettingsSection
+        title="Recent security events"
+        description="The last 25 auth-related events on your account. Critical events stay for 90 days."
+      >
+        {secEvents.length === 0 ? (
+          <p className="text-sm text-muted-foreground py-4 text-center">No security events yet.</p>
+        ) : (
+          <div className="space-y-2">
+            {secEvents.map((ev: any) => {
+              const isCrit = ev.severity === "critical";
+              const isWarn = ev.severity === "warn";
+              return (
+                <div key={ev.id} className="flex items-center justify-between gap-3 py-2 border-b border-border/30 last:border-0 text-sm">
+                  <div className="flex items-center gap-2 min-w-0">
+                    {isCrit ? <AlertTriangle className="h-4 w-4 text-destructive shrink-0" />
+                      : <Key className="h-4 w-4 text-muted-foreground shrink-0" />}
+                    <span className="truncate font-mono text-xs">{ev.event_type}</span>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Badge
+                      variant={isCrit ? "destructive" : "outline"}
+                      className={`text-[10px] ${isWarn && !isCrit ? "bg-amber-500/10 text-amber-700 border-amber-500/30" : ""}`}
+                    >
+                      {ev.severity}
+                    </Badge>
+                    <span className="text-xs text-muted-foreground">
+                      {formatDistanceToNow(new Date(ev.created_at))} ago
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </SettingsSection>
     </div>
   );
 }
