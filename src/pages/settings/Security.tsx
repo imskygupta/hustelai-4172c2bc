@@ -7,15 +7,70 @@ import { Button } from "@/components/ui/button";
 import { Loader2, Send, Shield, Activity, Download } from "lucide-react";
 import { Key, KeyRound, LogIn, AlertTriangle } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { useToast } from "@/hooks/use-toast";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { LogOut } from "lucide-react";
 
 export default function SecuritySettings() {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [telegram, setTelegram] = useState<any>(null);
   const [accessLogs, setAccessLogs] = useState<any[]>([]);
   const [sessionInfo, setSessionInfo] = useState<{ created?: string; updated?: string }>({});
   const [identities, setIdentities] = useState<any[]>([]);
   const [secEvents, setSecEvents] = useState<any[]>([]);
+
+  // Sign-out-everywhere flow state.
+  const [revokeOpen, setRevokeOpen] = useState(false);
+  const [revokePassword, setRevokePassword] = useState("");
+  const [revokeBusy, setRevokeBusy] = useState(false);
+  const [revokeError, setRevokeError] = useState<string | null>(null);
+
+  const handleRevokeAll = async () => {
+    if (!user?.email) return;
+    setRevokeError(null);
+    setRevokeBusy(true);
+    try {
+      // 1. Step-up: confirm current password.
+      const { error: signErr } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: revokePassword,
+      });
+      if (signErr) {
+        setRevokeError("Password did not match. Try again.");
+        setRevokeBusy(false);
+        return;
+      }
+      // 2. Mark reauth (server-side timestamp the edge function checks).
+      await (supabase as any).rpc("mark_reauth", { _user_id: user.id });
+      // 3. Revoke all sessions via edge function (service-role).
+      const { data, error } = await supabase.functions.invoke("session-revoke-all", { body: {} });
+      if (error || !data?.ok) {
+        setRevokeError(
+          data?.reason === "rate_limited"
+            ? "Too many revocation attempts. Try again later."
+            : "Couldn't revoke sessions. Please try again.",
+        );
+        setRevokeBusy(false);
+        return;
+      }
+      toast({
+        title: "Signed out everywhere",
+        description: `${data.revoked ?? 0} session(s) revoked. You'll be signed out now.`,
+      });
+      // 4. Force local sign-out — current refresh chain is dead anyway.
+      await supabase.auth.signOut().catch(() => { /* ignore */ });
+      window.location.href = "/login?reason=sessions_revoked";
+    } catch (e: any) {
+      setRevokeError(e?.message || "Unexpected error.");
+      setRevokeBusy(false);
+    }
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -72,6 +127,24 @@ export default function SecuritySettings() {
         </SettingsRow>
         <SettingsRow label="Last seen" description={sessionInfo.updated ? new Date(sessionInfo.updated).toLocaleString() : "—"}>
           <span className="text-xs text-muted-foreground">Encrypted</span>
+        </SettingsRow>
+      </SettingsSection>
+
+      <SettingsSection
+        title="Sign out everywhere"
+        description="Revoke every active sign-in for this account across all devices. You'll need to sign in again on every device, including this one."
+      >
+        <SettingsRow
+          label="Active sign-in sessions"
+          description="Full per-device inventory is kept server-side. Revocation removes them all at once."
+        >
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={() => { setRevokePassword(""); setRevokeError(null); setRevokeOpen(true); }}
+          >
+            <LogOut className="h-3.5 w-3.5 mr-1.5" /> Sign out all devices
+          </Button>
         </SettingsRow>
       </SettingsSection>
 
@@ -176,5 +249,44 @@ export default function SecuritySettings() {
         )}
       </SettingsSection>
     </div>
+    {/* Step-up confirmation dialog */}
+    <Dialog open={revokeOpen} onOpenChange={(o) => { if (!revokeBusy) setRevokeOpen(o); }}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Confirm sign-out everywhere</DialogTitle>
+          <DialogDescription>
+            For your security, re-enter your password. We'll then revoke every active session
+            for this account on every device.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-2 py-2">
+          <Label htmlFor="reauth-pw" className="text-sm">Current password</Label>
+          <Input
+            id="reauth-pw"
+            type="password"
+            value={revokePassword}
+            onChange={(e) => setRevokePassword(e.target.value)}
+            autoComplete="current-password"
+            disabled={revokeBusy}
+          />
+          {revokeError && (
+            <p className="text-xs text-destructive">{revokeError}</p>
+          )}
+        </div>
+        <DialogFooter>
+          <Button variant="ghost" onClick={() => setRevokeOpen(false)} disabled={revokeBusy}>
+            Cancel
+          </Button>
+          <Button
+            variant="destructive"
+            onClick={handleRevokeAll}
+            disabled={revokeBusy || revokePassword.length < 1}
+          >
+            {revokeBusy ? <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> Revoking…</> : "Revoke all sessions"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }
