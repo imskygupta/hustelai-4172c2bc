@@ -72,6 +72,7 @@ export function VerificationOverlay() {
   };
 
   const label =
+    trustState.reason === "security_review" ? "Account under security review" :
     trustState.reason === "suspended" ? "Account suspended" :
     trustState.reason === "expired" ? "Verification window expired" :
     trustState.reason === "email_unverified" ? "Verify your email to unlock AI tools" :
@@ -90,11 +91,19 @@ export function VerificationOverlay() {
         <p className="font-medium leading-tight">{label}</p>
         <p className="text-xs opacity-80 truncate">{user.email}</p>
       </div>
-      {trustState.reason !== "suspended" && (
+      {trustState.reason !== "suspended" && trustState.reason !== "security_review" && (
         <Button size="sm" variant="secondary" onClick={onResend} disabled={resending} className="shrink-0">
           {resending ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <Mail className="h-3.5 w-3.5 mr-1" />}
           Resend
         </Button>
+      )}
+      {trustState.reason === "security_review" && (
+        <a
+          href="mailto:support@hustlaiapp.in"
+          className="shrink-0 text-xs underline opacity-90 hover:opacity-100"
+        >
+          Contact support
+        </a>
       )}
       <button
         aria-label="Dismiss"
