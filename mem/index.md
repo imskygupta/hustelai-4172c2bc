@@ -49,3 +49,4 @@
 - [SEO Indexing Audit](mem://seo/indexing-pipeline-audit) — Phase A: current publish→sitemap→indexing flow, gaps, root cause for low Google indexed count
 - [Automated Indexing Plan](mem://seo/automated-indexing-architecture) — Phase B: post-publish dispatcher, GSC API, IndexNow autopilot, no new routes
 - [Search Growth Engine](mem://seo/search-growth-engine) — Clusters, link depth, segmented sitemaps, thin-content gate, CTR variants, authority/decay, humanization, GSC ingestion. BLOG-only.
+- [Cloud Budget Survival](mem://runtime/cloud-budget-survival) — Cost heatmap + cron/poll reduction plan to keep monthly cloud burn under $25
