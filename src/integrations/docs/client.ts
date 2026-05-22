@@ -3,6 +3,7 @@
 // Frontend reads go through the `docs-read-public` edge function which
 // holds the only Admin-DB-aware service-role credential.
 import { supabase } from "@/integrations/supabase/client";
+import { runWithDeadline } from "@/lib/async/timeout";
 
 // Phase 8F.1 — `docsDb` proxy export removed. Docs reads MUST go through the
 // `docs-read-public` edge function (Admin DB-aware). Only helper functions
@@ -40,7 +41,11 @@ export type DocsPage = {
 async function call(op: string, slug?: string) {
   try {
     const qs = new URLSearchParams({ op, ...(slug ? { slug } : {}) }).toString();
-    const { data, error } = await supabase.functions.invoke(`docs-read-public?${qs}`, { method: "GET" });
+    const { data, error } = await runWithDeadline(
+      () => supabase.functions.invoke(`docs-read-public?${qs}`, { method: "GET" }),
+      `docs.${op}`,
+      { timeoutMs: 5_000 },
+    );
     if (error) return null;
     return (data as any)?.data ?? null;
   } catch {
