@@ -8,6 +8,7 @@ import { startPoller } from "./ops/poller.js";
 import { startCron } from "./ops/cron.js";
 import { startSweeper, startHeartbeat } from "./ops/sweeper.js";
 import { startConfigPoller, getAdminChats, isFlagEnabled, snapshotInfo } from "./config/remote.js";
+import { startWorkflowLoop, getWorkflowLoopStats } from "./ops/loops/workflow.js";
 
 const app = express();
 app.use(express.json({ limit: "256kb" }));
@@ -40,6 +41,15 @@ app.get("/health", async (_req, res) => {
 // --- Ops self-awareness endpoints (admin/probe consumption) ---
 app.get("/ops/dedupe-stats", requireWorkerSecret, (_req, res) => {
   res.json({ ok: true, snapshot: snapshotInfo() });
+});
+
+// Per-loop stats for invocation-delta tracking. Add new entries as loops land.
+app.get("/ops/loop-stats", requireWorkerSecret, (_req, res) => {
+  res.json({
+    ok: true,
+    workflow: getWorkflowLoopStats(),
+    ts: new Date().toISOString(),
+  });
 });
 
 app.get("/ops/env-fingerprint", requireWorkerSecret, (_req, res) => {
@@ -188,6 +198,13 @@ app.listen(env.PORT, () => {
     startSweeper(workerId, queues, ctl.signal);
     startHeartbeat(workerId, queues, ctl.signal);
     console.log(`[ops-worker] enabled — id=${workerId} queues=${queues.join(",")}`);
+
+    // --- Phase-1 loop: workflow-runner replacement (default OFF) ---
+    if (String(process.env.LOOP_WORKFLOW ?? "false").toLowerCase() === "true") {
+      startWorkflowLoop(ctl.signal);
+    } else {
+      console.log("[workflow-loop] disabled (set LOOP_WORKFLOW=true to enable)");
+    }
   } else {
     console.log(`[ops-worker] disabled (set OPS_WORKER_ENABLED=true to enable)`);
   }

@@ -51,3 +51,4 @@
 - [Search Growth Engine](mem://seo/search-growth-engine) — Clusters, link depth, segmented sitemaps, thin-content gate, CTR variants, authority/decay, humanization, GSC ingestion. BLOG-only.
 - [Cloud Budget Survival](mem://runtime/cloud-budget-survival) — Cost heatmap + cron/poll reduction plan to keep monthly cloud burn under $25
 - [Railway Transition Plan](mem://runtime/railway-transition-plan) — Single ops-worker on Railway absorbs workflow/ai-job/indexing/crawl/cleanup loops; user-owned infra, no PRIMARY surface change
+- [Railway Credential Isolation](mem://runtime/railway-credential-isolation) — Per-loop DB-key map for Railway ops-worker; workflow-loop is the single PRIMARY-touching exception (read-only peek)
