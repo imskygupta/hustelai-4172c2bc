@@ -21,11 +21,18 @@ export default function DocsArticle() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
     setLoading(true);
     fetchDocsPage(slug).then((p) => {
+      if (cancelled) return;
       setPage(p);
       setLoading(false);
+    }).catch(() => {
+      if (cancelled) return;
+      setPage(null);
+      setLoading(false);
     });
+    return () => { cancelled = true; };
   }, [slug]);
 
   if (loading) {
