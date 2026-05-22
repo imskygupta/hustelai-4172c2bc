@@ -4997,9 +4997,12 @@ export type Database = {
       }
       profiles: {
         Row: {
+          account_origin: string
           address: string | null
           affiliate_commission: number | null
           affiliate_earnings: number
+          auth_provider: string
+          auth_provider_user_id: string | null
           bio: string | null
           company: string | null
           created_at: string
@@ -5007,11 +5010,13 @@ export type Database = {
           dodo_customer_id: string | null
           dodo_subscription_id: string | null
           email: string | null
+          email_verified: boolean
           first_run_state: Json
           freelancer_category: string | null
           headline: string | null
           id: string
           is_verified: boolean
+          oauth_linked_at: string | null
           onboarding: Json | null
           onboarding_completed: boolean
           phone: string | null
@@ -5020,6 +5025,7 @@ export type Database = {
           referral_code: string | null
           referral_credits: number
           referred_by: string | null
+          restricted_pending_ownership_review: boolean
           restricted_reason: string | null
           resume_url: string | null
           search_count: number
@@ -5039,9 +5045,12 @@ export type Database = {
           xp_points: number
         }
         Insert: {
+          account_origin?: string
           address?: string | null
           affiliate_commission?: number | null
           affiliate_earnings?: number
+          auth_provider?: string
+          auth_provider_user_id?: string | null
           bio?: string | null
           company?: string | null
           created_at?: string
@@ -5049,11 +5058,13 @@ export type Database = {
           dodo_customer_id?: string | null
           dodo_subscription_id?: string | null
           email?: string | null
+          email_verified?: boolean
           first_run_state?: Json
           freelancer_category?: string | null
           headline?: string | null
           id?: string
           is_verified?: boolean
+          oauth_linked_at?: string | null
           onboarding?: Json | null
           onboarding_completed?: boolean
           phone?: string | null
@@ -5062,6 +5073,7 @@ export type Database = {
           referral_code?: string | null
           referral_credits?: number
           referred_by?: string | null
+          restricted_pending_ownership_review?: boolean
           restricted_reason?: string | null
           resume_url?: string | null
           search_count?: number
@@ -5081,9 +5093,12 @@ export type Database = {
           xp_points?: number
         }
         Update: {
+          account_origin?: string
           address?: string | null
           affiliate_commission?: number | null
           affiliate_earnings?: number
+          auth_provider?: string
+          auth_provider_user_id?: string | null
           bio?: string | null
           company?: string | null
           created_at?: string
@@ -5091,11 +5106,13 @@ export type Database = {
           dodo_customer_id?: string | null
           dodo_subscription_id?: string | null
           email?: string | null
+          email_verified?: boolean
           first_run_state?: Json
           freelancer_category?: string | null
           headline?: string | null
           id?: string
           is_verified?: boolean
+          oauth_linked_at?: string | null
           onboarding?: Json | null
           onboarding_completed?: boolean
           phone?: string | null
@@ -5104,6 +5121,7 @@ export type Database = {
           referral_code?: string | null
           referral_credits?: number
           referred_by?: string | null
+          restricted_pending_ownership_review?: boolean
           restricted_reason?: string | null
           resume_url?: string | null
           search_count?: number
@@ -9626,6 +9644,22 @@ export type Database = {
         }
         Relationships: []
       }
+      security_account_conflicts: {
+        Row: {
+          account_origin: string | null
+          auth_provider: string | null
+          created_at: string | null
+          email: string | null
+          email_verified: boolean | null
+          has_duplicate_email: boolean | null
+          mixed_providers: string[] | null
+          restricted_pending_ownership_review: boolean | null
+          stale_unverified: boolean | null
+          user_id: string | null
+          verification_status: string | null
+        }
+        Relationships: []
+      }
       v_db_extraction_ranking: {
         Row: {
           cost_bucket: string | null
@@ -9800,6 +9834,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      claim_account_ownership: {
+        Args: { _provider: string; _user_id: string }
+        Returns: boolean
       }
       claim_ai_jobs: {
         Args: { _limit?: number }
@@ -9983,6 +10021,28 @@ export type Database = {
       flag_hash_bucket: {
         Args: { _flag: string; _user: string }
         Returns: number
+      }
+      get_security_account_conflicts: {
+        Args: never
+        Returns: {
+          account_origin: string | null
+          auth_provider: string | null
+          created_at: string | null
+          email: string | null
+          email_verified: boolean | null
+          has_duplicate_email: boolean | null
+          mixed_providers: string[] | null
+          restricted_pending_ownership_review: boolean | null
+          stale_unverified: boolean | null
+          user_id: string | null
+          verification_status: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "security_account_conflicts"
+          isOneToOne: false
+          isSetofReturn: true
+        }
       }
       grant_bonus_credits: {
         Args: {
@@ -10316,6 +10376,7 @@ export type Database = {
         Returns: Json
       }
       resolve_user_limits: { Args: { _user: string }; Returns: Json }
+      revoke_user_sessions: { Args: { _user_id: string }; Returns: number }
       roll_up_analytics_events: {
         Args: { _lookback?: string }
         Returns: number
