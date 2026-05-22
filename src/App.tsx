@@ -41,6 +41,7 @@ const AdminMarketingPages = lazy(() => import("./pages/admin/MarketingPages"));
 const AdminOperations = lazy(() => import("./pages/admin/Operations"));
 const AdminIncidentMode = lazy(() => import("./pages/admin/IncidentMode"));
 const AdminSecurityUsers = lazy(() => import("./pages/admin/SecurityUsers"));
+const AdminRuntimeTrust = lazy(() => import("./pages/admin/RuntimeTrust"));
 import NotificationPreferences from "./pages/settings/NotificationPreferences";
 import Integrations from "./pages/settings/Integrations";
 import Exports from "./pages/settings/Exports";
@@ -587,6 +588,7 @@ const App = () => {
             <Route path="/admin/operations" element={<AdminOperations />} />
             <Route path="/admin/incident-mode" element={<AdminIncidentMode />} />
             <Route path="/admin/security/users" element={<AdminSecurityUsers />} />
+            <Route path="/admin/security/runtime-trust" element={<AdminRuntimeTrust />} />
             <Route path="/admin/feature-flags" element={<AdminFeatureFlags />} />
             <Route path="/admin/automations" element={<Automations />} />
             <Route path="/admin/payments-review" element={<PaymentsReview />} />
