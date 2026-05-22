@@ -588,6 +588,7 @@ const App = () => {
             <Route path="/admin/operations" element={<AdminOperations />} />
             <Route path="/admin/incident-mode" element={<AdminIncidentMode />} />
             <Route path="/admin/security/users" element={<AdminSecurityUsers />} />
+            <Route path="/admin/security/runtime-trust" element={<AdminRuntimeTrust />} />
             <Route path="/admin/feature-flags" element={<AdminFeatureFlags />} />
             <Route path="/admin/automations" element={<Automations />} />
             <Route path="/admin/payments-review" element={<PaymentsReview />} />
