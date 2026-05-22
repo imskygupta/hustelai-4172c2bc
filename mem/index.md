@@ -35,3 +35,5 @@
 - [Sunday Brief Newsletter](mem://features/newsletter-sunday-brief) — Unified 1/week blog+app newsletter, 6-day throttle, bulk add
 - [Docs Content Recovery](mem://transfer/docs-content-recovery) — Audit: Admin DB docs tables empty; legacy fallback wired in docs-read-public; backfill plan ready
 - [Trust Tier & Verification](mem://security/trust-tier-and-verification) — Verified-account gate, trust tiers, requireVerifiedUser edge helper
+- [Trust Context Model](mem://security/trust-context-and-stabilization) — TrustContext enum, requireExecutionTrust, HMAC internal signing, test matrix
+- [Verification Phase 1 Report](mem://security/verification-enforcement-phase1) — AI runtime functions patched with requireVerifiedUser
