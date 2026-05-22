@@ -202,11 +202,12 @@ export default function Explore() {
             likes: 0,
             dislikes: 0,
           };
-          const { data: inserted } = await runWithDeadline(
+          const insertResult = await runWithDeadline<any>(
             () => blogDb.from("side_hustles").insert(insertData as any).select("*").single(),
             "explore.saveAiResult",
             { timeoutMs: 3_000 },
           ).catch(() => ({ data: null } as any));
+          const inserted = insertResult?.data;
           if (inserted) {
             savedResults.push(mapDbResult(inserted));
           } else {
