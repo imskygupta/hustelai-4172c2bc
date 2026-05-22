@@ -49,6 +49,37 @@ Deno.serve(async (req) => {
     const result = checkEmailPolicy(email);
 
     if (result.ok) {
+      // Pre-account takeover defense: if a row already exists for this email,
+      // do NOT allow a fresh password signup to mint a parallel shell.
+      const emailLower = email.toLowerCase().trim();
+      try {
+        const { data: list } = await sb.auth.admin.listUsers({ page: 1, perPage: 200 });
+        const existing = list?.users?.find((u: any) => (u.email || "").toLowerCase() === emailLower);
+        if (existing) {
+          if (existing.email_confirmed_at) {
+            void sb.rpc("log_security_auth_event", {
+              _user_id: existing.id, _email: emailLower,
+              _event_type: "auth.signup_blocked", _severity: "warn",
+              _metadata: { reason: "email_already_registered", source },
+            });
+            return json({ ok: false, reason: "email_already_registered",
+              message: "This email is already registered. Try signing in instead." }, 200);
+          }
+          // Unconfirmed shell exists. If stale (>24h) suspend it; either way reject.
+          const ageHours = (Date.now() - new Date(existing.created_at).getTime()) / 36e5;
+          if (ageHours >= 24) {
+            try { await sb.rpc("auto_suspend_unverified"); } catch { /* best-effort */ }
+          }
+          void sb.rpc("log_security_auth_event", {
+            _user_id: existing.id, _email: emailLower,
+            _event_type: "auth.signup_blocked", _severity: "warn",
+            _metadata: { reason: "verification_pending", age_hours: ageHours, source },
+          });
+          return json({ ok: false, reason: "verification_pending",
+            message: "A signup is already in progress for this email. Check your inbox or sign in with Google." }, 200);
+        }
+      } catch { /* fall through — never block legitimate signup on a lookup error */ }
+
       return json({ ok: true });
     }
 
