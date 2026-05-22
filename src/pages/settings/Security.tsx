@@ -5,6 +5,7 @@ import { SettingsSection, SettingsRow } from "@/components/settings/SettingsSect
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Loader2, Send, Shield, Activity, Download } from "lucide-react";
+import { Key, KeyRound, LogIn, AlertTriangle } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 export default function SecuritySettings() {
@@ -13,20 +14,26 @@ export default function SecuritySettings() {
   const [telegram, setTelegram] = useState<any>(null);
   const [accessLogs, setAccessLogs] = useState<any[]>([]);
   const [sessionInfo, setSessionInfo] = useState<{ created?: string; updated?: string }>({});
+  const [identities, setIdentities] = useState<any[]>([]);
+  const [secEvents, setSecEvents] = useState<any[]>([]);
 
   useEffect(() => {
     if (!user) return;
     (async () => {
-      const [integRes, logsRes, sessRes] = await Promise.all([
+      const [integRes, logsRes, sessRes, idsRes, evRes] = await Promise.all([
         (supabase as any).from("user_integrations").select("*").eq("user_id", user.id).eq("provider", "telegram").maybeSingle(),
         (supabase as any).from("export_access_logs").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(10),
         supabase.auth.getSession(),
+        supabase.auth.getUserIdentities(),
+        (supabase as any).rpc("get_my_security_events", { _limit: 25 }),
       ]);
       const integ = integRes?.data;
       const logs = logsRes?.data;
       const sess = sessRes?.data;
       setTelegram(integ);
       setAccessLogs(Array.isArray(logs) ? logs : []);
+      setIdentities((idsRes as any)?.data?.identities ?? []);
+      setSecEvents(Array.isArray(evRes?.data) ? evRes.data : []);
       const s = sess?.session;
       setSessionInfo({
         created: s ? new Date((s as any).user.created_at).toISOString() : undefined,
