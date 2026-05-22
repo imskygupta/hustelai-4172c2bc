@@ -49,7 +49,19 @@ function trustTierFor(
 
 export async function requireVerifiedUser(
   req: Request,
-  opts: { minTier?: 2 | 3 } = {},
+  opts: {
+    minTier?: 2 | 3;
+    /**
+     * Surface a structured security event when access is denied for verification reasons.
+     * Set to one of the supported denial event types so observability stays consistent.
+     */
+    denialEvent?:
+      | "verification_blocked_ai"
+      | "verification_blocked_runtime"
+      | "verification_blocked_export";
+    /** Logical function or surface name used in the audit metadata. */
+    fn?: string;
+  } = {},
 ): Promise<VerifiedGate> {
   const auth = req.headers.get("Authorization") || "";
   if (!auth.startsWith("Bearer ")) {
@@ -105,6 +117,11 @@ export async function requireVerifiedUser(
     .maybeSingle();
 
   if (pe || !profile) {
+    await maybeLogDenial(url, service, opts, req, {
+      userId: user.id,
+      email: user.email ?? null,
+      reason: "profile_missing",
+    });
     return {
       ok: false,
       response: deny(403, {
@@ -122,6 +139,11 @@ export async function requireVerifiedUser(
     : string;
 
   if (profile.verification_status === "suspended") {
+    await maybeLogDenial(url, service, opts, req, {
+      userId: user.id,
+      email: user.email ?? null,
+      reason: "suspended",
+    });
     return {
       ok: false,
       response: deny(403, {
@@ -135,6 +157,11 @@ export async function requireVerifiedUser(
   }
 
   if (profile.verification_status !== "verified" || !emailConfirmed) {
+    await maybeLogDenial(url, service, opts, req, {
+      userId: user.id,
+      email: user.email ?? null,
+      reason: "unverified",
+    });
     return {
       ok: false,
       response: deny(403, {
@@ -155,6 +182,12 @@ export async function requireVerifiedUser(
   );
 
   if (opts.minTier && trustTier < opts.minTier) {
+    await maybeLogDenial(url, service, opts, req, {
+      userId: user.id,
+      email: user.email ?? null,
+      reason: "tier_required",
+      currentTier: trustTier,
+    });
     return {
       ok: false,
       response: deny(403, {
@@ -172,6 +205,41 @@ export async function requireVerifiedUser(
     profile: profile as VerifiedGate extends { ok: true } ? never : never,
     trustTier,
   } as VerifiedGate;
+}
+
+async function maybeLogDenial(
+  url: string,
+  service: string,
+  opts: { denialEvent?: string; fn?: string },
+  req: Request,
+  ctx: {
+    userId?: string | null;
+    email?: string | null;
+    reason: string;
+    currentTier?: number;
+  },
+) {
+  if (!opts.denialEvent) return;
+  try {
+    const admin = createClient(url, service, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+    await admin.rpc("log_security_auth_event", {
+      _user_id: ctx.userId ?? null,
+      _email: ctx.email ?? null,
+      _event_type: opts.denialEvent,
+      _severity: "warn",
+      _ip: req.headers.get("x-forwarded-for") ?? null,
+      _user_agent: req.headers.get("user-agent") ?? null,
+      _metadata: {
+        fn: opts.fn ?? null,
+        reason: ctx.reason,
+        current_tier: ctx.currentTier ?? null,
+      },
+    });
+  } catch {
+    /* never fail the gate because logging failed */
+  }
 }
 
 /** Fire-and-forget security event logger. */
