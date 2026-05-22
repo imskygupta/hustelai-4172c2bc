@@ -160,6 +160,35 @@ export default function SecurityUsers() {
     load();
   };
 
+  const resolveConflict = async (id: string, userId: string, action: "mark_safe" | "revoke_sessions" | "force_reset") => {
+    setWorking(id);
+    try {
+      if (action === "revoke_sessions" || action === "force_reset") {
+        await supabase.rpc("revoke_user_sessions", { _user_id: userId });
+      }
+      if (action === "force_reset") {
+        await supabase
+          .from("profiles")
+          .update({
+            restricted_pending_ownership_review: true,
+            restricted_reason: "admin_force_ownership_reset",
+            verification_status: "restricted_security_review",
+          })
+          .eq("user_id", userId);
+      }
+      await (supabase as any)
+        .from("identity_conflict_queue")
+        .update({ resolved_at: new Date().toISOString(), resolution: action })
+        .eq("id", id);
+      toast.success("Conflict updated");
+      load();
+    } catch (e: any) {
+      toast.error(e?.message || "Failed to update conflict");
+    } finally {
+      setWorking(null);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-7xl mx-auto space-y-6">
