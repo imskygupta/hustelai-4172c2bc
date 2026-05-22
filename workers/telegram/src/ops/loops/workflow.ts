@@ -18,6 +18,7 @@
 import { primaryAdmin } from "../../supabase.js";
 import { env } from "../../env.js";
 import { emitEvent } from "../queue.js";
+import { reportLoopTick } from "../loop-runner.js";
 
 const IDLE_MIN_MS = Number(process.env.POLL_IDLE_MIN_MS || 5_000);
 const IDLE_MAX_MS = Number(process.env.POLL_IDLE_MAX_MS || 60_000);
@@ -86,8 +87,12 @@ export function startWorkflowLoop(signal: AbortSignal) {
     console.log(`[workflow-loop] started (claim_limit=${CLAIM_LIMIT}, observe_only=${OBSERVE_ONLY})`);
     while (!signal.aborted) {
       stats.ticks++;
+      const tickStart = Date.now();
+      let didWork = false;
+      let dueObserved = 0;
       try {
         const due = await peekDueCount();
+        dueObserved = due;
         if (due === 0) {
           stats.empty_ticks++;
           await wait(idleMs, signal);
@@ -103,6 +108,7 @@ export function startWorkflowLoop(signal: AbortSignal) {
             stats.last_invoked_at = new Date().toISOString();
             if (res.ok) {
               stats.runs_processed += res.processed;
+              if (res.processed > 0) didWork = true;
               console.log(`[workflow-loop] processed=${res.processed} due=${due}`);
             } else {
               stats.errors++;
@@ -110,11 +116,9 @@ export function startWorkflowLoop(signal: AbortSignal) {
               await wait(ERROR_MS, signal);
             }
           }
-          // Small breather between batches to avoid hammering during a backlog
           await wait(2_000, signal);
         }
 
-        // Flush stats every 5 min
         if (Date.now() - lastStatsFlush > 300_000) {
           await emitEvent("WORKFLOW_LOOP_STATS", { ...stats, uptime_s: Math.round((Date.now() - stats.startedAt) / 1000) }, { source: "ops.workflow-loop" });
           lastStatsFlush = Date.now();
@@ -123,6 +127,12 @@ export function startWorkflowLoop(signal: AbortSignal) {
         stats.errors++;
         console.error("[workflow-loop] tick error:", e?.message || e);
         await wait(ERROR_MS, signal);
+      } finally {
+        reportLoopTick("workflow-loop", {
+          tick_ms: Date.now() - tickStart,
+          queue_depth: dueObserved,
+          did_work: didWork,
+        });
       }
     }
     console.log("[workflow-loop] stopped");
