@@ -9,6 +9,7 @@ import { initCalmMode } from "./components/CalmModeToggle";
 import { installCrashReporter } from "./lib/observability/reportCrash";
 import { installPrimaryGuard } from "./integrations/supabase/primary-guard";
 import { getActiveBootTasks, INFRA_SAFE_MODE, installDeadlockWatchdog } from "./lib/async/timeout";
+import { installLeakDetector } from "./lib/runtime/leakDetector";
 
 // Calm mode is a global preference (reduces motion + gradients across surfaces).
 // Dark mode, by contrast, is scoped to the authenticated AppShell — see AppShell.tsx.
@@ -16,6 +17,8 @@ initCalmMode();
 // Phase 7F: hard-fail any access to extracted tables on the primary client.
 installPrimaryGuard();
 installDeadlockWatchdog();
+// Dev-only / opt-in (?hai_runtime_trace=1 in localStorage). No-op in prod.
+installLeakDetector();
 setTimeout(() => {
   const active = getActiveBootTasks();
   if (active.length > 0) {

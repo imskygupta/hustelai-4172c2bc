@@ -37,3 +37,6 @@
 - [Trust Tier & Verification](mem://security/trust-tier-and-verification) — Verified-account gate, trust tiers, requireVerifiedUser edge helper
 - [Trust Context Model](mem://security/trust-context-and-stabilization) — TrustContext enum, requireExecutionTrust, HMAC internal signing, test matrix
 - [Verification Phase 1 Report](mem://security/verification-enforcement-phase1) — AI runtime functions patched with requireVerifiedUser
+- [Runtime Stability Verification](mem://runtime/runtime-stability-verification) — Stress matrix, AI surface audit, React safety pass
+- [Docs Recovery Audit](mem://runtime/docs-recovery-audit) — Admin-DB migration + legacy fallback verification
+- [Runtime Risk Register](mem://runtime/runtime-risk-register) — Confirmed fixes, remaining risks, safe-to-resume gate
