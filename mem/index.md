@@ -44,3 +44,5 @@
 - [UX Friction Audit](mem://product/ux-friction-audit) — Canvas/exec UX, landing identity, docs onboarding, AI runtime perception
 - [Route Reduction Plan](mem://product/route-reduction-plan) — 257→~160 routes; delete/redirect/merge inventory
 - [AI Runtime Experience](mem://product/ai-runtime-experience) — Perceived speed, trust, resumability, ⌘K palette contract
+- [OAuth Linking Hardening](mem://security/oauth-account-linking-hardening) — Pre-takeover defense, signup-guard, auth-link-verify, ownership migration
+- [Account Ownership Model](mem://security/account-ownership-model) — Profile provenance columns and lifecycle state machine
