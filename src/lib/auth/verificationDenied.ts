@@ -4,8 +4,8 @@
 //   { error: "verification_required" | "account_suspended" | "profile_missing",
 //     verification_required: true, ... }
 //
-// Frontend rule: stop polling, stop retries, surface the global
-// <VerificationLock /> via a profile refresh — never spin forever.
+// Frontend rule: stop polling, stop retries, and let the root auth gate render
+// <RestrictedVerificationShell /> if the centralized trust state is restricted.
 
 import { supabase } from "@/integrations/supabase/client";
 import { runWithDeadline, TimeoutError } from "@/lib/async/timeout";
@@ -32,8 +32,7 @@ let lastDeniedAt = 0;
 
 /**
  * Call this when an edge-function response indicates the user failed
- * verification. It refreshes the auth profile so <VerificationLock /> takes
- * over, and dispatches a `hai:verification-denied` event so any active
+ * verification. It dispatches a `hai:verification-denied` event so any active
  * pollers/loaders can cancel themselves.
  *
  * Idempotent: safe to call from many call sites concurrently.

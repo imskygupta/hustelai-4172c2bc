@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, useRef, ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useState, useRef, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AUTH_EMAIL_REDIRECT_TO } from "@/lib/auth-config";
 import { identify, resetAnalytics } from "@/lib/analytics";
@@ -8,6 +8,8 @@ import { reportAuthAnomaly } from "@/lib/auth/telemetry";
 import { broadcastSignout, subscribeAuthBroadcast } from "@/lib/auth/crossTab";
 import { isWorkspaceHost } from "@/lib/host";
 import { failOpen, retryWithTimeout } from "@/lib/async/timeout";
+import { resolveTrustState, type TrustState } from "@/lib/auth/restriction";
+import { recordAuthListenerEvent } from "@/lib/runtime/safetyCounters";
 
 interface Profile {
   id: string;
@@ -30,6 +32,7 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   profile: Profile | null;
+  trustState: TrustState;
   loading: boolean;
   profileLoading: boolean;
   signUp: (email: string, password: string, displayName: string, referralCode?: string) => Promise<{ error: any }>;
@@ -263,9 +266,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (nextSession?.user) {
       writeBridgeSession(nextSession);
-      if (fetchProfileAllowed) {
+      if (fetchProfileAllowed && nextSession.user.email_confirmed_at) {
         setProfileLoading(true);
         setTimeout(() => fetchProfile(nextSession.user.id, nextSession.user.email, !!nextSession.user.email_confirmed_at), 0);
+      } else {
+        setProfile(null);
+        setProfileLoading(false);
       }
     } else {
       setProfile(null);
@@ -300,6 +306,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, nextSession) => {
         if (!mounted) return;
+        recordAuthListenerEvent(event, { hasSession: !!nextSession, userId: nextSession?.user?.id });
         authDebug("state_change", { event, hasSession: !!nextSession, userId: nextSession?.user?.id });
 
         if (event === "TOKEN_REFRESHED") {
@@ -436,8 +443,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     clearSentryUser();
   };
 
+  const trustState = useMemo(
+    () => resolveTrustState({ user, profile, loading, profileLoading }),
+    [user, profile, loading, profileLoading],
+  );
+
+  const value = useMemo<AuthContextType>(
+    () => ({ user, session, profile, trustState, loading, profileLoading, signUp, signIn, signOut, refreshProfile }),
+    [user, session, profile, trustState, loading, profileLoading],
+  );
+
   return (
-    <AuthContext.Provider value={{ user, session, profile, loading, profileLoading, signUp, signIn, signOut, refreshProfile }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );

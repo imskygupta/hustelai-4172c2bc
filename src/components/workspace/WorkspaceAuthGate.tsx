@@ -3,6 +3,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles } from "lucide-react";
 import PortalGate from "./PortalGate";
+import RestrictedVerificationShell from "@/components/auth/RestrictedVerificationShell";
 
 /**
  * Workspace-only auth gate. Unlike RequireAuth (which redirects to /login),
@@ -14,7 +15,7 @@ import PortalGate from "./PortalGate";
  * arrival feels like a transition, not a redirect.
  */
 export function WorkspaceAuthGate({ children }: { children: ReactNode }) {
-  const { user, loading } = useAuth();
+  const { user, loading, trustState } = useAuth();
   const arrivedFromHandoff = useRef<boolean>(
     typeof window !== "undefined" && /access_token=/.test(window.location.hash || "")
   );
@@ -48,6 +49,7 @@ export function WorkspaceAuthGate({ children }: { children: ReactNode }) {
   }
 
   if (!user) return <PortalGate />;
+  if (trustState.restricted) return <RestrictedVerificationShell />;
 
   return (
     <>

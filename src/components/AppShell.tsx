@@ -7,7 +7,6 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { Search, Crown, Sparkles, Rocket, Star, ChevronRight, ArrowRight, Command, BookOpen } from "lucide-react";
-import { VerifyEmailGate } from "@/components/VerifyEmailGate";
 import { Chatbot } from "@/components/Chatbot";
 import { HustleBotIntro } from "@/components/HustleBotIntro";
 import NotificationCenter from "@/components/workspace-os/NotificationCenter";
@@ -114,7 +113,6 @@ export function AppShell({ children, title, breadcrumbs, actions }: AppShellProp
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
-        <VerifyEmailGate />
         <AppSidebar />
 
         <div className="flex-1 flex flex-col min-w-0">
