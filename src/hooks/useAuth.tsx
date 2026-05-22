@@ -31,6 +31,7 @@ interface AuthContextType {
   session: Session | null;
   profile: Profile | null;
   loading: boolean;
+  profileLoading: boolean;
   signUp: (email: string, password: string, displayName: string, referralCode?: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
@@ -186,11 +187,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [profileLoading, setProfileLoading] = useState(false);
   const refreshFailCount = useRef(0);
   const hydratedRef = useRef(false);
   const signedOutTimestamps = useRef<number[]>([]);
+  const profileRequestRef = useRef<Promise<void> | null>(null);
+  const lastProfileFetchAtRef = useRef(0);
 
-  const fetchProfile = async (userId: string, email?: string | null) => {
+  const fetchProfile = async (userId: string, email?: string | null, emailConfirmed = false, force = false) => {
+    const now = Date.now();
+    if (!force && profileRequestRef.current && now - lastProfileFetchAtRef.current < 1_500) {
+      return profileRequestRef.current;
+    }
+    lastProfileFetchAtRef.current = now;
     const fallbackProfile: Profile = {
       id: userId,
       user_id: userId,
@@ -201,7 +210,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       is_verified: false,
       xp_points: 0,
       onboarding_completed: true,
+      verification_status: emailConfirmed ? "verified" : "pending",
+      verification_deadline: null,
+      verified_at: emailConfirmed ? new Date().toISOString() : null,
     };
+    setProfileLoading(true);
+    const task = (async () => {
     try {
       const { data } = await failOpen(
         () => retryWithTimeout(
@@ -223,11 +237,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     } catch {
       // Silently handle profile fetch errors
+    } finally {
+      setProfileLoading(false);
+      profileRequestRef.current = null;
     }
+    })();
+    profileRequestRef.current = task;
+    return task;
   };
 
   const refreshProfile = async () => {
-    if (user) await fetchProfile(user.id, user.email);
+    if (user) await fetchProfile(user.id, user.email, !!user.email_confirmed_at, true);
   };
 
   const applySession = (nextSession: Session | null, source: string) => {
@@ -242,9 +262,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (nextSession?.user) {
       writeBridgeSession(nextSession);
-      setTimeout(() => fetchProfile(nextSession.user.id, nextSession.user.email), 0);
+      setTimeout(() => fetchProfile(nextSession.user.id, nextSession.user.email, !!nextSession.user.email_confirmed_at), 0);
     } else {
       setProfile(null);
+      setProfileLoading(false);
     }
   };
 
@@ -252,6 +273,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setSession(null);
     setUser(null);
     setProfile(null);
+    setProfileLoading(false);
     setLoading(false);
     if (clearBridge) clearBridgeSession();
     if (!clearStorage) return;
