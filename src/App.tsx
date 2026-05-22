@@ -9,7 +9,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
-import RestrictedVerificationShell from "@/components/auth/RestrictedVerificationShell";
+import VerificationOverlay from "@/components/auth/VerificationOverlay";
 import { WorkspaceProvider } from "@/lib/workspace/context";
 import { WorkspaceFrame } from "@/components/workspace/WorkspaceFrame";
 import { WorkspaceAuthGate } from "@/components/workspace/WorkspaceAuthGate";
