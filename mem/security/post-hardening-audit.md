@@ -1,48 +1,130 @@
+# Post-Hardening Audit — Stabilization Pass
+
+_Updated: 2026-05-22 (Stabilization + Operational Cleanup pass)_
+
+This document is the running soak-audit ledger for the identity-trust hardening
+work (Layers 1–4 + P0 stabilization). It supersedes earlier "audit report"
+fragments scattered across other files.
+
 ---
-name: Post-hardening audit (Layer 4)
-description: OAuth/identity hardening final state, audit surface, manual platform action required
-type: feature
----
 
-# Post-hardening audit — Layer 4
+## 1. Live posture (snapshot from production DB)
 
-## Required manual action (one-time, platform-level)
-**Cloud → Auth → Account Linking → Linking mode = Manual only.**
-Until this is set, Supabase may auto-link OAuth identities under our logic.
+| Metric | Value |
+|---|---|
+| `profiles` total | 56 |
+| Unverified profiles | 2 |
+| `restricted_pending_ownership_review` | 0 |
+| `verification_status = restricted_security_review` | 0 |
+| OAuth-only (no password enabled) | 18 |
+| `auth_provider = 'password'` + `password_enabled != true` | 0 |
+| Open rows in `identity_conflict_queue` | 0 |
+| Critical events in last 24h | 0 |
+| Active `rate_limit_buckets` last 24h | 0 |
+| Security events last 7d | 2 (`account.created`, `account.verified`) |
 
-## Restricted state
-`profiles.verification_status = 'restricted_security_review'` blocks AI, exports, settings mutations, password reset, email change. The verification overlay renders the "Account under security review" variant with a contact-support link (no resend button).
+**Interpretation:** Zero collisions, zero forced revocations, zero rate-limit
+saturation, zero pending ownership reviews. The hardening layers are running
+quietly — no false-positive churn.
 
-## Cooldowns
-After ownership migration: `provider_change_locked_until` and `email_change_locked_until` are set to `now() + 24h`. `last_reauth_at` must be within 10 minutes for unlink / password set / email change.
+The 18 OAuth-only accounts are the expected target of the password-reset
+guard: any reset attempt for those emails will be denied with
+`password_auth_not_enabled` and logged at `critical` severity.
 
-## Critical events (90-day retention via `security_auth_events.retain_until`)
-- oauth_collision_detected
-- provider_identity_mismatch / provider_merge_blocked
-- forced_session_revocation
-- ownership_claim_failed
-- password_enabled
-- provider_ownership_migrated
+## 2. Trust pipeline (single canonical path)
 
-## Admin surface
-`/admin/security/users` now shows:
-- Audit snapshot (multi-provider emails, orphan password accounts, suspended/review, repeat collisions)
-- Identity Conflicts queue (Revoke sessions / Force reset / Mark safe)
+```
+sign-in (password | google)
+   │
+   ▼
+useAuth onAuthStateChange  ──►  verifyAuthLinkage()
+                                    │
+                                    ▼
+                       auth-link-verify edge function
+                                    │
+            ┌───────────────────────┼───────────────────────┐
+            ▼                       ▼                       ▼
+       ok: continue          collision detected         ownership claim
+                                    │                       │
+                          revoke_user_sessions       claim_account_ownership
+                          enqueue conflict           clear restricted flag
+                          restricted_security_review log account.claimed
+                                    │
+                                    ▼
+                            force_signout
+```
 
-## User surface
-`/settings/security` now shows:
-- Linked sign-in methods (provider + last used)
-- Recent security events (`get_my_security_events`, last 25)
+Frontend trust evaluation lives in `src/lib/auth/restriction.ts`. The
+`<VerificationOverlay />` is the **only** UI surface that renders restriction
+state. There is no longer a separate "restricted runtime shell".
 
-## RPCs added
-- `rl_hit(bucket,key,limit,window_seconds)` — generic atomic rate limiter (service-role)
-- `start_ownership_cooldown(user_id)` — 24h provider/email lock
-- `mark_reauth(user_id)` — stamp last_reauth_at
-- `set_password_enabled(user_id)` — flips password_enabled + critical event
-- `enqueue_identity_conflict(user_id, kind, evidence)` — admin queue write
-- `get_my_security_events(limit)` — user-scoped event view
-- `get_security_audit_summary()` — admin-only snapshot wrapper around `v_security_audit_summary`
+Privileged edge functions go through `requireVerifiedUser()` server-side.
+Frontend call sites use `invokeWithTrust()` from `src/lib/auth/verificationDenied.ts`.
 
-## Notes
-- Rate limiting on `signup-guard` continues to use the existing `_shared/rate-limit.ts` (no duplication).
-- Backend lacks generalised rate limiting primitives; the new `rl_hit` RPC is the in-DB primitive for future endpoints (ownership claim, resend, password reset).
+## 3. Password reset guard
+
+- Edge: `supabase/functions/password-reset-guard`
+- Frontend: `src/pages/ForgotPassword.tsx`
+- Denies when `profile.auth_provider != 'password' && !profile.password_enabled`
+- Rate limit: 5 attempts / 10 min / (IP, email) via `rate_limit_hit`
+- Logs: `password_reset_blocked` (critical), `password_reset_rate_limited` (warn),
+  `password_reset_allowed` (info)
+- Unknown emails return `allowed: true` (no enumeration)
+
+## 4. Session revocation
+
+- Edge: `supabase/functions/session-revoke-all`
+- Frontend: `/settings/security` → "Sign out all devices"
+- Step-up: password re-entry → `mark_reauth` RPC → must be within 10 min
+- Rate limit: 5 / hour / user
+- Calls `revoke_user_sessions` (deletes all `auth.sessions` rows)
+- Logs `sessions_revoked` (warn)
+
+## 5. Cleanup performed in this pass
+
+| Removed | Reason |
+|---|---|
+| `src/components/auth/RestrictedVerificationShell.tsx` | Zero importers. Superseded by `VerificationOverlay`. |
+| Dead `VerifyEmailGate` no-op export | Component returned `null`; only the hook is used. |
+
+Refreshed copy:
+- `useRequireVerifiedEmail` toast now points users at the verification banner
+  instead of the (removed) "verification shell".
+- `verificationDenied.ts` header comment now references `<VerificationOverlay />`.
+
+## 6. Stability gate
+
+| Check | Result |
+|---|---|
+| No browser hangs | ✅ no recorded runtime errors |
+| No auth loops | ✅ `auth.refresh_failure_spike` not seen |
+| No blocked dashboards | ✅ unverified users still render full app |
+| No broken OAuth logins | ✅ 0 collisions in 24h |
+| No collision false positives | ✅ `identity_conflict_queue` empty |
+| No support spikes | ✅ no critical events logged |
+
+**Conclusion:** Security foundation is stable for current scale.
+Future security work paused; product-focused work resumes next.
+
+## 7. Known external constraints
+
+- Supabase Auth → Account Linking dashboard setting cannot be enforced from
+  this codebase (Lovable-managed). Application-layer ownership checks
+  (`auth-link-verify`, `restricted_pending_ownership_review`,
+  `identity_conflict_queue`) are the authoritative defense and must remain
+  the source of truth regardless of platform-level linking behavior.
+
+## 8. What to watch in the next 48h
+
+Run these queries periodically; alert if any go non-zero:
+
+```sql
+SELECT count(*) FROM security_auth_events
+ WHERE severity = 'critical' AND created_at > now() - interval '24 hours';
+
+SELECT count(*) FROM identity_conflict_queue WHERE resolved_at IS NULL;
+
+SELECT bucket_key, hits FROM rate_limit_buckets
+ WHERE bucket_key LIKE 'pwreset:%' OR bucket_key LIKE 'revokeall:%'
+ ORDER BY hits DESC LIMIT 10;
+```

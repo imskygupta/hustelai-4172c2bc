@@ -5,7 +5,9 @@
 //     verification_required: true, ... }
 //
 // Frontend rule: stop polling, stop retries, and let the root auth gate render
-// <RestrictedVerificationShell /> if the centralized trust state is restricted.
+// <VerificationOverlay /> (lightweight banner) if the centralized trust state
+// is restricted. There is no separate "restricted shell" anymore — the app
+// keeps running and privileged calls are blocked server-side.
 
 import { supabase } from "@/integrations/supabase/client";
 import { runWithDeadline, TimeoutError } from "@/lib/async/timeout";
