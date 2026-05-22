@@ -9,9 +9,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
-import VerificationLock from "@/components/auth/VerificationLock";
 import RestrictedVerificationShell from "@/components/auth/RestrictedVerificationShell";
-import { getRestrictionReason } from "@/lib/auth/restriction";
 import { WorkspaceProvider } from "@/lib/workspace/context";
 import { WorkspaceFrame } from "@/components/workspace/WorkspaceFrame";
 import { WorkspaceAuthGate } from "@/components/workspace/WorkspaceAuthGate";
@@ -246,6 +244,7 @@ const AuthorityPage = lazy(() => import("./pages/authority/AuthorityPage"));
 import { MaintenanceBanner } from "./components/flags/FeatureGate";
 import TelegramLanding from "./pages/marketing/TelegramLanding";
 import { Navigate } from "react-router-dom";
+import { assertRestrictedRuntimeBoundary, markFullRuntimeBootStarted, registerRuntimeMount } from "@/lib/runtime/safetyCounters";
 
 // Legacy `/workspaces/*` → clean cockpit aliases (workspace host only).
 function LegacyProjectRedirect() {
@@ -282,11 +281,13 @@ const queryClient = new QueryClient();
 
 function FullRuntimeApp() {
   useEffect(() => {
+    markFullRuntimeBootStarted();
+    const unregister = registerRuntimeMount("FullRuntimeApp");
     // Phase 9.2: advance hydration phases after first paint, then lazily
     // refresh runtime feature flags from the Admin DB (fail-open).
     bootstrapHydration();
     const t = setTimeout(() => { void refreshFeatureFlagsFromAdmin(); }, 1_500);
-    return () => clearTimeout(t);
+    return () => { clearTimeout(t); unregister(); };
   }, []);
 
   return (
@@ -295,7 +296,6 @@ function FullRuntimeApp() {
         <Toaster />
         <Sonner />
         <DebugRuntimeOverlay />
-        <VerificationLock />
         {isMaintenance() ? <MaintenancePage /> : (
         <BrowserRouter>
           <YandexRouteTracker />
@@ -640,8 +640,10 @@ function FullRuntimeApp() {
 }
 
 function AuthenticatedRuntimeGate() {
-  const { user, profile, loading, profileLoading } = useAuth();
-  const restrictedReason = getRestrictionReason(user, profile, profileLoading);
+  const { user, loading, profileLoading, trustState } = useAuth();
+  const restrictedReason = trustState.reason;
+
+  assertRestrictedRuntimeBoundary(trustState.restricted, "AuthenticatedRuntimeGate");
 
   useEffect(() => {
     try {
@@ -652,13 +654,14 @@ function AuthenticatedRuntimeGate() {
         profileLoading,
         hasUser: !!user,
         restrictedReason,
+        trustReady: trustState.ready,
       });
     } catch {
       // diagnostics only
     }
-  }, [loading, profileLoading, restrictedReason, user]);
+  }, [loading, profileLoading, restrictedReason, trustState.ready, user]);
 
-  if (loading || (user && user.email_confirmed_at && profileLoading && !profile)) {
+  if (!trustState.ready) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="h-8 w-8 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
