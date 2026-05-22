@@ -71,6 +71,20 @@ async function hmacSha256(secret: string, data: string): Promise<string> {
     .join("");
 }
 
+async function withDeadline<T>(p: PromiseLike<T>, label: string, ms = 8_000): Promise<T> {
+  let timer: number | undefined;
+  try {
+    return await Promise.race([
+      Promise.resolve(p),
+      new Promise<T>((_, reject) => {
+        timer = setTimeout(() => reject(new Error(`${label}_timeout`)), ms);
+      }),
+    ]);
+  } finally {
+    if (timer !== undefined) clearTimeout(timer);
+  }
+}
+
 const ALLOWED_SERVICES = new Set([
   "workflow-runner",
   "ai-job-runner",
@@ -231,10 +245,14 @@ export async function requireExecutionTrust(
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
       { auth: { persistSession: false, autoRefreshToken: false } },
     );
-    const { data: roles } = await admin
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", gate.user.id);
+    const { data: roles } = await withDeadline(
+      admin
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", gate.user.id),
+      "role_lookup",
+      3_000,
+    );
     if (roles?.some((r) => r.role === "admin" || r.role === "super_admin")) {
       context = "admin_operator";
     }
@@ -299,7 +317,7 @@ async function logTrustEvent(
     const admin = createClient(url, service, {
       auth: { persistSession: false, autoRefreshToken: false },
     });
-    await admin.rpc("log_security_auth_event", {
+    await withDeadline(admin.rpc("log_security_auth_event", {
       _user_id: null,
       _email: null,
       _event_type: args.type,
@@ -307,7 +325,7 @@ async function logTrustEvent(
       _ip: req.headers.get("x-forwarded-for") ?? null,
       _user_agent: req.headers.get("user-agent") ?? null,
       _metadata: { fn: args.fn, service: args.service ?? null, reason: args.reason },
-    });
+    }), "trust_event_log", 2_000);
   } catch {
     /* never fail the gate because logging failed */
   }
