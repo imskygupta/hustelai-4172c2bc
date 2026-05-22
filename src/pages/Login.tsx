@@ -142,6 +142,12 @@ export default function Login() {
             </p>
           </div>
 
+          {reasonMessage && (
+            <div className="mt-4 text-xs rounded-md border border-amber-500/30 bg-amber-500/10 text-amber-200 px-3 py-2">
+              {reasonMessage}
+            </div>
+          )}
+
           <div className="mt-6 inline-flex w-full rounded-lg bg-muted/50 p-1">
             <button
               type="button"
