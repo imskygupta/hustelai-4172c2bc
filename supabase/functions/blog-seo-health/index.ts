@@ -35,6 +35,42 @@ function wordCount(md: string) {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
+  // Service-role short-circuit so indexing-dispatcher can call validate_url
+  // without an admin user session.
+  const auth = req.headers.get("Authorization") ?? "";
+  const isServiceRole = auth === `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`;
+  const url = new URL(req.url);
+  const action = url.searchParams.get("action");
+
+  // Single-URL crawlability validator (used by indexing-dispatcher).
+  if (action === "validate_url" && (isServiceRole || await requireAdmin(req))) {
+    const target = url.searchParams.get("url") ?? "";
+    if (!/^https?:\/\//i.test(target)) {
+      return new Response(JSON.stringify({ ok: false, error: "invalid_url" }), {
+        status: 400, headers: { ...cors, "content-type": "application/json" },
+      });
+    }
+    const result = await validateUrl(target);
+    // Best-effort audit row; never blocks response.
+    try {
+      await blog.from("indexing_audit").insert({
+        url: target,
+        ok: result.ok,
+        http_status: result.http_status,
+        canonical: result.canonical,
+        noindex: result.noindex,
+        has_og: result.has_og,
+        has_jsonld: result.has_jsonld,
+        has_article_schema: result.has_article_schema,
+        in_sitemap: result.in_sitemap,
+        issues: result.issues,
+      });
+    } catch { /* table may not exist yet; ignore */ }
+    return new Response(JSON.stringify(result), {
+      headers: { ...cors, "content-type": "application/json" },
+    });
+  }
+
   if (!(await requireAdmin(req))) {
     return new Response(JSON.stringify({ error: "forbidden" }), { status: 403, headers: { ...cors, "content-type": "application/json" } });
   }
