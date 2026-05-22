@@ -40,3 +40,7 @@
 - [Runtime Stability Verification](mem://runtime/runtime-stability-verification) — Stress matrix, AI surface audit, React safety pass
 - [Docs Recovery Audit](mem://runtime/docs-recovery-audit) — Admin-DB migration + legacy fallback verification
 - [Runtime Risk Register](mem://runtime/runtime-risk-register) — Confirmed fixes, remaining risks, safe-to-resume gate
+- [Workspace Consolidation v2](mem://product/workspace-consolidation-v2) — Single /workspace cockpit, 6-item nav, route dedup
+- [UX Friction Audit](mem://product/ux-friction-audit) — Canvas/exec UX, landing identity, docs onboarding, AI runtime perception
+- [Route Reduction Plan](mem://product/route-reduction-plan) — 257→~160 routes; delete/redirect/merge inventory
+- [AI Runtime Experience](mem://product/ai-runtime-experience) — Perceived speed, trust, resumability, ⌘K palette contract
