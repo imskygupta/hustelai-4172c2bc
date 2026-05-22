@@ -65,16 +65,6 @@ export function VerificationLock() {
     return () => clearInterval(id);
   }, [open]);
 
-  // Light poll so the lock auto-closes once the user clicks the email link
-  // in another tab.
-  useEffect(() => {
-    if (!open) return;
-    const id = setInterval(() => {
-      refreshProfile().catch(() => undefined);
-    }, 8000);
-    return () => clearInterval(id);
-  }, [open, refreshProfile]);
-
   const remainingMs = useMemo(() => {
     if (!profile?.verification_deadline) return 0;
     return new Date(profile.verification_deadline).getTime() - now;
