@@ -10087,6 +10087,16 @@ export type Database = {
         Args: { _flag: string; _user: string }
         Returns: number
       }
+      get_my_security_events: {
+        Args: { _limit?: number }
+        Returns: {
+          created_at: string
+          event_type: string
+          id: string
+          metadata: Json
+          severity: string
+        }[]
+      }
       get_security_account_conflicts: {
         Args: never
         Returns: {
