@@ -81,7 +81,8 @@ export function startWorkflowLoop(signal: AbortSignal) {
   let idleMs = IDLE_MIN_MS;
   let lastStatsFlush = Date.now();
 
-  const loop = async () => {
+  // Loop body — returns only on abort. Throws bubble to superviseLoop().
+  return (async () => {
     console.log(`[workflow-loop] started (claim_limit=${CLAIM_LIMIT}, observe_only=${OBSERVE_ONLY})`);
     while (!signal.aborted) {
       stats.ticks++;
@@ -125,8 +126,7 @@ export function startWorkflowLoop(signal: AbortSignal) {
       }
     }
     console.log("[workflow-loop] stopped");
-  };
-  void loop();
+  })();
 }
 
 export function getWorkflowLoopStats() {
