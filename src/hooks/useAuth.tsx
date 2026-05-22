@@ -264,6 +264,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (nextSession?.user) {
       writeBridgeSession(nextSession);
       if (fetchProfileAllowed) {
+        setProfileLoading(true);
         setTimeout(() => fetchProfile(nextSession.user.id, nextSession.user.email, !!nextSession.user.email_confirmed_at), 0);
       }
     } else {
