@@ -1,115 +1,85 @@
-# OAuth Pre-Account Takeover — P0 Hardening Plan
+# Layer 4 — Final OAuth & Identity Hardening
 
-This builds on the existing verification system (`profiles.verification_status`, `security_auth_events`, `handle_new_user`) already in place from the trust rollout. We will NOT touch `auth.users`/`auth.identities` schemas (read-only). All defense lives in `public.*`, edge functions, and Supabase auth config.
+Closes the remaining items after Layers 1–3. No new infra abstractions — extends existing tables, edge functions, and `/admin/security/users`.
 
-## Threat being closed
+## 0. Manual platform action (user-side, mandatory)
 
-Attacker pre-registers `victim@gmail.com` with password (unconfirmed). Later the victim signs in with Google; Supabase's default same-email auto-link could attach the Google identity to the attacker's shell account. Even without auto-link, the attacker keeps an unconfirmed `auth.users` row that creates ambiguity and may be reactivated.
+Surface a one-time instruction in the response:
+**Cloud → Auth → Account Linking → Linking mode = Manual only.**
+Lovable cannot toggle this via API; without it Supabase may silently auto-link identities under our logic.
 
-## Strategy — 4 layers, each shipped as a separate approval
+## 1. DB migration — extend trust + audit model
 
-### Layer 1 — Auth config + DB hardening (one migration + `configure_auth`)
+Single migration adds:
 
-**Auth config**
-- `auto_confirm_email = false`, `password_hibp_enabled = true`, `external_anonymous_users_enabled = false`, `disable_signup = false`.
-- The "Manual linking only" toggle in Cloud → Auth → Account Linking cannot be set via tool — we surface it in the admin panel (Layer 4) and in the runbook memory file.
+- `profiles.verification_status` enum value: `restricted_security_review` (string column, no schema break).
+- `profiles.provider_change_locked_until timestamptz`, `email_change_locked_until timestamptz`, `last_reauth_at timestamptz`, `password_enabled boolean default false`.
+- `auth_anomaly_events.severity text` (`info|warn|critical`) + `retain_until timestamptz` (default `now()+90d`).
+- `identity_conflict_queue` table: `id, user_id, kind, detected_at, resolved_at, resolver_admin_id, resolution, notes, evidence jsonb`. RLS: admin-only via existing `has_role(_,'admin')`.
+- `rate_limit_buckets` table (`bucket text, key text, window_started_at timestamptz, count int, primary key(bucket,key)`) + `rl_hit(bucket,key,limit,window_seconds)` SECURITY DEFINER RPC returning `{allowed, retry_after}`.
+- Trigger: when `password_enabled` flips false→true, write `auth_anomaly_events('password_enabled', critical)` and send security email.
+- View `v_security_audit_summary` for the post-hardening audit (multi-provider emails, orphan password accounts, suspended shells, repeated collisions, same-IP shell bursts, OAuth→password transitions).
 
-**Migration additions to `public.profiles`**
-- `auth_provider TEXT NOT NULL DEFAULT 'email'` — first provider that successfully owned the account.
-- `auth_provider_user_id TEXT` — provider subject (`sub`).
-- `email_verified BOOLEAN NOT NULL DEFAULT false` — mirror of `auth.users.email_confirmed_at IS NOT NULL`, kept in sync by trigger.
-- `oauth_linked_at TIMESTAMPTZ` — when an OAuth identity first attached.
-- `account_origin TEXT NOT NULL DEFAULT 'email'` — `email | oauth_google | oauth_apple | magic_link | admin_created`.
-- `restricted_pending_ownership_review BOOLEAN NOT NULL DEFAULT false` — emergency lock flag.
+## 2. Edge function changes (no new functions)
 
-**`handle_new_user` rewrite (additive, safe fallback)**
-- Detects provider from `raw_app_meta_data->>'provider'` + `providers[]`.
-- Populates the new columns.
-- If `email_confirmed_at IS NULL` and provider is `email`: profile created with `verification_status='pending'`, `email_verified=false`, NO downstream provisioning (wallet/roles/workspace memberships gated on `is_user_verified`).
-- If provider is OAuth (`google`, `apple`): mark `email_verified=true`, `verification_status='verified'`, set `oauth_linked_at=now()`, `account_origin='oauth_<provider>'`.
+- `auth-link-verify`:
+  - On collision/mismatch/ownership dispute → set `verification_status='restricted_security_review'`, emit `oauth_collision_detected|provider_identity_mismatch|forced_session_revocation` at **critical** severity, enqueue admin alert + `identity_conflict_queue` row.
+  - Call `rl_hit('auth_link_verify', user_id, 30, 60)`.
+- `signup-guard`: wrap with `rl_hit('signup_guard', ip, 10, 60)` → 429 with `Retry-After`.
+- `ownership-claim` path inside existing claim RPC: `rl_hit('ownership_claim', email, 5, 3600)`; on success set `provider_change_locked_until = now()+24h`, `email_change_locked_until = now()+24h`, require `last_reauth_at > now()-10min` else 401 `reauth_required`.
+- `resend-verification` (existing): `rl_hit('resend_verify', email, 5, 3600)`.
+- New helper `security-notify` (utility module imported by the above, **not a new public function**) → enqueues templated email via existing transactional queue for: new provider linked, ownership migration, session revoked, collision detected, password enabled, email changed.
 
-**New trigger `handle_user_identity_change`**
-- Fires `AFTER INSERT OR UPDATE ON auth.identities` (read-only schema allows triggers on it from `public` definer functions — verified in current Supabase).
-- On insert of a new identity for an existing user:
-  - If the existing profile is `email_verified=false`: mark `restricted_pending_ownership_review=true`, log `oauth_conflict_detected` (severity=critical).
-  - If the existing profile is `email_verified=true` AND the new identity's `provider='google'`: log `oauth_link_attempt` (severity=warn). The link is allowed (user owns the verified email) but session is downgraded — `auth-link-verify` (Layer 3) re-checks on next sign-in.
+## 3. Password reset hardening
 
-**New view `security_account_conflicts`** — admin-only RLS:
-- Confirmed users with duplicate emails (should be 0).
-- Profiles where `account_origin='email'` AND `email_verified=false` AND `auth.identities` already contains an OAuth row for the same `user_id` (the takeover symptom).
-- Mixed-provider accounts (informational — 5 today).
-- Unconfirmed accounts older than 24h.
+- `password-reset-request` edge function (or existing flow): reject if `profiles.password_enabled = false` AND `auth_provider != 'password'` → respond `password_auth_not_enabled`.
+- Frontend `ForgotPassword.tsx`: surface friendly copy + link to "Enable password login" inside Security tab.
+- Setting a password for the first time requires recent reauth + emits `password_enabled` critical event + email.
 
-**Helper RPCs**
-- `claim_account_ownership(_user_id uuid, _provider text)` — service-role only, called by Layer 3 to safely migrate ownership.
-- `revoke_user_sessions(_user_id uuid)` — wraps `auth.sessions` delete via service role (the only auth-schema mutation we make, and only for sessions, never users/identities).
+## 4. Frontend — restricted state + security center
 
-### Layer 2 — Edge function hardening
+- `src/lib/auth/restriction.ts`: extend `trustState` to recognize `restricted_security_review`. Effects centralised: read-only, no AI, no exports, no settings mutations, no password reset, no email change.
+- `VerificationOverlay.tsx`: new variant `security_review` with copy "Account under security review" + contact support CTA. No resend button in this variant.
+- Gate hooks (`useCanRunAi`, `useCanExport`, `useCanMutateSettings`) read the new state.
+- New page `src/pages/profile/SecurityCenter.tsx` mounted as **tab inside existing Profile → Security** (no new route):
+  - Linked Login Methods list (provider, linked_at, last_used_at, unlink button → requires reauth modal).
+  - Recent security events (last 30, from `auth_anomaly_events`).
+  - "Enable password login" / "Change password" with reauth gate.
+- Reauth modal component reused across unlink / password set / email change → writes `last_reauth_at`.
 
-**`signup-guard` (existing — extended)**
-- Before allowing email/password signup, look up `auth.users` (service role) by lowercased email:
-  - If a confirmed row exists → reject with `email_already_registered` (no enumeration tell — same response timing).
-  - If an unconfirmed row exists < 24h old → reject with `verification_pending` (instruct user to check inbox).
-  - If an unconfirmed row exists ≥ 24h old → call `auto_suspend_unverified()` first, then reject; the stale shell is now `suspended` and cannot be reactivated by attacker.
-- Log every block to `security_auth_events` as `auth.signup_blocked` (already present).
+## 5. Admin — Identity Conflicts section
 
-**`auth-link-verify` (NEW)** — called client-side after every successful sign-in:
-- Reads `auth.identities` for `auth.uid()`.
-- If multiple providers: require both identity emails match (case-insensitive) AND both have `identity_data->>'email_verified'='true'`. Otherwise:
-  - `revoke_user_sessions(user_id)`, mark profile `restricted_pending_ownership_review=true`, log `provider_merge_blocked` (critical).
-  - Return `{ ok: false, action: 'force_signout', reason: 'provider_collision' }` → client signs out globally.
-- If profile is `restricted_pending_ownership_review=true` AND current session is OAuth-verified for the same email:
-  - Call `claim_account_ownership(user_id, provider)` which: sets `auth_provider`, `account_origin='oauth_<provider>'`, clears the lock, logs `provider_ownership_migrated` (critical), revokes all sessions older than 1 minute (everything except the current OAuth session).
-- Returns `{ ok: true }` for the normal path.
+Extend existing `/admin/security/users` (no new route):
+- New tab "Identity Conflicts" → table of `identity_conflict_queue` open items.
+- Row actions: **Merge recommendation**, **Revoke sessions** (calls `revoke_user_sessions`), **Force ownership reset**, **Mark safe**.
+- Audit timeline pulls from `auth_anomaly_events` filtered by `user_id`.
+- Critical events pinned at top with red severity badge; 90d retention enforced by `retain_until`.
 
-**`admin-utils` audit**
-- All admin-created accounts must use `email_confirm: false` and send a verification email. Verified, patched if any path bypasses.
+## 6. Memory & audit deliverables
 
-### Layer 3 — Client wiring (minimal)
+- `mem/security/post-hardening-audit.md` — initial run of `v_security_audit_summary` snapshot + interpretation.
+- Update `mem/security/account-ownership-model.md` with `restricted_security_review` state + cooldown semantics.
+- Update `mem/security/oauth-account-linking-hardening.md` with rate limits, password-reset rule, notification matrix.
+- Update `mem/index.md`.
 
-- `useAuth.tsx`: after `SIGNED_IN` event, invoke `auth-link-verify` once per session. On `force_signout` response, call `supabase.auth.signOut({ scope: 'global' })` and route to `/login?reason=ownership_review`.
-- `Login.tsx` / `Signup.tsx`: surface server-returned reason codes (`email_already_registered`, `verification_pending`, `ownership_review`) with clear copy. No silent failures.
-- `VerificationOverlay.tsx`: if `restricted_pending_ownership_review=true`, swap the banner to an ownership-review variant with "Verify ownership via email" CTA → triggers a magic link to the canonical address.
+## 7. Files touched (estimate)
 
-### Layer 4 — Admin panel + reports
+- 1 migration
+- 4 edge functions edited, 0 new public functions (1 shared util module)
+- ~8 frontend files (restriction lib, overlay, gate hooks, SecurityCenter tab, ReauthModal, ForgotPassword copy, admin conflicts tab, types)
+- 3 memory docs + index
 
-- `/admin/security/auth-integrity` reading `security_account_conflicts` and `security_auth_events`:
-  - Counts: confirmed duplicates, mixed-provider, unconfirmed >24h, ownership-review locked.
-  - Per-row actions (manual only): "Send ownership verification", "Force re-auth (revoke sessions)", "Mark resolved".
-- One-time backfill report (read-only) listing profiles created pre-patch where hydration occurred before verification — triage list, no auto-mutation.
-- Memory docs:
-  - `mem/security/oauth-account-linking-hardening.md` — threat model, defense layers, runbook for the Cloud "Manual linking only" toggle.
-  - `mem/security/account-ownership-model.md` — column meanings, provider lifecycle states, allowed transitions.
+## 8. Execution order
 
-## Safety + rollback
+1. Migration (await approval)
+2. Edge function updates + deploy
+3. Frontend restriction + Security Center + Admin tab
+4. Run audit, write `post-hardening-audit.md`
+5. Surface manual "Manual Linking Only" instruction to user
 
-- All triggers wrapped in `BEGIN/EXCEPTION WHEN OTHERS` falling back to legacy path so signup never outages.
-- Every new column is additive with safe defaults — no existing rows break.
-- Rollback SQL: `scripts/security/oauth-takeover-rollback.sql` (drops triggers, restores prior `handle_new_user`, removes new columns).
-- I will NOT:
-  - Force-logout existing mixed-provider users (5 accounts) — they get surfaced in admin panel for manual action.
-  - Delete or merge any `auth.users` rows.
-  - Build a parallel `identity_links` table — Supabase's `auth.identities` is the source of truth; we only annotate via profile columns.
+## 9. Out of scope (per freeze rules)
 
-## What I need from you
-
-This plan ships in 4 PRs gated on your approval. To start I'll execute **Layer 1 (migration + auth config)** only. Reply "go" to proceed with Layer 1; I will pause and confirm before Layer 2.
-
-## Files touched (full plan)
-
-```
-supabase/migrations/<ts>_oauth_takeover_layer1.sql      [new]
-supabase/functions/auth-link-verify/index.ts            [new]
-supabase/functions/signup-guard/index.ts                [edit]
-supabase/functions/admin-utils/index.ts                 [audit]
-src/hooks/useAuth.tsx                                   [edit, +20 lines]
-src/pages/Login.tsx, src/pages/Signup.tsx               [edit, reason codes]
-src/components/auth/VerificationOverlay.tsx            [edit, ownership variant]
-src/pages/admin/SecurityUsers.tsx                       [edit, new panel section]
-scripts/security/oauth-takeover-rollback.sql            [new]
-mem/security/oauth-account-linking-hardening.md         [new]
-mem/security/account-ownership-model.md                 [new]
-mem/index.md                                            [edit, +2 links]
-```
-
-Total: ~13 files, 1 migration, 1 new edge function. No `auth.users`/`auth.identities` schema mutations.
+- No new admin route
+- No new telemetry layer (reuses `auth_anomaly_events`)
+- No new DB extraction
+- No new runtime shell
