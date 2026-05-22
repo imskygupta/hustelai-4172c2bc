@@ -169,7 +169,11 @@ function ctaForKeyword(fk?: string) {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
-  if (!(await isAdmin(req))) return json({ ok: false, error: "forbidden" }, 403);
+  // Service-role short-circuit so indexing-dispatcher can run
+  // auto_insert_slug without an admin user session.
+  const authHdr = req.headers.get("Authorization") ?? "";
+  const isServiceRole = authHdr === `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`;
+  if (!isServiceRole && !(await isAdmin(req))) return json({ ok: false, error: "forbidden" }, 403);
   const url = new URL(req.url);
   const action = url.searchParams.get("action") ?? "overview";
 
