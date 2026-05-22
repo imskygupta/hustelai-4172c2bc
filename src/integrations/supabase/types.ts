@@ -10109,6 +10109,7 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      get_security_audit_summary: { Args: never; Returns: Json }
       grant_bonus_credits: {
         Args: {
           _amount: number
