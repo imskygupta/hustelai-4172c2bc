@@ -27,7 +27,7 @@ function fmtCountdown(ms: number) {
  * tier 1 users can browse, but every privileged surface should render
  * underneath this lock and through the centralized edge guard.
  */
-export function VerificationLock() {
+export function VerificationLock({ alwaysOpen = false }: { alwaysOpen?: boolean } = {}) {
   const { user, profile, signOut, refreshProfile } = useAuth();
   const [now, setNow] = useState(() => Date.now());
   const [resending, setResending] = useState(false);
@@ -44,7 +44,7 @@ export function VerificationLock() {
   const status = profile?.verification_status;
   const open =
     !!user &&
-    ((!!profile && status !== "verified" && status !== undefined) || forcedOpen);
+    (alwaysOpen || (!!profile && status !== "verified" && status !== undefined) || forcedOpen);
 
   useEffect(() => {
     const onDenied = () => {
@@ -64,16 +64,6 @@ export function VerificationLock() {
     const id = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(id);
   }, [open]);
-
-  // Light poll so the lock auto-closes once the user clicks the email link
-  // in another tab.
-  useEffect(() => {
-    if (!open) return;
-    const id = setInterval(() => {
-      refreshProfile().catch(() => undefined);
-    }, 8000);
-    return () => clearInterval(id);
-  }, [open, refreshProfile]);
 
   const remainingMs = useMemo(() => {
     if (!profile?.verification_deadline) return 0;
