@@ -250,7 +250,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (user) await fetchProfile(user.id, user.email, !!user.email_confirmed_at, true);
   };
 
-  const applySession = (nextSession: Session | null, source: string) => {
+  const applySession = (nextSession: Session | null, source: string, opts: { fetchProfile?: boolean } = {}) => {
+    const fetchProfileAllowed = opts.fetchProfile !== false;
     setSession(nextSession);
     setUser(nextSession?.user ?? null);
     authDebug("session.apply", {
@@ -262,7 +263,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (nextSession?.user) {
       writeBridgeSession(nextSession);
-      setTimeout(() => fetchProfile(nextSession.user.id, nextSession.user.email, !!nextSession.user.email_confirmed_at), 0);
+      if (fetchProfileAllowed) {
+        setTimeout(() => fetchProfile(nextSession.user.id, nextSession.user.email, !!nextSession.user.email_confirmed_at), 0);
+      }
     } else {
       setProfile(null);
       setProfileLoading(false);
@@ -320,7 +323,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return;
         }
 
-        applySession(nextSession, `event:${event}`);
+        applySession(nextSession, `event:${event}`, { fetchProfile: event !== "TOKEN_REFRESHED" });
         if (hydratedRef.current) setLoading(false);
       }
     );
