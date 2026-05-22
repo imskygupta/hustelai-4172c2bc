@@ -241,7 +241,7 @@ async function maybeLogDenial(
     const admin = createClient(url, service, {
       auth: { persistSession: false, autoRefreshToken: false },
     });
-    await admin.rpc("log_security_auth_event", {
+    await withDeadline(admin.rpc("log_security_auth_event", {
       _user_id: ctx.userId ?? null,
       _email: ctx.email ?? null,
       _event_type: opts.denialEvent,
@@ -253,7 +253,7 @@ async function maybeLogDenial(
         reason: ctx.reason,
         current_tier: ctx.currentTier ?? null,
       },
-    });
+    }), "denial_event_log", 2_000);
   } catch {
     /* never fail the gate because logging failed */
   }
@@ -273,7 +273,7 @@ export async function logSecurityAuthEvent(
   },
 ) {
   try {
-    await admin.rpc("log_security_auth_event", {
+    await withDeadline(admin.rpc("log_security_auth_event", {
       _user_id: args.userId ?? null,
       _email: args.email ?? null,
       _event_type: args.eventType,
@@ -281,7 +281,7 @@ export async function logSecurityAuthEvent(
       _ip: args.req?.headers.get("x-forwarded-for") ?? null,
       _user_agent: args.req?.headers.get("user-agent") ?? null,
       _metadata: args.metadata ?? {},
-    });
+    }), "security_event_log", 2_000);
   } catch {
     /* fail open on logging */
   }
