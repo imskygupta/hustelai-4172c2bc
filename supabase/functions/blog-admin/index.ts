@@ -43,26 +43,18 @@ function readingMinutes(md: string) {
   return Math.max(1, Math.ceil(words / 200));
 }
 
-// Fire-and-forget IndexNow ping for a published post URL.
-async function pingIndexNow(slug: string, source_id: string) {
+// Fire-and-forget hand-off to the unified indexing-dispatcher (sitemap +
+// link-engine + IndexNow + GSC + crawl-orch refresh + validate). Never
+// blocks the publish — dispatcher handles retries + GSC pending_auth.
+async function pingIndexNow(slug: string, _source_id: string) {
   try {
-    const url = `https://blogs.hustlaiapp.in/${slug}`;
-    await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/indexnow?action=enqueue`, {
+    fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/indexing-dispatcher?action=dispatch`, {
       method: "POST",
       headers: {
         "content-type": "application/json",
         Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
       },
-      body: JSON.stringify({ urls: [url], source_kind: "blog_post", source_id }),
-    });
-    // Trigger immediate flush (non-blocking best-effort).
-    fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/indexnow?action=flush`, {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
-      },
-      body: "{}",
+      body: JSON.stringify({ slugs: [slug], reason: "manual" }),
     }).catch(() => null);
   } catch (_) { /* swallow */ }
 }
