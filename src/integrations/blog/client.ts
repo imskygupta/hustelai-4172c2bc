@@ -155,6 +155,16 @@ export const blogApi = {
   crawlFreshness: () => call(`/crawl-orchestrator?action=freshness`, { admin: true, method: "POST" }),
   crawlRefreshPost: (slug: string) =>
     call(`/crawl-orchestrator?action=refresh_post`, { admin: true, method: "POST", body: JSON.stringify({ slug }) }),
+
+  // Indexing Dispatcher (post-publish fan-out + retry + telemetry)
+  indexingBootstrapSql: () => call(`/indexing-dispatcher?action=bootstrap_sql`),
+  indexingStats: () => call(`/indexing-dispatcher?action=stats`, { admin: true }),
+  indexingDispatch: (slugs: string[], reason: "manual" | "refresh" = "manual") =>
+    call(`/indexing-dispatcher?action=dispatch`, { admin: true, method: "POST", body: JSON.stringify({ slugs, reason }) }),
+  indexingRetry: (limit = 25) =>
+    call(`/indexing-dispatcher?action=retry`, { admin: true, method: "POST", body: JSON.stringify({ limit }) }),
+  indexingManualRetry: (idOrSlug: string) =>
+    call(`/indexing-dispatcher?action=manual_retry`, { admin: true, method: "POST", body: JSON.stringify(/^[0-9a-f-]{36}$/i.test(idOrSlug) ? { id: idOrSlug } : { slug: idOrSlug }) }),
 };
 
 // ──────────────────────────────────────────────────────────────────────────

@@ -11,12 +11,18 @@ export default function CrawlOrchestrator() {
   const [queue, setQueue] = useState<any[]>([]);
   const [busy, setBusy] = useState(false);
   const [bootSql, setBootSql] = useState<string | null>(null);
+  const [idx, setIdx] = useState<any>(null);
+  const [idxBootSql, setIdxBootSql] = useState<string | null>(null);
 
   async function load() {
     setBusy(true);
     try {
-      const [d, q] = await Promise.all([blogApi.crawlDiagnostics(), blogApi.crawlQueue()]);
-      setDiag(d); setQueue(q.queue ?? []);
+      const [d, q, s] = await Promise.all([
+        blogApi.crawlDiagnostics(),
+        blogApi.crawlQueue(),
+        blogApi.indexingStats().catch(() => null),
+      ]);
+      setDiag(d); setQueue(q.queue ?? []); setIdx(s);
     } catch (e: any) {
       toast.error(e.message ?? "Load failed");
     } finally { setBusy(false); }
@@ -196,6 +202,70 @@ $$);`;
           <pre className="text-[11px] bg-muted/30 p-3 rounded overflow-x-auto whitespace-pre-wrap">{bootSql}</pre>
         </Card>
       )}
+
+      <Card className="p-4 space-y-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">Indexing pipeline</p>
+            <h2 className="font-semibold mt-1">Post-publish dispatcher (sitemap → IndexNow → GSC → crawl → validate)</h2>
+          </div>
+          <div className="flex gap-2">
+            <Button size="sm" variant="outline" onClick={async () => {
+              const r = await blogApi.indexingBootstrapSql(); setIdxBootSql(r.sql);
+            }}>Bootstrap SQL</Button>
+            <Button size="sm" onClick={() => run("Retry indexing", () => blogApi.indexingRetry(25))} disabled={busy}>
+              <Send className="w-4 h-4 mr-1" /> Retry failed/pending
+            </Button>
+          </div>
+        </div>
+        {idx ? (
+          <>
+            <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
+              {[
+                ["Queued", idx.counts?.queued],
+                ["In flight", idx.counts?.in_flight],
+                ["Pending auth", idx.counts?.pending_auth],
+                ["Failed", idx.counts?.failed],
+                ["Done 24h", idx.counts?.done_24h],
+                ["Dispatched 7d", idx.counts?.dispatched_7d],
+              ].map(([l, v]) => (
+                <div key={l as string} className="rounded border border-border/40 p-3">
+                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{l}</div>
+                  <div className="text-xl font-semibold mt-1">{Number(v ?? 0)}</div>
+                </div>
+              ))}
+            </div>
+            <div className="flex items-center gap-2 text-xs">
+              <Badge variant={idx.gsc_connector?.configured ? "secondary" : "outline"}>
+                GSC connector: {idx.gsc_connector?.configured ? "connected" : "not connected (pending_auth)"}
+              </Badge>
+              {idx.last_done_at && <span className="text-muted-foreground">Last done: {new Date(idx.last_done_at).toLocaleString()}</span>}
+            </div>
+            <div>
+              <h3 className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1">Recent jobs</h3>
+              <div className="space-y-1 text-[11px] max-h-[260px] overflow-auto">
+                {(idx.recent ?? []).map((j: any) => (
+                  <div key={j.id} className="flex items-center justify-between border-b border-border/40 py-1">
+                    <span className="truncate font-mono">{j.slug}</span>
+                    <span className="flex gap-1 ml-2">
+                      <Badge variant="outline">{j.state}</Badge>
+                      <Badge variant="secondary">a{j.attempts}</Badge>
+                      <Button size="sm" variant="ghost" className="h-5 px-2 text-[10px]"
+                        onClick={() => run("Manual retry", () => blogApi.indexingManualRetry(j.id))} disabled={busy}>retry</Button>
+                    </span>
+                  </div>
+                ))}
+                {!(idx.recent ?? []).length && <p className="text-muted-foreground">No jobs yet.</p>}
+              </div>
+            </div>
+          </>
+        ) : (
+          <p className="text-xs text-muted-foreground">Run Bootstrap SQL once in the BLOG DB to enable indexing telemetry.</p>
+        )}
+        {idxBootSql && (
+          <pre className="text-[11px] bg-muted/30 p-3 rounded overflow-x-auto whitespace-pre-wrap">{idxBootSql}</pre>
+        )}
+      </Card>
     </div>
   );
 }

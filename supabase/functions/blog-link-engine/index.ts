@@ -169,7 +169,11 @@ function ctaForKeyword(fk?: string) {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
-  if (!(await isAdmin(req))) return json({ ok: false, error: "forbidden" }, 403);
+  // Service-role short-circuit so indexing-dispatcher can run
+  // auto_insert_slug without an admin user session.
+  const authHdr = req.headers.get("Authorization") ?? "";
+  const isServiceRole = authHdr === `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`;
+  if (!isServiceRole && !(await isAdmin(req))) return json({ ok: false, error: "forbidden" }, 403);
   const url = new URL(req.url);
   const action = url.searchParams.get("action") ?? "overview";
 
@@ -239,6 +243,29 @@ Deno.serve(async (req) => {
       const withCta = inserted.md +
         (body.append_cta === false ? "" : `\n\n> [${cta.label}](${cta.href})\n`);
       return json({ ok: true, body_md: withCta, injected: inserted.injected, related, cta });
+    }
+
+    // Service-callable variant: looks up the post by slug, runs auto_insert,
+    // and PERSISTS the result. Used by indexing-dispatcher post-publish.
+    if (action === "auto_insert_slug" && req.method === "POST") {
+      const body = await req.json().catch(() => ({}));
+      const slug = body.slug as string | undefined;
+      if (!slug) return json({ ok: false, error: "slug_required" }, 400);
+      const target = all.find(p => p.slug === slug);
+      if (!target) return json({ ok: true, skipped: "not_published" });
+      const md = (target as any).body_md ?? "";
+      const related = suggestRelated(target, all, 6).filter(r => r.score > 0.05);
+      const targets = related.map(r => ({
+        href: `/${r.slug}`,
+        phrases: phrasesFromTitle(r.title).concat(r.focus_keyword ? [r.focus_keyword] : []),
+      }));
+      const inserted = autoInsert(md, targets, 4);
+      if (inserted.injected > 0 && inserted.md !== md) {
+        await blog.from("blog_posts")
+          .update({ body_md: inserted.md, updated_at: new Date().toISOString() })
+          .eq("id", (target as any).id);
+      }
+      return json({ ok: true, slug, injected: inserted.injected, related_count: related.length });
     }
 
     return json({ ok: false, error: "unsupported action" }, 400);
