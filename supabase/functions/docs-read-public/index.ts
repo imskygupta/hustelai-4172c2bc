@@ -26,6 +26,20 @@ async function getCached<T>(key: string, fn: () => Promise<T>): Promise<T> {
   return fresh;
 }
 
+async function withDeadline<T>(p: PromiseLike<T>, label: string, ms = 5_000): Promise<T> {
+  let timer: number | undefined;
+  try {
+    return await Promise.race([
+      Promise.resolve(p),
+      new Promise<T>((_, reject) => {
+        timer = setTimeout(() => reject(new Error(`${label}_timeout`)), ms);
+      }),
+    ]);
+  } finally {
+    if (timer !== undefined) clearTimeout(timer);
+  }
+}
+
 function getLegacy() {
   const url = Deno.env.get("LEGACY_DOCS_SUPABASE_URL");
   const key = Deno.env.get("LEGACY_DOCS_SUPABASE_SERVICE_ROLE_KEY");
@@ -64,40 +78,40 @@ Deno.serve(async (req) => {
       });
     } else if (op === "categories") {
       data = await getCached("categories", async () => {
-        const { data } = await admin.from("docs_categories").select("*").order("sort_order");
+        const { data } = await withDeadline(admin.from("docs_categories").select("*").order("sort_order"), "docs_categories_admin");
         if (data && data.length > 0) return data;
         if (legacy) {
-          const { data: leg } = await legacy.from("docs_categories").select("*").order("sort_order");
+          const { data: leg } = await withDeadline(legacy.from("docs_categories").select("*").order("sort_order"), "docs_categories_legacy");
           return leg ?? [];
         }
         return [];
       });
     } else if (op === "pages") {
       data = await getCached("pages", async () => {
-        const { data } = await admin
+        const { data } = await withDeadline(admin
           .from("docs_pages")
           .select("*")
           .eq("is_published", true)
-          .order("sort_order");
+          .order("sort_order"), "docs_pages_admin");
         if (data && data.length > 0) return data;
         if (legacy) {
-          const { data: leg } = await legacy
-            .from("docs_pages").select("*").eq("is_published", true).order("sort_order");
+          const { data: leg } = await withDeadline(legacy
+            .from("docs_pages").select("*").eq("is_published", true).order("sort_order"), "docs_pages_legacy");
           return leg ?? [];
         }
         return [];
       });
     } else if (op === "page" && slug) {
       data = await getCached(`page:${slug}`, async () => {
-        const { data } = await admin
+        const { data } = await withDeadline(admin
           .from("docs_pages")
           .select("*")
           .eq("slug", slug)
-          .maybeSingle();
+          .maybeSingle(), "docs_page_admin");
         if (data) return data;
         if (legacy) {
-          const { data: leg } = await legacy
-            .from("docs_pages").select("*").eq("slug", slug).maybeSingle();
+          const { data: leg } = await withDeadline(legacy
+            .from("docs_pages").select("*").eq("slug", slug).maybeSingle(), "docs_page_legacy");
           return leg ?? null;
         }
         return null;
