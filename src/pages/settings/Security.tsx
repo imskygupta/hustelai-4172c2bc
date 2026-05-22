@@ -119,21 +119,21 @@ export default function SecuritySettings() {
             {identities.map((id: any) => (
               <SettingsRow
                 key={id.identity_id || id.id}
-                label={
-                  <span className="flex items-center gap-2">
-                    {id.provider === "email" ? <KeyRound className="h-4 w-4" /> : <LogIn className="h-4 w-4" />}
-                    <span className="capitalize">{id.provider}</span>
-                  </span>
-                }
+                label={String(id.provider).charAt(0).toUpperCase() + String(id.provider).slice(1)}
                 description={
                   id.last_sign_in_at
                     ? `Last used ${formatDistanceToNow(new Date(id.last_sign_in_at))} ago`
                     : id.created_at ? `Linked ${formatDistanceToNow(new Date(id.created_at))} ago` : "—"
                 }
               >
-                <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30">
-                  Connected
-                </Badge>
+                <span className="flex items-center gap-2">
+                  {id.provider === "email"
+                    ? <KeyRound className="h-4 w-4 text-muted-foreground" />
+                    : <LogIn className="h-4 w-4 text-muted-foreground" />}
+                  <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30">
+                    Connected
+                  </Badge>
+                </span>
               </SettingsRow>
             ))}
           </div>
