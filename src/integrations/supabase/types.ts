@@ -2947,6 +2947,42 @@ export type Database = {
           },
         ]
       }
+      identity_conflict_queue: {
+        Row: {
+          detected_at: string
+          evidence: Json
+          id: string
+          kind: string
+          notes: string | null
+          resolution: string | null
+          resolved_at: string | null
+          resolver_admin_id: string | null
+          user_id: string
+        }
+        Insert: {
+          detected_at?: string
+          evidence?: Json
+          id?: string
+          kind: string
+          notes?: string | null
+          resolution?: string | null
+          resolved_at?: string | null
+          resolver_admin_id?: string | null
+          user_id: string
+        }
+        Update: {
+          detected_at?: string
+          evidence?: Json
+          id?: string
+          kind?: string
+          notes?: string | null
+          resolution?: string | null
+          resolved_at?: string | null
+          resolver_admin_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       indexnow_log: {
         Row: {
           created_at: string
@@ -5010,18 +5046,22 @@ export type Database = {
           dodo_customer_id: string | null
           dodo_subscription_id: string | null
           email: string | null
+          email_change_locked_until: string | null
           email_verified: boolean
           first_run_state: Json
           freelancer_category: string | null
           headline: string | null
           id: string
           is_verified: boolean
+          last_reauth_at: string | null
           oauth_linked_at: string | null
           onboarding: Json | null
           onboarding_completed: boolean
+          password_enabled: boolean
           phone: string | null
           phone_number: string | null
           portfolio_links: Json | null
+          provider_change_locked_until: string | null
           referral_code: string | null
           referral_credits: number
           referred_by: string | null
@@ -5058,18 +5098,22 @@ export type Database = {
           dodo_customer_id?: string | null
           dodo_subscription_id?: string | null
           email?: string | null
+          email_change_locked_until?: string | null
           email_verified?: boolean
           first_run_state?: Json
           freelancer_category?: string | null
           headline?: string | null
           id?: string
           is_verified?: boolean
+          last_reauth_at?: string | null
           oauth_linked_at?: string | null
           onboarding?: Json | null
           onboarding_completed?: boolean
+          password_enabled?: boolean
           phone?: string | null
           phone_number?: string | null
           portfolio_links?: Json | null
+          provider_change_locked_until?: string | null
           referral_code?: string | null
           referral_credits?: number
           referred_by?: string | null
@@ -5106,18 +5150,22 @@ export type Database = {
           dodo_customer_id?: string | null
           dodo_subscription_id?: string | null
           email?: string | null
+          email_change_locked_until?: string | null
           email_verified?: boolean
           first_run_state?: Json
           freelancer_category?: string | null
           headline?: string | null
           id?: string
           is_verified?: boolean
+          last_reauth_at?: string | null
           oauth_linked_at?: string | null
           onboarding?: Json | null
           onboarding_completed?: boolean
+          password_enabled?: boolean
           phone?: string | null
           phone_number?: string | null
           portfolio_links?: Json | null
+          provider_change_locked_until?: string | null
           referral_code?: string | null
           referral_credits?: number
           referred_by?: string | null
@@ -6074,6 +6122,7 @@ export type Database = {
           id: string
           ip: string | null
           metadata: Json
+          retain_until: string | null
           severity: string
           user_agent: string | null
           user_id: string | null
@@ -6085,6 +6134,7 @@ export type Database = {
           id?: string
           ip?: string | null
           metadata?: Json
+          retain_until?: string | null
           severity?: string
           user_agent?: string | null
           user_id?: string | null
@@ -6096,6 +6146,7 @@ export type Database = {
           id?: string
           ip?: string | null
           metadata?: Json
+          retain_until?: string | null
           severity?: string
           user_agent?: string | null
           user_id?: string | null
@@ -9707,6 +9758,16 @@ export type Database = {
         }
         Relationships: []
       }
+      v_security_audit_summary: {
+        Row: {
+          computed_at: string | null
+          multi_provider_emails: number | null
+          orphan_password_accounts: number | null
+          repeat_collision_users: number | null
+          suspended_shells: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       _assert_admin_with_reason: { Args: { _reason: string }; Returns: string }
@@ -9987,6 +10048,10 @@ export type Database = {
         }
         Returns: string
       }
+      enqueue_identity_conflict: {
+        Args: { _evidence: Json; _kind: string; _user_id: string }
+        Returns: string
+      }
       enqueue_workflow_runs: {
         Args: {
           _dedupe_key?: string
@@ -10128,6 +10193,7 @@ export type Database = {
         Returns: string
       }
       mark_expired_exports: { Args: never; Returns: number }
+      mark_reauth: { Args: { _user_id: string }; Returns: undefined }
       migration_mirror_health: {
         Args: { _since?: string }
         Returns: {
@@ -10377,6 +10443,15 @@ export type Database = {
       }
       resolve_user_limits: { Args: { _user: string }; Returns: Json }
       revoke_user_sessions: { Args: { _user_id: string }; Returns: number }
+      rl_hit: {
+        Args: {
+          _bucket: string
+          _key: string
+          _limit: number
+          _window_seconds: number
+        }
+        Returns: Json
+      }
       roll_up_analytics_events: {
         Args: { _lookback?: string }
         Returns: number
@@ -10458,7 +10533,12 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      set_password_enabled: { Args: { _user_id: string }; Returns: undefined }
       stability_score_snapshot: { Args: never; Returns: string }
+      start_ownership_cooldown: {
+        Args: { _user_id: string }
+        Returns: undefined
+      }
       telegram_delivery_timeline: {
         Args: { _bucket?: string; _since?: string }
         Returns: {
