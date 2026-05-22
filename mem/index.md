@@ -34,3 +34,4 @@
 - [Workspace Premium OS](mem://features/workspace-premium-os) — Cinematic portal-gate auth, dark cockpit, AI Fuel/BYOK hero on workspace.*
 - [Sunday Brief Newsletter](mem://features/newsletter-sunday-brief) — Unified 1/week blog+app newsletter, 6-day throttle, bulk add
 - [Docs Content Recovery](mem://transfer/docs-content-recovery) — Audit: Admin DB docs tables empty; legacy fallback wired in docs-read-public; backfill plan ready
+- [Trust Tier & Verification](mem://security/trust-tier-and-verification) — Verified-account gate, trust tiers, requireVerifiedUser edge helper

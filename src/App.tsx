@@ -9,6 +9,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { AuthProvider } from "@/hooks/useAuth";
+import VerificationLock from "@/components/auth/VerificationLock";
 import { WorkspaceProvider } from "@/lib/workspace/context";
 import { WorkspaceFrame } from "@/components/workspace/WorkspaceFrame";
 import { WorkspaceAuthGate } from "@/components/workspace/WorkspaceAuthGate";
@@ -39,6 +40,7 @@ const AdminDocs = lazy(() => import("./pages/admin/AdminDocs"));
 const AdminMarketingPages = lazy(() => import("./pages/admin/MarketingPages"));
 const AdminOperations = lazy(() => import("./pages/admin/Operations"));
 const AdminIncidentMode = lazy(() => import("./pages/admin/IncidentMode"));
+const AdminSecurityUsers = lazy(() => import("./pages/admin/SecurityUsers"));
 import NotificationPreferences from "./pages/settings/NotificationPreferences";
 import Integrations from "./pages/settings/Integrations";
 import Exports from "./pages/settings/Exports";
@@ -293,6 +295,7 @@ const App = () => {
         <Toaster />
         <Sonner />
         <DebugRuntimeOverlay />
+        <VerificationLock />
         {isMaintenance() ? <MaintenancePage /> : (
         <BrowserRouter>
           <YandexRouteTracker />
@@ -583,6 +586,7 @@ const App = () => {
             <Route path="/admin/infrastructure" element={<Infrastructure />} />
             <Route path="/admin/operations" element={<AdminOperations />} />
             <Route path="/admin/incident-mode" element={<AdminIncidentMode />} />
+            <Route path="/admin/security/users" element={<AdminSecurityUsers />} />
             <Route path="/admin/feature-flags" element={<AdminFeatureFlags />} />
             <Route path="/admin/automations" element={<Automations />} />
             <Route path="/admin/payments-review" element={<PaymentsReview />} />

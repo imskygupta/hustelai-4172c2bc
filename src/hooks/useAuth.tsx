@@ -20,6 +20,10 @@ interface Profile {
   xp_points: number;
   onboarding_completed?: boolean;
   onboarding?: any;
+  verification_status?: "pending" | "verified" | "suspended" | "flagged";
+  verification_deadline?: string | null;
+  verified_at?: string | null;
+  restricted_reason?: string | null;
 }
 
 interface AuthContextType {

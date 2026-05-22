@@ -5020,6 +5020,7 @@ export type Database = {
           referral_code: string | null
           referral_credits: number
           referred_by: string | null
+          restricted_reason: string | null
           resume_url: string | null
           search_count: number
           social_links: Json | null
@@ -5031,6 +5032,9 @@ export type Database = {
           updated_at: string
           user_id: string
           username: string | null
+          verification_deadline: string | null
+          verification_status: string
+          verified_at: string | null
           website: string | null
           xp_points: number
         }
@@ -5058,6 +5062,7 @@ export type Database = {
           referral_code?: string | null
           referral_credits?: number
           referred_by?: string | null
+          restricted_reason?: string | null
           resume_url?: string | null
           search_count?: number
           social_links?: Json | null
@@ -5069,6 +5074,9 @@ export type Database = {
           updated_at?: string
           user_id: string
           username?: string | null
+          verification_deadline?: string | null
+          verification_status?: string
+          verified_at?: string | null
           website?: string | null
           xp_points?: number
         }
@@ -5096,6 +5104,7 @@ export type Database = {
           referral_code?: string | null
           referral_credits?: number
           referred_by?: string | null
+          restricted_reason?: string | null
           resume_url?: string | null
           search_count?: number
           social_links?: Json | null
@@ -5107,6 +5116,9 @@ export type Database = {
           updated_at?: string
           user_id?: string
           username?: string | null
+          verification_deadline?: string | null
+          verification_status?: string
+          verified_at?: string | null
           website?: string | null
           xp_points?: number
         }
@@ -6033,6 +6045,42 @@ export type Database = {
           title?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      security_auth_events: {
+        Row: {
+          created_at: string
+          email: string | null
+          event_type: string
+          id: string
+          ip: string | null
+          metadata: Json
+          severity: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          event_type: string
+          id?: string
+          ip?: string | null
+          metadata?: Json
+          severity?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          event_type?: string
+          id?: string
+          ip?: string | null
+          metadata?: Json
+          severity?: string
+          user_agent?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -9716,6 +9764,7 @@ export type Database = {
           users: number
         }[]
       }
+      auto_suspend_unverified: { Args: never; Returns: number }
       autonomous_controller_overview: { Args: never; Returns: Json }
       blog_automation_overview: { Args: never; Returns: Json }
       bookmark_count_for_post: { Args: { _slug: string }; Returns: number }
@@ -10001,9 +10050,22 @@ export type Database = {
         }
       }
       is_suspended: { Args: { _user_id: string }; Returns: boolean }
+      is_user_verified: { Args: { _user_id: string }; Returns: boolean }
       issue_telegram_link_token: {
         Args: { _bot?: string; _user: string }
         Returns: Json
+      }
+      log_security_auth_event: {
+        Args: {
+          _email: string
+          _event_type: string
+          _ip?: string
+          _metadata?: Json
+          _severity?: string
+          _user_agent?: string
+          _user_id: string
+        }
+        Returns: string
       }
       mark_expired_exports: { Args: never; Returns: number }
       migration_mirror_health: {
