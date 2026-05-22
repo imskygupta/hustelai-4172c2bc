@@ -50,3 +50,4 @@
 - [Automated Indexing Plan](mem://seo/automated-indexing-architecture) — Phase B: post-publish dispatcher, GSC API, IndexNow autopilot, no new routes
 - [Search Growth Engine](mem://seo/search-growth-engine) — Clusters, link depth, segmented sitemaps, thin-content gate, CTR variants, authority/decay, humanization, GSC ingestion. BLOG-only.
 - [Cloud Budget Survival](mem://runtime/cloud-budget-survival) — Cost heatmap + cron/poll reduction plan to keep monthly cloud burn under $25
+- [Railway Transition Plan](mem://runtime/railway-transition-plan) — Single ops-worker on Railway absorbs workflow/ai-job/indexing/crawl/cleanup loops; user-owned infra, no PRIMARY surface change
