@@ -679,11 +679,9 @@ const App = () => {
   <HelmetProvider>
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <AuthenticatedRuntimeGate />
-      </TooltipProvider>
+      <Toaster />
+      <Sonner />
+      <AuthenticatedRuntimeGate />
     </AuthProvider>
   </QueryClientProvider>
   </HelmetProvider>
