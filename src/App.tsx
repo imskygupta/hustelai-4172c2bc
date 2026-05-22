@@ -41,6 +41,7 @@ const AdminMarketingPages = lazy(() => import("./pages/admin/MarketingPages"));
 const AdminOperations = lazy(() => import("./pages/admin/Operations"));
 const AdminIncidentMode = lazy(() => import("./pages/admin/IncidentMode"));
 const AdminSecurityUsers = lazy(() => import("./pages/admin/SecurityUsers"));
+const AdminRuntimeTrust = lazy(() => import("./pages/admin/RuntimeTrust"));
 import NotificationPreferences from "./pages/settings/NotificationPreferences";
 import Integrations from "./pages/settings/Integrations";
 import Exports from "./pages/settings/Exports";
