@@ -325,7 +325,75 @@ export default function SecurityUsers() {
             )}
           </CardContent>
         </Card>
+
+        {audit && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">Post-hardening audit snapshot</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                <Stat label="Multi-provider emails" value={audit.multi_provider_emails ?? 0} />
+                <Stat label="Orphan password accounts" value={audit.orphan_password_accounts ?? 0} />
+                <Stat label="Suspended / review" value={audit.suspended_shells ?? 0} />
+                <Stat label="Repeat collision users" value={audit.repeat_collision_users ?? 0} />
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <ShieldAlert className="h-4 w-4 text-destructive" /> Identity conflicts
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {conflicts.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-4 text-center">No open conflicts.</p>
+            ) : (
+              <ul className="divide-y divide-border/40">
+                {conflicts.map((c) => (
+                  <li key={c.id} className="py-3 flex items-start justify-between gap-3 text-sm">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="destructive" className="text-[10px]">{c.kind}</Badge>
+                        <span className="text-xs text-muted-foreground">{fmt(c.detected_at)}</span>
+                      </div>
+                      <div className="text-[11px] text-muted-foreground font-mono mt-1 truncate max-w-[480px]">
+                        user_id={c.user_id} · {JSON.stringify(c.evidence)}
+                      </div>
+                    </div>
+                    <div className="flex gap-1 shrink-0">
+                      <Button size="sm" variant="outline" disabled={working === c.id}
+                        onClick={() => resolveConflict(c.id, c.user_id, "revoke_sessions")}>
+                        Revoke sessions
+                      </Button>
+                      <Button size="sm" variant="outline" disabled={working === c.id}
+                        onClick={() => resolveConflict(c.id, c.user_id, "force_reset")}>
+                        Force reset
+                      </Button>
+                      <Button size="sm" variant="ghost" disabled={working === c.id}
+                        onClick={() => resolveConflict(c.id, c.user_id, "mark_safe")}>
+                        Mark safe
+                      </Button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
       </div>
+    </div>
+  );
+}
+
+function Stat({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="rounded-md border border-border/40 p-3">
+      <div className="text-2xl font-semibold">{value}</div>
+      <div className="text-xs text-muted-foreground mt-1">{label}</div>
     </div>
   );
 }
