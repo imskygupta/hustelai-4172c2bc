@@ -44,8 +44,7 @@ export function VerificationLock() {
   const status = profile?.verification_status;
   const open =
     !!user &&
-    ((!!profile && status !== "verified" && status !== undefined) || forcedOpen) &&
-    status !== undefined;
+    ((!!profile && status !== "verified" && status !== undefined) || forcedOpen);
 
   useEffect(() => {
     const onDenied = () => {
