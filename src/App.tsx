@@ -8,8 +8,10 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
-import { AuthProvider } from "@/hooks/useAuth";
+import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import VerificationLock from "@/components/auth/VerificationLock";
+import RestrictedVerificationShell from "@/components/auth/RestrictedVerificationShell";
+import { getRestrictionReason } from "@/lib/auth/restriction";
 import { WorkspaceProvider } from "@/lib/workspace/context";
 import { WorkspaceFrame } from "@/components/workspace/WorkspaceFrame";
 import { WorkspaceAuthGate } from "@/components/workspace/WorkspaceAuthGate";
@@ -278,7 +280,7 @@ const Shelled = (el: React.ReactNode) => (
 
 const queryClient = new QueryClient();
 
-const App = () => {
+function FullRuntimeApp() {
   useEffect(() => {
     // Phase 9.2: advance hydration phases after first paint, then lazily
     // refresh runtime feature flags from the Admin DB (fail-open).
@@ -286,11 +288,8 @@ const App = () => {
     const t = setTimeout(() => { void refreshFeatureFlagsFromAdmin(); }, 1_500);
     return () => clearTimeout(t);
   }, []);
+
   return (
-  <Sentry.ErrorBoundary fallback={<RootErrorFallback />}>
-  <HelmetProvider>
-  <QueryClientProvider client={queryClient}>
-    <AuthProvider>
     <WorkspaceProvider>
       <TooltipProvider>
         <Toaster />
@@ -637,6 +636,51 @@ const App = () => {
         )}
       </TooltipProvider>
     </WorkspaceProvider>
+  );
+}
+
+function AuthenticatedRuntimeGate() {
+  const { user, profile, loading, profileLoading } = useAuth();
+  const restrictedReason = getRestrictionReason(user, profile, profileLoading);
+
+  useEffect(() => {
+    try {
+      if (localStorage.getItem("hustleai_auth_debug") !== "1") return;
+      console.info("[auth] runtime_gate", {
+        path: window.location.pathname,
+        loading,
+        profileLoading,
+        hasUser: !!user,
+        restrictedReason,
+      });
+    } catch {
+      // diagnostics only
+    }
+  }, [loading, profileLoading, restrictedReason, user]);
+
+  if (loading || (user && user.email_confirmed_at && profileLoading && !profile)) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="h-8 w-8 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
+      </div>
+    );
+  }
+
+  if (restrictedReason) return <RestrictedVerificationShell />;
+  return <FullRuntimeApp />;
+}
+
+const App = () => {
+  return (
+  <Sentry.ErrorBoundary fallback={<RootErrorFallback />}>
+  <HelmetProvider>
+  <QueryClientProvider client={queryClient}>
+    <AuthProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <AuthenticatedRuntimeGate />
+      </TooltipProvider>
     </AuthProvider>
   </QueryClientProvider>
   </HelmetProvider>
