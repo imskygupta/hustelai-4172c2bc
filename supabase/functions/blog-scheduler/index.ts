@@ -94,6 +94,19 @@ async function publishDuePosts(): Promise<string[]> {
     await blog.from("blog_posts").update({ status: "published", published_at: now }).eq("id", p.id);
     published.push(p.slug);
   }
+  // Fire-and-forget: hand the freshly published slugs to the unified
+  // indexing-dispatcher (sitemap + link-engine + IndexNow + GSC + crawl
+  // refresh + validate). Dispatcher manages retries + GSC pending_auth.
+  if (published.length) {
+    fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/indexing-dispatcher?action=dispatch`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+      },
+      body: JSON.stringify({ slugs: published, reason: "auto" }),
+    }).catch(() => null);
+  }
   return published;
 }
 
