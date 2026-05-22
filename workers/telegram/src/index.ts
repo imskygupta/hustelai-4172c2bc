@@ -9,6 +9,7 @@ import { startCron } from "./ops/cron.js";
 import { startSweeper, startHeartbeat } from "./ops/sweeper.js";
 import { startConfigPoller, getAdminChats, isFlagEnabled, snapshotInfo } from "./config/remote.js";
 import { startWorkflowLoop, getWorkflowLoopStats } from "./ops/loops/workflow.js";
+import { superviseLoop, getLoopRegistry } from "./ops/loop-runner.js";
 
 const app = express();
 app.use(express.json({ limit: "256kb" }));
@@ -45,9 +46,18 @@ app.get("/ops/dedupe-stats", requireWorkerSecret, (_req, res) => {
 
 // Per-loop stats for invocation-delta tracking. Add new entries as loops land.
 app.get("/ops/loop-stats", requireWorkerSecret, (_req, res) => {
+  const mem = process.memoryUsage();
   res.json({
     ok: true,
     workflow: getWorkflowLoopStats(),
+    supervisors: getLoopRegistry(),
+    process: {
+      uptime_s: Math.round(process.uptime()),
+      rss_mb: Math.round(mem.rss / 1024 / 1024),
+      heap_used_mb: Math.round(mem.heapUsed / 1024 / 1024),
+      heap_total_mb: Math.round(mem.heapTotal / 1024 / 1024),
+      pid: process.pid,
+    },
     ts: new Date().toISOString(),
   });
 });
@@ -201,7 +211,7 @@ app.listen(env.PORT, () => {
 
     // --- Phase-1 loop: workflow-runner replacement (default OFF) ---
     if (String(process.env.LOOP_WORKFLOW ?? "false").toLowerCase() === "true") {
-      startWorkflowLoop(ctl.signal);
+      superviseLoop("workflow-loop", (signal) => startWorkflowLoop(signal), ctl.signal);
     } else {
       console.log("[workflow-loop] disabled (set LOOP_WORKFLOW=true to enable)");
     }
