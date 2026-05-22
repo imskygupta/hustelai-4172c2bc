@@ -9,6 +9,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { AuthProvider } from "@/hooks/useAuth";
+import VerificationLock from "@/components/auth/VerificationLock";
 import { WorkspaceProvider } from "@/lib/workspace/context";
 import { WorkspaceFrame } from "@/components/workspace/WorkspaceFrame";
 import { WorkspaceAuthGate } from "@/components/workspace/WorkspaceAuthGate";
@@ -293,6 +294,7 @@ const App = () => {
         <Toaster />
         <Sonner />
         <DebugRuntimeOverlay />
+        <VerificationLock />
         {isMaintenance() ? <MaintenancePage /> : (
         <BrowserRouter>
           <YandexRouteTracker />
