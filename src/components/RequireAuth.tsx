@@ -2,7 +2,6 @@ import { ReactNode, useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Loader2 } from "lucide-react";
-import RestrictedVerificationShell from "@/components/auth/RestrictedVerificationShell";
 import { recordRedirectAttempt } from "@/lib/runtime/safetyCounters";
 
 const AUTH_DEBUG_KEY = "hustleai_auth_debug";
@@ -25,7 +24,7 @@ function logGuardFailure(path: string, reason: string) {
  * before redirecting so page refreshes and workspace transitions don't race.
  */
 export function RequireAuth({ children }: { children: ReactNode }) {
-  const { user, loading, trustState } = useAuth();
+  const { user, loading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [loadingExpired, setLoadingExpired] = useState(false);
@@ -44,8 +43,6 @@ export function RequireAuth({ children }: { children: ReactNode }) {
       navigate(`/login?next=${next}`, { replace: true });
     }
   }, [loading, loadingExpired, user, navigate, location]);
-
-  if (trustState.restricted) return <RestrictedVerificationShell />;
 
   if (loading || !user) {
     return (

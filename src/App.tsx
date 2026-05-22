@@ -9,7 +9,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
-import RestrictedVerificationShell from "@/components/auth/RestrictedVerificationShell";
+import VerificationOverlay from "@/components/auth/VerificationOverlay";
 import { WorkspaceProvider } from "@/lib/workspace/context";
 import { WorkspaceFrame } from "@/components/workspace/WorkspaceFrame";
 import { WorkspaceAuthGate } from "@/components/workspace/WorkspaceAuthGate";
@@ -244,7 +244,7 @@ const AuthorityPage = lazy(() => import("./pages/authority/AuthorityPage"));
 import { MaintenanceBanner } from "./components/flags/FeatureGate";
 import TelegramLanding from "./pages/marketing/TelegramLanding";
 import { Navigate } from "react-router-dom";
-import { assertRestrictedRuntimeBoundary, markFullRuntimeBootStarted, registerRuntimeMount } from "@/lib/runtime/safetyCounters";
+import { markFullRuntimeBootStarted, registerRuntimeMount } from "@/lib/runtime/safetyCounters";
 
 // Legacy `/workspaces/*` → clean cockpit aliases (workspace host only).
 function LegacyProjectRedirect() {
@@ -639,40 +639,6 @@ function FullRuntimeApp() {
   );
 }
 
-function AuthenticatedRuntimeGate() {
-  const { user, loading, profileLoading, trustState } = useAuth();
-  const restrictedReason = trustState.reason;
-
-  assertRestrictedRuntimeBoundary(trustState.restricted, "AuthenticatedRuntimeGate");
-
-  useEffect(() => {
-    try {
-      if (localStorage.getItem("hustleai_auth_debug") !== "1") return;
-      console.info("[auth] runtime_gate", {
-        path: window.location.pathname,
-        loading,
-        profileLoading,
-        hasUser: !!user,
-        restrictedReason,
-        trustReady: trustState.ready,
-      });
-    } catch {
-      // diagnostics only
-    }
-  }, [loading, profileLoading, restrictedReason, trustState.ready, user]);
-
-  if (!trustState.ready) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="h-8 w-8 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
-      </div>
-    );
-  }
-
-  if (restrictedReason) return <RestrictedVerificationShell />;
-  return <FullRuntimeApp />;
-}
-
 const App = () => {
   return (
   <Sentry.ErrorBoundary fallback={<RootErrorFallback />}>
@@ -681,7 +647,8 @@ const App = () => {
     <AuthProvider>
       <Toaster />
       <Sonner />
-      <AuthenticatedRuntimeGate />
+      <FullRuntimeApp />
+      <VerificationOverlay />
     </AuthProvider>
   </QueryClientProvider>
   </HelmetProvider>
