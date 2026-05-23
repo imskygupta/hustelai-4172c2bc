@@ -8961,8 +8961,12 @@ export type Database = {
           artifact_origin: string | null
           artifact_state: string
           artifact_type: string
+          continuity_expires_at: string | null
+          continuity_state: string
           created_at: string
           dedupe_key: string | null
+          degraded_at: string | null
+          degraded_reason: string | null
           delivery_attempts: number
           delivery_status: string
           file_url: string | null
@@ -9000,8 +9004,12 @@ export type Database = {
           artifact_origin?: string | null
           artifact_state?: string
           artifact_type: string
+          continuity_expires_at?: string | null
+          continuity_state?: string
           created_at?: string
           dedupe_key?: string | null
+          degraded_at?: string | null
+          degraded_reason?: string | null
           delivery_attempts?: number
           delivery_status?: string
           file_url?: string | null
@@ -9039,8 +9047,12 @@ export type Database = {
           artifact_origin?: string | null
           artifact_state?: string
           artifact_type?: string
+          continuity_expires_at?: string | null
+          continuity_state?: string
           created_at?: string
           dedupe_key?: string | null
+          degraded_at?: string | null
+          degraded_reason?: string | null
           delivery_attempts?: number
           delivery_status?: string
           file_url?: string | null
@@ -10025,7 +10037,11 @@ export type Database = {
           artifact_origin: string | null
           artifact_state: string | null
           artifact_type: string | null
+          continuity_expires_at: string | null
+          continuity_state: string | null
           created_at: string | null
+          degraded_at: string | null
+          degraded_reason: string | null
           delivery_attempts: number | null
           delivery_status: string | null
           file_url: string | null
@@ -10503,6 +10519,10 @@ export type Database = {
       issue_telegram_link_token: {
         Args: { _bot?: string; _user: string }
         Returns: Json
+      }
+      lifecycle_degrade_expired_continuity: {
+        Args: { _batch?: number }
+        Returns: number
       }
       log_security_auth_event: {
         Args: {
