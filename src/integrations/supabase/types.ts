@@ -8908,13 +8908,20 @@ export type Database = {
           artifact_type: string
           created_at: string
           dedupe_key: string | null
+          delivery_attempts: number
+          delivery_status: string
           file_url: string | null
           id: string
           is_favorite: boolean
+          last_delivery_at: string | null
+          last_delivery_error: string | null
           metadata: Json
           mime_type: string | null
           preview_text: string | null
           ref_export_id: string | null
+          share_expires_at: string | null
+          share_revoked_at: string | null
+          share_token: string | null
           size_bytes: number | null
           source_module: string
           status: string
@@ -8931,13 +8938,20 @@ export type Database = {
           artifact_type: string
           created_at?: string
           dedupe_key?: string | null
+          delivery_attempts?: number
+          delivery_status?: string
           file_url?: string | null
           id?: string
           is_favorite?: boolean
+          last_delivery_at?: string | null
+          last_delivery_error?: string | null
           metadata?: Json
           mime_type?: string | null
           preview_text?: string | null
           ref_export_id?: string | null
+          share_expires_at?: string | null
+          share_revoked_at?: string | null
+          share_token?: string | null
           size_bytes?: number | null
           source_module: string
           status?: string
@@ -8954,13 +8968,20 @@ export type Database = {
           artifact_type?: string
           created_at?: string
           dedupe_key?: string | null
+          delivery_attempts?: number
+          delivery_status?: string
           file_url?: string | null
           id?: string
           is_favorite?: boolean
+          last_delivery_at?: string | null
+          last_delivery_error?: string | null
           metadata?: Json
           mime_type?: string | null
           preview_text?: string | null
           ref_export_id?: string | null
+          share_expires_at?: string | null
+          share_revoked_at?: string | null
+          share_token?: string | null
           size_bytes?: number | null
           source_module?: string
           status?: string
@@ -9883,14 +9904,21 @@ export type Database = {
         Row: {
           artifact_type: string | null
           created_at: string | null
+          delivery_attempts: number | null
+          delivery_status: string | null
           file_url: string | null
           id: string | null
           is_favorite: boolean | null
+          last_delivery_at: string | null
+          last_delivery_error: string | null
           metadata: Json | null
           mime_type: string | null
           origin: string | null
           preview_text: string | null
           ref_export_id: string | null
+          share_expires_at: string | null
+          share_revoked_at: string | null
+          share_token: string | null
           size_bytes: number | null
           source_module: string | null
           status: string | null
@@ -10442,6 +10470,22 @@ export type Database = {
       operator_pulse: { Args: { _slug: string }; Returns: Json }
       operator_pulse_global: { Args: never; Returns: Json }
       post_performance: { Args: { _slug: string }; Returns: Json }
+      public_artifact_get: {
+        Args: { _token: string }
+        Returns: {
+          artifact_type: string
+          created_at: string
+          file_url: string
+          id: string
+          mime_type: string
+          preview_text: string
+          ref_export_id: string
+          share_expires_at: string
+          size_bytes: number
+          source_module: string
+          title: string
+        }[]
+      }
       purge_stale_telemetry: { Args: never; Returns: Json }
       queue_archive_promote: {
         Args: { _queue: string; _reason?: string; _ref_id: string }
