@@ -113,6 +113,8 @@ export async function patchArtifact(id: string, patch: Partial<{
   storage_mode: string;
   telegram_message_id: string | null;
   telegram_channel: string | null;
+  telegram_chat_id: string | null;
+  telegram_file_id: string | null;
   telegram_deep_link: string | null;
   status: string;
   file_url: string | null;
