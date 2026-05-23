@@ -37,6 +37,14 @@ serve(async (req) => {
       meta = {},
     } = body || {};
 
+    // Drop empty/orphan alerts before they pollute the storage channel.
+    // Prior bug: noisy callers with no message + default kind produced
+    // "<b>client.unknown</b>\nno_key" garbage in Telegram.
+    const _msg = String(message ?? "").trim();
+    if (kind === "client.unknown" && (!_msg || _msg === "Unspecified alert") && !feature) {
+      return j({ ok: true, skipped: "empty_orphan" });
+    }
+
     // Resolve user id from JWT if not explicitly provided
     let resolvedUser = user_id;
     if (!resolvedUser) {
