@@ -76,6 +76,12 @@ events into 1 row within a 5-minute window.
 
 ## Outstanding (Phases 8–10)
 
-- [ ] Phase 8: Railway reconciliation worker (TG-delivered-but-artifact-failed, orphans, stale queued)
+- [x] Phase 8: Railway reconciliation worker — `workers/telegram/src/ops/loops/reconciliation.ts`
+      - 5 repair cases: delivered-not-patched, stuck queued, retry storm, TG orphan, queue lag
+      - Adaptive backoff 30s → 5min, scan cap 25/tick, no duplicate sends, FSM-safe
+      - Heartbeats + queue metrics + recon runs → ADMIN DB (Phase 8.6)
+      - Telemetry routed through `admin-alert` normalizer only (Phase 8.5)
+      - Flag-gated: `LOOP_RECONCILIATION=true` on Railway
+      - Admin readback: `ops-worker-status` edge fn → Integrations rail "Railway runtime" card
 - [ ] Phase 9: Exports page realtime + retention/quota indicators
 - [ ] Phase 10: Integrations control center polish (Telegram diagnostics, worker health, queue cards)
