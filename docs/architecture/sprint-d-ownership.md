@@ -85,3 +85,29 @@ events into 1 row within a 5-minute window.
       - Admin readback: `ops-worker-status` edge fn → Integrations rail "Railway runtime" card
 - [ ] Phase 9: Exports page realtime + retention/quota indicators
 - [ ] Phase 10: Integrations control center polish (Telegram diagnostics, worker health, queue cards)
+
+## Sprint E Phase 4 — Weighted queue fairness
+
+Queue priority is now tier-aware AND starvation-safe.
+
+- `ops.tier_priority(user_id)` resolves canonical priority from
+  `profiles.subscription_tier` (infinity=10, elite=40, pro=70, free=100).
+- `ops.effective_priority(priority, created_at, attempt)` applies two
+  corrections at claim time:
+    - **aging boost**: −1 per minute waited, capped at 90 → worst-case
+      Free job eventually reaches priority 10 (never starved).
+    - **retry decay**: +15 per attempt, capped at 60 → retried jobs lose
+      precedence so fresh first-attempt work isn't dominated by a high-tier
+      retry storm.
+- `ops.claim_job_weighted` orders by effective_priority. Railway poller
+  (`workers/telegram/src/ops/queue.ts`) and the edge `claimJob` helper
+  default to weighted. Raw `claim_job` is kept for FIFO callers.
+- BEFORE-INSERT trigger `ops.jobs_set_tier_priority` auto-fills priority
+  from tier when the caller passed the default 100.
+- Admin observability: `ops.v_queue_pressure_by_tier` exposes depth /
+  in-flight / retrying / oldest-pending per queue × tier.
+
+**Invariants preserved:** priority affects latency, concurrency, retry
+ordering, worker selection — NEVER correctness, continuity ownership, or
+artifact integrity. Free users still receive identical FSM/continuity
+behaviour, just later in the lane.
