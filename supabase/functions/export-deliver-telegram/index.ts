@@ -131,18 +131,18 @@ serve(async (req) => {
 
     await sb.from("generated_exports").update({
       status: "delivered",
-      telegram_chat_id: integ.provider_chat_id,
-      telegram_message_id: messageId,
-      telegram_file_id: cachedFileId || exp.telegram_file_id,
       delivery_method: cachedFileId ? "hybrid" : "telegram",
       delivered_at: new Date().toISOString(),
     }).eq("id", exp.id);
-    // Canonical FSM transition: delivering -> delivered, mirror TG memory.
+    // Sprint D Phase 6: workspace_artifacts is the ONLY canonical owner of
+    // Telegram linkage (chat_id, message_id, file_id, deep_link). generated_exports
+    // keeps only generation lifecycle (status, delivered_at, storage_path).
     void transitionArtifactByExport(exp.id, "delivered", {
       storage_mode: cachedFileId ? "hybrid" : "telegram",
       telegram_message_id: messageId,
       telegram_channel: integ.provider_chat_id,
       telegram_chat_id: integ.provider_chat_id,
+      telegram_file_id: cachedFileId || null,
       telegram_deep_link: link,
       status: "delivered",
       delivery_status: "delivered",
