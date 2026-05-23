@@ -1,4 +1,3 @@
-import { blogDb } from "@/integrations/blog/db";
 import { supabase } from "@/integrations/supabase/client";
 
 export interface FreelanceResult {
@@ -45,7 +44,7 @@ export async function searchFreelanceIdeas(query: string): Promise<FreelanceResu
   const q = query.toLowerCase();
   const keywords = q.split(/\s+/).filter(w => w.length > 2);
 
-  let request = blogDb.from("side_hustles").select("*");
+  let request = supabase.from("side_hustles").select("*");
 
   if (keywords.length > 0) {
     const orFilters = keywords.flatMap(kw => [
@@ -60,7 +59,7 @@ export async function searchFreelanceIdeas(query: string): Promise<FreelanceResu
   const { data, error } = await request.order("likes", { ascending: false }).limit(50);
   if (error) throw new Error(error.message);
   if (!data || data.length === 0) {
-    const { data: trending } = await blogDb.from("side_hustles").select("*").order("likes", { ascending: false }).limit(12);
+    const { data: trending } = await supabase.from("side_hustles").select("*").order("likes", { ascending: false }).limit(12);
     return (trending || []).map(mapDbResult);
   }
 

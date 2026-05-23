@@ -1,4 +1,3 @@
-import { blogDb } from "@/integrations/blog/db";
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -67,7 +66,7 @@ export default function Explore() {
   useEffect(() => {
     let cancelled = false;
     runWithDeadline(
-      () => blogDb.from("side_hustles").select("*").order("likes", { ascending: false }).limit(6),
+      () => supabase.from("side_hustles").select("*").order("likes", { ascending: false }).limit(6),
       "explore.trending",
     ).then(({ data }: any) => { if (!cancelled && data) setTrendingCards(data.map(mapDbResult)); }).catch(() => undefined);
     return () => { cancelled = true; };
@@ -241,7 +240,7 @@ export default function Explore() {
             dislikes: 0,
           };
           const insertResult = await runWithDeadline<any>(
-            () => blogDb.from("side_hustles").insert(insertData as any).select("*").single(),
+            () => supabase.from("side_hustles").insert(insertData as any).select("*").single(),
             "explore.saveAiResult",
             { timeoutMs: 3_000 },
           ).catch(() => ({ data: null } as any));
@@ -276,7 +275,7 @@ export default function Explore() {
 
   const dbSearch = async (query: string): Promise<FreelanceResult[]> => {
     const keywords = query.toLowerCase().split(/\s+/).filter(w => w.length > 2);
-    let request = blogDb.from("side_hustles").select("*");
+    let request = supabase.from("side_hustles").select("*");
     if (keywords.length > 0) {
       const orFilters = keywords.flatMap(kw => [
         `title.ilike.%${kw}%`,

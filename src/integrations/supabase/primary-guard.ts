@@ -23,8 +23,12 @@ export const PRIMARY_FORBIDDEN_TABLES: ReadonlySet<string> = new Set([
   "ai_context_windows",
   "ai_session_state",
   // Blogs/CMS DB (ynvfxxmhowlvhtqiigfc)
-  "side_hustles",
-  "hustle_votes",
+  // NOTE: side_hustles + hustle_votes intentionally remain on primary for now.
+  // The blog-side schema in scripts/blogs-db-bootstrap.sql is SEO-shaped, while
+  // the runtime app (Explore / FreelanceCard / HustleDetail) needs the
+  // operational shape (type, time_commitment, effort, startup_cost,
+  // is_trending, likes, dislikes). Migrating requires reshape + 203-row
+  // backfill + edge fn updates. Tracked separately.
   "newsletter_subscribers",
   "newsletter_issues",
   "newsletter_sends",

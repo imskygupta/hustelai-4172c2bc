@@ -36,6 +36,26 @@ create index if not exists idx_side_hustles_status on public.side_hustles(status
 create index if not exists idx_side_hustles_category on public.side_hustles(category);
 create index if not exists idx_side_hustles_published_at on public.side_hustles(published_at desc);
 
+-- Engagement + display columns used by Explore / FreelanceCard.
+alter table public.side_hustles add column if not exists likes integer not null default 0;
+alter table public.side_hustles add column if not exists dislikes integer not null default 0;
+alter table public.side_hustles add column if not exists earnings text;
+alter table public.side_hustles add column if not exists description text;
+alter table public.side_hustles add column if not exists niche text;
+alter table public.side_hustles add column if not exists today text;
+
+-- hustle_votes (per-user upvote/downvote, RLS by JWT sub) ───────────────────
+create table if not exists public.hustle_votes (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null,
+  hustle_id uuid not null references public.side_hustles(id) on delete cascade,
+  vote_type text not null check (vote_type in ('up','down')),
+  created_at timestamptz not null default now(),
+  unique (user_id, hustle_id)
+);
+create index if not exists idx_hustle_votes_hustle on public.hustle_votes(hustle_id);
+create index if not exists idx_hustle_votes_user on public.hustle_votes(user_id);
+
 -- SEO surface ──────────────────────────────────────────────────────────────
 create table if not exists public.seo_pages (
   id uuid primary key default gen_random_uuid(),
@@ -192,6 +212,7 @@ alter table public.email_templates enable row level security;
 alter table public.email_logs enable row level security;
 alter table public.editorial_queue enable row level security;
 alter table public.campaign_events enable row level security;
+alter table public.hustle_votes enable row level security;
 
 do $$ begin
   -- public-read tables
@@ -210,6 +231,22 @@ do $$ begin
   end if;
   if not exists (select 1 from pg_policies where polname='seo_redirects_public_read') then
     create policy seo_redirects_public_read on public.seo_redirects for select using (true);
+  end if;
+  -- hustle_votes: anyone authenticated can read aggregates; owner-only writes.
+  if not exists (select 1 from pg_policies where polname='hustle_votes_public_read') then
+    create policy hustle_votes_public_read on public.hustle_votes for select using (true);
+  end if;
+  if not exists (select 1 from pg_policies where polname='hustle_votes_owner_insert') then
+    create policy hustle_votes_owner_insert on public.hustle_votes
+      for insert with check (auth.uid() = user_id);
+  end if;
+  if not exists (select 1 from pg_policies where polname='hustle_votes_owner_update') then
+    create policy hustle_votes_owner_update on public.hustle_votes
+      for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+  end if;
+  if not exists (select 1 from pg_policies where polname='hustle_votes_owner_delete') then
+    create policy hustle_votes_owner_delete on public.hustle_votes
+      for delete using (auth.uid() = user_id);
   end if;
 end $$;
 
