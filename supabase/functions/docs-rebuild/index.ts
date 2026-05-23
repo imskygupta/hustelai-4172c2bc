@@ -41,6 +41,20 @@ Deno.serve(async (req) => {
   try {
     const admin = getAdmin();
 
+    // Probe: confirm docs tables exist before any mutation.
+    const probeCats = await admin.from("docs_categories").select("id", { count: "exact", head: true });
+    const probePages = await admin.from("docs_pages").select("id", { count: "exact", head: true });
+    if (probeCats.error || probePages.error) {
+      return json(412, {
+        error: "admin_db_not_bootstrapped",
+        detail: "docs_categories or docs_pages missing on Admin DB. Run scripts/admin-db-bootstrap.sql (sections for docs_categories + docs_pages) against the Admin Supabase project, then re-invoke.",
+        probe: {
+          docs_categories: probeCats.error?.message ?? "ok",
+          docs_pages: probePages.error?.message ?? "ok",
+        },
+      });
+    }
+
     // 1) snapshot
     const [catRes, pageRes] = await Promise.all([
       admin.from("docs_categories").select("*").order("sort_order"),
