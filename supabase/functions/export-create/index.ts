@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { createExport } from "../_shared/exports/createExport.ts";
+import { createArtifact } from "../_shared/artifacts/createArtifact.ts";
 import { flagGuard } from "../_shared/flags/resolve.ts";
 import { emitWorkflowEvent } from "../_shared/workflows/emit.ts";
 import { parseJson, z } from "../_shared/validation.ts";
@@ -64,6 +65,22 @@ serve(async (req) => {
       file_b64, storage_path,
       metadata, deliver_to_telegram: !!deliver_to_telegram,
     });
+
+    // Register canonical artifact (single source of truth for the Exports page).
+    if (row?.id) {
+      void createArtifact({
+        user_id: u.user.id,
+        artifact_type: export_type,
+        source_module: (metadata as any)?.source_module || "export-create",
+        title,
+        preview_text: (metadata as any)?.preview_text || null,
+        mime_type: mime_type || (row as any).mime_type || null,
+        size_bytes: (row as any).size_bytes ?? null,
+        metadata: { ...(metadata || {}), export_type },
+        ref_export_id: row.id,
+        storage_mode: "local",
+      });
+    }
 
     if (row?.id) {
       void emitWorkflowEvent(sb, "export.generated", {
