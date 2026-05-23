@@ -1,112 +1,108 @@
-# Sprint C — Operational Continuity + Delivery Polish
+# Sprint D — Runtime Continuity & Delivery Stabilization
 
-Goal: HustleAI should feel like a durable AI operating system. No new infra. Polish + complete the execution chain wired up in Sprints A/B.
+Architecture decisions are locked: multi-DB split stays, primary-guard stays, no bypasses, no hardcoded auth. Every phase below is additive on top of the current Sprint C state.
+
+I'll execute the phases in the order shown. Each phase is independently shippable and verifiable, so you can stop me / re-order at any boundary.
 
 ---
 
-## Part 1 — Detail surface contrast pass
+## Phase 1 — Canonical session resolver (foundation)
 
-Audit and fix muted/low-contrast text + pale pills across:
-- `src/pages/HustleDetail.tsx`
-- `src/pages/RoadmapDetail.tsx` (and any roadmap viewer)
-- `src/pages/Workspace*` detail views
-- `src/components/artifacts/PreviewPane.tsx`
-- `src/components/artifacts/DeliveryChip.tsx`
-- Export/AI/proposal cards
+New files:
+- `src/lib/runtime/session.ts` — single browser-side resolver. Exports `getRuntimeSession()` returning `{ user_id, tier, telegram: { connected, chat_id, bot_username }, is_admin, workspace_owner_id, access_token }`. Internally calls `supabase.auth.getSession()`, then a single `runtime-session` edge fn (new, cached 30s) to enrich tier + telegram + admin from the correct sibling DBs.
+- `supabase/functions/runtime-session/index.ts` — JWT-validated, returns the same enriched shape. Used by both browser cache miss and Railway workers.
+- `supabase/functions/_shared/auth/resolveSession.ts` — server-side resolver. Accepts either `Authorization: Bearer <jwt>` (user invoke) or `x-runtime-key: <signed worker key>` (Railway). Returns the same canonical shape. All edge fns migrate to this.
 
-Changes (semantic tokens only — `index.css`):
-- Tighten `--muted-foreground` (raise lightness contrast vs `--card`).
-- Add `--badge-*` token set for semantic delivery pills (queued/processing/delivered/cached/telegram_only/failed/retrying).
-- Replace `text-muted-foreground` with `text-foreground/80` on metadata rows where contrast fails.
-- Strengthen borders: `border-border` → `border-border/80` on pale cards; never pale-on-pale.
-- Specifically replace the washed pale-green tag text with `bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30`.
+Exit criteria:
+- `export-create`, `artifact-resend`, `notifications-test`, `export-deliver-telegram` all use `resolveSession()`.
+- Frontend reads tier/TG state from one hook (`useRuntimeSession`) instead of 5+ ad-hoc queries.
+- Zero new `auth.failed` alerts in admin TG over a 30-min window.
 
-## Part 2 — Exports → Operational Memory
+---
 
-Evolve `src/pages/settings/Exports.tsx`:
-- Timeline grouping: Today / Yesterday / Earlier this week / Older (group by `created_at`).
-- New `ArtifactCard` component (rich): icon by type, title, source_module, delivery chip with animated transitions, timestamp, metadata row.
-- `ArtifactPreviewDrawer` (uses existing `PreviewPane`) opened from card click — keep current ShareDialog wired inside.
-- CTAs on each card:
-  - "Continue working" → routes back to `source_module` deep link.
-  - "Open in Telegram" → uses `telegram_deep_link` if `telegram_message_id` present.
-  - "Resend" / "Share" / "Delete" (existing).
-- Type filter chips: AI, Docs, Roadmaps, Proposals, Workspace, Telegram-only.
-- Use Framer Motion (already present) for chip transitions and drawer.
+## Phase 2 — Export pipeline reliability
 
-## Part 3 — Telegram delivery continuity
-
-Ensure every persistent generation auto-registers + auto-delivers:
-- Audit `export-create` callers; confirm `createArtifact` helper is invoked from roadmap/proposal/AI generators that currently bypass it. Patch the 2–3 obvious holdouts (no rebuilds).
-- After `export-deliver-telegram` success, ensure `telegram_message_id` + `telegram_deep_link` patched into `workspace_artifacts` (already partially wired; verify and fix gaps).
-- TG-only artifacts: when `storage_mode='telegram'` and no local path, card still renders with "Open in Telegram" primary CTA.
-
-## Part 4 — Delivery health states
-
-Formalize states (already in DB as `delivery_status`):
-`queued | processing | delivered | cached | telegram_only | failed | retrying`
-
-Update `DeliveryChip` with full state map + tokenized colors + tooltip showing `last_delivery_error` + retry button when `failed`/`retrying`.
-
-## Part 5 — Admin alert payload formalization
-
-Update `supabase/functions/_shared/alerts.ts` (or inline in `export-deliver-telegram` + `admin-alert`):
-
-```ts
-type DeliveryAlert = {
-  kind: 'delivery.failed' | 'delivery.retry_storm' | 'artifact.malformed' | 'auth.failed' | 'pipeline.anomaly';
-  artifact_id?: string;
-  export_id?: string;
-  user_id?: string;
-  retry_count?: number;
-  failure_reason?: string;
-  pipeline_stage?: string;
-};
+Migration (additive only, no destructive changes):
+```text
+workspace_artifacts:
+  + artifact_origin     text   -- 'export' | 'ai_tool' | 'workflow' | 'manual'
+  + generation_source   text   -- module/route that created it
+  + pipeline_state      text   -- generated|persisted|mirrored|queued|delivered|indexed|surfaced
+  + delivery_state      text   -- none|queued|sending|delivered|failed|revoked
+  + dedupe_key          text   -- unique per (user, source, key)
+  + unique idx (user_id, dedupe_key) where dedupe_key is not null
 ```
 
-Reject any alert missing `kind` or with `kind === 'client.unknown'` (already done, formalize).
-Never accept user-export-shaped payloads.
+Code:
+- `_shared/artifacts/lifecycle.ts` — `advancePipelineState(artifact_id, next, meta)` with FSM guard (no backward transitions except admin override).
+- `createArtifact()` becomes the only write-path; every AI generation hook must call it. Add a CI grep test asserting no generation file writes to `workspace_artifacts` directly.
+- One-shot backfill SQL: legacy exports → set `pipeline_state='surfaced'`, `delivery_state` derived from `notification_deliveries` join.
 
-## Part 6 — Workspace continuity rail
-
-New component `src/components/workspace/ContinuityRail.tsx` shown on dashboard/workspace landing:
-- "Reopen latest roadmap" (latest artifact where type=roadmap)
-- "Continue proposal" (latest type=proposal, status≠delivered final)
-- "Resume workspace" (latest workspace doc)
-- "Open latest artifact" (most recent any)
-- "Continue AI workflow" (latest AI chat artifact)
-
-Fed by simple queries against `v_workspace_artifacts_unified` filtered by `user_id = auth.uid()`, limit 1 per type. No new tables.
-
-## Part 7 — Storage strategy
-
-No code change beyond reinforcing TG metadata:
-- Verify `telegram_deep_link` derivation is stable (`https://t.me/c/<chat_id_no_prefix>/<message_id>` for private channel, or bot deep-link variant we already use).
-- Add helper `src/lib/artifacts/telegram-link.ts` so frontend + edge both reconstruct identically.
+Exit criteria:
+- 100% of new artifacts have non-null `pipeline_state` + `artifact_origin`.
+- Resend dedupe via `dedupe_key` blocks duplicate TG sends across 3 rapid clicks.
 
 ---
 
-## Files
+## Phase 3 — Telegram delivery memory
 
-**New**
-- `src/components/artifacts/ArtifactCard.tsx`
-- `src/components/artifacts/ArtifactPreviewDrawer.tsx`
-- `src/components/artifacts/TimelineGroup.tsx`
-- `src/components/workspace/ContinuityRail.tsx`
-- `src/lib/artifacts/telegram-link.ts`
-- `src/lib/artifacts/groupByTimeline.ts`
+Schema (additive on `workspace_artifacts`):
+```text
++ telegram_message_id text
++ telegram_chat_id    text
++ telegram_deep_link  text
++ resend_count        int  default 0
+```
 
-**Modified**
-- `src/index.css` (badge tokens, muted contrast)
-- `src/components/artifacts/DeliveryChip.tsx` (full state map + retry)
-- `src/components/artifacts/PreviewPane.tsx` (contrast)
-- `src/pages/settings/Exports.tsx` (timeline grouping, filters, drawer)
-- `src/pages/HustleDetail.tsx`, `src/pages/RoadmapDetail.tsx` (contrast pass, scoped)
-- `supabase/functions/admin-alert/index.ts` (formal payload schema)
-- `supabase/functions/export-deliver-telegram/index.ts` (emit formal alert payloads, patch telegram_deep_link)
-- Dashboard/Workspace landing page (mount `ContinuityRail`)
+Code:
+- `export-deliver-telegram` writes all 4 fields on success (or last attempt for failures).
+- `artifact-resend` increments `resend_count` and re-emits via the same dedupe path.
+- `ArtifactCard` action menu (frontend): `Open in Telegram` (deep link), `Resend`, `Regenerate`, `Copy link`. Already partially present — wire to canonical fields.
+- TG-only artifacts (no local file) still render in Exports + ContinuityRail using preview metadata; "Download" is replaced by "Open in Telegram".
 
-**Migrations**: none (all fields exist from Sprints A/B).
+Exit criteria:
+- Every TG delivery in the last 24h has all 4 fields populated.
+- "Open in Telegram" works for the 3 historical artifact types tested live.
 
-## Out of scope
-No rebuild of Exports/Telegram/Explore/AI. No DB migrations. No new infra/storage backend. No payment changes.
+---
+
+## Phase 4 — Integrations page as operations control center
+
+Rebuild `src/pages/settings/Integrations.tsx` around `Promise.allSettled` only. New `IntegrationsHealthRail` component shows:
+- Telegram: linked state, chat_id, bot username, last successful + last failed delivery (from `notification_deliveries`), tier gate.
+- Discord: linked state from `communityDb.discord_links` (already fixed).
+- Notification routing: per-event channel chips.
+- Worker runtime: latest row from `worker_heartbeats` (Phase 6).
+- Export routing mode: which deliveries are enabled for this user's tier.
+
+Zero blank states: each card shows `connected | not_connected | unavailable_on_tier | degraded`. No silent rejection.
+
+Exit criteria:
+- Page loads cleanly even if any 1 of 5 data sources fails.
+- No new `client.unhandled_rejection` in admin TG when navigating.
+
+---
+
+## Phase 5 — Operational telemetry normalization
+
+New file: `supabase/functions/_shared/alerts/normalize.ts` — `normalizeOperationalAlert(input)` returns a typed alert or `null`:
+- Whitelist kinds: `delivery.failed | retry_storm | auth.failed | pipeline.anomaly | worker.down | queue.stalled`.
+- Strips: stack traces, HTML fragments, `primary_guard` strings, `client.unhandled_rejection`, `no_key`.
+- Truncates message to 280 chars, structures meta as JSON.
+
+`admin-alert` becomes the only writer and routes everything through this normalizer; non-whitelisted kinds → structured log row in `admin_alerts_dropped` (ADMIN DB) instead of TG.
+
+Frontend `recordAnomaly` / `runtime-violation-log` reclassified: violations go to `runtime_violations` table only (silent persistence, surfaced in admin UI), never to TG.
+
+Exit criteria:
+- Admin TG channel receives only the 6 whitelisted kinds over a 24h smoke window.
+- `runtime_violations` table still records `primary-guard` hits for auditing.
+
+---
+
+## Phase 6 — Railway worker visibility
+
+Schema (ADMIN DB):
+```text
+worker_heartbeats:
+  worker_id text p
