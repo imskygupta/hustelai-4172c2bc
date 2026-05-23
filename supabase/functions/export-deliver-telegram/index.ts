@@ -6,6 +6,7 @@ import { patchArtifactByExport } from "../_shared/artifacts/createArtifact.ts";
 import { transitionArtifactByExport } from "../_shared/artifacts/transition.ts";
 import { isFeatureEnabledServer } from "../_shared/flags/resolve.ts";
 import { emitWorkflowEvent } from "../_shared/workflows/emit.ts";
+import { emitCollapsedEvent } from "../_shared/workflows/collapse.ts";
 
 const TG_TOKEN = Deno.env.get("TELEGRAM_BOT_TOKEN") || "";
 const corsHeaders = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, content-type" };
@@ -164,10 +165,16 @@ serve(async (req) => {
   } catch (e: any) {
     const errMsg = String(e?.message || e);
     if (exportIdOuter) {
-      void emitWorkflowEvent(sbOuter, "export.failed", {
+      // Sprint D Phase 7.5: collapse retry-driven failures into one rolling
+      // event per export, instead of one row per attempt.
+      void emitCollapsedEvent(sbOuter, "export.failed", {
         export_id: exportIdOuter, user_id: userIdOuter, channel: "telegram",
-        reason: errMsg,
-      }, { user_id: userIdOuter, dedupe_key: `export_fail:${exportIdOuter}:tg:${Date.now()}`, source: "export-deliver-telegram" });
+        reason: errMsg.slice(0, 300),
+      }, {
+        dedupe_key: `deliver_fail:${exportIdOuter}:tg`,
+        origin: "edge.export-deliver-telegram",
+        user_id: userIdOuter,
+      });
       // Mark failed + escalate to admin after 3+ attempts
       try {
         const { data: cur } = await sbOuter.from("workspace_artifacts")
