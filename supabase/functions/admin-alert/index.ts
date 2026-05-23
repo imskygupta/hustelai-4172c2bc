@@ -7,6 +7,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { dispatchToWorker, workerConfigured } from "../_shared/notifications/worker.ts";
 import { mirrorToOwned } from "../_shared/ops-routing.ts";
 import { getAdmin } from "../_shared/clients.ts";
+import { normalizeOperationalAlert } from "../_shared/alerts/normalize.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -37,47 +38,38 @@ serve(async (req) => {
       meta = {},
     } = body || {};
 
-    // Sprint C: formal operator-grade alert kinds. Anything else is treated
-    // as low-signal noise and dropped unless explicitly flagged severity≥error.
-    const FORMAL_KINDS = new Set([
-      "delivery.failed",
-      "delivery.retry_storm",
-      "artifact.malformed",
-      "auth.failed",
-      "pipeline.anomaly",
-    ]);
-    const isUserExportShaped = !!(body && (body.export_id || body.artifact_id) && !FORMAL_KINDS.has(kind));
-    if (isUserExportShaped) {
-      return j({ ok: true, skipped: "user_export_payload_blocked" });
+    // Sprint D · Phase 5 — Hard normalization gate.
+    // Anything not on the operator whitelist (or carrying HTML/stack frames /
+    // legacy noise / empty payload) is dropped from the TG channel entirely
+    // and recorded only as a structured drop-audit row.
+    const norm = normalizeOperationalAlert({
+      kind, severity, source, user_id, feature, message, meta,
+      artifact_id: body.artifact_id, export_id: body.export_id,
+      retry_count: body.retry_count, failure_reason: body.failure_reason,
+      pipeline_stage: body.pipeline_stage,
+    });
+    if (!norm.alert) {
+      // Best-effort audit write; never fail the request on it.
+      try {
+        await admin.from("admin_alerts_dropped").insert({
+          original_kind: norm.audit.original_kind,
+          original_message: norm.audit.original_message,
+          reason: norm.audit.reason,
+          source, feature, user_id,
+        });
+      } catch { /* table may not exist yet — silent */ }
+      return j({ ok: true, dropped: norm.dropped_reason });
     }
 
-    // Drop empty/orphan alerts before they pollute the storage channel.
-    // Prior bug: noisy callers with no message + default kind produced
-    // "<b>client.unknown</b>\nno_key" garbage in Telegram.
-    const _msg = String(message ?? "").trim();
-    if (kind === "client.unknown" && (!_msg || _msg === "Unspecified alert") && !feature) {
-      return j({ ok: true, skipped: "empty_orphan" });
-    }
-
-    // Promote formal delivery alerts to error severity by default so they
-    // hit the operator Telegram channel without callers having to remember.
-    let effectiveSeverity = severity;
-    if (FORMAL_KINDS.has(kind) && (severity === "warning" || severity === "info")) {
-      effectiveSeverity = "error";
-    }
-
-    // Normalize structured fields if caller passed top-level keys per spec
-    const structuredMeta = {
-      ...(meta || {}),
-      ...(body.artifact_id ? { artifact_id: body.artifact_id } : {}),
-      ...(body.export_id ? { export_id: body.export_id } : {}),
-      ...(body.retry_count != null ? { retry_count: body.retry_count } : {}),
-      ...(body.failure_reason ? { failure_reason: body.failure_reason } : {}),
-      ...(body.pipeline_stage ? { pipeline_stage: body.pipeline_stage } : {}),
-    };
+    // Normalizer has already produced operator-grade fields.
+    const effectiveSeverity = norm.alert.severity;
+    const structuredMeta = norm.alert.meta;
+    const normalizedKind = norm.alert.kind;
+    const normalizedMessage = norm.alert.message;
+    const normalizedFeature = norm.alert.feature;
 
     // Resolve user id from JWT if not explicitly provided
-    let resolvedUser = user_id;
+    let resolvedUser = norm.alert.user_id;
     if (!resolvedUser) {
       const auth = req.headers.get("Authorization") || "";
       if (auth.startsWith("Bearer ")) {
@@ -87,7 +79,7 @@ serve(async (req) => {
     }
 
     // Dedupe identical alerts within 30s
-    const key = `${kind}::${resolvedUser || "anon"}::${(message || "").slice(0, 80)}`;
+    const key = `${normalizedKind}::${resolvedUser || "anon"}::${normalizedMessage.slice(0, 80)}`;
     const now = Date.now();
     const last = RECENT.get(key) || 0;
     if (now - last < DEDUPE_MS) return j({ ok: true, deduped: true });
@@ -98,10 +90,10 @@ serve(async (req) => {
     }
 
     const insertRow = {
-      kind, severity: effectiveSeverity, source,
+      kind: normalizedKind, severity: effectiveSeverity, source: norm.alert.source,
       user_id: resolvedUser,
-      feature,
-      message: String(message).slice(0, 500),
+      feature: normalizedFeature,
+      message: normalizedMessage,
       meta: structuredMeta,
     };
     const { data: row, error } = await admin.from("admin_alerts").insert(insertRow).select("id").single();
@@ -112,9 +104,9 @@ serve(async (req) => {
     if (workerConfigured() && (effectiveSeverity === "error" || effectiveSeverity === "critical")) {
       const sevIcon = effectiveSeverity === "critical" ? "🚨" : "⚠️";
       const text = [
-        `${sevIcon} <b>${escape(kind)}</b>`,
-        escape(message),
-        feature ? `Feature: <code>${escape(feature)}</code>` : null,
+        `${sevIcon} <b>${escape(normalizedKind)}</b>`,
+        escape(normalizedMessage),
+        normalizedFeature ? `Feature: <code>${escape(normalizedFeature)}</code>` : null,
         resolvedUser ? `User: <code>${escape(resolvedUser)}</code>` : null,
         structuredMeta?.context ? `Context: <code>${escape(String(structuredMeta.context))}</code>` : null,
         structuredMeta?.pipeline_stage ? `Stage: <code>${escape(String(structuredMeta.pipeline_stage))}</code>` : null,
@@ -127,14 +119,14 @@ serve(async (req) => {
       const r = await dispatchToWorker({
         bot: "hustleai",
         message: text,
-        kind,
+        kind: normalizedKind,
         severity: effectiveSeverity,
-        source,
+        source: norm.alert.source,
         user_id: resolvedUser,
-        feature,
+        feature: normalizedFeature,
         meta: structuredMeta,
         force_telegram: true,
-        dedupe_key: `admin-alert:${kind}:${(resolvedUser || "anon")}:${String(message).slice(0, 80)}`,
+        dedupe_key: `admin-alert:${normalizedKind}:${(resolvedUser || "anon")}:${normalizedMessage.slice(0, 80)}`,
       });
       if (r.ok) {
         await admin.from("admin_alerts").update({ telegram_sent: true }).eq("id", row.id);
