@@ -8905,20 +8905,25 @@ export type Database = {
       }
       workspace_artifacts: {
         Row: {
+          artifact_origin: string | null
+          artifact_state: string
           artifact_type: string
           created_at: string
           dedupe_key: string | null
           delivery_attempts: number
           delivery_status: string
           file_url: string | null
+          generation_source: string | null
           id: string
           is_favorite: boolean
           last_delivery_at: string | null
           last_delivery_error: string | null
+          last_transition_at: string
           metadata: Json
           mime_type: string | null
           preview_text: string | null
           ref_export_id: string | null
+          resend_count: number
           share_expires_at: string | null
           share_revoked_at: string | null
           share_token: string | null
@@ -8927,6 +8932,7 @@ export type Database = {
           status: string
           storage_mode: string
           telegram_channel: string | null
+          telegram_chat_id: string | null
           telegram_deep_link: string | null
           telegram_message_id: string | null
           title: string
@@ -8935,20 +8941,25 @@ export type Database = {
           workspace_id: string | null
         }
         Insert: {
+          artifact_origin?: string | null
+          artifact_state?: string
           artifact_type: string
           created_at?: string
           dedupe_key?: string | null
           delivery_attempts?: number
           delivery_status?: string
           file_url?: string | null
+          generation_source?: string | null
           id?: string
           is_favorite?: boolean
           last_delivery_at?: string | null
           last_delivery_error?: string | null
+          last_transition_at?: string
           metadata?: Json
           mime_type?: string | null
           preview_text?: string | null
           ref_export_id?: string | null
+          resend_count?: number
           share_expires_at?: string | null
           share_revoked_at?: string | null
           share_token?: string | null
@@ -8957,6 +8968,7 @@ export type Database = {
           status?: string
           storage_mode?: string
           telegram_channel?: string | null
+          telegram_chat_id?: string | null
           telegram_deep_link?: string | null
           telegram_message_id?: string | null
           title: string
@@ -8965,20 +8977,25 @@ export type Database = {
           workspace_id?: string | null
         }
         Update: {
+          artifact_origin?: string | null
+          artifact_state?: string
           artifact_type?: string
           created_at?: string
           dedupe_key?: string | null
           delivery_attempts?: number
           delivery_status?: string
           file_url?: string | null
+          generation_source?: string | null
           id?: string
           is_favorite?: boolean
           last_delivery_at?: string | null
           last_delivery_error?: string | null
+          last_transition_at?: string
           metadata?: Json
           mime_type?: string | null
           preview_text?: string | null
           ref_export_id?: string | null
+          resend_count?: number
           share_expires_at?: string | null
           share_revoked_at?: string | null
           share_token?: string | null
@@ -8987,6 +9004,7 @@ export type Database = {
           status?: string
           storage_mode?: string
           telegram_channel?: string | null
+          telegram_chat_id?: string | null
           telegram_deep_link?: string | null
           telegram_message_id?: string | null
           title?: string
