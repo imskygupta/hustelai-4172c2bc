@@ -3,6 +3,7 @@
 // can re-send by file_id (no re-upload). Telegram is cache, NOT source of truth.
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { patchArtifactByExport } from "../_shared/artifacts/createArtifact.ts";
 
 const TG_TOKEN = Deno.env.get("TELEGRAM_BOT_TOKEN") || "";
 const STORAGE_CHANNEL = Deno.env.get("TELEGRAM_STORAGE_CHANNEL_ID") || "";
@@ -53,6 +54,11 @@ serve(async (req) => {
       telegram_storage_channel_id: channelId,
       delivery_method: "hybrid",
     }).eq("id", exp.id);
+    void patchArtifactByExport(exp.id, {
+      storage_mode: "hybrid",
+      telegram_message_id: messageId,
+      telegram_channel: channelId,
+    });
 
     return j({ ok: true, file_id: fileId });
   } catch (e: any) {
