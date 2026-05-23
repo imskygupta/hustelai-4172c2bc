@@ -176,15 +176,26 @@ serve(async (req) => {
           last_delivery_at: new Date().toISOString(),
           last_delivery_error: errMsg.slice(0, 500),
         }).eq("ref_export_id", exportIdOuter);
-        if ((cur?.delivery_attempts || 0) >= 3) {
+        const attempts = cur?.delivery_attempts || 0;
+        if (attempts >= 3) {
+          const alertKind = attempts >= 6 ? "delivery.retry_storm" : "delivery.failed";
           void fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/admin-alert`, {
             method: "POST",
             headers: { "Content-Type": "application/json", Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}` },
             body: JSON.stringify({
-              kind: "delivery.failed",
+              kind: alertKind,
+              severity: "error",
+              source: "edge.export-deliver-telegram",
               feature: "telegram.exports",
-              message: `Export ${exportIdOuter} failed after ${cur?.delivery_attempts} attempts`,
-              metadata: { export_id: exportIdOuter, attempts: cur?.delivery_attempts, error: errMsg.slice(0, 200) },
+              user_id: userIdOuter,
+              message: `Export ${exportIdOuter} failed after ${attempts} attempts`,
+              // Formal Sprint C payload — top-level structured fields
+              artifact_id: cur?.id || null,
+              export_id: exportIdOuter,
+              retry_count: attempts,
+              failure_reason: errMsg.slice(0, 300),
+              pipeline_stage: "telegram.deliver",
+              meta: { error: errMsg.slice(0, 200) },
             }),
           }).catch(() => {});
         }

@@ -37,6 +37,20 @@ serve(async (req) => {
       meta = {},
     } = body || {};
 
+    // Sprint C: formal operator-grade alert kinds. Anything else is treated
+    // as low-signal noise and dropped unless explicitly flagged severity≥error.
+    const FORMAL_KINDS = new Set([
+      "delivery.failed",
+      "delivery.retry_storm",
+      "artifact.malformed",
+      "auth.failed",
+      "pipeline.anomaly",
+    ]);
+    const isUserExportShaped = !!(body && (body.export_id || body.artifact_id) && !FORMAL_KINDS.has(kind));
+    if (isUserExportShaped) {
+      return j({ ok: true, skipped: "user_export_payload_blocked" });
+    }
+
     // Drop empty/orphan alerts before they pollute the storage channel.
     // Prior bug: noisy callers with no message + default kind produced
     // "<b>client.unknown</b>\nno_key" garbage in Telegram.
@@ -44,6 +58,23 @@ serve(async (req) => {
     if (kind === "client.unknown" && (!_msg || _msg === "Unspecified alert") && !feature) {
       return j({ ok: true, skipped: "empty_orphan" });
     }
+
+    // Promote formal delivery alerts to error severity by default so they
+    // hit the operator Telegram channel without callers having to remember.
+    let effectiveSeverity = severity;
+    if (FORMAL_KINDS.has(kind) && (severity === "warning" || severity === "info")) {
+      effectiveSeverity = "error";
+    }
+
+    // Normalize structured fields if caller passed top-level keys per spec
+    const structuredMeta = {
+      ...(meta || {}),
+      ...(body.artifact_id ? { artifact_id: body.artifact_id } : {}),
+      ...(body.export_id ? { export_id: body.export_id } : {}),
+      ...(body.retry_count != null ? { retry_count: body.retry_count } : {}),
+      ...(body.failure_reason ? { failure_reason: body.failure_reason } : {}),
+      ...(body.pipeline_stage ? { pipeline_stage: body.pipeline_stage } : {}),
+    };
 
     // Resolve user id from JWT if not explicitly provided
     let resolvedUser = user_id;
@@ -67,36 +98,41 @@ serve(async (req) => {
     }
 
     const insertRow = {
-      kind, severity, source,
+      kind, severity: effectiveSeverity, source,
       user_id: resolvedUser,
       feature,
       message: String(message).slice(0, 500),
-      meta,
+      meta: structuredMeta,
     };
     const { data: row, error } = await admin.from("admin_alerts").insert(insertRow).select("id").single();
     if (error) return j({ ok: false, error: error.message }, 500);
     mirrorToOwned("admin_alerts", insertRow);
 
     // Forward error/critical to the external Telegram worker (Railway).
-    if (workerConfigured() && (severity === "error" || severity === "critical")) {
-      const sevIcon = severity === "critical" ? "🚨" : "⚠️";
+    if (workerConfigured() && (effectiveSeverity === "error" || effectiveSeverity === "critical")) {
+      const sevIcon = effectiveSeverity === "critical" ? "🚨" : "⚠️";
       const text = [
         `${sevIcon} <b>${escape(kind)}</b>`,
         escape(message),
         feature ? `Feature: <code>${escape(feature)}</code>` : null,
         resolvedUser ? `User: <code>${escape(resolvedUser)}</code>` : null,
-        meta?.context ? `Context: <code>${escape(String(meta.context))}</code>` : null,
-        meta?.raw ? `Raw: <code>${escape(String(meta.raw).slice(0, 200))}</code>` : null,
+        structuredMeta?.context ? `Context: <code>${escape(String(structuredMeta.context))}</code>` : null,
+        structuredMeta?.pipeline_stage ? `Stage: <code>${escape(String(structuredMeta.pipeline_stage))}</code>` : null,
+        structuredMeta?.artifact_id ? `Artifact: <code>${escape(String(structuredMeta.artifact_id))}</code>` : null,
+        structuredMeta?.export_id ? `Export: <code>${escape(String(structuredMeta.export_id))}</code>` : null,
+        structuredMeta?.retry_count != null ? `Retries: <code>${escape(String(structuredMeta.retry_count))}</code>` : null,
+        structuredMeta?.failure_reason ? `Reason: <code>${escape(String(structuredMeta.failure_reason).slice(0, 200))}</code>` : null,
+        structuredMeta?.raw ? `Raw: <code>${escape(String(structuredMeta.raw).slice(0, 200))}</code>` : null,
       ].filter(Boolean).join("\n");
       const r = await dispatchToWorker({
         bot: "hustleai",
         message: text,
         kind,
-        severity,
+        severity: effectiveSeverity,
         source,
         user_id: resolvedUser,
         feature,
-        meta,
+        meta: structuredMeta,
         force_telegram: true,
         dedupe_key: `admin-alert:${kind}:${(resolvedUser || "anon")}:${String(message).slice(0, 80)}`,
       });
