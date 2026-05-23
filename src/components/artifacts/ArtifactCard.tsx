@@ -2,11 +2,12 @@ import { motion } from "framer-motion";
 import {
   FileDown, Send, MessageSquare, Database, Star, StarOff, Trash2,
   ExternalLink, Link as LinkIcon, RefreshCw, ArrowRight, FileText, Sparkles,
-  ScrollText, Receipt, FileSignature,
+  ScrollText, Receipt, FileSignature, Wrench, Archive, Clock, Infinity as InfinityIcon, Hourglass,
 } from "lucide-react";
 import type { ArtifactRow } from "@/lib/artifacts/api";
 import { DeliveryChip } from "./DeliveryChip";
 import { buildTelegramDeepLink } from "@/lib/artifacts/telegram-link";
+import { useRuntimeSession } from "@/lib/runtime/useRuntimeSession";
 
 function humanBytes(b?: number | null) {
   if (!b) return null;
@@ -51,6 +52,8 @@ export type ArtifactCardProps = {
 
 export function ArtifactCard({ a, onResend, onFav, onDelete, onOpen, onShare, onPreview }: ArtifactCardProps) {
   const Icon = iconFor(a.artifact_type);
+  const { snapshot } = useRuntimeSession();
+  const isAdmin = !!snapshot?.is_admin;
   const onTelegram = a.storage_mode === "telegram" || a.storage_mode === "hybrid" || !!a.telegram_message_id;
   const tgOnly = a.storage_mode === "telegram" && !a.file_url;
   const created = new Date(a.created_at);
@@ -60,11 +63,18 @@ export function ArtifactCard({ a, onResend, onFav, onDelete, onOpen, onShare, on
   const deepLink = a.telegram_deep_link
     || buildTelegramDeepLink({ chatId: a.telegram_channel, messageId: a.telegram_message_id });
 
+  const archived = a.artifact_state === "archived" || a.status === "revoked";
+  const repairedRecently = !!a.last_repair_at && (Date.now() - new Date(a.last_repair_at).getTime() < 7 * 86_400_000);
+  const retryPending = a.delivery_status === "retrying" || (failed && (a.delivery_attempts ?? 0) > 0 && (a.delivery_attempts ?? 0) < 6);
+  const expiringSoon = !!a.share_expires_at && new Date(a.share_expires_at).getTime() - Date.now() < 2 * 86_400_000;
+  const persistent = a.storage_mode === "hybrid" || (onTelegram && !tgOnly);
+
   return (
     <motion.div
       layout
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -6 }}
       transition={{ duration: 0.22 }}
       className="group rounded-xl border border-border bg-card p-4 transition hover:border-primary/40 hover:shadow-[var(--shadow-card)]"
     >
@@ -100,6 +110,15 @@ export function ArtifactCard({ a, onResend, onFav, onDelete, onOpen, onShare, on
       <div className="flex flex-wrap gap-1.5 mb-3">
         <StorageBadge mode={a.storage_mode} tgOnly={tgOnly} />
         {onTelegram && !tgOnly && <Badge tone="cyan" icon={MessageSquare}>Telegram</Badge>}
+        {persistent ? (
+          <Badge tone="emerald" icon={InfinityIcon}>Persistent</Badge>
+        ) : (
+          <Badge tone="amber" icon={Clock}>Temporary cache</Badge>
+        )}
+        {retryPending && <Badge tone="amber" icon={Hourglass}>Retry pending</Badge>}
+        {repairedRecently && <Badge tone="emerald" icon={Wrench}>Repaired by Railway</Badge>}
+        {expiringSoon && <Badge tone="amber" icon={Clock}>Retention expiring soon</Badge>}
+        {archived && <Badge tone="red" icon={Archive}>Archived</Badge>}
         <DeliveryChip
           status={tgOnly ? "telegram_only" : a.delivery_status}
           attempts={a.delivery_attempts ?? 0}
@@ -108,6 +127,20 @@ export function ArtifactCard({ a, onResend, onFav, onDelete, onOpen, onShare, on
           onRetry={failed ? onResend : undefined}
         />
       </div>
+
+      {isAdmin && (
+        <div className="text-[10px] uppercase tracking-wide text-foreground/55 mb-2 flex flex-wrap gap-x-3 gap-y-0.5">
+          <span>state: <span className="text-foreground/80">{a.artifact_state || "—"}</span></span>
+          <span>retries: <span className="text-foreground/80">{a.delivery_attempts ?? 0}</span></span>
+          <span>resends: <span className="text-foreground/80">{a.resend_count ?? 0}</span></span>
+          {a.repair_count != null && a.repair_count > 0 && (
+            <span>repairs: <span className="text-foreground/80">{a.repair_count}</span></span>
+          )}
+          {a.last_repair_at && (
+            <span>last repair: <span className="text-foreground/80">{new Date(a.last_repair_at).toLocaleString()}</span></span>
+          )}
+        </div>
+      )}
 
       <div className="flex flex-wrap gap-1">
         {deepLink ? (
