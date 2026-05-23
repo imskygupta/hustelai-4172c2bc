@@ -3,6 +3,7 @@ import {
   FileDown, Send, MessageSquare, Database, Star, StarOff, Trash2,
   ExternalLink, Link as LinkIcon, RefreshCw, ArrowRight, FileText, Sparkles,
   ScrollText, Receipt, FileSignature, Wrench, Archive, Clock, Infinity as InfinityIcon, Hourglass,
+  ShieldOff, Lock,
 } from "lucide-react";
 import type { ArtifactRow } from "@/lib/artifacts/api";
 import { DeliveryChip } from "./DeliveryChip";
@@ -69,6 +70,11 @@ export function ArtifactCard({ a, onResend, onFav, onDelete, onOpen, onShare, on
   const expiringSoon = !!a.share_expires_at && new Date(a.share_expires_at).getTime() - Date.now() < 2 * 86_400_000;
   const persistent = a.storage_mode === "hybrid" || (onTelegram && !tgOnly);
 
+  // Phase 6 — continuity soft-degradation. Row stays visible, actions degrade.
+  const continuityExpired = a.continuity_state === "expired";
+  const continuityExpiringSoon = !continuityExpired && !!a.continuity_expires_at
+    && new Date(a.continuity_expires_at).getTime() - Date.now() < 3 * 86_400_000;
+
   return (
     <motion.div
       layout
@@ -79,7 +85,7 @@ export function ArtifactCard({ a, onResend, onFav, onDelete, onOpen, onShare, on
       className="group rounded-xl border border-border bg-card p-4 transition hover:border-primary/40 hover:shadow-[var(--shadow-card)]"
     >
       <button onClick={onPreview} className="w-full text-left">
-        <div className="flex items-start gap-3 mb-3">
+        <div className={`flex items-start gap-3 mb-3 ${continuityExpired ? "opacity-75" : ""}`}>
           <div className="h-10 w-10 rounded-lg bg-primary/15 text-primary flex items-center justify-center shrink-0 ring-1 ring-primary/25">
             <Icon className="h-4 w-4" />
           </div>
@@ -118,6 +124,8 @@ export function ArtifactCard({ a, onResend, onFav, onDelete, onOpen, onShare, on
         {retryPending && <Badge tone="amber" icon={Hourglass}>Retry pending</Badge>}
         {repairedRecently && <Badge tone="emerald" icon={Wrench}>Repaired by Railway</Badge>}
         {expiringSoon && <Badge tone="amber" icon={Clock}>Retention expiring soon</Badge>}
+        {continuityExpiringSoon && <Badge tone="amber" icon={Hourglass}>Continuity expiring soon</Badge>}
+        {continuityExpired && <Badge tone="amber" icon={ShieldOff}>Continuity expired</Badge>}
         {archived && <Badge tone="red" icon={Archive}>Archived</Badge>}
         <DeliveryChip
           status={tgOnly ? "telegram_only" : a.delivery_status}
@@ -143,15 +151,24 @@ export function ArtifactCard({ a, onResend, onFav, onDelete, onOpen, onShare, on
       )}
 
       <div className="flex flex-wrap gap-1">
+        {continuityExpired && (
+          <div className="w-full mb-2 rounded-md border border-amber-500/40 bg-amber-500/10 px-2.5 py-1.5 text-[11px] text-amber-900 dark:text-amber-100 flex items-center gap-1.5">
+            <Lock className="h-3 w-3 shrink-0" />
+            <span>
+              Continuity expired — your file is still safe in Telegram.{" "}
+              <a href="/billing" className="underline font-medium hover:opacity-80">Upgrade</a> to restore reopen &amp; resend.
+            </span>
+          </div>
+        )}
         {deepLink ? (
           <CardBtn onClick={() => window.open(deepLink, "_blank", "noreferrer")} icon={MessageSquare} label="Open in Telegram" tone="cyan" />
         ) : null}
-        {!tgOnly && <CardBtn onClick={onOpen} icon={ExternalLink} label="Open" />}
-        {continueTo && (
+        {!tgOnly && !continuityExpired && <CardBtn onClick={onOpen} icon={ExternalLink} label="Open" />}
+        {continueTo && !continuityExpired && (
           <CardBtn onClick={() => (window.location.href = continueTo)} icon={ArrowRight} label="Continue working" tone="primary" />
         )}
-        <CardBtn onClick={onShare} icon={LinkIcon} label="Share" />
-        {failed ? (
+        {!continuityExpired && <CardBtn onClick={onShare} icon={LinkIcon} label="Share" />}
+        {continuityExpired ? null : failed ? (
           <CardBtn onClick={onResend} icon={RefreshCw} label="Retry" tone="primary" />
         ) : (
           <CardBtn onClick={onResend} icon={Send} label={onTelegram ? "Resend" : "Send to Telegram"} disabled={inFlight} />

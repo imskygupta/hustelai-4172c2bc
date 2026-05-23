@@ -38,6 +38,11 @@ export interface ArtifactRow {
   last_repair_at?: string | null;
   repair_count?: number | null;
   telegram_file_id?: string | null;
+  // Sprint E Phase 6 — soft-degradation continuity
+  continuity_state?: "active" | "degraded" | "expired" | string | null;
+  continuity_expires_at?: string | null;
+  degraded_at?: string | null;
+  degraded_reason?: string | null;
 }
 
 export async function listArtifacts(opts: { search?: string; type?: string; deliveryStatus?: string; limit?: number } = {}): Promise<ArtifactRow[]> {

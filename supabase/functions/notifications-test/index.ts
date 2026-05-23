@@ -58,6 +58,7 @@ serve(async (req) => {
         generation_source: "settings.integrations.health_rail",
         dedupe_key: `smoke_test:${user.id}:${Math.floor(Date.now() / 60_000)}`,
         storage_mode: "telegram",
+        tier: cap.tier,
       });
       artifactId = created?.id ?? null;
     }

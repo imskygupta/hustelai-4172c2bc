@@ -10,6 +10,7 @@ import { startSweeper, startHeartbeat } from "./ops/sweeper.js";
 import { startConfigPoller, getAdminChats, isFlagEnabled, snapshotInfo } from "./config/remote.js";
 import { startWorkflowLoop, getWorkflowLoopStats } from "./ops/loops/workflow.js";
 import { startReconciliationLoop, getReconciliationStats } from "./ops/loops/reconciliation.js";
+import { startLifecycleLoop, getLifecycleStats } from "./ops/loops/lifecycle.js";
 import { superviseLoop, getLoopRegistry } from "./ops/loop-runner.js";
 
 const app = express();
@@ -223,6 +224,13 @@ app.listen(env.PORT, () => {
       superviseLoop("recon-loop", (signal) => startReconciliationLoop(signal), ctl.signal);
     } else {
       console.log("[recon-loop] disabled (set LOOP_RECONCILIATION=true to enable)");
+    }
+
+    // --- Sprint E Phase 6: lifecycle/retention sweep (default OFF) ---
+    if (String(process.env.LOOP_LIFECYCLE ?? "false").toLowerCase() === "true") {
+      superviseLoop("lifecycle-loop", (signal) => startLifecycleLoop(signal), ctl.signal);
+    } else {
+      console.log("[lifecycle-loop] disabled (set LOOP_LIFECYCLE=true to enable)");
     }
   } else {
     console.log(`[ops-worker] disabled (set OPS_WORKER_ENABLED=true to enable)`);

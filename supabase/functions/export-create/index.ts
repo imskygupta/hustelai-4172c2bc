@@ -104,6 +104,7 @@ serve(async (req) => {
         metadata: { ...(metadata || {}), export_type },
         ref_export_id: row.id,
         storage_mode: "local",
+        tier: capExport.tier,
       });
     }
 
