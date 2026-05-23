@@ -5,6 +5,7 @@
 //
 // Never throws. Returns the inserted row id or null on failure.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { resolveCapabilities, type Tier } from "../tier/resolveCapabilities.ts";
 
 export interface CreateArtifactInput {
   user_id: string;
@@ -23,6 +24,8 @@ export interface CreateArtifactInput {
   dedupe_key?: string;
   artifact_origin?: "export" | "ai_tool" | "workflow" | "manual" | "operational";
   generation_source?: string;
+  /** Tier at creation — used to compute continuity_expires_at. Falls back to 'free'. */
+  tier?: Tier | string | null;
 }
 
 function truncate(s: string | null | undefined, n = 280): string | null {
@@ -46,9 +49,21 @@ function sb() {
   );
 }
 
+/**
+ * Sprint E Phase 6 — continuity expiry derived from canonical tier capabilities.
+ * NULL = unlimited retention (Infinity tier; continuity_days < 0).
+ */
+function computeContinuityExpiry(tier: Tier | string | null | undefined): string | null {
+  const caps = resolveCapabilities(tier);
+  if (!caps.continuity_days || caps.continuity_days < 0) return null;
+  const ms = caps.continuity_days * 86_400_000;
+  return new Date(Date.now() + ms).toISOString();
+}
+
 export async function createArtifact(input: CreateArtifactInput): Promise<{ id: string } | null> {
   try {
     const client = sb();
+    const continuityExpiresAt = computeContinuityExpiry(input.tier);
     const row = {
       user_id: input.user_id,
       workspace_id: input.workspace_id ?? null,
@@ -70,6 +85,9 @@ export async function createArtifact(input: CreateArtifactInput): Promise<{ id: 
       artifact_state: input.file_url ? "persisted" : "generated",
       artifact_origin: input.artifact_origin ?? (input.ref_export_id ? "export" : "manual"),
       generation_source: input.generation_source ?? input.source_module,
+      // Phase 6 — soft-degradation continuity tracking
+      continuity_state: "active",
+      continuity_expires_at: continuityExpiresAt,
     };
 
     const { data, error } = await client
