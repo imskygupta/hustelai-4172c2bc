@@ -45,53 +45,47 @@ async function logEvent(sb: ReturnType<typeof admin>, userId: string | null, ema
 }
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
-  if (req.method !== "POST") return json({ ok: false, reason: "method_not_allowed" }, 405);
+  try {
+    if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+    if (req.method !== "POST") return json({ ok: false, reason: "method_not_allowed" }, 405);
 
-  const authHeader = req.headers.get("Authorization") || "";
-  const token = authHeader.replace(/^Bearer\s+/i, "");
-  if (!token) return json({ ok: false, reason: "missing_token" }, 401);
+    const authHeader = req.headers.get("Authorization") || "";
+    const token = authHeader.replace(/^Bearer\s+/i, "");
+    if (!token) return json({ ok: false, reason: "missing_token" }, 401);
 
-  const sb = admin();
+    const sb = admin();
 
-  // Validate the user from the JWT
-  const { data: userData, error: userErr } = await sb.auth.getUser(token);
-  if (userErr || !userData?.user) {
-    return json({ ok: false, reason: "invalid_token" }, 401);
-  }
-  const user = userData.user;
-  const userId = user.id;
-  const userEmail = (user.email || "").toLowerCase();
+    // Validate the user from the JWT
+    const { data: userData, error: userErr } = await sb.auth.getUser(token);
+    if (userErr || !userData?.user) {
+      return json({ ok: false, reason: "invalid_token" }, 401);
+    }
+    const user = userData.user;
+    const userId = user.id;
+    const userEmail = (user.email || "").toLowerCase();
 
-  // Pull all identities for this user
-  const { data: identities, error: identErr } = await sb
-    .from("identities")
-    .select("id, provider, email, identity_data, created_at")
-    .eq("user_id", userId)
-    .schema("auth" as any);
-
-  if (identErr) {
-    // Fall back to admin listUsers if direct table read isn't permitted in this project.
-    const { data: full } = await sb.auth.admin.getUserById(userId);
+    // Pull all identities for this user via admin API (auth.identities table
+    // is not exposed through PostgREST — `.schema('auth')` chained after
+    // `.from()` was a TypeError and crashed the function with a 500).
+    const { data: full, error: adminErr } = await sb.auth.admin.getUserById(userId);
+    if (adminErr) {
+      console.error("auth-link-verify: admin.getUserById failed", adminErr);
+      return json({ ok: false, reason: "identity_lookup_failed" }, 500);
+    }
     const ids = (full?.user?.identities || []).map((i: any) => ({
       id: i.identity_id || i.id,
       provider: i.provider,
-      email: (i.identity_data?.email || "").toLowerCase(),
-      identity_data: i.identity_data,
+      email: (i.identity_data?.email || i.email || "").toLowerCase(),
+      identity_data: i.identity_data || {},
       created_at: i.created_at,
     }));
+
     return await evaluate(sb, userId, userEmail, ids);
+  } catch (e) {
+    // Catch-all so CORS headers always attach, even on unexpected runtime errors.
+    console.error("auth-link-verify: unhandled error", e);
+    return json({ ok: false, reason: "internal_error", message: e instanceof Error ? e.message : String(e) }, 500);
   }
-
-  const ids = (identities || []).map((i: any) => ({
-    id: i.id,
-    provider: i.provider,
-    email: (i.email || i.identity_data?.email || "").toLowerCase(),
-    identity_data: i.identity_data,
-    created_at: i.created_at,
-  }));
-
-  return await evaluate(sb, userId, userEmail, ids);
 });
 
 async function evaluate(
