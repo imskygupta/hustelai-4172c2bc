@@ -21,7 +21,7 @@ export function RetentionRail({ rowCount }: Props) {
   const { snapshot } = useRuntimeSession();
   const [open, setOpen] = useState(false);
   const tier = ((snapshot?.tier as Tier) || "free");
-  const tgConnected = !!snapshot?.telegram_chat_id;
+  const tgConnected = !!snapshot?.telegram?.connected;
   const retention = resolveRetention(tier);
   const quota = resolveQuota(tier);
   const routing = resolveRouting(tier, tgConnected);
