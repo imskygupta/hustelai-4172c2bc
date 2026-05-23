@@ -50,6 +50,7 @@ export interface TransitionPatch {
   telegram_chat_id?: string | null;
   telegram_channel?: string | null;
   telegram_deep_link?: string | null;
+  telegram_file_id?: string | null;
   storage_mode?: string;
   file_url?: string | null;
   status?: string;
