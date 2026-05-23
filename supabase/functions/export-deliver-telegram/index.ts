@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { sendTelegram } from "../_shared/notifications/telegram.ts";
-import { randomToken, siteOrigin } from "../_shared/exports/createExport.ts";
+import { randomToken, siteOrigin, resolveDeliveryTarget } from "../_shared/exports/createExport.ts";
 import { isFeatureEnabledServer } from "../_shared/flags/resolve.ts";
 import { emitWorkflowEvent } from "../_shared/workflows/emit.ts";
 
@@ -22,6 +22,13 @@ serve(async (req) => {
     const { data: exp } = await sb.from("generated_exports").select("*").eq("id", export_id).maybeSingle();
     if (!exp || !exp.storage_path) return j({ error: "not found" }, 404);
     userIdOuter = exp.user_id;
+
+    // Hard gate: free tier or no connected TG = silently skip. Prevents retry
+    // storms enqueueing dead TG jobs.
+    const target = await resolveDeliveryTarget(sb, exp.user_id);
+    if (!target.can_telegram) {
+      return j({ ok: false, reason: target.telegram_connected ? "free_tier" : "no_telegram", skipped: true });
+    }
 
     // Runtime gate: telegram delivery can be disabled / put in maintenance.
     if (!(await isFeatureEnabledServer(exp.user_id, "telegram.notifications"))) {

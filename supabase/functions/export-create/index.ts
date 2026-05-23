@@ -73,17 +73,9 @@ serve(async (req) => {
       }, { user_id: u.user.id, dedupe_key: `export:${row.id}`, source: "export-create" });
     }
 
-    // Fire-and-forget: cache to private Telegram storage channel for fast future delivery.
-    if (row?.storage_path && Deno.env.get("TELEGRAM_STORAGE_CHANNEL_ID")) {
-      void fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/export-cache-telegram`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
-        },
-        body: JSON.stringify({ export_id: row.id }),
-      }).catch(() => {});
-    }
+    // NOTE: TG cache enqueue is handled centrally inside createExport() with
+    // proper plan + telegram_connected guards. Duplicate enqueue here removed
+    // to prevent retry storms and ghost TG jobs for free users.
 
     return json({ ok: true, export: row });
   } catch (e: any) {

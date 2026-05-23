@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { Bell, Check } from "lucide-react";
+import { Bell, Check, X } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { formatDistanceToNow } from "date-fns";
 import { Button } from "@/components/ui/button";
@@ -18,7 +18,12 @@ export default function NotificationCenter() {
   const load = async () => {
     if (!user) return;
     const { data } = await (supabase as any).from("workspace_notifications")
-      .select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(30);
+      .select("*")
+      .eq("user_id", user.id)
+      .is("dismissed_at", null)
+      .eq("client_hidden", false)
+      .order("created_at", { ascending: false })
+      .limit(30);
     setItems(data || []);
   };
   useEffect(() => {
@@ -27,8 +32,10 @@ export default function NotificationCenter() {
     const channel = supabase.channel(`notifs-${user.id}`)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "workspace_notifications", filter: `user_id=eq.${user.id}` },
         (payload: any) => {
-          load();
           const n = payload?.new;
+          // Respect dismissed/hidden state — never resurrect.
+          if (!n || n.dismissed_at || n.client_hidden) return;
+          load();
           if (n?.title) {
             toast(n.title, {
               description: n.body || undefined,
@@ -46,6 +53,13 @@ export default function NotificationCenter() {
     if (!user) return;
     await (supabase as any).from("workspace_notifications").update({ read: true }).eq("user_id", user.id).eq("read", false);
     load();
+  };
+
+  const dismissOne = async (id: string) => {
+    setItems(prev => prev.filter(i => i.id !== id));
+    await (supabase as any).from("workspace_notifications")
+      .update({ dismissed_at: new Date().toISOString(), client_hidden: true, read: true })
+      .eq("id", id);
   };
 
   return (
@@ -68,12 +82,20 @@ export default function NotificationCenter() {
         <div className="max-h-96 overflow-y-auto">
           {items.length === 0 && <p className="text-xs text-muted-foreground p-4 text-center">All quiet here.</p>}
           {items.map(n => (
-            <Link key={n.id} to={n.link || "#"} onClick={() => setOpen(false)}
-              className={`block p-3 border-b border-border/50 hover:bg-muted/50 ${!n.read ? "bg-primary/5" : ""}`}>
-              <p className="text-sm font-medium leading-tight">{n.title}</p>
-              {n.body && <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{n.body}</p>}
-              <p className="text-[10px] text-muted-foreground mt-1">{formatDistanceToNow(new Date(n.created_at), { addSuffix: true })}</p>
-            </Link>
+            <div key={n.id} className={`group relative border-b border-border/50 ${!n.read ? "bg-primary/5" : ""}`}>
+              <Link to={n.link || "#"} onClick={() => setOpen(false)}
+                className="block p-3 pr-9 hover:bg-muted/50">
+                <p className="text-sm font-medium leading-tight">{n.title}</p>
+                {n.body && <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{n.body}</p>}
+                <p className="text-[10px] text-muted-foreground mt-1">{formatDistanceToNow(new Date(n.created_at), { addSuffix: true })}</p>
+              </Link>
+              <button
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); dismissOne(n.id); }}
+                className="absolute top-2 right-2 p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted opacity-0 group-hover:opacity-100 transition"
+                aria-label="Dismiss">
+                <X className="h-3 w-3" />
+              </button>
+            </div>
           ))}
         </div>
       </PopoverContent>
