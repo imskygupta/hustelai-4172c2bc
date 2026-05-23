@@ -16,6 +16,7 @@ import { useRequireVerifiedEmail } from "@/components/VerifyEmailGate";
 import { invokeWithTrust } from "@/lib/auth/verificationDenied";
 import { runWithDeadline, TimeoutError } from "@/lib/async/timeout";
 import { supabase } from "@/integrations/supabase/client";
+import { DynamicSection } from "@/components/explore/DynamicSection";
 
 const categories = ["All", "Tech", "Creative", "Freelance", "Marketing", "Education", "Service", "E-Commerce", "Finance", "Gig Economy", "Gaming", "Admin"];
 const difficulties = ["All", "Beginner", "Intermediate", "Advanced"];
