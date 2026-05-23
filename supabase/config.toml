@@ -3,6 +3,9 @@ project_id = "vbnqaovxatucrgtnggea"
 [functions.ai-search]
 verify_jwt = false
 
+[functions.artifact-public-view]
+verify_jwt = false
+
 [functions.telegram-webhook]
 verify_jwt = false
 
