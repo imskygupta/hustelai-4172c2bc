@@ -8903,6 +8903,78 @@ export type Database = {
         }
         Relationships: []
       }
+      workspace_artifacts: {
+        Row: {
+          artifact_type: string
+          created_at: string
+          dedupe_key: string | null
+          file_url: string | null
+          id: string
+          is_favorite: boolean
+          metadata: Json
+          mime_type: string | null
+          preview_text: string | null
+          ref_export_id: string | null
+          size_bytes: number | null
+          source_module: string
+          status: string
+          storage_mode: string
+          telegram_channel: string | null
+          telegram_deep_link: string | null
+          telegram_message_id: string | null
+          title: string
+          updated_at: string
+          user_id: string
+          workspace_id: string | null
+        }
+        Insert: {
+          artifact_type: string
+          created_at?: string
+          dedupe_key?: string | null
+          file_url?: string | null
+          id?: string
+          is_favorite?: boolean
+          metadata?: Json
+          mime_type?: string | null
+          preview_text?: string | null
+          ref_export_id?: string | null
+          size_bytes?: number | null
+          source_module: string
+          status?: string
+          storage_mode?: string
+          telegram_channel?: string | null
+          telegram_deep_link?: string | null
+          telegram_message_id?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+          workspace_id?: string | null
+        }
+        Update: {
+          artifact_type?: string
+          created_at?: string
+          dedupe_key?: string | null
+          file_url?: string | null
+          id?: string
+          is_favorite?: boolean
+          metadata?: Json
+          mime_type?: string | null
+          preview_text?: string | null
+          ref_export_id?: string | null
+          size_bytes?: number | null
+          source_module?: string
+          status?: string
+          storage_mode?: string
+          telegram_channel?: string | null
+          telegram_deep_link?: string | null
+          telegram_message_id?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+          workspace_id?: string | null
+        }
+        Relationships: []
+      }
       workspace_automations: {
         Row: {
           config: Json
@@ -9804,6 +9876,32 @@ export type Database = {
           orphan_password_accounts: number | null
           repeat_collision_users: number | null
           suspended_shells: number | null
+        }
+        Relationships: []
+      }
+      v_workspace_artifacts_unified: {
+        Row: {
+          artifact_type: string | null
+          created_at: string | null
+          file_url: string | null
+          id: string | null
+          is_favorite: boolean | null
+          metadata: Json | null
+          mime_type: string | null
+          origin: string | null
+          preview_text: string | null
+          ref_export_id: string | null
+          size_bytes: number | null
+          source_module: string | null
+          status: string | null
+          storage_mode: string | null
+          telegram_channel: string | null
+          telegram_deep_link: string | null
+          telegram_message_id: string | null
+          title: string | null
+          updated_at: string | null
+          user_id: string | null
+          workspace_id: string | null
         }
         Relationships: []
       }
