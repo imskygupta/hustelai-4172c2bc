@@ -33,7 +33,7 @@ export function PreviewPane({ artifactType, mimeType, previewText, signedUrl, ti
 
   if (isMarkdown(mimeType, artifactType) && (previewText || signedUrl)) {
     return (
-      <article className="prose prose-invert dark:prose-invert max-w-none rounded-lg border border-border bg-muted/30 p-6 text-foreground/90">
+      <article className="prose dark:prose-invert max-w-none rounded-lg border border-border bg-card p-6 text-foreground">
         <ReactMarkdown>{previewText || "_Preview unavailable — download the full file below._"}</ReactMarkdown>
       </article>
     );
