@@ -37,10 +37,38 @@ const BLOG_HOST = "blogs.hustlaiapp.in";
 const SITEMAP   = `https://${BLOG_HOST}/sitemap.xml`;
 const SITE      = `https://${BLOG_HOST}/`;
 
-// GSC connector (Lovable gateway).
-const LOVABLE_KEY = Deno.env.get("LOVABLE_API_KEY");
-const GSC_KEY     = Deno.env.get("GOOGLE_SEARCH_CONSOLE_API_KEY");
-const GSC_BASE    = "https://connector-gateway.lovable.dev/google_search_console";
+// GSC — self-managed Google OAuth (refresh-token flow).
+// Replaces the Lovable connector. Same pending_auth state machine.
+const GSC_CLIENT_ID     = Deno.env.get("GSC_OAUTH_CLIENT_ID");
+const GSC_CLIENT_SECRET = Deno.env.get("GSC_OAUTH_CLIENT_SECRET");
+const GSC_REFRESH_TOKEN = Deno.env.get("GSC_OAUTH_REFRESH_TOKEN");
+const GSC_BASE          = "https://www.googleapis.com";
+const GSC_TOKEN_URL     = "https://oauth2.googleapis.com/token";
+
+// In-memory access token cache (per cold start).
+let _gscToken: { access_token: string; expires_at: number } | null = null;
+
+async function getGoogleAccessToken(): Promise<string | null> {
+  if (!GSC_CLIENT_ID || !GSC_CLIENT_SECRET || !GSC_REFRESH_TOKEN) return null;
+  const now = Date.now();
+  if (_gscToken && _gscToken.expires_at - 60_000 > now) return _gscToken.access_token;
+  const body = new URLSearchParams({
+    client_id: GSC_CLIENT_ID,
+    client_secret: GSC_CLIENT_SECRET,
+    refresh_token: GSC_REFRESH_TOKEN,
+    grant_type: "refresh_token",
+  });
+  const r = await safeFetch(GSC_TOKEN_URL, {
+    method: "POST",
+    headers: { "content-type": "application/x-www-form-urlencoded" },
+    body: body.toString(),
+  }, 10000);
+  const tok = (r.body as any)?.access_token;
+  const ttl = Number((r.body as any)?.expires_in ?? 3600);
+  if (!r.ok || !tok) { _gscToken = null; return null; }
+  _gscToken = { access_token: tok, expires_at: now + ttl * 1000 };
+  return tok;
+}
 
 // Retry policy: exponential backoff with cooldown caps.
 // attempt → minutes until next retry.
@@ -190,13 +218,16 @@ async function stepIndexNow(url: string, slug: string, source_id: string) {
 }
 
 async function stepGsc(url: string) {
-  // If connector not available, return pending_auth — caller will set job state.
-  if (!LOVABLE_KEY || !GSC_KEY) {
-    return { ok: false, pending_auth: true, reason: "gsc_connector_not_connected" };
+  // If self-managed OAuth not configured, return pending_auth — caller sets job state.
+  if (!GSC_CLIENT_ID || !GSC_CLIENT_SECRET || !GSC_REFRESH_TOKEN) {
+    return { ok: false, pending_auth: true, reason: "gsc_oauth_not_configured" };
+  }
+  const access = await getGoogleAccessToken();
+  if (!access) {
+    return { ok: false, pending_auth: true, reason: "gsc_token_refresh_failed" };
   }
   const headers = {
-    "Authorization": `Bearer ${LOVABLE_KEY}`,
-    "X-Connection-Api-Key": GSC_KEY,
+    "Authorization": `Bearer ${access}`,
     "content-type": "application/json",
   };
   // 1. (Re)submit sitemap — idempotent + free.
@@ -217,6 +248,7 @@ async function stepGsc(url: string) {
   );
   // Treat 401/403 as auth failure → caller marks pending_auth and retries later.
   if (submit.status === 401 || submit.status === 403) {
+    _gscToken = null; // invalidate cache so next attempt re-refreshes
     return { ok: false, pending_auth: true, reason: "gsc_unauthorized", submit_status: submit.status };
   }
   return {
@@ -450,7 +482,10 @@ async function stats() {
     .order("submitted_at", { ascending: false }).limit(1).maybeSingle();
   return {
     counts: { queued, in_flight, pending_auth, failed, done_24h: done24, dispatched_7d: dispatched7d },
-    gsc_connector: { configured: !!(LOVABLE_KEY && GSC_KEY) },
+    gsc_connector: {
+      configured: !!(GSC_CLIENT_ID && GSC_CLIENT_SECRET && GSC_REFRESH_TOKEN),
+      mode: "self_managed_oauth",
+    },
     last_done_at: (lastDone as any)?.submitted_at ?? null,
     recent: recent ?? [],
     failures: failures ?? [],
