@@ -21,6 +21,8 @@ export interface CreateArtifactInput {
   storage_mode?: "local" | "telegram" | "hybrid";
   deliver_to_telegram?: boolean;
   dedupe_key?: string;
+  artifact_origin?: "export" | "ai_tool" | "workflow" | "manual" | "operational";
+  generation_source?: string;
 }
 
 function truncate(s: string | null | undefined, n = 280): string | null {
@@ -62,6 +64,12 @@ export async function createArtifact(input: CreateArtifactInput): Promise<{ id: 
       storage_mode: input.storage_mode ?? "local",
       status: "ready",
       dedupe_key: inferDedupeKey(input),
+      // Canonical FSM seeding — every new artifact starts at `persisted` if it
+      // has a file_url, otherwise `generated`. transitionArtifact() enforces
+      // every subsequent move from here onwards.
+      artifact_state: input.file_url ? "persisted" : "generated",
+      artifact_origin: input.artifact_origin ?? (input.ref_export_id ? "export" : "manual"),
+      generation_source: input.generation_source ?? input.source_module,
     };
 
     const { data, error } = await client

@@ -1,6 +1,7 @@
 // Owner-only re-delivery wrapper. Avoids dupe sends by short idempotency window.
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { transitionArtifact, incrementResend } from "../_shared/artifacts/transition.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -19,7 +20,7 @@ serve(async (req) => {
     if (!artifact_id) return j({ error: "artifact_id required" }, 400);
 
     const { data: art } = await sb.from("workspace_artifacts")
-      .select("id, user_id, ref_export_id, artifact_type, title, delivery_status, last_delivery_at")
+      .select("id, user_id, ref_export_id, artifact_type, title, delivery_status, last_delivery_at, artifact_state, resend_count")
       .eq("id", artifact_id).maybeSingle();
 
     let exportId: string | null = null;
@@ -38,9 +39,12 @@ serve(async (req) => {
       ownerId = art.user_id;
       title = art.title;
       type = art.artifact_type;
-      await sb.from("workspace_artifacts").update({
-        delivery_status: "retrying", delivery_attempts: 0,
-      }).eq("id", artifact_id);
+      // FSM re-entry: delivered/failed/partial -> queued (NEVER a new row).
+      await transitionArtifact(artifact_id, "queued", {
+        delivery_status: "retrying",
+        delivery_attempts: 0,
+      });
+      void incrementResend(artifact_id);
     } else {
       // Legacy export row (no artifact yet) — verify ownership directly.
       const { data: exp } = await sb.from("generated_exports")

@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { sendTelegram } from "../_shared/notifications/telegram.ts";
 import { randomToken, siteOrigin, resolveDeliveryTarget } from "../_shared/exports/createExport.ts";
 import { patchArtifactByExport } from "../_shared/artifacts/createArtifact.ts";
+import { transitionArtifactByExport } from "../_shared/artifacts/transition.ts";
 import { isFeatureEnabledServer } from "../_shared/flags/resolve.ts";
 import { emitWorkflowEvent } from "../_shared/workflows/emit.ts";
 
@@ -29,12 +30,12 @@ serve(async (req) => {
       const { data: cur } = await sb.from("workspace_artifacts")
         .select("id, delivery_attempts").eq("ref_export_id", exp.id).maybeSingle();
       if (cur) {
-        await sb.from("workspace_artifacts").update({
+        await transitionArtifactByExport(exp.id, "delivering", {
           delivery_status: "sending",
           delivery_attempts: (cur.delivery_attempts || 0) + 1,
           last_delivery_at: new Date().toISOString(),
           last_delivery_error: null,
-        }).eq("id", cur.id);
+        });
       }
     }
 
@@ -136,12 +137,12 @@ serve(async (req) => {
       delivery_method: cachedFileId ? "hybrid" : "telegram",
       delivered_at: new Date().toISOString(),
     }).eq("id", exp.id);
-    // Mirror delivery onto the canonical artifact row so the Exports page
-    // reflects TG persistence + deep link without re-querying.
-    void patchArtifactByExport(exp.id, {
+    // Canonical FSM transition: delivering -> delivered, mirror TG memory.
+    void transitionArtifactByExport(exp.id, "delivered", {
       storage_mode: cachedFileId ? "hybrid" : "telegram",
       telegram_message_id: messageId,
       telegram_channel: integ.provider_chat_id,
+      telegram_chat_id: integ.provider_chat_id,
       telegram_deep_link: link,
       status: "delivered",
       delivery_status: "delivered",
@@ -171,11 +172,11 @@ serve(async (req) => {
       try {
         const { data: cur } = await sbOuter.from("workspace_artifacts")
           .select("id, delivery_attempts").eq("ref_export_id", exportIdOuter).maybeSingle();
-        await sbOuter.from("workspace_artifacts").update({
+        await transitionArtifactByExport(exportIdOuter, "failed", {
           delivery_status: "failed",
           last_delivery_at: new Date().toISOString(),
           last_delivery_error: errMsg.slice(0, 500),
-        }).eq("ref_export_id", exportIdOuter);
+        });
         const attempts = cur?.delivery_attempts || 0;
         if (attempts >= 3) {
           const alertKind = attempts >= 6 ? "delivery.retry_storm" : "delivery.failed";
