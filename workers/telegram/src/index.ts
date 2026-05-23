@@ -225,6 +225,13 @@ app.listen(env.PORT, () => {
     } else {
       console.log("[recon-loop] disabled (set LOOP_RECONCILIATION=true to enable)");
     }
+
+    // --- Sprint E Phase 6: lifecycle/retention sweep (default OFF) ---
+    if (String(process.env.LOOP_LIFECYCLE ?? "false").toLowerCase() === "true") {
+      superviseLoop("lifecycle-loop", (signal) => startLifecycleLoop(signal), ctl.signal);
+    } else {
+      console.log("[lifecycle-loop] disabled (set LOOP_LIFECYCLE=true to enable)");
+    }
   } else {
     console.log(`[ops-worker] disabled (set OPS_WORKER_ENABLED=true to enable)`);
   }
