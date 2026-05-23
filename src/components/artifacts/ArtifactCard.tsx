@@ -3,6 +3,7 @@ import {
   FileDown, Send, MessageSquare, Database, Star, StarOff, Trash2,
   ExternalLink, Link as LinkIcon, RefreshCw, ArrowRight, FileText, Sparkles,
   ScrollText, Receipt, FileSignature, Wrench, Archive, Clock, Infinity as InfinityIcon, Hourglass,
+  ShieldOff, Lock,
 } from "lucide-react";
 import type { ArtifactRow } from "@/lib/artifacts/api";
 import { DeliveryChip } from "./DeliveryChip";
@@ -68,6 +69,11 @@ export function ArtifactCard({ a, onResend, onFav, onDelete, onOpen, onShare, on
   const retryPending = a.delivery_status === "retrying" || (failed && (a.delivery_attempts ?? 0) > 0 && (a.delivery_attempts ?? 0) < 6);
   const expiringSoon = !!a.share_expires_at && new Date(a.share_expires_at).getTime() - Date.now() < 2 * 86_400_000;
   const persistent = a.storage_mode === "hybrid" || (onTelegram && !tgOnly);
+
+  // Phase 6 — continuity soft-degradation. Row stays visible, actions degrade.
+  const continuityExpired = a.continuity_state === "expired";
+  const continuityExpiringSoon = !continuityExpired && !!a.continuity_expires_at
+    && new Date(a.continuity_expires_at).getTime() - Date.now() < 3 * 86_400_000;
 
   return (
     <motion.div
