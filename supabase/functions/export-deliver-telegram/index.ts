@@ -7,6 +7,7 @@ import { transitionArtifactByExport } from "../_shared/artifacts/transition.ts";
 import { isFeatureEnabledServer } from "../_shared/flags/resolve.ts";
 import { emitWorkflowEvent } from "../_shared/workflows/emit.ts";
 import { emitCollapsedEvent } from "../_shared/workflows/collapse.ts";
+import { requireCapability } from "../_shared/tier/guard.ts";
 
 const TG_TOKEN = Deno.env.get("TELEGRAM_BOT_TOKEN") || "";
 const corsHeaders = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, content-type" };
@@ -25,6 +26,18 @@ serve(async (req) => {
     const { data: exp } = await sb.from("generated_exports").select("*").eq("id", export_id).maybeSingle();
     if (!exp || !exp.storage_path) return j({ error: "not found" }, 404);
     userIdOuter = exp.user_id;
+
+    // Sprint E Phase 3 — backend-first capability enforcement. Never trust
+    // queue payloads / client flags; resolve canonical tier here.
+    const tgCap = await requireCapability(sbOuter, exp.user_id, "telegram_exports");
+    if (!tgCap.ok) {
+      void patchArtifactByExport(exp.id, {
+        delivery_status: "skipped",
+        last_delivery_error: "tier_locked",
+        last_delivery_at: new Date().toISOString(),
+      });
+      return j({ ok: false, reason: "tier_locked", required_tier: tgCap.required_tier, skipped: true });
+    }
 
     // Mark sending. delivery_attempts uses a server-side increment fallback.
     {

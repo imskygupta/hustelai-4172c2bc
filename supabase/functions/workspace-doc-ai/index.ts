@@ -3,6 +3,8 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { callAIWithFallback } from "../_shared/ai-fallback.ts";
 import { requireVerifiedUser as __requireVerifiedUser } from "../_shared/require-verified.ts";
+import { requireCapability, guardErrorBody } from "../_shared/tier/guard.ts";
+import { consumeAndCheck } from "../_shared/tier/quota.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -97,6 +99,14 @@ Deno.serve(async (req) => {
     const user = userData?.user;
     if (!user) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
+    // Sprint E Phase 3 — canonical AI capability gate (backend-first).
+    const capAI = await requireCapability(supabase, user.id, "ai_generation");
+    if (!capAI.ok) {
+      return new Response(JSON.stringify(guardErrorBody(capAI)), {
+        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const { task, context = "", section = "", input = "", prompt = "", state = null } = await req.json();
     const tpl = TASKS[task];
     if (!tpl) return new Response(JSON.stringify({ error: "Unknown task" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -120,18 +130,13 @@ Deno.serve(async (req) => {
     // Server-side daily quota — bypass when user has BYO key.
     const hasKey = !!keyRow?.api_key;
     if (!hasKey) {
-      const { data: quota, error: qErr } = await supabase.rpc("consume_ai_quota", {
-        _user_id: user.id, _feature: `doc_ai:${task}`,
-      });
-      if (qErr) {
-        return new Response(JSON.stringify({ error: qErr.message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      }
-      const q = quota as any;
-      if (!q?.allowed) {
+      // Sprint E Phase 5 — canonical tier-aware AI quota. BYO bypasses.
+      const q = await consumeAndCheck(supabase, user.id, "ai", capAI.capabilities.ai_quota);
+      if (!q.ok) {
         return new Response(JSON.stringify({
-          error: "quota_exceeded",
-          used: q?.used, max: q?.max,
-          message: `Daily limit reached (${q?.used}/${q?.max}). Connect your own AI key in Settings → AI Providers for unlimited assists.`,
+          error: "ai_quota_exceeded",
+          used: q.count, max: q.limit, tier: capAI.tier,
+          message: `Daily AI limit reached (${q.count}/${q.limit}). Upgrade tier or connect your own AI key in Settings → AI Providers.`,
         }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
     }

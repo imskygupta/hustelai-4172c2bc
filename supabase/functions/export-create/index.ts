@@ -7,6 +7,8 @@ import { emitWorkflowEvent } from "../_shared/workflows/emit.ts";
 import { parseJson, z } from "../_shared/validation.ts";
 import { enforceRateLimit } from "../_shared/rate-limit.ts";
 import { recordAnomaly } from "../_shared/anomaly.ts";
+import { requireCapability, guardErrorBody } from "../_shared/tier/guard.ts";
+import { consumeAndCheck } from "../_shared/tier/quota.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -33,6 +35,19 @@ serve(async (req) => {
     const { data: u } = await sb.auth.getUser(jwt);
     if (!u?.user) return json({ error: "unauthorized" }, 401);
 
+    // Sprint E Phase 3 — canonical capability + quota enforcement.
+    const capExport = await requireCapability(sb, u.user.id, "export_generation");
+    if (!capExport.ok) return json(guardErrorBody(capExport), 403);
+    const q = await consumeAndCheck(sb, u.user.id, "export", capExport.capabilities.export_quota);
+    if (!q.ok) {
+      return json({
+        error: "export_quota_exceeded",
+        kind: q.kind, count: q.count, limit: q.limit, remaining: q.remaining,
+        tier: capExport.tier,
+        message: `Daily export limit reached (${q.count}/${q.limit}). Upgrade for more.`,
+      }, 429);
+    }
+
     // Master export switch — kill switch + maintenance honored automatically.
     const blocked = await flagGuard(u.user.id, "exports.ai_exports", corsHeaders, { endpoint: "export-create" });
     if (blocked) return blocked;
@@ -53,10 +68,20 @@ serve(async (req) => {
     if (!parsed.ok) return parsed.response;
     const { export_type, title, mime_type, file_b64, storage_path, metadata, deliver_to_telegram } = parsed.data;
 
-    // Telegram delivery is independently flagged.
+    // Telegram delivery — capability + flag + quota all enforced.
     if (deliver_to_telegram) {
+      const tgCap = await requireCapability(sb, u.user.id, "telegram_exports");
+      if (!tgCap.ok) return json(guardErrorBody(tgCap), 403);
       const tgBlocked = await flagGuard(u.user.id, "telegram.exports", corsHeaders, { endpoint: "export-create:tg" });
       if (tgBlocked) return tgBlocked;
+      const tgQ = await consumeAndCheck(sb, u.user.id, "telegram_delivery", tgCap.capabilities.telegram_delivery_quota);
+      if (!tgQ.ok) {
+        return json({
+          error: "telegram_delivery_quota_exceeded",
+          count: tgQ.count, limit: tgQ.limit, tier: tgCap.tier,
+          message: `Daily Telegram delivery limit reached (${tgQ.count}/${tgQ.limit}).`,
+        }, 429);
+      }
     }
 
     const row = await createExport({

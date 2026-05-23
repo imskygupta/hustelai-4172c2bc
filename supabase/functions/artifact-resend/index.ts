@@ -2,6 +2,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { transitionArtifact, incrementResend } from "../_shared/artifacts/transition.ts";
+import { checkResendCooldown, guardErrorBody } from "../_shared/tier/guard.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -30,11 +31,14 @@ serve(async (req) => {
 
     if (art) {
       if (art.user_id !== u.user.id) return j({ error: "forbidden" }, 403);
-      // Idempotency window: ignore retries fired within 30s of last attempt.
+      // In-flight idempotency window (always 30s regardless of tier).
       if (art.last_delivery_at && (Date.now() - new Date(art.last_delivery_at).getTime() < 30_000) &&
           (art.delivery_status === "sending" || art.delivery_status === "retrying")) {
         return j({ ok: false, reason: "in_flight", skipped: true });
       }
+      // Sprint E Phase 3 / Phase 10 — canonical cooldown + resend-cap.
+      const cool = await checkResendCooldown(sb, u.user.id, artifact_id);
+      if (!cool.ok) return j(guardErrorBody(cool), 429);
       exportId = art.ref_export_id;
       ownerId = art.user_id;
       title = art.title;
