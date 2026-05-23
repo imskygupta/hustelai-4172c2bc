@@ -2303,6 +2303,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "export_access_logs_export_id_fkey"
+            columns: ["export_id"]
+            isOneToOne: false
+            referencedRelation: "v_export_delivery"
+            referencedColumns: ["export_id"]
+          },
+          {
             foreignKeyName: "export_access_logs_token_id_fkey"
             columns: ["token_id"]
             isOneToOne: false
@@ -2364,6 +2371,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "generated_exports"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "export_download_tokens_export_id_fkey"
+            columns: ["export_id"]
+            isOneToOne: false
+            referencedRelation: "v_export_delivery"
+            referencedColumns: ["export_id"]
           },
         ]
       }
@@ -8494,9 +8508,12 @@ export type Database = {
       }
       workflow_events: {
         Row: {
+          collapsed_count: number
           created_at: string
           dedupe_key: string | null
+          event_origin: string | null
           id: string
+          last_seen_at: string
           matched_workflows: number
           name: string
           payload: Json
@@ -8504,9 +8521,12 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          collapsed_count?: number
           created_at?: string
           dedupe_key?: string | null
+          event_origin?: string | null
           id?: string
+          last_seen_at?: string
           matched_workflows?: number
           name: string
           payload?: Json
@@ -8514,9 +8534,12 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          collapsed_count?: number
           created_at?: string
           dedupe_key?: string | null
+          event_origin?: string | null
           id?: string
+          last_seen_at?: string
           matched_workflows?: number
           name?: string
           payload?: Json
@@ -8934,6 +8957,7 @@ export type Database = {
           telegram_channel: string | null
           telegram_chat_id: string | null
           telegram_deep_link: string | null
+          telegram_file_id: string | null
           telegram_message_id: string | null
           title: string
           updated_at: string
@@ -8970,6 +8994,7 @@ export type Database = {
           telegram_channel?: string | null
           telegram_chat_id?: string | null
           telegram_deep_link?: string | null
+          telegram_file_id?: string | null
           telegram_message_id?: string | null
           title: string
           updated_at?: string
@@ -9006,6 +9031,7 @@ export type Database = {
           telegram_channel?: string | null
           telegram_chat_id?: string | null
           telegram_deep_link?: string | null
+          telegram_file_id?: string | null
           telegram_message_id?: string | null
           title?: string
           updated_at?: string
@@ -9905,6 +9931,34 @@ export type Database = {
           table_bytes: number | null
           table_name: string | null
           total_bytes: number | null
+        }
+        Relationships: []
+      }
+      v_export_delivery: {
+        Row: {
+          artifact_id: string | null
+          artifact_state: string | null
+          delivered_at: string | null
+          delivery_attempts: number | null
+          delivery_status: string | null
+          expires_at: string | null
+          export_id: string | null
+          export_status: Database["public"]["Enums"]["export_status"] | null
+          export_type: string | null
+          last_delivery_at: string | null
+          last_delivery_error: string | null
+          resend_count: number | null
+          size_bytes: number | null
+          storage_bucket: string | null
+          storage_mode: string | null
+          storage_path: string | null
+          telegram_chat_id: string | null
+          telegram_deep_link: string | null
+          telegram_file_id: string | null
+          telegram_message_id: string | null
+          tier_at_creation: string | null
+          title: string | null
+          user_id: string | null
         }
         Relationships: []
       }
