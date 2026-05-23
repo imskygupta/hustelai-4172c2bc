@@ -8,6 +8,12 @@
 // Returned values are intentionally small + serializable so they can be
 // surfaced 1:1 in the Integrations control center and tier upsell UI.
 
+// Sprint E Phase 2 — delegates retention/quota/routing through the
+// canonical capability resolver. The numbers live in ONE place now
+// (tier/resolveCapabilities.ts) so storage and runtime stay in sync.
+
+import { resolveCapabilities } from "../tier/resolveCapabilities.ts";
+
 export type Tier = "free" | "pro" | "elite" | "infinity";
 
 export interface RetentionPolicy {
@@ -37,34 +43,40 @@ export interface DeliveryRouting {
   storage_mode: "local" | "telegram" | "hybrid";
 }
 
-const RETENTION: Record<Tier, RetentionPolicy> = {
-  free:     { supabase_ttl_hours: 24,    telegram_ttl_days: 7,   persistent_continuity: false },
-  pro:      { supabase_ttl_hours: 24 * 7, telegram_ttl_days: 90, persistent_continuity: true  },
-  elite:    { supabase_ttl_hours: 24 * 7, telegram_ttl_days: 365, persistent_continuity: true },
-  infinity: { supabase_ttl_hours: 24 * 7, telegram_ttl_days: -1,  persistent_continuity: true },
+const BYTE_CEILINGS: Record<Tier, number> = {
+  free: 10 * 1024 * 1024,
+  pro: 50 * 1024 * 1024,
+  elite: 50 * 1024 * 1024,
+  infinity: 50 * 1024 * 1024,
 };
-
-const QUOTA: Record<Tier, StorageQuota> = {
-  free:     { max_continuity_rows: 25,   max_artifact_bytes: 10  * 1024 * 1024, resumable_exports: false },
-  pro:      { max_continuity_rows: 500,  max_artifact_bytes: 50  * 1024 * 1024, resumable_exports: true  },
-  elite:    { max_continuity_rows: 2500, max_artifact_bytes: 50  * 1024 * 1024, resumable_exports: true  },
-  infinity: { max_continuity_rows: 10000, max_artifact_bytes: 50 * 1024 * 1024, resumable_exports: true  },
+const SUPABASE_TTL_HOURS: Record<Tier, number> = {
+  free: 24, pro: 24 * 7, elite: 24 * 7, infinity: 24 * 7,
 };
 
 export function resolveRetention(tier: Tier): RetentionPolicy {
-  return RETENTION[tier] ?? RETENTION.free;
+  const caps = resolveCapabilities(tier);
+  return {
+    supabase_ttl_hours: SUPABASE_TTL_HOURS[tier] ?? SUPABASE_TTL_HOURS.free,
+    telegram_ttl_days: caps.continuity_days,
+    persistent_continuity: caps.persistent_storage,
+  };
 }
 
 export function resolveQuota(tier: Tier): StorageQuota {
-  return QUOTA[tier] ?? QUOTA.free;
+  const caps = resolveCapabilities(tier);
+  return {
+    max_continuity_rows: caps.continuity_slots,
+    max_artifact_bytes: BYTE_CEILINGS[tier] ?? BYTE_CEILINGS.free,
+    resumable_exports: caps.persistent_storage,
+  };
 }
 
 export function resolveRouting(tier: Tier, telegram_connected: boolean): DeliveryRouting {
-  if (!telegram_connected) {
+  const caps = resolveCapabilities(tier);
+  if (!telegram_connected || !caps.telegram_notifications) {
     return { can_telegram: false, hybrid: false, storage_mode: "local" };
   }
-  if (tier === "free") {
-    // Free users get TG notifications only — no persistent TG archive.
+  if (!caps.hybrid_storage) {
     return { can_telegram: true, hybrid: false, storage_mode: "telegram" };
   }
   return { can_telegram: true, hybrid: true, storage_mode: "hybrid" };

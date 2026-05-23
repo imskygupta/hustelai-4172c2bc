@@ -7633,6 +7633,36 @@ export type Database = {
         }
         Relationships: []
       }
+      tier_usage_counters: {
+        Row: {
+          count: number
+          created_at: string
+          id: string
+          kind: string
+          last_at: string
+          user_id: string
+          window_date: string
+        }
+        Insert: {
+          count?: number
+          created_at?: string
+          id?: string
+          kind: string
+          last_at?: string
+          user_id: string
+          window_date?: string
+        }
+        Update: {
+          count?: number
+          created_at?: string
+          id?: string
+          kind?: string
+          last_at?: string
+          user_id?: string
+          window_date?: string
+        }
+        Relationships: []
+      }
       tool_launch_events: {
         Row: {
           anon_id: string | null
@@ -9978,6 +10008,18 @@ export type Database = {
         }
         Relationships: []
       }
+      v_tier_pressure: {
+        Row: {
+          active_users: number | null
+          avg_per_user: number | null
+          kind: string | null
+          last_activity: string | null
+          peak_per_user: number | null
+          tier: Database["public"]["Enums"]["subscription_tier"] | null
+          total_count: number | null
+        }
+        Relationships: []
+      }
       v_workspace_artifacts_unified: {
         Row: {
           artifact_origin: string | null
@@ -10109,6 +10151,13 @@ export type Database = {
           step_name: string
           step_order: number
           users: number
+        }[]
+      }
+      atomic_tier_consume: {
+        Args: { _amount?: number; _kind: string; _user_id: string }
+        Returns: {
+          count: number
+          window_date: string
         }[]
       }
       auto_suspend_unverified: { Args: never; Returns: number }
@@ -10881,6 +10930,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      tier_usage_today: {
+        Args: { _kind: string; _user_id: string }
+        Returns: number
       }
       toggle_bookmark: { Args: { _slug: string }; Returns: Json }
       topology_compute_blast_radius: { Args: never; Returns: number }
