@@ -10,6 +10,7 @@ import { startSweeper, startHeartbeat } from "./ops/sweeper.js";
 import { startConfigPoller, getAdminChats, isFlagEnabled, snapshotInfo } from "./config/remote.js";
 import { startWorkflowLoop, getWorkflowLoopStats } from "./ops/loops/workflow.js";
 import { startReconciliationLoop, getReconciliationStats } from "./ops/loops/reconciliation.js";
+import { startLifecycleLoop, getLifecycleStats } from "./ops/loops/lifecycle.js";
 import { superviseLoop, getLoopRegistry } from "./ops/loop-runner.js";
 
 const app = express();
