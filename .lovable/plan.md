@@ -1,50 +1,61 @@
-# HustleAI Stabilization + UX Restoration Sprint
+## Sprint A — Unified Artifact System + Telegram Persistence
 
-This is a large multi-phase sprint touching async delivery, notifications, auth UX, and the Explore/generation engine. Before I implement, I need to confirm scope and audit a few systems — going in blind risks breaking production flows (export queue, websocket hydration, Explore template engine).
+### 1. Canonical table: `workspace_artifacts`
 
-## Sprint 1 — Operational Fixes (highest priority)
+New migration creating:
 
-### 1A. Telegram routing hardening
-- **Centralize delivery routing** in a single `resolveDeliveryTarget(user, export)` helper used by `export-create`, `export-deliver-telegram`, `export-cache-telegram`, and the shared `createExport.ts`.
-- **Hard guard**: never enqueue TG delivery when `plan === "free"` OR `telegram_connected === false`. Today `createExport.ts` fires `export-cache-telegram` for everyone and `export-create/index.ts` re-fires it again — both need the guard.
-- **Free users**: browser download + in-app completion only. Strip `deliver_to_telegram` server-side rather than trusting the flag.
-- **Paid users**: keep TG sync, async delivery, large-file relay.
-- **Idempotency**: dedupe export jobs by `(export_id, delivery_target)` so retry storms can't enqueue duplicate TG jobs for dead paths.
+- `workspace_artifacts` (id, user_id, workspace_id, artifact_type, source_module, title, preview_text, file_url, telegram_message_id, telegram_channel, telegram_deep_link, storage_mode default 'local', mime_type, size_bytes, metadata jsonb, status default 'ready', dedupe_key unique, created_at, updated_at, is_favorite, ref_export_id)
+- Indexes: (user_id, created_at desc), artifact_type, source_module, dedupe_key
+- RLS: owner only SELECT/UPDATE/DELETE; service_role full
+- Trigger: `updated_at` autoset
+- View `v_workspace_artifacts_unified` that UNIONs `workspace_artifacts` + legacy `generated_exports` so the Exports page surfaces both during transition
 
-### 1B. Notification resurrection fix
-- **Schema**: add `dismissed_at`, `read_at`, `client_hidden` to `workspace_notifications` (and the legacy `notifications` table if it backs export events).
-- **Event producer**: notification creation must upsert on `(user_id, dedupe_key)` where `dedupe_key = "export:<export_id>"`. If a row exists with `dismissed_at IS NOT NULL`, do NOT recreate or clear the flag.
-- **Frontend** (`NotificationCenter.tsx`, `NotificationPopup.tsx`): respect `dismissed_at`/`client_hidden` on every realtime merge and poll refresh. Today `NotificationPopup` already uses localStorage for dismissal — migrate that to server-side so it survives reloads and devices.
-- **Audit**: export completion event emitter, async queue replay, websocket hydration reducer.
+### 2. Shared helper
 
-## Sprint 2 — Auth UX
+`supabase/functions/_shared/artifacts/createArtifact.ts`
 
-### 2A. Email verification full-screen modal
-- Replace `EmailVerificationBanner` (small destructive banner) with a full-screen centered modal: blurred backdrop, branded illustration, large heading "Verify your email to activate your workspace", resend with countdown timer, spam-folder reminder, animated success state, mobile responsive.
-- Keep existing `supabase.auth.resend()` call and `AUTH_EMAIL_REDIRECT_TO` — UI swap only.
-- Audit all call sites of the old banner and toast-style auth confirmations; route them through the new modal.
+- `createArtifact({ user_id, artifact_type, source_module, title, preview_text?, file_url?, mime_type?, size_bytes?, metadata?, ref_export_id?, storage_mode?, deliver_to_telegram? })`
+- Auto-infers preview_text (truncate 280)
+- Generates dedupe_key when not supplied (`${source_module}:${ref_export_id || hash}`)
+- Inserts row (upsert on dedupe_key)
+- If `deliver_to_telegram` + paid + connected → enqueue `export-deliver-telegram` and patches storage_mode='telegram' once message_id returns
+- Never throws (returns null on failure, logs)
 
-## Sprint 3 — Explore + Generation Engine
+### 3. Wire-in points (single line each)
 
-### 3A. Remove dead marketing structure
-- Audit current Explore page for static featured content, marketing blocks, repetitive template cards, dead discovery sections — remove.
+- `export-create/index.ts` → after `createExport()`, call `createArtifact()` with `ref_export_id`, type derived from `export_type`
+- `export-deliver-telegram` → after successful send, update artifact row (`telegram_message_id`, `telegram_channel`, `telegram_deep_link`, `storage_mode='telegram'`)
+- `export-cache-telegram` → on cache success, set artifact storage_mode='hybrid' + telegram_message_id
 
-### 3B. Restore dynamic generation engine
-- Replace `loadSavedTemplates()` path with `generateSuggestionsFromPrompt()` calling Lovable AI Gateway (`google/gemini-2.5-flash` for low-latency suggestions, escalate to `gemini-2.5-pro` for roadmap synthesis).
-- Inference inputs: user prompt + workspace content + exports + niche + connected tools + prior roadmap graph + operational gaps.
+### 4. Telegram orphan fix
 
-### 3C. New Explore structure (3 dynamic sections)
-- **Continue Building** — unfinished systems, expandable workflows, recent generations, roadmap continuations, operational follow-ups. Sourced from existing workspace/roadmap/export tables.
-- **AI Suggestions** — dynamically generated, not hardcoded.
-- **Operational Packs** — AI-generated contextual packs (Freelancer OS, Agency Ops, Creator Pipeline, Lead Gen, CRM Automation), not static cards.
+`supabase/functions/admin-alert/index.ts`:
+- Reject (200 ok skipped) when `kind === 'client.unknown'` AND `!message?.trim()` AND `!feature`
+- Always pass `parse_mode: "HTML"` via worker dispatch metadata
 
-## What I need from you before I start
+### 5. Exports page rebuild
 
-This sprint touches 25+ files across 4 unrelated subsystems. To avoid a wedged half-done state, I'd like to confirm:
+`src/pages/settings/Exports.tsx`:
+- Switch query to `workspace_artifacts` via new `src/lib/artifacts/api.ts`
+- Cards: title, source_module badge, artifact_type pill, preview_text, created_at, storage_mode badge (Local / TG / Hybrid), TG badge with deep link
+- Actions: Open (file_url or TG link), Resend to Telegram (calls existing `deliver-telegram`), Favorite, Revoke
+- Filters: all / by artifact_type (chips from distinct values)
+- Stats: total, TG-cached, favorites, storage bytes
+- Empty state with semantic tokens
 
-1. **Sprint sequencing** — ship Sprint 1 (Telegram + notifications) end-to-end first, then return for Sprints 2 and 3 in follow-up turns? Or batch everything into one giant patch?
-2. **DB migrations OK?** Sprint 1B and 3C need schema additions (`dismissed_at`, `read_at`, `client_hidden`, possibly a `delivery_target` column on the export jobs table). You said "preserve existing DB compatibility wherever possible" — confirming additive columns are acceptable.
-3. **Explore page entry point** — which route is "Explore" today? I see `src/pages/seo/*`, no `Explore.tsx`. Is it `WorkspaceLanding`, `dashboard/AutomationsHub`, or somewhere else? Need the file before I rewrite it.
-4. **Free-tier export delivery** — do free users currently have ANY async path, or is it strictly synchronous browser download? (Affects whether I keep the async export job row for free users at all, or short-circuit to inline response.)
+### 6. Visual polish
 
-Recommended sequencing: **Sprint 1 first** (these are active production bugs causing ghost notifications and trust degradation), confirm green, then Sprint 2, then Sprint 3 (largest scope, needs the Explore file pointer).
+Bump contrast on:
+- HustleDetail muted text → `text-muted-foreground` → `text-foreground/75`
+- Roadmap cards: increase pill foreground opacity
+- Tag pills (`bg-emerald-500/10 text-emerald-300`) → ensure WCAG by using `text-emerald-200` on dark, `text-emerald-700` on light
+- Exports card already uses tokens — verified
+- Empty states keep tokenized colors
+
+### Technical notes
+
+- No new infra
+- No DB migration of existing `generated_exports` rows — surfaced via union view
+- Helper is fire-and-forget from all generation paths
+- `createArtifact` is callable from any edge function via shared import
+- Frontend reads only `workspace_artifacts` (which includes mirrored exports going forward); historical exports surface through the union view used only by the Exports page
