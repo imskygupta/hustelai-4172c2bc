@@ -9201,7 +9201,10 @@ export type Database = {
       workspace_notifications: {
         Row: {
           body: string | null
+          client_hidden: boolean
           created_at: string | null
+          dedupe_key: string | null
+          dismissed_at: string | null
           id: string
           kind: string
           link: string | null
@@ -9212,7 +9215,10 @@ export type Database = {
         }
         Insert: {
           body?: string | null
+          client_hidden?: boolean
           created_at?: string | null
+          dedupe_key?: string | null
+          dismissed_at?: string | null
           id?: string
           kind: string
           link?: string | null
@@ -9223,7 +9229,10 @@ export type Database = {
         }
         Update: {
           body?: string | null
+          client_hidden?: boolean
           created_at?: string | null
+          dedupe_key?: string | null
+          dismissed_at?: string | null
           id?: string
           kind?: string
           link?: string | null
