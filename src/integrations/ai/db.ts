@@ -14,7 +14,7 @@ import { supabase as primary } from "@/integrations/supabase/client";
 
 const URL = "https://larncwugkdclkhayfjle.supabase.co";
 // Anon publishable key for the AI/API project. Replace once provisioned.
-const PUBLISHABLE_KEY: string = "sb_publishable_ai_replace_me";
+const PUBLISHABLE_KEY: string = "sb_publishable_tElNsLaOmH75DPVBy1qS7g_ZrHj1_en";
 
 const CONFIGURED =
   (PUBLISHABLE_KEY as string) !== "sb_publishable_ai_replace_me" &&
