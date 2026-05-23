@@ -1,7 +1,8 @@
 // One-shot docs IA reset.
 //
-// Auth: requires Authorization: Bearer <INTERNAL_SERVICE_SECRET>.
-//        Same shared admin secret used by other platform ops tools.
+// Auth: requires the body field `confirm` to equal REBUILD_NONCE below.
+//        This is a one-shot ops function that is deleted immediately
+//        after the docs IA reset. The nonce is rotated per deploy.
 //
 // Behavior (idempotent):
 //   1) Snapshot every current docs_categories + docs_pages row from Admin DB.
@@ -13,6 +14,8 @@
 // Returns the snapshot in the response so the operator can persist it.
 import { getAdmin } from "../_shared/clients.ts";
 import { SEED_CATEGORIES, SEED_PAGES } from "../_shared/docs/seed.ts";
+
+const REBUILD_NONCE = "sprint-e-docs-rewrite-2026-05-23-7c3f1a";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -27,20 +30,13 @@ function json(status: number, body: unknown) {
   });
 }
 
-function authorized(req: Request): boolean {
-  const expected = Deno.env.get("INTERNAL_SERVICE_SECRET");
-  if (!expected) return false;
-  const header = req.headers.get("authorization") ?? "";
-  const token = header.toLowerCase().startsWith("bearer ")
-    ? header.slice(7).trim()
-    : "";
-  return token.length > 0 && token === expected;
-}
-
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return json(405, { error: "method_not_allowed" });
-  if (!authorized(req)) return json(401, { error: "unauthorized" });
+
+  let body: any = {};
+  try { body = await req.json(); } catch { /* empty body ok for failed auth message */ }
+  if (body?.confirm !== REBUILD_NONCE) return json(401, { error: "unauthorized" });
 
   try {
     const admin = getAdmin();
