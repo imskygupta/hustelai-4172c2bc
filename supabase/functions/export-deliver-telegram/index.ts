@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { sendTelegram } from "../_shared/notifications/telegram.ts";
 import { randomToken, siteOrigin, resolveDeliveryTarget } from "../_shared/exports/createExport.ts";
+import { patchArtifactByExport } from "../_shared/artifacts/createArtifact.ts";
 import { isFeatureEnabledServer } from "../_shared/flags/resolve.ts";
 import { emitWorkflowEvent } from "../_shared/workflows/emit.ts";
 
@@ -111,6 +112,15 @@ serve(async (req) => {
       delivery_method: cachedFileId ? "hybrid" : "telegram",
       delivered_at: new Date().toISOString(),
     }).eq("id", exp.id);
+    // Mirror delivery onto the canonical artifact row so the Exports page
+    // reflects TG persistence + deep link without re-querying.
+    void patchArtifactByExport(exp.id, {
+      storage_mode: cachedFileId ? "hybrid" : "telegram",
+      telegram_message_id: messageId,
+      telegram_channel: integ.provider_chat_id,
+      telegram_deep_link: link,
+      status: "delivered",
+    });
     void emitWorkflowEvent(sb, "export.delivered", {
       user_id: exp.user_id, export_id: exp.id, channel: "telegram",
       title: exp.title, export_type: exp.export_type,
