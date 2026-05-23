@@ -42,8 +42,16 @@ export async function enqueueJob(o: EnqueueOpts): Promise<string> {
   return String(data);
 }
 
-export async function claimJob(queue: Queue, worker: string, leaseSeconds = 60) {
-  const { data, error } = await db().rpc("claim_job" as any, {
+// Sprint E Phase 4 — defaults to weighted-fairness claim. Pass
+// `{ weighted: false }` to opt back into raw FIFO (rarely needed).
+export async function claimJob(
+  queue: Queue,
+  worker: string,
+  leaseSeconds = 60,
+  opts: { weighted?: boolean } = {},
+) {
+  const rpc = opts.weighted === false ? "claim_job" : "claim_job_weighted";
+  const { data, error } = await db().rpc(rpc as any, {
     _queue: queue, _worker: worker, _lease_seconds: leaseSeconds,
   });
   if (error) throw new Error(`claimJob failed: ${error.message}`);

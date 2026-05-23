@@ -20,11 +20,28 @@ export interface JobRow {
   cancel_requested: boolean;
 }
 
+// Sprint E Phase 4 — weighted-fairness claim. Honors canonical tier
+// priority + aging (anti-starvation) + retry decay. Falls back to raw
+// FIFO claim only if the weighted RPC is missing (older DB version).
+const USE_WEIGHTED = String(process.env.QUEUE_WEIGHTED_CLAIM ?? "true").toLowerCase() !== "false";
 export async function claim(queue: Queue, worker: string, leaseSeconds = 60): Promise<JobRow | null> {
-  const { data, error } = await supabaseAdmin.rpc("claim_job" as any, {
+  const rpc = USE_WEIGHTED ? "claim_job_weighted" : "claim_job";
+  const { data, error } = await supabaseAdmin.rpc(rpc as any, {
     _queue: queue, _worker: worker, _lease_seconds: leaseSeconds,
   });
-  if (error) { console.error("[queue.claim]", queue, error.message); return null; }
+  if (error) {
+    // Soft-fallback if the weighted RPC is missing on this env.
+    if (USE_WEIGHTED && /function .* does not exist/i.test(error.message)) {
+      console.warn("[queue.claim] weighted RPC missing, falling back to claim_job");
+      const { data: d2, error: e2 } = await supabaseAdmin.rpc("claim_job" as any, {
+        _queue: queue, _worker: worker, _lease_seconds: leaseSeconds,
+      });
+      if (e2) { console.error("[queue.claim]", queue, e2.message); return null; }
+      return ((d2 as any[]) ?? [])[0] ?? null;
+    }
+    console.error("[queue.claim]", queue, error.message);
+    return null;
+  }
   const rows = (data as any[]) ?? [];
   return rows[0] ?? null;
 }
