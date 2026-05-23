@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { communityDb } from "@/integrations/community/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Send, Check, Copy, Zap, Bell, Loader2, ExternalLink, Plug, Crown, X, MessageSquare, Sparkles, ArrowRight } from "lucide-react";
@@ -65,12 +66,20 @@ export default function Integrations() {
   const load = async () => {
     if (!user) return;
     setLoading(true);
-    const [{ data: profile }, { data: integ }, { data: pref }, { data: dl }] = await Promise.all([
+    // discord_links lives on the realtime/community DB (extracted off primary),
+    // so it MUST be queried via communityDb. Routing it through `supabase` here
+    // triggers primary-guard and rejects the entire Promise.all — which used to
+    // blank out the Integrations page and spam the admin TG channel.
+    const [profileRes, integRes, prefRes, dlRes] = await Promise.allSettled([
       supabase.from("profiles").select("subscription_tier").eq("user_id", user.id).maybeSingle(),
       supabase.from("notification_integrations" as any).select("*").eq("user_id", user.id),
       supabase.from("notification_preferences").select("channel_prefs, preset").eq("user_id", user.id).maybeSingle(),
-      supabase.from("discord_links" as any).select("discord_username").eq("user_id", user.id).maybeSingle(),
+      communityDb.from("discord_links" as any).select("discord_username").eq("user_id", user.id).maybeSingle(),
     ]);
+    const profile = profileRes.status === "fulfilled" ? (profileRes.value as any).data : null;
+    const integ = integRes.status === "fulfilled" ? (integRes.value as any).data : null;
+    const pref = prefRes.status === "fulfilled" ? (prefRes.value as any).data : null;
+    const dl = dlRes.status === "fulfilled" ? (dlRes.value as any).data : null;
     setTier(profile?.subscription_tier || "free");
     setIntegrations((integ || []) as any);
     setPrefs(((pref as any)?.channel_prefs as Record<string, string[]>) || {});
