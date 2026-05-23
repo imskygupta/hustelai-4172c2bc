@@ -4,6 +4,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { dispatchNotification } from "../_shared/notifications/dispatcher.ts";
 import { createArtifact } from "../_shared/artifacts/createArtifact.ts";
 import { transitionArtifact } from "../_shared/artifacts/transition.ts";
+import { requireCapability, guardErrorBody } from "../_shared/tier/guard.ts";
+import { consumeAndCheck } from "../_shared/tier/quota.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -23,6 +25,23 @@ serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const provider = body?.provider as string | undefined;
     const operational = body?.operational === true;
+
+    // Sprint E Phase 3 — operational smoke-test uses Telegram-as-storage.
+    // That path is tier-locked behind telegram_exports + delivery quota.
+    if (operational) {
+      const cap = await requireCapability(sb, user.id, "telegram_exports");
+      if (!cap.ok) {
+        return new Response(JSON.stringify(guardErrorBody(cap)), {
+          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const q = await consumeAndCheck(sb, user.id, "telegram_delivery", cap.capabilities.telegram_delivery_quota);
+      if (!q.ok) {
+        return new Response(JSON.stringify({
+          error: "telegram_delivery_quota_exceeded", used: q.count, max: q.limit, tier: cap.tier,
+        }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+    }
 
     // Canonical smoke-test path: create a real artifact row, route it through
     // dispatchNotification, and let the user observe it in Exports + Telegram.
