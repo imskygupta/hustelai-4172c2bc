@@ -2233,6 +2233,36 @@ export type Database = {
         }
         Relationships: []
       }
+      explore_suggestions_cache: {
+        Row: {
+          context_hash: string
+          created_at: string
+          expires_at: string
+          id: string
+          payload: Json
+          section: string
+          user_id: string
+        }
+        Insert: {
+          context_hash: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          payload?: Json
+          section: string
+          user_id: string
+        }
+        Update: {
+          context_hash?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          payload?: Json
+          section?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       export_access_logs: {
         Row: {
           created_at: string
