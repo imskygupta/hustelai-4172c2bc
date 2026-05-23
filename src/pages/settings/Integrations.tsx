@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Link } from "react-router-dom";
 import { continueWorkflow } from "@/lib/nextActions/continueWorkflow";
+import { IntegrationsHealthRail } from "./IntegrationsHealthRail";
 
 interface Integration {
   id: string;
@@ -201,6 +202,9 @@ export default function Integrations() {
           </div>
           <p className="text-sm text-zinc-400">Get instant alerts on Telegram for payments, AI tasks, leads, and security events.</p>
         </header>
+
+        {/* Operational control center — never blanks because one provider fails */}
+        <IntegrationsHealthRail />
 
         {!allowed && (
           <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 flex items-start gap-3">
