@@ -1,6 +1,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { requireVerifiedUser as __requireVerifiedUser } from "../_shared/require-verified.ts";
+import { requireCapability, guardErrorBody } from "../_shared/tier/guard.ts";
+import { consumeAndCheck } from "../_shared/tier/quota.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -54,10 +56,19 @@ serve(async (req) => {
       .eq("user_id", userId)
       .single();
 
-    if (!profile || !["pro", "elite", "infinity"].includes(profile.subscription_tier)) {
-      return new Response(JSON.stringify({ error: "This feature requires Pro, Elite, or Infinity subscription." }), {
+    // Sprint E Phase 3 — canonical capability gate (advanced_exports tier-locked).
+    const cap = await requireCapability(serviceClient, userId, "advanced_exports");
+    if (!cap.ok) {
+      return new Response(JSON.stringify(guardErrorBody(cap)), {
         status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+    const q = await consumeAndCheck(serviceClient, userId, "ai", cap.capabilities.ai_quota);
+    if (!q.ok) {
+      return new Response(JSON.stringify({
+        error: "ai_quota_exceeded", used: q.count, max: q.limit, tier: cap.tier,
+        message: `Daily AI limit reached (${q.count}/${q.limit}).`,
+      }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     const toneLabel = tone || "Professional";
