@@ -1,103 +1,112 @@
+# Sprint C — Operational Continuity + Delivery Polish
 
-# Sprint B — Sharing Links + File Delivery Stabilization
+Goal: HustleAI should feel like a durable AI operating system. No new infra. Polish + complete the execution chain wired up in Sprints A/B.
 
-Builds on Sprint A's `workspace_artifacts` + unified view. Everything below reads/writes real artifact + delivery state — no mocks, no placeholders.
+---
 
-## 1. Database — delivery state + share metadata
+## Part 1 — Detail surface contrast pass
 
-New migration on `public.workspace_artifacts`:
+Audit and fix muted/low-contrast text + pale pills across:
+- `src/pages/HustleDetail.tsx`
+- `src/pages/RoadmapDetail.tsx` (and any roadmap viewer)
+- `src/pages/Workspace*` detail views
+- `src/components/artifacts/PreviewPane.tsx`
+- `src/components/artifacts/DeliveryChip.tsx`
+- Export/AI/proposal cards
 
-- Add columns:
-  - `delivery_status text` — `pending | sending | sent | cached | delivered | failed | retrying | skipped` (default `pending`)
-  - `delivery_attempts int` default 0
-  - `last_delivery_error text`
-  - `last_delivery_at timestamptz`
-  - `share_token text` (unique, nullable) — stable public share token
-  - `share_expires_at timestamptz`
-  - `share_revoked_at timestamptz`
-- Index on `(user_id, delivery_status)`, unique on `share_token`.
-- Update `v_workspace_artifacts_unified` to surface the new fields, deriving delivery_status for legacy `generated_exports` from existing `status` + `delivered_at`.
-- New SECURITY DEFINER RPC `public_artifact_get(_token text)` — returns sanitized columns (title, type, preview_text, mime_type, size_bytes, file_url candidate, created_at, source_module) only if token is unrevoked and not expired. Powers public share pages without exposing the table.
+Changes (semantic tokens only — `index.css`):
+- Tighten `--muted-foreground` (raise lightness contrast vs `--card`).
+- Add `--badge-*` token set for semantic delivery pills (queued/processing/delivered/cached/telegram_only/failed/retrying).
+- Replace `text-muted-foreground` with `text-foreground/80` on metadata rows where contrast fails.
+- Strengthen borders: `border-border` → `border-border/80` on pale cards; never pale-on-pale.
+- Specifically replace the washed pale-green tag text with `bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30`.
 
-## 2. Edge functions
+## Part 2 — Exports → Operational Memory
 
-- New `artifact-share-issue` — owner-only. Body `{ artifact_id, expires_in_hours? }`. Generates/reuses `share_token`, returns `{ url: "<origin>/a/:token" }`. Idempotent (returns existing if not expired/revoked).
-- New `artifact-share-revoke` — owner-only. Sets `share_revoked_at = now()`.
-- New `artifact-public-view` — no JWT, validates token via the RPC, returns sanitized payload + a 60s signed Storage URL when applicable (delegates to `export-download` flow for legacy rows by `ref_export_id`).
-- Update `export-deliver-telegram`: wrap each send in status transitions — set `delivery_status='sending'` then `sent`/`cached`/`delivered`/`failed`, increment `delivery_attempts`, store `last_delivery_error`. On `failed` after 3 attempts, fire `admin-alert` (kind `delivery.failed`) — never on user happy-path.
-- New `artifact-resend` — owner-only thin wrapper that re-enqueues `export-deliver-telegram` with idempotency guard (skip if `delivery_status in ('sending','retrying')` newer than 30s). Replaces the direct invoke in `resendArtifactToTelegram`.
-- Add CORS + JWT validation patterns matching existing functions; all paths return CORS headers including errors.
+Evolve `src/pages/settings/Exports.tsx`:
+- Timeline grouping: Today / Yesterday / Earlier this week / Older (group by `created_at`).
+- New `ArtifactCard` component (rich): icon by type, title, source_module, delivery chip with animated transitions, timestamp, metadata row.
+- `ArtifactPreviewDrawer` (uses existing `PreviewPane`) opened from card click — keep current ShareDialog wired inside.
+- CTAs on each card:
+  - "Continue working" → routes back to `source_module` deep link.
+  - "Open in Telegram" → uses `telegram_deep_link` if `telegram_message_id` present.
+  - "Resend" / "Share" / "Delete" (existing).
+- Type filter chips: AI, Docs, Roadmaps, Proposals, Workspace, Telegram-only.
+- Use Framer Motion (already present) for chip transitions and drawer.
 
-`supabase/config.toml` adds `verify_jwt = false` for `artifact-public-view` only.
+## Part 3 — Telegram delivery continuity
 
-## 3. Public share pages — `/a/:token`
+Ensure every persistent generation auto-registers + auto-delivers:
+- Audit `export-create` callers; confirm `createArtifact` helper is invoked from roadmap/proposal/AI generators that currently bypass it. Patch the 2–3 obvious holdouts (no rebuilds).
+- After `export-deliver-telegram` success, ensure `telegram_message_id` + `telegram_deep_link` patched into `workspace_artifacts` (already partially wired; verify and fix gaps).
+- TG-only artifacts: when `storage_mode='telegram'` and no local path, card still renders with "Open in Telegram" primary CTA.
 
-New `src/pages/PublicArtifact.tsx` route, no auth required, mobile-first. Renders by `artifact_type`:
+## Part 4 — Delivery health states
 
-- `proposal_pdf` / `invoice_pdf` / `resume_pdf` / `roadmap_pdf` → PDF preview (`<iframe>` of signed URL) + download button
-- `workspace_doc` / markdown → renders `preview_text` via existing `react-markdown` setup
-- `ai_chat_export` / `data_export` → text preview (mono font, scroll container)
-- Fallback → metadata card + download button
+Formalize states (already in DB as `delivery_status`):
+`queued | processing | delivered | cached | telegram_only | failed | retrying`
 
-Includes:
-- HustleAI branding header + footer
-- "This link expires <relative time>" notice
-- Open in new tab / Download actions
-- `<SEO>` block with `noindex` (private share)
-- Graceful states: `loading`, `not_found`, `expired`, `revoked` — links to existing `PublicLinkUnavailable` styling
+Update `DeliveryChip` with full state map + tokenized colors + tooltip showing `last_delivery_error` + retry button when `failed`/`retrying`.
 
-## 4. Exports page upgrades
+## Part 5 — Admin alert payload formalization
 
-`src/pages/settings/Exports.tsx`:
+Update `supabase/functions/_shared/alerts.ts` (or inline in `export-deliver-telegram` + `admin-alert`):
 
-- Add **delivery state chips** per row, color-coded via semantic tokens:
-  - `delivered` emerald, `sent` sky, `cached` violet, `sending`/`retrying` amber pulse, `failed` destructive, `pending`/`skipped` muted
-- **Timeline tooltip** on chip: attempts count + last_delivery_at + error
-- **Retry button** for `failed` (calls `artifact-resend`), disabled while `sending`/`retrying`
-- **Share** button → opens dialog with copyable `/a/:token` URL, expiry, and Revoke action (calls `artifact-share-issue` / `artifact-share-revoke`)
-- **Filter** by delivery state in addition to type
-- **Empty state** rewrite: when 0 artifacts, show educational card listing where artifacts come from (Roadmaps, Proposals, Invoices, AI Chats, Workspace Docs) with links to those features — no "0 exports" fake counters
-- Telegram-not-connected banner with link to `/settings/telegram` when relevant
+```ts
+type DeliveryAlert = {
+  kind: 'delivery.failed' | 'delivery.retry_storm' | 'artifact.malformed' | 'auth.failed' | 'pipeline.anomaly';
+  artifact_id?: string;
+  export_id?: string;
+  user_id?: string;
+  retry_count?: number;
+  failure_reason?: string;
+  pipeline_stage?: string;
+};
+```
 
-New `src/components/artifacts/`:
-- `DeliveryChip.tsx`
-- `ShareDialog.tsx`
-- `PreviewPane.tsx` (PDF/markdown/text)
-- `ArtifactEmptyState.tsx`
+Reject any alert missing `kind` or with `kind === 'client.unknown'` (already done, formalize).
+Never accept user-export-shaped payloads.
 
-`src/lib/artifacts/api.ts` extended with: `issueShare`, `revokeShare`, `retryDelivery`, `fetchPublicArtifact`.
+## Part 6 — Workspace continuity rail
 
-## 5. Admin observability
+New component `src/components/workspace/ContinuityRail.tsx` shown on dashboard/workspace landing:
+- "Reopen latest roadmap" (latest artifact where type=roadmap)
+- "Continue proposal" (latest type=proposal, status≠delivered final)
+- "Resume workspace" (latest workspace doc)
+- "Open latest artifact" (most recent any)
+- "Continue AI workflow" (latest AI chat artifact)
 
-`admin-alert` already filters orphans. Wire new alert kinds emitted from delivery code:
-- `delivery.failed` (after 3 attempts)
-- `delivery.retry_storm` (>10 attempts in 1h per artifact)
-- `share.malformed` (token RPC mismatch)
+Fed by simple queries against `v_workspace_artifacts_unified` filtered by `user_id = auth.uid()`, limit 1 per type. No new tables.
 
-Strictly internal — never echoes user exports content, only counts + IDs.
+## Part 7 — Storage strategy
 
-## 6. Routing
+No code change beyond reinforcing TG metadata:
+- Verify `telegram_deep_link` derivation is stable (`https://t.me/c/<chat_id_no_prefix>/<message_id>` for private channel, or bot deep-link variant we already use).
+- Add helper `src/lib/artifacts/telegram-link.ts` so frontend + edge both reconstruct identically.
 
-`src/App.tsx`:
-- Add `<Route path="/a/:token" element={<PublicArtifact />} />` in the public marketing tree (no auth gate)
+---
 
-## 7. Out of scope (explicit)
+## Files
 
-- No new infra/providers
-- No DB migration of existing `generated_exports` rows
-- No rebuild of Explore, AI routing, or Telegram bot infra
-- No new payment flows
+**New**
+- `src/components/artifacts/ArtifactCard.tsx`
+- `src/components/artifacts/ArtifactPreviewDrawer.tsx`
+- `src/components/artifacts/TimelineGroup.tsx`
+- `src/components/workspace/ContinuityRail.tsx`
+- `src/lib/artifacts/telegram-link.ts`
+- `src/lib/artifacts/groupByTimeline.ts`
 
-## File-level summary
+**Modified**
+- `src/index.css` (badge tokens, muted contrast)
+- `src/components/artifacts/DeliveryChip.tsx` (full state map + retry)
+- `src/components/artifacts/PreviewPane.tsx` (contrast)
+- `src/pages/settings/Exports.tsx` (timeline grouping, filters, drawer)
+- `src/pages/HustleDetail.tsx`, `src/pages/RoadmapDetail.tsx` (contrast pass, scoped)
+- `supabase/functions/admin-alert/index.ts` (formal payload schema)
+- `supabase/functions/export-deliver-telegram/index.ts` (emit formal alert payloads, patch telegram_deep_link)
+- Dashboard/Workspace landing page (mount `ContinuityRail`)
 
-**New migrations:** 1 (`workspace_artifacts` columns + view rebuild + `public_artifact_get` RPC)
+**Migrations**: none (all fields exist from Sprints A/B).
 
-**New edge functions (4):** `artifact-share-issue`, `artifact-share-revoke`, `artifact-public-view`, `artifact-resend`
-
-**Modified edge functions:** `export-deliver-telegram` (status transitions + alerts)
-
-**New frontend files (5):** `PublicArtifact.tsx`, `DeliveryChip.tsx`, `ShareDialog.tsx`, `PreviewPane.tsx`, `ArtifactEmptyState.tsx`
-
-**Modified frontend:** `Exports.tsx`, `lib/artifacts/api.ts`, `App.tsx`, `supabase/config.toml`
-
-Approve to implement.
+## Out of scope
+No rebuild of Exports/Telegram/Explore/AI. No DB migrations. No new infra/storage backend. No payment changes.
