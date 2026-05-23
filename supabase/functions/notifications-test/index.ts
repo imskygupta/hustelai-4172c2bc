@@ -2,6 +2,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { dispatchNotification } from "../_shared/notifications/dispatcher.ts";
+import { createArtifact } from "../_shared/artifacts/createArtifact.ts";
+import { transitionArtifact } from "../_shared/artifacts/transition.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -20,20 +22,51 @@ serve(async (req) => {
 
     const body = await req.json().catch(() => ({}));
     const provider = body?.provider as string | undefined;
+    const operational = body?.operational === true;
+
+    // Canonical smoke-test path: create a real artifact row, route it through
+    // dispatchNotification, and let the user observe it in Exports + Telegram.
+    let artifactId: string | null = null;
+    if (operational) {
+      const created = await createArtifact({
+        user_id: user.id,
+        artifact_type: "operational_test",
+        source_module: "notifications-test",
+        title: "Operational smoke-test notification",
+        preview_text: "Sprint D canonical delivery — verifies session, FSM, telemetry and Telegram delivery in one shot.",
+        metadata: { kind: "smoke_test", issued_at: new Date().toISOString() },
+        artifact_origin: "operational",
+        generation_source: "settings.integrations.health_rail",
+        dedupe_key: `smoke_test:${user.id}:${Math.floor(Date.now() / 60_000)}`,
+        storage_mode: "telegram",
+      });
+      artifactId = created?.id ?? null;
+    }
 
     dispatchNotification({
       user_id: user.id,
-      event_key: "test_notification",
+      event_key: operational ? "operational_smoke_test" : "test_notification",
       category: "system",
-      source: "settings",
+      source: operational ? "operational" : "settings",
       channels: provider ? [provider as any] : undefined,
       message: {
-        title: "🚀 Test alert from HustleAI",
-        body: "If you can read this, your real-time notifications are working perfectly. You'll receive payment, AI task, and security alerts here.",
+        title: operational ? "🛰 Operational smoke-test" : "🚀 Test alert from HustleAI",
+        body: operational
+          ? "Canonical end-to-end pipeline check. Artifact persisted, FSM advanced, delivery routed."
+          : "If you can read this, your real-time notifications are working perfectly. You'll receive payment, AI task, and security alerts here.",
       },
     });
 
-    return new Response(JSON.stringify({ ok: true, queued: true }), {
+    // Reflect delivery dispatch on the FSM. The actual delivered transition
+    // happens inside the dispatcher's Telegram worker.
+    if (artifactId) {
+      await transitionArtifact(artifactId, "delivering", {
+        delivery_status: "sending",
+        last_delivery_at: new Date().toISOString(),
+      });
+    }
+
+    return new Response(JSON.stringify({ ok: true, queued: true, artifact_id: artifactId }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e: any) {
