@@ -29,6 +29,12 @@ export interface ArtifactRow {
   share_token?: string | null;
   share_expires_at?: string | null;
   share_revoked_at?: string | null;
+  artifact_state?: string | null;
+  artifact_origin?: string | null;
+  generation_source?: string | null;
+  resend_count?: number | null;
+  telegram_chat_id?: string | null;
+  last_transition_at?: string | null;
 }
 
 export async function listArtifacts(opts: { search?: string; type?: string; deliveryStatus?: string; limit?: number } = {}): Promise<ArtifactRow[]> {
@@ -92,6 +98,18 @@ export async function revokeShare(artifactId: string): Promise<{ ok: boolean; re
 
 export async function retryDelivery(artifactId: string): Promise<{ ok: boolean; reason?: string }> {
   return resendArtifactToTelegram({ id: artifactId } as ArtifactRow);
+}
+
+/** Build a tg:// deep link to jump straight into the delivered message. */
+export function telegramDeepLinkFor(a: Pick<ArtifactRow, "telegram_deep_link" | "telegram_message_id" | "telegram_chat_id" | "telegram_channel">): string | null {
+  if (a.telegram_deep_link) return a.telegram_deep_link;
+  const chat = a.telegram_chat_id || a.telegram_channel;
+  if (chat && a.telegram_message_id) {
+    // Numeric chat ids → use private chat link form supported by Telegram clients.
+    const clean = String(chat).replace(/^-100/, "");
+    return `tg://privatepost?channel=${encodeURIComponent(clean)}&post=${encodeURIComponent(a.telegram_message_id)}`;
+  }
+  return null;
 }
 
 export interface PublicArtifactPayload {
