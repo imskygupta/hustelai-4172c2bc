@@ -151,15 +151,24 @@ export function ArtifactCard({ a, onResend, onFav, onDelete, onOpen, onShare, on
       )}
 
       <div className="flex flex-wrap gap-1">
+        {continuityExpired && (
+          <div className="w-full mb-2 rounded-md border border-amber-500/40 bg-amber-500/10 px-2.5 py-1.5 text-[11px] text-amber-900 dark:text-amber-100 flex items-center gap-1.5">
+            <Lock className="h-3 w-3 shrink-0" />
+            <span>
+              Continuity expired — your file is still safe in Telegram.{" "}
+              <a href="/billing" className="underline font-medium hover:opacity-80">Upgrade</a> to restore reopen &amp; resend.
+            </span>
+          </div>
+        )}
         {deepLink ? (
           <CardBtn onClick={() => window.open(deepLink, "_blank", "noreferrer")} icon={MessageSquare} label="Open in Telegram" tone="cyan" />
         ) : null}
-        {!tgOnly && <CardBtn onClick={onOpen} icon={ExternalLink} label="Open" />}
-        {continueTo && (
+        {!tgOnly && !continuityExpired && <CardBtn onClick={onOpen} icon={ExternalLink} label="Open" />}
+        {continueTo && !continuityExpired && (
           <CardBtn onClick={() => (window.location.href = continueTo)} icon={ArrowRight} label="Continue working" tone="primary" />
         )}
-        <CardBtn onClick={onShare} icon={LinkIcon} label="Share" />
-        {failed ? (
+        {!continuityExpired && <CardBtn onClick={onShare} icon={LinkIcon} label="Share" />}
+        {continuityExpired ? null : failed ? (
           <CardBtn onClick={onResend} icon={RefreshCw} label="Retry" tone="primary" />
         ) : (
           <CardBtn onClick={onResend} icon={Send} label={onTelegram ? "Resend" : "Send to Telegram"} disabled={inFlight} />
