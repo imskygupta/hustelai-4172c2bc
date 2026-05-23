@@ -482,7 +482,10 @@ async function stats() {
     .order("submitted_at", { ascending: false }).limit(1).maybeSingle();
   return {
     counts: { queued, in_flight, pending_auth, failed, done_24h: done24, dispatched_7d: dispatched7d },
-    gsc_connector: { configured: !!(LOVABLE_KEY && GSC_KEY) },
+    gsc_connector: {
+      configured: !!(GSC_CLIENT_ID && GSC_CLIENT_SECRET && GSC_REFRESH_TOKEN),
+      mode: "self_managed_oauth",
+    },
     last_done_at: (lastDone as any)?.submitted_at ?? null,
     recent: recent ?? [],
     failures: failures ?? [],
