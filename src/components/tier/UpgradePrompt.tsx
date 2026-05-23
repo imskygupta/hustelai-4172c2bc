@@ -31,7 +31,7 @@ export function UpgradePrompt({
   message,
   variant = "inline",
   hideWhenGranted = true,
-  cta = "/upgrade",
+  cta = "/pricing",
 }: Props) {
   const { has, tier } = useCapabilities();
   const granted = has(capability);
