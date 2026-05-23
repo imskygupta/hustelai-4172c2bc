@@ -6,8 +6,11 @@ import { listArtifacts, toggleArtifactFavorite, deleteArtifact, resendArtifactTo
 import { notifyError, notifySuccess } from "@/lib/errors/toast";
 import {
   FileDown, Send, Search, Database, MessageSquare, Star, StarOff, Trash2,
-  ExternalLink, Sparkles, Boxes,
+  ExternalLink, Boxes, Link as LinkIcon, RefreshCw,
 } from "lucide-react";
+import { DeliveryChip } from "@/components/artifacts/DeliveryChip";
+import { ShareDialog } from "@/components/artifacts/ShareDialog";
+import { ArtifactEmptyState } from "@/components/artifacts/ArtifactEmptyState";
 
 const TYPE_FILTERS: Array<{ value: string; label: string }> = [
   { value: "", label: "All" },
@@ -18,6 +21,17 @@ const TYPE_FILTERS: Array<{ value: string; label: string }> = [
   { value: "workspace_doc", label: "Workspace doc" },
   { value: "ai_chat_export", label: "AI chat" },
   { value: "data_export", label: "Data" },
+];
+
+const DELIVERY_FILTERS: Array<{ value: string; label: string }> = [
+  { value: "", label: "All states" },
+  { value: "delivered", label: "Delivered" },
+  { value: "sent", label: "Sent" },
+  { value: "sending", label: "Sending" },
+  { value: "retrying", label: "Retrying" },
+  { value: "failed", label: "Failed" },
+  { value: "pending", label: "Pending" },
+  { value: "skipped", label: "Skipped" },
 ];
 
 function humanBytes(b?: number | null) {
@@ -34,17 +48,24 @@ export default function Exports() {
   const [rows, setRows] = useState<ArtifactRow[]>([]);
   const [search, setSearch] = useState("");
   const [type, setType] = useState("");
+  const [deliveryStatus, setDeliveryStatus] = useState("");
   const [favOnly, setFavOnly] = useState(false);
+  const [shareTarget, setShareTarget] = useState<ArtifactRow | null>(null);
 
   const load = async () => {
     if (!user) return;
     setLoading(true);
-    const list = await listArtifacts({ search: search || undefined, type: type || undefined, limit: 200 });
+    const list = await listArtifacts({
+      search: search || undefined,
+      type: type || undefined,
+      deliveryStatus: deliveryStatus || undefined,
+      limit: 200,
+    });
     setRows(list);
     setLoading(false);
   };
 
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [user, type]);
+  useEffect(() => { load(); /* eslint-disable-next-line */ }, [user, type, deliveryStatus]);
   useEffect(() => {
     const t = setTimeout(load, 250);
     return () => clearTimeout(t);
@@ -66,7 +87,9 @@ export default function Exports() {
       notifySuccess("Sent to Telegram", a.title);
       load();
     } else {
-      notifyError(r.reason || "telegram_failed", { context: "artifacts.resend" });
+      // in_flight is not a failure — informational
+      if (r.reason === "in_flight") notifySuccess("Already in flight", "Hang tight, retry is in progress.");
+      else notifyError(r.reason || "telegram_failed", { context: "artifacts.resend" });
     }
   };
 
@@ -135,6 +158,14 @@ export default function Exports() {
           >
             <Star className="h-3.5 w-3.5" /> Favorites
           </button>
+          <select
+            value={deliveryStatus}
+            onChange={(e) => setDeliveryStatus(e.target.value)}
+            className="text-xs rounded-md px-3 py-2 bg-muted/40 ring-1 ring-border text-foreground/80 outline-none focus:ring-primary/50"
+            aria-label="Filter by delivery state"
+          >
+            {DELIVERY_FILTERS.map(f => <option key={f.value} value={f.value}>{f.label}</option>)}
+          </select>
         </div>
         <div className="flex flex-wrap gap-1.5">
           {TYPE_FILTERS.map(f => (
@@ -156,15 +187,13 @@ export default function Exports() {
       {loading ? (
         <div className="space-y-2">{[0,1,2].map(i => <Skeleton key={i} className="h-28 rounded-xl" />)}</div>
       ) : filtered.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-border bg-muted/20 p-12 text-center text-sm text-foreground/70">
-          <Sparkles className="h-8 w-8 mx-auto mb-3 text-foreground/40" />
-          <div className="text-foreground/90 font-medium mb-1">
-            {favOnly ? "No favorites yet" : "No artifacts yet"}
+        favOnly || type || deliveryStatus || search ? (
+          <div className="rounded-xl border border-dashed border-border bg-muted/20 p-10 text-center text-sm text-foreground/70">
+            No artifacts match these filters.
           </div>
-          <div className="text-xs text-foreground/60">
-            Generate a roadmap, resume, proposal, or workspace doc — anything you make on HustleAI shows up here.
-          </div>
-        </div>
+        ) : (
+          <ArtifactEmptyState />
+        )
       ) : (
         <div className="grid gap-3 sm:grid-cols-2">
           {filtered.map(a => (
@@ -175,10 +204,18 @@ export default function Exports() {
               onFav={() => onFav(a)}
               onDelete={() => onDelete(a)}
               onOpen={() => onOpen(a)}
+              onShare={() => setShareTarget(a)}
             />
           ))}
         </div>
       )}
+
+      <ShareDialog
+        artifact={shareTarget}
+        open={!!shareTarget}
+        onOpenChange={(v) => !v && setShareTarget(null)}
+        onUpdated={load}
+      />
     </div>
   );
 }
@@ -194,10 +231,12 @@ function Stat({ label, value }: { label: string; value: string }) {
 
 function ArtifactCard({ a, onResend, onFav, onDelete, onOpen }: {
   a: ArtifactRow;
-  onResend: () => void; onFav: () => void; onDelete: () => void; onOpen: () => void;
+  onResend: () => void; onFav: () => void; onDelete: () => void; onOpen: () => void; onShare: () => void;
 }) {
   const onTelegram = a.storage_mode === "telegram" || a.storage_mode === "hybrid";
   const created = new Date(a.created_at);
+  const inFlight = a.delivery_status === "sending" || a.delivery_status === "retrying";
+  const failed = a.delivery_status === "failed";
   return (
     <div className="group rounded-xl border border-border bg-muted/10 p-4 transition hover:border-primary/30">
       <div className="flex items-start gap-3 mb-3">
@@ -226,12 +265,22 @@ function ArtifactCard({ a, onResend, onFav, onDelete, onOpen }: {
       <div className="flex flex-wrap gap-1.5 mb-3">
         <StorageBadge mode={a.storage_mode} />
         {onTelegram && <Badge tone="cyan" icon={MessageSquare}>Telegram</Badge>}
-        {a.status && a.status !== "ready" && a.status !== "delivered" && <Badge tone="amber">{a.status}</Badge>}
+        <DeliveryChip
+          status={a.delivery_status}
+          attempts={a.delivery_attempts ?? 0}
+          lastAt={a.last_delivery_at ?? null}
+          lastError={a.last_delivery_error ?? null}
+        />
       </div>
 
       <div className="flex flex-wrap gap-1">
         <CardBtn onClick={onOpen} icon={ExternalLink} label="Open" />
-        <CardBtn onClick={onResend} icon={Send} label={onTelegram ? "Resend" : "Send to Telegram"} />
+        <CardBtn onClick={onShare} icon={LinkIcon} label="Share" />
+        {failed ? (
+          <CardBtn onClick={onResend} icon={RefreshCw} label="Retry" />
+        ) : (
+          <CardBtn onClick={onResend} icon={Send} label={onTelegram ? "Resend" : "Send to Telegram"} disabled={inFlight} />
+        )}
         <CardBtn onClick={onDelete} icon={Trash2} label="Remove" tone="danger" />
       </div>
     </div>
