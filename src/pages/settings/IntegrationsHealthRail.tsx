@@ -47,6 +47,9 @@ export function IntegrationsHealthRail() {
   const { toast } = useToast();
   const [data, setData] = useState<RailData>(emptyData);
   const [testing, setTesting] = useState(false);
+  const [opsStatus, setOpsStatus] = useState<{
+    workers: any[]; queues: any[]; recon: { success_rate_pct: number | null; last_run_at: string | null; totals: any };
+  } | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -117,6 +120,26 @@ export function IntegrationsHealthRail() {
     void load();
     return () => { alive = false; };
   }, [user, snapshot]);
+
+  // Admin-only: pull Railway worker / queue / reconciliation snapshot.
+  useEffect(() => {
+    if (!snapshot?.is_admin) return;
+    let alive = true;
+    const loadOps = async () => {
+      try {
+        const { data: r, error } = await supabase.functions.invoke("ops-worker-status", { body: {} });
+        if (error || !alive) return;
+        setOpsStatus({
+          workers: (r as any)?.workers ?? [],
+          queues: (r as any)?.queues ?? [],
+          recon: (r as any)?.reconciliation ?? { success_rate_pct: null, last_run_at: null, totals: {} },
+        });
+      } catch { /* ignore — card just stays hidden */ }
+    };
+    void loadOps();
+    const t = setInterval(loadOps, 60_000);
+    return () => { alive = false; clearInterval(t); };
+  }, [snapshot?.is_admin]);
 
   const sendTest = async () => {
     setTesting(true);
@@ -200,6 +223,56 @@ export function IntegrationsHealthRail() {
             data.runtime.failed_24h > 5 ? "Retry pressure elevated" : "No retry storms",
           ]} />
       </div>
+
+      {opsStatus && (
+        <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 mt-3">
+          <div className="flex items-center gap-2 mb-3">
+            <Activity className="h-3.5 w-3.5 text-zinc-400" />
+            <h3 className="text-[11px] uppercase tracking-[0.18em] text-zinc-500">Railway runtime (admin)</h3>
+          </div>
+          <div className="grid sm:grid-cols-3 gap-3 text-[11px]">
+            <div>
+              <div className="text-zinc-500 mb-1">Workers</div>
+              {opsStatus.workers.length === 0
+                ? <div className="text-zinc-600">No heartbeats received yet</div>
+                : opsStatus.workers.slice(0, 4).map((w) => (
+                  <div key={w.worker_id} className="flex justify-between text-zinc-400">
+                    <span className="truncate mr-2">{w.worker_kind}</span>
+                    <span className={
+                      w.status === "online" ? "text-emerald-400"
+                      : w.status === "lagging" ? "text-amber-400"
+                      : "text-rose-400"
+                    }>{w.status}</span>
+                  </div>
+                ))}
+            </div>
+            <div>
+              <div className="text-zinc-500 mb-1">Queues</div>
+              {opsStatus.queues.length === 0
+                ? <div className="text-zinc-600">No queue metrics yet</div>
+                : opsStatus.queues.slice(0, 4).map((q) => (
+                  <div key={q.queue_name} className="flex justify-between text-zinc-400">
+                    <span className="truncate mr-2">{q.queue_name}</span>
+                    <span>{q.pending} pending</span>
+                  </div>
+                ))}
+            </div>
+            <div>
+              <div className="text-zinc-500 mb-1">Reconciliation</div>
+              <div className="text-zinc-400">
+                {opsStatus.recon.success_rate_pct != null
+                  ? `${opsStatus.recon.success_rate_pct}% success rate`
+                  : "No runs yet"}
+              </div>
+              <div className="text-zinc-500 text-[10px]">
+                {opsStatus.recon.last_run_at
+                  ? `last run ${formatTime(opsStatus.recon.last_run_at)}`
+                  : "—"}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
