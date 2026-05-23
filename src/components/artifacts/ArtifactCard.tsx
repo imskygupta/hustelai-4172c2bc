@@ -85,7 +85,7 @@ export function ArtifactCard({ a, onResend, onFav, onDelete, onOpen, onShare, on
       className="group rounded-xl border border-border bg-card p-4 transition hover:border-primary/40 hover:shadow-[var(--shadow-card)]"
     >
       <button onClick={onPreview} className="w-full text-left">
-        <div className="flex items-start gap-3 mb-3">
+        <div className={`flex items-start gap-3 mb-3 ${continuityExpired ? "opacity-75" : ""}`}>
           <div className="h-10 w-10 rounded-lg bg-primary/15 text-primary flex items-center justify-center shrink-0 ring-1 ring-primary/25">
             <Icon className="h-4 w-4" />
           </div>
@@ -124,6 +124,8 @@ export function ArtifactCard({ a, onResend, onFav, onDelete, onOpen, onShare, on
         {retryPending && <Badge tone="amber" icon={Hourglass}>Retry pending</Badge>}
         {repairedRecently && <Badge tone="emerald" icon={Wrench}>Repaired by Railway</Badge>}
         {expiringSoon && <Badge tone="amber" icon={Clock}>Retention expiring soon</Badge>}
+        {continuityExpiringSoon && <Badge tone="amber" icon={Hourglass}>Continuity expiring soon</Badge>}
+        {continuityExpired && <Badge tone="amber" icon={ShieldOff}>Continuity expired</Badge>}
         {archived && <Badge tone="red" icon={Archive}>Archived</Badge>}
         <DeliveryChip
           status={tgOnly ? "telegram_only" : a.delivery_status}
