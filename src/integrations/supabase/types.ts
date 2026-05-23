@@ -8941,11 +8941,13 @@ export type Database = {
           is_favorite: boolean
           last_delivery_at: string | null
           last_delivery_error: string | null
+          last_repair_at: string | null
           last_transition_at: string
           metadata: Json
           mime_type: string | null
           preview_text: string | null
           ref_export_id: string | null
+          repair_count: number
           resend_count: number
           share_expires_at: string | null
           share_revoked_at: string | null
@@ -8978,11 +8980,13 @@ export type Database = {
           is_favorite?: boolean
           last_delivery_at?: string | null
           last_delivery_error?: string | null
+          last_repair_at?: string | null
           last_transition_at?: string
           metadata?: Json
           mime_type?: string | null
           preview_text?: string | null
           ref_export_id?: string | null
+          repair_count?: number
           resend_count?: number
           share_expires_at?: string | null
           share_revoked_at?: string | null
@@ -9015,11 +9019,13 @@ export type Database = {
           is_favorite?: boolean
           last_delivery_at?: string | null
           last_delivery_error?: string | null
+          last_repair_at?: string | null
           last_transition_at?: string
           metadata?: Json
           mime_type?: string | null
           preview_text?: string | null
           ref_export_id?: string | null
+          repair_count?: number
           resend_count?: number
           share_expires_at?: string | null
           share_revoked_at?: string | null
@@ -9974,20 +9980,27 @@ export type Database = {
       }
       v_workspace_artifacts_unified: {
         Row: {
+          artifact_origin: string | null
+          artifact_state: string | null
           artifact_type: string | null
           created_at: string | null
           delivery_attempts: number | null
           delivery_status: string | null
           file_url: string | null
+          generation_source: string | null
           id: string | null
           is_favorite: boolean | null
           last_delivery_at: string | null
           last_delivery_error: string | null
+          last_repair_at: string | null
+          last_transition_at: string | null
           metadata: Json | null
           mime_type: string | null
           origin: string | null
           preview_text: string | null
           ref_export_id: string | null
+          repair_count: number | null
+          resend_count: number | null
           share_expires_at: string | null
           share_revoked_at: string | null
           share_token: string | null
@@ -9996,7 +10009,9 @@ export type Database = {
           status: string | null
           storage_mode: string | null
           telegram_channel: string | null
+          telegram_chat_id: string | null
           telegram_deep_link: string | null
+          telegram_file_id: string | null
           telegram_message_id: string | null
           title: string | null
           updated_at: string | null

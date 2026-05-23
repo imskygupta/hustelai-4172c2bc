@@ -1,16 +1,18 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
-import { listArtifacts, toggleArtifactFavorite, deleteArtifact, resendArtifactToTelegram, type ArtifactRow } from "@/lib/artifacts/api";
+import { toggleArtifactFavorite, deleteArtifact, resendArtifactToTelegram, type ArtifactRow } from "@/lib/artifacts/api";
 import { notifyError, notifySuccess } from "@/lib/errors/toast";
-import { Search, Star, Boxes, MessageSquare } from "lucide-react";
+import { Search, Star, Boxes, MessageSquare, WifiOff } from "lucide-react";
 import { ShareDialog } from "@/components/artifacts/ShareDialog";
 import { ArtifactEmptyState } from "@/components/artifacts/ArtifactEmptyState";
 import { ArtifactCard } from "@/components/artifacts/ArtifactCard";
 import { TimelineGroup } from "@/components/artifacts/TimelineGroup";
 import { ArtifactPreviewDrawer } from "@/components/artifacts/ArtifactPreviewDrawer";
 import { groupByTimeline } from "@/lib/artifacts/groupByTimeline";
+import { RetentionRail } from "@/components/artifacts/RetentionRail";
+import { useArtifactsRealtime } from "@/lib/artifacts/useArtifactsRealtime";
 
 const TYPE_FILTERS: Array<{ value: string; label: string; match?: (a: ArtifactRow) => boolean }> = [
   { value: "", label: "All" },
@@ -43,8 +45,6 @@ function humanBytes(b?: number | null) {
 export default function Exports() {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [loading, setLoading] = useState(true);
-  const [rows, setRows] = useState<ArtifactRow[]>([]);
   const [search, setSearch] = useState("");
   const [type, setType] = useState("");
   const [deliveryStatus, setDeliveryStatus] = useState("");
@@ -52,25 +52,13 @@ export default function Exports() {
   const [shareTarget, setShareTarget] = useState<ArtifactRow | null>(null);
   const [previewTarget, setPreviewTarget] = useState<ArtifactRow | null>(null);
 
-  const load = async () => {
-    if (!user) return;
-    setLoading(true);
-    // type filter is now client-side (semantic buckets, not raw artifact_type strings)
-    const list = await listArtifacts({
-      search: search || undefined,
-      deliveryStatus: deliveryStatus || undefined,
-      limit: 200,
-    });
-    setRows(list);
-    setLoading(false);
-  };
-
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [user, deliveryStatus]);
-  useEffect(() => {
-    const t = setTimeout(load, 250);
-    return () => clearTimeout(t);
-    // eslint-disable-next-line
-  }, [search]);
+  const { rows, loading, degraded, stats, refresh } = useArtifactsRealtime({
+    userId: user?.id ?? null,
+    search: search || undefined,
+    deliveryStatus: deliveryStatus || undefined,
+    limit: 200,
+  });
+  const load = refresh;
 
   const filtered = useMemo(() => {
     const typeMatch = TYPE_FILTERS.find((f) => f.value === type)?.match;
@@ -81,13 +69,6 @@ export default function Exports() {
     });
   }, [rows, favOnly, type]);
   const groups = useMemo(() => groupByTimeline(filtered), [filtered]);
-  const stats = useMemo(() => {
-    const total = rows.length;
-    const bytes = rows.reduce((a, r) => a + (r.size_bytes || 0), 0);
-    const favorites = rows.filter(r => r.is_favorite).length;
-    const tgCached = rows.filter(r => r.storage_mode === "telegram" || r.storage_mode === "hybrid").length;
-    return { total, bytes, favorites, tgCached };
-  }, [rows]);
 
   const onResend = async (a: ArtifactRow) => {
     const r = await resendArtifactToTelegram(a);
@@ -104,7 +85,8 @@ export default function Exports() {
   const onFav = async (a: ArtifactRow) => {
     try {
       await toggleArtifactFavorite(a, !a.is_favorite);
-      setRows(rs => rs.map(r => r.id === a.id ? { ...r, is_favorite: !r.is_favorite } : r));
+      // Realtime will reconcile; optimistic refresh ensures snappy feedback.
+      void load();
     } catch (e: any) {
       toast({ title: "Failed", description: e.message, variant: "destructive" });
     }
@@ -134,7 +116,8 @@ export default function Exports() {
             <Boxes className="h-4 w-4 text-primary" /> Artifacts
           </h2>
           <p className="text-sm text-foreground/75 mt-0.5">
-            Operational memory — every file, doc, and AI output you've generated, grouped by recency.
+            Persistent operational memory. Exports are delivered through Telegram so they survive
+            refreshes, device changes, and failures — Railway automatically repairs any drift.
           </p>
         </div>
         <div className="flex gap-2 text-[11px]">
@@ -144,6 +127,15 @@ export default function Exports() {
           <Stat label="On Telegram" value={String(stats.tgCached)} />
         </div>
       </div>
+
+      <RetentionRail rowCount={rows.length} />
+
+      {degraded && (
+        <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-[12px] text-amber-800 dark:text-amber-200 flex items-center gap-2">
+          <WifiOff className="h-3.5 w-3.5" />
+          Live updates unavailable — falling back to periodic refresh. Your continuity is unaffected.
+        </div>
+      )}
 
       <div className="sticky top-0 z-10 -mx-1 px-1 pb-2 pt-1 bg-background/85 backdrop-blur space-y-2">
         <div className="flex flex-wrap gap-2">
@@ -206,7 +198,12 @@ export default function Exports() {
       ) : (
         <div className="space-y-6">
           {groups.map((g) => (
-            <TimelineGroup key={g.bucket} label={g.label} count={g.items.length}>
+            <TimelineGroup
+              key={g.bucket}
+              label={g.label}
+              count={g.items.length}
+              defaultCollapsed={g.bucket === "archived" || g.bucket === "earlier"}
+            >
               {g.items.map((a) => (
                 <ArtifactCard
                   key={a.id}

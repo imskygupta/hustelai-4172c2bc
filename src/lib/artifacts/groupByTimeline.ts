@@ -1,12 +1,13 @@
 import type { ArtifactRow } from "@/lib/artifacts/api";
 
-export type TimelineBucket = "today" | "yesterday" | "this_week" | "earlier";
+export type TimelineBucket = "today" | "yesterday" | "this_week" | "earlier" | "archived";
 
 export const BUCKET_LABELS: Record<TimelineBucket, string> = {
   today: "Today",
   yesterday: "Yesterday",
   this_week: "Earlier this week",
   earlier: "Older",
+  archived: "Archived",
 };
 
 function startOfDay(d: Date) {
@@ -29,8 +30,12 @@ export function bucketOf(iso: string, now: Date = new Date()): TimelineBucket {
 
 export function groupByTimeline<T extends ArtifactRow>(rows: T[]): Array<{ bucket: TimelineBucket; label: string; items: T[] }> {
   const now = new Date();
-  const groups: Record<TimelineBucket, T[]> = { today: [], yesterday: [], this_week: [], earlier: [] };
-  for (const r of rows) groups[bucketOf(r.created_at, now)].push(r);
+  const groups: Record<TimelineBucket, T[]> = { today: [], yesterday: [], this_week: [], earlier: [], archived: [] };
+  for (const r of rows) {
+    const state = (r.artifact_state || "").toString();
+    if (state === "archived" || r.status === "revoked") groups.archived.push(r);
+    else groups[bucketOf(r.created_at, now)].push(r);
+  }
   return (Object.keys(groups) as TimelineBucket[])
     .filter((k) => groups[k].length)
     .map((k) => ({ bucket: k, label: BUCKET_LABELS[k], items: groups[k] }));

@@ -35,6 +35,9 @@ export interface ArtifactRow {
   resend_count?: number | null;
   telegram_chat_id?: string | null;
   last_transition_at?: string | null;
+  last_repair_at?: string | null;
+  repair_count?: number | null;
+  telegram_file_id?: string | null;
 }
 
 export async function listArtifacts(opts: { search?: string; type?: string; deliveryStatus?: string; limit?: number } = {}): Promise<ArtifactRow[]> {

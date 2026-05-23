@@ -249,9 +249,10 @@ async function invokeEdge(fn: string, body: Record<string, unknown>): Promise<bo
  */
 async function invokeRunnerPatch(artifact_id: string, patch: Record<string, any>): Promise<boolean> {
   try {
+    const now = new Date().toISOString();
     const { error } = await primaryAdmin
       .from("workspace_artifacts")
-      .update({ ...patch, last_transition_at: new Date().toISOString() })
+      .update({ ...patch, last_transition_at: now, last_repair_at: now })
       .eq("id", artifact_id);
     if (error) { console.warn("[recon] patch failed:", error.message); return false; }
     return true;
