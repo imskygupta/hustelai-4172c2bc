@@ -1,6 +1,8 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { isFeatureEnabledServer } from "../_shared/flags/resolve.ts";
 import { requireVerifiedUser as __requireVerifiedUser } from "../_shared/require-verified.ts";
+import { requireCapability, guardErrorBody } from "../_shared/tier/guard.ts";
+import { consumeAndCheck } from "../_shared/tier/quota.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -22,6 +24,16 @@ Deno.serve(async (req) => {
     const { data: { user } } = await userClient.auth.getUser();
     if (!user) return new Response(JSON.stringify({ error: "unauthorized" }), { status: 401, headers: cors });
 
+    // Sprint E Phase 3 — canonical AI + automation capability + quota.
+    const cap = await requireCapability(sb, user.id, "ai_generation");
+    if (!cap.ok) return new Response(JSON.stringify(guardErrorBody(cap)), { status: 403, headers: cors });
+    const q = await consumeAndCheck(sb, user.id, "ai", cap.capabilities.ai_quota);
+    if (!q.ok) {
+      return new Response(JSON.stringify({
+        error: "ai_quota_exceeded", used: q.count, max: q.limit, tier: cap.tier,
+      }), { status: 429, headers: cors });
+    }
+
     if (!(await isFeatureEnabledServer(user.id, "ai_jobs.engine"))) {
       return new Response(JSON.stringify({ error: "ai_jobs disabled" }), { status: 503, headers: cors });
     }
@@ -29,6 +41,18 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const { kind, input = {}, feature, priority = 100, max_attempts = 3, dedupe_key, scheduled_at } = body || {};
     if (!kind) return new Response(JSON.stringify({ error: "kind required" }), { status: 400, headers: cors });
+
+    // Automation jobs (workflow runners) require automation capability.
+    if (String(feature || "").startsWith("automation") || String(kind || "").startsWith("automation")) {
+      const aCap = await requireCapability(sb, user.id, "workflow_automation");
+      if (!aCap.ok) return new Response(JSON.stringify(guardErrorBody(aCap)), { status: 403, headers: cors });
+      const aQ = await consumeAndCheck(sb, user.id, "automation", aCap.capabilities.automation_quota);
+      if (!aQ.ok) {
+        return new Response(JSON.stringify({
+          error: "automation_quota_exceeded", used: aQ.count, max: aQ.limit, tier: aCap.tier,
+        }), { status: 429, headers: cors });
+      }
+    }
 
     // Snapshot the creator's verification context onto the job payload.
     // The runner re-checks current status at execute time and aborts if the
