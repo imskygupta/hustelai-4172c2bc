@@ -1,85 +1,50 @@
-# Layer 4 — Final OAuth & Identity Hardening
+# HustleAI Stabilization + UX Restoration Sprint
 
-Closes the remaining items after Layers 1–3. No new infra abstractions — extends existing tables, edge functions, and `/admin/security/users`.
+This is a large multi-phase sprint touching async delivery, notifications, auth UX, and the Explore/generation engine. Before I implement, I need to confirm scope and audit a few systems — going in blind risks breaking production flows (export queue, websocket hydration, Explore template engine).
 
-## 0. Manual platform action (user-side, mandatory)
+## Sprint 1 — Operational Fixes (highest priority)
 
-Surface a one-time instruction in the response:
-**Cloud → Auth → Account Linking → Linking mode = Manual only.**
-Lovable cannot toggle this via API; without it Supabase may silently auto-link identities under our logic.
+### 1A. Telegram routing hardening
+- **Centralize delivery routing** in a single `resolveDeliveryTarget(user, export)` helper used by `export-create`, `export-deliver-telegram`, `export-cache-telegram`, and the shared `createExport.ts`.
+- **Hard guard**: never enqueue TG delivery when `plan === "free"` OR `telegram_connected === false`. Today `createExport.ts` fires `export-cache-telegram` for everyone and `export-create/index.ts` re-fires it again — both need the guard.
+- **Free users**: browser download + in-app completion only. Strip `deliver_to_telegram` server-side rather than trusting the flag.
+- **Paid users**: keep TG sync, async delivery, large-file relay.
+- **Idempotency**: dedupe export jobs by `(export_id, delivery_target)` so retry storms can't enqueue duplicate TG jobs for dead paths.
 
-## 1. DB migration — extend trust + audit model
+### 1B. Notification resurrection fix
+- **Schema**: add `dismissed_at`, `read_at`, `client_hidden` to `workspace_notifications` (and the legacy `notifications` table if it backs export events).
+- **Event producer**: notification creation must upsert on `(user_id, dedupe_key)` where `dedupe_key = "export:<export_id>"`. If a row exists with `dismissed_at IS NOT NULL`, do NOT recreate or clear the flag.
+- **Frontend** (`NotificationCenter.tsx`, `NotificationPopup.tsx`): respect `dismissed_at`/`client_hidden` on every realtime merge and poll refresh. Today `NotificationPopup` already uses localStorage for dismissal — migrate that to server-side so it survives reloads and devices.
+- **Audit**: export completion event emitter, async queue replay, websocket hydration reducer.
 
-Single migration adds:
+## Sprint 2 — Auth UX
 
-- `profiles.verification_status` enum value: `restricted_security_review` (string column, no schema break).
-- `profiles.provider_change_locked_until timestamptz`, `email_change_locked_until timestamptz`, `last_reauth_at timestamptz`, `password_enabled boolean default false`.
-- `auth_anomaly_events.severity text` (`info|warn|critical`) + `retain_until timestamptz` (default `now()+90d`).
-- `identity_conflict_queue` table: `id, user_id, kind, detected_at, resolved_at, resolver_admin_id, resolution, notes, evidence jsonb`. RLS: admin-only via existing `has_role(_,'admin')`.
-- `rate_limit_buckets` table (`bucket text, key text, window_started_at timestamptz, count int, primary key(bucket,key)`) + `rl_hit(bucket,key,limit,window_seconds)` SECURITY DEFINER RPC returning `{allowed, retry_after}`.
-- Trigger: when `password_enabled` flips false→true, write `auth_anomaly_events('password_enabled', critical)` and send security email.
-- View `v_security_audit_summary` for the post-hardening audit (multi-provider emails, orphan password accounts, suspended shells, repeated collisions, same-IP shell bursts, OAuth→password transitions).
+### 2A. Email verification full-screen modal
+- Replace `EmailVerificationBanner` (small destructive banner) with a full-screen centered modal: blurred backdrop, branded illustration, large heading "Verify your email to activate your workspace", resend with countdown timer, spam-folder reminder, animated success state, mobile responsive.
+- Keep existing `supabase.auth.resend()` call and `AUTH_EMAIL_REDIRECT_TO` — UI swap only.
+- Audit all call sites of the old banner and toast-style auth confirmations; route them through the new modal.
 
-## 2. Edge function changes (no new functions)
+## Sprint 3 — Explore + Generation Engine
 
-- `auth-link-verify`:
-  - On collision/mismatch/ownership dispute → set `verification_status='restricted_security_review'`, emit `oauth_collision_detected|provider_identity_mismatch|forced_session_revocation` at **critical** severity, enqueue admin alert + `identity_conflict_queue` row.
-  - Call `rl_hit('auth_link_verify', user_id, 30, 60)`.
-- `signup-guard`: wrap with `rl_hit('signup_guard', ip, 10, 60)` → 429 with `Retry-After`.
-- `ownership-claim` path inside existing claim RPC: `rl_hit('ownership_claim', email, 5, 3600)`; on success set `provider_change_locked_until = now()+24h`, `email_change_locked_until = now()+24h`, require `last_reauth_at > now()-10min` else 401 `reauth_required`.
-- `resend-verification` (existing): `rl_hit('resend_verify', email, 5, 3600)`.
-- New helper `security-notify` (utility module imported by the above, **not a new public function**) → enqueues templated email via existing transactional queue for: new provider linked, ownership migration, session revoked, collision detected, password enabled, email changed.
+### 3A. Remove dead marketing structure
+- Audit current Explore page for static featured content, marketing blocks, repetitive template cards, dead discovery sections — remove.
 
-## 3. Password reset hardening
+### 3B. Restore dynamic generation engine
+- Replace `loadSavedTemplates()` path with `generateSuggestionsFromPrompt()` calling Lovable AI Gateway (`google/gemini-2.5-flash` for low-latency suggestions, escalate to `gemini-2.5-pro` for roadmap synthesis).
+- Inference inputs: user prompt + workspace content + exports + niche + connected tools + prior roadmap graph + operational gaps.
 
-- `password-reset-request` edge function (or existing flow): reject if `profiles.password_enabled = false` AND `auth_provider != 'password'` → respond `password_auth_not_enabled`.
-- Frontend `ForgotPassword.tsx`: surface friendly copy + link to "Enable password login" inside Security tab.
-- Setting a password for the first time requires recent reauth + emits `password_enabled` critical event + email.
+### 3C. New Explore structure (3 dynamic sections)
+- **Continue Building** — unfinished systems, expandable workflows, recent generations, roadmap continuations, operational follow-ups. Sourced from existing workspace/roadmap/export tables.
+- **AI Suggestions** — dynamically generated, not hardcoded.
+- **Operational Packs** — AI-generated contextual packs (Freelancer OS, Agency Ops, Creator Pipeline, Lead Gen, CRM Automation), not static cards.
 
-## 4. Frontend — restricted state + security center
+## What I need from you before I start
 
-- `src/lib/auth/restriction.ts`: extend `trustState` to recognize `restricted_security_review`. Effects centralised: read-only, no AI, no exports, no settings mutations, no password reset, no email change.
-- `VerificationOverlay.tsx`: new variant `security_review` with copy "Account under security review" + contact support CTA. No resend button in this variant.
-- Gate hooks (`useCanRunAi`, `useCanExport`, `useCanMutateSettings`) read the new state.
-- New page `src/pages/profile/SecurityCenter.tsx` mounted as **tab inside existing Profile → Security** (no new route):
-  - Linked Login Methods list (provider, linked_at, last_used_at, unlink button → requires reauth modal).
-  - Recent security events (last 30, from `auth_anomaly_events`).
-  - "Enable password login" / "Change password" with reauth gate.
-- Reauth modal component reused across unlink / password set / email change → writes `last_reauth_at`.
+This sprint touches 25+ files across 4 unrelated subsystems. To avoid a wedged half-done state, I'd like to confirm:
 
-## 5. Admin — Identity Conflicts section
+1. **Sprint sequencing** — ship Sprint 1 (Telegram + notifications) end-to-end first, then return for Sprints 2 and 3 in follow-up turns? Or batch everything into one giant patch?
+2. **DB migrations OK?** Sprint 1B and 3C need schema additions (`dismissed_at`, `read_at`, `client_hidden`, possibly a `delivery_target` column on the export jobs table). You said "preserve existing DB compatibility wherever possible" — confirming additive columns are acceptable.
+3. **Explore page entry point** — which route is "Explore" today? I see `src/pages/seo/*`, no `Explore.tsx`. Is it `WorkspaceLanding`, `dashboard/AutomationsHub`, or somewhere else? Need the file before I rewrite it.
+4. **Free-tier export delivery** — do free users currently have ANY async path, or is it strictly synchronous browser download? (Affects whether I keep the async export job row for free users at all, or short-circuit to inline response.)
 
-Extend existing `/admin/security/users` (no new route):
-- New tab "Identity Conflicts" → table of `identity_conflict_queue` open items.
-- Row actions: **Merge recommendation**, **Revoke sessions** (calls `revoke_user_sessions`), **Force ownership reset**, **Mark safe**.
-- Audit timeline pulls from `auth_anomaly_events` filtered by `user_id`.
-- Critical events pinned at top with red severity badge; 90d retention enforced by `retain_until`.
-
-## 6. Memory & audit deliverables
-
-- `mem/security/post-hardening-audit.md` — initial run of `v_security_audit_summary` snapshot + interpretation.
-- Update `mem/security/account-ownership-model.md` with `restricted_security_review` state + cooldown semantics.
-- Update `mem/security/oauth-account-linking-hardening.md` with rate limits, password-reset rule, notification matrix.
-- Update `mem/index.md`.
-
-## 7. Files touched (estimate)
-
-- 1 migration
-- 4 edge functions edited, 0 new public functions (1 shared util module)
-- ~8 frontend files (restriction lib, overlay, gate hooks, SecurityCenter tab, ReauthModal, ForgotPassword copy, admin conflicts tab, types)
-- 3 memory docs + index
-
-## 8. Execution order
-
-1. Migration (await approval)
-2. Edge function updates + deploy
-3. Frontend restriction + Security Center + Admin tab
-4. Run audit, write `post-hardening-audit.md`
-5. Surface manual "Manual Linking Only" instruction to user
-
-## 9. Out of scope (per freeze rules)
-
-- No new admin route
-- No new telemetry layer (reuses `auth_anomaly_events`)
-- No new DB extraction
-- No new runtime shell
+Recommended sequencing: **Sprint 1 first** (these are active production bugs causing ghost notifications and trust degradation), confirm green, then Sprint 2, then Sprint 3 (largest scope, needs the Explore file pointer).
