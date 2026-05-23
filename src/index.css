@@ -25,7 +25,8 @@
     --secondary-foreground: 222 25% 18%;
 
     --muted: 220 14% 96%;
-    --muted-foreground: 220 9% 46%;
+    /* Tightened for contrast on cream surfaces (WCAG AA on --card) */
+    --muted-foreground: 220 12% 36%;
 
     --accent: 220 14% 96%;
     --accent-foreground: 222 25% 18%;
@@ -74,7 +75,8 @@
     --secondary-foreground: 210 20% 92%;
 
     --muted: 222 18% 16%;
-    --muted-foreground: 215 14% 65%;
+    /* Slightly brighter on ink-blue surface so metadata rows read clearly */
+    --muted-foreground: 215 16% 74%;
 
     --accent: 222 18% 16%;
     --accent-foreground: 210 20% 92%;
