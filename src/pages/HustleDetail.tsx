@@ -201,7 +201,7 @@ export default function HustleDetail() {
               )}
             </div>
             <h1 className="text-3xl md:text-4xl font-display font-bold">{hustle.title}</h1>
-            <p className="text-muted-foreground text-lg">{hustle.description}</p>
+            <p className="text-foreground/80 text-lg">{hustle.description}</p>
             <div className="flex items-center gap-6 flex-wrap text-sm">
               <div className="flex items-center gap-1.5 text-primary">
                 <DollarSign className="w-4 h-4" />
@@ -225,7 +225,7 @@ export default function HustleDetail() {
             {hustle.tags && hustle.tags.length > 0 && (
               <div className="flex flex-wrap gap-2">
                 {hustle.tags.map(tag => (
-                  <span key={tag} className="px-2.5 py-1 rounded-full text-xs bg-primary/10 text-primary">{tag}</span>
+                  <span key={tag} className="px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/15 text-emerald-800 dark:text-emerald-200 ring-1 ring-emerald-500/30">{tag}</span>
                 ))}
               </div>
             )}
