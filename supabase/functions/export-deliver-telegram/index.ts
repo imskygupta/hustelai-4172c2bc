@@ -172,11 +172,11 @@ serve(async (req) => {
       try {
         const { data: cur } = await sbOuter.from("workspace_artifacts")
           .select("id, delivery_attempts").eq("ref_export_id", exportIdOuter).maybeSingle();
-        await sbOuter.from("workspace_artifacts").update({
+        await transitionArtifactByExport(exportIdOuter, "failed", {
           delivery_status: "failed",
           last_delivery_at: new Date().toISOString(),
           last_delivery_error: errMsg.slice(0, 500),
-        }).eq("ref_export_id", exportIdOuter);
+        });
         const attempts = cur?.delivery_attempts || 0;
         if (attempts >= 3) {
           const alertKind = attempts >= 6 ? "delivery.retry_storm" : "delivery.failed";
