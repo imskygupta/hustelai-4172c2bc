@@ -49,7 +49,6 @@ serve(async (req) => {
     const channelId = String(jr.result?.chat?.id || STORAGE_CHANNEL);
 
     await sb.from("generated_exports").update({
-      telegram_file_id: fileId,
       telegram_storage_message_id: messageId,
       telegram_storage_channel_id: channelId,
       delivery_method: "hybrid",
@@ -58,6 +57,7 @@ serve(async (req) => {
       storage_mode: "hybrid",
       telegram_message_id: messageId,
       telegram_channel: channelId,
+      telegram_file_id: fileId,
     });
 
     return j({ ok: true, file_id: fileId });

@@ -6,6 +6,7 @@ import { patchArtifactByExport } from "../_shared/artifacts/createArtifact.ts";
 import { transitionArtifactByExport } from "../_shared/artifacts/transition.ts";
 import { isFeatureEnabledServer } from "../_shared/flags/resolve.ts";
 import { emitWorkflowEvent } from "../_shared/workflows/emit.ts";
+import { emitCollapsedEvent } from "../_shared/workflows/collapse.ts";
 
 const TG_TOKEN = Deno.env.get("TELEGRAM_BOT_TOKEN") || "";
 const corsHeaders = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, content-type" };
@@ -131,18 +132,18 @@ serve(async (req) => {
 
     await sb.from("generated_exports").update({
       status: "delivered",
-      telegram_chat_id: integ.provider_chat_id,
-      telegram_message_id: messageId,
-      telegram_file_id: cachedFileId || exp.telegram_file_id,
       delivery_method: cachedFileId ? "hybrid" : "telegram",
       delivered_at: new Date().toISOString(),
     }).eq("id", exp.id);
-    // Canonical FSM transition: delivering -> delivered, mirror TG memory.
+    // Sprint D Phase 6: workspace_artifacts is the ONLY canonical owner of
+    // Telegram linkage (chat_id, message_id, file_id, deep_link). generated_exports
+    // keeps only generation lifecycle (status, delivered_at, storage_path).
     void transitionArtifactByExport(exp.id, "delivered", {
       storage_mode: cachedFileId ? "hybrid" : "telegram",
       telegram_message_id: messageId,
       telegram_channel: integ.provider_chat_id,
       telegram_chat_id: integ.provider_chat_id,
+      telegram_file_id: cachedFileId || null,
       telegram_deep_link: link,
       status: "delivered",
       delivery_status: "delivered",
@@ -164,10 +165,16 @@ serve(async (req) => {
   } catch (e: any) {
     const errMsg = String(e?.message || e);
     if (exportIdOuter) {
-      void emitWorkflowEvent(sbOuter, "export.failed", {
+      // Sprint D Phase 7.5: collapse retry-driven failures into one rolling
+      // event per export, instead of one row per attempt.
+      void emitCollapsedEvent(sbOuter, "export.failed", {
         export_id: exportIdOuter, user_id: userIdOuter, channel: "telegram",
-        reason: errMsg,
-      }, { user_id: userIdOuter, dedupe_key: `export_fail:${exportIdOuter}:tg:${Date.now()}`, source: "export-deliver-telegram" });
+        reason: errMsg.slice(0, 300),
+      }, {
+        dedupe_key: `deliver_fail:${exportIdOuter}:tg`,
+        origin: "edge.export-deliver-telegram",
+        user_id: userIdOuter,
+      });
       // Mark failed + escalate to admin after 3+ attempts
       try {
         const { data: cur } = await sbOuter.from("workspace_artifacts")

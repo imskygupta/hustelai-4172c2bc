@@ -21,8 +21,7 @@ serve(async (req) => {
     await sb.rpc("mark_expired_exports").catch(() => {});
 
     const { data: rows } = await sb.from("generated_exports")
-      .select("id, storage_bucket, storage_path, tier_at_creation, telegram_file_id, expires_at, status")
-      .not("telegram_file_id", "is", null)
+      .select("id, storage_bucket, storage_path, tier_at_creation, telegram_file_id, expires_at, status, workspace_artifacts!ref_export_id(telegram_file_id)")
       .not("storage_path", "is", null)
       .lt("expires_at", new Date().toISOString())
       .limit(limit);
@@ -30,6 +29,9 @@ serve(async (req) => {
     let removed = 0;
     const errors: string[] = [];
     for (const r of rows || []) {
+      const artifactFileId = (r as any).workspace_artifacts?.[0]?.telegram_file_id ?? null;
+      const effectiveFileId = artifactFileId || r.telegram_file_id;
+      if (!effectiveFileId) continue; // not cached on Telegram yet — skip
       if (dryRun) { removed++; continue; }
       const { error } = await sb.storage.from(r.storage_bucket || "exports").remove([r.storage_path!]);
       if (error) { errors.push(`${r.id}: ${error.message}`); continue; }
