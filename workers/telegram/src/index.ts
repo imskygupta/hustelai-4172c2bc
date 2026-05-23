@@ -9,6 +9,7 @@ import { startCron } from "./ops/cron.js";
 import { startSweeper, startHeartbeat } from "./ops/sweeper.js";
 import { startConfigPoller, getAdminChats, isFlagEnabled, snapshotInfo } from "./config/remote.js";
 import { startWorkflowLoop, getWorkflowLoopStats } from "./ops/loops/workflow.js";
+import { startReconciliationLoop, getReconciliationStats } from "./ops/loops/reconciliation.js";
 import { superviseLoop, getLoopRegistry } from "./ops/loop-runner.js";
 
 const app = express();
@@ -50,6 +51,7 @@ app.get("/ops/loop-stats", requireWorkerSecret, (_req, res) => {
   res.json({
     ok: true,
     workflow: getWorkflowLoopStats(),
+    reconciliation: getReconciliationStats(),
     supervisors: getLoopRegistry(),
     process: {
       uptime_s: Math.round(process.uptime()),
@@ -214,6 +216,13 @@ app.listen(env.PORT, () => {
       superviseLoop("workflow-loop", (signal) => startWorkflowLoop(signal), ctl.signal);
     } else {
       console.log("[workflow-loop] disabled (set LOOP_WORKFLOW=true to enable)");
+    }
+
+    // --- Phase-8 loop: continuity reconciliation (default OFF) ---
+    if (String(process.env.LOOP_RECONCILIATION ?? "false").toLowerCase() === "true") {
+      superviseLoop("recon-loop", (signal) => startReconciliationLoop(signal), ctl.signal);
+    } else {
+      console.log("[recon-loop] disabled (set LOOP_RECONCILIATION=true to enable)");
     }
   } else {
     console.log(`[ops-worker] disabled (set OPS_WORKER_ENABLED=true to enable)`);
