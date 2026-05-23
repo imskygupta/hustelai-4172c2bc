@@ -10200,7 +10200,19 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_forum_post_vote: {
+        Args: { _delta_down: number; _delta_up: number; _post_id: string }
+        Returns: undefined
+      }
       increment_own_search_count: { Args: never; Returns: number }
+      increment_side_hustle_like: {
+        Args: {
+          _delta_dislike: number
+          _delta_like: number
+          _hustle_id: string
+        }
+        Returns: undefined
+      }
       intelligence_open_alerts: {
         Args: { _limit?: number }
         Returns: {
@@ -10682,6 +10694,7 @@ export type Database = {
         Returns: undefined
       }
       unlock_summary: { Args: { _user: string }; Returns: Json }
+      unsubscribe_newsletter: { Args: { _token: string }; Returns: boolean }
       usage_top_consumers: {
         Args: { _limit?: number; _meter: string; _since?: string }
         Returns: {
