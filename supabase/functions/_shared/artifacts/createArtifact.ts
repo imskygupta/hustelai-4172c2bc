@@ -110,6 +110,10 @@ export async function patchArtifact(id: string, patch: Partial<{
   file_url: string | null;
   size_bytes: number;
   metadata: Record<string, any>;
+  delivery_status: string;
+  delivery_attempts: number;
+  last_delivery_error: string | null;
+  last_delivery_at: string;
 }>): Promise<boolean> {
   try {
     const { error } = await sb().from("workspace_artifacts").update(patch).eq("id", id);

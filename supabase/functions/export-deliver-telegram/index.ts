@@ -24,24 +24,48 @@ serve(async (req) => {
     if (!exp || !exp.storage_path) return j({ error: "not found" }, 404);
     userIdOuter = exp.user_id;
 
+    // Mark sending. delivery_attempts uses a server-side increment fallback.
+    {
+      const { data: cur } = await sb.from("workspace_artifacts")
+        .select("id, delivery_attempts").eq("ref_export_id", exp.id).maybeSingle();
+      if (cur) {
+        await sb.from("workspace_artifacts").update({
+          delivery_status: "sending",
+          delivery_attempts: (cur.delivery_attempts || 0) + 1,
+          last_delivery_at: new Date().toISOString(),
+          last_delivery_error: null,
+        }).eq("id", cur.id);
+      }
+    }
+
     // Hard gate: free tier or no connected TG = silently skip. Prevents retry
     // storms enqueueing dead TG jobs.
     const target = await resolveDeliveryTarget(sb, exp.user_id);
     if (!target.can_telegram) {
+      void patchArtifactByExport(exp.id, {
+        delivery_status: "skipped",
+        last_delivery_error: target.telegram_connected ? "free_tier" : "no_telegram",
+        last_delivery_at: new Date().toISOString(),
+      });
       return j({ ok: false, reason: target.telegram_connected ? "free_tier" : "no_telegram", skipped: true });
     }
 
     // Runtime gate: telegram delivery can be disabled / put in maintenance.
     if (!(await isFeatureEnabledServer(exp.user_id, "telegram.notifications"))) {
+      void patchArtifactByExport(exp.id, { delivery_status: "skipped", last_delivery_error: "telegram_notifications_disabled" });
       return j({ ok: false, reason: "telegram_notifications_disabled", deferred: true });
     }
     if (!(await isFeatureEnabledServer(exp.user_id, "telegram.storage"))) {
+      void patchArtifactByExport(exp.id, { delivery_status: "skipped", last_delivery_error: "telegram_storage_disabled" });
       return j({ ok: false, reason: "telegram_storage_disabled", deferred: true });
     }
 
     const { data: integ } = await sb.from("notification_integrations")
       .select("*").eq("user_id", exp.user_id).eq("provider", "telegram").eq("status", "connected").maybeSingle();
-    if (!integ?.provider_chat_id) return j({ ok: false, reason: "no_telegram" });
+    if (!integ?.provider_chat_id) {
+      void patchArtifactByExport(exp.id, { delivery_status: "skipped", last_delivery_error: "no_telegram" });
+      return j({ ok: false, reason: "no_telegram" });
+    }
 
     // Always issue a fresh single-use share token
     const tok = randomToken(24);
@@ -120,6 +144,9 @@ serve(async (req) => {
       telegram_channel: integ.provider_chat_id,
       telegram_deep_link: link,
       status: "delivered",
+      delivery_status: "delivered",
+      last_delivery_at: new Date().toISOString(),
+      last_delivery_error: null,
     });
     void emitWorkflowEvent(sb, "export.delivered", {
       user_id: exp.user_id, export_id: exp.id, channel: "telegram",
@@ -134,13 +161,36 @@ serve(async (req) => {
     }
     return j({ ok: true });
   } catch (e: any) {
+    const errMsg = String(e?.message || e);
     if (exportIdOuter) {
       void emitWorkflowEvent(sbOuter, "export.failed", {
         export_id: exportIdOuter, user_id: userIdOuter, channel: "telegram",
-        reason: String(e?.message || e),
+        reason: errMsg,
       }, { user_id: userIdOuter, dedupe_key: `export_fail:${exportIdOuter}:tg:${Date.now()}`, source: "export-deliver-telegram" });
+      // Mark failed + escalate to admin after 3+ attempts
+      try {
+        const { data: cur } = await sbOuter.from("workspace_artifacts")
+          .select("id, delivery_attempts").eq("ref_export_id", exportIdOuter).maybeSingle();
+        await sbOuter.from("workspace_artifacts").update({
+          delivery_status: "failed",
+          last_delivery_at: new Date().toISOString(),
+          last_delivery_error: errMsg.slice(0, 500),
+        }).eq("ref_export_id", exportIdOuter);
+        if ((cur?.delivery_attempts || 0) >= 3) {
+          void fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/admin-alert`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}` },
+            body: JSON.stringify({
+              kind: "delivery.failed",
+              feature: "telegram.exports",
+              message: `Export ${exportIdOuter} failed after ${cur?.delivery_attempts} attempts`,
+              metadata: { export_id: exportIdOuter, attempts: cur?.delivery_attempts, error: errMsg.slice(0, 200) },
+            }),
+          }).catch(() => {});
+        }
+      } catch {}
     }
-    return j({ error: String(e?.message || e) }, 500);
+    return j({ error: errMsg }, 500);
   }
 });
 

@@ -56,6 +56,7 @@ import TelegramSettings from "./pages/settings/Telegram";
 import Wallet from "./pages/settings/Wallet";
 import FeedbackPage from "./pages/settings/Feedback";
 import Download from "./pages/Download";
+import PublicArtifact from "./pages/PublicArtifact";
 import AdminBlock from "./pages/AdminBlock";
 import Community from "./pages/Community";
 import Profile from "./pages/Profile";
@@ -514,6 +515,7 @@ function FullRuntimeApp() {
             <Route path="/integrations/telegram" element={<TelegramLanding />} />
             <Route path="/integrations/:slug" element={<IntegrationDetail />} />
             <Route path="/d/:token" element={<Download />} />
+            <Route path="/a/:token" element={<PublicArtifact />} />
             <Route path="/settings" element={Shelled(<SettingsLayout />)}>
               <Route index element={<Navigate to="/settings/profile" replace />} />
               <Route path="profile" element={<ProfileSettings />} />
