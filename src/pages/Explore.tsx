@@ -9,32 +9,34 @@ import { type FreelanceResult, mapDbResult } from "@/lib/ai-search";
 import { Navbar } from "@/components/Navbar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Filter, X, Zap, Sparkles, ChefHat, Compass, Rocket, Activity, ArrowRight } from "lucide-react";
+import { Filter, X, Zap, Sparkles, ChefHat, Compass, Rocket, Activity, ArrowRight, RefreshCw, Layers, Wand2, PlayCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { SignupCTADialog } from "@/components/SignupCTADialog";
 import { useRequireVerifiedEmail } from "@/components/VerifyEmailGate";
-import { CategoryGrid, type CategoryDef } from "@/components/explore/CategoryGrid";
-import { ActionStack } from "@/components/explore/ActionStack";
-import { OperationalTools, ExecutionPipeline } from "@/components/explore/OperationalTools";
 import { invokeWithTrust } from "@/lib/auth/verificationDenied";
 import { runWithDeadline, TimeoutError } from "@/lib/async/timeout";
+import { supabase } from "@/integrations/supabase/client";
 
 const categories = ["All", "Tech", "Creative", "Freelance", "Marketing", "Education", "Service", "E-Commerce", "Finance", "Gig Economy", "Gaming", "Admin"];
 const difficulties = ["All", "Beginner", "Intermediate", "Advanced"];
 const types = ["All", "Online", "In-Person", "Hybrid"];
 
-const popularTemplates = [
-  "AI automation agency for SMBs",
-  "Productized design service operations",
-  "Notion systems as a digital product line",
-  "Content engines for founder brands",
-  "Freelance SEO retainer operations",
-  "Faceless YouTube operations stack",
-  "Cold outreach systems for B2B SaaS",
-  "Micro SaaS operating models",
-  "Done-for-you LinkedIn ghostwriting ops",
-  "n8n automation pipelines for agencies",
-];
+type SuggestionItem = {
+  title: string;
+  description: string;
+  cta: string;
+  reason?: string;
+  tags?: string[];
+  target_route?: string;
+  already_active?: boolean;
+  modules?: string[];
+};
+
+type DynamicState = {
+  items: SuggestionItem[];
+  loading: boolean;
+  error: string | null;
+};
 
 export default function Explore() {
   const [searchParams] = useSearchParams();
@@ -55,6 +57,11 @@ export default function Explore() {
   const [searchNotice, setSearchNotice] = useState<string | null>(null);
   const searchSeq = useRef(0);
 
+  // Dynamic operational inference sections
+  const [continueState, setContinueState] = useState<DynamicState>({ items: [], loading: true, error: null });
+  const [aiSuggestState, setAiSuggestState] = useState<DynamicState>({ items: [], loading: true, error: null });
+  const [packsState, setPacksState] = useState<DynamicState>({ items: [], loading: true, error: null });
+
   // Load top liked cards for display
   useEffect(() => {
     let cancelled = false;
@@ -64,6 +71,37 @@ export default function Explore() {
     ).then(({ data }: any) => { if (!cancelled && data) setTrendingCards(data.map(mapDbResult)); }).catch(() => undefined);
     return () => { cancelled = true; };
   }, []);
+
+  // Fetch all 3 dynamic sections from the explore-suggest orchestrator.
+  // Each section is independent — one failure won't block the others.
+  const loadSection = async (section: "continue" | "suggestions" | "packs", setter: typeof setContinueState, force = false) => {
+    if (!user) {
+      setter({ items: [], loading: false, error: null });
+      return;
+    }
+    setter((s) => ({ ...s, loading: true, error: null }));
+    try {
+      const { data, error } = await supabase.functions.invoke("explore-suggest", {
+        body: { section, force },
+      });
+      if (error) throw error;
+      if ((data as any)?.error && !(data as any)?.items?.length) {
+        setter({ items: [], loading: false, error: (data as any).error });
+        return;
+      }
+      setter({ items: ((data as any)?.items || []) as SuggestionItem[], loading: false, error: null });
+    } catch (e: any) {
+      setter({ items: [], loading: false, error: e?.message || "Unavailable" });
+    }
+  };
+
+  useEffect(() => {
+    if (!user) return;
+    loadSection("continue", setContinueState);
+    loadSection("suggestions", setAiSuggestState);
+    loadSection("packs", setPacksState);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   useEffect(() => {
     const stop = () => {
@@ -311,10 +349,6 @@ export default function Explore() {
               <span className="flex items-center gap-1"><Sparkles className="w-3.5 h-3.5 text-violet-500" /> AI-classified niches</span>
               <span className="flex items-center gap-1"><Rocket className="w-3.5 h-3.5 text-cyan-500" /> Operationally ready</span>
             </div>
-
-            <div className="pt-4">
-              <ExecutionPipeline />
-            </div>
           </motion.div>
         </div>
       </section>
@@ -347,27 +381,53 @@ export default function Explore() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="space-y-12"
+              className="space-y-14"
             >
-              {/* Premium category grid */}
-              <div className="space-y-4">
-                <div className="flex items-end justify-between gap-4 flex-wrap">
-                  <div>
-                    <div className="flex items-center gap-2 text-primary text-xs font-semibold uppercase tracking-wider">
-                      <Compass className="w-3.5 h-3.5" /> Opportunity Systems
-                    </div>
-                    <h2 className="text-2xl md:text-3xl font-display font-bold mt-1">Browse digital income systems</h2>
-                    <p className="text-sm text-muted-foreground mt-1">Pick a category to load curated opportunities and a ready-to-run execution stack.</p>
-                  </div>
-                </div>
-                <CategoryGrid onPick={(c: CategoryDef) => handleSearch(c.query)} />
-              </div>
+              {/* Section 1: Continue Building */}
+              <DynamicSection
+                icon={<PlayCircle className="w-3.5 h-3.5" />}
+                eyebrow="Continue Building"
+                title="Pick up where your workspace left off"
+                subtitle="Unfinished systems, paused workflows, and roadmap continuations inferred from your live workspace state."
+                state={continueState}
+                onRefresh={() => loadSection("continue", setContinueState, true)}
+                onItemClick={(it) => {
+                  if (it.target_route) navigate(it.target_route);
+                  else handleSearch(it.title);
+                }}
+                accent="primary"
+              />
 
-              {/* Action stack — discovery → execution moat */}
-              <ActionStack />
+              {/* Section 2: AI Suggestions */}
+              <DynamicSection
+                icon={<Wand2 className="w-3.5 h-3.5" />}
+                eyebrow="AI Suggestions"
+                title="What your workspace should build next"
+                subtitle="Operational gaps synthesized from your exports, workflows, niche, and connected tools — not preset templates."
+                state={aiSuggestState}
+                onRefresh={() => loadSection("suggestions", setAiSuggestState, true)}
+                onItemClick={(it) => {
+                  if (it.target_route) navigate(it.target_route);
+                  else handleSearch(it.title);
+                }}
+                accent="violet"
+              />
 
-              {/* Operational tooling — moat vs. proposal-only competitors */}
-              <OperationalTools />
+              {/* Section 3: Operational Packs */}
+              <DynamicSection
+                icon={<Layers className="w-3.5 h-3.5" />}
+                eyebrow="Operational Packs"
+                title="Stacks tailored to your operating model"
+                subtitle="Bundled systems generated for your niche — Freelancer OS, Agency CRM, Creator Pipeline, Outreach + Proposal Engine."
+                state={packsState}
+                onRefresh={() => loadSection("packs", setPacksState, true)}
+                onItemClick={(it) => {
+                  if (it.target_route) navigate(it.target_route);
+                  else handleSearch(it.title);
+                }}
+                accent="cyan"
+                showModules
+              />
 
               {/* Trending opportunities */}
               {trendingCards.length > 0 && (
@@ -391,30 +451,6 @@ export default function Explore() {
                   </div>
                 </div>
               )}
-
-              {/* Popular operator queries */}
-              <div className="space-y-4">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-primary" />
-                  <span className="text-sm font-medium text-primary">Operator Queries</span>
-                </div>
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {popularTemplates.map((template, i) => (
-                    <motion.button
-                      key={template}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: i * 0.04 }}
-                      onClick={() => handleSearch(template)}
-                      className="text-left px-4 py-3 rounded-xl border border-border bg-card/40 hover:border-primary/50 hover:bg-primary/5 transition-all duration-300 group"
-                    >
-                      <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">
-                        {template}
-                      </span>
-                    </motion.button>
-                  ))}
-                </div>
-              </div>
             </motion.div>
           )}
 
@@ -498,9 +534,6 @@ export default function Explore() {
 
           {!isLoading && filtered.length > 0 && (
             <>
-              {/* Action stack appears at top of any results — discovery → execution */}
-              <ActionStack context={activeContext || undefined} />
-
               <div className="flex items-center justify-between">
                 <p className="text-sm text-muted-foreground">
                   Showing <span className="text-foreground font-medium">{filtered.length}</span> results
