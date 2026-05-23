@@ -2,6 +2,7 @@
 // that produce files (PDFs, CSVs, AI exports). Frontend uses the
 // `export-create` edge function instead.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { resolveCapabilities } from "../tier/resolveCapabilities.ts";
 
 export interface CreateExportInput {
   user_id: string;
@@ -17,7 +18,6 @@ export interface CreateExportInput {
 }
 
 const FREE_TTL_HOURS = 24 * 7; // 7 days for free tier (Telegram-cached delivery)
-const PERSISTENT_TIERS = new Set(["pro", "elite", "infinity"]);
 
 /**
  * Resolves whether a given user is allowed to receive Telegram delivery
@@ -31,10 +31,11 @@ export async function resolveDeliveryTarget(
   const { data: profile } = await sb.from("profiles")
     .select("subscription_tier").eq("user_id", user_id).maybeSingle();
   const tier = (profile?.subscription_tier || "free").toLowerCase();
-  const paid = PERSISTENT_TIERS.has(tier);
+  const caps = resolveCapabilities(tier);
+  const canTgExport = caps.telegram_exports;
 
   let telegram_connected = false;
-  if (paid) {
+  if (canTgExport) {
     const { data: integ } = await sb.from("notification_integrations")
       .select("provider_chat_id, status")
       .eq("user_id", user_id).eq("provider", "telegram").eq("status", "connected")
@@ -42,7 +43,7 @@ export async function resolveDeliveryTarget(
     telegram_connected = !!integ?.provider_chat_id;
   }
 
-  return { tier, telegram_connected, can_telegram: paid && telegram_connected };
+  return { tier, telegram_connected, can_telegram: canTgExport && telegram_connected };
 }
 
 export async function createExport(input: CreateExportInput) {
@@ -54,7 +55,8 @@ export async function createExport(input: CreateExportInput) {
   const { data: profile } = await sb.from("profiles")
     .select("subscription_tier").eq("user_id", input.user_id).maybeSingle();
   const tier = (profile?.subscription_tier || "free").toLowerCase();
-  const isPersistent = PERSISTENT_TIERS.has(tier);
+  const caps = resolveCapabilities(tier);
+  const isPersistent = caps.persistent_storage;
   const expiresAt = isPersistent ? null : new Date(Date.now() + FREE_TTL_HOURS * 3600_000).toISOString();
 
   let storagePath = input.storage_path || null;
