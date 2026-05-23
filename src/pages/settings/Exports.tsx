@@ -229,7 +229,7 @@ function Stat({ label, value }: { label: string; value: string }) {
   );
 }
 
-function ArtifactCard({ a, onResend, onFav, onDelete, onOpen }: {
+function ArtifactCard({ a, onResend, onFav, onDelete, onOpen, onShare }: {
   a: ArtifactRow;
   onResend: () => void; onFav: () => void; onDelete: () => void; onOpen: () => void; onShare: () => void;
 }) {
