@@ -15,6 +15,7 @@ import StartHerePanel from "@/components/activation/StartHerePanel";
 import RecentNextAction from "@/components/activation/RecentNextAction";
 import WorkflowMomentum from "@/components/activation/WorkflowMomentum";
 import ResumeWorkflowCard from "@/components/activation/ResumeWorkflowCard";
+import ContinuityRail from "@/components/workspace/ContinuityRail";
 import AdaptiveCockpit from "@/components/dashboard/AdaptiveCockpit";
 import OperationalFlows from "@/components/dashboard/OperationalFlows";
 import ContextualNudge from "@/components/dashboard/ContextualNudge";
@@ -507,6 +508,7 @@ export default function Dashboard() {
             <StartHerePanel />
             <ResumeWorkflowCard />
             <RecentNextAction />
+            <ContinuityRail />
             <WorkflowMomentum />
             <div className="grid md:grid-cols-2 gap-5">
               <DailyUsageWidget />
