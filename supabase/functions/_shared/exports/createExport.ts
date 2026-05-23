@@ -19,6 +19,32 @@ export interface CreateExportInput {
 const FREE_TTL_HOURS = 24 * 7; // 7 days for free tier (Telegram-cached delivery)
 const PERSISTENT_TIERS = new Set(["pro", "elite", "infinity"]);
 
+/**
+ * Resolves whether a given user is allowed to receive Telegram delivery
+ * for an export. Free users and users without a connected Telegram
+ * integration are never enqueued (prevents retry storms / ghost jobs).
+ */
+export async function resolveDeliveryTarget(
+  sb: ReturnType<typeof createClient>,
+  user_id: string,
+): Promise<{ tier: string; telegram_connected: boolean; can_telegram: boolean }> {
+  const { data: profile } = await sb.from("profiles")
+    .select("subscription_tier").eq("user_id", user_id).maybeSingle();
+  const tier = (profile?.subscription_tier || "free").toLowerCase();
+  const paid = PERSISTENT_TIERS.has(tier);
+
+  let telegram_connected = false;
+  if (paid) {
+    const { data: integ } = await sb.from("notification_integrations")
+      .select("provider_chat_id, status")
+      .eq("user_id", user_id).eq("provider", "telegram").eq("status", "connected")
+      .maybeSingle();
+    telegram_connected = !!integ?.provider_chat_id;
+  }
+
+  return { tier, telegram_connected, can_telegram: paid && telegram_connected };
+}
+
 export async function createExport(input: CreateExportInput) {
   const sb = createClient(
     Deno.env.get("SUPABASE_URL")!,
@@ -62,7 +88,11 @@ export async function createExport(input: CreateExportInput) {
   }).select("*").single();
   if (error) throw error;
 
-  if (input.deliver_to_telegram) {
+  // Resolve TG eligibility once — free users and unconnected accounts are silently
+  // skipped (no enqueue) to prevent retry storms / ghost notifications.
+  const target = await resolveDeliveryTarget(sb, input.user_id);
+
+  if (input.deliver_to_telegram && target.can_telegram) {
     // Fire-and-forget Telegram delivery (don't block creator)
     void fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/export-deliver-telegram`, {
       method: "POST",
@@ -75,8 +105,8 @@ export async function createExport(input: CreateExportInput) {
   }
 
   // Fire-and-forget cache to Telegram storage channel (CDN layer).
-  // No-op if TELEGRAM_STORAGE_CHANNEL_ID is not configured.
-  if (storagePath) {
+  // Only enqueued for paid tiers — free users use direct browser download only.
+  if (storagePath && isPersistent) {
     void fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/export-cache-telegram`, {
       method: "POST",
       headers: {
