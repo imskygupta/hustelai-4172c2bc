@@ -1,8 +1,7 @@
 // One-shot docs IA reset.
 //
-// Auth: requires Authorization: Bearer <SUPABASE_SERVICE_ROLE_KEY>
-//        (the primary project's service role) — the same auth the
-//        platform's other admin-only ops use. Refuses otherwise.
+// Auth: requires Authorization: Bearer <INTERNAL_SERVICE_SECRET>.
+//        Same shared admin secret used by other platform ops tools.
 //
 // Behavior (idempotent):
 //   1) Snapshot every current docs_categories + docs_pages row from Admin DB.
@@ -29,7 +28,7 @@ function json(status: number, body: unknown) {
 }
 
 function authorized(req: Request): boolean {
-  const expected = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  const expected = Deno.env.get("INTERNAL_SERVICE_SECRET");
   if (!expected) return false;
   const header = req.headers.get("authorization") ?? "";
   const token = header.toLowerCase().startsWith("bearer ")
