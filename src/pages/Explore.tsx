@@ -57,10 +57,12 @@ export default function Explore() {
   const [searchNotice, setSearchNotice] = useState<string | null>(null);
   const searchSeq = useRef(0);
 
-  // Dynamic operational inference sections
-  const [continueState, setContinueState] = useState<DynamicState>({ items: [], loading: true, error: null });
-  const [aiSuggestState, setAiSuggestState] = useState<DynamicState>({ items: [], loading: true, error: null });
-  const [packsState, setPacksState] = useState<DynamicState>({ items: [], loading: true, error: null });
+  // Dynamic operational inference sections.
+  // Start with loading=false; only flip to true when we actually fetch (signed-in users).
+  // Anonymous users get static curated content instead of perpetual skeletons.
+  const [continueState, setContinueState] = useState<DynamicState>({ items: [], loading: false, error: null });
+  const [aiSuggestState, setAiSuggestState] = useState<DynamicState>({ items: [], loading: false, error: null });
+  const [packsState, setPacksState] = useState<DynamicState>({ items: [], loading: false, error: null });
 
   // Load top liked cards for display
   useEffect(() => {
@@ -75,6 +77,8 @@ export default function Explore() {
   // Fetch all 3 dynamic sections from the explore-suggest orchestrator.
   // Each section is independent — one failure won't block the others.
   const loadSection = async (section: "continue" | "suggestions" | "packs", setter: typeof setContinueState, force = false) => {
+    // HARD GATE: anonymous users never trigger AI orchestration / explore-suggest.
+    // This protects against runtime burn on logged-out surfaces.
     if (!user) {
       setter({ items: [], loading: false, error: null });
       return;
@@ -96,7 +100,13 @@ export default function Explore() {
   };
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      // Ensure no skeleton ever shimmers for anonymous visitors.
+      setContinueState({ items: [], loading: false, error: null });
+      setAiSuggestState({ items: [], loading: false, error: null });
+      setPacksState({ items: [], loading: false, error: null });
+      return;
+    }
     loadSection("continue", setContinueState);
     loadSection("suggestions", setAiSuggestState);
     loadSection("packs", setPacksState);
