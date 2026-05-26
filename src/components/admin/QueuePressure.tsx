@@ -55,10 +55,15 @@ export default function QueuePressure() {
     }
   }
 
+  // Cost stabilization: 30s → 120s + visibility-gated.
   useEffect(() => {
-    load();
-    const id = setInterval(load, 30_000);
-    return () => clearInterval(id);
+    let alive = true;
+    void load();
+    const tick = () => { if (alive && document.visibilityState === "visible") void load(); };
+    const onVis = () => { if (document.visibilityState === "visible") tick(); };
+    const id = window.setInterval(tick, 120_000);
+    document.addEventListener("visibilitychange", onVis);
+    return () => { alive = false; clearInterval(id); document.removeEventListener("visibilitychange", onVis); };
   }, []);
 
   const totalDepth = rows.reduce((a, r) => a + Number(r.depth || 0), 0);

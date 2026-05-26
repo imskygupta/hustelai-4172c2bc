@@ -168,14 +168,10 @@ export function setServerConfigInMemory(next: Record<string, any>) {
  *  root domain. Defaults stay in effect until the next successful fetch. */
 export async function loadServerRuntimeConfig(): Promise<void> {
   try {
-    const { supabase } = await import("@/integrations/supabase/client");
-    const { data, error } = await supabase
-      .from("api_runtime_config")
-      .select("key,value");
-    if (error || !data) return;
-    const next: Record<string, any> = {};
-    for (const row of data as any[]) next[row.key] = row.value;
-    SERVER_CONFIG = next;
+    // Served from cached public-bootstrap payload (5 min localStorage cache,
+    // 1 hour CDN cache) — collapses what used to be a hot per-pageview query.
+    const { getCachedRuntimeConfig } = await import("@/lib/public-bootstrap");
+    SERVER_CONFIG = await getCachedRuntimeConfig();
     SERVER_CONFIG_LOADED = true;
   } catch (err) {
     console.warn("[runtime] server config load failed, using defaults:", err);

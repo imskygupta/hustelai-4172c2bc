@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { Zap, Mail, MapPin, ArrowUpRight, Instagram, Youtube, Twitter, Linkedin, Facebook, MessageCircle, Globe, Send } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { Link, useLocation } from "react-router-dom";
 import { isAppShellRoute } from "@/components/app-shell-routes";
 import { CONTACT_EMAIL, SUPPORT_EMAIL } from "@/config/branding";
 import { NewsletterCapture } from "@/components/newsletter/NewsletterCapture";
+import { getCachedSocialLinks } from "@/lib/public-bootstrap";
 
 const productLinks = [
   { label: "The platform", href: "/platform" },
@@ -66,13 +66,11 @@ export function Footer() {
   const hiddenInAppShell = isAppShellRoute(pathname);
   const [socialLinks, setSocialLinks] = useState<any[]>([]);
 
-  const loadSocialLinks = async () => {
-    const { data } = await supabase.from("social_links" as any).select("*").eq("is_active", true).order("display_order");
-    if (data) setSocialLinks(data as any);
-  };
-
   useEffect(() => {
-    if (!hiddenInAppShell) loadSocialLinks();
+    if (hiddenInAppShell) return;
+    let alive = true;
+    getCachedSocialLinks().then((data) => { if (alive && data?.length) setSocialLinks(data); });
+    return () => { alive = false; };
   }, [hiddenInAppShell]);
 
   // Hide marketing footer inside the SaaS app shell so users don't get

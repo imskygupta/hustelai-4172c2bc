@@ -136,9 +136,13 @@ export function IntegrationsHealthRail() {
         });
       } catch { /* ignore — card just stays hidden */ }
     };
+    // Cost stabilization: 60s → 180s + visibility-gated.
     void loadOps();
-    const t = setInterval(loadOps, 60_000);
-    return () => { alive = false; clearInterval(t); };
+    const tick = () => { if (alive && document.visibilityState === "visible") void loadOps(); };
+    const onVis = () => { if (document.visibilityState === "visible") tick(); };
+    const t = setInterval(tick, 180_000);
+    document.addEventListener("visibilitychange", onVis);
+    return () => { alive = false; clearInterval(t); document.removeEventListener("visibilitychange", onVis); };
   }, [snapshot?.is_admin]);
 
   const sendTest = async () => {

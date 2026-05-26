@@ -30,12 +30,16 @@ function Pill({ icon: Icon, children }: { icon: React.ComponentType<{ className?
 
 export function ArticleActivityRibbon({ slug }: { slug: string }) {
   const [pulse, setPulse] = useState<OperatorPulse | null>(null);
+  // Cost stabilization: 45s → 180s + visibility-gated.
   useEffect(() => {
     let alive = true;
-    const tick = () => fetchOperatorPulse(slug).then((p) => alive && setPulse(p));
-    tick();
-    const id = setInterval(tick, 45_000); // staggered, calm refresh
-    return () => { alive = false; clearInterval(id); };
+    const run = () => fetchOperatorPulse(slug).then((p) => alive && setPulse(p));
+    run();
+    const tick = () => { if (alive && document.visibilityState === "visible") run(); };
+    const onVis = () => { if (document.visibilityState === "visible") tick(); };
+    const id = setInterval(tick, 180_000);
+    document.addEventListener("visibilitychange", onVis);
+    return () => { alive = false; clearInterval(id); document.removeEventListener("visibilitychange", onVis); };
   }, [slug]);
 
   if (!pulse) return null;
@@ -71,12 +75,16 @@ export function ArticleActivityRibbon({ slug }: { slug: string }) {
 
 export function GlobalActivityRibbon({ className = "" }: { className?: string }) {
   const [pulse, setPulse] = useState<GlobalPulse | null>(null);
+  // Cost stabilization: 60s → 180s + visibility-gated.
   useEffect(() => {
     let alive = true;
-    const tick = () => fetchGlobalPulse().then((p) => alive && setPulse(p));
-    tick();
-    const id = setInterval(tick, 60_000);
-    return () => { alive = false; clearInterval(id); };
+    const run = () => fetchGlobalPulse().then((p) => alive && setPulse(p));
+    run();
+    const tick = () => { if (alive && document.visibilityState === "visible") run(); };
+    const onVis = () => { if (document.visibilityState === "visible") tick(); };
+    const id = setInterval(tick, 180_000);
+    document.addEventListener("visibilitychange", onVis);
+    return () => { alive = false; clearInterval(id); document.removeEventListener("visibilitychange", onVis); };
   }, []);
 
   if (!pulse) return null;

@@ -24,7 +24,8 @@ import { env } from "../../env.js";
 const IDLE_MIN_MS = Number(process.env.LIFECYCLE_IDLE_MIN_MS || 5 * 60_000);
 const IDLE_MAX_MS = Number(process.env.LIFECYCLE_IDLE_MAX_MS || 60 * 60_000);
 const BATCH_SIZE = Math.max(25, Math.min(500, Number(process.env.LIFECYCLE_BATCH || 200)));
-const HEARTBEAT_EVERY_TICKS = 6;
+// Cost stabilization: 6 → 12 ticks between heartbeat upserts.
+const HEARTBEAT_EVERY_TICKS = 12;
 const LARGE_SWEEP_THRESHOLD = 100;
 
 const stats = {

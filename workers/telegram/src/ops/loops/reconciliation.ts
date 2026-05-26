@@ -28,7 +28,8 @@ const IDLE_MIN_MS = Number(process.env.RECON_IDLE_MIN_MS || 30_000);
 const IDLE_MAX_MS = Number(process.env.RECON_IDLE_MAX_MS || 5 * 60_000);
 const SCAN_LIMIT = Math.max(5, Math.min(50, Number(process.env.RECON_SCAN_LIMIT || 25)));
 const TICK_TIMEOUT_MS = 30_000;
-const HEARTBEAT_EVERY_TICKS = 4; // ~ every 2-20min depending on backoff
+// Cost stabilization: 4 → 12 ticks between heartbeat upserts.
+const HEARTBEAT_EVERY_TICKS = 12; // ~ every 6-60min depending on backoff
 
 // Thresholds (admin-alert only fires when crossed; collapsed by normalizer)
 const STUCK_DELIVERING_MIN = 10;       // delivering > 10min with no message_id = drift

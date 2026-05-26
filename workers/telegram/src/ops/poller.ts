@@ -4,13 +4,15 @@
 import { claim, complete, fail, heartbeat, type Queue } from "./queue.js";
 import { getHandler } from "./handlers.js";
 
-const HEARTBEAT_MS = 20_000;
+// Cost stabilization: 20s → 60s. Lease window is 60s, renewing at 60s still
+// gives one safe renewal per lease before expiry on long-running jobs.
+const HEARTBEAT_MS = 60_000;
 // Phase 2: exponential backoff when queue is idle. Starts at 5s, doubles up
-// to 60s cap on every consecutive empty claim, resets to 5s on first job.
+// to 120s cap on every consecutive empty claim, resets to 10s on first job.
 // SKIP LOCKED + lease fencing + queue semantics unchanged.
-const IDLE_MIN_MS = 5_000;
-const IDLE_MAX_MS = 60_000;
-const ERROR_MS = 5_000;
+const IDLE_MIN_MS = 10_000;
+const IDLE_MAX_MS = 120_000;
+const ERROR_MS = 15_000;
 
 export function startPoller(queue: Queue, workerId: string, signal: AbortSignal) {
   const loop = async () => {
