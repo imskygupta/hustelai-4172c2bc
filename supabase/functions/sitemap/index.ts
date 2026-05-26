@@ -86,6 +86,9 @@ function urlEntry(loc: string, lastmod: string, changefreq: string, priority: nu
 }
 
 Deno.serve(async () => {
+  // Note: signature kept as `async ()` historically; we now read the request
+  // for op=robots routing. Deno passes a Request as the first arg.
+  // (Closure below is replaced inline.)
   // Phase 7C.2: all seo_* reads now come from the Blogs DB.
   // Falls back to primary anon during staged cutover.
   let supabase: ReturnType<typeof createClient>;
