@@ -7,10 +7,12 @@ import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, FileText } from "lucide-react";
+import { RefreshCw, FileText, Hammer } from "lucide-react";
 import { failOpen } from "@/lib/async/timeout";
 import { TimedSection, DegradedCard } from "@/components/runtime/Loaders";
 import { listDocsCategories, listDocsPages } from "@/integrations/docs/client";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 type Counts = { categories: number; pages: number; lastUpdated: string | null };
 
@@ -19,6 +21,7 @@ export default function DocsOpsPanel() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [cache, setCache] = useState<{ ok: boolean; status: number; ageMs: number | null } | null>(null);
+  const [rebuilding, setRebuilding] = useState(false);
 
   async function load() {
     setLoading(true); setError(null);
@@ -59,6 +62,35 @@ export default function DocsOpsPanel() {
 
   useEffect(() => { load(); }, []);
 
+  async function rebuild() {
+    const token = window.prompt("Enter DOCS_REBUILD_TOKEN to reseed docs from canonical seed:");
+    if (!token) return;
+    setRebuilding(true);
+    try {
+      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/docs-rebuild`;
+      const res = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-rebuild-token": token,
+          apikey: (import.meta.env as any).VITE_SUPABASE_PUBLISHABLE_KEY ?? "",
+          Authorization: `Bearer ${(import.meta.env as any).VITE_SUPABASE_PUBLISHABLE_KEY ?? ""}`,
+        },
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok || !body?.ok) {
+        toast.error(`Rebuild failed: ${body?.error ?? res.status}`);
+      } else {
+        toast.success(`Rebuilt: ${body?.report?.pages_upserted ?? 0} pages, ${body?.report?.published_pages_after ?? 0} published`);
+        await load();
+      }
+    } catch (e: any) {
+      toast.error(`Rebuild error: ${e?.message ?? String(e)}`);
+    } finally {
+      setRebuilding(false);
+    }
+  }
+
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
@@ -66,9 +98,14 @@ export default function DocsOpsPanel() {
           <FileText className="h-4 w-4" />
           <h2 className="font-medium">Docs Operations</h2>
         </div>
-        <Button size="sm" variant="ghost" onClick={load}>
-          <RefreshCw className="h-3 w-3 mr-1" /> Refresh
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button size="sm" variant="outline" onClick={rebuild} disabled={rebuilding}>
+            <Hammer className="h-3 w-3 mr-1" /> {rebuilding ? "Rebuilding…" : "Rebuild docs"}
+          </Button>
+          <Button size="sm" variant="ghost" onClick={load}>
+            <RefreshCw className="h-3 w-3 mr-1" /> Refresh
+          </Button>
+        </div>
       </div>
 
       <TimedSection loading={loading} error={error} title="Docs content" onRetry={load}>
