@@ -8,6 +8,7 @@ import { NewsletterBlock } from "@/components/blog/NewsletterBlock";
 import { EditorialFeedSkeleton, OperationalHint } from "@/components/blog/EditorialSkeleton";
 import { PrefetchLink } from "@/components/blog/PrefetchLink";
 import { onIdle } from "@/lib/blog-cache";
+import { isUsableImageUrl } from "@/lib/blog-image";
 
 const CATEGORY_PLACEHOLDERS: Record<string, string> = {
   "freelancer-workflows": "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1600&q=70&auto=format&fit=crop",
@@ -34,7 +35,7 @@ const STARTER_COLLECTIONS = [
 ];
 
 function heroFor(post: any): string {
-  return post?.hero_image
+  return (isUsableImageUrl(post?.hero_image) ? post.hero_image : null)
     || CATEGORY_PLACEHOLDERS[post?.blog_categories?.slug ?? ""]
     || CATEGORY_PLACEHOLDERS["async-operations"];
 }
