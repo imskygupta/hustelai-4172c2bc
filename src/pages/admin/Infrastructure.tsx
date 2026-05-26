@@ -261,6 +261,7 @@ export default function Infrastructure() {
 
           <TabsContent value="deps" className="space-y-4">
             <Input placeholder="Search source/target…" value={search} onChange={(e) => setSearch(e.target.value)} className="max-w-md" />
+            {/* connected-databases panel rendered above via dedicated tab */}
             <Card className="overflow-auto">
               <Table>
                 <TableHeader><TableRow>
