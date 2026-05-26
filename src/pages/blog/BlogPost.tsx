@@ -8,7 +8,7 @@ import { renderMarkdown, buildArticleJsonLd, buildFaqJsonLd } from "@/lib/blog-m
 import { extractEditorialMeta } from "@/lib/blog-meta";
 import { injectInternalLinks, buildLinkTargets } from "@/lib/blog-internal-links";
 import { BlogImage } from "@/components/blog/BlogImage";
-import { optimizedImage } from "@/lib/blog-image";
+import { optimizedImage, isUsableImageUrl } from "@/lib/blog-image";
 import { ReadingProgress } from "@/components/blog/ReadingProgress";
 import { Breadcrumb } from "@/components/blog/Breadcrumb";
 import { NewsletterBlock } from "@/components/blog/NewsletterBlock";
