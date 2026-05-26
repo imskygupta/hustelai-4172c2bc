@@ -36,6 +36,8 @@ export default function SeoBlogIndex() {
   const [mostSaved, setMostSaved] = useState<SeoBlogRow[]>([]);
   const [search, setSearch] = useSearchParams();
   const activePersona = (search.get("persona") as OperatorPersona | null) || null;
+  const activeStage = search.get("stage");
+  const hasFilter = Boolean(activePersona || activeStage);
 
   useEffect(() => {
     // Defensive fetch: always resolve UI state, never let a hung/failed
@@ -83,6 +85,11 @@ export default function SeoBlogIndex() {
     );
   }, [allPosts, activePersona]);
 
+  // Noindex empty filter states. Parameter pages with zero curated results are
+  // thin faceted-nav pages — keep them crawlable (follow) but exclude from the
+  // index so they don't dilute crawl budget or editorial trust.
+  const isEmptyFilterState = hasFilter && filtered !== null && filtered.length === 0;
+
   const setPersona = (p: OperatorPersona | null) => {
     const next = new URLSearchParams(search);
     if (p) next.set("persona", p);
@@ -96,6 +103,7 @@ export default function SeoBlogIndex() {
         title="Operational Guides for Freelancers & Modern Agencies | HustleAI"
         description="Operator handbooks for freelancers, solo hustlers and small agencies — onboarding, proposals, async delivery, automation and Telegram-first workflows."
         path="/insights"
+        robots={isEmptyFilterState ? "noindex,follow" : undefined}
       />
       <Navbar />
       <main className="pt-24">
