@@ -1,5 +1,6 @@
 import { FileSignature, FileDown, Send, MessageCircle } from "lucide-react";
 import { SignalDot, AsyncLane, OperationalChip, DeliveryBadge, QueueProgress, OpsGrid } from "./ops-primitives";
+import { useStageActivation } from "./useStageActivation";
 
 const STAGES = [
   {
@@ -38,6 +39,7 @@ const STAGES = [
  * Uses dotted async lanes between connected cards.
  */
 export function ConnectedWorkflowSection() {
+  const railRef = useStageActivation(STAGES.length, { stagger: 0.2 });
   return (
     <section className="relative py-20 md:py-28 px-4 bg-slate-50/60 overflow-hidden">
       <OpsGrid />
@@ -55,12 +57,12 @@ export function ConnectedWorkflowSection() {
         </div>
 
         {/* Connected cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-3 md:gap-0 relative">
+        <div ref={railRef} className="grid grid-cols-1 md:grid-cols-4 gap-3 md:gap-0 relative">
           {STAGES.map((s, i) => (
-            <div key={s.label} className="relative md:px-3">
+            <div key={s.label} data-stage className="relative md:px-3">
               {/* Connector lane to the next card (desktop only) */}
               {i < STAGES.length - 1 ? (
-                <div className="hidden md:flex absolute top-1/2 -right-1 translate-x-1/2 -translate-y-1/2 w-6 items-center z-10">
+                <div data-stage-lane className="hidden md:flex absolute top-1/2 -right-1 translate-x-1/2 -translate-y-1/2 w-6 items-center z-10">
                   <AsyncLane tone="emerald" />
                 </div>
               ) : null}
@@ -71,7 +73,7 @@ export function ConnectedWorkflowSection() {
                   0{i + 1}
                 </div>
 
-                <div className="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center mb-3 group-hover:bg-emerald-600 transition-colors">
+                <div data-stage-icon className="w-10 h-10 rounded-xl text-white flex items-center justify-center mb-3">
                   <s.icon className="w-4 h-4" />
                 </div>
                 <div className="text-sm font-semibold text-slate-900">{s.label}</div>

@@ -1,5 +1,6 @@
 import { Sparkles, FileDown, Send, Workflow, Cloud, Briefcase, ArrowRight } from "lucide-react";
 import { SignalDot, AsyncLane, OperationalChip, OpsGrid } from "./ops-primitives";
+import { useStageActivation } from "./useStageActivation";
 
 /**
  * Homepage narrative flow:
@@ -53,6 +54,7 @@ const STAGES = [
 ];
 
 export function WorkflowStorySection() {
+  const railRef = useStageActivation(STAGES.length, { stagger: 0.16 });
   return (
     <section className="relative py-20 md:py-28 px-4 bg-white overflow-hidden">
       <OpsGrid />
@@ -70,17 +72,17 @@ export function WorkflowStorySection() {
         </div>
 
         {/* Stage rail */}
-        <div className="grid grid-cols-2 md:grid-cols-6 gap-3 md:gap-0 relative">
+        <div ref={railRef} className="grid grid-cols-2 md:grid-cols-6 gap-3 md:gap-0 relative">
           {STAGES.map((s, i) => (
-            <div key={s.label} className="relative md:px-2">
+            <div key={s.label} data-stage className="relative md:px-2">
               {i < STAGES.length - 1 ? (
-                <div className="hidden md:flex absolute top-1/2 -right-1 translate-x-1/2 -translate-y-1/2 w-5 items-center z-10">
+                <div data-stage-lane className="hidden md:flex absolute top-1/2 -right-1 translate-x-1/2 -translate-y-1/2 w-5 items-center z-10">
                   <AsyncLane tone={i < 3 ? "emerald" : i < 5 ? "violet" : "sky"} />
                 </div>
               ) : null}
               <div className="hover-ops group relative h-full rounded-2xl border border-slate-200 bg-white p-4 hover:border-slate-300 transition-all duration-300">
                 <div className="absolute top-2.5 right-3 text-[10px] font-mono text-slate-300">{s.step}</div>
-                <div className="w-9 h-9 rounded-xl bg-slate-900 text-white flex items-center justify-center mb-3 group-hover:bg-emerald-600 transition-colors">
+                <div data-stage-icon className="w-9 h-9 rounded-xl text-white flex items-center justify-center mb-3">
                   <s.icon className="w-4 h-4" />
                 </div>
                 <div className="text-sm font-semibold text-slate-900">{s.label}</div>
