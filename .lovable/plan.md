@@ -1,108 +1,67 @@
-# Sprint D — Runtime Continuity & Delivery Stabilization
+## Platform Stabilization + SEO Maturity Sprint
 
-Architecture decisions are locked: multi-DB split stays, primary-guard stays, no bypasses, no hardcoded auth. Every phase below is additive on top of the current Sprint C state.
+This is a multi-surface sprint touching docs content, blog SEO, sitemaps, internal linking, AdSense readiness, and admin diagnostics. No new infra — only audit + fix on top of existing systems (crawl orchestrator, indexing-dispatcher, blog-link-engine, blog-seo-health, BLOG_DB, GSC connector, AdSense Readiness panel).
 
-I'll execute the phases in the order shown. Each phase is independently shippable and verifiable, so you can stop me / re-order at any boundary.
-
----
-
-## Phase 1 — Canonical session resolver (foundation)
-
-New files:
-- `src/lib/runtime/session.ts` — single browser-side resolver. Exports `getRuntimeSession()` returning `{ user_id, tier, telegram: { connected, chat_id, bot_username }, is_admin, workspace_owner_id, access_token }`. Internally calls `supabase.auth.getSession()`, then a single `runtime-session` edge fn (new, cached 30s) to enrich tier + telegram + admin from the correct sibling DBs.
-- `supabase/functions/runtime-session/index.ts` — JWT-validated, returns the same enriched shape. Used by both browser cache miss and Railway workers.
-- `supabase/functions/_shared/auth/resolveSession.ts` — server-side resolver. Accepts either `Authorization: Bearer <jwt>` (user invoke) or `x-runtime-key: <signed worker key>` (Railway). Returns the same canonical shape. All edge fns migrate to this.
-
-Exit criteria:
-- `export-create`, `artifact-resend`, `notifications-test`, `export-deliver-telegram` all use `resolveSession()`.
-- Frontend reads tier/TG state from one hook (`useRuntimeSession`) instead of 5+ ad-hoc queries.
-- Zero new `auth.failed` alerts in admin TG over a 30-min window.
+I'll execute it in **5 grouped waves** so each wave ships verifiable value and respects the ≤ $1/day budget.
 
 ---
 
-## Phase 2 — Export pipeline reliability
+### Wave 1 — Docs content expansion (kills "low value content")
+- Replace ALL "This page is being expanded…" placeholders in `supabase/functions/_shared/docs/seed.ts` (the canonical doc source).
+- Expand the 11 priority sections (Workspace, AI Workspace, Exports, Continuity, Telegram, Billing, Integrations, Automation, AI tools, Quotas, Upgrade flows) to 700–1200 words each: intro → use case → step-by-step → tips → troubleshooting → FAQs → related links.
+- Remaining 35+ stubs get expanded to ≥700 words with the same skeleton.
+- Operational language only — no DB names, no Railway, no Telegram-as-storage, no queue/FSM internals.
+- Add `docs-rebuild`-style one-shot reseed script (kept internal, removed after run, per docs-archive policy).
 
-Migration (additive only, no destructive changes):
-```text
-workspace_artifacts:
-  + artifact_origin     text   -- 'export' | 'ai_tool' | 'workflow' | 'manual'
-  + generation_source   text   -- module/route that created it
-  + pipeline_state      text   -- generated|persisted|mirrored|queued|delivered|indexed|surfaced
-  + delivery_state      text   -- none|queued|sending|delivered|failed|revoked
-  + dedupe_key          text   -- unique per (user, source, key)
-  + unique idx (user_id, dedupe_key) where dedupe_key is not null
-```
+### Wave 2 — Sitemap consistency (3 domains)
+- `public/sitemap.xml` (main app) — regenerated via existing `scripts/generate-sitemap.ts` pattern; exclude admin/auth/draft routes.
+- `blog-sitemap` edge fn — verify it emits index + segmented (`/sitemap-posts.xml`, `/sitemap-topics.xml`, `/sitemap-fresh.xml`) per the Search Growth Engine doc. Fix lastmod, canonicals, drafts exclusion.
+- New `docs-sitemap` edge fn for `docs.hustlaiapp.in`, generated from `ADMIN_DOCS` / seed table.
+- `robots.txt` for each subdomain advertises its own sitemap.
+- Surface counts + last-generated + invalid entries in admin SEO panel.
 
-Code:
-- `_shared/artifacts/lifecycle.ts` — `advancePipelineState(artifact_id, next, meta)` with FSM guard (no backward transitions except admin override).
-- `createArtifact()` becomes the only write-path; every AI generation hook must call it. Add a CI grep test asserting no generation file writes to `workspace_artifacts` directly.
-- One-shot backfill SQL: legacy exports → set `pipeline_state='surfaced'`, `delivery_state` derived from `notification_deliveries` join.
+### Wave 3 — Blog SEO + indexing audit
+Extend existing `blog-seo-health` + `crawl-orchestrator` to produce a real operator-facing diagnostic at `/admin/seo-operations` (new card, no new route). Reports per-post:
+- canonical present + correct
+- title uniqueness, OG tags, schema (Article + Breadcrumb)
+- word count < 800 → thin
+- internal links < 3 → weak
+- orphan (0 inbound)
+- not crawled in 14d
+- discovered-not-indexed (from GSC if connector live, else heuristic on `indexing_jobs`)
+- noindex leakage
+- duplicate slug patterns
+- stale queued jobs
 
-Exit criteria:
-- 100% of new artifacts have non-null `pipeline_state` + `artifact_origin`.
-- Resend dedupe via `dedupe_key` blocks duplicate TG sends across 3 rapid clicks.
+Output as sortable list with `READY / NEEDS WORK / CRITICAL` verdicts. Reuses `seo_quality_checks` table from the Search Growth Engine plan; no new sprawl.
 
----
+### Wave 4 — Internal linking + cross-domain authority
+- Extend `blog-link-engine` `auto_insert_slug` to also inject:
+  - main-app → docs/blog/tools links via Footer + relevant marketing pages
+  - docs → 3 related blog articles + 2 related tools (via `ADMIN_DOCS.related`)
+  - blog → 2 docs + 1 product page + 1 integration page per article
+- Add a Footer/global "Resources" block linking Docs ↔ Blog ↔ Product.
 
-## Phase 3 — Telegram delivery memory
-
-Schema (additive on `workspace_artifacts`):
-```text
-+ telegram_message_id text
-+ telegram_chat_id    text
-+ telegram_deep_link  text
-+ resend_count        int  default 0
-```
-
-Code:
-- `export-deliver-telegram` writes all 4 fields on success (or last attempt for failures).
-- `artifact-resend` increments `resend_count` and re-emits via the same dedupe path.
-- `ArtifactCard` action menu (frontend): `Open in Telegram` (deep link), `Resend`, `Regenerate`, `Copy link`. Already partially present — wire to canonical fields.
-- TG-only artifacts (no local file) still render in Exports + ContinuityRail using preview metadata; "Download" is replaced by "Open in Telegram".
-
-Exit criteria:
-- Every TG delivery in the last 24h has all 4 fields populated.
-- "Open in Telegram" works for the 3 historical artifact types tested live.
+### Wave 5 — AdSense Readiness panel becomes real
+Extend existing `adsense-readiness` edge fn + `AdsenseReadiness.tsx` to score per page on the 12 signals listed (thin content, orphan, low word count, missing meta/OG/schema, dup titles, weak linking, noindex, crawlable, in sitemap, content maturity). Emit `READY / NEEDS WORK / CRITICAL`. Reuses `seo_quality_checks`; no new tables.
 
 ---
 
-## Phase 4 — Integrations page as operations control center
+### Performance guardrails (carried from previous sprint)
+- All new sweeps: cron-only, batched ≤25/tick, exp backoff, hourly or slower.
+- No new realtime channels, no client polling.
+- All writes on BLOG_DB; PRIMARY untouched.
+- Admin panels are visibility-gated (existing `useVisibilityInterval`).
+- All reads cached 5m+ via existing `public-bootstrap` pattern where applicable.
 
-Rebuild `src/pages/settings/Integrations.tsx` around `Promise.allSettled` only. New `IntegrationsHealthRail` component shows:
-- Telegram: linked state, chat_id, bot username, last successful + last failed delivery (from `notification_deliveries`), tier gate.
-- Discord: linked state from `communityDb.discord_links` (already fixed).
-- Notification routing: per-event channel chips.
-- Worker runtime: latest row from `worker_heartbeats` (Phase 6).
-- Export routing mode: which deliveries are enabled for this user's tier.
-
-Zero blank states: each card shows `connected | not_connected | unavailable_on_tier | degraded`. No silent rejection.
-
-Exit criteria:
-- Page loads cleanly even if any 1 of 5 data sources fails.
-- No new `client.unhandled_rejection` in admin TG when navigating.
+### Final deliverable
+A single markdown report at `/mnt/documents/seo-stabilization-2026-05-26.md` covering: audited surfaces, fixes shipped, expanded pages list, sitemap URLs, indexing blockers, AdSense score deltas, manual GSC/AdSense actions still required.
 
 ---
 
-## Phase 5 — Operational telemetry normalization
+### Scope warning
+This is a **large** sprint — realistically 5 sequential AI loops (one per wave) to do it well without truncation. If I try to ship all 5 waves in one loop, content quality on the 45+ doc pages will degrade (AI-slop, which is exactly what AdSense is rejecting).
 
-New file: `supabase/functions/_shared/alerts/normalize.ts` — `normalizeOperationalAlert(input)` returns a typed alert or `null`:
-- Whitelist kinds: `delivery.failed | retry_storm | auth.failed | pipeline.anomaly | worker.down | queue.stalled`.
-- Strips: stack traces, HTML fragments, `primary_guard` strings, `client.unhandled_rejection`, `no_key`.
-- Truncates message to 280 chars, structures meta as JSON.
+**Recommended:** approve this plan, then I execute Wave 1 in this loop, and you say "next wave" to continue. Each wave produces a usable artifact on its own.
 
-`admin-alert` becomes the only writer and routes everything through this normalizer; non-whitelisted kinds → structured log row in `admin_alerts_dropped` (ADMIN DB) instead of TG.
-
-Frontend `recordAnomaly` / `runtime-violation-log` reclassified: violations go to `runtime_violations` table only (silent persistence, surfaced in admin UI), never to TG.
-
-Exit criteria:
-- Admin TG channel receives only the 6 whitelisted kinds over a 24h smoke window.
-- `runtime_violations` table still records `primary-guard` hits for auditing.
-
----
-
-## Phase 6 — Railway worker visibility
-
-Schema (ADMIN DB):
-```text
-worker_heartbeats:
-  worker_id text p
+Confirm and I'll start with **Wave 1 (docs expansion)** immediately.
