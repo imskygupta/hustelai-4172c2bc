@@ -6,6 +6,7 @@ import { communityDb } from "@/integrations/community/client";
 import { blogDb } from "@/integrations/blog/db";
 import { aiDb } from "@/integrations/ai/db";
 import { Button } from "@/components/ui/button";
+import { InfraOverviewCard } from "@/components/admin/InfraOverviewCard";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
@@ -197,6 +198,13 @@ const NAV_GROUPS: { label: string; defaultOpen?: boolean; items: NavItem[] }[] =
       { kind: "route", href: "/admin/usage-governance", label: "Usage Governance", icon: ShieldCheck, keywords: "limits quota tier capability" },
       { kind: "route", href: "/admin/mission-control", label: "Mission Control", icon: Activity, keywords: "intelligence funnel cost alerts heatmap" },
       { kind: "section", id: "system-health", label: "System Health", icon: Activity },
+      { kind: "route", href: "/admin/infrastructure", label: "Infrastructure", icon: Activity, keywords: "infrastructure databases supabase registry runtime topology" },
+      { kind: "route", href: "/admin/infrastructure/platform-registry", label: "Platform Registry", icon: Activity, keywords: "platform registry connected databases route registry subdomain edge functions infrastructure graph health audit overview" },
+      { kind: "route", href: "/admin/infrastructure/platform-registry?sub=databases", label: "Connected Databases", icon: Activity, keywords: "connected databases supabase projects refs migration owners dashboard access" },
+      { kind: "route", href: "/admin/infrastructure/platform-registry?sub=routes", label: "Route Registry", icon: Activity, keywords: "routes pages frontend admin api edge functions endpoints urls discovery" },
+      { kind: "route", href: "/admin/infrastructure/platform-registry?sub=subdomains", label: "Subdomain Registry", icon: Activity, keywords: "subdomain subdomains hustlaiapp docs blogs sitemap robots ssl dns canonical" },
+      { kind: "route", href: "/admin/infrastructure/platform-registry?sub=functions", label: "Edge Functions Catalog", icon: Activity, keywords: "edge functions supabase functions deno endpoints catalog list" },
+      { kind: "route", href: "/admin/infrastructure/platform-registry?sub=audit", label: "Global Health Audit", icon: Activity, keywords: "health audit verify all dbs sitemaps robots probes broken routes" },
       { kind: "route", href: "/admin/communications/telegram", label: "Telegram Ops", icon: Radio, keywords: "telegram bot delivery" },
       { kind: "section", id: "audit", label: "Audit Log", icon: ScrollText, keywords: "audit log operator actions accountability" },
     ],
@@ -1013,6 +1021,7 @@ export default function AdminDashboard() {
               </div>
 
               {/* Platform Status */}
+              <InfraOverviewCard />
               <div className="glass rounded-xl p-6 space-y-4">
                 <h3 className="font-display font-bold flex items-center gap-2">
                   <Activity className="w-5 h-5 text-primary" /> Platform Status

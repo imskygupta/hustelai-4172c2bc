@@ -222,6 +222,7 @@ const AdminFeatureFlags = lazy(() => import("./pages/admin/FeatureFlags"));
 const RuntimeAnalytics = lazy(() => import("./pages/admin/RuntimeAnalytics"));
 const MigrationHealth = lazy(() => import("./pages/admin/MigrationHealth"));
 const Infrastructure = lazy(() => import("./pages/admin/Infrastructure"));
+const PlatformRegistry = lazy(() => import("./pages/admin/PlatformRegistry"));
 const Automations = lazy(() => import("./pages/admin/Automations"));
 const BlogAdmin = lazy(() => import("./pages/admin/BlogAdmin"));
 const BlogSeoHealth = lazy(() => import("./pages/admin/BlogSeoHealth"));
@@ -588,6 +589,7 @@ function FullRuntimeApp() {
             <Route path="/admin/runtime/analytics" element={<RuntimeAnalytics />} />
             <Route path="/admin/runtime/migration" element={<MigrationHealth />} />
             <Route path="/admin/infrastructure" element={<Infrastructure />} />
+            <Route path="/admin/infrastructure/platform-registry" element={<PlatformRegistry />} />
             <Route path="/admin/operations" element={<AdminOperations />} />
             <Route path="/admin/incident-mode" element={<AdminIncidentMode />} />
             <Route path="/admin/security/users" element={<AdminSecurityUsers />} />
