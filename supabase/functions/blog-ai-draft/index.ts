@@ -51,8 +51,16 @@ async function callAI(topic: string, angle: string, keyword: string): Promise<an
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
-  const __gate = await __requireVerifiedUser(req, { denialEvent: "verification_blocked_ai", fn: "blog-ai-draft" });
-  if (!__gate.ok) return __gate.response;
+  // Internal-caller bypass: trusted machine callers (scheduler/cron) present
+  // the service-role key as a bearer token. Skip the human verification gate
+  // in that case — otherwise enforce it as usual.
+  const __auth = req.headers.get("authorization") ?? req.headers.get("Authorization") ?? "";
+  const __serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+  const __isInternal = !!__serviceKey && __auth === `Bearer ${__serviceKey}`;
+  if (!__isInternal) {
+    const __gate = await __requireVerifiedUser(req, { denialEvent: "verification_blocked_ai", fn: "blog-ai-draft" });
+    if (!__gate.ok) return __gate.response;
+  }
   try {
     let topic = "", angle = "", keyword = "", auto = false;
     if (req.method === "POST") {
