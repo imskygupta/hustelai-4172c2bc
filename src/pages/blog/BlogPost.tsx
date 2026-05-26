@@ -388,3 +388,50 @@ function BlogPostInner() {
     </BlogShell>
   );
 }
+
+/**
+ * Degraded fallback for blog post pages.
+ *
+ * If something inside BlogPostInner throws after data hydration, we still
+ * surface a crawler-safe page with the title and excerpt from the SWR
+ * cache (when available) instead of the global "Something went sideways"
+ * crash. This protects SEO/AdSense trust on hero URLs and avoids hard
+ * 5xx-style render failures for indexers.
+ */
+function BlogPostDegraded() {
+  const { slug = "" } = useParams();
+  const cached: any = blogApi.cachedPost(slug);
+  const post = cached?.post;
+  return (
+    <BlogShell>
+      <BlogSEO
+        title={post?.meta_title || post?.title || "HustleAI Notes"}
+        description={post?.meta_description || post?.excerpt || "Operational writing for freelancers."}
+        path={post?.slug ? `/${post.slug}` : "/"}
+      />
+      <article className="mx-auto max-w-[760px] px-5 pt-12 pb-16">
+        <h1 className="font-serif text-[34px] sm:text-[44px] tracking-[-0.02em] leading-[1.08]">
+          {post?.title || "Note temporarily unavailable"}
+        </h1>
+        {post?.subtitle && <p className="mt-4 text-lg text-muted-foreground">{post.subtitle}</p>}
+        {post?.excerpt && <p className="mt-6 text-base text-foreground/85">{post.excerpt}</p>}
+        <div className="mt-10 text-sm text-muted-foreground border-t border-border/60 pt-6">
+          We hit a rendering issue while assembling the full article. The piece
+          is still available — please <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="underline hover:text-foreground"
+          >reload</button> or <Link to="/" className="underline hover:text-foreground">browse other notes</Link>.
+        </div>
+      </article>
+    </BlogShell>
+  );
+}
+
+export default function BlogPost() {
+  return (
+    <SafeBoundary label="BlogPost" fallback={<BlogPostDegraded />}>
+      <BlogPostInner />
+    </SafeBoundary>
+  );
+}
