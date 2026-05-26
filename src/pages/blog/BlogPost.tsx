@@ -184,7 +184,7 @@ function BlogPostInner() {
         )}
       </article>
 
-      {post.hero_image && (
+      {isUsableImageUrl(post.hero_image) && (
         <div className="mx-auto max-w-4xl px-5 mb-12">
           <figure className="aspect-[16/9] rounded-lg overflow-hidden bg-muted/40 ring-1 ring-border/40 shadow-[0_30px_60px_-30px_hsl(var(--foreground)/0.18)]">
             <BlogImage
