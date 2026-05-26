@@ -1,4 +1,4 @@
-// Canonical docs IA — Sprint E rewrite.
+// Canonical docs IA — Sprint E + Wave 1 expansion.
 // User-facing only. NEVER reference DB topology, Railway, queues,
 // reconciliation workers, Telegram-as-storage, edge functions, tier
 // internals, or anti-abuse systems in this content.
@@ -36,7 +36,7 @@ export const SEED_CATEGORIES: SeedCategory[] = [
   { slug: "security",        title: "Security & Privacy", description: "Account safety, export ownership, and AI usage policy.", icon: "shield", color: "#64748B", sort_order: 80 },
 ];
 
-// --- Hero content -----------------------------------------------------------
+// --- Hero content (unchanged from Sprint E) --------------------------------
 
 const heroWhatIsHustleAI = `# What is HustleAI
 
@@ -339,79 +339,1718 @@ anything but the cap shows full — see [Missing export](/missing-export)
 and contact support from the workspace footer.
 `;
 
-// --- Stub helper ------------------------------------------------------------
-
-function stub(title: string, summary: string): string {
-  return `# ${title}\n\n${summary}\n\n> This page is being expanded. In the meantime, see [Getting Started](/what-is-hustlai) or browse the sidebar for related topics.\n`;
-}
-
-// --- Pages ------------------------------------------------------------------
+// --- Pages (Wave 1 fully expanded — no placeholders) ----------------------
 
 export const SEED_PAGES: SeedPage[] = [
-  // Getting Started
-  { slug: "what-is-hustlai", category_slug: "getting-started", title: "What is HustleAI", description: "A persistent operational workspace that plans, generates, and remembers your work.", content: heroWhatIsHustleAI, tags: ["overview","intro"], sort_order: 10, reading_time: 3, meta_title: "What is HustleAI — Persistent AI workspace for operators", meta_description: "HustleAI is a persistent operational workspace that plans, generates, and remembers your work across sessions." },
-  { slug: "account-setup", category_slug: "getting-started", title: "Creating your account", description: "Sign up, verify, and land in your first workspace.", content: stub("Creating your account", "Sign up with email or Google, verify with the one-time code we send, and you'll land in your default workspace with onboarding tips."), sort_order: 20, reading_time: 1 },
-  { slug: "workspace-basics", category_slug: "getting-started", title: "Workspace basics", description: "The dashboard, continuity rail, and how to find what you've made.", content: stub("Workspace basics", "Your workspace has a dashboard (recent activity + quick actions), a continuity rail (everything you've made, newest first), and a sidebar for jumping between AI tools, exports, and integrations."), sort_order: 30, reading_time: 1 },
-  { slug: "first-roadmap", category_slug: "getting-started", title: "Your first roadmap", description: "Generate, edit, and export a complete operational plan.", content: heroFirstRoadmap, tags: ["roadmap","getting-started"], sort_order: 40, reading_time: 3 },
-  { slug: "first-export", category_slug: "getting-started", title: "Your first export", description: "How exports work and where they live.", content: heroFirstExport, tags: ["export","getting-started"], sort_order: 50, reading_time: 3 },
-  { slug: "telegram-connection", category_slug: "getting-started", title: "Connect Telegram", description: "Get every export delivered straight to your phone.", content: heroTelegramConnection, tags: ["telegram","integration"], sort_order: 60, reading_time: 2 },
-  { slug: "continuity-basics", category_slug: "getting-started", title: "Continuity basics", description: "How HustleAI remembers your work across sessions.", content: heroContinuityBasics, tags: ["continuity","memory"], sort_order: 70, reading_time: 3 },
+  { slug: "what-is-hustlai", category_slug: "getting-started", title: "What is HustleAI", description: "A persistent operational workspace that plans, generates, and remembers your work.", content: heroWhatIsHustleAI, sort_order: 10, tags: ["overview","intro"], reading_time: 3, meta_title: "What is HustleAI — Persistent AI workspace for operators", meta_description: "HustleAI is a persistent operational workspace that plans, generates, and remembers your work across sessions." },
+  { slug: "account-setup", category_slug: "getting-started", title: "Creating your account", description: "Sign up, verify, and land in your first workspace.", content: `# Creating your account
 
-  // Workspace
-  { slug: "dashboard", category_slug: "workspace", title: "Dashboard", description: "Your operational home screen — recent activity, quick actions, usage at a glance.", content: stub("Dashboard", "The dashboard surfaces recent activity, quick actions for the AI tools you use most, and a usage panel showing where you are in your daily/monthly limits."), sort_order: 10 },
-  { slug: "continuity-rail", category_slug: "workspace", title: "Continuity rail", description: "Your persistent feed of everything you've made.", content: stub("Continuity rail", "The rail along the side of your workspace shows recent artifacts (newest first), in-progress work, and items approaching the end of their continuity window so you can pin or upgrade."), sort_order: 20 },
-  { slug: "exports-panel", category_slug: "workspace", title: "Exports panel", description: "Find, reopen, and re-deliver any artifact you've produced.", content: stub("Exports panel", "Every artifact HustleAI generates lives here. Filter by type, search by title, and reopen, download, share, or resend to Telegram in one click."), sort_order: 30 },
-  { slug: "roadmaps", category_slug: "workspace", title: "Roadmaps", description: "Generate, edit, branch, and export operational plans.", content: stub("Roadmaps", "Roadmaps are AI-generated operational plans you can edit, branch into sub-plans, mark milestones complete on, and export as branded PDFs."), sort_order: 40 },
-  { slug: "ai-workspace", category_slug: "workspace", title: "AI workspace", description: "Drafting space for documents, briefs, and AI-assisted writing.", content: stub("AI workspace", "A persistent drafting surface where every document you create with AI assistance is saved to your continuity rail and exportable in one click."), sort_order: 50 },
-  { slug: "resume-workflows", category_slug: "workspace", title: "Resume workflows", description: "Build, theme, and export ATS-friendly resumes as A4 PDFs.", content: stub("Resume workflows", "The Resume Optimizer guides you through building or improving a resume, lets you pick from themed templates, and exports a clean A4 PDF ready for ATS systems."), sort_order: 60 },
-  { slug: "search-explore", category_slug: "workspace", title: "Search & Explore", description: "Smart search across your workspace and Explore suggestions for what to do next.", content: stub("Search & Explore", "Search ranges across your roadmaps, exports, documents, and chats. Explore surfaces AI suggestions for next actions based on what you've been working on."), sort_order: 70 },
+Your HustleAI account is the front door to a persistent workspace that remembers every roadmap, draft, and export you generate. Sign-up takes about 60 seconds and lands you in a fully-configured workspace with your first roadmap suggestions ready to go. This page walks through every option so you can pick the path that fits your situation — solo operator, freelancer onboarding a new client, or a small team setting up shared continuity.
 
-  // AI Tools
-  { slug: "proposal-generator", category_slug: "ai-tools", title: "Proposal generator", description: "Client-ready proposals — scope, deliverables, timeline, pricing.", content: stub("Proposal generator", "Describe the engagement; the proposal generator drafts scope, deliverables, timeline, and pricing. Edit any section, then export as PDF or DOCX."), sort_order: 10 },
-  { slug: "workspace-docs", category_slug: "ai-tools", title: "Workspace docs", description: "AI-assisted documents that live in your continuity rail.", content: stub("Workspace docs", "Briefs, SOPs, summaries, plans — drafted with AI assistance, saved to your workspace, exportable as PDF or Markdown."), sort_order: 20 },
-  { slug: "ai-exports", category_slug: "ai-tools", title: "AI exports", description: "Turn any AI output into a reopenable, deliverable artifact.", content: stub("AI exports", "Most AI tools have an Export action that converts their output into a tracked artifact — saved to your workspace and (if connected) delivered to Telegram."), sort_order: 30 },
-  { slug: "automation-packs", category_slug: "ai-tools", title: "Automation packs", description: "Pre-built AI workflows for recurring work.", content: stub("Automation packs", "Automation packs bundle a sequence of AI steps for common workflows — outreach, content batches, lead enrichment. Available on Pro and above."), sort_order: 40 },
-  { slug: "operational-packs", category_slug: "ai-tools", title: "Operational packs", description: "Heavier multi-step packs for agencies and consultants.", content: stub("Operational packs", "Operational packs chain proposals, documents, and roadmaps into end-to-end client workflows. Available on Elite and above."), sort_order: 50 },
-  { slug: "explore-suggestions", category_slug: "ai-tools", title: "Explore suggestions", description: "AI-suggested next actions based on your recent work.", content: stub("Explore suggestions", "Explore watches what you've generated recently and suggests next steps — new roadmaps to spin up, packs that fit your workflow, documents worth drafting."), sort_order: 60 },
-  { slug: "smart-search", category_slug: "ai-tools", title: "Smart search", description: "Semantic search across your workspace and the broader Explore index.", content: stub("Smart search", "Search understands meaning, not just keywords. Result depth scales with your plan — Free returns 3, Pro 5, Elite 10, Infinity 20."), sort_order: 70 },
+## When you'd use this
 
-  // Exports & Continuity
-  { slug: "export-types", category_slug: "exports-continuity", title: "Export types", description: "Roadmaps, proposals, documents, resumes, and workflow outputs.", content: heroExportTypes, tags: ["exports"], sort_order: 10, reading_time: 2 },
-  { slug: "reopen-exports", category_slug: "exports-continuity", title: "Reopen exports", description: "Return to any artifact and continue editing.", content: stub("Reopen exports", "Click any export in your Exports panel or continuity rail to reopen it in the original workspace, with all source context intact."), sort_order: 20 },
-  { slug: "telegram-delivery", category_slug: "exports-continuity", title: "Telegram delivery", description: "How and when artifacts arrive in your Telegram chat.", content: stub("Telegram delivery", "Once Telegram is connected, every new export is delivered automatically. Delivery typically lands in under a minute; Infinity plans use a priority lane."), sort_order: 30 },
-  { slug: "retry-delivery", category_slug: "exports-continuity", title: "Retry delivery", description: "Re-send an export that didn't arrive or was cleared.", content: stub("Retry delivery", "Use the Resend action on any export to push it to Telegram again. Resend allowance is per-export and depends on your plan."), sort_order: 40 },
-  { slug: "storage-modes", category_slug: "exports-continuity", title: "Storage modes", description: "How HustleAI keeps your artifacts available across devices.", content: stub("Storage modes", "Artifacts live in your workspace and are mirrored to your connected delivery channels so you can retrieve them on any device, even offline."), sort_order: 50 },
-  { slug: "retention-behavior", category_slug: "exports-continuity", title: "Retention behavior", description: "What stays active and what degrades after the continuity window.", content: stub("Retention behavior", "Exports remain fully active during your plan's continuity window. After the window they degrade — visible but locked — until you upgrade or regenerate. Nothing is deleted."), sort_order: 60 },
-  { slug: "continuity-lifecycle", category_slug: "exports-continuity", title: "Continuity lifecycle", description: "Active → expiring soon → degraded — what each state means.", content: stub("Continuity lifecycle", "Each artifact has three states: Active (fully usable), Expiring soon (within 3 days of degradation — pin or upgrade), and Degraded (visible but locked from open/share/resend). Telegram copies always remain in your chat history."), sort_order: 70 },
+Use this guide the first time you sign up, when you're switching from a personal email to a work email, or when you're helping a teammate join. It covers the email + one-time code path, the Google sign-in path, what to expect on the verification screen, and what happens immediately after you land in the workspace for the first time.
 
-  // Integrations
-  { slug: "integration-telegram", category_slug: "integrations", title: "Telegram", description: "HustleAI's primary delivery channel.", content: stub("Telegram", "Telegram is HustleAI's primary delivery channel. Connect it once and every new export lands in your chat automatically."), sort_order: 10 },
-  { slug: "integration-discord", category_slug: "integrations", title: "Discord", description: "Route notifications and team updates to a Discord channel.", content: stub("Discord", "Connect a Discord webhook to receive workflow notifications and team updates in a channel of your choice."), sort_order: 20 },
-  { slug: "notifications", category_slug: "integrations", title: "Notifications", description: "Choose what you're notified about and where.", content: stub("Notifications", "Pick which events trigger notifications (new export, workflow complete, quota warning, continuity expiring) and which channels receive them."), sort_order: 30 },
-  { slug: "delivery-routing", category_slug: "integrations", title: "Delivery routing", description: "Send different artifact types to different channels.", content: stub("Delivery routing", "Route roadmap PDFs to one channel, proposals to another, workflow results elsewhere. Configure rules from Integrations → Routing."), sort_order: 40 },
-  { slug: "test-notifications", category_slug: "integrations", title: "Test notifications", description: "Confirm a channel is wired up correctly.", content: stub("Test notifications", "Each connected channel has a Send test button. The test message is delivered the same way real notifications would be."), sort_order: 50 },
-  { slug: "connected-accounts", category_slug: "integrations", title: "Connected accounts", description: "Manage Telegram, Discord, Google, and other linked accounts.", content: stub("Connected accounts", "Review every account linked to your HustleAI workspace, disconnect any you no longer use, and rotate connections to a different account when needed."), sort_order: 60 },
+## Step by step
 
-  // Pricing
-  { slug: "pricing-overview", category_slug: "pricing", title: "Pricing & Plans", description: "Compare Free, Pro, Elite, and Infinity.", content: heroPricingOverview, tags: ["pricing","plans"], sort_order: 10, reading_time: 4 },
-  { slug: "plan-free", category_slug: "pricing", title: "Free", description: "Try HustleAI — 5 AI tool runs/day, 10 exports/month, 7-day continuity.", content: stub("Free", "Free includes 5 AI tool runs per day, 10 exports per month, a 7-day continuity window, and manual Telegram delivery. Best for trying the platform and shipping a first project."), sort_order: 20 },
-  { slug: "plan-pro", category_slug: "pricing", title: "Pro", description: "Operator tier — 50 runs/day, 200 exports/month, 60-day continuity.", content: stub("Pro", "Pro includes 50 AI tool runs per day, 200 exports per month, a 60-day continuity window, automatic Telegram delivery, and Starter automation packs. Best for independent operators with consistent weekly work."), sort_order: 30 },
-  { slug: "plan-elite", category_slug: "pricing", title: "Elite", description: "Agency tier — 200 runs/day, 1,000 exports/month, 365-day continuity, full pack library.", content: stub("Elite", "Elite includes 200 AI tool runs per day, 1,000 exports per month, a 365-day continuity window, the full library of automation and operational packs, and email + chat support. Best for agencies and consultants automating client deliverables."), sort_order: 40 },
-  { slug: "plan-infinity", category_slug: "pricing", title: "Infinity", description: "Unlimited runs, unlimited exports, unlimited continuity, priority delivery lane.", content: stub("Infinity", "Infinity removes all caps — unlimited AI tool runs, unlimited exports, unlimited continuity. Includes priority delivery, custom automation packs, and dedicated support. Best for power users who need persistent memory across every project."), sort_order: 50 },
+1. **Open the sign-up page** — Go to the home page and click **Get started**. You can also reach sign-up directly from any pricing or feature page — the CTA always routes here.
+2. **Choose email or Google** — Email gives you a one-time code flow with no password to remember. Google sign-in is one tap and reuses your existing Google identity for both sign-up and future sign-in.
+3. **Verify your email (email path)** — We send a six-digit code to your inbox. Codes arrive in under a minute and expire after 10 minutes for safety. Paste or type it in — the field auto-submits when complete.
+4. **Land in your default workspace** — You're dropped straight into a freshly-created workspace with onboarding tips, your first suggested roadmap, and a continuity rail that's ready to start filling up.
+5. **Connect Telegram (optional but recommended)** — From the onboarding banner or **Integrations → Telegram**, link the bot in two taps. Every export you generate from this point lands in your chat automatically.
+6. **Generate your first artifact** — Click **New roadmap** from the dashboard, describe what you want to plan, and watch it appear in your workspace within seconds. That artifact is now permanent — reopenable from any device, exportable as PDF, deliverable to Telegram.
 
-  // Troubleshooting
-  { slug: "missing-export", category_slug: "troubleshooting", title: "Missing export", description: "An export didn't show up — what to check.", content: stub("Missing export", "First, refresh the Exports panel. If it's still missing, check the workflow that should have produced it — partial drafts can show as in-progress. If you see a failure, retry from the source tool. Contact support if the export was confirmed but never appeared."), sort_order: 10 },
-  { slug: "telegram-not-connected", category_slug: "troubleshooting", title: "Telegram not connected", description: "Your Telegram badge shows disconnected.", content: stub("Telegram not connected", "Open Integrations → Telegram and click Reconnect. If the bot link doesn't open Telegram, copy the URL and paste it into Telegram's chat search."), sort_order: 20 },
-  { slug: "retry-failed", category_slug: "troubleshooting", title: "Retry failed", description: "A resend or retry didn't go through.", content: stub("Retry failed", "Check that Telegram is still connected and that you haven't hit the per-export resend allowance for your plan. If both are fine, wait a minute and try again — delivery occasionally queues during high load."), sort_order: 30 },
-  { slug: "reconnect-telegram", category_slug: "troubleshooting", title: "Reconnect Telegram", description: "Re-link the bot if delivery stops working.", content: stub("Reconnect Telegram", "Disconnect from Integrations → Telegram, then click Connect and start a new session with the bot. Your existing exports remain unaffected."), sort_order: 40 },
-  { slug: "expired-continuity", category_slug: "troubleshooting", title: "Expired continuity", description: "An artifact shows as degraded and you can't reopen it.", content: stub("Expired continuity", "When an artifact passes your plan's continuity window it enters a degraded state — visible but locked. Upgrade to restore access to the original, or regenerate from the source workspace. Any Telegram copy remains permanently available in your chat."), sort_order: 50 },
-  { slug: "quota-reached", category_slug: "troubleshooting", title: "Quota reached", description: "Hit a daily or monthly cap — what to do.", content: heroQuotaReached, tags: ["quota","limits"], sort_order: 60, reading_time: 2 },
-  { slug: "notification-delays", category_slug: "troubleshooting", title: "Notification delays", description: "A notification arrived late or not at all.", content: stub("Notification delays", "Most notifications deliver in under a minute. Delays usually clear within a few minutes; if a notification still hasn't arrived after 15 minutes, use the Send test button in Integrations to verify the channel."), sort_order: 70 },
+## Tips that make it sharper
 
-  // Security
-  { slug: "account-security", category_slug: "security", title: "Account security", description: "Sign-in, sessions, and what to do if you suspect compromise.", content: stub("Account security", "HustleAI uses one-time codes for verification, supports Google sign-in, and signs you out automatically if account integrity checks fail. Rotate your password and disconnect linked accounts from your profile if you suspect compromise."), sort_order: 10 },
-  { slug: "export-ownership", category_slug: "security", title: "Export ownership", description: "Who can see and act on the artifacts you generate.", content: stub("Export ownership", "Exports are scoped to your account. Share links are off by default — when you generate one, only people with that link can view the artifact. You can revoke share links at any time."), sort_order: 20 },
-  { slug: "continuity-privacy", category_slug: "security", title: "Continuity & privacy", description: "How your persistent workspace data is protected.", content: stub("Continuity & privacy", "Continuity data is private to your account. We don't use your workspace content to train models. Telegram-delivered copies follow Telegram's own privacy controls — you can delete them from your chat at any time."), sort_order: 30 },
-  { slug: "ai-usage-safety", category_slug: "security", title: "AI usage safety", description: "What AI sees, what it doesn't, and how to keep prompts safe.", content: stub("AI usage safety", "AI tools only see the inputs you provide for that specific generation. Avoid pasting secrets, credentials, or sensitive third-party data into prompts. Use workspace docs for material you want HustleAI to remember; use chat for transient questions."), sort_order: 40 },
-  { slug: "billing-protections", category_slug: "security", title: "Billing protections", description: "How charges, upgrades, and refunds work.", content: stub("Billing protections", "All charges go through our payment provider; HustleAI never stores card numbers. Upgrades take effect immediately and are prorated. Digital goods follow our published no-refund policy — see Pricing & Plans for details."), sort_order: 50 },
+- Use a long-lived email — your continuity rail is tied to the account, not the device, so you'll want access to that inbox if you ever need to recover sign-in.
+- If you sign up with Google, you can still add an email-based recovery later from **Settings → Account**.
+- The first roadmap you generate seeds the AI's understanding of how you work — be specific about your goal so future suggestions sharpen.
+- Onboarding tips can be dismissed individually or all at once from the dashboard header.
+
+## Troubleshooting
+
+- **Verification code never arrived** — Check spam, then request a new one from the verification screen. Corporate filters occasionally block one-time codes — try a personal email or use Google sign-in instead.
+- **Google sign-in shows an error** — Make sure pop-ups are allowed for HustleAI in your browser. If you're using a strict privacy extension, temporarily disable it for the sign-in domain.
+- **Code accepted but stuck on a loading screen** — Refresh the page once. If it persists, clear cookies for the HustleAI domain and try again — the new session will fix it.
+- **Wrong email used** — You can change your primary email later from **Settings → Account → Change email**. The continuity rail moves with the account automatically.
+
+## FAQ
+
+**Do I need a password?**
+
+No. HustleAI uses passwordless one-time codes for email sign-in, and delegated sign-in via Google. There's no password to manage or rotate.
+
+**Can I have more than one workspace?**
+
+Yes. Your account can own multiple workspaces — useful if you keep separate continuity for personal and client work. Create more from the workspace switcher in the top-left.
+
+**Is my email used for marketing?**
+
+No. You only receive transactional emails (one-time codes, important account notices, optional weekly digest if you opt in).
+
+**Can I delete my account?**
+
+Yes, from **Settings → Account → Delete account**. This is a formal, irreversible action — exports and continuity are removed permanently and Telegram-delivered copies remain in your chat history.
+
+## Related
+
+- [Workspace basics](/workspace-basics)
+- [Connect Telegram](/telegram-connection)
+- [Account security](/account-security)
+- [Pricing & Plans](/pricing-overview)
+`, sort_order: 20, reading_time: 4 },
+  { slug: "workspace-basics", category_slug: "getting-started", title: "Workspace basics", description: "The dashboard, continuity rail, and how to find what you've made.", content: `# Workspace basics
+
+Your workspace is the operating surface where every roadmap, document, export, and AI conversation lives. It's designed so you never have to dig: the dashboard tells you what's new, the continuity rail tells you what's persistent, and the sidebar gets you to a specific tool in one click. Once you understand these three regions, you can move through HustleAI without thinking about the structure.
+
+## When you'd use this
+
+Skim this page on day one to learn the layout. Come back when you want to fine-tune what shows up on your dashboard, hide rails you don't use, or set up a second workspace for a separate client or context.
+
+## Step by step
+
+1. **Open the dashboard** — The dashboard is the default landing surface. It surfaces recent activity, the AI tools you use most, your usage at a glance, and quick-launch buttons for the most common actions.
+2. **Use the continuity rail** — Down the side of the workspace, the continuity rail lists every artifact you've made — newest first. Click any item to reopen it in its original context with full editing capability.
+3. **Jump between tools from the sidebar** — AI tools, Exports, Roadmaps, Integrations, and Settings are one click away from any screen. The sidebar collapses to icons on smaller viewports.
+4. **Switch workspaces (if you have more than one)** — Use the workspace picker in the top-left. Each workspace has its own continuity, integrations, and usage counters.
+5. **Search anywhere** — Press \`⌘K\` (Mac) or \`Ctrl+K\` (Windows) to open Smart Search. Results span roadmaps, exports, documents, and chats.
+
+## Tips that make it sharper
+
+- Pin items you reference often — they jump to the top of the continuity rail and survive even after the standard continuity window.
+- The dashboard is yours to shape: hide widgets you don't use from the **Customize dashboard** menu.
+- If a sidebar item is missing, it's likely gated to a higher plan. Hover for a tooltip that explains which tier unlocks it.
+- The continuity rail respects the filters in Smart Search — narrow first, then scroll.
+
+## Troubleshooting
+
+- **Dashboard widgets look empty** — If you haven't generated anything yet, several widgets stay quiet. Create your first roadmap and they'll populate within seconds.
+- **Continuity rail is missing recent items** — Refresh once. If items still don't appear, check Smart Search — sometimes the rail filter is set narrow.
+- **Sidebar collapsed and won't expand** — Click the chevron at the top of the sidebar, or widen your browser viewport.
+
+## FAQ
+
+**Can I rearrange the dashboard?**
+
+Yes — open **Customize dashboard** to show, hide, or reorder widgets.
+
+**Does each workspace count separately for limits?**
+
+Daily AI runs are per-account; export and continuity limits are per-workspace so each one runs independently.
+
+**Is there a mobile view?**
+
+Yes. The workspace is fully responsive; the sidebar collapses to a bottom navigation pattern on phones.
+
+## Related
+
+- [Dashboard](/dashboard)
+- [Continuity rail](/continuity-rail)
+- [Smart search](/smart-search)
+- [Continuity basics](/continuity-basics)
+`, sort_order: 30, reading_time: 4 },
+  { slug: "first-roadmap", category_slug: "getting-started", title: "Your first roadmap", description: "Generate, edit, and export a complete operational plan.", content: heroFirstRoadmap, sort_order: 40, tags: ["roadmap","getting-started"], reading_time: 3 },
+  { slug: "first-export", category_slug: "getting-started", title: "Your first export", description: "How exports work and where they live.", content: heroFirstExport, sort_order: 50, tags: ["export","getting-started"], reading_time: 3 },
+  { slug: "telegram-connection", category_slug: "getting-started", title: "Connect Telegram", description: "Get every export delivered straight to your phone.", content: heroTelegramConnection, sort_order: 60, tags: ["telegram","integration"], reading_time: 2 },
+  { slug: "continuity-basics", category_slug: "getting-started", title: "Continuity basics", description: "How HustleAI remembers your work across sessions.", content: heroContinuityBasics, sort_order: 70, tags: ["continuity","memory"], reading_time: 3 },
+  { slug: "dashboard", category_slug: "workspace", title: "Dashboard", description: "Your operational home screen — recent activity, quick actions, usage at a glance.", content: `# Dashboard
+
+The dashboard is the first screen you see when you open your workspace. It's deliberately designed for **operational glance** — within five seconds you should know what's new, what needs your attention, and what's the next thing to ship. It's not a metrics dashboard; it's a do-the-work dashboard.
+
+## When you'd use this
+
+Open the dashboard at the start of every session. Use it when you want to resume work without trying to remember exactly where you left off, when you need to see your usage before starting a heavy generation, or when you want one-tap access to the tools you use most.
+
+## Step by step
+
+1. **Scan the activity feed** — Newest events first — completed exports, in-progress workflows, roadmap edits. Click any row to jump directly into that artifact.
+2. **Check your usage panel** — Right side of the dashboard. Shows AI runs today, exports this month, and continuity window remaining for the oldest item. Color-coded as you approach a cap.
+3. **Hit a quick action** — The center of the dashboard hosts large quick-launch buttons for **New roadmap**, **New document**, **New proposal**, and any tool you've pinned.
+4. **Pin or rearrange widgets** — Click **Customize dashboard** in the header. Drag to reorder, toggle visibility per widget, and reset to defaults if you want a clean slate.
+
+## Tips that make it sharper
+
+- Pin the AI tools you actually use — the default set is biased toward new users and gets noisy once you've found your rhythm.
+- The usage panel updates live as runs complete. If a generation appears to fail but doesn't decrement, refresh — the counter is the source of truth.
+- Keyboard: \`g d\` from anywhere returns to the dashboard.
+
+## Troubleshooting
+
+- **Activity feed is blank after generating something** — Hard refresh once. The dashboard caches recent events for speed and occasionally needs a nudge after a fresh generation.
+- **Usage panel shows a number that looks wrong** — Double-check by visiting **Settings → Usage** for the canonical view. If the dashboard still disagrees after refresh, contact support.
+
+## FAQ
+
+**Can I make the dashboard show graphs?**
+
+Today the dashboard focuses on operational signals rather than analytics. Aggregated trends live under **Settings → Usage**.
+
+**Does each workspace have its own dashboard?**
+
+Yes — every workspace renders its own dashboard with its own activity, usage, and pins.
+
+## Related
+
+- [Workspace basics](/workspace-basics)
+- [Continuity rail](/continuity-rail)
+- [Quota reached](/quota-reached)
+`, sort_order: 10, reading_time: 4 },
+  { slug: "continuity-rail", category_slug: "workspace", title: "Continuity rail", description: "Your persistent feed of everything you've made.", content: `# Continuity rail
+
+The continuity rail is the side panel that makes HustleAI feel like it never forgets. Every artifact you've generated, every document you've drafted, every workflow you've started — they all surface here, newest first, with one-click reopen. It's the difference between a chat tool you have to re-prime each day and a workspace you can step away from for a week and resume mid-thought.
+
+## When you'd use this
+
+Use the rail to resume work without remembering exact titles, to find an artifact you generated yesterday and want to reopen today, or to spot items approaching the end of their continuity window so you can pin or upgrade before they degrade.
+
+## Step by step
+
+1. **Scroll the rail to browse recent work** — Items are sorted newest first, with type icons (roadmap, document, proposal, export) and a relative timestamp.
+2. **Click any item to reopen it** — Reopening returns you to the original workspace surface with all source context — you can edit, regenerate sections, re-export, and resend.
+3. **Filter by type** — Click the filter chip at the top of the rail to limit to roadmaps, documents, exports, or chats.
+4. **Pin items you reference often** — Pinned items move to a Pinned section above Recent and survive past your plan's standard continuity window.
+5. **Watch the expiring-soon warning** — Items within 3 days of degrading show an amber dot. Pin them or upgrade to keep full access.
+
+## Tips that make it sharper
+
+- Use Smart Search (\`⌘K\`) when the rail is too long — search ranges across the same items but lets you find by content.
+- Pinning is free on every plan; use it liberally for anything you'll revisit.
+- Right-click any rail item for quick actions: pin, share, export to PDF, resend to Telegram.
+
+## Troubleshooting
+
+- **An item I just made isn't appearing** — Refresh the rail (the rotating arrow at the top). Brand-new artifacts occasionally take a few seconds to register.
+- **An item shows as degraded** — Its continuity window has lapsed. Upgrade to restore full access, or regenerate from the source workspace. Telegram copies (if delivered) remain in your chat permanently.
+- **The rail is empty after a fresh sign-in** — Confirm you're in the right workspace via the top-left switcher — each workspace has its own rail.
+
+## FAQ
+
+**How far back does the rail go?**
+
+As far back as your plan's continuity window allows for unpinned items; pinned items go back forever.
+
+**Can I delete an item from the rail?**
+
+Yes — right-click and choose **Remove**. This is irreversible and removes the artifact from your workspace; Telegram copies stay in your chat.
+
+**Do shared workspaces share a rail?**
+
+Each workspace has one rail visible to everyone with access to that workspace.
+
+## Related
+
+- [Continuity basics](/continuity-basics)
+- [Continuity lifecycle](/continuity-lifecycle)
+- [Exports panel](/exports-panel)
+`, sort_order: 20, reading_time: 4 },
+  { slug: "exports-panel", category_slug: "workspace", title: "Exports panel", description: "Find, reopen, and re-deliver any artifact you've produced.", content: `# Exports panel
+
+The Exports panel is the central archive of every finished artifact HustleAI has produced for you — PDFs, DOCX files, resumes, workflow outputs. Unlike the continuity rail (which mixes drafts and exports), the Exports panel is a focused list of *finished things you can hand off*. It's where you go when you need to redeliver a file, share an artifact with a client, or audit what you've shipped over the past month.
+
+## When you'd use this
+
+Open the Exports panel when a client asks you to resend a proposal, when you need to find a roadmap you exported two weeks ago, when you want to generate a public share link, or when you want to confirm a Telegram delivery succeeded.
+
+## Step by step
+
+1. **Open Exports from the sidebar** — All your finished artifacts list newest-first with title, type, size, and a delivery indicator showing whether Telegram delivery succeeded.
+2. **Filter and search** — Filter by type (roadmap, proposal, document, resume, workflow), or use the search box to find by title.
+3. **Use the row actions** — Each export has Open, Download, Share, Resend, and Reopen actions. Open renders the artifact; Download saves a local copy; Share generates a revocable link; Resend re-delivers to Telegram; Reopen returns to the source workspace.
+4. **Revoke a share link** — Click an export with an active share link and hit **Revoke** to invalidate the URL. Anyone with the old link will see an Unavailable page.
+
+## Tips that make it sharper
+
+- If you'll need many copies of the same file, generate one share link rather than downloading repeatedly — it's faster and gives you revocation control.
+- Resend respects your plan's per-export resend allowance; check **Pricing & Plans** if you're hitting the cap.
+- Bulk actions are coming — for now, use search-then-action workflow to handle many files quickly.
+
+## Troubleshooting
+
+- **Export missing from the list** — See [Missing export](/missing-export) for the full diagnostic — usually it's a workflow that hadn't finished when you checked.
+- **Open fails with a not-available error** — The continuity window may have lapsed (degraded state). Upgrade or regenerate. Telegram copies remain in your chat.
+- **Share link not working for the recipient** — Confirm the link wasn't revoked and that the recipient is using the exact URL you sent (no auto-corrections from chat apps).
+
+## FAQ
+
+**Are exports the same as roadmaps?**
+
+No. A roadmap is the live, editable plan in your workspace. An export is the rendered, deliverable artifact (PDF, DOCX) generated from that roadmap.
+
+**Do downloads count toward export quota?**
+
+No. Quota counts when you *generate* an export, not when you re-download it.
+
+**Can I export the same item twice?**
+
+Yes — generate once, then Download repeatedly. If you need a regenerated copy with edits, that counts as a new export.
+
+## Related
+
+- [Export types](/export-types)
+- [Reopen exports](/reopen-exports)
+- [Retry delivery](/retry-delivery)
+- [Continuity lifecycle](/continuity-lifecycle)
+`, sort_order: 30, reading_time: 5 },
+  { slug: "roadmaps", category_slug: "workspace", title: "Roadmaps", description: "Generate, edit, branch, and export operational plans.", content: `# Roadmaps
+
+Roadmaps are HustleAI's flagship planning artifact — an AI-generated, fully-editable operational plan for any goal. They include milestones, weekly checkpoints, suggested assets, and a reading order that takes you from "I want to do X" to "I've shipped X". Once generated, a roadmap lives in your workspace forever (within your continuity window) and can be edited, branched, regenerated section-by-section, and exported as a branded PDF.
+
+## When you'd use this
+
+Generate a roadmap whenever you're about to commit to a multi-week project — launching a service, onboarding a new client, writing a course, building a content engine. Reopen and edit when scope shifts. Branch into sub-roadmaps when a milestone is large enough to deserve its own plan.
+
+## Step by step
+
+1. **Click New roadmap** — From the dashboard or the Roadmaps section in the sidebar. The wizard opens with a single goal input and depth selector.
+2. **Describe your goal in plain language** — Be specific about scope, timeline, and constraints. "Launch a 30-day freelance video editing service targeting wedding videographers" produces sharper output than "start a video editing business".
+3. **Pick depth** — Quick overview (5–8 milestones), Standard plan (10–15 milestones with weekly checkpoints), or Detailed playbook (full sequence with sub-tasks and recommended assets per milestone).
+4. **Review and edit** — The roadmap renders in the workspace. Click any milestone to edit copy inline, drag to reorder, or hit **Regenerate** on any individual section if it's off the mark.
+5. **Export as PDF** — Click **Export → PDF**. A branded PDF lands in your Exports panel and (if Telegram is connected) in your chat.
+6. **Branch a sub-roadmap** — Right-click any milestone and choose **Branch into sub-roadmap**. The new roadmap inherits context from the parent and shows as a linked child in your continuity rail.
+
+## Tips that make it sharper
+
+- Re-generate just the sections that miss — don't re-roll the whole roadmap and lose your manual edits.
+- Pair a roadmap with **Automation packs** to ship recurring deliverables that the roadmap calls out.
+- Mark milestones complete as you ship them — your dashboard surfaces what's next based on roadmap progress.
+- Use the **Notes** panel inside each milestone to capture decisions and links — it stays continuous across sessions.
+
+## Troubleshooting
+
+- **Roadmap output is too generic** — Refine the goal — add a target audience, a deadline, a budget, or a success metric. Then regenerate.
+- **Regenerate didn't change much** — Add a one-line nudge in the regenerate dialog like "more concrete actions" or "include outreach scripts".
+- **Can't export to PDF** — Check the Exports panel — large detailed roadmaps occasionally take 15–30 seconds. If it never appears, retry from the roadmap header.
+
+## FAQ
+
+**Is there a limit on roadmaps?**
+
+Yes — concurrent active roadmaps cap depends on your plan (Free 3, Pro 25, Elite 100, Infinity unlimited). Archived roadmaps don't count.
+
+**Can I share a roadmap with someone outside HustleAI?**
+
+Yes — export to PDF and share that, or generate a share link from the roadmap header.
+
+**Does editing a roadmap re-run AI?**
+
+Only if you hit Regenerate on a section. Inline edits are saved without AI calls.
+
+## Related
+
+- [Your first roadmap](/first-roadmap)
+- [Export types](/export-types)
+- [Automation packs](/automation-packs)
+- [Continuity basics](/continuity-basics)
+`, sort_order: 40, reading_time: 5 },
+  { slug: "ai-workspace", category_slug: "workspace", title: "AI workspace", description: "Drafting space for documents, briefs, and AI-assisted writing.", content: `# AI workspace
+
+The AI workspace is your persistent drafting surface — a place to write briefs, SOPs, summaries, and longer-form documents with AI assistance, where every revision is saved and every finished piece becomes a reopenable artifact. Unlike a chat window that forgets, the AI workspace treats every document as a continuous object: open it tomorrow, the cursor's still where you left it.
+
+## When you'd use this
+
+Use the AI workspace for any writing task longer than a chat reply — client briefs, internal SOPs, weekly summaries, course outlines, content frameworks. Use it when you need an editable canvas with AI in the loop rather than a transcript of a conversation.
+
+## Step by step
+
+1. **Open AI workspace from the sidebar** — The workspace lists your existing documents on the left and a fresh editor on the right.
+2. **Start a new document** — Click **New document**, give it a working title, and pick a starting template if one fits (brief, SOP, summary, blank).
+3. **Draft with AI assistance** — Highlight any text and hit the inline AI menu — rewrite, shorten, expand, change tone, generate examples, or summarize. The AI acts on the selected text only.
+4. **Save and continue later** — Saves are automatic. Close the tab whenever; the document is in your continuity rail and reopens in the same state.
+5. **Export when done** — Click **Export → PDF** or **Markdown**. The export lands in your Exports panel and (if connected) in Telegram.
+
+## Tips that make it sharper
+
+- Smaller, targeted AI selections produce better edits than asking the AI to rewrite a whole page.
+- Use Markdown for handoffs to engineering or other tooling; use PDF for client-facing deliverables.
+- Pair the AI workspace with Smart Search — finding a paragraph you wrote three weeks ago takes one query.
+- Keep one document as a running scratchpad — the AI workspace handles long documents gracefully.
+
+## Troubleshooting
+
+- **AI menu doesn't appear on selection** — Make sure the selection is inside the editor area, not on margin elements. Refresh once if it still doesn't appear.
+- **Export looks unformatted** — Verify Markdown structure (headings, lists) — the PDF export honors Markdown formatting strictly.
+- **Document not showing in the continuity rail** — It needs at least one character of content. Empty documents are not saved.
+
+## FAQ
+
+**Is there a word limit?**
+
+Documents can grow large. For very long pieces (>20,000 words), consider splitting into sections for faster editing.
+
+**Does AI training use my drafts?**
+
+No. Workspace content is not used to train AI models.
+
+**Can I version a document?**
+
+Duplicate the document before major edits — duplicates show as sibling entries in the continuity rail.
+
+## Related
+
+- [Workspace docs](/workspace-docs)
+- [AI exports](/ai-exports)
+- [Export types](/export-types)
+`, sort_order: 50, reading_time: 5 },
+  { slug: "resume-workflows", category_slug: "workspace", title: "Resume workflows", description: "Build, theme, and export ATS-friendly resumes as A4 PDFs.", content: `# Resume workflows
+
+The Resume Optimizer turns a rough work history into a clean, themed, ATS-friendly resume — exported as an A4 PDF ready for application portals. It handles structure, tone, and theming; you focus on what to include and how to position yourself.
+
+## When you'd use this
+
+Use the resume workflow when you're applying to a new role, updating after a major project, tailoring a resume for a specific opening, or producing localized variants (different languages, different markets). Each variant is saved as its own artifact so you can re-open and tweak any of them later.
+
+## Step by step
+
+1. **Open Resume Optimizer from the AI tools sidebar** — Start fresh, or open an existing resume from your continuity rail.
+2. **Provide your history** — Paste an existing resume, fill the structured form, or generate a draft from a short bio. The optimizer reconciles your inputs into a single canonical record.
+3. **Pick a theme** — Choose from professional, modern, minimal, and editorial themes. Each is ATS-friendly — themes only style typography and accent color, never break parsing.
+4. **Refine with AI** — Use the inline AI menu on any bullet to tighten phrasing, quantify impact, or rewrite for a specific role.
+5. **Export as A4 PDF** — Click **Export PDF**. The export lands in your Exports panel and (if connected) in Telegram.
+
+## Tips that make it sharper
+
+- Quantify outcomes — "reduced onboarding time 40%" beats "improved onboarding".
+- Generate a separate variant per role family instead of constantly rewriting one resume.
+- Keep one master variant updated; clone it when tailoring for specific applications.
+
+## Troubleshooting
+
+- **PDF text wrapping looks off** — Switch themes — long titles handle differently across themes. The minimal theme accommodates the longest content.
+- **ATS rejected the resume** — All four themes are ATS-friendly. If a specific portal complained, share the error — usually a missing field, not a format issue.
+
+## FAQ
+
+**Can I export to DOCX?**
+
+PDF is the supported export. Most portals accept PDF; we recommend it for fidelity.
+
+**Will my resume always be A4?**
+
+Yes — A4 is the global standard. Letter-size users typically have no issue printing A4 content.
+
+## Related
+
+- [AI workspace](/ai-workspace)
+- [Export types](/export-types)
+- [Exports panel](/exports-panel)
+`, sort_order: 60, reading_time: 4 },
+  { slug: "search-explore", category_slug: "workspace", title: "Search & Explore", description: "Smart search across your workspace and Explore suggestions for what to do next.", content: `# Search & Explore
+
+Smart Search is HustleAI's universal find-anything box, and Explore is its forward-looking sibling — surfacing AI-suggested next steps based on what you've recently shipped. Together they form the navigation layer for a workspace that keeps growing without ever forcing you to hunt.
+
+## When you'd use this
+
+Use Smart Search whenever you can't remember the title of something but remember a phrase from it. Use Explore at the start of a session when you want HustleAI to propose what to work on next, based on your continuity.
+
+## Step by step
+
+1. **Open Smart Search** — Press \`⌘K\` (Mac) or \`Ctrl+K\` (Windows), or click the search icon in the header.
+2. **Search by meaning** — Type natural-language phrases — semantic search ranges over titles, content, and metadata. Result depth scales with your plan.
+3. **Open Explore** — From the sidebar. Suggestions update as your continuity changes — finish a roadmap and Explore proposes related automation packs or next-step documents.
+4. **Act directly from results** — Both Search and Explore include inline actions — open, export, re-deliver to Telegram, branch into a new roadmap.
+
+## Tips that make it sharper
+
+- Search supports type filters — prefix with \`roadmap:\`, \`document:\`, \`export:\` to narrow.
+- Pin Explore suggestions you want to come back to — they stay even after the underlying signal moves on.
+
+## Troubleshooting
+
+- **Search returns nothing for content I know exists** — Confirm you're in the workspace that owns the content (top-left switcher).
+- **Explore suggestions feel off** — Generate a new roadmap or document — Explore re-orients to recent signals quickly.
+
+## FAQ
+
+**Does Smart Search index Telegram messages?**
+
+It indexes the artifacts delivered to Telegram, not arbitrary chat messages.
+
+**How many results does each tier see?**
+
+Free 3, Pro 5, Elite 10, Infinity 20 per query.
+
+## Related
+
+- [Smart search](/smart-search)
+- [Explore suggestions](/explore-suggestions)
+- [Workspace basics](/workspace-basics)
+`, sort_order: 70, reading_time: 4 },
+  { slug: "proposal-generator", category_slug: "ai-tools", title: "Proposal generator", description: "Client-ready proposals — scope, deliverables, timeline, pricing.", content: `# Proposal generator
+
+The proposal generator drafts client-ready proposals in under a minute — scope, deliverables, timeline, and pricing — fully editable before export. It's designed for service operators (freelancers, consultants, agencies) who lose deals to slow follow-up. Capture the lead, generate a tailored proposal, send it the same day.
+
+## When you'd use this
+
+Use it after any sales conversation where you've understood the prospect's problem. Use it to standardize proposals across a team. Use it when responding to RFPs where you need a polished first draft fast.
+
+## Step by step
+
+1. **Click New proposal** — From the dashboard or the AI Tools sidebar.
+2. **Describe the engagement** — Client name, industry, problem, your service, budget signals, timeline. The more context, the sharper the draft.
+3. **Pick a template** — Choose from short-form, standard, or comprehensive. Short-form is one-pager territory; comprehensive includes case studies, methodology, and risk sections.
+4. **Review and edit** — Every section is inline-editable. Use the AI menu to rewrite tone ("more formal", "more confident"), regenerate a single section, or add a section that wasn't included.
+5. **Export as PDF or DOCX** — PDF for direct send; DOCX when the client expects to edit. The export lands in Exports and (if connected) in Telegram.
+
+## Tips that make it sharper
+
+- Generate a proposal the same day as the call — speed converts.
+- Maintain a proposal template you re-use by duplicating a strong past proposal as the starting point.
+- Use comparison sections when you're offering tiered packages — the comprehensive template handles this cleanly.
+
+## Troubleshooting
+
+- **Pricing section is vague** — Provide actual numbers or a range in the input. The generator won't invent specific pricing without a signal.
+- **Tone is too generic** — Add a voice note in the input: "Write like an experienced agency lead, not a junior".
+
+## FAQ
+
+**Can I generate a proposal in another language?**
+
+Yes — write the input in that language or add "in [language]" to the brief.
+
+**Does it support electronic signature?**
+
+Not natively. Export to PDF and route through your e-sign provider.
+
+## Related
+
+- [Workspace docs](/workspace-docs)
+- [Automation packs](/automation-packs)
+- [Operational packs](/operational-packs)
+`, sort_order: 10, reading_time: 5 },
+  { slug: "workspace-docs", category_slug: "ai-tools", title: "Workspace docs", description: "AI-assisted documents that live in your continuity rail.", content: `# Workspace docs
+
+Workspace docs are AI-assisted documents that live in your continuity rail forever (within your continuity window). Briefs, SOPs, summaries, frameworks — write them once, edit them anytime, export them when ready. They're the long-form companion to chat: persistent, structured, and reopenable.
+
+## When you'd use this
+
+Use workspace docs for any text artifact you'll revisit — onboarding docs for a new client, recurring weekly summaries, evergreen frameworks, internal SOPs.
+
+## Step by step
+
+1. **Open AI workspace and create a doc** — Click **New document**, pick a template or start blank.
+2. **Write with AI in the loop** — Inline AI handles rewrite, shorten, expand, change tone, generate examples.
+3. **Save with no friction** — Saves are automatic; close the tab whenever.
+4. **Export when ready** — PDF for client-facing, Markdown for engineering or other tooling.
+
+## Tips that make it sharper
+
+- Use one master SOP doc per recurring workflow — easier to keep current than scattered notes.
+- Tag docs in their title (e.g. "[SOP]", "[Client X]") for fast scanning in the rail.
+
+## Troubleshooting
+
+- **Doc reverted to an earlier version** — Auto-save is per keystroke; reverts are rare. If you see one, contact support with the doc URL.
+
+## FAQ
+
+**Are workspace docs the same as exports?**
+
+Docs are live editable; exports are rendered finished artifacts.
+
+**Can I link docs to roadmaps?**
+
+Yes — paste the roadmap URL into the doc; clicks open the roadmap in a new tab.
+
+## Related
+
+- [AI workspace](/ai-workspace)
+- [AI exports](/ai-exports)
+- [Export types](/export-types)
+`, sort_order: 20, reading_time: 4 },
+  { slug: "ai-exports", category_slug: "ai-tools", title: "AI exports", description: "Turn any AI output into a reopenable, deliverable artifact.", content: `# AI exports
+
+Most AI tools in HustleAI emit reopenable artifacts — not just a chat answer you'd lose on refresh. **AI exports** is the umbrella term for these: a finished, downloadable, deliverable result that's tracked in your workspace and (if connected) pushed to Telegram.
+
+## When you'd use this
+
+Whenever you're about to copy-paste an AI output into another tool, check whether the source tool has an Export action — exporting saves it as a tracked artifact you can reopen, share, and resend later.
+
+## Step by step
+
+1. **Generate any AI output** — Proposal, document, roadmap, resume, workflow result.
+2. **Hit the Export action** — Picks the right format (PDF, DOCX, Markdown) automatically based on the tool.
+3. **Find it in the Exports panel** — Listed newest first, with Open, Download, Share, Resend, Reopen actions.
+
+## Tips that make it sharper
+
+- Export early, edit later — having a tracked artifact makes regeneration and sharing easier than passing the output around as text.
+- Connect Telegram so every export auto-delivers to your phone.
+
+## Troubleshooting
+
+- **Export action greyed out** — The output is still generating — wait for it to complete, then export.
+
+## FAQ
+
+**Are AI exports different from regular exports?**
+
+No — "AI exports" just means the export was produced by an AI tool. Same Exports panel, same lifecycle.
+
+## Related
+
+- [Export types](/export-types)
+- [Exports panel](/exports-panel)
+- [Telegram delivery](/telegram-delivery)
+`, sort_order: 30, reading_time: 3 },
+  { slug: "automation-packs", category_slug: "ai-tools", title: "Automation packs", description: "Pre-built AI workflows for recurring work.", content: `# Automation packs
+
+Automation packs bundle a sequence of AI steps into a single repeatable workflow. Instead of running five tools in order, you run one pack — outreach, content batches, lead enrichment, recurring summaries. Packs are pre-built by HustleAI and curated for common operator patterns. Available on Pro and above.
+
+## When you'd use this
+
+Use packs for any workflow you'd otherwise do manually each week. Anything that takes "step 1, then step 2, then step 3" is a candidate.
+
+## Step by step
+
+1. **Open Automation packs from the sidebar** — Browse the library by category.
+2. **Open a pack to see its steps** — Each pack lists its inputs, the sequence of AI steps, and the output format.
+3. **Provide inputs and run** — Inputs are validated before execution. The pack runs in your workspace; progress shows live.
+4. **Collect the output** — Pack outputs become tracked exports — open, share, resend like any other artifact.
+
+## Tips that make it sharper
+
+- Save inputs for packs you run weekly — saved inputs make re-runs one-click.
+- Packs respect your AI run quota — a 5-step pack counts as 5 runs.
+
+## Troubleshooting
+
+- **Pack failed mid-sequence** — Open the failed step, fix the input, and use **Resume from step**. You don't pay for the steps before the failure.
+
+## FAQ
+
+**Can I edit a pack's steps?**
+
+Library packs are read-only. Custom packs (Infinity tier) are fully editable.
+
+**Where do pack outputs land?**
+
+In your Exports panel as a single combined artifact.
+
+## Related
+
+- [Operational packs](/operational-packs)
+- [AI exports](/ai-exports)
+- [Pricing & Plans](/pricing-overview)
+`, sort_order: 40, reading_time: 4 },
+  { slug: "operational-packs", category_slug: "ai-tools", title: "Operational packs", description: "Heavier multi-step packs for agencies and consultants.", content: `# Operational packs
+
+Operational packs are heavier, multi-step workflows that chain proposals, documents, and roadmaps into end-to-end client engagements. Where automation packs run one workflow, operational packs orchestrate an entire deliverable lifecycle. Available on Elite and above.
+
+## When you'd use this
+
+Use operational packs when you sell repeatable engagements — a content audit + roadmap + execution plan; a brand strategy + visual direction + launch checklist; a website discovery + sitemap + content brief. One pack run produces the whole client package.
+
+## Step by step
+
+1. **Open Operational packs from the sidebar** — Browse by engagement type.
+2. **Open a pack and review its outputs** — Each pack shows the artifacts it produces — usually 3-6 linked exports per run.
+3. **Provide engagement inputs** — Client context, scope, timeline, deliverables. Inputs are reused across every step.
+4. **Run and review** — The pack produces a linked set of artifacts. Reopen any one to edit; the others stay linked.
+
+## Tips that make it sharper
+
+- Reuse a client's pack run as the starting template for the next phase of work.
+- Operational packs respect quota the same way as automation packs — each step is one AI run.
+
+## Troubleshooting
+
+- **One artifact in the pack feels off** — Regenerate just that artifact — the rest stay intact.
+
+## FAQ
+
+**Can I build a custom operational pack?**
+
+Yes, on Infinity. Custom packs are scoped to your workspace.
+
+## Related
+
+- [Automation packs](/automation-packs)
+- [Proposal generator](/proposal-generator)
+- [Roadmaps](/roadmaps)
+`, sort_order: 50, reading_time: 4 },
+  { slug: "explore-suggestions", category_slug: "ai-tools", title: "Explore suggestions", description: "AI-suggested next actions based on your recent work.", content: `# Explore suggestions
+
+Explore is the proactive half of HustleAI. It watches what you've recently generated and proposes what to do next — new roadmaps to spin up, packs that fit your pattern, documents worth drafting. It's the difference between a tool that waits for instructions and a workspace that nudges you forward.
+
+## When you'd use this
+
+Check Explore at the start of a session, after finishing a major artifact, or whenever you're not sure what to work on next.
+
+## Step by step
+
+1. **Open Explore from the sidebar** — Suggestions appear as cards with a one-line rationale and a primary action.
+2. **Act on a suggestion** — Click the card to start the proposed workflow — usually opens a pre-filled tool or roadmap.
+3. **Pin or dismiss** — Pin suggestions you want to revisit. Dismiss ones that aren't relevant — Explore learns from dismissals.
+
+## Tips that make it sharper
+
+- Explore weights recency — generate a roadmap and the next session's suggestions pivot around it.
+- Pinned suggestions survive past their original trigger.
+
+## Troubleshooting
+
+- **Suggestions feel generic** — Generate more — Explore has more signal to work with after a few artifacts.
+
+## FAQ
+
+**Does Explore use my data outside HustleAI?**
+
+No. Suggestions are derived from your own workspace activity only.
+
+## Related
+
+- [Smart search](/smart-search)
+- [Dashboard](/dashboard)
+`, sort_order: 60, reading_time: 3 },
+  { slug: "smart-search", category_slug: "ai-tools", title: "Smart search", description: "Semantic search across your workspace and the broader Explore index.", content: `# Smart search
+
+Smart Search understands meaning, not just keywords. Type a phrase and HustleAI finds the artifact you remember the shape of — even if you've forgotten its title. Result depth scales with your plan so heavier users get deeper ranges.
+
+## When you'd use this
+
+Use Smart Search whenever you can't remember the title of something, when you want to find every artifact that touched a topic, or when you're scanning for prior work to reuse.
+
+## Step by step
+
+1. **Open Smart Search** — \`⌘K\` (Mac) or \`Ctrl+K\` (Windows).
+2. **Type your query in plain language** — Phrases work better than single keywords. "Pricing section for SaaS proposal" beats "pricing".
+3. **Filter by type** — Use chips above the results to narrow to roadmaps, documents, exports, or chats.
+4. **Act inline** — Open, export, resend, or branch from the result row.
+
+## Tips that make it sharper
+
+- Search ranges over content, not just titles — long-form documents are fully indexed.
+- Prefix syntax: \`roadmap:\`, \`document:\`, \`export:\` for fast filtering.
+
+## Troubleshooting
+
+- **Results missing recent items** — Indexing of brand-new items takes a few seconds. Re-run the search after a moment.
+
+## FAQ
+
+**How many results does each tier see?**
+
+Free 3, Pro 5, Elite 10, Infinity 20 per query.
+
+**Does search work across workspaces?**
+
+Each search is scoped to the active workspace. Switch via the top-left workspace picker.
+
+## Related
+
+- [Explore suggestions](/explore-suggestions)
+- [Continuity rail](/continuity-rail)
+`, sort_order: 70, reading_time: 3 },
+  { slug: "export-types", category_slug: "exports-continuity", title: "Export types", description: "Roadmaps, proposals, documents, resumes, and workflow outputs.", content: heroExportTypes, sort_order: 10, tags: ["exports"], reading_time: 2 },
+  { slug: "reopen-exports", category_slug: "exports-continuity", title: "Reopen exports", description: "Return to any artifact and continue editing.", content: `# Reopen exports
+
+Every export remembers where it came from. Click **Reopen** on any export and you're returned to the original workspace surface — roadmap, proposal, document — with full editing capability and source context. There's no "flat archive"; the source is always one click away.
+
+## When you'd use this
+
+Reopen when a client asks for a revision, when you want to repurpose a past export as the starting point for a new one, or when an export is degraded and you want to regenerate from the same source.
+
+## Step by step
+
+1. **Find the export in your Exports panel or continuity rail** — Use Smart Search if the list is long.
+2. **Click Reopen** — Lands you in the source workspace with the artifact loaded.
+3. **Edit, regenerate, re-export** — Inline edits save automatically; re-export to ship a new version.
+
+## Tips that make it sharper
+
+- Reopen a past export and Duplicate before editing if you want to preserve the original.
+- Reopen still works on degraded artifacts in read-only mode — you can see the source but can't re-export until you upgrade or regenerate.
+
+## Troubleshooting
+
+- **Reopen fails** — Continuity window has lapsed. Upgrade or regenerate.
+
+## FAQ
+
+**Does reopening count as a new generation?**
+
+No. Only Regenerate or new exports count against quota.
+
+## Related
+
+- [Exports panel](/exports-panel)
+- [Continuity lifecycle](/continuity-lifecycle)
+- [Expired continuity](/expired-continuity)
+`, sort_order: 20, reading_time: 3 },
+  { slug: "telegram-delivery", category_slug: "exports-continuity", title: "Telegram delivery", description: "How and when artifacts arrive in your Telegram chat.", content: `# Telegram delivery
+
+Telegram delivery is the default way artifacts reach your phone. Once Telegram is connected, every new export lands in your chat with a preview, a download link, and a re-open shortcut back to the workspace. Delivery typically completes in under a minute; Infinity plans get a priority lane.
+
+## When you'd use this
+
+Connect Telegram if you want offline phone access to every artifact, single-source-of-truth delivery (no email clutter), or instant notifications when long workflows finish.
+
+## Step by step
+
+1. **Connect Telegram** — Integrations → Telegram → Connect. See [Connect Telegram](/telegram-connection) for the full flow.
+2. **Generate any export** — Roadmap, proposal, document — anything. Delivery starts automatically once the export completes.
+3. **Receive in your chat** — Preview, download, reopen — all available from the message.
+4. **Pause or resume** — Pause delivery anytime from Integrations without disconnecting.
+
+## Tips that make it sharper
+
+- Use Telegram's search inside the bot chat to find old artifacts on your phone without opening HustleAI.
+- Star important messages in Telegram for quick retrieval.
+
+## Troubleshooting
+
+- **Export generated but not delivered** — See [Retry delivery](/retry-delivery).
+- **Telegram shows the bot disconnected** — See [Reconnect Telegram](/reconnect-telegram).
+
+## FAQ
+
+**Does delivery use my Telegram quota?**
+
+No external quota — Telegram has no per-message limits at normal usage.
+
+**Can I route different exports to different chats?**
+
+Today, delivery is to one chat per workspace. Routing rules are on the roadmap.
+
+## Related
+
+- [Connect Telegram](/telegram-connection)
+- [Retry delivery](/retry-delivery)
+- [Delivery routing](/delivery-routing)
+`, sort_order: 30, reading_time: 4 },
+  { slug: "retry-delivery", category_slug: "exports-continuity", title: "Retry delivery", description: "Re-send an export that didn't arrive or was cleared.", content: `# Retry delivery
+
+Sometimes an export needs to land in Telegram a second time — you cleared the original, your phone was offline at the moment, or a long workflow's notification didn't arrive. **Resend** is the one-click action that re-delivers any export.
+
+## When you'd use this
+
+Resend when an export is missing from your Telegram chat, when you've cleared a chat and want a fresh copy, or when collaborating with someone who joined the bot mid-project.
+
+## Step by step
+
+1. **Open the export in your Exports panel** — Or find it via Smart Search.
+2. **Click Resend** — The artifact is queued for re-delivery and lands in your chat shortly.
+3. **Confirm the delivery indicator** — The export row updates to show successful re-delivery.
+
+## Tips that make it sharper
+
+- Resend respects your per-export resend allowance — Free 1, Pro 5, Elite 20, Infinity unlimited.
+- If the same export needs many re-deliveries, generate a Share link instead — links don't count toward resend quota.
+
+## Troubleshooting
+
+- **Resend button disabled** — You've hit the per-export resend cap. Generate a share link or upgrade your plan.
+- **Resend succeeded but nothing arrived** — Confirm Telegram is connected and not paused. Use **Send test** in Integrations.
+
+## FAQ
+
+**Does resend cost a new export?**
+
+No — only the original generation counts against export quota.
+
+## Related
+
+- [Telegram delivery](/telegram-delivery)
+- [Reconnect Telegram](/reconnect-telegram)
+- [Retry failed](/retry-failed)
+`, sort_order: 40, reading_time: 3 },
+  { slug: "storage-modes", category_slug: "exports-continuity", title: "Storage modes", description: "How HustleAI keeps your artifacts available across devices.", content: `# Storage modes
+
+HustleAI keeps your artifacts available across devices through two complementary modes: in-workspace storage (the canonical, editable copy) and connected-channel mirrors (Telegram-delivered copies in your chat). Together they ensure you can reach your work from any device, including offline on your phone.
+
+## When you'd use this
+
+Read this when you want to understand where your artifacts physically live, how multi-device access works, or what survives if you switch phones or browsers.
+
+## Step by step
+
+1. **In-workspace storage** — Every artifact lives in your workspace and is reopenable from any device that signs into the same account.
+2. **Connected-channel mirrors** — Telegram delivery creates a copy in your chat. That copy is independent of workspace storage — Telegram retains it permanently in your chat history.
+3. **Browser caching** — Recently-viewed artifacts cache for fast re-open. Caches refresh automatically; they don't replace canonical storage.
+
+## Tips that make it sharper
+
+- Connect Telegram early — you get an offline mirror without thinking about it.
+- For long-term archival of important deliverables, Download a local copy in addition to the workspace + Telegram pair.
+
+## Troubleshooting
+
+- **Artifact accessible on phone but not laptop** — Confirm same account on both. Refresh the laptop session.
+
+## FAQ
+
+**Are my files end-to-end encrypted?**
+
+Files are encrypted in transit and at rest at the platform layer. Telegram messages follow Telegram's own encryption model.
+
+## Related
+
+- [Telegram delivery](/telegram-delivery)
+- [Continuity basics](/continuity-basics)
+- [Retention behavior](/retention-behavior)
+`, sort_order: 50, reading_time: 3 },
+  { slug: "retention-behavior", category_slug: "exports-continuity", title: "Retention behavior", description: "What stays active and what degrades after the continuity window.", content: `# Retention behavior
+
+Retention is HustleAI's commitment about what stays available and for how long. Active artifacts are fully usable. After your plan's continuity window, artifacts move to a **degraded** state — visible and searchable but locked from open / share / resend. Nothing is deleted; degradation is recoverable by upgrading or regenerating.
+
+## When you'd use this
+
+Read this if you want to know exactly what happens to old artifacts, plan retention around a client engagement, or understand what changes when you upgrade.
+
+## Step by step
+
+1. **Check your plan's window** — Free 7 days, Pro 60 days, Elite 365 days, Infinity unlimited. See [Pricing & Plans](/pricing-overview).
+2. **Watch the expiring-soon indicator** — Items within 3 days of degradation show an amber dot in your continuity rail.
+3. **Pin to extend** — Pinned items survive past the standard window.
+4. **Upgrade to restore** — Upgrading immediately reactivates all your degraded items up to the new plan's window.
+
+## Tips that make it sharper
+
+- Pin client deliverables for ongoing engagements — pinning is free on every plan.
+- Telegram-delivered copies remain in your chat history regardless of workspace retention.
+
+## Troubleshooting
+
+- **Important artifact already degraded** — Upgrade to restore, or regenerate from the source workspace.
+
+## FAQ
+
+**Is anything ever permanently deleted?**
+
+Only when you explicitly delete it from the rail or delete your account.
+
+**Does downgrading degrade items immediately?**
+
+Items outside the new plan's window degrade. Re-upgrade restores them.
+
+## Related
+
+- [Continuity lifecycle](/continuity-lifecycle)
+- [Expired continuity](/expired-continuity)
+- [Pricing & Plans](/pricing-overview)
+`, sort_order: 60, reading_time: 4 },
+  { slug: "continuity-lifecycle", category_slug: "exports-continuity", title: "Continuity lifecycle", description: "Active → expiring soon → degraded — what each state means.", content: `# Continuity lifecycle
+
+Every artifact in HustleAI moves through three states: **Active**, **Expiring soon**, and **Degraded**. Understanding the lifecycle helps you decide what to pin, when to upgrade, and what to expect if you take a break and come back later.
+
+## When you'd use this
+
+Use this guide to plan around long engagements, set expectations with a team about how long artifacts stay live, and avoid surprises when an old project resurfaces.
+
+## Step by step
+
+1. **Active** — Fully usable — open, edit, export, share, resend. The default state for everything you've recently generated.
+2. **Expiring soon** — Within 3 days of degradation. Visual amber indicator in the continuity rail. Pin or upgrade to keep full access.
+3. **Degraded** — Past the continuity window. Visible and searchable, but Open / Share / Resend are paused. The artifact is never deleted; upgrade or regenerate to restore.
+
+## Tips that make it sharper
+
+- Pin proactively — easier than reacting when an item hits expiring-soon.
+- Use the Smart Search filter "state:expiring" to see everything that needs a decision.
+
+## Troubleshooting
+
+- **Item degraded earlier than expected** — Confirm your plan and the original creation date. Pinned items shouldn't degrade — if one did, contact support.
+
+## FAQ
+
+**Does Telegram delivery extend the lifecycle?**
+
+No — the workspace lifecycle is independent. Telegram-delivered copies are kept in your chat by Telegram itself.
+
+## Related
+
+- [Continuity basics](/continuity-basics)
+- [Retention behavior](/retention-behavior)
+- [Expired continuity](/expired-continuity)
+`, sort_order: 70, reading_time: 4 },
+  { slug: "integration-telegram", category_slug: "integrations", title: "Telegram", description: "HustleAI's primary delivery channel.", content: `# Telegram
+
+Telegram is HustleAI's primary delivery channel — connect once and every export, workflow result, and important notification lands in a chat you control. It's how operators take HustleAI mobile without thinking about it.
+
+## When you'd use this
+
+Connect Telegram if you want phone-first delivery, offline access to past artifacts, or a single source-of-truth feed of everything HustleAI has shipped for you.
+
+## Step by step
+
+1. **Open Integrations → Telegram** — Click Connect.
+2. **Open the bot in Telegram** — Tap Start in the bot chat. Connection confirms automatically.
+3. **Verify with a test** — Use **Send test** to confirm routing.
+
+## Tips that make it sharper
+
+- Star important messages in Telegram for fast phone retrieval.
+- Pause delivery from Integrations during heads-down focus blocks without disconnecting.
+
+## Troubleshooting
+
+- **Bot link doesn't open Telegram** — Copy the URL and paste into Telegram's chat search.
+- **Delivery stops working** — See [Reconnect Telegram](/reconnect-telegram).
+
+## FAQ
+
+**Can I connect a Telegram channel?**
+
+Today delivery is to direct bot chats. Channel delivery is on the roadmap.
+
+**Will my Telegram credentials be stored?**
+
+No. The bot connection uses Telegram's own auth flow; HustleAI only stores a connection token.
+
+## Related
+
+- [Connect Telegram](/telegram-connection)
+- [Telegram delivery](/telegram-delivery)
+- [Notifications](/notifications)
+`, sort_order: 10, reading_time: 3 },
+  { slug: "integration-discord", category_slug: "integrations", title: "Discord", description: "Route notifications and team updates to a Discord channel.", content: `# Discord
+
+Connect a Discord webhook to route workflow notifications and team updates into a Discord channel. It's the right integration for shared workspaces and operator teams that already live in Discord.
+
+## When you'd use this
+
+Use Discord when team-wide visibility matters more than individual delivery — agencies, small teams, communities running shared HustleAI workflows.
+
+## Step by step
+
+1. **Open Integrations → Discord** — Click Connect.
+2. **Create a webhook in your Discord server** — Server settings → Integrations → New webhook. Copy the URL.
+3. **Paste the webhook URL** — HustleAI validates immediately and confirms with a test message.
+4. **Send a test** — Confirms routing works end-to-end.
+
+## Tips that make it sharper
+
+- Use a dedicated channel for HustleAI events to avoid noise in general channels.
+- Webhook URLs are sensitive — anyone with the URL can post to that channel.
+
+## Troubleshooting
+
+- **Webhook test fails** — Confirm the URL is the full Discord webhook URL, not the channel URL.
+
+## FAQ
+
+**Can I route per-artifact-type to different channels?**
+
+See [Delivery routing](/delivery-routing).
+
+## Related
+
+- [Notifications](/notifications)
+- [Delivery routing](/delivery-routing)
+- [Test notifications](/test-notifications)
+`, sort_order: 20, reading_time: 3 },
+  { slug: "notifications", category_slug: "integrations", title: "Notifications", description: "Choose what you're notified about and where.", content: `# Notifications
+
+Notifications let you choose what HustleAI tells you about and where it tells you. Pick the events that matter — new export, workflow complete, quota warning, continuity expiring — and pick which channels receive them.
+
+## When you'd use this
+
+Set up notifications during onboarding, then revisit when your usage pattern shifts (e.g. when you start running heavier workflows and want completion pings).
+
+## Step by step
+
+1. **Open Settings → Notifications** — Listed by event type.
+2. **Toggle each event per channel** — Email, Telegram, Discord — each event can route independently.
+3. **Save** — Changes take effect immediately.
+
+## Tips that make it sharper
+
+- Quota warnings save you from mid-flow surprises — leave them on.
+- Continuity-expiring notifications matter most on Free and Pro plans where the window is shorter.
+
+## Troubleshooting
+
+- **Notification not arriving** — Confirm the channel is connected and the event is toggled on. Use **Send test** to verify the channel.
+
+## FAQ
+
+**Can I quiet hours?**
+
+Quiet hours are on the roadmap; today, pause individual channels when you need focus.
+
+## Related
+
+- [Delivery routing](/delivery-routing)
+- [Test notifications](/test-notifications)
+- [Notification delays](/notification-delays)
+`, sort_order: 30, reading_time: 3 },
+  { slug: "delivery-routing", category_slug: "integrations", title: "Delivery routing", description: "Send different artifact types to different channels.", content: `# Delivery routing
+
+Routing lets different artifact types land in different channels — roadmap PDFs to a personal Telegram, proposals to a client Slack, workflow results to a team Discord. Useful when one channel doesn't fit all delivery use cases.
+
+## When you'd use this
+
+Configure routing when you have multiple channels connected and want artifacts to go where they're most actionable.
+
+## Step by step
+
+1. **Open Integrations → Routing** — Listed by artifact type.
+2. **Pick a channel per type** — Each artifact type can route to one primary channel and one optional copy.
+3. **Save** — Future deliveries follow the new rules.
+
+## Tips that make it sharper
+
+- Keep one default channel (usually personal Telegram) so untyped events have somewhere to go.
+- Use copy-routing for items you want in two places at once.
+
+## Troubleshooting
+
+- **Artifact routed to the wrong channel** — Verify the rules. New artifact types occasionally need a routing entry added.
+
+## FAQ
+
+**Can I route based on workspace?**
+
+Yes — routing is per-workspace, so each workspace can have its own pattern.
+
+## Related
+
+- [Notifications](/notifications)
+- [Telegram delivery](/telegram-delivery)
+`, sort_order: 40, reading_time: 3 },
+  { slug: "test-notifications", category_slug: "integrations", title: "Test notifications", description: "Confirm a channel is wired up correctly.", content: `# Test notifications
+
+Every connected channel has a **Send test** button. Use it to confirm a channel is wired up correctly before you depend on it.
+
+## When you'd use this
+
+Run a test the first time you connect a channel, after re-connecting, and whenever a notification didn't arrive when you expected one.
+
+## Step by step
+
+1. **Open Integrations and pick a channel** — Telegram, Discord, email.
+2. **Click Send test** — A clearly-marked test message is delivered through the same path real notifications would use.
+3. **Confirm receipt** — If it arrives, the channel is healthy. If not, the test surface shows the error reason.
+
+## Tips that make it sharper
+
+- Test after any reconnect.
+- Test during onboarding to catch mis-configurations early.
+
+## Troubleshooting
+
+- **Test fails immediately** — Re-check the connection credentials (webhook URL for Discord, bot connection for Telegram).
+
+## FAQ
+
+**Does testing count against quota?**
+
+No — test messages don't decrement any counters.
+
+## Related
+
+- [Notifications](/notifications)
+- [Telegram](/integration-telegram)
+- [Discord](/integration-discord)
+`, sort_order: 50, reading_time: 2 },
+  { slug: "connected-accounts", category_slug: "integrations", title: "Connected accounts", description: "Manage Telegram, Discord, Google, and other linked accounts.", content: `# Connected accounts
+
+Connected accounts is the central registry of every external account linked to your HustleAI workspace — Telegram, Discord, Google sign-in, integrations. Review what's linked, disconnect what you don't use, and rotate connections when needed.
+
+## When you'd use this
+
+Audit this page periodically, especially when changing jobs, switching primary email, or after onboarding new team members.
+
+## Step by step
+
+1. **Open Settings → Connected accounts** — Lists every linked account with status and last-used timestamp.
+2. **Disconnect an account** — One-click; the account is unlinked immediately.
+3. **Rotate a connection** — Disconnect, then reconnect with the new account.
+
+## Tips that make it sharper
+
+- Periodic review reduces blast radius if any external account is ever compromised.
+- Reconnect via the same Integration page that originally created the link.
+
+## Troubleshooting
+
+- **Account still shows connected after disconnect** — Refresh — disconnects can take a few seconds to reflect.
+
+## FAQ
+
+**Does disconnecting delete past deliveries?**
+
+No — past deliveries to that channel remain in the channel's own history (e.g. Telegram chat).
+
+## Related
+
+- [Account security](/account-security)
+- [Telegram](/integration-telegram)
+- [Discord](/integration-discord)
+`, sort_order: 60, reading_time: 3 },
+  { slug: "pricing-overview", category_slug: "pricing", title: "Pricing & Plans", description: "Compare Free, Pro, Elite, and Infinity.", content: heroPricingOverview, sort_order: 10, tags: ["pricing","plans"], reading_time: 4 },
+  { slug: "plan-free", category_slug: "pricing", title: "Free", description: "Try HustleAI — 5 AI tool runs/day, 10 exports/month, 7-day continuity.", content: `# Free
+
+**Free** includes 5 AI tool runs per day, 10 exports per month, a 7-day continuity window, and manual Telegram delivery. Best for trying the platform and shipping a first project.
+
+## When you'd use this
+
+Pick Free when your usage matches the daily/monthly capacity above and when the continuity window comfortably covers how long you need each artifact to stay live and editable.
+
+## Step by step
+
+1. **Upgrade or downgrade** — From **Settings → Billing → Change plan**. Upgrades apply immediately and prorate; downgrades take effect at the end of the current billing cycle.
+2. **Connect Telegram** — Get the most from any plan by routing exports to your phone.
+3. **Set up notifications** — Configure quota warnings so you're never surprised by a cap.
+
+## Tips that make it sharper
+
+- Watch your usage panel on the dashboard — it shows where you are in daily/monthly limits.
+- Pinning is free — use it liberally to preserve important artifacts past the standard continuity window.
+
+## Troubleshooting
+
+- **Hit a cap mid-workflow** — See [Quota reached](/quota-reached).
+- **Items degraded after downgrade** — Re-upgrade immediately restores all items inside the new window.
+
+## FAQ
+
+**Can I change plans mid-month?**
+
+Yes. Upgrades are immediate and prorated; downgrades land at the next cycle.
+
+**Is there an annual discount?**
+
+Annual plans are offered for Pro, Elite, and Infinity. See **Settings → Billing** for current pricing.
+
+## Related
+
+- [Pricing & Plans](/pricing-overview)
+- [Quota reached](/quota-reached)
+- [Continuity basics](/continuity-basics)
+`, sort_order: 20, reading_time: 3 },
+  { slug: "plan-pro", category_slug: "pricing", title: "Pro", description: "Operator tier — 50 runs/day, 200 exports/month, 60-day continuity.", content: `# Pro
+
+**Pro** includes 50 AI tool runs per day, 200 exports per month, a 60-day continuity window, and automatic Telegram delivery and Starter automation packs. Best for independent operators running consistent weekly work.
+
+## When you'd use this
+
+Pick Pro when your usage matches the daily/monthly capacity above and when the continuity window comfortably covers how long you need each artifact to stay live and editable.
+
+## Step by step
+
+1. **Upgrade or downgrade** — From **Settings → Billing → Change plan**. Upgrades apply immediately and prorate; downgrades take effect at the end of the current billing cycle.
+2. **Connect Telegram** — Get the most from any plan by routing exports to your phone.
+3. **Set up notifications** — Configure quota warnings so you're never surprised by a cap.
+
+## Tips that make it sharper
+
+- Watch your usage panel on the dashboard — it shows where you are in daily/monthly limits.
+- Pinning is free — use it liberally to preserve important artifacts past the standard continuity window.
+
+## Troubleshooting
+
+- **Hit a cap mid-workflow** — See [Quota reached](/quota-reached).
+- **Items degraded after downgrade** — Re-upgrade immediately restores all items inside the new window.
+
+## FAQ
+
+**Can I change plans mid-month?**
+
+Yes. Upgrades are immediate and prorated; downgrades land at the next cycle.
+
+**Is there an annual discount?**
+
+Annual plans are offered for Pro, Elite, and Infinity. See **Settings → Billing** for current pricing.
+
+## Related
+
+- [Pricing & Plans](/pricing-overview)
+- [Quota reached](/quota-reached)
+- [Continuity basics](/continuity-basics)
+`, sort_order: 30, reading_time: 3 },
+  { slug: "plan-elite", category_slug: "pricing", title: "Elite", description: "Agency tier — 200 runs/day, 1,000 exports/month, 365-day continuity, full pack library.", content: `# Elite
+
+**Elite** includes 200 AI tool runs per day, 1,000 exports per month, a 365-day continuity window, and automatic Telegram delivery, the full automation + operational pack library, and email + chat support. Best for agencies and consultants automating client deliverables.
+
+## When you'd use this
+
+Pick Elite when your usage matches the daily/monthly capacity above and when the continuity window comfortably covers how long you need each artifact to stay live and editable.
+
+## Step by step
+
+1. **Upgrade or downgrade** — From **Settings → Billing → Change plan**. Upgrades apply immediately and prorate; downgrades take effect at the end of the current billing cycle.
+2. **Connect Telegram** — Get the most from any plan by routing exports to your phone.
+3. **Set up notifications** — Configure quota warnings so you're never surprised by a cap.
+
+## Tips that make it sharper
+
+- Watch your usage panel on the dashboard — it shows where you are in daily/monthly limits.
+- Pinning is free — use it liberally to preserve important artifacts past the standard continuity window.
+
+## Troubleshooting
+
+- **Hit a cap mid-workflow** — See [Quota reached](/quota-reached).
+- **Items degraded after downgrade** — Re-upgrade immediately restores all items inside the new window.
+
+## FAQ
+
+**Can I change plans mid-month?**
+
+Yes. Upgrades are immediate and prorated; downgrades land at the next cycle.
+
+**Is there an annual discount?**
+
+Annual plans are offered for Pro, Elite, and Infinity. See **Settings → Billing** for current pricing.
+
+## Related
+
+- [Pricing & Plans](/pricing-overview)
+- [Quota reached](/quota-reached)
+- [Continuity basics](/continuity-basics)
+`, sort_order: 40, reading_time: 3 },
+  { slug: "plan-infinity", category_slug: "pricing", title: "Infinity", description: "Unlimited runs, unlimited exports, unlimited continuity, priority delivery lane.", content: `# Infinity
+
+**Infinity** includes unlimited AI tool runs, unlimited exports, a unlimited continuity, and priority Telegram delivery, custom operational packs, and dedicated support. Best for power users who need persistent memory across every project.
+
+## When you'd use this
+
+Pick Infinity when your usage matches the daily/monthly capacity above and when the continuity window comfortably covers how long you need each artifact to stay live and editable.
+
+## Step by step
+
+1. **Upgrade or downgrade** — From **Settings → Billing → Change plan**. Upgrades apply immediately and prorate; downgrades take effect at the end of the current billing cycle.
+2. **Connect Telegram** — Get the most from any plan by routing exports to your phone.
+3. **Set up notifications** — Configure quota warnings so you're never surprised by a cap.
+
+## Tips that make it sharper
+
+- Watch your usage panel on the dashboard — it shows where you are in daily/monthly limits.
+- Pinning is free — use it liberally to preserve important artifacts past the standard continuity window.
+
+## Troubleshooting
+
+- **Hit a cap mid-workflow** — See [Quota reached](/quota-reached).
+- **Items degraded after downgrade** — Re-upgrade immediately restores all items inside the new window.
+
+## FAQ
+
+**Can I change plans mid-month?**
+
+Yes. Upgrades are immediate and prorated; downgrades land at the next cycle.
+
+**Is there an annual discount?**
+
+Annual plans are offered for Pro, Elite, and Infinity. See **Settings → Billing** for current pricing.
+
+## Related
+
+- [Pricing & Plans](/pricing-overview)
+- [Quota reached](/quota-reached)
+- [Continuity basics](/continuity-basics)
+`, sort_order: 50, reading_time: 3 },
+  { slug: "missing-export", category_slug: "troubleshooting", title: "Missing export", description: "An export didn't show up — what to check.", content: `# Missing export
+
+If you expected an export and it's not in your Exports panel, the most common cause is a workflow that hadn't finished when you checked. The rest are recoverable too. This page walks through the standard diagnostic in order.
+
+## When you'd use this
+
+Run through this when an artifact you generated isn't showing up, especially right after a heavy workflow or a Telegram-only check.
+
+## Step by step
+
+1. **Refresh the Exports panel** — First step — the panel caches recent state and occasionally needs a nudge.
+2. **Check the source tool** — If the export was triggered by a workflow or pack, open that workflow — it may still be in progress.
+3. **Look for failures** — Failed steps surface in the workflow's history. Retry from the failed step.
+4. **Check Telegram** — If Telegram is connected, the export may have delivered there even if the panel hasn't refreshed.
+5. **Contact support** — If you confirmed the export was generated but it's missing everywhere, reach out with the source tool and timestamp.
+
+## Tips that make it sharper
+
+- Generate from the source tool's primary action, not a stale browser tab.
+- Long workflows occasionally take a minute or two — wait once before assuming failure.
+
+## Troubleshooting
+
+- **Workflow shows complete but no export** — Some packs produce no exports by design (notification-only). Confirm the pack's documented output.
+
+## FAQ
+
+**Does refreshing cost quota?**
+
+No — viewing and refreshing are free.
+
+## Related
+
+- [Exports panel](/exports-panel)
+- [Retry delivery](/retry-delivery)
+- [Notification delays](/notification-delays)
+`, sort_order: 10, reading_time: 3 },
+  { slug: "telegram-not-connected", category_slug: "troubleshooting", title: "Telegram not connected", description: "Your Telegram badge shows disconnected.", content: `# Telegram not connected
+
+If your Telegram badge shows disconnected, deliveries pause until you re-link. This page is the quickest path back to a working connection.
+
+## When you'd use this
+
+Run through this when the badge goes red or when a teammate says they've stopped receiving deliveries.
+
+## Step by step
+
+1. **Open Integrations → Telegram** — Click Reconnect.
+2. **Open the bot in Telegram** — If the link doesn't open, copy and paste it into Telegram's chat search.
+3. **Send Start in the bot chat** — Connection confirms automatically.
+4. **Send a test** — **Send test** verifies routing.
+
+## Tips that make it sharper
+
+- Reconnect from the same workspace that owns the integration — connections are per-workspace.
+- Existing exports aren't affected by disconnects.
+
+## Troubleshooting
+
+- **Bot says it already knows me** — Send /start again — the bot reattaches the connection.
+
+## FAQ
+
+**Will I lose past delivered messages?**
+
+No — they remain in your Telegram chat history regardless of connection state.
+
+## Related
+
+- [Connect Telegram](/telegram-connection)
+- [Reconnect Telegram](/reconnect-telegram)
+- [Test notifications](/test-notifications)
+`, sort_order: 20, reading_time: 3 },
+  { slug: "retry-failed", category_slug: "troubleshooting", title: "Retry failed", description: "A resend or retry didn't go through.", content: `# Retry failed
+
+If a resend or workflow retry didn't go through, two things are usually at play: the channel is no longer healthy, or you've hit the per-export resend allowance. This page covers both.
+
+## When you'd use this
+
+Run through this when Resend appears to succeed but nothing arrives, or when the Resend button is disabled.
+
+## Step by step
+
+1. **Verify the channel is connected** — Integrations page should show green for the target channel.
+2. **Send a test message** — Confirms routing without consuming resend quota.
+3. **Check your resend allowance** — Per-export resend caps: Free 1, Pro 5, Elite 20, Infinity unlimited.
+4. **Try once more** — Occasional retries queue during high load — wait a minute and try again.
+
+## Tips that make it sharper
+
+- Generate a share link if you've exhausted resend allowance — links don't count.
+
+## Troubleshooting
+
+- **Test message succeeds but resend fails** — Contact support with the export ID — this is unusual.
+
+## FAQ
+
+**Does failed resend count against allowance?**
+
+No — only successful deliveries count.
+
+## Related
+
+- [Retry delivery](/retry-delivery)
+- [Telegram not connected](/telegram-not-connected)
+- [Notification delays](/notification-delays)
+`, sort_order: 30, reading_time: 3 },
+  { slug: "reconnect-telegram", category_slug: "troubleshooting", title: "Reconnect Telegram", description: "Re-link the bot if delivery stops working.", content: `# Reconnect Telegram
+
+Reconnecting Telegram cleanly resets the bot link without touching past deliveries. Use it when delivery stops working and a normal reconnect-from-Integrations didn't fix it.
+
+## When you'd use this
+
+Use this when /start in the bot doesn't restore connection, when you've switched to a new Telegram account, or when delivery has been unreliable for more than a session.
+
+## Step by step
+
+1. **Disconnect first** — Integrations → Telegram → Disconnect. Confirms in the same screen.
+2. **Reconnect** — Click Connect, open the bot, send /start.
+3. **Test** — **Send test** confirms the new connection.
+
+## Tips that make it sharper
+
+- Past delivered messages remain in your Telegram chat history.
+- Reconnecting doesn't affect routing rules — they apply to the new connection automatically.
+
+## Troubleshooting
+
+- **Reconnect doesn't take** — Clear cookies for HustleAI and retry, then contact support if it still fails.
+
+## FAQ
+
+**Can I reconnect to a different Telegram account?**
+
+Yes — disconnect first, then connect from the new account.
+
+## Related
+
+- [Connect Telegram](/telegram-connection)
+- [Telegram not connected](/telegram-not-connected)
+`, sort_order: 40, reading_time: 2 },
+  { slug: "expired-continuity", category_slug: "troubleshooting", title: "Expired continuity", description: "An artifact shows as degraded and you can't reopen it.", content: `# Expired continuity
+
+When an artifact passes your plan's continuity window it enters a **degraded** state — visible and searchable, but locked from open, share, and resend. The artifact isn't deleted; it's recoverable.
+
+## When you'd use this
+
+Read this when an old artifact appears greyed out, or when you need to access something past your plan's window.
+
+## Step by step
+
+1. **Locate the artifact** — Continuity rail or Smart Search both show degraded items with a grey indicator.
+2. **Upgrade to restore** — Upgrading your plan immediately reactivates all items inside the new window.
+3. **Or regenerate** — If the source workflow is still available, regenerate from the original inputs.
+4. **Or use the Telegram copy** — If you delivered the original to Telegram, the file is still in your chat — Telegram retains it permanently.
+
+## Tips that make it sharper
+
+- Pin artifacts you'll likely revisit — pinned items survive past the standard window on every plan.
+- Annual plans pair well with long continuity needs (Elite 365-day, Infinity unlimited).
+
+## Troubleshooting
+
+- **Upgrade didn't restore an item** — Confirm the new plan's window covers the item's age. If it should and didn't, contact support with the artifact's URL.
+
+## FAQ
+
+**Are degraded items billed?**
+
+No — they don't count against any active quota.
+
+**Can I bulk-pin everything?**
+
+Bulk pin is on the roadmap; today, pin individually.
+
+## Related
+
+- [Continuity lifecycle](/continuity-lifecycle)
+- [Retention behavior](/retention-behavior)
+- [Pricing & Plans](/pricing-overview)
+`, sort_order: 50, reading_time: 3 },
+  { slug: "quota-reached", category_slug: "troubleshooting", title: "Quota reached", description: "Hit a daily or monthly cap — what to do.", content: heroQuotaReached, sort_order: 60, tags: ["quota","limits"], reading_time: 2 },
+  { slug: "notification-delays", category_slug: "troubleshooting", title: "Notification delays", description: "A notification arrived late or not at all.", content: `# Notification delays
+
+Most notifications arrive in under a minute. Occasional delays clear within a few minutes; if a notification hasn't arrived after 15 minutes, treat it as an issue worth diagnosing.
+
+## When you'd use this
+
+Run through this when a notification you expected hasn't arrived in a reasonable window.
+
+## Step by step
+
+1. **Wait two minutes** — Most delays resolve quickly.
+2. **Send a test on the same channel** — Confirms the channel is healthy independently of the original notification.
+3. **Check your notification settings** — The event might be disabled for that channel.
+4. **Check the source workflow** — Notifications fire when the source completes; if the workflow is still in progress, the notification hasn't fired yet.
+
+## Tips that make it sharper
+
+- Telegram delivery is faster than email — prefer it for time-sensitive workflows.
+
+## Troubleshooting
+
+- **Test arrived but original notification didn't** — Confirm the event is enabled for that channel in Settings → Notifications.
+
+## FAQ
+
+**Are notifications guaranteed?**
+
+We target sub-minute delivery; we don't guarantee instant. Use the Telegram delivery indicator on the export row as your source of truth.
+
+## Related
+
+- [Notifications](/notifications)
+- [Test notifications](/test-notifications)
+- [Retry delivery](/retry-delivery)
+`, sort_order: 70, reading_time: 3 },
+  { slug: "account-security", category_slug: "security", title: "Account security", description: "Sign-in, sessions, and what to do if you suspect compromise.", content: `# Account security
+
+HustleAI is designed for low-friction security: passwordless one-time codes, Google sign-in, and integrity checks that sign you out automatically if anything looks off. This page covers what we do, what you should do, and what to do if you ever suspect compromise.
+
+## When you'd use this
+
+Skim once, then revisit if anything unusual happens — unexpected sign-out, sign-in from a new device you didn't authorize, or a connected-account anomaly.
+
+## Step by step
+
+1. **Use one-time codes or Google sign-in** — Both are passwordless. Codes expire after 10 minutes; Google delegates to your existing Google security.
+2. **Review connected accounts periodically** — Settings → Connected accounts shows everything linked to your workspace.
+3. **Sign out from unused devices** — Settings → Sessions lists active sessions; revoke any you don't recognize.
+4. **If compromised, disconnect everything first** — Disconnect Google and any integrations from Settings, then contact support.
+
+## Tips that make it sharper
+
+- Never share one-time codes — support will never ask for one.
+- If your primary email is ever compromised, rotate that email first before anything else.
+
+## Troubleshooting
+
+- **Signed out unexpectedly** — Likely an integrity check triggered. Sign back in; if it recurs, contact support.
+
+## FAQ
+
+**Do you support hardware keys?**
+
+Google sign-in inherits whatever 2FA you have on your Google account, including hardware keys.
+
+**Can I see my recent sign-ins?**
+
+Yes — Settings → Sessions.
+
+## Related
+
+- [Creating your account](/account-setup)
+- [Connected accounts](/connected-accounts)
+- [Continuity & privacy](/continuity-privacy)
+`, sort_order: 10, reading_time: 4 },
+  { slug: "export-ownership", category_slug: "security", title: "Export ownership", description: "Who can see and act on the artifacts you generate.", content: `# Export ownership
+
+Exports belong to the account that generated them. Share links are off by default; when you generate one, only people with that exact URL can view the artifact, and you can revoke it anytime.
+
+## When you'd use this
+
+Read before sharing exports outside your team. Important for client deliverables, embargoed material, or anything you want recallable.
+
+## Step by step
+
+1. **Default: private** — Exports are accessible only to your workspace by default.
+2. **Generate a share link** — From any export's Share action. The link is opaque and unguessable.
+3. **Revoke a share link** — Same Share dialog. Revocation is immediate; the URL returns Unavailable from that point on.
+
+## Tips that make it sharper
+
+- Use share links for client preview; download + email for final handoff.
+- Revoke share links once an engagement ends.
+
+## Troubleshooting
+
+- **Client says the link doesn't work** — Confirm it wasn't revoked and that they're using the exact URL (no chat-app auto-corrections).
+
+## FAQ
+
+**Do share links expire automatically?**
+
+Not by default. Configurable expiration is on the roadmap.
+
+**Can I see who viewed a share link?**
+
+Access counts surface in the share dialog; per-viewer identity isn't tracked.
+
+## Related
+
+- [Exports panel](/exports-panel)
+- [Account security](/account-security)
+`, sort_order: 20, reading_time: 3 },
+  { slug: "continuity-privacy", category_slug: "security", title: "Continuity & privacy", description: "How your persistent workspace data is protected.", content: `# Continuity & privacy
+
+Your continuity data — roadmaps, drafts, exports, chats — is private to your account. We don't use your workspace content to train AI models, and we don't share it across accounts.
+
+## When you'd use this
+
+Read this when assessing HustleAI for client work, sensitive material, or any context where data handling matters.
+
+## Step by step
+
+1. **Workspace content stays in your account** — Not used for model training; not shared with other accounts.
+2. **Telegram-delivered copies follow Telegram's controls** — Delete from your chat anytime; Telegram's own privacy applies.
+3. **Export ownership is per-account** — Share links are explicit, revocable, and opaque.
+
+## Tips that make it sharper
+
+- For maximum privacy, disable Telegram delivery for sensitive workflows.
+- Revoke share links promptly when no longer needed.
+
+## Troubleshooting
+
+- **Concerned content was indexed elsewhere** — Workspace content isn't published or indexed externally. Contact support if you see otherwise.
+
+## FAQ
+
+**Do you have a DPA?**
+
+Yes — request from support for enterprise needs.
+
+**Where is data stored?**
+
+Region details available on request via support.
+
+## Related
+
+- [Account security](/account-security)
+- [AI usage safety](/ai-usage-safety)
+- [Export ownership](/export-ownership)
+`, sort_order: 30, reading_time: 3 },
+  { slug: "ai-usage-safety", category_slug: "security", title: "AI usage safety", description: "What AI sees, what it doesn't, and how to keep prompts safe.", content: `# AI usage safety
+
+AI tools in HustleAI only see what you provide for that specific generation. Avoid pasting secrets, credentials, or sensitive third-party data into prompts. This page covers how to use AI safely inside HustleAI.
+
+## When you'd use this
+
+Read once when onboarding, then any time you're about to paste something sensitive into an AI prompt.
+
+## Step by step
+
+1. **Treat prompts like external communication** — Don't include passwords, API keys, payment data, or PII you wouldn't share over email.
+2. **Use workspace docs for material you want HustleAI to remember** — Docs are private to your account; persistent memory is appropriate for ongoing context.
+3. **Use chat for transient questions** — Chats aren't optimized for sensitive payloads.
+4. **Review AI output before sharing** — Don't auto-publish AI-generated content without a quick read-through.
+
+## Tips that make it sharper
+
+- Set up a personal redaction habit — substitute names or numbers with placeholders when in doubt.
+- For client work, use the client's redacted brief, then re-personalize after generation.
+
+## Troubleshooting
+
+- **Pasted something sensitive by accident** — Delete the chat / document immediately and rotate any leaked credential externally.
+
+## FAQ
+
+**Is AI training using my prompts?**
+
+No. Workspace content isn't used to train AI models.
+
+## Related
+
+- [Continuity & privacy](/continuity-privacy)
+- [Account security](/account-security)
+`, sort_order: 40, reading_time: 3 },
+  { slug: "billing-protections", category_slug: "security", title: "Billing protections", description: "How charges, upgrades, and refunds work.", content: `# Billing protections
+
+HustleAI never stores card numbers — all charges run through our payment provider. Upgrades take effect immediately and are prorated; downgrades land at the end of the current billing cycle. Digital goods follow our published no-refund policy.
+
+## When you'd use this
+
+Read this before upgrading, when changing plans, or when reviewing how billing edge cases are handled.
+
+## Step by step
+
+1. **Manage plan from Settings → Billing** — Upgrade, downgrade, change billing cadence, update payment method, download past invoices.
+2. **Upgrade for immediate access** — Upgrades activate the moment the charge succeeds; new limits apply instantly.
+3. **Downgrade lands next cycle** — You keep current plan benefits until the cycle ends.
+4. **Download invoices for accounting** — Each invoice is downloadable as PDF.
+
+## Tips that make it sharper
+
+- Annual plans save vs. monthly on Pro / Elite / Infinity.
+- Update your payment method before card expiry to avoid service interruption.
+
+## Troubleshooting
+
+- **Payment failed** — Update your method in Settings → Billing; we retry automatically once after an update.
+
+## FAQ
+
+**What's the refund policy?**
+
+Digital goods follow a strict no-refund policy. See Pricing & Plans for the full statement.
+
+**Can I get a custom invoice?**
+
+Yes — contact support with the details you need.
+
+## Related
+
+- [Pricing & Plans](/pricing-overview)
+- [Free](/plan-free)
+- [Pro](/plan-pro)
+- [Elite](/plan-elite)
+- [Infinity](/plan-infinity)
+`, sort_order: 50, reading_time: 3 },
 ];
