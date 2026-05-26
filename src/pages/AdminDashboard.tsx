@@ -6,6 +6,7 @@ import { communityDb } from "@/integrations/community/client";
 import { blogDb } from "@/integrations/blog/db";
 import { aiDb } from "@/integrations/ai/db";
 import { Button } from "@/components/ui/button";
+import { InfraOverviewCard } from "@/components/admin/InfraOverviewCard";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
