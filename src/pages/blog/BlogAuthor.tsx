@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { BlogShell } from "@/components/blog/BlogShell";
 import { BlogSEO } from "@/components/blog/BlogSEO";
+import { isUsableImageUrl } from "@/lib/blog-image";
 
 const BASE = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
 const ANON = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
@@ -55,7 +56,7 @@ export default function BlogAuthor() {
             {posts.map((p: any) => (
               <Link key={p.id} to={`/${p.slug}`} className="group">
                 <div className="aspect-[16/10] rounded-md overflow-hidden bg-muted/40 mb-3">
-                  {p.hero_image && <img src={p.hero_image} alt={p.title} loading="lazy" className="w-full h-full object-cover" />}
+                  {isUsableImageUrl(p.hero_image) && <img src={p.hero_image} alt={p.title} loading="lazy" className="w-full h-full object-cover" />}
                 </div>
                 <h2 className="font-serif text-lg group-hover:underline underline-offset-4">{p.title}</h2>
               </Link>

@@ -8,7 +8,7 @@ import { renderMarkdown, buildArticleJsonLd, buildFaqJsonLd } from "@/lib/blog-m
 import { extractEditorialMeta } from "@/lib/blog-meta";
 import { injectInternalLinks, buildLinkTargets } from "@/lib/blog-internal-links";
 import { BlogImage } from "@/components/blog/BlogImage";
-import { optimizedImage } from "@/lib/blog-image";
+import { optimizedImage, isUsableImageUrl } from "@/lib/blog-image";
 import { ReadingProgress } from "@/components/blog/ReadingProgress";
 import { Breadcrumb } from "@/components/blog/Breadcrumb";
 import { NewsletterBlock } from "@/components/blog/NewsletterBlock";
@@ -102,8 +102,8 @@ function BlogPostInner() {
         title={post.meta_title || post.title}
         description={post.meta_description || post.excerpt || ""}
         path={`/${post.slug}`}
-        image={post.hero_image}
-        preloadImage={post.hero_image ? optimizedImage(post.hero_image, 1440) : undefined}
+        image={isUsableImageUrl(post.hero_image) ? post.hero_image : undefined}
+        preloadImage={isUsableImageUrl(post.hero_image) ? optimizedImage(post.hero_image, 1440) : undefined}
         type="article"
         publishedAt={post.published_at}
         updatedAt={post.updated_at}
@@ -184,7 +184,7 @@ function BlogPostInner() {
         )}
       </article>
 
-      {post.hero_image && (
+      {isUsableImageUrl(post.hero_image) && (
         <div className="mx-auto max-w-4xl px-5 mb-12">
           <figure className="aspect-[16/9] rounded-lg overflow-hidden bg-muted/40 ring-1 ring-border/40 shadow-[0_30px_60px_-30px_hsl(var(--foreground)/0.18)]">
             <BlogImage
