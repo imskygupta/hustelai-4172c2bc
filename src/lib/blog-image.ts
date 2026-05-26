@@ -22,9 +22,31 @@ function isProxied(url: string) {
   return /^https?:\/\/images\.weserv\.nl\//.test(url);
 }
 
+/**
+ * Hosts that used to serve hero images but no longer resolve.
+ * `source.unsplash.com` was deprecated by Unsplash in 2024 and now
+ * returns 503 — so any legacy DB row pointing there must be treated as
+ * "no image" by the public reader, otherwise weserv proxies a broken
+ * upstream and the browser falls back to rendering alt text in place
+ * of the hero.
+ */
+const DEAD_IMAGE_HOSTS = [
+  /^https?:\/\/source\.unsplash\.com\//i,
+];
+
+/** Returns true if `url` looks like a real image we can attempt to render. */
+export function isUsableImageUrl(url?: string | null): url is string {
+  if (!url) return false;
+  const trimmed = String(url).trim();
+  if (!trimmed) return false;
+  if (DEAD_IMAGE_HOSTS.some((re) => re.test(trimmed))) return false;
+  return true;
+}
+
 /** Returns a single optimized URL (WebP, width capped). */
 export function optimizedImage(url: string, width = 1024): string {
   if (!url || url.startsWith("data:") || isProxied(url)) return url;
+  if (!isUsableImageUrl(url)) return "";
   if (!/^https?:\/\//.test(url)) return url; // local/relative — leave alone
   const q = new URLSearchParams({
     url: strip(url),
