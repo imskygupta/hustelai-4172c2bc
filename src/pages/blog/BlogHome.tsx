@@ -28,9 +28,9 @@ const CATEGORY_DESCRIPTIONS: Record<string, string> = {
 };
 
 const STARTER_COLLECTIONS = [
-  { slug: "freelancer-workflows", label: "Start a freelance practice", note: "Foundations: pricing, scoping, retainers." },
-  { slug: "client-systems",       label: "Run client work async",      note: "Briefs, status, decisions on rails." },
-  { slug: "ai-operations",        label: "Ship AI as a deliverable",   note: "Exports clients can actually use." },
+  { slug: "freelancer-workflows", label: "Start a freelance practice", note: "Foundations: pricing, scoping, retainers.", accent: "from-emerald-500/15 to-emerald-500/0" },
+  { slug: "client-systems",       label: "Run client work async",      note: "Briefs, status, decisions on rails.",       accent: "from-amber-500/15 to-amber-500/0" },
+  { slug: "ai-operations",        label: "Ship AI as a deliverable",   note: "Exports clients can actually use.",         accent: "from-sky-500/15 to-sky-500/0" },
 ];
 
 function heroFor(post: any): string {
@@ -107,8 +107,14 @@ export default function BlogHome() {
               key={c.slug}
               to={`/category/${c.slug}`}
               prefetchCategory={c.slug}
-              className="group rounded-lg border border-border/60 px-4 py-4 hover:border-foreground/40 transition bg-background/40"
+              className="group relative overflow-hidden rounded-lg border border-border/60 px-4 py-4 hover:border-foreground/40 transition bg-background/40"
             >
+              <div className={`pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${c.accent}`} aria-hidden="true" />
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute -right-6 -top-6 h-20 w-20 rounded-full opacity-40 blur-2xl bg-gradient-to-br"
+                style={{ backgroundImage: `linear-gradient(135deg, hsl(var(--muted-foreground) / 0.18), transparent)` }}
+              />
               <div className="flex items-center gap-2 text-[11px] uppercase tracking-wide text-muted-foreground mb-1.5">
                 <span className="font-mono">0{i + 1}</span>
                 <span>Collection</span>
@@ -186,7 +192,14 @@ export default function BlogHome() {
             <span className="text-[11px] uppercase tracking-wide text-muted-foreground">SEO authority hubs</span>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {cats.slice(0, 6).map((c: any) => (
+            {cats
+              .filter((c: any) => {
+                // Defensive: hide categories with explicit zero post count.
+                // If the API doesn't provide a count, keep the category visible.
+                const n = c?.post_count ?? c?.published_count ?? c?.article_count;
+                return n === undefined || n === null || Number(n) > 0;
+              })
+              .slice(0, 6).map((c: any) => (
               <PrefetchLink
                 key={c.slug}
                 to={`/category/${c.slug}`}
