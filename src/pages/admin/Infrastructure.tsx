@@ -21,6 +21,7 @@ import { RuntimeExtractionPanel } from "./RuntimeExtractionPanel";
 import { PrimaryDetoxStatusPanel } from "./PrimaryDetoxStatus";
 import { BoundaryMapPanel } from "./BoundaryMapPanel";
 import { PlatformHardeningPanel } from "./PlatformHardeningPanel";
+import { ConnectedDatabasesPanel } from "./ConnectedDatabasesPanel";
 import { failOpen, INFRA_SAFE_MODE, retryWithTimeout } from "@/lib/async/timeout";
 
 type Project = {
@@ -195,6 +196,7 @@ export default function Infrastructure() {
         <Tabs defaultValue="registry">
           <TabsList className="flex-wrap h-auto">
             <TabsTrigger value="registry"><Database className="h-4 w-4 mr-1" />Supabase Registry</TabsTrigger>
+            <TabsTrigger value="connected"><Database className="h-4 w-4 mr-1" />Connected Databases</TabsTrigger>
             <TabsTrigger value="deps"><Network className="h-4 w-4 mr-1" />Dependencies</TabsTrigger>
             <TabsTrigger value="health"><Activity className="h-4 w-4 mr-1" />Runtime Health</TabsTrigger>
             <TabsTrigger value="telegram"><Send className="h-4 w-4 mr-1" />Telegram</TabsTrigger>
