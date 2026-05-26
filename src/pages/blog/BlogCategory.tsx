@@ -9,6 +9,7 @@ import { AdSlot } from "@/components/blog/AdSlot";
 import { EditorialCategorySkeleton } from "@/components/blog/EditorialSkeleton";
 import { PrefetchLink } from "@/components/blog/PrefetchLink";
 import { onIdle } from "@/lib/blog-cache";
+import { isUsableImageUrl } from "@/lib/blog-image";
 
 /**
  * Topic cluster hub: pillar + supporting posts + sibling clusters + tags.
@@ -85,7 +86,7 @@ export default function BlogCategory() {
               <PrefetchLink to={`/${pillar.slug}`} prefetchPost={pillar.slug} className="block group rounded-lg overflow-hidden border border-border/60 hover:border-foreground/40 transition">
                 <div className="grid md:grid-cols-2">
                   <div className="aspect-[16/10] md:aspect-auto bg-muted/40">
-                    {pillar.hero_image && <img src={pillar.hero_image} alt={pillar.title} loading="eager" className="w-full h-full object-cover" />}
+                    {isUsableImageUrl(pillar.hero_image) && <img src={pillar.hero_image} alt={pillar.title} loading="eager" className="w-full h-full object-cover" />}
                   </div>
                   <div className="p-6 md:p-8 flex flex-col justify-center">
                     <div className="text-[11px] uppercase tracking-wide text-muted-foreground mb-2">Pillar guide · {pillar.reading_time ?? 5} min</div>
@@ -111,7 +112,7 @@ export default function BlogCategory() {
                 {supporting.map((p: any) => (
                   <PrefetchLink key={p.id ?? p.slug} to={`/${p.slug}`} prefetchPost={p.slug} className="block group">
                     <div className="aspect-[16/10] rounded-lg overflow-hidden bg-muted/40 mb-3 ring-1 ring-border/40">
-                      {p.hero_image && <img src={p.hero_image} alt={p.title} loading="lazy" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.02]" />}
+                      {isUsableImageUrl(p.hero_image) && <img src={p.hero_image} alt={p.title} loading="lazy" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.02]" />}
                     </div>
                     <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{p.reading_time ?? 4} min</div>
                     <h3 className="font-serif text-lg mt-1 group-hover:underline underline-offset-4">{p.title}</h3>
