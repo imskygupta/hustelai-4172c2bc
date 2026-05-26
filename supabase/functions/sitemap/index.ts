@@ -85,10 +85,54 @@ function urlEntry(loc: string, lastmod: string, changefreq: string, priority: nu
   return `<url><loc>${xmlEscape(loc)}</loc><lastmod>${lastmod}</lastmod><changefreq>${changefreq}</changefreq><priority>${priority.toFixed(1)}</priority></url>`;
 }
 
-Deno.serve(async () => {
-  // Note: signature kept as `async ()` historically; we now read the request
-  // for op=robots routing. Deno passes a Request as the first arg.
-  // (Closure below is replaced inline.)
+Deno.serve(async (req: Request) => {
+  const url = new URL(req.url);
+  const op = url.searchParams.get("op") ?? "sitemap";
+
+  if (op === "robots") {
+    const body = [
+      "User-agent: *",
+      "Allow: /",
+      "",
+      "Disallow: /login",
+      "Disallow: /signup",
+      "Disallow: /forgot-password",
+      "Disallow: /reset-password",
+      "Disallow: /onboarding",
+      "Disallow: /dashboard",
+      "Disallow: /profile",
+      "Disallow: /payment",
+      "Disallow: /payment-status",
+      "Disallow: /saved-hustles",
+      "Disallow: /admin",
+      "Disallow: /admin-dashboard",
+      "Disallow: /imskygupta-admin",
+      "Disallow: /admin/",
+      "Disallow: /settings/",
+      "Disallow: /workspace",
+      "Disallow: /workspaces",
+      "Disallow: /workspaces-legacy",
+      "Disallow: /work",
+      "Disallow: /canvas",
+      "Disallow: /hustlebot",
+      "Disallow: /portal/",
+      "Disallow: /p/",
+      "Disallow: /hustle/",
+      "Disallow: /roadmap/",
+      "Disallow: /status",
+      "Disallow: /blog",
+      "",
+      `Sitemap: ${SITE}/sitemap.xml`,
+      "",
+    ].join("\n");
+    return new Response(body, {
+      headers: {
+        "content-type": "text/plain; charset=utf-8",
+        "cache-control": "public, max-age=3600",
+      },
+    });
+  }
+
   // Phase 7C.2: all seo_* reads now come from the Blogs DB.
   // Falls back to primary anon during staged cutover.
   let supabase: ReturnType<typeof createClient>;
