@@ -30,16 +30,13 @@ function Pill({ icon: Icon, children }: { icon: React.ComponentType<{ className?
 
 export function ArticleActivityRibbon({ slug }: { slug: string }) {
   const [pulse, setPulse] = useState<OperatorPulse | null>(null);
-  // Cost stabilization: 45s → 180s + visibility-gated.
+  // Anon-runtime hygiene: blog pages are public, so this mounts for every
+  // logged-out visitor (and crawlers). One-shot fetch on mount — no polling,
+  // no visibilitychange listener. Counters move slowly; refresh on navigation.
   useEffect(() => {
     let alive = true;
-    const run = () => fetchOperatorPulse(slug).then((p) => alive && setPulse(p));
-    run();
-    const tick = () => { if (alive && document.visibilityState === "visible") run(); };
-    const onVis = () => { if (document.visibilityState === "visible") tick(); };
-    const id = setInterval(tick, 180_000);
-    document.addEventListener("visibilitychange", onVis);
-    return () => { alive = false; clearInterval(id); document.removeEventListener("visibilitychange", onVis); };
+    fetchOperatorPulse(slug).then((p) => { if (alive) setPulse(p); }).catch(() => {});
+    return () => { alive = false; };
   }, [slug]);
 
   if (!pulse) return null;
@@ -75,16 +72,12 @@ export function ArticleActivityRibbon({ slug }: { slug: string }) {
 
 export function GlobalActivityRibbon({ className = "" }: { className?: string }) {
   const [pulse, setPulse] = useState<GlobalPulse | null>(null);
-  // Cost stabilization: 60s → 180s + visibility-gated.
+  // Anon-runtime hygiene: rendered on the public blog index. One-shot fetch
+  // on mount, no polling. See ArticleActivityRibbon above.
   useEffect(() => {
     let alive = true;
-    const run = () => fetchGlobalPulse().then((p) => alive && setPulse(p));
-    run();
-    const tick = () => { if (alive && document.visibilityState === "visible") run(); };
-    const onVis = () => { if (document.visibilityState === "visible") tick(); };
-    const id = setInterval(tick, 180_000);
-    document.addEventListener("visibilitychange", onVis);
-    return () => { alive = false; clearInterval(id); document.removeEventListener("visibilitychange", onVis); };
+    fetchGlobalPulse().then((p) => { if (alive) setPulse(p); }).catch(() => {});
+    return () => { alive = false; };
   }, []);
 
   if (!pulse) return null;
