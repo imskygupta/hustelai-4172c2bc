@@ -102,8 +102,8 @@ function BlogPostInner() {
         title={post.meta_title || post.title}
         description={post.meta_description || post.excerpt || ""}
         path={`/${post.slug}`}
-        image={post.hero_image}
-        preloadImage={post.hero_image ? optimizedImage(post.hero_image, 1440) : undefined}
+        image={isUsableImageUrl(post.hero_image) ? post.hero_image : undefined}
+        preloadImage={isUsableImageUrl(post.hero_image) ? optimizedImage(post.hero_image, 1440) : undefined}
         type="article"
         publishedAt={post.published_at}
         updatedAt={post.updated_at}
