@@ -589,6 +589,7 @@ function FullRuntimeApp() {
             <Route path="/admin/runtime/analytics" element={<RuntimeAnalytics />} />
             <Route path="/admin/runtime/migration" element={<MigrationHealth />} />
             <Route path="/admin/infrastructure" element={<Infrastructure />} />
+            <Route path="/admin/infrastructure/platform-registry" element={<PlatformRegistry />} />
             <Route path="/admin/operations" element={<AdminOperations />} />
             <Route path="/admin/incident-mode" element={<AdminIncidentMode />} />
             <Route path="/admin/security/users" element={<AdminSecurityUsers />} />
