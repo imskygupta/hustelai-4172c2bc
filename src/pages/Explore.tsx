@@ -21,6 +21,57 @@ const categories = ["All", "Tech", "Creative", "Freelance", "Marketing", "Educat
 const difficulties = ["All", "Beginner", "Intermediate", "Advanced"];
 const types = ["All", "Online", "In-Person", "Hybrid"];
 
+/**
+ * Static curated grid shown to anonymous /explore visitors.
+ * Zero network calls, zero AI orchestration — pure marketing content.
+ * Replaces the live DynamicSection trio for logged-out users to eliminate
+ * runtime burn on the public surface.
+ */
+const ANON_CURATED: { title: string; description: string; cta: string; route?: string }[] = [
+  { title: "Freelance Writing Systems", description: "Pitch templates, client onboarding, and invoicing in one workspace.", cta: "Explore system", route: "/systems" },
+  { title: "AI Content Studio", description: "Faceless YouTube, Reels, and newsletter pipelines with prompts included.", cta: "See the stack", route: "/products" },
+  { title: "Local Service Funnels", description: "Lead capture, quote builder, and follow-up automation for service businesses.", cta: "View workflow", route: "/systems" },
+  { title: "Digital Product Launches", description: "Notion templates, AI prompt packs, and Gumroad-ready storefronts.", cta: "Browse templates", route: "/products" },
+  { title: "Outreach + Proposal Engine", description: "Cold email + branded proposal generation for freelancers and agencies.", cta: "How it works", route: "/how-it-works" },
+  { title: "Operator Roadmaps", description: "Step-by-step playbooks for going from idea to first paying client.", cta: "Read playbooks", route: "/insights" },
+];
+
+function AnonymousExploreGrid({ onSignup, navigate }: { onSignup: () => void; navigate: (to: string) => void }) {
+  return (
+    <div className="space-y-6">
+      <div className="flex items-end justify-between gap-4 flex-wrap">
+        <div>
+          <div className="flex items-center gap-2 text-primary text-xs font-semibold uppercase tracking-wider">
+            <Sparkles className="w-3.5 h-3.5" /> Curated Examples
+          </div>
+          <h2 className="text-2xl md:text-3xl font-display font-bold mt-1">Popular systems operators are running</h2>
+          <p className="text-sm text-muted-foreground mt-1 max-w-2xl">
+            Sign in to unlock live AI recommendations tailored to your workspace, tools, and niche.
+          </p>
+        </div>
+        <Button size="sm" onClick={onSignup} className="text-xs">
+          Sign up free <ArrowRight className="w-3 h-3 ml-1" />
+        </Button>
+      </div>
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {ANON_CURATED.map((it) => (
+          <button
+            key={it.title}
+            onClick={() => (it.route ? navigate(it.route) : onSignup())}
+            className="group text-left rounded-xl p-5 border border-border/50 bg-card/40 hover:bg-card/70 hover:border-foreground/20 transition-all"
+          >
+            <h3 className="font-semibold text-base leading-snug">{it.title}</h3>
+            <p className="text-xs text-muted-foreground mt-1.5 line-clamp-3">{it.description}</p>
+            <div className="inline-flex items-center gap-1.5 mt-4 text-xs font-medium text-primary group-hover:gap-2 transition-all">
+              {it.cta} <ArrowRight className="w-3 h-3" />
+            </div>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 type SuggestionItem = {
   title: string;
   description: string;
@@ -57,10 +108,12 @@ export default function Explore() {
   const [searchNotice, setSearchNotice] = useState<string | null>(null);
   const searchSeq = useRef(0);
 
-  // Dynamic operational inference sections
-  const [continueState, setContinueState] = useState<DynamicState>({ items: [], loading: true, error: null });
-  const [aiSuggestState, setAiSuggestState] = useState<DynamicState>({ items: [], loading: true, error: null });
-  const [packsState, setPacksState] = useState<DynamicState>({ items: [], loading: true, error: null });
+  // Dynamic operational inference sections.
+  // Start with loading=false; only flip to true when we actually fetch (signed-in users).
+  // Anonymous users get static curated content instead of perpetual skeletons.
+  const [continueState, setContinueState] = useState<DynamicState>({ items: [], loading: false, error: null });
+  const [aiSuggestState, setAiSuggestState] = useState<DynamicState>({ items: [], loading: false, error: null });
+  const [packsState, setPacksState] = useState<DynamicState>({ items: [], loading: false, error: null });
 
   // Load top liked cards for display
   useEffect(() => {
@@ -75,6 +128,8 @@ export default function Explore() {
   // Fetch all 3 dynamic sections from the explore-suggest orchestrator.
   // Each section is independent — one failure won't block the others.
   const loadSection = async (section: "continue" | "suggestions" | "packs", setter: typeof setContinueState, force = false) => {
+    // HARD GATE: anonymous users never trigger AI orchestration / explore-suggest.
+    // This protects against runtime burn on logged-out surfaces.
     if (!user) {
       setter({ items: [], loading: false, error: null });
       return;
@@ -96,7 +151,13 @@ export default function Explore() {
   };
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      // Ensure no skeleton ever shimmers for anonymous visitors.
+      setContinueState({ items: [], loading: false, error: null });
+      setAiSuggestState({ items: [], loading: false, error: null });
+      setPacksState({ items: [], loading: false, error: null });
+      return;
+    }
     loadSection("continue", setContinueState);
     loadSection("suggestions", setAiSuggestState);
     loadSection("packs", setPacksState);
@@ -383,8 +444,15 @@ export default function Explore() {
               animate={{ opacity: 1, y: 0 }}
               className="space-y-14"
             >
+              {/* Sections 1–3 are AI-inferred and ONLY run for signed-in users.
+                  Anonymous visitors see a static curated grid instead — no fetch,
+                  no skeleton, no regenerate loop, no runtime burn. */}
+              {!user && (
+                <AnonymousExploreGrid onSignup={() => setShowSignupCTA(true)} navigate={navigate} />
+              )}
+
               {/* Section 1: Continue Building */}
-              <DynamicSection
+              {user && <DynamicSection
                 icon={<PlayCircle className="w-3.5 h-3.5" />}
                 eyebrow="Continue Building"
                 title="Pick up where your workspace left off"
@@ -396,10 +464,10 @@ export default function Explore() {
                   else handleSearch(it.title);
                 }}
                 accent="primary"
-              />
+              />}
 
               {/* Section 2: AI Suggestions */}
-              <DynamicSection
+              {user && <DynamicSection
                 icon={<Wand2 className="w-3.5 h-3.5" />}
                 eyebrow="AI Suggestions"
                 title="What your workspace should build next"
@@ -411,10 +479,10 @@ export default function Explore() {
                   else handleSearch(it.title);
                 }}
                 accent="violet"
-              />
+              />}
 
               {/* Section 3: Operational Packs */}
-              <DynamicSection
+              {user && <DynamicSection
                 icon={<Layers className="w-3.5 h-3.5" />}
                 eyebrow="Operational Packs"
                 title="Stacks tailored to your operating model"
@@ -427,7 +495,7 @@ export default function Explore() {
                 }}
                 accent="cyan"
                 showModules
-              />
+              />}
 
               {/* Trending opportunities */}
               {trendingCards.length > 0 && (
