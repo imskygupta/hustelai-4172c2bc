@@ -287,8 +287,10 @@ function FullRuntimeApp() {
     // Phase 9.2: advance hydration phases after first paint, then lazily
     // refresh runtime feature flags from the Admin DB (fail-open).
     bootstrapHydration();
-    const t = setTimeout(() => { void refreshFeatureFlagsFromAdmin(); }, 1_500);
-    return () => { clearTimeout(t); unregister(); };
+    // Cost stabilization: removed delayed `refreshFeatureFlagsFromAdmin()` —
+    // resolveFlags() now uses a 5 min SWR cache (localStorage), so the
+    // per-mount Admin-DB refresh that fired on every page load is gone.
+    return () => { unregister(); };
   }, []);
 
   return (

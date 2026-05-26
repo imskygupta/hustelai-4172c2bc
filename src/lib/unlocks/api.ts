@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { UnlockPack, UnlockSummary } from "./types";
+import { getCachedUnlockPacks } from "@/lib/public-bootstrap";
 
 export async function getUnlockSummary(userId: string): Promise<UnlockSummary> {
   const { data, error } = await (supabase as any).rpc("unlock_summary", { _user: userId });
@@ -8,12 +9,14 @@ export async function getUnlockSummary(userId: string): Promise<UnlockSummary> {
 }
 
 export async function getUnlockPacks(meter?: string, feature?: string): Promise<UnlockPack[]> {
-  let q = (supabase as any).from("unlock_packs").select("*").eq("active", true).order("sort_order");
-  if (meter) q = q.eq("meter", meter);
-  if (feature && feature !== "*") q = q.in("feature", [feature, "*"]);
-  const { data, error } = await q;
-  if (error) throw error;
-  return (data || []) as UnlockPack[];
+  // Cost stabilization: served from the cached public-bootstrap payload.
+  // Filtering happens client-side (8 rows total — negligible).
+  const all = (await getCachedUnlockPacks()) as UnlockPack[];
+  return all.filter((p) => {
+    if (meter && p.meter !== meter) return false;
+    if (feature && feature !== "*" && p.feature !== feature && p.feature !== "*") return false;
+    return true;
+  });
 }
 
 /**

@@ -30,8 +30,9 @@ let cache: Snapshot = {
   source: "env-fallback",
 };
 
-const POLL_MS = 60_000;
-const TTL_MS = 90_000;
+// Cost stabilization: ops config rarely changes — 60s → 5min poll.
+const POLL_MS = 5 * 60_000;
+const TTL_MS = 10 * 60_000;
 
 function configUrl(): string | null {
   const base = (process.env.OPS_CONFIG_URL || "").replace(/\/+$/, "");

@@ -70,7 +70,16 @@ export default function QueueReplay() {
     }
   }
 
-  useEffect(() => { load(); const t = setInterval(load, 30_000); return () => clearInterval(t); }, []);
+  // Cost stabilization: 30s → 120s + visibility-gated.
+  useEffect(() => {
+    let alive = true;
+    void load();
+    const tick = () => { if (alive && document.visibilityState === "visible") void load(); };
+    const onVis = () => { if (document.visibilityState === "visible") tick(); };
+    const id = window.setInterval(tick, 120_000);
+    document.addEventListener("visibilitychange", onVis);
+    return () => { alive = false; clearInterval(id); document.removeEventListener("visibilitychange", onVis); };
+  }, []);
 
   return (
     <div className="space-y-4">

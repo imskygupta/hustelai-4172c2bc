@@ -47,9 +47,17 @@ export function AdminStatusBar() {
       if (cancelled) return;
       if (ok) markDbHealthy("primary"); else markDbDegraded("primary", "auth probe failed");
     };
+    // Cost stabilization: 60s → 180s + visibility-gated.
     probe();
-    const id = setInterval(probe, 60_000);
-    return () => { cancelled = true; clearInterval(id); };
+    const tick = () => { if (document.visibilityState === "visible") probe(); };
+    const onVis = () => { if (document.visibilityState === "visible") tick(); };
+    const id = setInterval(tick, 180_000);
+    document.addEventListener("visibilitychange", onVis);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+      document.removeEventListener("visibilitychange", onVis);
+    };
   }, []);
 
   return (

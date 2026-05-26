@@ -20,9 +20,10 @@ import { env } from "../../env.js";
 import { emitEvent } from "../queue.js";
 import { reportLoopTick } from "../loop-runner.js";
 
-const IDLE_MIN_MS = Number(process.env.POLL_IDLE_MIN_MS || 5_000);
-const IDLE_MAX_MS = Number(process.env.POLL_IDLE_MAX_MS || 60_000);
-const ERROR_MS = 10_000;
+// Cost stabilization: wider idle band + softer error backoff.
+const IDLE_MIN_MS = Number(process.env.POLL_IDLE_MIN_MS || 10_000);
+const IDLE_MAX_MS = Number(process.env.POLL_IDLE_MAX_MS || 300_000);
+const ERROR_MS = 30_000;
 const CLAIM_LIMIT = Math.max(1, Math.min(25, Number(process.env.WORKFLOW_CLAIM_LIMIT || 10)));
 const OBSERVE_ONLY = String(process.env.WORKFLOW_DUAL_RUN ?? "true").toLowerCase() === "false"
   ? false
@@ -116,7 +117,9 @@ export function startWorkflowLoop(signal: AbortSignal) {
               await wait(ERROR_MS, signal);
             }
           }
-          await wait(2_000, signal);
+          // Cost stabilization: post-drain pause 2s → 10s. The edge fn
+          // already drained up to CLAIM_LIMIT rows in one invocation.
+          await wait(10_000, signal);
         }
 
         if (Date.now() - lastStatsFlush > 300_000) {
