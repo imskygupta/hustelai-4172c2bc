@@ -222,6 +222,7 @@ const AdminFeatureFlags = lazy(() => import("./pages/admin/FeatureFlags"));
 const RuntimeAnalytics = lazy(() => import("./pages/admin/RuntimeAnalytics"));
 const MigrationHealth = lazy(() => import("./pages/admin/MigrationHealth"));
 const Infrastructure = lazy(() => import("./pages/admin/Infrastructure"));
+const PlatformRegistry = lazy(() => import("./pages/admin/PlatformRegistry"));
 const Automations = lazy(() => import("./pages/admin/Automations"));
 const BlogAdmin = lazy(() => import("./pages/admin/BlogAdmin"));
 const BlogSeoHealth = lazy(() => import("./pages/admin/BlogSeoHealth"));
