@@ -139,11 +139,17 @@ async function generateDrafts(target: number, anonKey: string): Promise<{ topic:
 
   const picks = [...bank].sort(() => Math.random() - 0.5).slice(0, target);
   const out: { topic: string; ok: boolean }[] = [];
+  const internalSecret = Deno.env.get("INTERNAL_SERVICE_SECRET") ?? "";
   for (const topic of picks) {
     try {
       const r = await fetch(DRAFT_FN, {
         method: "POST",
-        headers: { "content-type": "application/json", apikey: anonKey, authorization: `Bearer ${anonKey}` },
+        headers: {
+          "content-type": "application/json",
+          apikey: anonKey,
+          authorization: `Bearer ${anonKey}`,
+          "x-internal-secret": internalSecret,
+        },
         body: JSON.stringify({ topic, auto: true }),
       });
       out.push({ topic, ok: r.ok });
@@ -180,10 +186,11 @@ Deno.serve(async (req) => {
     const published = await publishDuePosts();
     const sweptDrafts = await sweepStuckDrafts();
     const scheduled = await promoteReadyDrafts(remainingPublish, stats.last_published_at);
-    // Use service-role as the internal-caller token so blog-ai-draft's
-    // verification gate recognizes the scheduler as a trusted machine caller.
-    const internalKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? Deno.env.get("SUPABASE_ANON_KEY")!;
-    const generated = await generateDrafts(remainingGenerate, internalKey);
+    // Pass anon key as the surface auth token; the internal-caller bypass
+    // in blog-ai-draft is keyed off the x-internal-secret header sent inside
+    // generateDrafts().
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const generated = await generateDrafts(remainingGenerate, anonKey);
     const pings = published.length > 0 ? await pingSitemaps() : [];
 
     return json({
