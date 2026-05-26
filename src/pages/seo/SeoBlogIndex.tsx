@@ -103,7 +103,7 @@ export default function SeoBlogIndex() {
         title="Operational Guides for Freelancers & Modern Agencies | HustleAI"
         description="Operator handbooks for freelancers, solo hustlers and small agencies — onboarding, proposals, async delivery, automation and Telegram-first workflows."
         path="/insights"
-        noindex={isEmptyFilterState}
+        robots={isEmptyFilterState ? "noindex,follow" : undefined}
       />
       <Navbar />
       <main className="pt-24">
