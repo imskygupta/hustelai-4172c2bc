@@ -49,6 +49,17 @@ const workflowLinks = [
   { label: "Features", href: "/features" },
 ];
 
+// Wave 4 — cross-surface authority flow: main app ↔ docs ↔ blogs.
+// Mix of internal Link routes and external subdomain anchors.
+const resourceLinks: { label: string; href: string; external?: boolean }[] = [
+  { label: "Documentation", href: "https://docs.hustlaiapp.in/", external: true },
+  { label: "Getting Started", href: "https://docs.hustlaiapp.in/account-setup", external: true },
+  { label: "First Roadmap Guide", href: "https://docs.hustlaiapp.in/first-roadmap", external: true },
+  { label: "Operator Blog", href: "https://blogs.hustlaiapp.in/", external: true },
+  { label: "Pricing & Plans", href: "/plans" },
+  { label: "Insights", href: "/insights" },
+];
+
 const platformIcons: Record<string, any> = {
   instagram: Instagram,
   youtube: Youtube,
@@ -115,7 +126,7 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-6 gap-x-10 gap-y-12 mb-14">
+        <div className="grid md:grid-cols-2 lg:grid-cols-7 gap-x-10 gap-y-12 mb-14">
           {/* Brand */}
           <div className="space-y-4 lg:col-span-2">
             <div className="flex items-center gap-2">
@@ -214,6 +225,29 @@ export function Footer() {
                   {l.label} <ArrowUpRight className="w-3 h-3 inline opacity-0 group-hover:opacity-100 transition-opacity" />
                 </Link>
               ))}
+            </div>
+          </div>
+
+          {/* Resources — cross-surface authority flow (docs + blog) */}
+          <div className="space-y-4">
+            <h4 className="font-display font-semibold text-xs uppercase tracking-[0.14em] text-slate-500">Resources</h4>
+            <div className="space-y-2.5">
+              {resourceLinks.map(l =>
+                l.external ? (
+                  <a
+                    key={l.href}
+                    href={l.href}
+                    rel="noopener"
+                    className="block text-sm text-muted-foreground hover:text-primary transition-colors group"
+                  >
+                    {l.label} <ArrowUpRight className="w-3 h-3 inline opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </a>
+                ) : (
+                  <Link key={l.href} to={l.href} className="block text-sm text-muted-foreground hover:text-primary transition-colors group">
+                    {l.label} <ArrowUpRight className="w-3 h-3 inline opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </Link>
+                ),
+              )}
             </div>
           </div>
         </div>
