@@ -167,6 +167,55 @@ function ctaForKeyword(fk?: string) {
   return { label: "Try HustleAI free", href: "https://hustlaiapp.in" };
 }
 
+/* Wave 4 — curated cross-surface anchor map (blog → docs/tools/main).
+ * Keyed by phrase fragments. Each entry contributes one href + phrases
+ * to the auto_insert_slug target list so authority flows from blogs
+ * outward to docs and inward to high-value product pages. */
+const CROSS_LINK_MAP: { match: RegExp; href: string; phrases: string[] }[] = [
+  { match: /proposal|pitch|cold email/i, href: "https://hustlaiapp.in/proposal-generator",
+    phrases: ["AI proposal generator", "proposal generator", "client proposal"] },
+  { match: /invoice|billing/i, href: "https://hustlaiapp.in/tools/invoice-generator",
+    phrases: ["free invoice generator", "invoice generator", "branded invoice"] },
+  { match: /contract|nda/i, href: "https://hustlaiapp.in/tools/contract-generator",
+    phrases: ["contract generator", "NDA generator", "freelance contract"] },
+  { match: /resume|cv/i, href: "https://hustlaiapp.in/resume-optimizer",
+    phrases: ["resume optimizer", "AI resume builder", "ATS-friendly resume"] },
+  { match: /price|rate|charge/i, href: "https://hustlaiapp.in/gig-price-calculator",
+    phrases: ["pricing calculator", "gig price calculator", "freelance rate calculator"] },
+  { match: /portal|client|onboard/i, href: "https://hustlaiapp.in/client-portal-software",
+    phrases: ["client portal software", "freelancer client portal", "client portal"] },
+  { match: /workflow|automation|async/i, href: "https://hustlaiapp.in/workflows/async-ai-workflow-platform",
+    phrases: ["async AI workflow platform", "AI workflow automation", "async workflows"] },
+  { match: /workspace|os|productivity/i, href: "https://hustlaiapp.in/workspace-os",
+    phrases: ["workspace OS", "freelancer workspace", "AI workspace"] },
+  { match: /telegram|notification|delivery/i, href: "https://hustlaiapp.in/integrations/telegram-export-delivery",
+    phrases: ["Telegram delivery", "Telegram export", "Telegram notifications"] },
+  { match: /stripe|payment|payout/i, href: "https://hustlaiapp.in/integrations/stripe-payments",
+    phrases: ["Stripe payments", "Stripe integration", "accept payments"] },
+  // Docs (authority sink — sends crawl budget to docs subdomain)
+  { match: /how (?:to|do)|setup|getting started|first/i, href: "https://docs.hustlaiapp.in/account-setup",
+    phrases: ["account setup guide", "getting started guide", "creating your account"] },
+  { match: /roadmap|plan|playbook/i, href: "https://docs.hustlaiapp.in/first-roadmap",
+    phrases: ["first roadmap", "AI roadmap", "roadmap generator"] },
+  { match: /export|pdf|continuity/i, href: "https://docs.hustlaiapp.in/exports-continuity",
+    phrases: ["exports & continuity", "workspace continuity", "export delivery"] },
+  { match: /pricing|plan|tier|upgrade/i, href: "https://docs.hustlaiapp.in/pricing",
+    phrases: ["pricing & plans", "tier comparison", "plan upgrade"] },
+];
+
+function crossLinkTargets(target: { title: string; focus_keyword?: string; body_md?: string }) {
+  const blob = `${target.title ?? ""} ${target.focus_keyword ?? ""} ${(target.body_md ?? "").slice(0, 2000)}`;
+  const out: { href: string; phrases: string[] }[] = [];
+  const seen = new Set<string>();
+  for (const e of CROSS_LINK_MAP) {
+    if (!e.match.test(blob)) continue;
+    if (seen.has(e.href)) continue;
+    seen.add(e.href);
+    out.push({ href: e.href, phrases: e.phrases });
+  }
+  return out;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   // Service-role short-circuit so indexing-dispatcher can run
@@ -234,10 +283,13 @@ Deno.serve(async (req) => {
       if (!target) return json({ ok: false, error: "post not found" }, 404);
       const md = body.body_md ?? target.body_md ?? "";
       const related = suggestRelated({ ...target, body_md: md }, all, 6).filter(r => r.score > 0.05);
-      const targets = related.map(r => ({
-        href: `/${r.slug}`,
-        phrases: phrasesFromTitle(r.title).concat(r.focus_keyword ? [r.focus_keyword] : []),
-      }));
+      const targets = [
+        ...related.map(r => ({
+          href: `/${r.slug}`,
+          phrases: phrasesFromTitle(r.title).concat(r.focus_keyword ? [r.focus_keyword] : []),
+        })),
+        ...crossLinkTargets({ ...target, body_md: md }),
+      ];
       const inserted = autoInsert(md, targets, body.max ?? 6);
       const cta = ctaForKeyword(target.focus_keyword);
       const withCta = inserted.md +
@@ -255,17 +307,21 @@ Deno.serve(async (req) => {
       if (!target) return json({ ok: true, skipped: "not_published" });
       const md = (target as any).body_md ?? "";
       const related = suggestRelated(target, all, 6).filter(r => r.score > 0.05);
-      const targets = related.map(r => ({
-        href: `/${r.slug}`,
-        phrases: phrasesFromTitle(r.title).concat(r.focus_keyword ? [r.focus_keyword] : []),
-      }));
-      const inserted = autoInsert(md, targets, 4);
+      const targets = [
+        ...related.map(r => ({
+          href: `/${r.slug}`,
+          phrases: phrasesFromTitle(r.title).concat(r.focus_keyword ? [r.focus_keyword] : []),
+        })),
+        ...crossLinkTargets(target as any),
+      ];
+      // Allow more injections now that we have docs+tools targets too.
+      const inserted = autoInsert(md, targets, body.max ?? 6);
       if (inserted.injected > 0 && inserted.md !== md) {
         await blog.from("blog_posts")
           .update({ body_md: inserted.md, updated_at: new Date().toISOString() })
           .eq("id", (target as any).id);
       }
-      return json({ ok: true, slug, injected: inserted.injected, related_count: related.length });
+      return json({ ok: true, slug, injected: inserted.injected, related_count: related.length, cross_link_targets: targets.length - related.length });
     }
 
     return json({ ok: false, error: "unsupported action" }, 400);
