@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-26T04:44:55.565Z",
+  "generated_at": "2026-05-26T04:56:00.147Z",
   "routes": [
     {
       "path": ":slug",
@@ -382,6 +382,14 @@
       "source": "src/App.tsx",
       "type": "admin",
       "authWrapper": "Infrastructure",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/admin/infrastructure/platform-registry",
+      "source": "src/App.tsx",
+      "type": "admin",
+      "authWrapper": "PlatformRegistry",
       "dynamic": false,
       "catchAll": false
     },
@@ -2410,6 +2418,10 @@
     {
       "name": "platform-hardening-status",
       "source": "supabase/functions/platform-hardening-status/index.ts"
+    },
+    {
+      "name": "platform-registry",
+      "source": "supabase/functions/platform-registry/index.ts"
     },
     {
       "name": "primary-detox-stats",
