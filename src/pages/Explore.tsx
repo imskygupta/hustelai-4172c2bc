@@ -393,8 +393,15 @@ export default function Explore() {
               animate={{ opacity: 1, y: 0 }}
               className="space-y-14"
             >
+              {/* Sections 1–3 are AI-inferred and ONLY run for signed-in users.
+                  Anonymous visitors see a static curated grid instead — no fetch,
+                  no skeleton, no regenerate loop, no runtime burn. */}
+              {!user && (
+                <AnonymousExploreGrid onSignup={() => setShowSignupCTA(true)} navigate={navigate} />
+              )}
+
               {/* Section 1: Continue Building */}
-              <DynamicSection
+              {user && <DynamicSection
                 icon={<PlayCircle className="w-3.5 h-3.5" />}
                 eyebrow="Continue Building"
                 title="Pick up where your workspace left off"
@@ -406,10 +413,10 @@ export default function Explore() {
                   else handleSearch(it.title);
                 }}
                 accent="primary"
-              />
+              />}
 
               {/* Section 2: AI Suggestions */}
-              <DynamicSection
+              {user && <DynamicSection
                 icon={<Wand2 className="w-3.5 h-3.5" />}
                 eyebrow="AI Suggestions"
                 title="What your workspace should build next"
@@ -421,10 +428,10 @@ export default function Explore() {
                   else handleSearch(it.title);
                 }}
                 accent="violet"
-              />
+              />}
 
               {/* Section 3: Operational Packs */}
-              <DynamicSection
+              {user && <DynamicSection
                 icon={<Layers className="w-3.5 h-3.5" />}
                 eyebrow="Operational Packs"
                 title="Stacks tailored to your operating model"
@@ -437,7 +444,7 @@ export default function Explore() {
                 }}
                 accent="cyan"
                 showModules
-              />
+              />}
 
               {/* Trending opportunities */}
               {trendingCards.length > 0 && (
