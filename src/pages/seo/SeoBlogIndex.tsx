@@ -38,15 +38,40 @@ export default function SeoBlogIndex() {
   const activePersona = (search.get("persona") as OperatorPersona | null) || null;
 
   useEffect(() => {
-    listBlogs(false).then(setAllPosts);
-    listTrendingBlogs(6).then(setTrending);
-    listRecentBlogs(6).then(setRecent);
-    listMostViewedBlogs(6).then(setMostRead);
+    // Defensive fetch: always resolve UI state, never let a hung/failed
+    // promise leave the archive spinner running forever.
+    const withTimeout = <T,>(p: Promise<T>, ms = 8000, fallback: T): Promise<T> =>
+      Promise.race([
+        p.catch((e) => {
+          console.warn("[SeoBlogIndex] fetch failed", e);
+          return fallback;
+        }),
+        new Promise<T>((resolve) =>
+          setTimeout(() => {
+            console.warn("[SeoBlogIndex] fetch timed out after", ms, "ms");
+            resolve(fallback);
+          }, ms),
+        ),
+      ]);
+
+    withTimeout(listBlogs(false), 8000, [] as SeoBlogRow[]).then(setAllPosts);
+    withTimeout(listTrendingBlogs(6), 8000, [] as SeoBlogRow[]).then(setTrending);
+    withTimeout(listRecentBlogs(6), 8000, [] as SeoBlogRow[]).then(setRecent);
+    withTimeout(listMostViewedBlogs(6), 8000, [] as SeoBlogRow[]).then(setMostRead);
     (async () => {
-      const slugs = await fetchMostSavedSlugs(6);
-      if (!slugs.length) return;
-      const rows = await Promise.all(slugs.map((s) => import("@/lib/seo-cms").then((m) => m.fetchPublishedBlog(s))));
-      setMostSaved(rows.filter(Boolean) as SeoBlogRow[]);
+      try {
+        const slugs = await withTimeout(fetchMostSavedSlugs(6), 6000, [] as string[]);
+        if (!slugs.length) return;
+        const mod = await import("@/lib/seo-cms");
+        const rows = await withTimeout(
+          Promise.all(slugs.map((s) => mod.fetchPublishedBlog(s).catch(() => null))),
+          8000,
+          [] as (SeoBlogRow | null)[],
+        );
+        setMostSaved(rows.filter(Boolean) as SeoBlogRow[]);
+      } catch (e) {
+        console.warn("[SeoBlogIndex] most-saved fetch failed", e);
+      }
     })();
   }, []);
 
