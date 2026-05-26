@@ -180,8 +180,10 @@ Deno.serve(async (req) => {
     const published = await publishDuePosts();
     const sweptDrafts = await sweepStuckDrafts();
     const scheduled = await promoteReadyDrafts(remainingPublish, stats.last_published_at);
-    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-    const generated = await generateDrafts(remainingGenerate, anonKey);
+    // Use service-role as the internal-caller token so blog-ai-draft's
+    // verification gate recognizes the scheduler as a trusted machine caller.
+    const internalKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? Deno.env.get("SUPABASE_ANON_KEY")!;
+    const generated = await generateDrafts(remainingGenerate, internalKey);
     const pings = published.length > 0 ? await pingSitemaps() : [];
 
     return json({
