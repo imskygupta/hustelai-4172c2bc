@@ -41,6 +41,20 @@
       "destination": "https://vbnqaovxatucrgtnggea.supabase.co/functions/v1/blog-sitemap?type=robots"
     },
     {
+      "source": "/robots.txt",
+      "has": [{ "type": "host", "value": "docs.hustlaiapp.in" }],
+      "destination": "https://vbnqaovxatucrgtnggea.supabase.co/functions/v1/docs-sitemap?op=robots"
+    },
+    {
+      "source": "/sitemap.xml",
+      "has": [{ "type": "host", "value": "docs.hustlaiapp.in" }],
+      "destination": "https://vbnqaovxatucrgtnggea.supabase.co/functions/v1/docs-sitemap"
+    },
+    {
+      "source": "/robots.txt",
+      "destination": "https://vbnqaovxatucrgtnggea.supabase.co/functions/v1/sitemap?op=robots"
+    },
+    {
       "source": "/sitemap.xml",
       "destination": "https://vbnqaovxatucrgtnggea.supabase.co/functions/v1/sitemap"
     },
