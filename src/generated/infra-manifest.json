@@ -1,0 +1,2657 @@
+{
+  "generated_at": "2026-05-26T04:44:34.663Z",
+  "routes": [
+    {
+      "path": ":slug",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "DocsArticle",
+      "dynamic": true,
+      "catchAll": false
+    },
+    {
+      "path": "*",
+      "source": "src/App.tsx",
+      "type": "redirect",
+      "authWrapper": "Navigate",
+      "dynamic": false,
+      "catchAll": true
+    },
+    {
+      "path": "/",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "DocsLayout",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/_preview/blog/:slug",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "SeoBlogPost",
+      "dynamic": true,
+      "catchAll": false
+    },
+    {
+      "path": "/_preview/page/:slug",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "DynamicSeoPage",
+      "dynamic": true,
+      "catchAll": false
+    },
+    {
+      "path": "/a/:token",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "PublicArtifact",
+      "dynamic": true,
+      "catchAll": false
+    },
+    {
+      "path": "/about",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "About",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/acceptable-use",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "AcceptableUse",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/admin",
+      "source": "src/App.tsx",
+      "type": "admin",
+      "authWrapper": "AdminBlock",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/admin-dashboard",
+      "source": "src/App.tsx",
+      "type": "admin",
+      "authWrapper": "AdminDashboard",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/admin-dashboard/docs",
+      "source": "src/App.tsx",
+      "type": "admin",
+      "authWrapper": "AdminDocs",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/admin/ai-jobs",
+      "source": "src/App.tsx",
+      "type": "admin",
+      "authWrapper": "AdminAiJobs",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/admin/automations",
+      "source": "src/App.tsx",
+      "type": "admin",
+      "authWrapper": "Automations",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/admin/blog",
+      "source": "src/App.tsx",
+      "type": "admin",
+      "authWrapper": "BlogAdmin",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/admin/blog/*",
+      "source": "src/App.tsx",
+      "type": "admin",
+      "authWrapper": "BlogAdminNotFound",
+      "dynamic": false,
+      "catchAll": true
+    },
+    {
+      "path": "/admin/blog/adsense",
+      "source": "src/App.tsx",
+      "type": "admin",
+      "authWrapper": "AdsenseReadiness",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/admin/blog/adsense-readiness",
+      "source": "src/App.tsx",
+      "type": "admin",
+      "authWrapper": "AdsenseReadiness",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/admin/blog/authority-batch",
+      "source": "src/App.tsx",
+      "type": "admin",
+      "authWrapper": "AuthorityBatch",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/admin/blog/bootstrap",
+      "source": "src/App.tsx",
+      "type": "admin",
+      "authWrapper": "BootstrapSqlHub",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/admin/blog/bootstrap-sql",
+      "source": "src/App.tsx",
+      "type": "admin",
+      "authWrapper": "BootstrapSqlHub",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/admin/blog/command",
+      "source": "src/App.tsx",
+      "type": "admin",
+      "authWrapper": "EditorialOS",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/admin/blog/crawl",
+      "source": "src/App.tsx",
+      "type": "admin",
+      "authWrapper": "CrawlOrchestrator",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/admin/blog/crawl-orchestrator",
+      "source": "src/App.tsx",
+      "type": "admin",
+      "authWrapper": "CrawlOrchestrator",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/admin/blog/editorial",
+      "source": "src/App.tsx",
+      "type": "admin",
+      "authWrapper": "EditorialCenter",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/admin/blog/graph",
+      "source": "src/App.tsx",
+      "type": "admin",
+      "authWrapper": "KnowledgeGraph",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/admin/blog/hustle-templates",
+      "source": "src/App.tsx",
+      "type": "admin",
+      "authWrapper": "HustleTemplatesAdmin",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/admin/blog/indexing",
+      "source": "src/App.tsx",
+      "type": "admin",
+      "authWrapper": "EditorialCenter",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/admin/blog/knowledge-graph",
+      "source": "src/App.tsx",
+      "type": "admin",
+      "authWrapper": "KnowledgeGraph",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/admin/blog/linking",
+      "source": "src/App.tsx",
+      "type": "admin",
+      "authWrapper": "EditorialCenter",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/admin/blog/media",
+      "source": "src/App.tsx",
+      "type": "admin",
+      "authWrapper": "BlogOperations",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/admin/blog/narrative",
+      "source": "src/App.tsx",
+      "type": "admin",
+      "authWrapper": "NarrativeOps",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/admin/blog/operations",
+      "source": "src/App.tsx",
+      "type": "admin",
+      "authWrapper": "BlogOperations",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/admin/blog/os",
+      "source": "src/App.tsx",
+      "type": "admin",
+      "authWrapper": "EditorialOS",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/admin/blog/pipeline",
+      "source": "src/App.tsx",
+      "type": "admin",
+      "authWrapper": "EditorialPipeline",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/admin/blog/queue",
+      "source": "src/App.tsx",
+      "type": "admin",
+      "authWrapper": "BlogOperations",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/admin/blog/registry",
+      "source": "src/App.tsx",
+      "type": "admin",
+      "authWrapper": "ProductRegistry",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/admin/blog/seo",
+      "source": "src/App.tsx",
+      "type": "admin",
+      "authWrapper": "BlogSeoHealth",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/admin/blog/seo-health",
+      "source": "src/App.tsx",
+      "type": "admin",
+      "authWrapper": "BlogSeoHealth",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/admin/blog/tool-media",
+      "source": "src/App.tsx",
+      "type": "admin",
+      "authWrapper": "ToolMediaLibrary",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/admin/blog/tool-registry",
+      "source": "src/App.tsx",
+      "type": "admin",
+      "authWrapper": "ProductRegistry",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/admin/blog/topics",
+      "source": "src/App.tsx",
+      "type": "admin",
+      "authWrapper": "EditorialCenter",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/admin/blog/traffic",
+      "source": "src/App.tsx",
+      "type": "admin",
+      "authWrapper": "TrafficIntelligence",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/admin/communications",
+      "source": "src/App.tsx",
+      "type": "admin",
+      "authWrapper": "AdminCommunications",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/admin/communications/newsletter",
+      "source": "src/App.tsx",
+      "type": "admin",
+      "authWrapper": "AdminNewsletterOps",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/admin/communications/telegram",
+      "source": "src/App.tsx",
+      "type": "admin",
+      "authWrapper": "TelegramOpsCenter",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/admin/feature-flags",
+      "source": "src/App.tsx",
+      "type": "admin",
+      "authWrapper": "AdminFeatureFlags",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/admin/incident-mode",
+      "source": "src/App.tsx",
+      "type": "admin",
+      "authWrapper": "AdminIncidentMode",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/admin/infrastructure",
+      "source": "src/App.tsx",
+      "type": "admin",
+      "authWrapper": "Infrastructure",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/admin/marketing-pages",
+      "source": "src/App.tsx",
+      "type": "admin",
+      "authWrapper": "AdminMarketingPages",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/admin/mission-control",
+      "source": "src/App.tsx",
+      "type": "admin",
+      "authWrapper": "AdminMissionControl",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/admin/notifications",
+      "source": "src/App.tsx",
+      "type": "admin",
+      "authWrapper": "AdminNotifications",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/admin/operations",
+      "source": "src/App.tsx",
+      "type": "admin",
+      "authWrapper": "AdminOperations",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/admin/ops-health",
+      "source": "src/App.tsx",
+      "type": "admin",
+      "authWrapper": "AdminOpsHealth",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/admin/payments-review",
+      "source": "src/App.tsx",
+      "type": "admin",
+      "authWrapper": "PaymentsReview",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/admin/runtime",
+      "source": "src/App.tsx",
+      "type": "admin",
+      "authWrapper": "AdminRuntime",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/admin/runtime/analytics",
+      "source": "src/App.tsx",
+      "type": "admin",
+      "authWrapper": "RuntimeAnalytics",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/admin/runtime/migration",
+      "source": "src/App.tsx",
+      "type": "admin",
+      "authWrapper": "MigrationHealth",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/admin/runtime/providers",
+      "source": "src/App.tsx",
+      "type": "admin",
+      "authWrapper": "RuntimeProviders",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/admin/security/runtime-trust",
+      "source": "src/App.tsx",
+      "type": "admin",
+      "authWrapper": "AdminRuntimeTrust",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/admin/security/users",
+      "source": "src/App.tsx",
+      "type": "admin",
+      "authWrapper": "AdminSecurityUsers",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/admin/telegram",
+      "source": "src/App.tsx",
+      "type": "admin",
+      "authWrapper": "TelegramOps",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/admin/telegram-control",
+      "source": "src/App.tsx",
+      "type": "admin",
+      "authWrapper": "TelegramControl",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/admin/usage-governance",
+      "source": "src/App.tsx",
+      "type": "admin",
+      "authWrapper": "AdminUsageGovernance",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/affiliates",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": null,
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/agency-workflow-tools",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "AgencyWorkflowToolsPage",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/ai",
+      "source": "src/App.tsx",
+      "type": "redirect",
+      "authWrapper": "Navigate",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/ai-business-card-maker",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "AIBusinessCardMakerPage",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/ai-document-generator",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "AIDocumentGeneratorPage",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/ai-invoice-generator",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "AIInvoiceGeneratorPage",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/ai-tools",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": null,
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/api/health",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "Health",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/api/status",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "Health",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/api/version",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "Health",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/auth-debug",
+      "source": "src/App.tsx",
+      "type": "auth",
+      "authWrapper": "AuthDebug",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/authors/:slug",
+      "source": "src/App.tsx",
+      "type": "auth",
+      "authWrapper": "AuthorPage",
+      "dynamic": true,
+      "catchAll": false
+    },
+    {
+      "path": "/blocks",
+      "source": "src/App.tsx",
+      "type": "redirect",
+      "authWrapper": "Navigate",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/blog",
+      "source": "src/App.tsx",
+      "type": "blog",
+      "authWrapper": "BlogRedirect",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/blog/*",
+      "source": "src/App.tsx",
+      "type": "blog",
+      "authWrapper": "BlogRedirect",
+      "dynamic": false,
+      "catchAll": true
+    },
+    {
+      "path": "/brand-kit",
+      "source": "src/App.tsx",
+      "type": "redirect",
+      "authWrapper": "Navigate",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/canvas",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": null,
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/career",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "Career",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/client",
+      "source": "src/App.tsx",
+      "type": "auth",
+      "authWrapper": "RequireAuth",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/client-onboarding-software",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "ClientOnboardingPage",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/client-portal-software",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "ClientPortalSoftwarePage",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/clients",
+      "source": "src/App.tsx",
+      "type": "redirect",
+      "authWrapper": "Navigate",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/community",
+      "source": "src/App.tsx",
+      "type": "redirect",
+      "authWrapper": "Navigate",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/company",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "Company",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/compliance",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "Compliance",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/contact",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "Contact",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/d/:token",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "Download",
+      "dynamic": true,
+      "catchAll": false
+    },
+    {
+      "path": "/dashboard",
+      "source": "src/App.tsx",
+      "type": "auth",
+      "authWrapper": "RequireAuth",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/dashboard/automations",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": null,
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/dashboard/tools",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": null,
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/dashboard/tools/business-card",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": null,
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/dashboard/tools/content-calendar",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": null,
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/dashboard/tools/contract-generator",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": null,
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/dashboard/tools/invoice-generator",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": null,
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/dashboard/tools/onboarding-form",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": null,
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/dashboard/tools/pomodoro",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": null,
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/dashboard/tools/portfolio-bio",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": null,
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/dashboard/tools/pricing-calculator",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": null,
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/dashboard/tools/proposal-generator",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": null,
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/dashboard/workspace-os",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": null,
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/dashboard/workspace-os/boosts",
+      "source": "src/App.tsx",
+      "type": "redirect",
+      "authWrapper": "Navigate",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/dashboard/workspace-os/preview/:module",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": null,
+      "dynamic": true,
+      "catchAll": false
+    },
+    {
+      "path": "/data-policy",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "DataPolicy",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/explore",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "Explore",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/faceless-content",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": null,
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/features",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "FeatureHub",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/features/:slug",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "FeatureDetail",
+      "dynamic": true,
+      "catchAll": false
+    },
+    {
+      "path": "/for-agencies",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "ForAgenciesPage",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/for-creators",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "ForCreatorsPage",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/for-freelancers",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "ForFreelancersPage",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/for-telegram-business",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "ForTelegramBusinessPage",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/forgot-password",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "ForgotPassword",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/free-tools",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "FreeToolHub",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/free-tools/:slug",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "FreeToolDetail",
+      "dynamic": true,
+      "catchAll": false
+    },
+    {
+      "path": "/freelancer-crm",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "FreelancerCRMPage",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/freelancer-productivity-tools",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "FreelancerProductivityToolsPage",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/freelancer-workspace",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "FreelancerWorkspacePage",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/gig-arbitrage",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": null,
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/gig-price-calculator",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": null,
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/how-it-works",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "HowItWorks",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/hustle-blueprint",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": null,
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/hustle/:id",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": null,
+      "dynamic": true,
+      "catchAll": false
+    },
+    {
+      "path": "/hustlebot",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": null,
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/imskygupta-admin",
+      "source": "src/App.tsx",
+      "type": "admin",
+      "authWrapper": "AdminLogin",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/infinity-zone",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": null,
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/insights",
+      "source": "src/App.tsx",
+      "type": "blog",
+      "authWrapper": "SeoBlogIndex",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/insights/:slug",
+      "source": "src/App.tsx",
+      "type": "blog",
+      "authWrapper": "SeoBlogPost",
+      "dynamic": true,
+      "catchAll": false
+    },
+    {
+      "path": "/insights/category/:slug",
+      "source": "src/App.tsx",
+      "type": "blog",
+      "authWrapper": "CategoryArchive",
+      "dynamic": true,
+      "catchAll": false
+    },
+    {
+      "path": "/insights/tag/:slug",
+      "source": "src/App.tsx",
+      "type": "blog",
+      "authWrapper": "TagArchive",
+      "dynamic": true,
+      "catchAll": false
+    },
+    {
+      "path": "/intake",
+      "source": "src/App.tsx",
+      "type": "redirect",
+      "authWrapper": "Navigate",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/intake/:slug",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "IntakeSubmit",
+      "dynamic": true,
+      "catchAll": false
+    },
+    {
+      "path": "/intake/preview",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "IntakePreview",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/integrations",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "Marketplace",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/integrations/:slug",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "IntegrationDetail",
+      "dynamic": true,
+      "catchAll": false
+    },
+    {
+      "path": "/integrations/telegram",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "TelegramLanding",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/knowledge-hub",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": null,
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/leaderboard",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": null,
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/login",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "Login",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/marketing-1",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "Marketing1",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/marketing-2",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "Marketing2",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/marketplace",
+      "source": "src/App.tsx",
+      "type": "redirect",
+      "authWrapper": "Navigate",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/marketplace/:id",
+      "source": "src/App.tsx",
+      "type": "redirect",
+      "authWrapper": "Navigate",
+      "dynamic": true,
+      "catchAll": false
+    },
+    {
+      "path": "/onboarding",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "Onboarding",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/operations",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "Operations",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/p/:token",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "WorkspacePortal",
+      "dynamic": true,
+      "catchAll": false
+    },
+    {
+      "path": "/payment",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": null,
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/payment-status",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": null,
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/pipeline",
+      "source": "src/App.tsx",
+      "type": "redirect",
+      "authWrapper": "Navigate",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/plans",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "Plans",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/platform",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "Platform",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/portal/:token",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "ClientPortal",
+      "dynamic": true,
+      "catchAll": false
+    },
+    {
+      "path": "/pricing",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "PricingPage",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/privacy-policy",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "PrivacyPolicy",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/problem-leads",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": null,
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/products",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "Products",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/products/:slug",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "ProductDetail",
+      "dynamic": true,
+      "catchAll": false
+    },
+    {
+      "path": "/profile",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": null,
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/projects/new",
+      "source": "src/App.tsx",
+      "type": "redirect",
+      "authWrapper": "Navigate",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/proposal-draft",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": null,
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/proposal-generator",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "ProposalGeneratorPage",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/providers",
+      "source": "src/App.tsx",
+      "type": "redirect",
+      "authWrapper": "Navigate",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/quotation-generator",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "QuotationGeneratorPage",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/red-flag-scanner",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": null,
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/refund-policy",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "RefundPolicy",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/relax",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "Relax",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/reset-password",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "ResetPassword",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/resume-optimizer",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": null,
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/revenue",
+      "source": "src/App.tsx",
+      "type": "redirect",
+      "authWrapper": "Navigate",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/reviews",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "Reviews",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/roadmap",
+      "source": "src/App.tsx",
+      "type": "redirect",
+      "authWrapper": "Navigate",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/roadmap/:id",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": null,
+      "dynamic": true,
+      "catchAll": false
+    },
+    {
+      "path": "/saved",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "SavedGuides",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/saved-hustles",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": null,
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/security",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "SecurityTrust",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/settings",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": null,
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/signup",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "Signup",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/skill-gap",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": null,
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/status",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "Status",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/stories",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "StoriesIndex",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/stories/:slug",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "StoryDetail",
+      "dynamic": true,
+      "catchAll": false
+    },
+    {
+      "path": "/sure-hit-jobs",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": null,
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/systems",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "SystemsIndex",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/systems/:slug",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "SystemDetail",
+      "dynamic": true,
+      "catchAll": false
+    },
+    {
+      "path": "/terms-conditions",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "TermsConditions",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/tools",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "ToolsHub",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/tools/business-card",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "BusinessCardGenerator",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/tools/content-calendar",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "ContentCalendar",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/tools/contract-generator",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "ContractGeneratorTool",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/tools/invoice-generator",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "InvoiceGeneratorTool",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/tools/onboarding-form",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "OnboardingFormBuilder",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/tools/pomodoro",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "PomodoroWidget",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/tools/portfolio-bio",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "PortfolioBio",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/tools/pricing-calculator",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "PricingCalculator",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/tools/proposal-generator",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "ProposalGeneratorTool",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/topics",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "TopicsIndex",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/topics/:slug",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "TopicHub",
+      "dynamic": true,
+      "catchAll": false
+    },
+    {
+      "path": "/trust",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "Trust",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/unsubscribe",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "Unsubscribe",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/use-cases",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "UseCaseHub",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/use-cases/:slug",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "UseCaseDetail",
+      "dynamic": true,
+      "catchAll": false
+    },
+    {
+      "path": "/work",
+      "source": "src/App.tsx",
+      "type": "workspace",
+      "authWrapper": null,
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/work/:slug",
+      "source": "src/App.tsx",
+      "type": "workspace",
+      "authWrapper": null,
+      "dynamic": true,
+      "catchAll": false
+    },
+    {
+      "path": "/workflows",
+      "source": "src/App.tsx",
+      "type": "workspace",
+      "authWrapper": "WorkflowHub",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/workflows/:slug",
+      "source": "src/App.tsx",
+      "type": "workspace",
+      "authWrapper": "WorkflowDetail",
+      "dynamic": true,
+      "catchAll": false
+    },
+    {
+      "path": "/workspace",
+      "source": "src/App.tsx",
+      "type": "redirect",
+      "authWrapper": "Navigate",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/workspace-os",
+      "source": "src/App.tsx",
+      "type": "workspace",
+      "authWrapper": "WorkspaceOSMarketingPage",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/workspaces",
+      "source": "src/App.tsx",
+      "type": "redirect",
+      "authWrapper": "Navigate",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/workspaces-legacy",
+      "source": "src/App.tsx",
+      "type": "workspace",
+      "authWrapper": null,
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/workspaces/:id",
+      "source": "src/App.tsx",
+      "type": "workspace",
+      "authWrapper": "LegacyProjectRedirect",
+      "dynamic": true,
+      "catchAll": false
+    },
+    {
+      "path": "/workspaces/:id/docs",
+      "source": "src/App.tsx",
+      "type": "workspace",
+      "authWrapper": "LegacyProjectDocsRedirect",
+      "dynamic": true,
+      "catchAll": false
+    },
+    {
+      "path": "/workspaces/:id/docs/:docId",
+      "source": "src/App.tsx",
+      "type": "workspace",
+      "authWrapper": "LegacyProjectDocRedirect",
+      "dynamic": true,
+      "catchAll": false
+    },
+    {
+      "path": "/workspaces/:id/docs/new/:type",
+      "source": "src/App.tsx",
+      "type": "workspace",
+      "authWrapper": "LegacyProjectDocsNewRedirect",
+      "dynamic": true,
+      "catchAll": false
+    },
+    {
+      "path": "/workspaces/*",
+      "source": "src/App.tsx",
+      "type": "workspace",
+      "authWrapper": null,
+      "dynamic": false,
+      "catchAll": true
+    },
+    {
+      "path": "/workspaces/ai-settings",
+      "source": "src/App.tsx",
+      "type": "redirect",
+      "authWrapper": "Navigate",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/workspaces/blocks",
+      "source": "src/App.tsx",
+      "type": "redirect",
+      "authWrapper": "Navigate",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/workspaces/brand-kit",
+      "source": "src/App.tsx",
+      "type": "redirect",
+      "authWrapper": "Navigate",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/workspaces/clients",
+      "source": "src/App.tsx",
+      "type": "redirect",
+      "authWrapper": "Navigate",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/workspaces/intake",
+      "source": "src/App.tsx",
+      "type": "redirect",
+      "authWrapper": "Navigate",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/workspaces/intake/:id",
+      "source": "src/App.tsx",
+      "type": "workspace",
+      "authWrapper": "LegacyIntakeInboxRedirect",
+      "dynamic": true,
+      "catchAll": false
+    },
+    {
+      "path": "/workspaces/new",
+      "source": "src/App.tsx",
+      "type": "redirect",
+      "authWrapper": "Navigate",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/workspaces/pipeline",
+      "source": "src/App.tsx",
+      "type": "redirect",
+      "authWrapper": "Navigate",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/workspaces/revenue",
+      "source": "src/App.tsx",
+      "type": "redirect",
+      "authWrapper": "Navigate",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/workspaces/roadmap",
+      "source": "src/App.tsx",
+      "type": "redirect",
+      "authWrapper": "Navigate",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "account",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "AccountSettings",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "api",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "ApiKeysSettings",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "automations",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "AutomationsHub",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "billing",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "BillingSettings",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "blocks",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "BlocksPage",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "brand-kit",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "BrandKitPage",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "clients",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "ClientsPage",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "exports",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "Exports",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "feedback",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "FeedbackPage",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "intake",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "IntakeForms",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "intake/:id",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "IntakeInbox",
+      "dynamic": true,
+      "catchAll": false
+    },
+    {
+      "path": "integrations",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "Integrations",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "library",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "DocsLibrary",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "notifications",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "NotificationPreferences",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "pipeline",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "Pipeline",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "profile",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "ProfileSettings",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "projects/:id",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "WorkspaceDetail",
+      "dynamic": true,
+      "catchAll": false
+    },
+    {
+      "path": "projects/:id/docs",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "DocsList",
+      "dynamic": true,
+      "catchAll": false
+    },
+    {
+      "path": "projects/:id/docs/:docId",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "DocEditor",
+      "dynamic": true,
+      "catchAll": false
+    },
+    {
+      "path": "projects/:id/docs/new/:type",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "DocEditor",
+      "dynamic": true,
+      "catchAll": false
+    },
+    {
+      "path": "projects/new",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "NewWorkspace",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "providers",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "AISettings",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "revenue",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "Revenue",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "roadmap",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "RoadmapCockpit",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "security",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "SecuritySettings",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "telegram",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "TelegramSettings",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "tools",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "ToolsHubWS",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "wallet",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "Wallet",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "workspace",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "WorkspaceSettings",
+      "dynamic": false,
+      "catchAll": false
+    }
+  ],
+  "edge_functions": [
+    {
+      "name": "abandoned-checkout-recovery",
+      "source": "supabase/functions/abandoned-checkout-recovery/index.ts"
+    },
+    {
+      "name": "admin-alert",
+      "source": "supabase/functions/admin-alert/index.ts"
+    },
+    {
+      "name": "admin-bot-notify",
+      "source": "supabase/functions/admin-bot-notify/index.ts"
+    },
+    {
+      "name": "admin-utils",
+      "source": "supabase/functions/admin-utils/index.ts"
+    },
+    {
+      "name": "adsense-readiness",
+      "source": "supabase/functions/adsense-readiness/index.ts"
+    },
+    {
+      "name": "ai-chatbot",
+      "source": "supabase/functions/ai-chatbot/index.ts"
+    },
+    {
+      "name": "ai-job-cancel",
+      "source": "supabase/functions/ai-job-cancel/index.ts"
+    },
+    {
+      "name": "ai-job-enqueue",
+      "source": "supabase/functions/ai-job-enqueue/index.ts"
+    },
+    {
+      "name": "ai-job-retry",
+      "source": "supabase/functions/ai-job-retry/index.ts"
+    },
+    {
+      "name": "ai-job-runner",
+      "source": "supabase/functions/ai-job-runner/index.ts"
+    },
+    {
+      "name": "ai-key-test",
+      "source": "supabase/functions/ai-key-test/index.ts"
+    },
+    {
+      "name": "ai-search",
+      "source": "supabase/functions/ai-search/index.ts"
+    },
+    {
+      "name": "artifact-public-view",
+      "source": "supabase/functions/artifact-public-view/index.ts"
+    },
+    {
+      "name": "artifact-resend",
+      "source": "supabase/functions/artifact-resend/index.ts"
+    },
+    {
+      "name": "artifact-share-issue",
+      "source": "supabase/functions/artifact-share-issue/index.ts"
+    },
+    {
+      "name": "artifact-share-revoke",
+      "source": "supabase/functions/artifact-share-revoke/index.ts"
+    },
+    {
+      "name": "auth-link-verify",
+      "source": "supabase/functions/auth-link-verify/index.ts"
+    },
+    {
+      "name": "authority-batch",
+      "source": "supabase/functions/authority-batch/index.ts"
+    },
+    {
+      "name": "blog-admin",
+      "source": "supabase/functions/blog-admin/index.ts"
+    },
+    {
+      "name": "blog-ai-draft",
+      "source": "supabase/functions/blog-ai-draft/index.ts"
+    },
+    {
+      "name": "blog-automation-audit",
+      "source": "supabase/functions/blog-automation-audit/index.ts"
+    },
+    {
+      "name": "blog-bootstrap",
+      "source": "supabase/functions/blog-bootstrap/index.ts"
+    },
+    {
+      "name": "blog-feed",
+      "source": "supabase/functions/blog-feed/index.ts"
+    },
+    {
+      "name": "blog-image-pipeline",
+      "source": "supabase/functions/blog-image-pipeline/index.ts"
+    },
+    {
+      "name": "blog-intelligence",
+      "source": "supabase/functions/blog-intelligence/index.ts"
+    },
+    {
+      "name": "blog-latest",
+      "source": "supabase/functions/blog-latest/index.ts"
+    },
+    {
+      "name": "blog-link-engine",
+      "source": "supabase/functions/blog-link-engine/index.ts"
+    },
+    {
+      "name": "blog-post",
+      "source": "supabase/functions/blog-post/index.ts"
+    },
+    {
+      "name": "blog-scheduler",
+      "source": "supabase/functions/blog-scheduler/index.ts"
+    },
+    {
+      "name": "blog-seo-health",
+      "source": "supabase/functions/blog-seo-health/index.ts"
+    },
+    {
+      "name": "blog-sitemap",
+      "source": "supabase/functions/blog-sitemap/index.ts"
+    },
+    {
+      "name": "blog-track",
+      "source": "supabase/functions/blog-track/index.ts"
+    },
+    {
+      "name": "brevo-newsletter",
+      "source": "supabase/functions/brevo-newsletter/index.ts"
+    },
+    {
+      "name": "cashfree-payment",
+      "source": "supabase/functions/cashfree-payment/index.ts"
+    },
+    {
+      "name": "cleanup-expired-exports",
+      "source": "supabase/functions/cleanup-expired-exports/index.ts"
+    },
+    {
+      "name": "crawl-orchestrator",
+      "source": "supabase/functions/crawl-orchestrator/index.ts"
+    },
+    {
+      "name": "dashboard-feed",
+      "source": "supabase/functions/dashboard-feed/index.ts"
+    },
+    {
+      "name": "discord-oauth",
+      "source": "supabase/functions/discord-oauth/index.ts"
+    },
+    {
+      "name": "discord-sync-role",
+      "source": "supabase/functions/discord-sync-role/index.ts"
+    },
+    {
+      "name": "docs-read-public",
+      "source": "supabase/functions/docs-read-public/index.ts"
+    },
+    {
+      "name": "docs-rebuild",
+      "source": "supabase/functions/docs-rebuild/index.ts"
+    },
+    {
+      "name": "docs-sitemap",
+      "source": "supabase/functions/docs-sitemap/index.ts"
+    },
+    {
+      "name": "dodo-bootstrap",
+      "source": "supabase/functions/dodo-bootstrap/index.ts"
+    },
+    {
+      "name": "dodo-checkout",
+      "source": "supabase/functions/dodo-checkout/index.ts"
+    },
+    {
+      "name": "dodo-portal",
+      "source": "supabase/functions/dodo-portal/index.ts"
+    },
+    {
+      "name": "dodo-verify",
+      "source": "supabase/functions/dodo-verify/index.ts"
+    },
+    {
+      "name": "dodo-webhook",
+      "source": "supabase/functions/dodo-webhook/index.ts"
+    },
+    {
+      "name": "editorial-center",
+      "source": "supabase/functions/editorial-center/index.ts"
+    },
+    {
+      "name": "editorial-pipeline",
+      "source": "supabase/functions/editorial-pipeline/index.ts"
+    },
+    {
+      "name": "event-dispatcher",
+      "source": "supabase/functions/event-dispatcher/index.ts"
+    },
+    {
+      "name": "explore-suggest",
+      "source": "supabase/functions/explore-suggest/index.ts"
+    },
+    {
+      "name": "export-cache-telegram",
+      "source": "supabase/functions/export-cache-telegram/index.ts"
+    },
+    {
+      "name": "export-create",
+      "source": "supabase/functions/export-create/index.ts"
+    },
+    {
+      "name": "export-deliver-telegram",
+      "source": "supabase/functions/export-deliver-telegram/index.ts"
+    },
+    {
+      "name": "export-download",
+      "source": "supabase/functions/export-download/index.ts"
+    },
+    {
+      "name": "export-issue-token",
+      "source": "supabase/functions/export-issue-token/index.ts"
+    },
+    {
+      "name": "export-revoke",
+      "source": "supabase/functions/export-revoke/index.ts"
+    },
+    {
+      "name": "export-storage-cleanup",
+      "source": "supabase/functions/export-storage-cleanup/index.ts"
+    },
+    {
+      "name": "export-tg-deeplink",
+      "source": "supabase/functions/export-tg-deeplink/index.ts"
+    },
+    {
+      "name": "faceless-content",
+      "source": "supabase/functions/faceless-content/index.ts"
+    },
+    {
+      "name": "gig-arbitrage",
+      "source": "supabase/functions/gig-arbitrage/index.ts"
+    },
+    {
+      "name": "gig-price-calculator",
+      "source": "supabase/functions/gig-price-calculator/index.ts"
+    },
+    {
+      "name": "hustle-blueprint",
+      "source": "supabase/functions/hustle-blueprint/index.ts"
+    },
+    {
+      "name": "hustle-roadmap",
+      "source": "supabase/functions/hustle-roadmap/index.ts"
+    },
+    {
+      "name": "hustle-templates",
+      "source": "supabase/functions/hustle-templates/index.ts"
+    },
+    {
+      "name": "indexing-dispatcher",
+      "source": "supabase/functions/indexing-dispatcher/index.ts"
+    },
+    {
+      "name": "indexnow",
+      "source": "supabase/functions/indexnow/index.ts"
+    },
+    {
+      "name": "infra-discovery-scan",
+      "source": "supabase/functions/infra-discovery-scan/index.ts"
+    },
+    {
+      "name": "infrastructure-probe",
+      "source": "supabase/functions/infrastructure-probe/index.ts"
+    },
+    {
+      "name": "inngest",
+      "source": "supabase/functions/inngest/index.ts"
+    },
+    {
+      "name": "intake-api",
+      "source": "supabase/functions/intake-api/index.ts"
+    },
+    {
+      "name": "intake-public",
+      "source": "supabase/functions/intake-public/index.ts"
+    },
+    {
+      "name": "intelligence-anomaly-scan",
+      "source": "supabase/functions/intelligence-anomaly-scan/index.ts"
+    },
+    {
+      "name": "job-opportunity-submit",
+      "source": "supabase/functions/job-opportunity-submit/index.ts"
+    },
+    {
+      "name": "knowledge-graph",
+      "source": "supabase/functions/knowledge-graph/index.ts"
+    },
+    {
+      "name": "log-event",
+      "source": "supabase/functions/log-event/index.ts"
+    },
+    {
+      "name": "mailer-send",
+      "source": "supabase/functions/mailer-send/index.ts"
+    },
+    {
+      "name": "migration-health",
+      "source": "supabase/functions/migration-health/index.ts"
+    },
+    {
+      "name": "narrative-bootstrap",
+      "source": "supabase/functions/narrative-bootstrap/index.ts"
+    },
+    {
+      "name": "narrative-generate",
+      "source": "supabase/functions/narrative-generate/index.ts"
+    },
+    {
+      "name": "newsletter-subscribe",
+      "source": "supabase/functions/newsletter-subscribe/index.ts"
+    },
+    {
+      "name": "notifications-broadcast",
+      "source": "supabase/functions/notifications-broadcast/index.ts"
+    },
+    {
+      "name": "notifications-connect",
+      "source": "supabase/functions/notifications-connect/index.ts"
+    },
+    {
+      "name": "notifications-test",
+      "source": "supabase/functions/notifications-test/index.ts"
+    },
+    {
+      "name": "notify-ops",
+      "source": "supabase/functions/notify-ops/index.ts"
+    },
+    {
+      "name": "ops-config-read",
+      "source": "supabase/functions/ops-config-read/index.ts"
+    },
+    {
+      "name": "ops-daily-digest",
+      "source": "supabase/functions/ops-daily-digest/index.ts"
+    },
+    {
+      "name": "ops-worker-status",
+      "source": "supabase/functions/ops-worker-status/index.ts"
+    },
+    {
+      "name": "password-reset-guard",
+      "source": "supabase/functions/password-reset-guard/index.ts"
+    },
+    {
+      "name": "payment-admin-notify",
+      "source": "supabase/functions/payment-admin-notify/index.ts"
+    },
+    {
+      "name": "platform-drift-scan",
+      "source": "supabase/functions/platform-drift-scan/index.ts"
+    },
+    {
+      "name": "platform-hardening-status",
+      "source": "supabase/functions/platform-hardening-status/index.ts"
+    },
+    {
+      "name": "primary-detox-stats",
+      "source": "supabase/functions/primary-detox-stats/index.ts"
+    },
+    {
+      "name": "problem-leads",
+      "source": "supabase/functions/problem-leads/index.ts"
+    },
+    {
+      "name": "production-audit",
+      "source": "supabase/functions/production-audit/index.ts"
+    },
+    {
+      "name": "production-incidents",
+      "source": "supabase/functions/production-incidents/index.ts"
+    },
+    {
+      "name": "proposal-draft",
+      "source": "supabase/functions/proposal-draft/index.ts"
+    },
+    {
+      "name": "provider-health-check",
+      "source": "supabase/functions/provider-health-check/index.ts"
+    },
+    {
+      "name": "provider-health-public",
+      "source": "supabase/functions/provider-health-public/index.ts"
+    },
+    {
+      "name": "provider-health-toggle",
+      "source": "supabase/functions/provider-health-toggle/index.ts"
+    },
+    {
+      "name": "public-bootstrap",
+      "source": "supabase/functions/public-bootstrap/index.ts"
+    },
+    {
+      "name": "queue-cleanup",
+      "source": "supabase/functions/queue-cleanup/index.ts"
+    },
+    {
+      "name": "red-flag-scanner",
+      "source": "supabase/functions/red-flag-scanner/index.ts"
+    },
+    {
+      "name": "reputation-score",
+      "source": "supabase/functions/reputation-score/index.ts"
+    },
+    {
+      "name": "resume-optimizer",
+      "source": "supabase/functions/resume-optimizer/index.ts"
+    },
+    {
+      "name": "retention-worker",
+      "source": "supabase/functions/retention-worker/index.ts"
+    },
+    {
+      "name": "robots",
+      "source": "supabase/functions/robots/index.ts"
+    },
+    {
+      "name": "runtime-authority-finalizer",
+      "source": "supabase/functions/runtime-authority-finalizer/index.ts"
+    },
+    {
+      "name": "runtime-extraction-router",
+      "source": "supabase/functions/runtime-extraction-router/index.ts"
+    },
+    {
+      "name": "runtime-extraction-verify",
+      "source": "supabase/functions/runtime-extraction-verify/index.ts"
+    },
+    {
+      "name": "runtime-violation-log",
+      "source": "supabase/functions/runtime-violation-log/index.ts"
+    },
+    {
+      "name": "send-email",
+      "source": "supabase/functions/send-email/index.ts"
+    },
+    {
+      "name": "send-invoice",
+      "source": "supabase/functions/send-invoice/index.ts"
+    },
+    {
+      "name": "send-otp-email",
+      "source": "supabase/functions/send-otp-email/index.ts"
+    },
+    {
+      "name": "send-resend-email",
+      "source": "supabase/functions/send-resend-email/index.ts"
+    },
+    {
+      "name": "send-welcome-email",
+      "source": "supabase/functions/send-welcome-email/index.ts"
+    },
+    {
+      "name": "seo-operations",
+      "source": "supabase/functions/seo-operations/index.ts"
+    },
+    {
+      "name": "session-revoke-all",
+      "source": "supabase/functions/session-revoke-all/index.ts"
+    },
+    {
+      "name": "shared-link-repair",
+      "source": "supabase/functions/shared-link-repair/index.ts"
+    },
+    {
+      "name": "signup-guard",
+      "source": "supabase/functions/signup-guard/index.ts"
+    },
+    {
+      "name": "sitemap",
+      "source": "supabase/functions/sitemap/index.ts"
+    },
+    {
+      "name": "skill-gap-consultant",
+      "source": "supabase/functions/skill-gap-consultant/index.ts"
+    },
+    {
+      "name": "skymedia-webhook",
+      "source": "supabase/functions/skymedia-webhook/index.ts"
+    },
+    {
+      "name": "submit-feedback",
+      "source": "supabase/functions/submit-feedback/index.ts"
+    },
+    {
+      "name": "telegram-admin-webhook",
+      "source": "supabase/functions/telegram-admin-webhook/index.ts"
+    },
+    {
+      "name": "telegram-bot-health",
+      "source": "supabase/functions/telegram-bot-health/index.ts"
+    },
+    {
+      "name": "telegram-broadcast",
+      "source": "supabase/functions/telegram-broadcast/index.ts"
+    },
+    {
+      "name": "telegram-webhook",
+      "source": "supabase/functions/telegram-webhook/index.ts"
+    },
+    {
+      "name": "telegram-webhook-set",
+      "source": "supabase/functions/telegram-webhook-set/index.ts"
+    },
+    {
+      "name": "telemetry-autonomous-controller",
+      "source": "supabase/functions/telemetry-autonomous-controller/index.ts"
+    },
+    {
+      "name": "telemetry-evacuation-verify",
+      "source": "supabase/functions/telemetry-evacuation-verify/index.ts"
+    },
+    {
+      "name": "telemetry-router",
+      "source": "supabase/functions/telemetry-router/index.ts"
+    },
+    {
+      "name": "tool-matcher",
+      "source": "supabase/functions/tool-matcher/index.ts"
+    },
+    {
+      "name": "tool-media-pipeline",
+      "source": "supabase/functions/tool-media-pipeline/index.ts"
+    },
+    {
+      "name": "tool-registry-sync",
+      "source": "supabase/functions/tool-registry-sync/index.ts"
+    },
+    {
+      "name": "topology-simulate-outage",
+      "source": "supabase/functions/topology-simulate-outage/index.ts"
+    },
+    {
+      "name": "unlock-purchase",
+      "source": "supabase/functions/unlock-purchase/index.ts"
+    },
+    {
+      "name": "upi-payment",
+      "source": "supabase/functions/upi-payment/index.ts"
+    },
+    {
+      "name": "usage-record",
+      "source": "supabase/functions/usage-record/index.ts"
+    },
+    {
+      "name": "work-api",
+      "source": "supabase/functions/work-api/index.ts"
+    },
+    {
+      "name": "workflow-emit",
+      "source": "supabase/functions/workflow-emit/index.ts"
+    },
+    {
+      "name": "workflow-runner",
+      "source": "supabase/functions/workflow-runner/index.ts"
+    },
+    {
+      "name": "workspace-ai",
+      "source": "supabase/functions/workspace-ai/index.ts"
+    },
+    {
+      "name": "workspace-doc-ai",
+      "source": "supabase/functions/workspace-doc-ai/index.ts"
+    },
+    {
+      "name": "workspace-email",
+      "source": "supabase/functions/workspace-email/index.ts"
+    },
+    {
+      "name": "workspace-followup",
+      "source": "supabase/functions/workspace-followup/index.ts"
+    },
+    {
+      "name": "workspace-intake",
+      "source": "supabase/functions/workspace-intake/index.ts"
+    },
+    {
+      "name": "workspace-portal",
+      "source": "supabase/functions/workspace-portal/index.ts"
+    },
+    {
+      "name": "workspace-roadmap",
+      "source": "supabase/functions/workspace-roadmap/index.ts"
+    }
+  ],
+  "public_endpoints": [
+    {
+      "path": "/ads.txt",
+      "kind": "verification"
+    },
+    {
+      "path": "/e12ebc337985792c33bf311baf38a834.txt",
+      "kind": "verification"
+    },
+    {
+      "path": "/robots.txt",
+      "kind": "robots"
+    }
+  ]
+}
