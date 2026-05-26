@@ -1020,6 +1020,7 @@ export default function AdminDashboard() {
               </div>
 
               {/* Platform Status */}
+              <InfraOverviewCard />
               <div className="glass rounded-xl p-6 space-y-4">
                 <h3 className="font-display font-bold flex items-center gap-2">
                   <Activity className="w-5 h-5 text-primary" /> Platform Status
