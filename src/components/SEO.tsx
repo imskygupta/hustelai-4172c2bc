@@ -9,19 +9,22 @@ export interface SEOProps {
   path?: string;
   image?: string;
   noindex?: boolean;
+  /** Override the robots meta directive entirely (e.g. "noindex,follow"). Takes precedence over `noindex`. */
+  robots?: string;
   type?: "website" | "article";
   jsonLd?: Record<string, any> | Record<string, any>[];
 }
 
-export function SEO({ title, description, path = "", image = DEFAULT_OG, noindex = false, type = "website", jsonLd }: SEOProps) {
+export function SEO({ title, description, path = "", image = DEFAULT_OG, noindex = false, robots, type = "website", jsonLd }: SEOProps) {
   const url = `${SITE}${path}`;
   const blocks = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
+  const robotsContent = robots ?? (noindex ? "noindex,nofollow" : null);
   return (
     <Helmet>
       <title>{title}</title>
       <meta name="description" content={description} />
       <link rel="canonical" href={url} />
-      {noindex && <meta name="robots" content="noindex,nofollow" />}
+      {robotsContent && <meta name="robots" content={robotsContent} />}
       <meta property="og:title" content={title} />
       <meta property="og:description" content={description} />
       <meta property="og:type" content={type} />
