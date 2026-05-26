@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { BlogShell } from "@/components/blog/BlogShell";
 import { BlogSEO } from "@/components/blog/BlogSEO";
+import { isUsableImageUrl } from "@/lib/blog-image";
 
 const BASE = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
 const ANON = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
