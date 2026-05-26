@@ -17,8 +17,9 @@ import { CategoryPill } from "@/components/blog/CategoryAccent";
 import { EditorialPostSkeleton } from "@/components/blog/EditorialSkeleton";
 import { PrefetchLink } from "@/components/blog/PrefetchLink";
 import { onIdle } from "@/lib/blog-cache";
+import { SafeBoundary } from "@/components/blog/SafeBoundary";
 
-export default function BlogPost() {
+function BlogPostInner() {
   const { slug = "" } = useParams();
   // Hydrate immediately from SWR cache to avoid blank flashes on back/next nav.
   const [data, setData] = useState<any>(() => blogApi.cachedPost(slug));
@@ -264,9 +265,11 @@ export default function BlogPost() {
         </div>
       </div>
 
-      {(post.cta_blocks ?? []).length > 0 && (
+      {(post.cta_blocks ?? []).filter((c: any) => c && typeof c.href === "string" && c.href.length > 0).length > 0 && (
         <section className="mx-auto max-w-[760px] px-5 my-10">
-          {post.cta_blocks.map((c: any, i: number) => (
+          {post.cta_blocks
+            .filter((c: any) => c && typeof c.href === "string" && c.href.length > 0)
+            .map((c: any, i: number) => (
             <a key={i} href={c.href.startsWith("http") ? c.href : `https://hustlaiapp.in${c.href}`}
               onClick={() => blogApi.track("cta", post.id, c.kind)}
               className="block rounded-lg border border-border/60 bg-gradient-to-br from-emerald-500/[0.04] to-transparent px-5 py-4 mb-3 hover:border-emerald-500/40 transition group">
@@ -278,11 +281,11 @@ export default function BlogPost() {
         </section>
       )}
 
-      {post.faq && post.faq.length > 0 && (
+      {Array.isArray(post.faq) && post.faq.filter((f: any) => f?.q && f?.a).length > 0 && (
         <section className="mx-auto max-w-[760px] px-5 my-12">
           <h2 className="font-serif text-2xl mb-4">FAQ</h2>
           <div className="divide-y divide-border/60 border-t border-b border-border/60">
-            {post.faq.map((f: any, i: number) => (
+            {post.faq.filter((f: any) => f?.q && f?.a).map((f: any, i: number) => (
               <details key={i} className="py-4">
                 <summary className="cursor-pointer font-medium">{f.q}</summary>
                 <div className="mt-2 text-muted-foreground">{f.a}</div>
@@ -292,9 +295,9 @@ export default function BlogPost() {
         </section>
       )}
 
-      {tags.length > 0 && (
+      {Array.isArray(tags) && tags.filter((t: any) => t?.slug && t?.title).length > 0 && (
         <div className="mx-auto max-w-[760px] px-5 my-8 flex flex-wrap gap-2">
-          {tags.map((t: any) => (
+          {tags.filter((t: any) => t?.slug && t?.title).map((t: any) => (
             <Link key={t.slug} to={`/tag/${t.slug}`} className="text-xs px-3 py-1 rounded-full border border-border/60 text-muted-foreground hover:text-foreground">#{t.title}</Link>
           ))}
         </div>
@@ -383,5 +386,52 @@ export default function BlogPost() {
         </section>
       )}
     </BlogShell>
+  );
+}
+
+/**
+ * Degraded fallback for blog post pages.
+ *
+ * If something inside BlogPostInner throws after data hydration, we still
+ * surface a crawler-safe page with the title and excerpt from the SWR
+ * cache (when available) instead of the global "Something went sideways"
+ * crash. This protects SEO/AdSense trust on hero URLs and avoids hard
+ * 5xx-style render failures for indexers.
+ */
+function BlogPostDegraded() {
+  const { slug = "" } = useParams();
+  const cached: any = blogApi.cachedPost(slug);
+  const post = cached?.post;
+  return (
+    <BlogShell>
+      <BlogSEO
+        title={post?.meta_title || post?.title || "HustleAI Notes"}
+        description={post?.meta_description || post?.excerpt || "Operational writing for freelancers."}
+        path={post?.slug ? `/${post.slug}` : "/"}
+      />
+      <article className="mx-auto max-w-[760px] px-5 pt-12 pb-16">
+        <h1 className="font-serif text-[34px] sm:text-[44px] tracking-[-0.02em] leading-[1.08]">
+          {post?.title || "Note temporarily unavailable"}
+        </h1>
+        {post?.subtitle && <p className="mt-4 text-lg text-muted-foreground">{post.subtitle}</p>}
+        {post?.excerpt && <p className="mt-6 text-base text-foreground/85">{post.excerpt}</p>}
+        <div className="mt-10 text-sm text-muted-foreground border-t border-border/60 pt-6">
+          We hit a rendering issue while assembling the full article. The piece
+          is still available — please <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="underline hover:text-foreground"
+          >reload</button> or <Link to="/" className="underline hover:text-foreground">browse other notes</Link>.
+        </div>
+      </article>
+    </BlogShell>
+  );
+}
+
+export default function BlogPost() {
+  return (
+    <SafeBoundary label="BlogPost" fallback={<BlogPostDegraded />}>
+      <BlogPostInner />
+    </SafeBoundary>
   );
 }
