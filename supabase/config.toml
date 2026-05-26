@@ -138,3 +138,6 @@ verify_jwt = false
 
 [functions.admin-bot-notify]
 verify_jwt = false
+
+[functions.docs-sitemap]
+verify_jwt = false
