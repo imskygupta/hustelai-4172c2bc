@@ -122,6 +122,30 @@ export default function BlogCategory() {
             </section>
           )}
 
+          {!pillar && supporting.length === 0 && (
+            <section className="mx-auto max-w-6xl px-5 mb-16">
+              <div className="border border-dashed border-border/60 rounded-lg p-10 text-center max-w-2xl mx-auto bg-muted/10">
+                <div className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.14em] text-muted-foreground mb-3">
+                  <span className="inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  Cluster in progress
+                </div>
+                <h2 className="font-serif text-2xl tracking-tight">Editorial work underway on this topic.</h2>
+                <p className="mt-3 text-sm text-muted-foreground">
+                  We&apos;re still building out operational notes for <span className="text-foreground">{title}</span>.
+                  In the meantime, browse related clusters or subscribe below to be notified when the first playbooks land.
+                </p>
+                <div className="mt-5 flex items-center justify-center gap-3 text-sm">
+                  <Link to="/" className="px-3 py-1.5 rounded-md border border-border/60 hover:border-foreground/40 transition">
+                    ← Back to Notes
+                  </Link>
+                  <Link to="/category/freelancer-workflows" className="px-3 py-1.5 rounded-md border border-border/60 hover:border-foreground/40 transition">
+                    Freelancer Workflows
+                  </Link>
+                </div>
+              </div>
+            </section>
+          )}
+
           <section className="mx-auto max-w-6xl px-5 mb-12">
             <NewsletterBlock variant="wide" source={`category:${slug}`} />
           </section>
