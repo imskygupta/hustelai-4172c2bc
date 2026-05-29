@@ -5,6 +5,8 @@ import Index from "@/pages/Index";
 const HomepageV2 = lazy(() => import("@/pages/HomepageV2"));
 const HomepageV3 = lazy(() => import("@/pages/HomepageV3"));
 const HomepageV4 = lazy(() => import("@/pages/HomepageV4"));
+const HomepageV5 = lazy(() => import("@/pages/HomepageV5"));
+const HomepageV6 = lazy(() => import("@/pages/HomepageV6"));
 
 /**
  * Renders `/` according to the admin-controlled `homepage_variant_setting`.
@@ -16,7 +18,12 @@ export default function HomepageDispatcher() {
 
   if (variant === "v1") return <Index />;
 
-  const Variant = variant === "v2" ? HomepageV2 : variant === "v3" ? HomepageV3 : HomepageV4;
+  const Variant =
+    variant === "v2" ? HomepageV2 :
+    variant === "v3" ? HomepageV3 :
+    variant === "v4" ? HomepageV4 :
+    variant === "v5" ? HomepageV5 :
+    HomepageV6;
   return (
     <Suspense fallback={
       <div className="min-h-screen flex items-center justify-center bg-white">
