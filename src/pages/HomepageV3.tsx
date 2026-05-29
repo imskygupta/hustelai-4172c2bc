@@ -648,21 +648,33 @@ function WorkflowsByAudience() {
         </div>
 
         <div className="rounded-[2rem] bg-white border border-[#1A1A1F]/8 p-6 md:p-10">
-          <div className="flex flex-wrap items-center gap-3 md:gap-4 justify-center md:justify-between">
+          <div className="relative flex flex-wrap items-center gap-3 md:gap-4 justify-center md:justify-between">
             {flow.steps.map((step, i) => (
-              <div key={step} className="flex items-center gap-3 md:gap-4">
+              <div key={step} className="relative flex items-center gap-3 md:gap-4">
                 <div
                   key={`${active}-${step}`}
-                  className="rounded-2xl bg-[#FBF7F1] border border-[#1A1A1F]/10 px-4 md:px-5 py-3 md:py-4 text-[13px] md:text-sm font-semibold text-[#1A1A1F] animate-[fade-in_0.6s_ease-out]"
+                  className="relative rounded-2xl bg-[#FBF7F1] border border-[#1A1A1F]/10 px-4 md:px-5 py-3 md:py-4 text-[13px] md:text-sm font-semibold text-[#1A1A1F] animate-[fade-in_0.6s_ease-out] overflow-hidden"
                   style={{ animationDelay: `${i * 100}ms`, animationFillMode: "both" }}
                 >
                   {step}
+                  <span
+                    className="pointer-events-none absolute inset-x-0 -bottom-px h-[2px] bg-[#FF7A45]/70"
+                    style={{
+                      animation: `flowPulse 2.4s ease-in-out ${i * 0.25}s infinite`,
+                    }}
+                  />
                 </div>
                 {i < flow.steps.length - 1 && (
-                  <svg width="24" height="8" viewBox="0 0 24 8" className="text-[#FF7A45]">
-                    <line x1="0" y1="4" x2="20" y2="4" stroke="currentColor" strokeWidth="1.5" strokeDasharray="2 3" />
-                    <path d="M18 1 L23 4 L18 7" fill="none" stroke="currentColor" strokeWidth="1.5" />
-                  </svg>
+                  <div className="relative w-8 md:w-12 h-2 overflow-hidden">
+                    <svg width="100%" height="8" viewBox="0 0 48 8" preserveAspectRatio="none" className="text-[#FF7A45]/60 absolute inset-0">
+                      <line x1="0" y1="4" x2="44" y2="4" stroke="currentColor" strokeWidth="1.5" strokeDasharray="2 3" />
+                      <path d="M40 1 L46 4 L40 7" fill="none" stroke="currentColor" strokeWidth="1.5" />
+                    </svg>
+                    <span
+                      className="absolute top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-[#FF7A45] shadow-[0_0_8px_#FF7A45]"
+                      style={{ animation: `packetTravel 2.2s linear ${i * 0.35}s infinite` }}
+                    />
+                  </div>
                 )}
               </div>
             ))}
@@ -674,6 +686,18 @@ function WorkflowsByAudience() {
           </div>
         </div>
       </div>
+      <style>{`
+        @keyframes packetTravel {
+          0%   { left: -8%;  opacity: 0; }
+          15%  { opacity: 1; }
+          85%  { opacity: 1; }
+          100% { left: 100%; opacity: 0; }
+        }
+        @keyframes flowPulse {
+          0%, 100% { opacity: 0.35; transform: scaleX(0.6); }
+          50%      { opacity: 1;    transform: scaleX(1); }
+        }
+      `}</style>
     </section>
   );
 }
