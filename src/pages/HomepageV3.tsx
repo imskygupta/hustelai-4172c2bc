@@ -4,6 +4,9 @@ import {
   ArrowRight, ArrowUpRight, Sparkles, Zap, Calendar, Users, Send,
   Briefcase, Palette, Building2, GraduationCap, Mic2, Wrench,
   Inbox, Bot, FileCheck2, Wallet, MoonStar,
+  Boxes, BookOpen, FileText, Receipt, MessageSquare, Database, Layers,
+  PenLine, Search, Image as ImageIcon, Newspaper, ChevronRight,
+  Mail, Twitter, Linkedin, Send as TelegramIcon, Github, Check,
 } from "lucide-react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
