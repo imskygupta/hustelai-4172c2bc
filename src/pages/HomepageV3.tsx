@@ -1290,47 +1290,93 @@ function DocumentationPathway() {
 }
 
 // ---------- 8e. Blog & Knowledge Network ----------
-const BLOG_FEATURED = {
+const BLOG_FALLBACK_FEATURED = {
+  slug: "",
   category: "Field guide",
   title: "The freelancer's operating system — a 30-day blueprint",
   excerpt: "How to install repeatable rhythms across client work, content and revenue so the business compounds while you sleep.",
   read: "12 min read",
 };
-const BLOG_LIST = [
-  { tag: "Trending",   title: "Why every freelancer needs a client portal in 2026",         read: "6 min" },
-  { tag: "AI",         title: "How to use AI to write proposals that convert at 60%+",      read: "9 min" },
-  { tag: "Workflow",   title: "Turning Telegram into a delivery channel for client work",   read: "7 min" },
-  { tag: "Pricing",    title: "The retainer math that turns one client into recurring revenue", read: "8 min" },
-  { tag: "Updates",    title: "What's new this month — Q3 changelog & shipping notes",      read: "4 min" },
+const BLOG_FALLBACK_LIST = [
+  { slug: "", tag: "Trending", title: "Why every freelancer needs a client portal in 2026",         read: "6 min" },
+  { slug: "", tag: "AI",        title: "How to use AI to write proposals that convert at 60%+",      read: "9 min" },
+  { slug: "", tag: "Workflow",  title: "Turning Telegram into a delivery channel for client work",   read: "7 min" },
+  { slug: "", tag: "Pricing",   title: "The retainer math that turns one client into recurring revenue", read: "8 min" },
 ];
+const BLOG_CATEGORIES = ["Workflows", "AI", "Pricing", "Client work", "Tools", "Updates"];
+
+function postHref(slug: string) {
+  return slug ? `/blog/${slug}` : "/blog";
+}
+function readingLabel(min: number | null | undefined) {
+  return min && min > 0 ? `${min} min` : "5 min";
+}
 
 function BlogKnowledge() {
+  const [posts, setPosts] = useState<LatestBlogPost[]>([]);
+  useEffect(() => {
+    const cancel = getLatestBlogPosts(5, (data) => {
+      if (Array.isArray(data) && data.length) setPosts(data);
+    });
+    return () => { try { (cancel as any)?.(); } catch {} };
+  }, []);
+
+  const featured = posts[0]
+    ? {
+        slug: posts[0].slug,
+        category: posts[0].category || "Field guide",
+        title: posts[0].title,
+        excerpt: posts[0].excerpt || "Operator-grade systems for independent businesses.",
+        read: `${readingLabel(posts[0].reading_time)} read`,
+      }
+    : BLOG_FALLBACK_FEATURED;
+
+  const list = posts.length > 1
+    ? posts.slice(1, 5).map((p) => ({
+        slug: p.slug,
+        tag: p.category || "Insight",
+        title: p.title,
+        read: readingLabel(p.reading_time),
+      }))
+    : BLOG_FALLBACK_LIST;
+
   return (
-    <section id="learn-more" className="px-4 py-20 md:py-28 bg-[#FBF7F1]">
+    <section id="learn-more" className="px-4 py-16 md:py-28 bg-[#FBF7F1]">
       <div className="container mx-auto max-w-6xl">
-        <div className="max-w-2xl mb-10 md:mb-14">
+        <div className="max-w-2xl mb-8 md:mb-14">
           <div className="text-[11px] uppercase tracking-[0.22em] font-semibold text-[#FF7A45] mb-3">
             Learn while your system runs
           </div>
           <RevealHeading
             text="A living publication for people who run quiet businesses."
-            className="font-display font-semibold tracking-tight text-[#1A1A1F] text-3xl md:text-5xl leading-[1.05]"
+            className="font-display font-semibold tracking-tight text-[#1A1A1F] text-[1.65rem] sm:text-3xl md:text-5xl leading-[1.05]"
           />
+          <div className="mt-5 flex flex-wrap gap-1.5">
+            {BLOG_CATEGORIES.map((c) => (
+              <Link
+                key={c}
+                to="/blog"
+                className="text-[11px] font-mono uppercase tracking-[0.14em] px-2.5 py-1 rounded-full border border-[#1A1A1F]/10 bg-white text-[#1A1A1F]/65 hover:text-[#FF7A45] hover:border-[#FF7A45]/40 transition-colors"
+              >
+                {c}
+              </Link>
+            ))}
+          </div>
         </div>
 
         <div className="grid md:grid-cols-12 gap-5">
           {/* Featured */}
           <Link
-            to="/blog"
+            to={postHref(featured.slug)}
             className="group md:col-span-7 rounded-[2rem] bg-gradient-to-br from-[#1A1A1F] to-[#2a1f1a] text-white p-7 md:p-10 overflow-hidden relative hover:-translate-y-1 transition-transform"
           >
             <div className="pointer-events-none absolute -top-24 -right-24 w-72 h-72 rounded-full blur-3xl bg-[#FF7A45]/40" />
             <div className="relative">
-              <span className="text-[10px] uppercase tracking-[0.24em] font-semibold text-[#FFB37A]">{BLOG_FEATURED.category}</span>
-              <h3 className="mt-3 font-display text-3xl md:text-4xl font-semibold leading-tight">{BLOG_FEATURED.title}</h3>
-              <p className="mt-4 text-white/70 text-[15px] leading-relaxed max-w-md">{BLOG_FEATURED.excerpt}</p>
+              <span className="text-[10px] uppercase tracking-[0.24em] font-semibold text-[#FFB37A]">{featured.category}</span>
+              <h3 className="mt-3 font-display text-2xl md:text-4xl font-semibold leading-tight">{featured.title}</h3>
+              <p className="mt-4 text-white/70 text-[14px] md:text-[15px] leading-relaxed max-w-md line-clamp-3">{featured.excerpt}</p>
               <div className="mt-6 flex items-center gap-3 text-[12px] text-white/60">
-                <span>{BLOG_FEATURED.read}</span>
+                <span>{featured.read}</span>
                 <span>·</span>
                 <span className="inline-flex items-center gap-1 text-white group-hover:text-[#FFB37A]">
                   Read article <ArrowUpRight className="w-3.5 h-3.5" />
@@ -1341,25 +1387,66 @@ function BlogKnowledge() {
 
           {/* Stacked list */}
           <div className="md:col-span-5 space-y-3">
-            {BLOG_LIST.map((b, i) => (
+            {list.map((b, i) => (
               <Link
                 key={i}
-                to="/blog"
+                to={postHref(b.slug)}
                 className="group block rounded-2xl bg-white border border-[#1A1A1F]/8 p-5 hover:-translate-y-0.5 hover:border-[#FF7A45]/40 transition-all"
               >
                 <div className="flex items-center justify-between mb-1.5">
                   <span className="text-[10px] uppercase tracking-[0.22em] font-semibold text-[#FF7A45]">{b.tag}</span>
                   <span className="text-[11px] text-[#1A1A1F]/45">{b.read}</span>
                 </div>
-                <div className="font-display text-[15px] font-semibold text-[#1A1A1F] leading-snug group-hover:text-[#FF7A45] transition-colors">
+                <div className="font-display text-[15px] font-semibold text-[#1A1A1F] leading-snug group-hover:text-[#FF7A45] transition-colors line-clamp-2">
                   {b.title}
                 </div>
               </Link>
             ))}
-            <Link to="/blog" className="block text-center text-[13px] font-semibold text-[#1A1A1F] hover:text-[#FF7A45] py-2">
-              Browse the publication →
-            </Link>
           </div>
+        </div>
+
+        {/* Template spotlight + view all */}
+        <div className="grid md:grid-cols-3 gap-3 mt-5">
+          <Link
+            to="/tools"
+            className="group rounded-2xl bg-gradient-to-br from-[#FFF6E8] to-[#FFE27A]/40 border border-[#1A1A1F]/8 p-5 hover:-translate-y-0.5 transition-all"
+          >
+            <span className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#FF7A45]">Template spotlight</span>
+            <div className="mt-2 font-display text-[17px] font-semibold text-[#1A1A1F] leading-snug">
+              The 30-day operator system
+            </div>
+            <div className="mt-1 text-[12px] text-[#1A1A1F]/60">Free Notion-style workspace template</div>
+            <div className="mt-3 text-[11px] font-semibold text-[#1A1A1F] inline-flex items-center gap-1 group-hover:text-[#FF7A45]">
+              Copy template <ArrowUpRight className="w-3 h-3" />
+            </div>
+          </Link>
+          <a
+            href="https://docs.hustlaiapp.in/"
+            rel="noopener"
+            className="group rounded-2xl bg-white border border-[#1A1A1F]/8 p-5 hover:-translate-y-0.5 hover:border-[#FF7A45]/30 transition-all"
+          >
+            <span className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#FF7A45]">Documentation</span>
+            <div className="mt-2 font-display text-[17px] font-semibold text-[#1A1A1F] leading-snug">
+              The complete HustleAI manual
+            </div>
+            <div className="mt-1 text-[12px] text-[#1A1A1F]/60">Every workflow, written down.</div>
+            <div className="mt-3 text-[11px] font-semibold text-[#1A1A1F] inline-flex items-center gap-1 group-hover:text-[#FF7A45]">
+              Open docs <ArrowUpRight className="w-3 h-3" />
+            </div>
+          </a>
+          <Link
+            to="/blog"
+            className="group rounded-2xl bg-[#1A1A1F] text-white p-5 hover:-translate-y-0.5 transition-all flex flex-col"
+          >
+            <span className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#FFB37A]">All articles</span>
+            <div className="mt-2 font-display text-[17px] font-semibold leading-snug">
+              View the full publication
+            </div>
+            <div className="mt-1 text-[12px] text-white/55">Browse 29+ operator essays.</div>
+            <div className="mt-3 text-[11px] font-semibold inline-flex items-center gap-1 group-hover:text-[#FFB37A]">
+              All blog posts <ArrowRight className="w-3 h-3" />
+            </div>
+          </Link>
         </div>
       </div>
     </section>
