@@ -124,7 +124,7 @@ export function Navbar() {
               className="mr-1 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold uppercase tracking-wider border border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors"
               title={banner.text}
             >
-              New <span aria-hidden>✨</span>
+              Preview <span aria-hidden>✨</span>
             </button>
           )}
           {navLinks.map((l) =>
