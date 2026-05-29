@@ -52,3 +52,4 @@
 - [Cloud Budget Survival](mem://runtime/cloud-budget-survival) — Cost heatmap + cron/poll reduction plan to keep monthly cloud burn under $25
 - [Railway Transition Plan](mem://runtime/railway-transition-plan) — Single ops-worker on Railway absorbs workflow/ai-job/indexing/crawl/cleanup loops; user-owned infra, no PRIMARY surface change
 - [Railway Credential Isolation](mem://runtime/railway-credential-isolation) — Per-loop DB-key map for Railway ops-worker; workflow-loop is the single PRIMARY-touching exception (read-only peek)
+- [V3 Mission Control Contract](mem://product/v3-mission-control-contract) — Locked 6-layer inventory, allowed edges, scroll choreography, desktop-only rule for the V3 homepage 3D scene
