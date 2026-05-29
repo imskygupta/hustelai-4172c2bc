@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import {
   Sparkles, ArrowRight, ExternalLink, Briefcase, Building2, Rocket, Compass, Check, RotateCcw, Layers,
+  GraduationCap, HeartHandshake, Settings2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +14,9 @@ const MODE_ICON: Record<OperatorMode, React.ComponentType<{ className?: string }
   freelancer: Briefcase,
   agency: Building2,
   creator: Rocket,
+  consultant: GraduationCap,
+  coach: HeartHandshake,
+  operator: Settings2,
   explorer: Compass,
 };
 
