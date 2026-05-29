@@ -8,6 +8,7 @@ import { blogApi, conversionApi } from "@/integrations/blog/client";
 import asyncRuntimeSql from "../../../supabase/owned-db-bootstrap/async_runtime.sql?raw";
 // eslint-disable-next-line import/no-unresolved
 import productionStabilitySql from "../../../supabase/owned-db-bootstrap/production_stability.sql?raw";
+import { DELIVERY_SETUP_SQL } from "@/lib/work-sql";
 
 type Source = {
   id: string;
@@ -52,6 +53,13 @@ const SOURCES: Source[] = [
     db: "OWNED_DB",
     description: "Creates ops.production_incidents, runtime_health_sweeps, shared_link_audit, explore_dependency_traces. Run on the owned project.",
     load: async () => ({ sql: productionStabilitySql as unknown as string }),
+  },
+  {
+    id: "universal-delivery-layer",
+    title: "Universal Delivery Layer (work_deliveries)",
+    db: "WORK_DB",
+    description: "Adds last_delivery_at / delivery_count to work_clients and creates work_deliveries. Run on the Workspace DB (ref: utflzmecghdtcjupgdan).",
+    load: async () => ({ sql: DELIVERY_SETUP_SQL }),
   },
 ];
 
