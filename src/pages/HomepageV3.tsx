@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, Inbox, Layers, Cpu, Send, Banknote, Box, Activity } from "lucide-react";
+import { ArrowRight, AlertTriangle, Magnet, Cpu, Send, RotateCcw, Globe2, Box, Activity } from "lucide-react";
 
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -53,30 +53,30 @@ function useCanRender3D() {
 const SCENES = [
   {
     n: 1,
-    kicker: "Scene 01 · Before",
-    rail: "Before",
-    title: "Your business is in nine tabs.",
-    body: "Inbox. WhatsApp. Notion. Drive. A half-written proposal. An invoice you forgot to send. Three follow-ups that died.",
-    detail: "This is not a workflow. This is a coping strategy.",
+    kicker: "Scene 01 · The Bottleneck",
+    rail: "Bottleneck",
+    title: "Your business works.\nBut only when you do.",
+    body: "Every proposal, payment, follow-up and delivery depends on you remembering what happens next.",
+    detail: "This isn't a workflow. It's a coping strategy held together by your memory.",
     accent: "#f43f5e",
-    icon: Inbox,
+    icon: AlertTriangle,
   },
   {
     n: 2,
     kicker: "Scene 02 · Capture",
     rail: "Capture",
-    title: "Everything lands in one place.",
-    body: "Clients, leads, requests, files — pulled into a single operating layer. Nothing lives in a tab anymore. Nothing waits on you to remember.",
+    title: "Everything enters one\noperating layer.",
+    body: "Messages, files, leads, requests — pulled into a single surface. The scatter becomes structure.",
     detail: "You stop being the queue.",
     accent: "#38bdf8",
-    icon: Layers,
+    icon: Magnet,
   },
   {
     n: 3,
-    kicker: "Scene 03 · Automation",
-    rail: "Automation",
-    title: "Work starts moving without you.",
-    body: "AI drafts the proposal. Workflows route approvals. Contracts generate themselves. The system does the first 80% before you open your laptop.",
+    kicker: "Scene 03 · Intelligence",
+    rail: "Intelligence",
+    title: "Work starts moving\nwithout permission.",
+    body: "A proposal drafts itself. An invoice queues. A reminder schedules. The system stops waiting for you to click.",
     detail: "Your role shifts from doing to deciding.",
     accent: "#a78bfa",
     icon: Cpu,
@@ -85,21 +85,31 @@ const SCENES = [
     n: 4,
     kicker: "Scene 04 · Delivery",
     rail: "Delivery",
-    title: "Deliverables ship themselves.",
-    body: "Branded exports. Client portals. Telegram drops. Shared links. Every output leaves the system polished — without you copy-pasting into anything.",
-    detail: "The client sees a company, not a freelancer juggling tools.",
+    title: "Work leaves the\nbuilding.",
+    body: "Branded exports, portals, Telegram drops, shared links. Deliverables flow outward — the client sees a company, not a freelancer juggling tools.",
+    detail: "Outputs ship without you copy-pasting into anything.",
     accent: "#f59e0b",
     icon: Send,
   },
   {
     n: 5,
-    kicker: "Scene 05 · Outcomes",
-    rail: "Outcomes",
-    title: "Money lands. Work repeats.",
-    body: "Invoices clear. Approvals come back. Retainers renew. You never chase a payment, never re-draft a contract, never lose a thread.",
-    detail: "This is what an operating system feels like.",
+    kicker: "Scene 05 · Revenue",
+    rail: "Revenue",
+    title: "The first payment is work.\nThe second is a system.",
+    body: "Invoices clear. Approvals return. Retainers renew. Referrals compound. The loop closes itself, again and again.",
+    detail: "Businesses don't grow linearly. They compound.",
     accent: "#10b981",
-    icon: Banknote,
+    icon: RotateCcw,
+  },
+  {
+    n: 6,
+    kicker: "Scene 06 · The Reveal",
+    rail: "Reveal",
+    title: "You stopped running tasks.\nYou started running an OS.",
+    body: "Zoom out. The machine you've been watching is the same machine that will run your business at 3am, on a Sunday, in another timezone, without you.",
+    detail: "This is what an operating system feels like.",
+    accent: "#60a5fa",
+    icon: Globe2,
   },
 ] as const;
 
@@ -226,9 +236,9 @@ function MissionControl3D() {
       const total = rect.height - vh;
       const passed = Math.min(Math.max(-rect.top, 0), Math.max(total, 1));
       const p = total > 0 ? passed / total : 0;
-      const next = 0.4 + p * 4.8;
+      const next = 0.4 + p * 5.8;
       phaseRef.current = next;
-      setPhaseLabel(Math.max(1, Math.min(5, Math.round(next))));
+      setPhaseLabel(Math.max(1, Math.min(6, Math.round(next))));
     };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -245,7 +255,7 @@ function MissionControl3D() {
     <section
       ref={sectionRef}
       className="relative bg-slate-950 text-white"
-      style={{ height: "560vh" }}
+      style={{ height: "680vh" }}
     >
       <div className="sticky top-0 h-screen w-full overflow-hidden">
         {/* 3D Canvas */}
@@ -283,7 +293,7 @@ function MissionControl3D() {
             <div className="hidden md:flex items-center gap-3 text-[11px] text-white/55 font-mono">
               <span className="text-white/40">Scene</span>
               <span className="text-white tabular-nums">{String(phaseLabel).padStart(2, "0")}</span>
-              <span className="text-white/40">/ 05</span>
+              <span className="text-white/40">/ 06</span>
             </div>
           </div>
 
@@ -294,7 +304,7 @@ function MissionControl3D() {
             >
               {scene.kicker}
             </div>
-            <h2 className="text-3xl md:text-6xl font-display font-semibold tracking-tight leading-[1.02]">
+            <h2 className="text-3xl md:text-6xl font-display font-semibold tracking-tight leading-[1.02] whitespace-pre-line">
               {scene.title}
             </h2>
             <p className="text-white/70 text-sm md:text-lg max-w-xl leading-relaxed">
@@ -339,7 +349,7 @@ function MissionControl3D() {
         {/* Subtle scroll guidance — only scene 1, no bouncing arrows */}
         {phaseLabel === 1 && (
           <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 text-[10px] uppercase tracking-[0.32em] text-white/40 font-mono animate-[fade-in_1s_ease-out]">
-            Keep scrolling — five scenes
+            Keep scrolling — six scenes
           </div>
         )}
       </div>
@@ -440,8 +450,8 @@ export default function HomepageV3() {
   return (
     <div className="min-h-screen bg-slate-950 text-white selection:bg-emerald-500/30">
       <SEO
-        title="HustleAI — Mission Control for your freelance business"
-        description="Five scenes. One transformation. Watch your business stop being nine tabs and start being an operating system."
+        title="HustleAI — Run your business like software"
+        description="Six scenes. One transformation. Watch a freelance practice stop depending on your memory and start running like an operating system."
         path="/homepage-3"
         noindex
       />
@@ -472,15 +482,15 @@ export default function HomepageV3() {
               <Activity className="w-3 h-3 text-emerald-400" /> Mission Control · V3
             </div>
             <h1 className="text-5xl md:text-7xl lg:text-[88px] font-display font-semibold tracking-[-0.02em] leading-[0.98]">
-              Your business <br />
-              <span className="text-white/40">stops being</span> <br />
-              <span className="bg-gradient-to-br from-emerald-300 via-sky-300 to-violet-300 bg-clip-text text-transparent">
-                nine tabs.
+              Your business works. <br />
+              <span className="text-white/40">But only when</span> <br />
+              <span className="bg-gradient-to-br from-rose-300 via-amber-200 to-emerald-300 bg-clip-text text-transparent">
+                you do.
               </span>
             </h1>
             <p className="text-white/65 text-lg md:text-xl max-w-xl leading-relaxed">
-              Five scenes. One transformation. Scroll to watch a freelance practice
-              become an operating system — and notice the moment you stop being the bottleneck.
+              Every proposal, payment, follow-up and delivery depends on you remembering what happens next.
+              Scroll six scenes and watch that change.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 pt-2">
               <Button
@@ -498,7 +508,7 @@ export default function HomepageV3() {
                 }
                 className="h-12 px-6 text-white/70 hover:text-white hover:bg-white/5 text-base"
               >
-                Watch the five scenes ↓
+                Watch the six scenes ↓
               </Button>
             </div>
             <div className="pt-6 text-[11px] text-white/35 font-mono uppercase tracking-[0.2em]">

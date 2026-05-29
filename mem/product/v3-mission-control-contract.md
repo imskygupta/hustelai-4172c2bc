@@ -22,27 +22,36 @@ Client → Workspace → AI → Export → Telegram
 
 No other edges. No decorative connections.
 
-## Scroll choreography (5 scenes)
+## Scroll choreography (6 scenes, distinct physics per scene)
 
-Narrative arc (transformation, not feature tour):
+Story arc — emotional state changes, never a feature tour. The system diagram
+is the **payoff**, not the opener. Scene 1 must read as pain, not architecture.
 
-1. **Before** — "Your business is in nine tabs." Inputs layer materializes, chaos resolves.
-2. **Capture** — "Everything lands in one place." Planning layer activates.
-3. **Automation** — "Work starts moving without you." Intelligence layer ignites.
-4. **Delivery** — "Deliverables ship themselves." Execution + Delivery layers light up.
-5. **Outcomes** — "Money lands. Work repeats." Outcomes layer settles, invoice→payment pulse.
+1. **Bottleneck** — "Your business works. But only when you do." Chaotic drift:
+   nodes float with random velocities, no grid, no edges, low emissive. Visible
+   labels are pain artifacts (WhatsApp, Missed follow-up, Proposal draft,
+   Invoice pending, Client waiting) — not module names.
+2. **Capture** — "Everything enters one operating layer." Magnetic convergence:
+   floating items lerp into their layer grid positions; edges fade in faintly.
+3. **Intelligence** — "Work starts moving without permission." Pulse propagation:
+   energy travels along edges from Inputs → Planning → Intelligence → Execution.
+4. **Delivery** — "Work leaves the building." Outbound packets fly from
+   Execution outward to Delivery nodes (Telegram, Portal, Shared Links).
+5. **Revenue** — "The first payment is work. The second is a system." Circular
+   loops orbit the Outcomes layer (Invoice → Payment → Retention → Repeat).
+6. **Reveal** — "You stopped running tasks. You started running an OS." Camera
+   pulls way back, the whole machine resolves at once with all layers lit.
 
-Camera drifts downward through layers as phase advances (depth movement, not pinning).
-Per-scene color wash + right-side progress rail + scene counter (no bouncing arrows).
-Copy must speak transformation ("never chase a payment again"), never feature listing.
+Per-scene color wash + right-side progress rail + scene counter (no bouncing
+arrows). Copy must speak transformation, never module names.
 
-Not a spinning model. Story-driven scrubbed timeline.
+Not a spinning model. Story-driven scrubbed timeline with distinct physics.
 
 ## V3 personality (locked)
 
 Dark Mission Control aesthetic — `bg-slate-950` end-to-end, gradient washes per scene.
 No section may be reusable on V1. No pricing block, no testimonials grid, no feature
-pills. Replace with: Chaos hero, narrative arc, Before/After contrast, emotional close.
+pills. Hero shows pain (chaos), not the diagram. Diagram only assembles from scene 2.
 Telemetry stream provides environmental storytelling (live ops events, no fake metrics).
 
 ## Device rules (strict)
