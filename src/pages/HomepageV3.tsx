@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { createElement, lazy, Suspense, useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowRight, ArrowUpRight, Sparkles, Zap, Calendar, Users, Send,
@@ -56,17 +56,17 @@ function useCanRender3D() {
 
 // ---------- Word-reveal heading (free SplitText equivalent) ----------
 function RevealHeading({
-  as: Tag = "h2",
+  as = "h2",
   text,
   className = "",
   delay = 0,
 }: {
-  as?: keyof JSX.IntrinsicElements;
+  as?: "h1" | "h2" | "h3";
   text: string;
   className?: string;
   delay?: number;
 }) {
-  const ref = useRef<HTMLElement>(null);
+  const ref = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
@@ -93,18 +93,18 @@ function RevealHeading({
     };
   }, [text, delay]);
 
-  return (
-    <Tag ref={ref as any} className={className}>
-      {text.split(/(\s+)/).map((part, i) =>
-        part.trim() === "" ? (
-          <span key={i}> </span>
-        ) : (
-          <span key={i} data-word className="inline-block will-change-transform">
-            {part}
-          </span>
-        ),
-      )}
-    </Tag>
+  return createElement(
+    as,
+    { ref, className },
+    text.split(/(\s+)/).map((part, i) =>
+      part.trim() === "" ? (
+        <span key={i}> </span>
+      ) : (
+        <span key={i} data-word className="inline-block will-change-transform">
+          {part}
+        </span>
+      ),
+    ),
   );
 }
 
