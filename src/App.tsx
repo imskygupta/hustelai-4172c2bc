@@ -348,6 +348,15 @@ function FullRuntimeApp() {
                   <Route path="library" element={<DocsLibrary />} />
                   <Route path="tools" element={<ToolsHubWS />} />
                   <Route path="automations" element={<AutomationsHub />} />
+                  {/* Surfaces that existed on the marketing host but were missing
+                      inside the workspace cockpit — referenced by the command
+                      palette and Continue-Building cards. */}
+                  <Route path="canvas" element={<HustleCanvas />} />
+                  <Route path="blueprint" element={<HustleBlueprint />} />
+                  {/* /assets collides with Vite's built static directory and
+                      serves a raw JS bundle on a static host. Anyone who lands
+                      here from a stale link gets bounced into the library. */}
+                  <Route path="assets" element={<Navigate to="/library" replace />} />
                 </Route>
                 {/* Legacy /workspaces/* aliases — keep typed/shared URLs working */}
                 <Route path="/workspace" element={<Navigate to="/" replace />} />
