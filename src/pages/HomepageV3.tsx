@@ -349,7 +349,7 @@ function MissionControl3D() {
         {/* Subtle scroll guidance — only scene 1, no bouncing arrows */}
         {phaseLabel === 1 && (
           <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 text-[10px] uppercase tracking-[0.32em] text-white/40 font-mono animate-[fade-in_1s_ease-out]">
-            Keep scrolling — five scenes
+            Keep scrolling — six scenes
           </div>
         )}
       </div>
@@ -482,15 +482,15 @@ export default function HomepageV3() {
               <Activity className="w-3 h-3 text-emerald-400" /> Mission Control · V3
             </div>
             <h1 className="text-5xl md:text-7xl lg:text-[88px] font-display font-semibold tracking-[-0.02em] leading-[0.98]">
-              Your business <br />
-              <span className="text-white/40">stops being</span> <br />
-              <span className="bg-gradient-to-br from-emerald-300 via-sky-300 to-violet-300 bg-clip-text text-transparent">
-                nine tabs.
+              Your business works. <br />
+              <span className="text-white/40">But only when</span> <br />
+              <span className="bg-gradient-to-br from-rose-300 via-amber-200 to-emerald-300 bg-clip-text text-transparent">
+                you do.
               </span>
             </h1>
             <p className="text-white/65 text-lg md:text-xl max-w-xl leading-relaxed">
-              Five scenes. One transformation. Scroll to watch a freelance practice
-              become an operating system — and notice the moment you stop being the bottleneck.
+              Every proposal, payment, follow-up and delivery depends on you remembering what happens next.
+              Scroll six scenes and watch that change.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 pt-2">
               <Button
@@ -508,7 +508,7 @@ export default function HomepageV3() {
                 }
                 className="h-12 px-6 text-white/70 hover:text-white hover:bg-white/5 text-base"
               >
-                Watch the five scenes ↓
+                Watch the six scenes ↓
               </Button>
             </div>
             <div className="pt-6 text-[11px] text-white/35 font-mono uppercase tracking-[0.2em]">
