@@ -31,6 +31,8 @@ import { PersonalizedHeroCTA } from "@/components/home/PersonalizedHeroCTA";
 import { ReturningUserContinuity } from "@/components/home/ReturningUserContinuity";
 import { OpsStats } from "@/components/seo/OpsStats";
 import { WhoIsHustleAIFor } from "@/components/home/WhoIsHustleAIFor";
+import { HomepageDiscoveryBanner } from "@/components/home/HomepageDiscoveryBanner";
+import { getHomepagePreference } from "@/lib/homepage/useHomepageBanner";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -38,6 +40,13 @@ export default function Index() {
   const navigate = useNavigate();
   const heroRef = useRef<HTMLDivElement>(null);
   const [showStickyCta, setShowStickyCta] = useState(false);
+
+  // If the visitor previously opted into the new experience, send them there.
+  // Preference expires after 30 days; classic preference is a no-op (stay).
+  useEffect(() => {
+    const pref = getHomepagePreference();
+    if (pref === "v3") navigate("/homepage-3", { replace: true });
+  }, [navigate]);
 
   useEffect(() => {
     // Hero text entrance
@@ -67,6 +76,7 @@ export default function Index() {
         jsonLd={[softwareJsonLd, orgJsonLd]}
       />
       <Navbar />
+      <HomepageDiscoveryBanner />
 
       {/* Hero */}
       <section className="pt-28 md:pt-32 pb-16 md:pb-24 px-4 relative overflow-hidden bg-gradient-to-b from-slate-50 via-white to-white">
