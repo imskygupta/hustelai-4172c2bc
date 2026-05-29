@@ -20,6 +20,7 @@ import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { useTelegramConnection } from "@/lib/usage/useTelegramConnection";
 import { ClientPickerDialog, type PickedClient } from "./ClientPickerDialog";
+import { TelegramStatusBadge } from "./TelegramStatusBadge";
 import {
   buildWaUrl,
   recordDelivery,
@@ -228,6 +229,21 @@ export function Deliver({ toolSlug, title, text, pdf, pdfFactory, className = ""
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+        <TelegramStatusBadge className="ml-1" />
+        {lastDelivery && (
+          <span className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-medium text-emerald-800">
+            <Check className="w-3 h-3" />
+            Delivered · {lastDelivery.channelLabel}
+            {lastDelivery.clientId && (
+              <Link
+                to={`/dashboard/clients/${lastDelivery.clientId}`}
+                className="inline-flex items-center gap-0.5 text-emerald-700 hover:text-emerald-900 hover:underline"
+              >
+                Open {lastDelivery.clientName || "client"} <ArrowRight className="w-3 h-3" />
+              </Link>
+            )}
+          </span>
+        )}
       </div>
 
       <ClientPickerDialog
