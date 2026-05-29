@@ -319,40 +319,41 @@ function Hero() {
 // ---------- 3. Who it's for ----------
 const AUDIENCES = [
   // active = index of the in-progress step (●). Earlier = ✓, later = ○.
-  { icon: Briefcase,     label: "Freelancers",    steps: ["Lead", "Proposal", "Approval", "Invoice", "Payment"],         tint: "#FF7A45", active: 2, size: "lg" as const },
-  { icon: Palette,       label: "Creators",       steps: ["Idea", "Script", "Content", "Distribution", "Sponsor"],       tint: "#FFB37A", active: 1, size: "md" as const },
-  { icon: Building2,     label: "Small agencies", steps: ["Client", "Workspace", "Team", "Delivery", "Retention"],       tint: "#1A1A1F", active: 3, size: "md" as const },
-  { icon: GraduationCap, label: "Consultants",    steps: ["Research", "Proposal", "Approval", "Engagement", "Renewal"],  tint: "#FF7A45", active: 2, size: "md" as const },
-  { icon: Mic2,          label: "Coaches",        steps: ["Booking", "Session", "Notes", "Follow-up", "Renewal"],        tint: "#E8DFF3", active: 1, size: "md" as const },
-  { icon: Wrench,        label: "Operators",      steps: ["Request", "Workflow", "Action", "Delivery", "Payment"],       tint: "#FFE27A", active: 2, size: "md" as const },
+  { icon: Briefcase,     label: "Freelancers",    steps: ["Lead", "Proposal", "Approval", "Invoice", "Payment"],         tint: "#FF7A45", active: 2, size: "lg" as const, automations: 3, pending: 1, outcome: "Proposal → Payment, all tracked in one portal." },
+  { icon: Palette,       label: "Creators",       steps: ["Idea", "Script", "Content", "Distribution", "Sponsor"],       tint: "#FFB37A", active: 1, size: "md" as const, automations: 2, pending: 2, outcome: "Idea to publish — without losing the thread." },
+  { icon: Building2,     label: "Small agencies", steps: ["Client", "Workspace", "Team", "Delivery", "Retention"],       tint: "#1A1A1F", active: 3, size: "md" as const, automations: 4, pending: 1, outcome: "Multi-client workspace that scales with you." },
+  { icon: GraduationCap, label: "Consultants",    steps: ["Research", "Proposal", "Approval", "Engagement", "Renewal"],  tint: "#FF7A45", active: 2, size: "md" as const, automations: 3, pending: 1, outcome: "Engagements that renew themselves." },
+  { icon: Mic2,          label: "Coaches",        steps: ["Booking", "Session", "Notes", "Follow-up", "Renewal"],        tint: "#E8DFF3", active: 1, size: "md" as const, automations: 2, pending: 1, outcome: "Bookings to renewals on autopilot." },
+  { icon: Wrench,        label: "Operators",      steps: ["Request", "Workflow", "Action", "Delivery", "Payment"],       tint: "#FFE27A", active: 2, size: "md" as const, automations: 5, pending: 0, outcome: "Every request becomes a billable workflow." },
 ];
 
 function WhoItsFor() {
   const ink = (tint: string) => (tint === "#E8DFF3" || tint === "#FFE27A" ? "#1A1A1F" : tint);
   return (
-    <section id="audiences" className="px-4 py-20 md:py-28">
+    <section id="audiences" className="px-4 py-14 md:py-28">
       <div className="container mx-auto max-w-6xl">
-        <div className="max-w-3xl mb-10 md:mb-14">
+        <div className="max-w-3xl mb-8 md:mb-14">
           <div className="text-[11px] uppercase tracking-[0.22em] font-semibold text-[#FF7A45] mb-3">
             Who it's for
           </div>
           <RevealHeading
             text="Different businesses. Same operating system."
-            className="font-display font-semibold tracking-tight text-[#1A1A1F] text-3xl md:text-5xl leading-[1.05]"
+            className="font-display font-semibold tracking-tight text-[#1A1A1F] text-[1.65rem] sm:text-3xl md:text-5xl leading-[1.05]"
           />
-          <p className="mt-4 text-[#1A1A1F]/55 text-base md:text-lg leading-relaxed">
+          <p className="mt-3 md:mt-4 text-[#1A1A1F]/55 text-[14px] md:text-lg leading-relaxed">
             You run the business. The system runs the process.
           </p>
         </div>
         {/* Editorial bento grid — featured card spans 2 cols on desktop */}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 auto-rows-fr">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-2.5 md:gap-4 auto-rows-fr">
           {AUDIENCES.map((a, idx) => {
             const color = ink(a.tint);
             const featured = a.size === "lg";
+            const progress = Math.min(100, ((a.active + 1) / a.steps.length) * 100);
             return (
               <div
                 key={a.label}
-                className={`group relative overflow-hidden rounded-3xl border border-[#1A1A1F]/8 bg-white p-5 md:p-6 transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_30px_60px_-30px_rgba(255,122,69,0.35)] ${
+                className={`group relative overflow-hidden rounded-2xl md:rounded-3xl border border-[#1A1A1F]/8 bg-white p-3.5 md:p-6 transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_30px_60px_-30px_rgba(255,122,69,0.35)] ${
                   featured ? "md:col-span-2 md:row-span-1" : ""
                 }`}
               >
@@ -362,20 +363,20 @@ function WhoItsFor() {
                   style={{ background: a.tint }}
                 />
 
-                <div className="relative flex items-start justify-between gap-4">
-                  <div className="flex items-center gap-3">
+                <div className="relative flex items-start justify-between gap-2">
+                  <div className="flex items-center gap-2 md:gap-3 min-w-0">
                     <div
-                      className="w-10 h-10 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110"
+                      className="w-8 h-8 md:w-10 md:h-10 rounded-xl md:rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 shrink-0"
                       style={{ background: `${a.tint}22`, color }}
                     >
-                      <a.icon className="w-5 h-5" />
+                      <a.icon className="w-4 h-4 md:w-5 md:h-5" />
                     </div>
-                    <div className="text-[#1A1A1F] font-display text-xl font-semibold">
+                    <div className="text-[#1A1A1F] font-display text-[15px] md:text-xl font-semibold leading-tight truncate">
                       {a.label}
                     </div>
                   </div>
                   <span
-                    className="text-[10px] font-mono uppercase tracking-[0.18em] text-[#1A1A1F]/30 group-hover:text-[#1A1A1F]/55 transition-colors"
+                    className="hidden md:inline text-[10px] font-mono uppercase tracking-[0.18em] text-[#1A1A1F]/30 group-hover:text-[#1A1A1F]/55 transition-colors"
                   >
                     {String(idx + 1).padStart(2, "0")}
                   </span>
@@ -383,7 +384,7 @@ function WhoItsFor() {
 
                 {/* Persistent ambient workflow — always visible at low opacity, lights up on hover */}
                 <ul
-                  className={`relative mt-5 space-y-1.5 opacity-30 group-hover:opacity-100 transition-opacity duration-500 ${
+                  className={`relative mt-3 md:mt-5 space-y-1 md:space-y-1.5 opacity-40 group-hover:opacity-100 transition-opacity duration-500 ${
                     featured ? "md:grid md:grid-cols-5 md:gap-3 md:space-y-0" : ""
                   }`}
                 >
@@ -393,7 +394,7 @@ function WhoItsFor() {
                     return (
                       <li
                         key={s}
-                        className={`flex items-center justify-between gap-2 text-[12px] font-mono leading-none ${
+                        className={`flex items-center justify-between gap-2 text-[11px] md:text-[12px] font-mono leading-none ${
                           featured ? "md:flex-col md:items-start md:gap-2 md:justify-start" : ""
                         }`}
                         style={{ color: live ? color : "#1A1A1F" }}
@@ -426,9 +427,81 @@ function WhoItsFor() {
                     );
                   })}
                 </ul>
+
+                {/* Tiny timeline strip */}
+                <div className="relative mt-3 h-[3px] rounded-full bg-[#1A1A1F]/8 overflow-hidden">
+                  <div
+                    className="absolute inset-y-0 left-0 rounded-full transition-all duration-700 group-hover:opacity-100 opacity-70"
+                    style={{ width: `${progress}%`, background: color }}
+                  />
+                </div>
+
+                {/* Micro-state summary */}
+                <div className="relative mt-2 flex items-center gap-2 text-[10px] md:text-[11px] font-mono uppercase tracking-[0.12em] text-[#1A1A1F]/55">
+                  <span className="inline-flex items-center gap-1">
+                    <span className="w-1 h-1 rounded-full" style={{ background: color }} />
+                    {a.automations} auto
+                  </span>
+                  <span className="text-[#1A1A1F]/20">·</span>
+                  <span className="inline-flex items-center gap-1">
+                    <span className="w-1 h-1 rounded-full bg-[#1A1A1F]/30" />
+                    {a.pending} pending
+                  </span>
+                </div>
+
+                {/* Outcome reveal on desktop hover */}
+                <div className="hidden md:block relative mt-3 max-h-0 opacity-0 group-hover:max-h-24 group-hover:opacity-100 transition-all duration-500 overflow-hidden">
+                  <div className="pt-3 border-t border-[#1A1A1F]/8 text-[12px] text-[#1A1A1F]/65 leading-snug">
+                    {a.outcome}
+                  </div>
+                </div>
               </div>
             );
           })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ---------- 3b. What actually happens inside HustleAI ----------
+const CLARITY = [
+  { icon: Inbox,            label: "Capture", desc: "Everything enters one place" },
+  { icon: Brain,            label: "Think",   desc: "AI drafts, researches and organizes" },
+  { icon: Truck,            label: "Deliver", desc: "Exports, portals, approvals" },
+  { icon: BadgeDollarSign,  label: "Earn",    desc: "Invoices, payments, retention" },
+];
+
+function ClarityStrip() {
+  return (
+    <section className="px-4 pt-2 pb-14 md:pb-20">
+      <div className="container mx-auto max-w-6xl">
+        <div className="max-w-2xl mb-6 md:mb-10">
+          <div className="text-[11px] uppercase tracking-[0.22em] font-semibold text-[#FF7A45] mb-3">
+            What actually happens inside HustleAI
+          </div>
+          <h2 className="font-display font-semibold tracking-tight text-[#1A1A1F] text-2xl md:text-4xl leading-[1.1]">
+            Four moves. Every business runs on them.
+          </h2>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 md:gap-4">
+          {CLARITY.map((c, i) => (
+            <div
+              key={c.label}
+              className="group relative rounded-2xl border border-[#1A1A1F]/8 bg-white p-4 md:p-6 transition-all hover:-translate-y-0.5 hover:border-[#FF7A45]/30"
+            >
+              <div className="flex items-center gap-2 md:gap-3 mb-2 md:mb-3">
+                <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl md:rounded-2xl bg-[#FBF7F1] flex items-center justify-center group-hover:bg-[#FF7A45]/10 transition-colors">
+                  <c.icon className="w-4 h-4 md:w-5 md:h-5 text-[#FF7A45]" />
+                </div>
+                <span className="text-[10px] font-mono tracking-[0.18em] text-[#1A1A1F]/30 tabular-nums">
+                  0{i + 1}
+                </span>
+              </div>
+              <div className="font-display text-base md:text-xl font-semibold text-[#1A1A1F] leading-tight">{c.label}</div>
+              <div className="text-[12px] md:text-[13px] text-[#1A1A1F]/60 mt-1 leading-snug">{c.desc}</div>
+            </div>
+          ))}
         </div>
       </div>
     </section>
