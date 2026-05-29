@@ -22,6 +22,7 @@ import ContextualNudge from "@/components/dashboard/ContextualNudge";
 import DashboardHero from "@/components/dashboard/DashboardHero";
 import OperationsTodayCard from "@/components/dashboard/OperationsTodayCard";
 import RecentClientActivityFeed from "@/components/dashboard/RecentClientActivityFeed";
+import ClientsHeadlineCard from "@/components/dashboard/ClientsHeadlineCard";
 import WorkspacePortalTile from "@/components/dashboard/WorkspacePortalTile";
 import FirstVisitWelcome from "@/components/onboarding/FirstVisitWelcome";
 import PostExportTelegramNudge from "@/components/onboarding/PostExportTelegramNudge";
@@ -268,6 +269,10 @@ export default function Dashboard() {
             Counts pull live from DB2 work_deliveries + work_clients. */}
         <OperationsTodayCard />
 
+        {/* Clients are the center of the product — surface them near the top
+            so the operator immediately sees where their business lives. */}
+        <ClientsHeadlineCard />
+
         {/* Live "your workspace is doing things" feed — pulled from
             DB2 work_deliveries so the dashboard feels alive on every visit. */}
         <RecentClientActivityFeed />
@@ -460,36 +465,9 @@ export default function Dashboard() {
           </div>
         </details>
 
-        {/* Live ticker / market strip */}
-        {feed?.stocks && (
-          <div className="rounded-xl border border-slate-200 bg-white overflow-hidden">
-            <div className="flex items-center justify-between px-4 py-2 border-b border-slate-100 bg-slate-50/50">
-              <span className="text-xs font-medium text-slate-500 flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                Live market
-              </span>
-              <span className="text-[10px] text-slate-400">Updates every 15 min</span>
-            </div>
-            <div className="overflow-hidden h-10 relative">
-              <motion.div
-                className="flex items-center gap-8 h-full whitespace-nowrap px-4 absolute"
-                animate={{ x: [0, -800] }}
-                transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
-              >
-                {[...feed.stocks, ...feed.stocks, ...feed.stocks].map((s, i) => (
-                  <span key={i} className="flex items-center gap-1.5 text-xs font-mono">
-                    <span className="font-semibold text-slate-900">{s.symbol}</span>
-                    <span className="text-slate-500">{s.price}</span>
-                    <span className={`flex items-center ${s.up ? "text-emerald-600" : "text-rose-500"}`}>
-                      {s.up ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-                      {s.change}
-                    </span>
-                  </span>
-                ))}
-              </motion.div>
-            </div>
-          </div>
-        )}
+        {/* Live market ticker removed — HustleAI is a client-work OS, not an
+            investing surface. The ticker was stealing attention from
+            Clients / Deliveries / Operations. */}
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="bg-slate-100/80 border border-slate-200 h-9">

@@ -13,41 +13,26 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { Badge } from "@/components/ui/badge";
 
-// Workspace OS — the core operational surface
+// Workspace OS — the core operational surface. Kept deliberately short:
+// users were overwhelmed when "Clients" concepts and doc tools were sprayed
+// across multiple groups. One mental model per row.
 const workspaceOsItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
-  { title: "Workspaces", url: "/workspaces", icon: Building2 },
   { title: "Work Hub", url: "/work", icon: Hammer },
-  { title: "Clients (CRM)", url: "/work/clients", icon: Users },
-  { title: "Client Activity", url: "/dashboard/deliveries", icon: SendIcon },
-  { title: "Documents", url: "/workspaces/blocks", icon: FileText },
-  { title: "Hustle Canvas", url: "/canvas", icon: LayoutGrid },
+  { title: "Clients", url: "/work/clients", icon: Users },
+  { title: "Activity", url: "/dashboard/deliveries", icon: SendIcon },
 ];
 
-// Doc Tools — quick branded doc generators. Authenticated sidebar always
-// points at the dashboard-shell version so users get autosave + AI assists,
-// not the public marketing/SEO surface.
-const docToolsItems = [
-  { title: "Invoice Generator", url: "/dashboard/tools/invoice-generator", icon: Receipt },
-  { title: "Proposal Generator", url: "/dashboard/tools/proposal-generator", icon: FileEdit },
-  { title: "Contract Generator", url: "/dashboard/tools/contract-generator", icon: FileSignature },
-];
-
-// AI Systems — high-leverage AI tools
+// AI Systems — only the top-leverage entry points. The long tail
+// (Skill Gap, Faceless Content, Gig Arbitrage, Sure-Hit Jobs, Knowledge Hub,
+// Lead Finder, Gig Price Calc, Resume Optimizer) lives inside the
+// AI Tool Bench so the sidebar stays scannable.
 const aiSystems = [
   { title: "Hustle Blueprint", url: "/hustle-blueprint", icon: Rocket, tier: "free" },
-  { title: "Proposal AI", url: "/proposal-draft", icon: FileText, tier: "pro" },
   { title: "Roadmap Engine", url: "/workspaces", icon: Brain, tier: "pro" },
+  { title: "Proposal AI", url: "/proposal-draft", icon: FileText, tier: "pro" },
   { title: "Red-Flag Scanner", url: "/red-flag-scanner", icon: ShieldAlert, tier: "free" },
-  { title: "Resume Optimizer", url: "/resume-optimizer", icon: FileText, tier: "free" },
-  { title: "Gig Price Calc", url: "/gig-price-calculator", icon: DollarSign, tier: "free" },
   { title: "AI Tool Bench", url: "/ai-tools", icon: Zap, tier: "pro" },
-  { title: "Skill Gap", url: "/skill-gap", icon: Brain, tier: "pro" },
-  { title: "Knowledge Hub", url: "/knowledge-hub", icon: BookOpen, tier: "pro" },
-  { title: "Faceless Content", url: "/faceless-content", icon: Film, tier: "free" },
-  { title: "Lead Finder", url: "/problem-leads", icon: Target, tier: "elite" },
-  { title: "Sure-Hit Jobs", url: "/sure-hit-jobs", icon: Briefcase, tier: "pro" },
-  { title: "Gig Arbitrage", url: "/gig-arbitrage", icon: TrendingUp, tier: "pro" },
 ];
 
 // Growth — discovery + visibility
@@ -58,14 +43,13 @@ const growthItems = [
   { title: "Affiliates", url: "/affiliates", icon: Crown },
 ];
 
-// Settings — billing, integrations, profile
+// Settings — only the durable account surfaces. Sub-pages live inside
+// /profile so the sidebar isn't doubling up.
 const settingsItems = [
   { title: "Plans & Billing", url: "/plans", icon: CreditCard },
   { title: "Integrations", url: "/integrations", icon: Plug },
   { title: "AI Fuel (BYO key)", url: "/workspaces/ai-settings", icon: Flame },
-  { title: "Infinity Zone", url: "/infinity-zone", icon: Sparkles },
   { title: "Profile", url: "/profile", icon: User },
-  { title: "Settings", url: "/profile?tab=settings", icon: Settings },
 ];
 
 function tierRank(t?: string) {
@@ -131,24 +115,6 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {workspaceOsItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={isActive(item.url)}>
-                    <NavLink to={item.url} className={linkCls(isActive(item.url))}>
-                      <item.icon className="h-4 w-4 shrink-0" />
-                      {!collapsed && <span className="text-sm">{item.title}</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-[10px] uppercase tracking-wider text-slate-400">Doc Tools</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {docToolsItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild isActive={isActive(item.url)}>
                     <NavLink to={item.url} className={linkCls(isActive(item.url))}>
