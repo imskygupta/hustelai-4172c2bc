@@ -1215,35 +1215,38 @@ function FreeToolsEcosystem() {
 }
 
 // ---------- 8d. Documentation Pathway ----------
-const DOC_PATH = [
-  { label: "Guides",     icon: BookOpen,   desc: "Step-by-step playbooks for each workflow." },
-  { label: "Templates",  icon: Layers,     desc: "Pre-built proposals, contracts, intake forms." },
-  { label: "Workflows",  icon: Boxes,      desc: "Repeatable sequences for client delivery." },
-  { label: "Docs",       icon: FileText,   desc: "Everything the system does, written down." },
-  { label: "API-ready",  icon: Database,   desc: "Soon: programmatic hooks for builders." },
+const WORKFLOW_GUIDES = [
+  { audience: "Freelancer", icon: Briefcase,     guide: "Client onboarding guide",       desc: "Lead → portal → first invoice, in one playbook.",     href: "https://docs.hustlaiapp.in/first-roadmap", external: true },
+  { audience: "Creator",    icon: Palette,       guide: "Content production workflow",   desc: "Idea capture → script → distribution, with AI inline.", href: "https://docs.hustlaiapp.in/", external: true },
+  { audience: "Agency",     icon: Building2,     guide: "Multi-client operations",       desc: "Run multiple workspaces without losing the thread.",    href: "https://docs.hustlaiapp.in/", external: true },
+  { audience: "Consultant", icon: GraduationCap, guide: "Proposal to payment system",    desc: "From research to renewal — every stage scripted.",      href: "https://docs.hustlaiapp.in/", external: true },
 ];
 
 function DocumentationPathway() {
   return (
-    <section id="learn" className="px-4 py-20 md:py-28">
+    <section id="learn" className="px-4 py-16 md:py-28">
       <div className="container mx-auto max-w-6xl">
-        <div className="grid md:grid-cols-12 gap-10 items-start">
+        <div className="grid md:grid-cols-12 gap-8 md:gap-10 items-start">
           <div className="md:col-span-5">
             <div className="text-[11px] uppercase tracking-[0.22em] font-semibold text-[#FF7A45] mb-3">
-              Learn the system
+              Start with your workflow
             </div>
             <RevealHeading
-              text="You don't just get software. You get operating procedures."
-              className="font-display font-semibold tracking-tight text-[#1A1A1F] text-3xl md:text-[2.75rem] leading-[1.05]"
+              text="Pick your business. We'll show you the playbook."
+              className="font-display font-semibold tracking-tight text-[#1A1A1F] text-[1.65rem] sm:text-3xl md:text-[2.75rem] leading-[1.05]"
             />
-            <p className="mt-5 text-[#1A1A1F]/65 text-[15px] md:text-lg leading-relaxed">
+            <p className="mt-4 md:mt-5 text-[#1A1A1F]/65 text-[14px] md:text-lg leading-relaxed">
               Every tool ships with a guide, a template and a workflow you can
               copy. Read once, run forever.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
-              <Link to="/docs" className="px-4 py-2 rounded-full bg-[#1A1A1F] text-white text-[13px] font-semibold inline-flex items-center gap-1.5">
+              <a
+                href="https://docs.hustlaiapp.in/"
+                rel="noopener"
+                className="px-4 py-2 rounded-full bg-[#1A1A1F] text-white text-[13px] font-semibold inline-flex items-center gap-1.5"
+              >
                 Open docs <ArrowRight className="w-4 h-4" />
-              </Link>
+              </a>
               <Link to="/how-it-works" className="px-4 py-2 rounded-full border border-[#1A1A1F]/10 text-[#1A1A1F] text-[13px] font-semibold hover:bg-white">
                 How it works
               </Link>
@@ -1251,25 +1254,33 @@ function DocumentationPathway() {
           </div>
 
           <div className="md:col-span-7">
-            <div className="rounded-[2rem] border border-[#1A1A1F]/8 bg-white p-6 md:p-8">
-              <ol className="space-y-3">
-                {DOC_PATH.map((d, i) => (
-                  <li key={d.label} className="group flex items-start gap-4">
-                    <div className="flex flex-col items-center pt-1">
-                      <div className="w-10 h-10 rounded-2xl bg-[#FBF7F1] border border-[#1A1A1F]/8 flex items-center justify-center group-hover:bg-[#FF7A45]/15 group-hover:border-[#FF7A45]/30 transition-colors">
-                        <d.icon className="w-4 h-4 text-[#1A1A1F]" />
-                      </div>
-                      {i < DOC_PATH.length - 1 && (
-                        <div className="w-px flex-1 bg-gradient-to-b from-[#1A1A1F]/15 to-transparent mt-1 min-h-[28px]" />
-                      )}
+            <div className="grid sm:grid-cols-2 gap-3 md:gap-4">
+              {WORKFLOW_GUIDES.map((g) => (
+                <a
+                  key={g.audience}
+                  href={g.href}
+                  rel="noopener"
+                  className="group rounded-2xl border border-[#1A1A1F]/8 bg-white p-5 hover:-translate-y-0.5 hover:border-[#FF7A45]/30 transition-all"
+                >
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-9 h-9 rounded-xl bg-[#FBF7F1] flex items-center justify-center group-hover:bg-[#FF7A45]/15 transition-colors">
+                      <g.icon className="w-4 h-4 text-[#1A1A1F]" />
                     </div>
-                    <div className="pb-5">
-                      <div className="font-display text-lg font-semibold text-[#1A1A1F]">{d.label}</div>
-                      <div className="text-[13px] text-[#1A1A1F]/60 mt-0.5">{d.desc}</div>
-                    </div>
-                  </li>
-                ))}
-              </ol>
+                    <span className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#1A1A1F]/40">
+                      {g.audience}
+                    </span>
+                  </div>
+                  <div className="font-display text-[16px] md:text-[17px] font-semibold text-[#1A1A1F] leading-snug">
+                    → {g.guide}
+                  </div>
+                  <div className="mt-1.5 text-[12px] md:text-[13px] text-[#1A1A1F]/60 leading-relaxed">
+                    {g.desc}
+                  </div>
+                  <div className="mt-3 text-[11px] font-semibold text-[#FF7A45] inline-flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    Read guide <ArrowUpRight className="w-3 h-3" />
+                  </div>
+                </a>
+              ))}
             </div>
           </div>
         </div>
