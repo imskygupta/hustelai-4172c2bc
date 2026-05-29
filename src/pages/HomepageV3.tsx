@@ -776,6 +776,424 @@ function ProofFeed() {
   );
 }
 
+// ---------- 8b. What's Inside — product ecosystem bento ----------
+const INSIDE_TILES: {
+  label: string;
+  desc: string;
+  icon: any;
+  span: string;
+  tint: string;
+  href: string;
+  badge?: string;
+}[] = [
+  { label: "AI Workspace",     desc: "One desk for client work, drafts, and async tasks.",                icon: Bot,         span: "md:col-span-3 md:row-span-2", tint: "#FF7A45", href: "/workspace-portal" },
+  { label: "Client Portal",    desc: "Branded space where decisions get signed and archived.",            icon: Users,       span: "md:col-span-3 md:row-span-1", tint: "#FFB37A", href: "/client" },
+  { label: "Proposal Engine",  desc: "Polished proposals in 5 seconds. Brand applied.",                  icon: FileText,    span: "md:col-span-2 md:row-span-1", tint: "#FF7A45", href: "/tools/proposal-generator" },
+  { label: "Invoice Engine",   desc: "GST-ready, multi-currency, paid in one click.",                    icon: Receipt,     span: "md:col-span-2 md:row-span-1", tint: "#FFE27A", href: "/tools/invoice-generator" },
+  { label: "Telegram Delivery",desc: "Every deliverable can drop straight into a chat.",                 icon: TelegramIcon, span: "md:col-span-2 md:row-span-1", tint: "#E8DFF3", href: "/marketing/telegram-landing" },
+  { label: "Documents",        desc: "Contracts, NDAs, briefs — versioned and signable.",                icon: FileCheck2,  span: "md:col-span-2 md:row-span-1", tint: "#1A1A1F", href: "/tools/contract-generator" },
+  { label: "Knowledge Base",   desc: "Your prompts, SOPs and templates in one library.",                 icon: BookOpen,    span: "md:col-span-2 md:row-span-1", tint: "#FFB37A", href: "/docs" },
+  { label: "Workflow OS",      desc: "Sequences that move work forward while you're offline.",           icon: Layers,      span: "md:col-span-3 md:row-span-1", tint: "#FF7A45", href: "/dashboard/automations" },
+  { label: "AI Tools",         desc: "12+ AI utilities for content, pricing, research and ops.",         icon: Sparkles,    span: "md:col-span-3 md:row-span-1", tint: "#FFE27A", href: "/tools" },
+];
+
+function WhatsInside() {
+  return (
+    <section id="inside" className="px-4 py-20 md:py-28">
+      <div className="container mx-auto max-w-6xl">
+        <div className="max-w-2xl mb-10 md:mb-14">
+          <div className="text-[11px] uppercase tracking-[0.22em] font-semibold text-[#FF7A45] mb-3">
+            What's inside
+          </div>
+          <RevealHeading
+            text="Not one product. A small operating system."
+            className="font-display font-semibold tracking-tight text-[#1A1A1F] text-3xl md:text-5xl leading-[1.05]"
+          />
+          <p className="mt-5 text-[#1A1A1F]/65 text-[15px] md:text-lg max-w-xl leading-relaxed">
+            Nine pieces, designed to work as one. Hover any tile to see what
+            lives inside.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-6 md:auto-rows-[180px] gap-3 md:gap-4">
+          {INSIDE_TILES.map((t) => {
+            const isDark = t.tint === "#1A1A1F";
+            return (
+              <Link
+                key={t.label}
+                to={t.href}
+                className={`group relative overflow-hidden rounded-3xl border border-[#1A1A1F]/8 p-5 md:p-6 transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_30px_60px_-30px_rgba(255,122,69,0.35)] ${t.span} ${isDark ? "bg-[#1A1A1F] text-white" : "bg-white text-[#1A1A1F]"}`}
+              >
+                {/* Soft parallax tint blob */}
+                <div
+                  className="pointer-events-none absolute -bottom-16 -right-16 w-48 h-48 rounded-full blur-3xl opacity-60 transition-transform duration-700 group-hover:scale-125"
+                  style={{ background: `${t.tint}55` }}
+                />
+                <div className="relative flex h-full flex-col">
+                  <div
+                    className={`w-10 h-10 rounded-2xl flex items-center justify-center mb-3 ${isDark ? "bg-white/10" : ""}`}
+                    style={isDark ? {} : { background: `${t.tint}22` }}
+                  >
+                    <t.icon className={`w-5 h-5 ${isDark ? "text-white" : ""}`} style={isDark ? {} : { color: t.tint === "#FFE27A" || t.tint === "#E8DFF3" ? "#1A1A1F" : t.tint }} />
+                  </div>
+                  <div className="font-display text-lg md:text-xl font-semibold leading-tight">{t.label}</div>
+                  <div className={`mt-1 text-[13px] leading-relaxed ${isDark ? "text-white/65" : "text-[#1A1A1F]/60"}`}>{t.desc}</div>
+                  <div className={`mt-auto pt-4 text-[12px] font-semibold inline-flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity ${isDark ? "text-white" : "text-[#FF7A45]"}`}>
+                    Open <ArrowUpRight className="w-3.5 h-3.5" />
+                  </div>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ---------- 8c. Free Tools ecosystem ----------
+const FREE_TOOLS = [
+  { label: "Invoice Generator",  desc: "GST-ready, USD/INR/EUR/GBP",       icon: Receipt,     href: "/tools/invoice-generator",  tag: "Most loved" },
+  { label: "Proposal Generator", desc: "4 scope templates, AI auto-fill",  icon: FileText,    href: "/tools/proposal-generator", tag: "Popular" },
+  { label: "Contract Generator", desc: "Lawyer-style freelance clauses",   icon: FileCheck2,  href: "/tools/contract-generator", tag: "Free" },
+  { label: "Pricing Calculator", desc: "Hourly, retainer, SaaS, margin",   icon: Wallet,      href: "/tools/pricing-calculator", tag: "New" },
+  { label: "Portfolio Bio",      desc: "Taglines for any platform",        icon: PenLine,     href: "/tools/portfolio-bio",      tag: "New" },
+  { label: "Onboarding Form",    desc: "Branded intake → workspace",       icon: Inbox,       href: "/tools/onboarding-form",    tag: "New" },
+  { label: "Content Calendar",   desc: "4-week social plan, CSV export",   icon: Calendar,    href: "/tools/content-calendar",   tag: "New" },
+  { label: "Pomodoro Widget",    desc: "Focus + earnings tracker",         icon: Zap,         href: "/tools/pomodoro",           tag: "New" },
+  { label: "Business Card",      desc: "4 themes · vCard download",        icon: ImageIcon,   href: "/tools/business-card",      tag: "New" },
+  { label: "Red Flag Scanner",   desc: "Clients that don't pay",           icon: Search,      href: "/red-flag-scanner",         tag: "AI" },
+];
+
+function FreeToolsEcosystem() {
+  const [count, setCount] = useState(0);
+  const target = FREE_TOOLS.length;
+  useEffect(() => {
+    let raf = 0;
+    let start: number | null = null;
+    const tick = (t: number) => {
+      if (start === null) start = t;
+      const p = Math.min((t - start) / 900, 1);
+      setCount(Math.round(p * target));
+      if (p < 1) raf = requestAnimationFrame(tick);
+    };
+    const io = new IntersectionObserver(
+      (entries) => entries.some((e) => e.isIntersecting) && (raf = requestAnimationFrame(tick)),
+      { threshold: 0.4 },
+    );
+    const node = document.getElementById("free-tools");
+    if (node) io.observe(node);
+    return () => {
+      cancelAnimationFrame(raf);
+      io.disconnect();
+    };
+  }, []);
+
+  return (
+    <section id="free-tools" className="px-4 py-20 md:py-28 bg-[#FBF7F1]">
+      <div className="container mx-auto max-w-6xl">
+        <div className="grid md:grid-cols-2 gap-10 mb-10 md:mb-14 items-end">
+          <div>
+            <div className="text-[11px] uppercase tracking-[0.22em] font-semibold text-[#FF7A45] mb-3">
+              Free tools, no signup
+            </div>
+            <RevealHeading
+              text="A growing toolkit you can use today."
+              className="font-display font-semibold tracking-tight text-[#1A1A1F] text-3xl md:text-5xl leading-[1.05]"
+            />
+          </div>
+          <div className="flex items-end gap-6 md:justify-end">
+            <div>
+              <div className="font-display text-5xl md:text-6xl font-semibold text-[#1A1A1F] tabular-nums">{count}+</div>
+              <div className="text-[11px] uppercase tracking-[0.22em] text-[#1A1A1F]/40 font-semibold">Tools shipping</div>
+            </div>
+            <Link
+              to="/tools"
+              className="text-[13px] font-semibold text-[#1A1A1F] hover:text-[#FF7A45] inline-flex items-center gap-1"
+            >
+              See all <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+        </div>
+
+        {/* Featured tool */}
+        <Link
+          to={FREE_TOOLS[0].href}
+          className="group block rounded-[2rem] border border-[#1A1A1F]/8 bg-white overflow-hidden mb-5"
+        >
+          <div className="grid md:grid-cols-5">
+            <div className="md:col-span-3 p-7 md:p-10">
+              <span className="inline-block text-[10px] uppercase tracking-[0.22em] font-bold text-[#FF7A45] bg-[#FF7A45]/10 px-2 py-1 rounded-full mb-4">
+                Featured · {FREE_TOOLS[0].tag}
+              </span>
+              <div className="font-display text-3xl md:text-4xl font-semibold text-[#1A1A1F] leading-tight mb-2">
+                {FREE_TOOLS[0].label}
+              </div>
+              <p className="text-[#1A1A1F]/65 max-w-md">
+                Build, preview and export GST-ready invoices in minutes. Saved
+                to your workspace, delivered via Telegram or share link.
+              </p>
+              <div className="mt-5 text-[13px] font-semibold text-[#1A1A1F] group-hover:text-[#FF7A45] inline-flex items-center gap-1.5">
+                Try it free <ArrowUpRight className="w-4 h-4" />
+              </div>
+            </div>
+            <div className="md:col-span-2 relative bg-gradient-to-br from-[#FFF6E8] to-[#FFE27A]/30 p-6 md:p-8 flex items-center justify-center">
+              <div className="rounded-2xl bg-white border border-[#1A1A1F]/8 w-full max-w-xs p-4 shadow-[0_30px_80px_-40px_rgba(255,122,69,0.5)] group-hover:-translate-y-1 transition-transform">
+                <div className="flex items-center justify-between text-[10px] uppercase tracking-[0.2em] text-[#1A1A1F]/40 font-semibold mb-3">
+                  <span>Invoice · INV-2034</span><span>Paid</span>
+                </div>
+                <div className="space-y-1.5">
+                  {["Discovery sprint", "Design system", "Frontend build", "Support · Q3"].map((row, i) => (
+                    <div key={row} className="flex justify-between text-[11px] text-[#1A1A1F]/70">
+                      <span>{row}</span>
+                      <span className="tabular-nums">₹{[45000, 90000, 120000, 30000][i].toLocaleString()}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-3 pt-2 border-t border-[#1A1A1F]/10 flex justify-between text-[12px] font-semibold text-[#1A1A1F]">
+                  <span>Total</span><span className="tabular-nums">₹2,85,000</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Link>
+
+        {/* Horizontal scrolling rail */}
+        <div className="relative -mx-4 px-4 overflow-x-auto pb-2 scrollbar-hide">
+          <div className="flex gap-3 min-w-max">
+            {FREE_TOOLS.slice(1).map((t) => (
+              <Link
+                key={t.label}
+                to={t.href}
+                className="group w-[260px] rounded-2xl border border-[#1A1A1F]/8 bg-white p-5 hover:-translate-y-1 hover:border-[#FF7A45]/40 transition-all"
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <div className="w-9 h-9 rounded-xl bg-[#FF7A45]/10 flex items-center justify-center">
+                    <t.icon className="w-4 h-4 text-[#FF7A45]" />
+                  </div>
+                  <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-[#1A1A1F]/40">{t.tag}</span>
+                </div>
+                <div className="font-display text-lg font-semibold text-[#1A1A1F] leading-snug">{t.label}</div>
+                <div className="text-[12px] text-[#1A1A1F]/55 mt-1">{t.desc}</div>
+                <div className="mt-3 text-[12px] font-semibold text-[#FF7A45] inline-flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  Open tool <ArrowRight className="w-3.5 h-3.5" />
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ---------- 8d. Documentation Pathway ----------
+const DOC_PATH = [
+  { label: "Guides",     icon: BookOpen,   desc: "Step-by-step playbooks for each workflow." },
+  { label: "Templates",  icon: Layers,     desc: "Pre-built proposals, contracts, intake forms." },
+  { label: "Workflows",  icon: Boxes,      desc: "Repeatable sequences for client delivery." },
+  { label: "Docs",       icon: FileText,   desc: "Everything the system does, written down." },
+  { label: "API-ready",  icon: Database,   desc: "Soon: programmatic hooks for builders." },
+];
+
+function DocumentationPathway() {
+  return (
+    <section id="learn" className="px-4 py-20 md:py-28">
+      <div className="container mx-auto max-w-6xl">
+        <div className="grid md:grid-cols-12 gap-10 items-start">
+          <div className="md:col-span-5">
+            <div className="text-[11px] uppercase tracking-[0.22em] font-semibold text-[#FF7A45] mb-3">
+              Learn the system
+            </div>
+            <RevealHeading
+              text="You don't just get software. You get operating procedures."
+              className="font-display font-semibold tracking-tight text-[#1A1A1F] text-3xl md:text-[2.75rem] leading-[1.05]"
+            />
+            <p className="mt-5 text-[#1A1A1F]/65 text-[15px] md:text-lg leading-relaxed">
+              Every tool ships with a guide, a template and a workflow you can
+              copy. Read once, run forever.
+            </p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Link to="/docs" className="px-4 py-2 rounded-full bg-[#1A1A1F] text-white text-[13px] font-semibold inline-flex items-center gap-1.5">
+                Open docs <ArrowRight className="w-4 h-4" />
+              </Link>
+              <Link to="/how-it-works" className="px-4 py-2 rounded-full border border-[#1A1A1F]/10 text-[#1A1A1F] text-[13px] font-semibold hover:bg-white">
+                How it works
+              </Link>
+            </div>
+          </div>
+
+          <div className="md:col-span-7">
+            <div className="rounded-[2rem] border border-[#1A1A1F]/8 bg-white p-6 md:p-8">
+              <ol className="space-y-3">
+                {DOC_PATH.map((d, i) => (
+                  <li key={d.label} className="group flex items-start gap-4">
+                    <div className="flex flex-col items-center pt-1">
+                      <div className="w-10 h-10 rounded-2xl bg-[#FBF7F1] border border-[#1A1A1F]/8 flex items-center justify-center group-hover:bg-[#FF7A45]/15 group-hover:border-[#FF7A45]/30 transition-colors">
+                        <d.icon className="w-4 h-4 text-[#1A1A1F]" />
+                      </div>
+                      {i < DOC_PATH.length - 1 && (
+                        <div className="w-px flex-1 bg-gradient-to-b from-[#1A1A1F]/15 to-transparent mt-1 min-h-[28px]" />
+                      )}
+                    </div>
+                    <div className="pb-5">
+                      <div className="font-display text-lg font-semibold text-[#1A1A1F]">{d.label}</div>
+                      <div className="text-[13px] text-[#1A1A1F]/60 mt-0.5">{d.desc}</div>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ---------- 8e. Blog & Knowledge Network ----------
+const BLOG_FEATURED = {
+  category: "Field guide",
+  title: "The freelancer's operating system — a 30-day blueprint",
+  excerpt: "How to install repeatable rhythms across client work, content and revenue so the business compounds while you sleep.",
+  read: "12 min read",
+};
+const BLOG_LIST = [
+  { tag: "Trending",   title: "Why every freelancer needs a client portal in 2026",         read: "6 min" },
+  { tag: "AI",         title: "How to use AI to write proposals that convert at 60%+",      read: "9 min" },
+  { tag: "Workflow",   title: "Turning Telegram into a delivery channel for client work",   read: "7 min" },
+  { tag: "Pricing",    title: "The retainer math that turns one client into recurring revenue", read: "8 min" },
+  { tag: "Updates",    title: "What's new this month — Q3 changelog & shipping notes",      read: "4 min" },
+];
+
+function BlogKnowledge() {
+  return (
+    <section id="learn-more" className="px-4 py-20 md:py-28 bg-[#FBF7F1]">
+      <div className="container mx-auto max-w-6xl">
+        <div className="max-w-2xl mb-10 md:mb-14">
+          <div className="text-[11px] uppercase tracking-[0.22em] font-semibold text-[#FF7A45] mb-3">
+            Learn while your system runs
+          </div>
+          <RevealHeading
+            text="A living publication for people who run quiet businesses."
+            className="font-display font-semibold tracking-tight text-[#1A1A1F] text-3xl md:text-5xl leading-[1.05]"
+          />
+        </div>
+
+        <div className="grid md:grid-cols-12 gap-5">
+          {/* Featured */}
+          <Link
+            to="/blog"
+            className="group md:col-span-7 rounded-[2rem] bg-gradient-to-br from-[#1A1A1F] to-[#2a1f1a] text-white p-7 md:p-10 overflow-hidden relative hover:-translate-y-1 transition-transform"
+          >
+            <div className="pointer-events-none absolute -top-24 -right-24 w-72 h-72 rounded-full blur-3xl bg-[#FF7A45]/40" />
+            <div className="relative">
+              <span className="text-[10px] uppercase tracking-[0.24em] font-semibold text-[#FFB37A]">{BLOG_FEATURED.category}</span>
+              <h3 className="mt-3 font-display text-3xl md:text-4xl font-semibold leading-tight">{BLOG_FEATURED.title}</h3>
+              <p className="mt-4 text-white/70 text-[15px] leading-relaxed max-w-md">{BLOG_FEATURED.excerpt}</p>
+              <div className="mt-6 flex items-center gap-3 text-[12px] text-white/60">
+                <span>{BLOG_FEATURED.read}</span>
+                <span>·</span>
+                <span className="inline-flex items-center gap-1 text-white group-hover:text-[#FFB37A]">
+                  Read article <ArrowUpRight className="w-3.5 h-3.5" />
+                </span>
+              </div>
+            </div>
+          </Link>
+
+          {/* Stacked list */}
+          <div className="md:col-span-5 space-y-3">
+            {BLOG_LIST.map((b, i) => (
+              <Link
+                key={i}
+                to="/blog"
+                className="group block rounded-2xl bg-white border border-[#1A1A1F]/8 p-5 hover:-translate-y-0.5 hover:border-[#FF7A45]/40 transition-all"
+              >
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-[10px] uppercase tracking-[0.22em] font-semibold text-[#FF7A45]">{b.tag}</span>
+                  <span className="text-[11px] text-[#1A1A1F]/45">{b.read}</span>
+                </div>
+                <div className="font-display text-[15px] font-semibold text-[#1A1A1F] leading-snug group-hover:text-[#FF7A45] transition-colors">
+                  {b.title}
+                </div>
+              </Link>
+            ))}
+            <Link to="/blog" className="block text-center text-[13px] font-semibold text-[#1A1A1F] hover:text-[#FF7A45] py-2">
+              Browse the publication →
+            </Link>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ---------- 8f. Pricing preview ----------
+const PRICING_TIERS = [
+  { name: "Starter",      price: "Free",      sub: "forever",   highlight: false, perks: ["Workspace + 1 portal", "Free tools + AI drafts", "Telegram delivery"] },
+  { name: "Professional", price: "₹499",      sub: "/month",    highlight: true,  perks: ["Unlimited portals", "AI Workspace + workflows", "Proposals · Invoices · Docs"] },
+  { name: "Business",     price: "₹1,499",    sub: "/month",    highlight: false, perks: ["Team seats", "Advanced automation", "Priority support · SLA"] },
+];
+
+function PricingPreview() {
+  return (
+    <section id="pricing" className="px-4 py-20 md:py-28">
+      <div className="container mx-auto max-w-6xl">
+        <div className="max-w-2xl mb-10 md:mb-14">
+          <div className="text-[11px] uppercase tracking-[0.22em] font-semibold text-[#FF7A45] mb-3">
+            Pricing
+          </div>
+          <RevealHeading
+            text="Start free. Pay only when the system pays you back."
+            className="font-display font-semibold tracking-tight text-[#1A1A1F] text-3xl md:text-5xl leading-[1.05]"
+          />
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-4 md:gap-5">
+          {PRICING_TIERS.map((p) => (
+            <div
+              key={p.name}
+              className={`relative rounded-3xl p-7 md:p-8 transition-all hover:-translate-y-1 ${
+                p.highlight
+                  ? "bg-[#1A1A1F] text-white border border-[#1A1A1F] shadow-[0_30px_80px_-30px_rgba(255,122,69,0.6)]"
+                  : "bg-white text-[#1A1A1F] border border-[#1A1A1F]/8"
+              }`}
+            >
+              {p.highlight && (
+                <span className="absolute -top-3 left-7 px-3 py-1 rounded-full text-[10px] uppercase tracking-[0.22em] font-bold bg-[#FF7A45] text-white">
+                  Most popular
+                </span>
+              )}
+              <div className="text-[11px] uppercase tracking-[0.22em] font-semibold opacity-60">{p.name}</div>
+              <div className="mt-3 flex items-baseline gap-1">
+                <span className="font-display text-4xl md:text-5xl font-semibold">{p.price}</span>
+                <span className={`text-[13px] ${p.highlight ? "text-white/55" : "text-[#1A1A1F]/55"}`}>{p.sub}</span>
+              </div>
+              <ul className="mt-6 space-y-2.5">
+                {p.perks.map((perk) => (
+                  <li key={perk} className={`flex items-start gap-2 text-[13px] ${p.highlight ? "text-white/85" : "text-[#1A1A1F]/75"}`}>
+                    <Check className={`w-4 h-4 mt-0.5 shrink-0 ${p.highlight ? "text-[#FFB37A]" : "text-[#FF7A45]"}`} />
+                    {perk}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-8 text-center">
+          <Link
+            to="/pricing"
+            className="inline-flex items-center gap-1.5 text-[14px] font-semibold text-[#1A1A1F] hover:text-[#FF7A45] transition-colors"
+          >
+            View full pricing <ArrowRight className="w-4 h-4" />
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 // ---------- 9. CTA ----------
 function V3CTA() {
   return (
