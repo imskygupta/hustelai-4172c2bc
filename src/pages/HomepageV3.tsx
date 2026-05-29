@@ -450,8 +450,8 @@ export default function HomepageV3() {
   return (
     <div className="min-h-screen bg-slate-950 text-white selection:bg-emerald-500/30">
       <SEO
-        title="HustleAI — Mission Control for your freelance business"
-        description="Five scenes. One transformation. Watch your business stop being nine tabs and start being an operating system."
+        title="HustleAI — Run your business like software"
+        description="Six scenes. One transformation. Watch a freelance practice stop depending on your memory and start running like an operating system."
         path="/homepage-3"
         noindex
       />
