@@ -217,12 +217,12 @@ function Hero() {
 
 // ---------- 3. Who it's for ----------
 const AUDIENCES = [
-  { icon: Briefcase, label: "Freelancers", flow: "Lead → Proposal → Invoice", tint: "#FF7A45" },
-  { icon: Palette, label: "Creators", flow: "Idea → Content → Sponsor", tint: "#FFB37A" },
-  { icon: Building2, label: "Small agencies", flow: "Client → Team → Delivery", tint: "#1A1A1F" },
-  { icon: GraduationCap, label: "Consultants", flow: "Research → Proposal → Approval", tint: "#FF7A45" },
-  { icon: Mic2, label: "Coaches", flow: "Booking → Session → Renewal", tint: "#E8DFF3" },
-  { icon: Wrench, label: "Operators", flow: "Request → Workflow → Payment", tint: "#FFE27A" },
+  { icon: Briefcase, label: "Freelancers",   steps: ["Lead", "Proposal", "Approval", "Invoice", "Payment"],   tint: "#FF7A45" },
+  { icon: Palette,   label: "Creators",      steps: ["Idea", "Script", "Content", "Distribution", "Sponsor"], tint: "#FFB37A" },
+  { icon: Building2, label: "Small agencies",steps: ["Client", "Workspace", "Team", "Delivery", "Retention"], tint: "#1A1A1F" },
+  { icon: GraduationCap, label: "Consultants", steps: ["Research", "Proposal", "Approval", "Engagement", "Renewal"], tint: "#FF7A45" },
+  { icon: Mic2,      label: "Coaches",       steps: ["Booking", "Session", "Notes", "Follow-up", "Renewal"],  tint: "#E8DFF3" },
+  { icon: Wrench,    label: "Operators",     steps: ["Request", "Workflow", "Action", "Delivery", "Payment"], tint: "#FFE27A" },
 ];
 
 function WhoItsFor() {
@@ -242,7 +242,7 @@ function WhoItsFor() {
           {AUDIENCES.map((a) => (
             <div
               key={a.label}
-              className="group relative overflow-hidden rounded-3xl border border-[#1A1A1F]/8 bg-white p-5 md:p-6 transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_30px_60px_-30px_rgba(255,122,69,0.35)]"
+              className="group relative overflow-hidden rounded-3xl border border-[#1A1A1F]/8 bg-white p-5 md:p-6 transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_30px_60px_-30px_rgba(255,122,69,0.35)] hover:scale-[1.015]"
             >
               <div
                 className="w-10 h-10 rounded-2xl flex items-center justify-center mb-4 transition-transform group-hover:scale-110"
@@ -253,11 +253,25 @@ function WhoItsFor() {
               <div className="text-[#1A1A1F] font-display text-xl font-semibold mb-1">
                 {a.label}
               </div>
-              <div className="text-[12px] text-[#1A1A1F]/55 font-mono opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                {a.flow}
-              </div>
-              <div className="text-[12px] text-[#1A1A1F]/55 font-mono group-hover:opacity-0 transition-opacity duration-300 absolute bottom-5 md:bottom-6">
+              <div className="text-[12px] text-[#1A1A1F]/40 font-mono group-hover:opacity-0 transition-opacity duration-300 mt-1">
                 Hover to see flow
+              </div>
+              {/* Mini animated flow on hover */}
+              <div className="mt-3 opacity-0 group-hover:opacity-100 transition-opacity duration-500 space-y-1.5">
+                {a.steps.map((s, i) => (
+                  <div
+                    key={s}
+                    className="flex items-center gap-2 text-[11px] font-mono text-[#1A1A1F]/75 translate-y-1 group-hover:translate-y-0 transition-transform"
+                    style={{ transitionDelay: `${i * 60}ms` }}
+                  >
+                    <span
+                      className="block w-1.5 h-1.5 rounded-full"
+                      style={{ background: a.tint === "#E8DFF3" || a.tint === "#FFE27A" ? "#1A1A1F" : a.tint }}
+                    />
+                    <span>{s}</span>
+                    {i < a.steps.length - 1 && <span className="text-[#1A1A1F]/25">↓</span>}
+                  </div>
+                ))}
               </div>
             </div>
           ))}
