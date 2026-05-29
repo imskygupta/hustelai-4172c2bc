@@ -1046,12 +1046,9 @@ function WhatsInside() {
         <div className="grid grid-cols-2 md:grid-cols-6 md:auto-rows-[180px] gap-3 md:gap-4">
           {INSIDE_TILES.map((t) => {
             const isDark = t.tint === "#1A1A1F";
-            return (
-              <Link
-                key={t.label}
-                to={t.href}
-                className={`group relative overflow-hidden rounded-3xl border border-[#1A1A1F]/8 p-5 md:p-6 transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_30px_60px_-30px_rgba(255,122,69,0.35)] ${t.span} ${isDark ? "bg-[#1A1A1F] text-white" : "bg-white text-[#1A1A1F]"}`}
-              >
+            const cls = `group relative overflow-hidden rounded-3xl border border-[#1A1A1F]/8 p-5 md:p-6 transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_30px_60px_-30px_rgba(255,122,69,0.35)] ${t.span} ${isDark ? "bg-[#1A1A1F] text-white" : "bg-white text-[#1A1A1F]"}`;
+            const inner = (
+              <>
                 {/* Soft parallax tint blob */}
                 <div
                   className="pointer-events-none absolute -bottom-16 -right-16 w-48 h-48 rounded-full blur-3xl opacity-60 transition-transform duration-700 group-hover:scale-125"
@@ -1070,7 +1067,12 @@ function WhatsInside() {
                     Open <ArrowUpRight className="w-3.5 h-3.5" />
                   </div>
                 </div>
-              </Link>
+              </>
+            );
+            return t.external ? (
+              <a key={t.label} href={t.href} target="_blank" rel="noreferrer" className={cls}>{inner}</a>
+            ) : (
+              <Link key={t.label} to={t.href} className={cls}>{inner}</Link>
             );
           })}
         </div>
