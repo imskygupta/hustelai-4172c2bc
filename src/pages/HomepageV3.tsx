@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, Inbox, Layers, Cpu, Send, Banknote, Box, Activity } from "lucide-react";
+import { ArrowRight, AlertTriangle, Magnet, Cpu, Send, RotateCcw, Globe2, Box, Activity } from "lucide-react";
 
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -53,30 +53,30 @@ function useCanRender3D() {
 const SCENES = [
   {
     n: 1,
-    kicker: "Scene 01 · Before",
-    rail: "Before",
-    title: "Your business is in nine tabs.",
-    body: "Inbox. WhatsApp. Notion. Drive. A half-written proposal. An invoice you forgot to send. Three follow-ups that died.",
-    detail: "This is not a workflow. This is a coping strategy.",
+    kicker: "Scene 01 · The Bottleneck",
+    rail: "Bottleneck",
+    title: "Your business works.\nBut only when you do.",
+    body: "Every proposal, payment, follow-up and delivery depends on you remembering what happens next.",
+    detail: "This isn't a workflow. It's a coping strategy held together by your memory.",
     accent: "#f43f5e",
-    icon: Inbox,
+    icon: AlertTriangle,
   },
   {
     n: 2,
     kicker: "Scene 02 · Capture",
     rail: "Capture",
-    title: "Everything lands in one place.",
-    body: "Clients, leads, requests, files — pulled into a single operating layer. Nothing lives in a tab anymore. Nothing waits on you to remember.",
+    title: "Everything enters one\noperating layer.",
+    body: "Messages, files, leads, requests — pulled into a single surface. The scatter becomes structure.",
     detail: "You stop being the queue.",
     accent: "#38bdf8",
-    icon: Layers,
+    icon: Magnet,
   },
   {
     n: 3,
-    kicker: "Scene 03 · Automation",
-    rail: "Automation",
-    title: "Work starts moving without you.",
-    body: "AI drafts the proposal. Workflows route approvals. Contracts generate themselves. The system does the first 80% before you open your laptop.",
+    kicker: "Scene 03 · Intelligence",
+    rail: "Intelligence",
+    title: "Work starts moving\nwithout permission.",
+    body: "A proposal drafts itself. An invoice queues. A reminder schedules. The system stops waiting for you to click.",
     detail: "Your role shifts from doing to deciding.",
     accent: "#a78bfa",
     icon: Cpu,
@@ -85,21 +85,31 @@ const SCENES = [
     n: 4,
     kicker: "Scene 04 · Delivery",
     rail: "Delivery",
-    title: "Deliverables ship themselves.",
-    body: "Branded exports. Client portals. Telegram drops. Shared links. Every output leaves the system polished — without you copy-pasting into anything.",
-    detail: "The client sees a company, not a freelancer juggling tools.",
+    title: "Work leaves the\nbuilding.",
+    body: "Branded exports, portals, Telegram drops, shared links. Deliverables flow outward — the client sees a company, not a freelancer juggling tools.",
+    detail: "Outputs ship without you copy-pasting into anything.",
     accent: "#f59e0b",
     icon: Send,
   },
   {
     n: 5,
-    kicker: "Scene 05 · Outcomes",
-    rail: "Outcomes",
-    title: "Money lands. Work repeats.",
-    body: "Invoices clear. Approvals come back. Retainers renew. You never chase a payment, never re-draft a contract, never lose a thread.",
-    detail: "This is what an operating system feels like.",
+    kicker: "Scene 05 · Revenue",
+    rail: "Revenue",
+    title: "The first payment is work.\nThe second is a system.",
+    body: "Invoices clear. Approvals return. Retainers renew. Referrals compound. The loop closes itself, again and again.",
+    detail: "Businesses don't grow linearly. They compound.",
     accent: "#10b981",
-    icon: Banknote,
+    icon: RotateCcw,
+  },
+  {
+    n: 6,
+    kicker: "Scene 06 · The Reveal",
+    rail: "Reveal",
+    title: "You stopped running tasks.\nYou started running an OS.",
+    body: "Zoom out. The machine you've been watching is the same machine that will run your business at 3am, on a Sunday, in another timezone, without you.",
+    detail: "This is what an operating system feels like.",
+    accent: "#60a5fa",
+    icon: Globe2,
   },
 ] as const;
 
