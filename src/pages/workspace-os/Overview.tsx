@@ -16,6 +16,7 @@ import CockpitBlock from "@/components/workspace/CockpitBlock";
 import { OperationsOverview } from "@/components/workspace/OperationsOverview";
 import { CrossProjectTimeline } from "@/components/workspace/CrossProjectTimeline";
 import { marketingUrl } from "@/lib/host";
+import { useOperatorMode } from "@/lib/operator-mode";
 
 // Industry-grade tool tiles. Calm whites + a single tinted icon plate per
 // tool — the colour is the *signal*, not the background. Each tile answers
@@ -129,6 +130,12 @@ export default function Overview() {
   // Continue where you left off — last active project from workspace context.
   const lastActive = activeProjectId ? items.find(w => w.id === activeProjectId) : null;
 
+  // Persona-aware framing: same data, same routes — different headline so the
+  // workspace feels built for who the user is. See src/lib/operator-mode.ts.
+  const { meta: cockpitMeta } = useOperatorMode();
+  const framedTitle = cockpitMeta?.workspace?.title;
+  const framedPills = cockpitMeta?.workspace?.pills;
+
   return (
     <div className="relative space-y-10">
       {/* Operator hero — mirrors the dashboard "discovery" hero, but tuned for
@@ -148,13 +155,17 @@ export default function Overview() {
           </p>
           <h2 className="text-[34px] sm:text-[40px] leading-[1.05] font-semibold tracking-tight">
             <span className="ws-headline-sweep">
-              {items.length === 0 ? "Let's set up your first project." : "Your operations, in one place."}
+              {items.length === 0
+                ? "Let's set up your first project."
+                : (framedTitle ?? "Your operations, in one place.")}
             </span>
           </h2>
           <p className="text-sm text-muted-foreground/80 mt-3 max-w-lg leading-relaxed">
             {items.length === 0
               ? "Workspace is project-first. Add a client and everything else flows from there."
-              : <>Pick up where you left off — or press <kbd className="text-[10px] border border-border/60 rounded px-1.5 py-0.5 mx-0.5">⌘K</kbd> to jump anywhere.</>}
+              : framedPills
+                ? <>{framedPills} · press <kbd className="text-[10px] border border-border/60 rounded px-1.5 py-0.5 mx-0.5">⌘K</kbd> to jump anywhere.</>
+                : <>Pick up where you left off — or press <kbd className="text-[10px] border border-border/60 rounded px-1.5 py-0.5 mx-0.5">⌘K</kbd> to jump anywhere.</>}
           </p>
           <TrustBar provider={activeProvider} projectCount={items.length} outputCount={recentOutputs.length} />
         </div>
