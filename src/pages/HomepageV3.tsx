@@ -255,7 +255,7 @@ function MissionControl3D() {
     <section
       ref={sectionRef}
       className="relative bg-slate-950 text-white"
-      style={{ height: "560vh" }}
+      style={{ height: "680vh" }}
     >
       <div className="sticky top-0 h-screen w-full overflow-hidden">
         {/* 3D Canvas */}
@@ -293,7 +293,7 @@ function MissionControl3D() {
             <div className="hidden md:flex items-center gap-3 text-[11px] text-white/55 font-mono">
               <span className="text-white/40">Scene</span>
               <span className="text-white tabular-nums">{String(phaseLabel).padStart(2, "0")}</span>
-              <span className="text-white/40">/ 05</span>
+              <span className="text-white/40">/ 06</span>
             </div>
           </div>
 
@@ -304,7 +304,7 @@ function MissionControl3D() {
             >
               {scene.kicker}
             </div>
-            <h2 className="text-3xl md:text-6xl font-display font-semibold tracking-tight leading-[1.02]">
+            <h2 className="text-3xl md:text-6xl font-display font-semibold tracking-tight leading-[1.02] whitespace-pre-line">
               {scene.title}
             </h2>
             <p className="text-white/70 text-sm md:text-lg max-w-xl leading-relaxed">
