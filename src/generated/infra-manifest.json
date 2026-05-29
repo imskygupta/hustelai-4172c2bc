@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-29T15:01:07.626Z",
+  "generated_at": "2026-05-29T16:05:03.210Z",
   "routes": [
     {
       "path": ":slug",
@@ -366,6 +366,14 @@
       "source": "src/App.tsx",
       "type": "admin",
       "authWrapper": "AdminFeatureFlags",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/admin/homepage-variants",
+      "source": "src/App.tsx",
+      "type": "admin",
+      "authWrapper": "AdminHomepageVariants",
       "dynamic": false,
       "catchAll": false
     },
@@ -982,6 +990,46 @@
       "source": "src/App.tsx",
       "type": "public",
       "authWrapper": null,
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/homepage-2",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "HomepageV2",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/homepage-3",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "HomepageV3",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/homepage-4",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "HomepageV4",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/homepage-5",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "HomepageV5",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/homepage-6",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "HomepageV6",
       "dynamic": false,
       "catchAll": false
     },
