@@ -38,6 +38,11 @@ const AdminMissionControl = lazy(() => import("./pages/admin/MissionControl"));
 const AdminOpsHealth = lazy(() => import("./pages/admin/OpsHealth"));
 const AdminDocs = lazy(() => import("./pages/admin/AdminDocs"));
 const AdminMarketingPages = lazy(() => import("./pages/admin/MarketingPages"));
+const AdminHomepageVariants = lazy(() => import("./pages/admin/HomepageVariants"));
+const HomepageDispatcher = lazy(() => import("./components/home/variants/HomepageDispatcher"));
+const HomepageV2 = lazy(() => import("./pages/HomepageV2"));
+const HomepageV3 = lazy(() => import("./pages/HomepageV3"));
+const HomepageV4 = lazy(() => import("./pages/HomepageV4"));
 const AdminOperations = lazy(() => import("./pages/admin/Operations"));
 const AdminIncidentMode = lazy(() => import("./pages/admin/IncidentMode"));
 const AdminSecurityUsers = lazy(() => import("./pages/admin/SecurityUsers"));
@@ -377,7 +382,10 @@ function FullRuntimeApp() {
             </div>
           }>
           <Routes>
-            <Route path="/" element={<Index />} />
+            <Route path="/" element={<HomepageDispatcher />} />
+            <Route path="/homepage-2" element={<HomepageV2 />} />
+            <Route path="/homepage-3" element={<HomepageV3 />} />
+            <Route path="/homepage-4" element={<HomepageV4 />} />
             {/* SEO landing pages (public) */}
             <Route path="/freelancer-crm" element={<FreelancerCRMPage />} />
             <Route path="/ai-invoice-generator" element={<AIInvoiceGeneratorPage />} />
@@ -511,6 +519,7 @@ function FullRuntimeApp() {
             <Route path="/admin/mission-control" element={<AdminMissionControl />} />
             <Route path="/admin/ops-health" element={<AdminOpsHealth />} />
             <Route path="/admin/marketing-pages" element={<AdminMarketingPages />} />
+            <Route path="/admin/homepage-variants" element={<AdminHomepageVariants />} />
             <Route path="/admin/communications/telegram" element={<TelegramOpsCenter />} />
             <Route path="/admin/ai-jobs" element={<AdminAiJobs />} />
             <Route path="/admin/telegram" element={<TelegramOps />} />

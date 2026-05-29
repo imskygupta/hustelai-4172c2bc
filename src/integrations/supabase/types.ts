@@ -2906,6 +2906,27 @@ export type Database = {
         }
         Relationships: []
       }
+      homepage_variant_setting: {
+        Row: {
+          active_variant: string
+          id: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          active_variant?: string
+          id?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          active_variant?: string
+          id?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       hustle_roadmaps: {
         Row: {
           content: string

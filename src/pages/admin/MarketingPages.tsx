@@ -48,6 +48,13 @@ export default function MarketingPages() {
           <p className="text-muted-foreground text-sm mt-1">
             Dedicated landing pages for paid ad campaigns. Not linked from anywhere on the public site — only accessible via the URLs below.
           </p>
+          <div className="mt-3">
+            <Button asChild size="sm" variant="outline">
+              <Link to="/admin/homepage-variants">
+                Homepage Variants <ExternalLink className="w-3.5 h-3.5 ml-1" />
+              </Link>
+            </Button>
+          </div>
         </div>
 
         <div className="grid md:grid-cols-2 gap-4">
