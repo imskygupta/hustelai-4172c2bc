@@ -1408,7 +1408,12 @@ export default function HomepageV3() {
       <CinematicSection />
       <Transformation />
       <WorkflowsByAudience />
+      <WhatsInside />
+      <FreeToolsEcosystem />
+      <DocumentationPathway />
+      <BlogKnowledge />
       <ProofFeed />
+      <PricingPreview />
       <V3CTA />
       <V3Footer />
     </div>
