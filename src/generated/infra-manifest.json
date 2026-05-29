@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-26T04:56:00.147Z",
+  "generated_at": "2026-05-29T15:01:07.626Z",
   "routes": [
     {
       "path": ":slug",
@@ -2660,10 +2660,6 @@
     {
       "path": "/e12ebc337985792c33bf311baf38a834.txt",
       "kind": "verification"
-    },
-    {
-      "path": "/robots.txt",
-      "kind": "robots"
     }
   ]
 }
