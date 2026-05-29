@@ -43,6 +43,8 @@ const HomepageDispatcher = lazy(() => import("./components/home/variants/Homepag
 const HomepageV2 = lazy(() => import("./pages/HomepageV2"));
 const HomepageV3 = lazy(() => import("./pages/HomepageV3"));
 const HomepageV4 = lazy(() => import("./pages/HomepageV4"));
+const HomepageV5 = lazy(() => import("./pages/HomepageV5"));
+const HomepageV6 = lazy(() => import("./pages/HomepageV6"));
 const AdminOperations = lazy(() => import("./pages/admin/Operations"));
 const AdminIncidentMode = lazy(() => import("./pages/admin/IncidentMode"));
 const AdminSecurityUsers = lazy(() => import("./pages/admin/SecurityUsers"));
@@ -386,6 +388,8 @@ function FullRuntimeApp() {
             <Route path="/homepage-2" element={<HomepageV2 />} />
             <Route path="/homepage-3" element={<HomepageV3 />} />
             <Route path="/homepage-4" element={<HomepageV4 />} />
+            <Route path="/homepage-5" element={<HomepageV5 />} />
+            <Route path="/homepage-6" element={<HomepageV6 />} />
             {/* SEO landing pages (public) */}
             <Route path="/freelancer-crm" element={<FreelancerCRMPage />} />
             <Route path="/ai-invoice-generator" element={<AIInvoiceGeneratorPage />} />
