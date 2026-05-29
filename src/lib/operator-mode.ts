@@ -51,6 +51,17 @@ export const OPERATOR_MODES: OperatorModeMeta[] = [
       to: "/dashboard/tools/proposal-generator",
       sub: "Draft a polished proposal in under 2 minutes.",
     },
+    todaySteps: [
+      { label: "Find a client",    href: "/problem-leads" },
+      { label: "Send a proposal",  href: "/dashboard/tools/proposal-generator" },
+      { label: "Deliver the work", href: "/work" },
+      { label: "Get paid",         href: "/dashboard/tools/invoice-generator" },
+    ],
+    emptyState: {
+      title: "Get your first client",
+      cta: "/dashboard/tools/proposal-generator",
+      ctaLabel: "Start a proposal",
+    },
     modules: [
       { label: "Proposal Generator",   to: "/dashboard/tools/proposal-generator", desc: "AI-drafted client pitches" },
       { label: "Invoice Generator",    to: "/dashboard/tools/invoice-generator",  desc: "Branded GST-ready invoices" },
@@ -68,6 +79,17 @@ export const OPERATOR_MODES: OperatorModeMeta[] = [
       label: "Open the client pipeline",
       to: "/workspaces/pipeline",
       sub: "Track every deal across discovery, proposal, delivery, billed.",
+    },
+    todaySteps: [
+      { label: "Client health",  href: "/work/clients" },
+      { label: "Team workload",  href: "/workspaces" },
+      { label: "Delivery queue", href: "/dashboard/deliveries" },
+      { label: "Revenue",        href: "/workspaces/revenue" },
+    ],
+    emptyState: {
+      title: "Create your first project",
+      cta: "/workspaces",
+      ctaLabel: "Open Workspace",
     },
     modules: [
       { label: "Pipeline",        to: "/workspaces/pipeline",   desc: "Deal stages kanban" },
@@ -87,6 +109,17 @@ export const OPERATOR_MODES: OperatorModeMeta[] = [
       to: "/hustle-blueprint",
       sub: "Get a step-by-step action plan for your next income stream.",
     },
+    todaySteps: [
+      { label: "Research",  href: "/explore" },
+      { label: "Create",    href: "/faceless-content" },
+      { label: "Publish",   href: "/dashboard/tools/content-calendar" },
+      { label: "Monetize",  href: "/problem-leads" },
+    ],
+    emptyState: {
+      title: "Plan your next content sprint",
+      cta: "/hustle-blueprint",
+      ctaLabel: "Open Content OS",
+    },
     modules: [
       { label: "Hustle Blueprint",     to: "/hustle-blueprint",                desc: "7-day action plans" },
       { label: "Faceless Content",     to: "/faceless-content",                desc: "Viral storyboards" },
@@ -94,6 +127,93 @@ export const OPERATOR_MODES: OperatorModeMeta[] = [
       { label: "Knowledge Hub",        to: "/knowledge-hub",                   desc: "Save & automate prompts" },
       { label: "Lead Finder",          to: "/problem-leads",                   desc: "Social-media lead radar" },
       { label: "AI Tool Bench",        to: "/ai-tools",                        desc: "Compare AI tools" },
+    ],
+  },
+  {
+    id: "consultant",
+    label: "Consultant",
+    tagline: "Discovery → strategy → retainer",
+    primary: {
+      label: "Draft a discovery brief",
+      to: "/dashboard/tools/proposal-generator",
+      sub: "Turn a first call into a structured engagement proposal.",
+    },
+    todaySteps: [
+      { label: "Discovery",  href: "/work/clients" },
+      { label: "Strategy",   href: "/knowledge-hub" },
+      { label: "Proposal",   href: "/dashboard/tools/proposal-generator" },
+      { label: "Retainer",   href: "/dashboard/tools/contract-generator" },
+    ],
+    emptyState: {
+      title: "Land your first retainer",
+      cta: "/dashboard/tools/proposal-generator",
+      ctaLabel: "Draft a proposal",
+    },
+    modules: [
+      { label: "Proposal Generator", to: "/dashboard/tools/proposal-generator", desc: "Discovery → engagement" },
+      { label: "Contract Generator", to: "/dashboard/tools/contract-generator", desc: "Retainers & SOWs" },
+      { label: "Clients (CRM)",      to: "/work/clients",                       desc: "Engagement pipeline" },
+      { label: "Knowledge Hub",      to: "/knowledge-hub",                      desc: "Reusable frameworks" },
+      { label: "Invoice Generator",  to: "/dashboard/tools/invoice-generator",  desc: "Retainer billing" },
+      { label: "Pricing Calculator", to: "/dashboard/tools/pricing-calculator", desc: "Anchor your value" },
+    ],
+  },
+  {
+    id: "coach",
+    label: "Coach",
+    tagline: "1:1 programs & cohorts",
+    primary: {
+      label: "Draft a coaching proposal",
+      to: "/dashboard/tools/proposal-generator",
+      sub: "Package your offer for the next discovery call.",
+    },
+    todaySteps: [
+      { label: "Discovery call",  href: "/work/clients" },
+      { label: "Send program",    href: "/dashboard/tools/proposal-generator" },
+      { label: "Onboard client",  href: "/workspaces/intake" },
+      { label: "Track outcomes",  href: "/dashboard/deliveries" },
+    ],
+    emptyState: {
+      title: "Onboard your first coachee",
+      cta: "/workspaces/intake",
+      ctaLabel: "Open intake",
+    },
+    modules: [
+      { label: "Proposal Generator", to: "/dashboard/tools/proposal-generator", desc: "Package your program" },
+      { label: "Client Intake",      to: "/workspaces/intake",                  desc: "Branded onboarding" },
+      { label: "Clients (CRM)",      to: "/work/clients",                       desc: "All coachees in one place" },
+      { label: "Contract Generator", to: "/dashboard/tools/contract-generator", desc: "Program agreements" },
+      { label: "Knowledge Hub",      to: "/knowledge-hub",                      desc: "Reusable session prompts" },
+      { label: "Invoice Generator",  to: "/dashboard/tools/invoice-generator",  desc: "Program billing" },
+    ],
+  },
+  {
+    id: "operator",
+    label: "Operator",
+    tagline: "Run the whole stack",
+    primary: {
+      label: "Open the workspace",
+      to: "/workspaces",
+      sub: "Pipelines, delivery and revenue in one cockpit.",
+    },
+    todaySteps: [
+      { label: "Pipeline",     href: "/workspaces/pipeline" },
+      { label: "Delivery",     href: "/dashboard/deliveries" },
+      { label: "Revenue",      href: "/workspaces/revenue" },
+      { label: "Automations",  href: "/knowledge-hub" },
+    ],
+    emptyState: {
+      title: "Wire up your operating stack",
+      cta: "/workspaces",
+      ctaLabel: "Open Workspace",
+    },
+    modules: [
+      { label: "Pipeline",      to: "/workspaces/pipeline",   desc: "Deal stages kanban" },
+      { label: "Workspaces",    to: "/workspaces",            desc: "Per-engagement workspaces" },
+      { label: "Revenue",       to: "/workspaces/revenue",    desc: "Earnings dashboard" },
+      { label: "Clients (CRM)", to: "/work/clients",          desc: "All clients in one place" },
+      { label: "Knowledge Hub", to: "/knowledge-hub",         desc: "Prompts & automations" },
+      { label: "AI Tool Bench", to: "/ai-tools",              desc: "Compare AI tools" },
     ],
   },
   {
