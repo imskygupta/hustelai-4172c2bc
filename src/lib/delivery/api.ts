@@ -148,3 +148,32 @@ export async function listRecentDeliveries(
   }
   return rows.map(r => ({ ...r, client_name: r.client_id ? nameById.get(r.client_id) ?? null : null }));
 }
+
+/** Client profile + their delivery history. Used by /dashboard/clients/:id. */
+export async function getClientDetail(
+  ownerId: string,
+  clientId: string,
+): Promise<{
+  client: WorkClientLite | null;
+  deliveries: DeliveryRow[];
+}> {
+  const [{ data: c }, { data: d }] = await Promise.all([
+    workspaceDb
+      .from("work_clients")
+      .select("id, name, phone, email, company, delivery_count, last_delivery_at")
+      .eq("owner_id", ownerId)
+      .eq("id", clientId)
+      .maybeSingle(),
+    workspaceDb
+      .from("work_deliveries")
+      .select("id, tool_slug, channel, content_title, content_preview, client_id, created_at")
+      .eq("owner_id", ownerId)
+      .eq("client_id", clientId)
+      .order("created_at", { ascending: false })
+      .limit(200),
+  ]);
+  return {
+    client: (c as WorkClientLite) || null,
+    deliveries: (d as DeliveryRow[]) || [],
+  };
+}
