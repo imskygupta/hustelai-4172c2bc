@@ -1,334 +1,318 @@
-# V3 Mobile Polish & IA Plan
+# Universal Delivery Layer — Phase 1.5
 
-Freeze new sections on `/homepage-3`. Focus only on polish, IA, and mobile UX.  
+Foundation for "Generate → Deliver → Track" across HustleAI. WhatsApp is a launcher (wa.me, no API). Telegram is a real integration (text + PDF via existing bot). Clients reuse the existing Work Hub `work_clients` table on DB2 — no second namespace.
+
+**Explicitly NOT building:** Client Timeline UI, Clients CRM screens, Email channel, Slack, Client Portal, share analytics dashboard, custom quota logic.  
   
-  
-This is actually a good plan. I'd make only a few adjustments before giving it to Lovable.
+This is actually a very solid specification. I agree with about **90–95% of it**. The biggest win is that it keeps the Universal Delivery Layer focused and doesn't accidentally turn into a CRM project. The document correctly reuses DB2 and the existing Work Hub client model instead of creating another client namespace.
 
-### Changes I'd make
+### What I would approve immediately
 
-#### 1. Footer first, but don't duplicate code
+✅ Reuse `work_clients` in DB2  
+✅ Add `work_deliveries` table  
+✅ WhatsApp via `wa.me` (no Meta API)  
+✅ Telegram text delivery  
+✅ Telegram PDF delivery  
+✅ Universal `<Deliver />` component  
+✅ Client picker with auto-create  
+✅ Red Flag Scanner integration  
+✅ Proposal Generator integration  
+✅ Roadmap PDF integration  
+✅ Email Generator tool  
+✅ Shared quota rules with existing AI tools
 
-Add this:
-
-```text
-Do not recreate footer markup.
-
-Homepage V3 must import and render the exact production Footer component.
-
-Single source of truth only.
-
-Any future footer update should automatically appear on V3.
-
-```
-
----
-
-#### 2. Audience cards can become much more premium
-
-Instead of:
-
-```text
-2 automations active
-1 approval pending
-
-```
-
-Use mini workflow visualizations.
-
-Example Freelancer:
-
-```text
-Lead      ✓
-Proposal  ✓
-Approval  ●
-Invoice   ○
-Payment   ○
-
-───────────────
-Flow progressing
-
-```
-
-Agency:
-
-```text
-Client A  ✓
-Client B  ✓
-Client C  ●
-Client D  ○
-
-───────────────
-Multi-client workspace
-
-```
-
-This feels like a living product rather than dashboard metrics.
+Those are all aligned with where HustleAI is headed.
 
 ---
 
-#### 3. Add hover expansion on desktop
+## One thing I'd change
 
-Current cards are still a little static.
+### Don't record WhatsApp delivery immediately
 
-Add:
-
-```text
-Desktop:
-hover expands card height by ~40-60px
-
-reveals:
-- workflow summary
-- outcome statement
-- CTA
-
-Mobile:
-always visible
-no hover dependency
-
-```
-
-This is the biggest upgrade I'd make to the audience section.
-
----
-
-#### 4. Blog Hub should become a magazine
-
-Current scope is good but I'd extend it:
+Current plan:
 
 ```text
-Featured article
-
-Latest articles
-
-Popular categories
-
-Documentation guide
-
-Template spotlight
-
-View all blog posts →
-
-```
-
-Reason:
-
-You already have 29+ articles.
-
-Use them.
-
-SEO should be visible.
-
----
-
-#### 5. Docs section should feel connected
-
-Instead of:
-
-```text
-Learn the system
-
-```
-
-Rename:
-
-```text
-Start with your workflow
-
-```
-
-Example:
-
-```text
-Freelancer
-→ Client onboarding guide
-
-Creator
-→ Content production workflow
-
-Agency
-→ Multi-client operations
-
-Consultant
-→ Proposal to payment system
-
-```
-
-Much stronger positioning.
-
----
-
-#### 6. Mobile Hero Audit (missing)
-
-This is actually more important than spacing.
-
-Add:
-
-```text
-Mobile hero audit
-
-Current desktop typography scales poorly.
-
-Requirements:
-
-- max 3 lines per headline
-- no orphan words
-- CTA visible without scrolling
-- audience section visible quickly
-- avoid excessive vertical whitespace
-
-```
-
----
-
-#### 7. Mission Control Mobile
-
-I would completely skip the 3D scene on mobile.
-
-Not fallback 3D.
-
-Not reduced 3D.
-
-Not simplified 3D.
-
-Replace with:
-
-```text
-Animated SVG workflow
-
-Lead
+User clicks WhatsApp
 ↓
-Proposal
-↓
-Approval
-↓
-Invoice
-↓
-Payment
-
-with subtle GSAP motion
+deliver-record fires
 
 ```
 
-Mobile users won't sit through a cinematic sequence.
+Problem:
 
-They want understanding in 5 seconds.
+```text
+User clicks
+↓
+WhatsApp opens
+↓
+User never sends
+
+```
+
+You still recorded a delivery.
+
+Instead:
+
+```text
+User clicks WhatsApp
+↓
+Create pending delivery
+↓
+Open wa.me
+↓
+Mark channel=whatsapp_opened
+
+```
+
+Later you can distinguish:
+
+```text
+telegram_sent
+telegram_pdf_sent
+whatsapp_opened
+saved_to_client
+
+```
+
+Much cleaner analytics.
 
 ---
 
-### One additional section I'd add
+## Email Generator is worth building
 
-Between Audience Cards and Blog:
+You mentioned:
+
+> we do not have email generator
+
+I think it's one of the easiest wins on the platform.
+
+Templates I'd add:
 
 ```text
-What actually happens inside HustleAI?
+Client Follow-up
+Proposal Follow-up
+Invoice Reminder
+Welcome Email
+Project Completion
+Revision Request
+Cold Outreach
+Partnership Pitch
 
 ```
 
-4 horizontal cards:
+Those are used constantly.
+
+And because Deliver exists:
 
 ```text
-Capture
-Everything enters one place
-
-Think
-AI drafts, researches and organizes
-
-Deliver
-Exports, portals, approvals
-
-Earn
-Invoices, payments, retention
+Generate Email
+↓
+Copy
+↓
+WhatsApp
+↓
+Telegram
+↓
+Save to Client
 
 ```
 
-Very small section.
-
-Very high clarity.
+The tool immediately has value.
 
 ---
 
-### Final Version I'd Send
+## Future-proof naming
 
-Keep your plan.
-
-Add:
+I would avoid:
 
 ```text
-8. Mobile hero audit
-9. Desktop hover expansion for audience cards
-10. Replace mobile Mission Control with lightweight SVG workflow
-11. Blog hub includes Template Spotlight
-12. Docs section renamed "Start with your workflow"
-13. Use production Footer component directly
-14. Add lightweight "What actually happens inside HustleAI?" clarity strip
+deliver-record
+deliver-telegram
+deliver-telegram-pdf
 
 ```
 
-After those changes, `/homepage-3` is getting close to something you could realistically make the default homepage and put behind the "Preview ✨" banner without it feeling experimental anymore.
+and think in terms of channels:
 
-## Scope (in order)
+```text
+delivery-events
+delivery-whatsapp
+delivery-telegram
 
-### 1. Footer parity with production
+```
 
-- Audit production Footer (`src/components/Footer.tsx` or equivalent used by `Index.tsx`) and reuse the **same** component on V3 instead of the custom V3 footer.
-- Guarantee links: Pricing, Free Tools, Docs, Blog, Templates, About, Contact, Privacy, Terms, Cookie, Refund, Security, Status, Sitemap, Newsletter signup, Social.
-- Desktop: 4–6 column grid. Mobile: collapsible accordion groups (Radix Accordion, single-open).
+because later you'll probably add:
 
-### 2. Mobile navbar redesign (V3 only)
+```text
+Email
+Client Portal
+Shared Link
+Slack
 
-- Floating sticky capsule at top with: logo, "Preview ✨" badge, primary CTA always visible, hamburger.
-- Hamburger sheet contains: Pricing, Docs, Blog, Free Tools, Search, Sign in.
-- Desktop nav unchanged.
-- Implementation: extend existing `Navbar` with a `variant="v3-mobile"` branch, or new `NavbarV3Mobile` rendered only below `md`.
+```
 
-### 3. Audience card depth (`WhoItsFor` section)
+and you won't want Telegram-specific architecture everywhere.
 
-- Already has progress dots — add:
-  - "2 automations active" line
-  - "1 approval pending" line
-  - tiny horizontal timeline strip beneath the step list
-- Derive counts from existing `AUDIENCES` data (`active` index + steps length). No fake metrics.
+---
 
-### 4. Mobile spacing audit
+## Biggest product insight
 
-- Reduce on `< md`: card padding (p-6 → p-4), icon size (w-10 → w-8), heading margin-bottom, workflow row height (py-1.5 → py-1), heading clamp.
-- Verify with viewport 412×915 (Galaxy S23) screenshot.
+The most valuable part of this entire feature is NOT WhatsApp.
 
-### 5. Blog hub expansion
+It's this:
 
-- Replace flat list with: 1 featured (latest), 4 latest in a 2×2 grid, popular-category chips, "Read the docs" link card.
-- Pull from existing blog client (`@/integrations/blog/latest`).
-- Inspiration: Linear/Stripe/Framer editorial layout.
+```text
+Client enters system
+↓
+Proposal delivered
+↓
+Invoice delivered
+↓
+Research delivered
+↓
+Roadmap delivered
 
-### 6. "Learn the system" docs section (new lightweight block, not a new feature)
+```
 
-- Cards mapping audience → guide: Freelancer→Client onboarding, Agency→Team workflows, Creator→Content workflows, Coach→Booking flow.
-- Pull doc slugs from `src/integrations/docs/client.ts` if available; otherwise hardcode known doc routes.
-- Sits between Audience grid and Blog.
+Now you automatically have:
 
-### 7. Mobile performance audit
+```text
+Client history
 
-- Confirm `MissionControlScene` (R3F) is gated: `useIsMobile()` → render static fallback, no Three import on mobile.
-- Lazy-import all heavy sections via `React.lazy` with `Suspense`.
-- Kill any GSAP timelines whose ScrollTrigger target is `display:none` on mobile.
-- Spot-check with `browser--performance_profile` at 412×915 after build.
+```
 
-## Explicitly out of scope
+without ever building a CRM.
 
-Testimonials, partner logos, customer counts, trust claims, new feature sections, percentage rollout, analytics dashboard.
+That's where the magic is.
 
-## Files likely touched
+---
 
-- `src/pages/HomepageV3.tsx` (footer swap, spacing, card depth, blog hub, docs section)
-- `src/components/Footer.tsx` (verify reusability)
-- `src/components/Navbar.tsx` or new `src/components/home/NavbarV3Mobile.tsx`
-- `src/components/home/MissionControlScene*.tsx` (mobile gating verification)
-- No DB migrations, no new tables, no new edge functions.
+## What I'd tell Lovable
 
-## Verification
+**Proceed with this spec almost exactly as written.**
 
-- Browser at 412×915 (mobile) + 1280×720 (desktop) after each priority.
-- Console clean of new errors. CSP/log-event 400s are pre-existing and out of scope.
+Only add:
 
-Shipping order: 1 → 2 → 4 → 3 → 5 → 6 → 7 (footer + nav first because they unblock everything else; perf audit last so it covers final bundle).
+1. WhatsApp deliveries recorded as `whatsapp_opened` rather than assumed sent.
+2. Email Generator gets added to Tools Hub.
+3. Reuse existing AI quotas (same semi-free limits as other AI tools).
+4. Keep everything in DB2 / Work Hub.
+5. Reuse existing `work_clients`; do not create another clients table.
+
+After this ships, stop. Don't build Client Timeline, CRM screens, analytics dashboards, or portal delivery yet. Collect delivery data first and let the feature prove itself. The foundation is the correct size for a Phase 1.5 rollout.
+
+---
+
+## 1. Data model (DB2 / workspace, `utflzmecghdtcjupgdan`)
+
+Reuse `work_clients` as-is (id, owner_id, name, email, phone, company). Add two columns + one new table:
+
+```sql
+alter table public.work_clients
+  add column if not exists last_delivery_at timestamptz,
+  add column if not exists delivery_count   int not null default 0;
+
+create table if not exists public.work_deliveries (
+  id uuid primary key default gen_random_uuid(),
+  owner_id uuid not null,
+  client_id uuid references public.work_clients(id) on delete set null,
+  tool_slug text not null,            -- 'red-flag-scanner', 'proposal-generator', 'email-generator', 'roadmap-pdf', ...
+  channel text not null,              -- 'whatsapp' | 'telegram' | 'telegram-pdf' | 'copy'
+  content_title text,
+  content_preview text,               -- first 280 chars
+  ref_kind text,                      -- 'pdf' | 'text' | 'output'
+  ref_id text,                        -- workspace_outputs.id or storage key
+  created_at timestamptz not null default now()
+);
+create index if not exists idx_work_deliveries_owner on public.work_deliveries(owner_id, created_at desc);
+create index if not exists idx_work_deliveries_client on public.work_deliveries(client_id, created_at desc);
+```
+
+GRANTs follow the same `anon_all` pattern used by other `work_*` tables (RLS scoped by `owner_id` from app). Append-only.
+
+## 2. Edge functions
+
+- `**deliver-record**` (verify_jwt=true): validates payload, upserts client by `(owner_id, phone|email)` if new, increments `delivery_count`/`last_delivery_at`, inserts `work_deliveries` row via `getWorkspace()` service client. Returns `{ client_id, delivery_id }`.
+- `**deliver-telegram**` (verify_jwt=true): sends text to user's own connected Telegram chat. Reuses `notification_integrations` lookup pattern from `useTelegramConnection`. Calls `deliver-record` internally.
+- `**deliver-telegram-pdf**` (verify_jwt=true): accepts either a public URL or a base64 PDF blob; uploads via Telegram `sendDocument` through the Telegram connector gateway. Records delivery.
+
+WhatsApp is pure client-side `wa.me` — no edge function for sending, but `deliver-record` is still called when the user confirms "Opened in WhatsApp".
+
+## 3. Universal `<Deliver />` component
+
+Single React component used by all generators.
+
+```text
+[ Copy ] [ Deliver ▾ ]
+            ├─ WhatsApp Client
+            ├─ Send to Telegram
+            ├─ Send PDF to Telegram   (only if pdf prop provided)
+            └─ Save to Client
+```
+
+Props:
+
+```ts
+type DeliverProps = {
+  toolSlug: string;
+  title: string;
+  text: string;                    // plain text payload for WA/Telegram
+  pdf?: { url?: string; blob?: Blob; filename: string };
+  defaultClientId?: string;
+};
+```
+
+Behavior:
+
+- **Client picker first** — searchable dropdown of existing `work_clients` (name/phone/company). "+ New client" inline form (name + WhatsApp number; email/company optional). New client is created on first deliver, then sticky in dropdown.
+- **WhatsApp**: builds `https://wa.me/<digits>?text=<encoded text+signature>`, opens in new tab, fires `deliver-record` on click.
+- **Telegram (text)**: calls `deliver-telegram`. If user has no Telegram connection, shows inline "Connect Telegram" CTA linking to `/settings/telegram`.
+- **Telegram (PDF)**: only renders if `pdf` prop supplied. Uploads blob → `deliver-telegram-pdf`.
+- **Save to Client**: skips channel, just records a delivery with `channel='copy'` so the client gets logged.
+
+Location: `src/components/delivery/Deliver.tsx` + `useClientPicker.ts` + `useDeliver.ts`.
+
+## 4. Wiring (this pass)
+
+Mount `<Deliver />` in:
+
+- **Red Flag Scanner** (`src/pages/RedFlagScanner.tsx`) — text output.
+- **Proposal Generator** — text + PDF (uses existing PDF export path; pass blob).
+- **Email Generator** — NEW lightweight tool (see §5) — text only.
+- **Roadmap PDF viewer** — PDF channel only.
+
+All other generators get `<Deliver />` in later passes — out of scope here.
+
+## 5. New tool: Email Generator (`/tools/email-generator`)
+
+Lightweight. Reuses existing AI quota middleware — no new gating logic.
+
+- Template chips: Follow-up · Proposal · Invoice reminder · Welcome · Project completion · Cold outreach
+- Single textarea: "Describe the situation"
+- Tone selector: Friendly · Formal · Direct
+- Generates subject + body via Lovable AI Gateway (default: `google/gemini-2.5-flash`).
+- Output card uses `<Deliver toolSlug="email-generator" />`.
+- Added to `ToolsHub.tsx` grid.
+
+## 6. Memory updates
+
+After ship: add `mem://features/delivery-layer.md` documenting the contract (component API, channel list, DB2 location, client-reuse rule) so future generators know to mount `<Deliver />` instead of inventing their own share buttons.
+
+---
+
+## Technical notes
+
+- Phone normalization: strip non-digits, prepend country code default `91` if missing leading `+`. Stored as digits-only on `work_clients.phone`.
+- Client dedupe on insert: match by `(owner_id, phone)` first, then `(owner_id, lower(email))`.
+- Telegram PDF size cap: 50 MB (Telegram limit) — show toast if larger.
+- All deliveries scoped by `owner_id` from `auth.uid()` in the edge function; frontend never trusts the client's `owner_id` field.
+- No new env vars. Uses existing `TELEGRAM_API_KEY` / `LOVABLE_API_KEY` + `WORKSPACE_SUPABASE_SERVICE_ROLE_KEY`.
+
+## Shipping order
+
+1. Migration (work_clients alter + work_deliveries).
+2. Edge functions: `deliver-record`, `deliver-telegram`, `deliver-telegram-pdf`.
+3. `<Deliver />` component + client picker.
+4. Wire into Red Flag Scanner + Proposal Generator + Roadmap PDF.
+5. Build Email Generator + add to ToolsHub.
+6. Save memory file.
