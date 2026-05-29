@@ -1012,15 +1012,16 @@ const INSIDE_TILES: {
   tint: string;
   href: string;
   badge?: string;
+  external?: boolean;
 }[] = [
-  { label: "AI Workspace",     desc: "One desk for client work, drafts, and async tasks.",                icon: Bot,         span: "md:col-span-3 md:row-span-2", tint: "#FF7A45", href: "/workspace-portal" },
-  { label: "Client Portal",    desc: "Branded space where decisions get signed and archived.",            icon: Users,       span: "md:col-span-3 md:row-span-1", tint: "#FFB37A", href: "/client" },
+  { label: "AI Workspace",     desc: "One desk for client work, drafts, and async tasks.",                icon: Bot,         span: "md:col-span-3 md:row-span-2", tint: "#FF7A45", href: "https://workspace.hustlaiapp.in", external: true },
+  { label: "Client Portal",    desc: "Branded space where decisions get signed and archived.",            icon: Users,       span: "md:col-span-3 md:row-span-1", tint: "#FFB37A", href: "https://workspace.hustlaiapp.in/client", external: true },
   { label: "Proposal Engine",  desc: "Polished proposals in 5 seconds. Brand applied.",                  icon: FileText,    span: "md:col-span-2 md:row-span-1", tint: "#FF7A45", href: "/tools/proposal-generator" },
   { label: "Invoice Engine",   desc: "GST-ready, multi-currency, paid in one click.",                    icon: Receipt,     span: "md:col-span-2 md:row-span-1", tint: "#FFE27A", href: "/tools/invoice-generator" },
-  { label: "Telegram Delivery",desc: "Every deliverable can drop straight into a chat.",                 icon: Send, span: "md:col-span-2 md:row-span-1", tint: "#E8DFF3", href: "/marketing/telegram-landing" },
+  { label: "Telegram Delivery",desc: "Every deliverable can drop straight into a chat.",                 icon: Send, span: "md:col-span-2 md:row-span-1", tint: "#E8DFF3", href: "/onboarding" },
   { label: "Documents",        desc: "Contracts, NDAs, briefs — versioned and signable.",                icon: FileCheck2,  span: "md:col-span-2 md:row-span-1", tint: "#1A1A1F", href: "/tools/contract-generator" },
-  { label: "Knowledge Base",   desc: "Your prompts, SOPs and templates in one library.",                 icon: BookOpen,    span: "md:col-span-2 md:row-span-1", tint: "#FFB37A", href: "/docs" },
-  { label: "Workflow OS",      desc: "Sequences that move work forward while you're offline.",           icon: Layers,      span: "md:col-span-3 md:row-span-1", tint: "#FF7A45", href: "/dashboard/automations" },
+  { label: "Knowledge Base",   desc: "Your prompts, SOPs and templates in one library.",                 icon: BookOpen,    span: "md:col-span-2 md:row-span-1", tint: "#FFB37A", href: "https://docs.hustlaiapp.in/", external: true },
+  { label: "Workflow OS",      desc: "Sequences that move work forward while you're offline.",           icon: Layers,      span: "md:col-span-3 md:row-span-1", tint: "#FF7A45", href: "https://workspace.hustlaiapp.in", external: true },
   { label: "AI Tools",         desc: "12+ AI utilities for content, pricing, research and ops.",         icon: Sparkles,    span: "md:col-span-3 md:row-span-1", tint: "#FFE27A", href: "/tools" },
 ];
 
