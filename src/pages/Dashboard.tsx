@@ -17,6 +17,7 @@ import WorkflowMomentum from "@/components/activation/WorkflowMomentum";
 import ResumeWorkflowCard from "@/components/activation/ResumeWorkflowCard";
 import ContinuityRail from "@/components/workspace/ContinuityRail";
 import AdaptiveCockpit from "@/components/dashboard/AdaptiveCockpit";
+import TodayCockpit from "@/components/dashboard/TodayCockpit";
 import OperationalFlows from "@/components/dashboard/OperationalFlows";
 import ContextualNudge from "@/components/dashboard/ContextualNudge";
 import DashboardHero from "@/components/dashboard/DashboardHero";
@@ -261,6 +262,9 @@ export default function Dashboard() {
 
         {/* Calm one-line orientation for new users — auto-hides after first project. */}
         <FirstVisitWelcome />
+
+        {/* TODAY — hero cockpit. Answers "what should I do next?" per persona. */}
+        <TodayCockpit />
 
         {/* Emotional entrypoint — sells possibility, sets the calm tone. */}
         <DashboardHero />
