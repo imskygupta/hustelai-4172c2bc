@@ -29,6 +29,34 @@ export interface EmptyStateMeta {
   ctaLabel?: string;
 }
 
+/**
+ * Persona-aware framing for the Workspace landing surface. Same routes, same
+ * data — just a different title/tagline so the user feels the workspace was
+ * built for them.
+ */
+export interface WorkspaceFraming {
+  /** Big workspace headline (replaces "Your operations, in one place."). */
+  title: string;
+  /** One-line subtitle / domain pills (e.g. "Clients • Team • Delivery • Revenue"). */
+  pills: string;
+  /** Primary dashboard CTA label (e.g. "Open Agency Workspace"). */
+  dashboardCtaLabel: string;
+  /** Where the dashboard CTA leads. */
+  dashboardCtaHref: string;
+}
+
+/**
+ * Dashboard widget IDs that the adaptive stack can reorder. Keep this list in
+ * sync with the renderer map in `src/pages/Dashboard.tsx`.
+ */
+export type DashboardWidgetId =
+  | "operations"   // OperationsTodayCard
+  | "clients"     // ClientsHeadlineCard
+  | "activity"    // RecentClientActivityFeed
+  | "portal"      // WorkspacePortalTile
+  | "hero"        // DashboardHero (emotional entrypoint)
+  | "resume";     // (placeholder — Resume Workflow Card if present)
+
 export interface OperatorModeMeta {
   id: OperatorMode;
   label: string;
@@ -39,6 +67,10 @@ export interface OperatorModeMeta {
   todaySteps?: TodayStep[];
   /** Persona-aware empty state used across the product. */
   emptyState?: EmptyStateMeta;
+  /** Adaptive dashboard widget order. Unknown widgets render in default order at the end. */
+  widgetOrder?: DashboardWidgetId[];
+  /** Persona-aware framing for the Workspace landing surface. */
+  workspace?: WorkspaceFraming;
 }
 
 export const OPERATOR_MODES: OperatorModeMeta[] = [
