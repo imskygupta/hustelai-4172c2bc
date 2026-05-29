@@ -271,7 +271,7 @@ function V3Nav() {
 // ---------- 2. Hero ----------
 function Hero() {
   return (
-    <section className="relative pt-32 md:pt-40 pb-16 md:pb-24 px-4 overflow-hidden">
+    <section className="relative pt-24 md:pt-40 pb-12 md:pb-24 px-4 overflow-hidden">
       {/* warm sunrise glow */}
       <div className="absolute inset-x-0 top-0 h-[600px] -z-10 opacity-80 pointer-events-none"
            style={{
@@ -279,20 +279,21 @@ function Hero() {
                "radial-gradient(60% 60% at 50% 0%, rgba(255,179,122,0.55) 0%, rgba(255,226,122,0.25) 40%, transparent 75%)",
            }} />
       <div className="container mx-auto max-w-5xl text-center">
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[#1A1A1F]/10 bg-white/60 backdrop-blur text-[11px] uppercase tracking-[0.18em] font-semibold text-[#1A1A1F]/70 mb-6">
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[#1A1A1F]/10 bg-white/60 backdrop-blur text-[10px] md:text-[11px] uppercase tracking-[0.18em] font-semibold text-[#1A1A1F]/70 mb-4 md:mb-6">
           <Sparkles className="w-3.5 h-3.5 text-[#FF7A45]" />
-          The operating system for independent businesses
+          <span className="hidden sm:inline">The operating system for independent businesses</span>
+          <span className="sm:hidden">Operating system for indie businesses</span>
         </div>
         <RevealHeading
           as="h1"
           text="Your business, running quietly in the background."
-          className="font-display font-semibold tracking-tight text-[#1A1A1F] text-4xl md:text-7xl leading-[1.02] max-w-4xl mx-auto"
+          className="font-display font-semibold tracking-tight text-[#1A1A1F] text-[2.25rem] sm:text-5xl md:text-7xl leading-[1.05] md:leading-[1.02] max-w-[18ch] sm:max-w-3xl md:max-w-4xl mx-auto text-balance"
         />
-        <p className="mt-6 text-[#1A1A1F]/65 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
+        <p className="mt-4 md:mt-6 text-[#1A1A1F]/65 text-[15px] md:text-xl max-w-xl md:max-w-2xl mx-auto leading-relaxed">
           HustleAI is the operating system for freelancers, creators, consultants
           and small agencies — so client work moves forward even when you don't.
         </p>
-        <div className="mt-8 flex items-center justify-center gap-3">
+        <div className="mt-6 md:mt-8 flex items-center justify-center gap-3">
           <Button
             size="lg"
             className="bg-[#1A1A1F] hover:bg-[#FF7A45] text-white rounded-full px-6 h-12 text-[14px] font-semibold"
