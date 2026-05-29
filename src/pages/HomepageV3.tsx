@@ -1729,6 +1729,7 @@ export default function HomepageV3() {
       <V3Nav />
       <Hero />
       <WhoItsFor />
+      <ClarityStrip />
       <ProblemEmotion />
       <CinematicSection />
       <Transformation />
@@ -1740,7 +1741,7 @@ export default function HomepageV3() {
       <ProofFeed />
       <PricingPreview />
       <V3CTA />
-      <V3Footer />
+      <Footer />
       <HomepageExperienceToggle variant="v3" />
     </div>
   );
