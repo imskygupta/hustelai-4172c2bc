@@ -113,3 +113,38 @@ export async function listWorkClients(ownerId: string): Promise<WorkClientLite[]
     .limit(50);
   return (data as WorkClientLite[]) || [];
 }
+
+export type DeliveryRow = {
+  id: string;
+  tool_slug: string;
+  channel: string;
+  content_title: string | null;
+  content_preview: string | null;
+  client_id: string | null;
+  created_at: string;
+};
+
+/** Recent deliveries for the current owner, joined with client name in-memory. */
+export async function listRecentDeliveries(
+  ownerId: string,
+  limit = 100,
+): Promise<Array<DeliveryRow & { client_name: string | null }>> {
+  const { data: deliveries } = await workspaceDb
+    .from("work_deliveries")
+    .select("id, tool_slug, channel, content_title, content_preview, client_id, created_at")
+    .eq("owner_id", ownerId)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  const rows = (deliveries as DeliveryRow[]) || [];
+  if (rows.length === 0) return [];
+  const ids = Array.from(new Set(rows.map(r => r.client_id).filter(Boolean) as string[]));
+  let nameById = new Map<string, string>();
+  if (ids.length) {
+    const { data: clients } = await workspaceDb
+      .from("work_clients")
+      .select("id, name")
+      .in("id", ids);
+    nameById = new Map(((clients as Array<{ id: string; name: string }>) || []).map(c => [c.id, c.name]));
+  }
+  return rows.map(r => ({ ...r, client_name: r.client_id ? nameById.get(r.client_id) ?? null : null }));
+}

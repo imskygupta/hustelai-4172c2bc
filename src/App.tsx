@@ -150,6 +150,7 @@ import ToolsHubWS from "./pages/workspace-os/ToolsHub";
 import IntakeSubmit from "./pages/IntakeSubmit";
 import OperationsHub from "./pages/dashboard/OperationsHub";
 import AutomationsHub from "./pages/dashboard/AutomationsHub";
+import Deliveries from "./pages/dashboard/Deliveries";
 import OperationsPreview from "./pages/dashboard/OperationsPreview";
 import IntakePreview from "./pages/IntakePreview";
 import Work from "./pages/Work";
@@ -486,6 +487,7 @@ function FullRuntimeApp() {
             {/* Operational backbone — workspace ops + outcome-first automations */}
             <Route path="/dashboard/workspace-os" element={Shelled(<OperationsHub />)} />
             <Route path="/dashboard/automations" element={Shelled(<AutomationsHub />)} />
+            <Route path="/dashboard/deliveries" element={Shelled(<Deliveries />)} />
             {/* Boosts canonical location moved into /settings/wallet — keep old path redirecting */}
             <Route path="/dashboard/workspace-os/boosts" element={<Navigate to="/settings/wallet" replace />} />
             <Route path="/dashboard/workspace-os/preview/:module" element={Shelled(<OperationsPreview />)} />

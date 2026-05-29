@@ -66,6 +66,25 @@ export function ClientPickerDialog({
 
         {!creating && (
           <>
+            {clients.length > 0 && (
+              <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
+                <span className="text-[10px] uppercase tracking-wider text-muted-foreground/70 mr-1">Recent</span>
+                {clients.slice(0, 3).map((c) => (
+                  <button
+                    key={`recent-${c.id}`}
+                    type="button"
+                    onClick={() => onPicked({
+                      id: c.id, name: c.name,
+                      phone: c.phone || undefined, email: c.email || undefined, company: c.company || undefined,
+                    })}
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 hover:bg-emerald-100 border border-emerald-200/60 text-[11px] text-emerald-800"
+                  >
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                    <span className="truncate max-w-[120px]">{c.name}</span>
+                  </button>
+                ))}
+              </div>
+            )}
             <div className="relative">
               <Search className="absolute left-2.5 top-2.5 w-4 h-4 text-muted-foreground" />
               <Input

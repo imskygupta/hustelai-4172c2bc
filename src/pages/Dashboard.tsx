@@ -20,6 +20,7 @@ import AdaptiveCockpit from "@/components/dashboard/AdaptiveCockpit";
 import OperationalFlows from "@/components/dashboard/OperationalFlows";
 import ContextualNudge from "@/components/dashboard/ContextualNudge";
 import DashboardHero from "@/components/dashboard/DashboardHero";
+import OperationsTodayCard from "@/components/dashboard/OperationsTodayCard";
 import WorkspacePortalTile from "@/components/dashboard/WorkspacePortalTile";
 import FirstVisitWelcome from "@/components/onboarding/FirstVisitWelcome";
 import PostExportTelegramNudge from "@/components/onboarding/PostExportTelegramNudge";
@@ -261,6 +262,10 @@ export default function Dashboard() {
 
         {/* Emotional entrypoint — sells possibility, sets the calm tone. */}
         <DashboardHero />
+
+        {/* Operations layer — reinforces "OS, not generator collection" framing.
+            Counts pull live from DB2 work_deliveries + work_clients. */}
+        <OperationsTodayCard />
 
         {/* Cinematic portal into the execution OS — opens workspace in a new tab. */}
         <WorkspacePortalTile />
