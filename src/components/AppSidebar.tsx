@@ -19,7 +19,7 @@ const workspaceOsItems = [
   { title: "Workspaces", url: "/workspaces", icon: Building2 },
   { title: "Work Hub", url: "/work", icon: Hammer },
   { title: "Clients (CRM)", url: "/work/clients", icon: Users },
-  { title: "Deliveries", url: "/dashboard/deliveries", icon: SendIcon },
+  { title: "Client Activity", url: "/dashboard/deliveries", icon: SendIcon },
   { title: "Documents", url: "/workspaces/blocks", icon: FileText },
   { title: "Hustle Canvas", url: "/canvas", icon: LayoutGrid },
 ];

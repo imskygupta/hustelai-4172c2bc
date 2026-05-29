@@ -242,6 +242,12 @@ export function Deliver({ toolSlug, title, text, pdf, pdfFactory, className = ""
                 Open {lastDelivery.clientName || "client"} <ArrowRight className="w-3 h-3" />
               </Link>
             )}
+            <Link
+              to="/dashboard/deliveries"
+              className="inline-flex items-center gap-0.5 text-emerald-700 hover:text-emerald-900 hover:underline"
+            >
+              View timeline <ArrowRight className="w-3 h-3" />
+            </Link>
           </span>
         )}
       </div>
