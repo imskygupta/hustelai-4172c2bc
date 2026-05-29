@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 /**
  * Operator Mode = role-based entry into the workspace.
@@ -12,7 +13,21 @@ export type OperatorMode =
   | "freelancer"   // get + manage clients
   | "agency"       // run agency ops
   | "creator"      // grow content/income streams
+  | "consultant"   // discovery → strategy → retainer
+  | "coach"        // 1:1 coaching ops (consultant-aligned for v1)
+  | "operator"     // generalist operator (agency-aligned for v1)
   | "explorer";    // browse all tools
+
+export interface TodayStep {
+  label: string;
+  href: string;
+}
+
+export interface EmptyStateMeta {
+  title: string;
+  cta: string;
+  ctaLabel?: string;
+}
 
 export interface OperatorModeMeta {
   id: OperatorMode;
@@ -20,6 +35,10 @@ export interface OperatorModeMeta {
   tagline: string;
   primary: { label: string; to: string; sub: string };
   modules: { label: string; to: string; desc: string }[];
+  /** 4-step "TODAY" answer to "what should I do next?" — rendered in the hero. */
+  todaySteps?: TodayStep[];
+  /** Persona-aware empty state used across the product. */
+  emptyState?: EmptyStateMeta;
 }
 
 export const OPERATOR_MODES: OperatorModeMeta[] = [
