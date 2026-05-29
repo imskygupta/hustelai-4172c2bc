@@ -22,6 +22,7 @@ import { printWithMeta, watermarkModeForTier } from "@/lib/tools/print-meta";
 import { continueWorkflow } from "@/lib/nextActions/continueWorkflow";
 import { emitDelight, pickDelight, bumpDelightCount } from "@/lib/delight-bus";
 import { Deliver } from "@/components/delivery/Deliver";
+import { buildTextPdfBlob } from "@/lib/delivery/pdf-from-text";
 
 const STORAGE_KEY = "hustleai-tool-proposal-v1";
 
