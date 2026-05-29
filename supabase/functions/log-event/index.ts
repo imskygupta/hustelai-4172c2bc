@@ -25,6 +25,8 @@ const ALLOWED_CATEGORIES = new Set([
   "ui",
   "system",
   "provider",
+  "ui_experiment",
+  "homepage_experiment",
 ]);
 
 Deno.serve(async (req) => {
