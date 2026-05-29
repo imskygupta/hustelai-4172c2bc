@@ -1,560 +1,334 @@
-# V3 Rebuild — "Mission Control" → "Calm Operating System"
+# V3 Mobile Polish & IA Plan
 
-V3 today reads as a dark, technical architecture diagram. We are rebuilding it as a bright, editorial, Awwwards-style marketing experience where the **user is the center**, not the workflow graph. The cinematic 3D scene becomes one moment inside a larger narrative, not the whole page.
-
-This is a full rebuild of `/homepage-3`. V1, V2, V4–V6 are untouched.  
+Freeze new sections on `/homepage-3`. Focus only on polish, IA, and mobile UX.  
   
   
-This is **dramatically better than the previous direction**.
+This is actually a good plan. I'd make only a few adjustments before giving it to Lovable.
 
-The biggest improvement is that whoever wrote this finally understood:
+### Changes I'd make
 
-> **Homepage ≠ Product demo**
->
-> Homepage = Positioning → Emotion → Understanding → Desire → Product
+#### 1. Footer first, but don't duplicate code
 
-I would score it:
+Add this:
 
+```text
+Do not recreate footer markup.
 
-| Area                   | Previous V3 | This Plan |
-| ---------------------- | ----------- | --------- |
-| Visual direction       | 6/10        | 9/10      |
-| Marketing clarity      | 4/10        | 9/10      |
-| Conversion potential   | 5/10        | 8.5/10    |
-| Emotional storytelling | 3/10        | 9/10      |
-| Awwwards potential     | 5/10        | 8/10      |
+Homepage V3 must import and render the exact production Footer component.
 
+Single source of truth only.
 
-&nbsp;
+Any future footer update should automatically appear on V3.
+
+```
 
 ---
 
-# What I love
+#### 2. Audience cards can become much more premium
 
-## 1. Bright theme
-
-This is probably the biggest win.
-
-Current V3 feels like:
+Instead of:
 
 ```text
-Dev tool
-Dashboard
-Infrastructure product
+2 automations active
+1 approval pending
 
 ```
 
-The new direction feels like:
+Use mini workflow visualizations.
+
+Example Freelancer:
 
 ```text
-Creative operating system
-Modern productivity platform
-Future-of-work software
+Lead      ✓
+Proposal  ✓
+Approval  ●
+Invoice   ○
+Payment   ○
+
+───────────────
+Flow progressing
 
 ```
 
-For your audience:
+Agency:
 
-- freelancers
-- creators
-- consultants
-- agency owners
-- operators
+```text
+Client A  ✓
+Client B  ✓
+Client C  ●
+Client D  ○
 
-Bright beats dark.
+───────────────
+Multi-client workspace
 
-Almost every modern SaaS winner is moving toward:
+```
 
-- cream
-- warm white
-- peach
-- soft gradients
-
-rather than:
-
-- black
-- cyan
-- terminal green
+This feels like a living product rather than dashboard metrics.
 
 ---
 
-## 2. Cinematic section moved to the middle
+#### 3. Add hover expansion on desktop
 
-This is exactly right.
+Current cards are still a little static.
 
-Currently:
+Add:
 
 ```text
-Visitor lands
-↓
-Gets attacked by workflow graph
+Desktop:
+hover expands card height by ~40-60px
+
+reveals:
+- workflow summary
+- outcome statement
+- CTA
+
+Mobile:
+always visible
+no hover dependency
 
 ```
 
-Nobody cares yet.
-
-The visitor first wants:
-
-```text
-What is this?
-Who is it for?
-Why should I care?
-
-```
-
-Then:
-
-```text
-Show me the magic
-
-```
-
-The new architecture solves this.
+This is the biggest upgrade I'd make to the audience section.
 
 ---
 
-## 3. Audience segmentation
+#### 4. Blog Hub should become a magazine
 
-This is huge.
-
-Currently HustleAI talks mostly to:
+Current scope is good but I'd extend it:
 
 ```text
-Freelancers
+Featured article
+
+Latest articles
+
+Popular categories
+
+Documentation guide
+
+Template spotlight
+
+View all blog posts →
 
 ```
 
-But you actually built tools useful for:
+Reason:
 
-```text
-Creators
-Consultants
-Coaches
-Agencies
-Operators
-Founders
+You already have 29+ articles.
 
-```
+Use them.
 
-Those audience cards will make people self-identify.
-
-That's one of the highest-converting patterns in SaaS.
+SEO should be visible.
 
 ---
 
-## 4. Problem → Emotion → Relief
+#### 5. Docs section should feel connected
 
-This is the strongest section in the document.
-
-These headlines:
+Instead of:
 
 ```text
-Stop remembering everything.
-Stop chasing approvals.
-Stop wondering what happens next.
+Learn the system
 
 ```
 
-are infinitely stronger than:
+Rename:
 
 ```text
-AI Workspace
-Workflow Engine
-Automation Layer
+Start with your workflow
 
 ```
-
-People buy relief.
-
-Not architecture.
-
----
-
-# What is still missing
-
-This is where I'd push further.
-
----
-
-## Add a "What actually is HustleAI?" section
-
-I still think this is the biggest risk.
-
-You know the product.
-
-Lovable knows the product.
-
-I know the product.
-
-A visitor doesn't.
-
-Somewhere near the hero:
-
-```text
-HustleAI combines:
-
-Client management
-+
-AI workspace
-+
-Proposal generation
-+
-Invoices
-+
-Client portals
-+
-Telegram operations
-
-inside one operating system.
-
-```
-
-People need a category.
-
----
-
-## Add a product ecosystem section
-
-Because HustleAI is becoming much larger.
-
-You now have:
-
-- Workspace
-- AI tools
-- Documents
-- Blog engine
-- Client portals
-- Invoices
-- Telegram
-- Proposals
-- Workflow OS
-- HustleBot
-
-Most visitors don't realize this.
-
-Create:
-
-```text
-One platform.
-Nine systems.
-One operating layer.
-
-```
-
-with animated modules.
-
----
-
-## Add a "Why not Notion + ChatGPT + Drive?" section
-
-Because that is the real competitor.
-
-Not ClickUp.
-
-Not Monday.
-
-Not Asana.
-
-Most users currently run:
-
-```text
-ChatGPT
-Notion
-Google Drive
-WhatsApp
-Stripe
-Docs
-Sheets
-Telegram
-
-```
-
-You should visually explode that stack.
-
-Then show HustleAI replacing it.
-
----
-
-## Add real workflows
-
-Not feature cards.
-
-Workflows.
 
 Example:
 
-### Freelancer
+```text
+Freelancer
+→ Client onboarding guide
+
+Creator
+→ Content production workflow
+
+Agency
+→ Multi-client operations
+
+Consultant
+→ Proposal to payment system
+
+```
+
+Much stronger positioning.
+
+---
+
+#### 6. Mobile Hero Audit (missing)
+
+This is actually more important than spacing.
+
+Add:
 
 ```text
+Mobile hero audit
+
+Current desktop typography scales poorly.
+
+Requirements:
+
+- max 3 lines per headline
+- no orphan words
+- CTA visible without scrolling
+- audience section visible quickly
+- avoid excessive vertical whitespace
+
+```
+
+---
+
+#### 7. Mission Control Mobile
+
+I would completely skip the 3D scene on mobile.
+
+Not fallback 3D.
+
+Not reduced 3D.
+
+Not simplified 3D.
+
+Replace with:
+
+```text
+Animated SVG workflow
+
 Lead
 ↓
 Proposal
 ↓
 Approval
 ↓
-Contract
-↓
 Invoice
 ↓
 Payment
 
+with subtle GSAP motion
+
 ```
+
+Mobile users won't sit through a cinematic sequence.
+
+They want understanding in 5 seconds.
 
 ---
 
-### Creator
+### One additional section I'd add
+
+Between Audience Cards and Blog:
 
 ```text
-Idea
-↓
-Research
-↓
-Content
-↓
-Distribution
-↓
-Sponsorship
+What actually happens inside HustleAI?
 
 ```
 
----
-
-### Agency
+4 horizontal cards:
 
 ```text
-Client
-↓
-Workspace
-↓
-Team
-↓
-Delivery
-↓
-Retention
+Capture
+Everything enters one place
+
+Think
+AI drafts, researches and organizes
+
+Deliver
+Exports, portals, approvals
+
+Earn
+Invoices, payments, retention
 
 ```
 
-These are much easier to understand.
+Very small section.
+
+Very high clarity.
 
 ---
 
-# Biggest thing I would add
+### Final Version I'd Send
 
-This section.
+Keep your plan.
 
----
-
-## The 3 AM Test
-
-Headline:
+Add:
 
 ```text
-What happens at 3 AM?
+8. Mobile hero audit
+9. Desktop hover expansion for audience cards
+10. Replace mobile Mission Control with lightweight SVG workflow
+11. Blog hub includes Template Spotlight
+12. Docs section renamed "Start with your workflow"
+13. Use production Footer component directly
+14. Add lightweight "What actually happens inside HustleAI?" clarity strip
 
 ```
 
-Subheadline:
+After those changes, `/homepage-3` is getting close to something you could realistically make the default homepage and put behind the "Preview ✨" banner without it feeling experimental anymore.
 
-```text
-Your clients don't stop.
-Your business shouldn't either.
+## Scope (in order)
 
-```
+### 1. Footer parity with production
 
-Visual:
+- Audit production Footer (`src/components/Footer.tsx` or equivalent used by `Index.tsx`) and reuse the **same** component on V3 instead of the custom V3 footer.
+- Guarantee links: Pricing, Free Tools, Docs, Blog, Templates, About, Contact, Privacy, Terms, Cookie, Refund, Security, Status, Sitemap, Newsletter signup, Social.
+- Desktop: 4–6 column grid. Mobile: collapsible accordion groups (Radix Accordion, single-open).
 
-```text
-Proposal approved
-↓
-Contract generated
-↓
-Invoice sent
-↓
-Telegram notification delivered
-↓
-Workspace updated
+### 2. Mobile navbar redesign (V3 only)
 
-```
+- Floating sticky capsule at top with: logo, "Preview ✨" badge, primary CTA always visible, hamburger.
+- Hamburger sheet contains: Pricing, Docs, Blog, Free Tools, Search, Sign in.
+- Desktop nav unchanged.
+- Implementation: extend existing `Navbar` with a `variant="v3-mobile"` branch, or new `NavbarV3Mobile` rendered only below `md`.
 
-without user interaction.
+### 3. Audience card depth (`WhoItsFor` section)
 
-That section would explain the entire philosophy of HustleAI better than 50 feature cards.
+- Already has progress dots — add:
+  - "2 automations active" line
+  - "1 approval pending" line
+  - tiny horizontal timeline strip beneath the step list
+- Derive counts from existing `AUDIENCES` data (`active` index + steps length). No fake metrics.
 
----
+### 4. Mobile spacing audit
 
-# One thing I would remove
+- Reduce on `< md`: card padding (p-6 → p-4), icon size (w-10 → w-8), heading margin-bottom, workflow row height (py-1.5 → py-1), heading clamp.
+- Verify with viewport 412×915 (Galaxy S23) screenshot.
 
-The name:
+### 5. Blog hub expansion
 
-```text
-Mission Control
+- Replace flat list with: 1 featured (latest), 4 latest in a 2×2 grid, popular-category chips, "Read the docs" link card.
+- Pull from existing blog client (`@/integrations/blog/latest`).
+- Inspiration: Linear/Stripe/Framer editorial layout.
 
-```
+### 6. "Learn the system" docs section (new lightweight block, not a new feature)
 
-I would retire it completely.
+- Cards mapping audience → guide: Freelancer→Client onboarding, Agency→Team workflows, Creator→Content workflows, Coach→Booking flow.
+- Pull doc slugs from `src/integrations/docs/client.ts` if available; otherwise hardcode known doc routes.
+- Sits between Audience grid and Blog.
 
-It's still too technical.
+### 7. Mobile performance audit
 
-The page is now becoming:
+- Confirm `MissionControlScene` (R3F) is gated: `useIsMobile()` → render static fallback, no Three import on mobile.
+- Lazy-import all heavy sections via `React.lazy` with `Suspense`.
+- Kill any GSAP timelines whose ScrollTrigger target is `display:none` on mobile.
+- Spot-check with `browser--performance_profile` at 412×915 after build.
 
-```text
-Calm Operating System
+## Explicitly out of scope
 
-```
+Testimonials, partner logos, customer counts, trust claims, new feature sections, percentage rollout, analytics dashboard.
 
-not:
+## Files likely touched
 
-```text
-NASA dashboard
+- `src/pages/HomepageV3.tsx` (footer swap, spacing, card depth, blog hub, docs section)
+- `src/components/Footer.tsx` (verify reusability)
+- `src/components/Navbar.tsx` or new `src/components/home/NavbarV3Mobile.tsx`
+- `src/components/home/MissionControlScene*.tsx` (mobile gating verification)
+- No DB migrations, no new tables, no new edge functions.
 
-```
+## Verification
 
-Even internally I'd rename V3.
+- Browser at 412×915 (mobile) + 1280×720 (desktop) after each priority.
+- Console clean of new errors. CSP/log-event 400s are pre-existing and out of scope.
 
-Something like:
-
-```text
-Operating System
-The Quiet Machine
-Run While You Sleep
-Business In Motion
-
-```
-
-fits the new direction much better.
-
----
-
-Overall:
-
-**This is the first homepage plan I've seen in your project that feels like it could genuinely become the default homepage instead of just being an experimental variant.** It finally puts the user's transformation ahead of the workflow graph while still keeping the impressive animation layer as the payoff.
-
----
-
-## 1. New visual identity (locked)
-
-Kill the dark cyberpunk look. New palette:
-
-- Base: `#FBF7F1` warm cream / `#FFFFFF`
-- Ink: `#1A1A1F` near-black for type
-- Accent 1: `#FF7A45` coral
-- Accent 2: `#FFB37A` peach
-- Accent 3: `#FFE27A` soft yellow highlight
-- Accent 4: `#E8DFF3` lavender mist (for cool counterweight in scene 3)
-- Sunrise gradient: coral → peach → cream, used sparingly
-
-Typography:
-
-- Display: existing `font-display` (serif/editorial) at large sizes with `SplitText` word/char reveals
-- Body: existing sans, increased leading, longer line-length
-
-Surface language:
-
-- Soft frosted-glass cards, generous radii (`rounded-3xl`)
-- Warm shadows (`0 30px 60px -30px rgba(255,122,69,0.25)`)
-- No slate-950, no neon, no terminal vibes
-- Calm-mode + reduced-motion fully respected
-
-Lock this in an updated `mem/product/v3-mission-control-contract.md`.
-
----
-
-## 2. New page structure (information architecture first)
-
-Current order is hero → 6 scenes → CTA. New order:
-
-```
-1. V3Nav            floating glass capsule navbar (V3-only)
-2. Hero             positioning: what it is + who it's for, in 5 seconds
-3. WhoItsFor        animated audience cards (freelancer, creator, agency, consultant, coach, operator)
-4. ProblemEmotion   3 emotional "stop ___" panels with micro-visuals
-5. Cinematic        the 6-scene 3D experience (the centerpiece, not the whole page)
-6. Transformation   before/after lived-experience strip
-7. Workflows        4 audience-specific flow chips that animate on hover
-8. Proof            real capabilities surfaced as activity feed (no fake metrics)
-9. CTA              "Run your business like software" + email/signup
-10. V3Footer        light footer matching theme
-```
-
-The cinematic block stays scroll-scrubbed, but copy and explanations live **beside / below** the canvas, not over it.
-
----
-
-## 3. Motion architecture (GSAP-first)
-
-Install/use existing `gsap` with these plugins (free plugins only — DrawSVG/SplitText/ScrollSmoother are Club GSAP paid). To avoid paid licensing we ship equivalents:
-
-- **Smooth scroll**: keep native scroll (per existing memory: "preserve native scrolling, never Lenis"). Use `ScrollTrigger` with `scrub` and `ease` for the cinematic section; do not introduce ScrollSmoother (paid + violates memory).
-- **SplitText equivalent**: small custom util `splitWords.ts` that splits headings into `<span>` words/chars and animates via GSAP. Used on all section headlines.
-- **DrawSVG equivalent**: animate `stroke-dasharray`/`stroke-dashoffset` via GSAP on the SVG connectors in the Transformation and Workflows sections.
-- **MotionPath equivalent**: use GSAP `motionPath` (free, ships in core) for packet flow in the Workflows section.
-- **Observer**: free, use for unified wheel/touch handling on the cinematic pinned section.
-
-3D scene (`MissionControlScene.tsx`):
-
-- Retheme to bright palette (cream background fog, coral/peach emissive instead of cyan)
-- Keep 6-phase physics but soften — slower damp, lower amplitudes
-- Reduce node count visual weight; thinner edges; warm bloom
-- Camera moves stay, but choreography becomes calmer
-
----
-
-## 4. New components
-
-```
-src/components/home/v3/
-  V3Nav.tsx                  floating glass capsule navbar
-  V3Footer.tsx               light footer
-  V3Hero.tsx                 positioning hero w/ SplitText word reveal
-  WhoItsFor.tsx              6 animated audience cards w/ hover workflow preview
-  ProblemEmotion.tsx         3 "stop ___" panels with inline micro-visuals
-  CinematicSection.tsx       wraps existing MissionControlScene; copy lives in side rail
-  TransformationStrip.tsx    before/after lived experience
-  WorkflowsByAudience.tsx    SVG flow with DrawSVG + MotionPath packet
-  ProofFeed.tsx              real capability activity feed
-  V3CTA.tsx                  closing CTA
-  ScrollProgress.tsx         top progress bar + "01 / 09  keep scrolling" cue
-  splitWords.ts              SplitText equivalent util
-```
-
-Edit:
-
-- `src/pages/HomepageV3.tsx` — full restructure to new sections
-- `src/components/home/v3/MissionControlScene.tsx` — retheme to bright palette + calmer motion
-- `mem/product/v3-mission-control-contract.md` — update contract to bright editorial identity + new IA
-
----
-
-## 5. Copy direction (new, no recycling)
-
-- Hero H1: *"Your business, running quietly in the background."*
-- Hero sub: *"HustleAI is the operating system for freelancers, creators, consultants and small agencies — so client work moves forward even when you don't."*
-- Who it's for: 6 chips each with one verb + one outcome
-- Problem panels: *"Stop remembering everything." / "Stop chasing approvals." / "Stop wondering what happens next."*
-- Cinematic side rail: per-scene problem → relief → mechanism, three short lines
-- Transformation: *"Before HustleAI / After HustleAI"* lived-experience pairs
-- CTA: *"Run your business like software."*
-
----
-
-## 6. Performance & gating (unchanged guarantees)
-
-- 3D canvas still desktop-only via `useCanRender3D()` + IntersectionObserver lazy-mount
-- Mobile / reduced-motion: bright illustrated fallback (rebuild `NarrativeFallback` in new palette)
-- Budget ≤ 180KB over V1 maintained
-- All GSAP plugins used are free (core + ScrollTrigger + Observer + MotionPathPlugin)
-
----
-
-## 7. Out of scope
-
-- V1, V2, V4, V5, V6 — untouched
-- Admin variant rotation — untouched
-- No new backend, no DB changes, no auth changes
-- No paid GSAP plugins (no Club GSAP)
-
----
-
-## Deliverable
-
-A `/homepage-3` that opens bright and human, explains in 5 seconds what HustleAI is and who it's for, leads visitors through a calm narrative arc, and uses the cinematic 3D scene as one memorable centerpiece — not the whole page.
+Shipping order: 1 → 2 → 4 → 3 → 5 → 6 → 7 (footer + nav first because they unblock everything else; perf audit last so it covers final bundle).
