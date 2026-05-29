@@ -184,7 +184,7 @@ export function Deliver({ toolSlug, title, text, pdf, pdfFactory, className = ""
                     <span className="text-[10px] text-muted-foreground">Delivered to your HustleAI bot chat</span>
                   </div>
                 </DropdownMenuItem>
-                {pdf && (
+                {(pdf || pdfFactory) && (
                   <DropdownMenuItem
                     onClick={() => sendTelegramDirect("telegram_pdf")}
                     className="gap-2"
