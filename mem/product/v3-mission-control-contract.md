@@ -24,18 +24,26 @@ No other edges. No decorative connections.
 
 ## Scroll choreography (5 scenes)
 
-1. **Incoming work** — Inputs layer materializes (Client nodes appear)
-2. **Work gets organized** — Planning layer activates (Workspace lights)
-3. **AI assists execution** — Intelligence layer ignites; Execution begins
-4. **Deliverables leave the system** — Exports animate outward to Delivery
-5. **Revenue returns** — Invoice → Payment lights up; Outcomes layer settles
+Narrative arc (transformation, not feature tour):
+
+1. **Before** — "Your business is in nine tabs." Inputs layer materializes, chaos resolves.
+2. **Capture** — "Everything lands in one place." Planning layer activates.
+3. **Automation** — "Work starts moving without you." Intelligence layer ignites.
+4. **Delivery** — "Deliverables ship themselves." Execution + Delivery layers light up.
+5. **Outcomes** — "Money lands. Work repeats." Outcomes layer settles, invoice→payment pulse.
+
+Camera drifts downward through layers as phase advances (depth movement, not pinning).
+Per-scene color wash + right-side progress rail + scene counter (no bouncing arrows).
+Copy must speak transformation ("never chase a payment again"), never feature listing.
 
 Not a spinning model. Story-driven scrubbed timeline.
 
-## Platform pillars to surface beside the scene
+## V3 personality (locked)
 
-Proposal Engine · Invoice Engine · AI Workspace · Client Portal · Telegram Delivery · Workflow OS.
-Goal: visitor understands the scale of HustleAI within 15 seconds.
+Dark Mission Control aesthetic — `bg-slate-950` end-to-end, gradient washes per scene.
+No section may be reusable on V1. No pricing block, no testimonials grid, no feature
+pills. Replace with: Chaos hero, narrative arc, Before/After contrast, emotional close.
+Telemetry stream provides environmental storytelling (live ops events, no fake metrics).
 
 ## Device rules (strict)
 

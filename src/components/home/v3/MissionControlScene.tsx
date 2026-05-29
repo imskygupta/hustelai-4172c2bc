@@ -1,5 +1,5 @@
 import { Suspense, useMemo, useRef } from "react";
-import { Canvas, useFrame } from "@react-three/fiber";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Html, OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
 import { EDGES, LAYERS, nodePosition } from "./missionControlInventory";
@@ -135,6 +135,7 @@ const LAYER_ACCENTS: Record<string, string> = {
 
 function SceneContents({ phaseRef }: { phaseRef: React.MutableRefObject<number> }) {
   const group = useRef<THREE.Group>(null);
+  const { camera } = useThree();
 
   // Pre-compute node positions and layer lookup.
   const nodes = useMemo(
@@ -161,12 +162,25 @@ function SceneContents({ phaseRef }: { phaseRef: React.MutableRefObject<number> 
     [nodes],
   );
 
-  // Tiny ambient sway — story-first, not spinning.
-  useFrame(({ clock }) => {
+  // Story-driven camera drift + ambient breath. As phase advances the camera
+  // descends through layers and pushes slightly closer at mid-arc, so the
+  // user feels pulled through the system instead of staring at a pinned model.
+  useFrame(({ clock }, dt) => {
     if (!group.current) return;
     const t = clock.getElapsedTime();
-    group.current.rotation.y = Math.sin(t * 0.25) * 0.06 - 0.18;
-    group.current.rotation.x = -0.18;
+    const phase = phaseRef.current; // 0.4..5
+    const p = Math.max(0, Math.min(1, (phase - 0.4) / 4.6));
+
+    group.current.rotation.y = Math.sin(t * 0.22) * 0.05 - 0.16 + p * 0.05;
+    group.current.rotation.x = -0.18 - p * 0.06;
+
+    const targetY = 2.2 - p * 4.0;
+    const targetZ = 11.5 - Math.sin(p * Math.PI) * 1.6;
+    const targetX = Math.sin(t * 0.18) * 0.25;
+    camera.position.x = THREE.MathUtils.damp(camera.position.x, targetX, 2.2, dt);
+    camera.position.y = THREE.MathUtils.damp(camera.position.y, targetY, 2.2, dt);
+    camera.position.z = THREE.MathUtils.damp(camera.position.z, targetZ, 2.2, dt);
+    camera.lookAt(0, targetY * 0.6, 0);
   });
 
   // Per-frame activation values via refs avoids re-renders.
