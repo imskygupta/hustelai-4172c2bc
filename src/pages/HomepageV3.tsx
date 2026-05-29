@@ -217,64 +217,117 @@ function Hero() {
 
 // ---------- 3. Who it's for ----------
 const AUDIENCES = [
-  { icon: Briefcase, label: "Freelancers",   steps: ["Lead", "Proposal", "Approval", "Invoice", "Payment"],   tint: "#FF7A45" },
-  { icon: Palette,   label: "Creators",      steps: ["Idea", "Script", "Content", "Distribution", "Sponsor"], tint: "#FFB37A" },
-  { icon: Building2, label: "Small agencies",steps: ["Client", "Workspace", "Team", "Delivery", "Retention"], tint: "#1A1A1F" },
-  { icon: GraduationCap, label: "Consultants", steps: ["Research", "Proposal", "Approval", "Engagement", "Renewal"], tint: "#FF7A45" },
-  { icon: Mic2,      label: "Coaches",       steps: ["Booking", "Session", "Notes", "Follow-up", "Renewal"],  tint: "#E8DFF3" },
-  { icon: Wrench,    label: "Operators",     steps: ["Request", "Workflow", "Action", "Delivery", "Payment"], tint: "#FFE27A" },
+  // active = index of the in-progress step (●). Earlier = ✓, later = ○.
+  { icon: Briefcase,     label: "Freelancers",    steps: ["Lead", "Proposal", "Approval", "Invoice", "Payment"],         tint: "#FF7A45", active: 2, size: "lg" as const },
+  { icon: Palette,       label: "Creators",       steps: ["Idea", "Script", "Content", "Distribution", "Sponsor"],       tint: "#FFB37A", active: 1, size: "md" as const },
+  { icon: Building2,     label: "Small agencies", steps: ["Client", "Workspace", "Team", "Delivery", "Retention"],       tint: "#1A1A1F", active: 3, size: "md" as const },
+  { icon: GraduationCap, label: "Consultants",    steps: ["Research", "Proposal", "Approval", "Engagement", "Renewal"],  tint: "#FF7A45", active: 2, size: "md" as const },
+  { icon: Mic2,          label: "Coaches",        steps: ["Booking", "Session", "Notes", "Follow-up", "Renewal"],        tint: "#E8DFF3", active: 1, size: "md" as const },
+  { icon: Wrench,        label: "Operators",      steps: ["Request", "Workflow", "Action", "Delivery", "Payment"],       tint: "#FFE27A", active: 2, size: "md" as const },
 ];
 
 function WhoItsFor() {
+  const ink = (tint: string) => (tint === "#E8DFF3" || tint === "#FFE27A" ? "#1A1A1F" : tint);
   return (
     <section id="audiences" className="px-4 py-20 md:py-28">
       <div className="container mx-auto max-w-6xl">
-        <div className="max-w-2xl mb-10 md:mb-14">
+        <div className="max-w-3xl mb-10 md:mb-14">
           <div className="text-[11px] uppercase tracking-[0.22em] font-semibold text-[#FF7A45] mb-3">
             Who it's for
           </div>
           <RevealHeading
-            text="Built for the people who run their own thing."
+            text="Different businesses. Same operating system."
             className="font-display font-semibold tracking-tight text-[#1A1A1F] text-3xl md:text-5xl leading-[1.05]"
           />
+          <p className="mt-4 text-[#1A1A1F]/55 text-base md:text-lg leading-relaxed">
+            You run the business. The system runs the process.
+          </p>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
-          {AUDIENCES.map((a) => (
-            <div
-              key={a.label}
-              className="group relative overflow-hidden rounded-3xl border border-[#1A1A1F]/8 bg-white p-5 md:p-6 transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_30px_60px_-30px_rgba(255,122,69,0.35)] hover:scale-[1.015]"
-            >
+        {/* Editorial bento grid — featured card spans 2 cols on desktop */}
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 auto-rows-fr">
+          {AUDIENCES.map((a, idx) => {
+            const color = ink(a.tint);
+            const featured = a.size === "lg";
+            return (
               <div
-                className="w-10 h-10 rounded-2xl flex items-center justify-center mb-4 transition-transform group-hover:scale-110"
-                style={{ background: `${a.tint}22`, color: a.tint === "#E8DFF3" || a.tint === "#FFE27A" ? "#1A1A1F" : a.tint }}
+                key={a.label}
+                className={`group relative overflow-hidden rounded-3xl border border-[#1A1A1F]/8 bg-white p-5 md:p-6 transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_30px_60px_-30px_rgba(255,122,69,0.35)] ${
+                  featured ? "md:col-span-2 md:row-span-1" : ""
+                }`}
               >
-                <a.icon className="w-5 h-5" />
-              </div>
-              <div className="text-[#1A1A1F] font-display text-xl font-semibold mb-1">
-                {a.label}
-              </div>
-              <div className="text-[12px] text-[#1A1A1F]/40 font-mono group-hover:opacity-0 transition-opacity duration-300 mt-1">
-                Hover to see flow
-              </div>
-              {/* Mini animated flow on hover */}
-              <div className="mt-3 opacity-0 group-hover:opacity-100 transition-opacity duration-500 space-y-1.5">
-                {a.steps.map((s, i) => (
-                  <div
-                    key={s}
-                    className="flex items-center gap-2 text-[11px] font-mono text-[#1A1A1F]/75 translate-y-1 group-hover:translate-y-0 transition-transform"
-                    style={{ transitionDelay: `${i * 60}ms` }}
-                  >
-                    <span
-                      className="block w-1.5 h-1.5 rounded-full"
-                      style={{ background: a.tint === "#E8DFF3" || a.tint === "#FFE27A" ? "#1A1A1F" : a.tint }}
-                    />
-                    <span>{s}</span>
-                    {i < a.steps.length - 1 && <span className="text-[#1A1A1F]/25">↓</span>}
+                {/* ambient corner wash in audience tint */}
+                <div
+                  className="pointer-events-none absolute -top-16 -right-16 w-48 h-48 rounded-full opacity-0 group-hover:opacity-70 transition-opacity duration-700 blur-2xl"
+                  style={{ background: a.tint }}
+                />
+
+                <div className="relative flex items-start justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="w-10 h-10 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110"
+                      style={{ background: `${a.tint}22`, color }}
+                    >
+                      <a.icon className="w-5 h-5" />
+                    </div>
+                    <div className="text-[#1A1A1F] font-display text-xl font-semibold">
+                      {a.label}
+                    </div>
                   </div>
-                ))}
+                  <span
+                    className="text-[10px] font-mono uppercase tracking-[0.18em] text-[#1A1A1F]/30 group-hover:text-[#1A1A1F]/55 transition-colors"
+                  >
+                    {String(idx + 1).padStart(2, "0")}
+                  </span>
+                </div>
+
+                {/* Persistent ambient workflow — always visible at low opacity, lights up on hover */}
+                <ul
+                  className={`relative mt-5 space-y-1.5 opacity-30 group-hover:opacity-100 transition-opacity duration-500 ${
+                    featured ? "md:grid md:grid-cols-5 md:gap-3 md:space-y-0" : ""
+                  }`}
+                >
+                  {a.steps.map((s, i) => {
+                    const done = i < a.active;
+                    const live = i === a.active;
+                    return (
+                      <li
+                        key={s}
+                        className={`flex items-center justify-between gap-2 text-[12px] font-mono leading-none ${
+                          featured ? "md:flex-col md:items-start md:gap-2 md:justify-start" : ""
+                        }`}
+                        style={{ color: live ? color : "#1A1A1F" }}
+                      >
+                        <span className={live ? "font-semibold" : done ? "" : "opacity-70"}>
+                          {s}
+                        </span>
+                        <span className="flex items-center justify-center w-3 h-3 shrink-0">
+                          {done ? (
+                            <Check className="w-3 h-3" style={{ color }} strokeWidth={3} />
+                          ) : live ? (
+                            <span className="relative flex w-2 h-2">
+                              <span
+                                className="absolute inline-flex h-full w-full rounded-full opacity-60 animate-ping"
+                                style={{ background: color }}
+                              />
+                              <span
+                                className="relative inline-flex w-2 h-2 rounded-full"
+                                style={{ background: color }}
+                              />
+                            </span>
+                          ) : (
+                            <span
+                              className="block w-2 h-2 rounded-full border"
+                              style={{ borderColor: "#1A1A1F33" }}
+                            />
+                          )}
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ul>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>
