@@ -1,221 +1,560 @@
-# Homepage Variants Experiment — Audit & Plan
+# V3 Rebuild — "Mission Control" → "Calm Operating System"
 
-The current `/` stays untouched. We add three experimental homepages at fixed routes, plus an admin-controlled flag that decides which variant `/` actually renders. No SEO, sitemap, auth, pricing, or routing changes.
+V3 today reads as a dark, technical architecture diagram. We are rebuilding it as a bright, editorial, Awwwards-style marketing experience where the **user is the center**, not the workflow graph. The cinematic 3D scene becomes one moment inside a larger narrative, not the whole page.
 
----
+This is a full rebuild of `/homepage-3`. V1, V2, V4–V6 are untouched.  
+  
+  
+This is **dramatically better than the previous direction**.
 
-## 1. Audit of current `/` (Index.tsx)
+The biggest improvement is that whoever wrote this finally understood:
 
-**Section order (top → bottom):**
-1. Hero — badge, H1 ("Run your freelance and client operations from one workspace."), subhead, capability chips (Proposals · Onboarding · Invoices · Delivery), `PersonalizedHeroCTA`, trust microcopy, secondary nav chips.
-2. `ReturningUserContinuity` (authed-only continuity strip).
-3. `TrustStrip`.
-4. `WhoIsHustleAIFor` — persona positioning.
-5. `OpsStats` — operational social proof.
-6. `WorkflowRibbon` ("System rhythm").
-7. `WorkflowStorySection` — 6-stage operational story (Generate → Export → Deliver → Continue → Async → Workspace), already has scroll-activated stages via `useStageActivation`.
-8. `UnifiedWorkspaceSection`, `AsyncOperationsSection`.
-9. `OperatingSystemArchitecture` — module grid + live ribbon.
-10. `ConnectedWorkflowSection`.
-11. `OperationalContinuitySection`.
-12. `WorkflowRibbon` ("Deliverables lane") → `RealDeliverablesSection`.
-13. `IntegrationsNotificationsSection` + `IntegrationsMarquee`.
-14. `WorkflowRibbon` ("Governance lane") → `ControlGovernanceSection`.
-15. `FreeToolsStrip`, `FlexibleUsageSection`.
-16. `Pricing` (+ "View all plans" CTA).
-17. `Testimonials`.
-18. Dark CTA card ("Send your first proposal in under five minutes").
-19. `Footer` + sticky mobile CTA after 520px scroll.
+> **Homepage ≠ Product demo**
+>
+> Homepage = Positioning → Emotion → Understanding → Desire → Product
 
-**Strengths:** clear positioning (client operations workspace), trustworthy chrome, persona clarity, real workflow narrative, good information density, mobile sticky CTA.
+I would score it:
 
-**Weaknesses (matches user's read):**
-- Almost no real motion below the hero — `useStageActivation` is the only scroll-tied effect.
-- Visual rhythm is uniform: card grid → card grid → card grid. Eye fatigues by section 8.
-- Hero text is strong but static; "operating system" claim is asserted, not shown.
-- No live/async feeling on the page itself.
-- Pricing + dark CTA feel detached from the workflow narrative above.
 
-**Messaging hierarchy:** Hero promise → who it's for → ops proof → 6-stage story → platform sections → deliverables → integrations → governance → free tools → pricing → testimonials → final CTA. Solid; we keep this on every variant.
+| Area                   | Previous V3 | This Plan |
+| ---------------------- | ----------- | --------- |
+| Visual direction       | 6/10        | 9/10      |
+| Marketing clarity      | 4/10        | 9/10      |
+| Conversion potential   | 5/10        | 8.5/10    |
+| Emotional storytelling | 3/10        | 9/10      |
+| Awwwards potential     | 5/10        | 8/10      |
 
-**Conversion path:** `PersonalizedHeroCTA` (primary) → pricing CTA → bottom dark CTA → mobile sticky. Each variant must preserve all four.
+
+&nbsp;
 
 ---
 
-## 2. Variant system architecture
+# What I love
 
-**Routes (always live, indexable by us but `noindex` on the variants):**
-- `/` → renders the variant selected by the flag (defaults to V1).
-- `/homepage-2`, `/homepage-3`, `/homepage-4` → always render that specific variant, regardless of flag. Used for admin preview + A/B links.
+## 1. Bright theme
 
-**Flag storage:** new row in existing `app_settings` table (or equivalent platform settings table on the primary DB — confirm during build). Single key `active_homepage` with values `v1 | v2 | v3 | v4`. Default `v1`. Read once on app boot via existing settings client, cached in a small `useActiveHomepage()` hook with a sane fallback to `v1` so a fetch failure never breaks `/`.
+This is probably the biggest win.
 
-**Admin UI:** `Admin → Marketing → Homepage Variants` panel (new tab inside `src/pages/admin/MarketingPages.tsx` or a new sibling). Four radio cards (V1 current, V2 motion, V3 3D, V4 live ops) with preview links to the `/homepage-N` routes and a Save button that writes `active_homepage`.
-
-**SEO / sitemap guardrails:**
-- `/` continues to emit the existing `SEO` component (unchanged title, description, JSON-LD).
-- `/homepage-2|3|4` render with `<meta name="robots" content="noindex,nofollow">` and are NOT added to `sitemap.xml`.
-- No canonical changes. No new auth, pricing, or workspace touchpoints.
-
-**Shared shell:** All variants reuse `Navbar`, `Footer`, `PersonalizedHeroCTA`, `Pricing`, `Testimonials`, dark CTA card, and the mobile sticky CTA. Only the middle narrative changes per variant.
-
----
-
-## 3. Wireframes
-
-### V2 — Motion-first (Linear / Vercel / Raycast energy)
+Current V3 feels like:
 
 ```text
-┌──────────────────────────────────────────────┐
-│ Navbar                                       │
-├──────────────────────────────────────────────┤
-│ HERO  (existing copy)                        │
-│  • Headline split-letter reveal (GSAP)       │
-│  • Chips fade-in stagger                     │
-│  • Floating capability cards parallax        │
-├──────────────────────────────────────────────┤
-│ ScrollTrigger pinned panel:                  │
-│  6 workflow stages animate IN as you scroll  │
-│  Lanes light up sequentially (existing       │
-│  AsyncLane primitives, amplified)            │
-├──────────────────────────────────────────────┤
-│ Floating module stack (CRM/Invoices/Proposal │
-│  /AI/Portal/Notifications) — cards drift on  │
-│  mouse + reorder on scroll                   │
-├──────────────────────────────────────────────┤
-│ Integrations marquee (existing)              │
-├──────────────────────────────────────────────┤
-│ Pricing → Testimonials → Dark CTA → Footer   │
-└──────────────────────────────────────────────┘
+Dev tool
+Dashboard
+Infrastructure product
+
 ```
 
-### V3 — 3D Operating Command Center
+The new direction feels like:
 
 ```text
-┌──────────────────────────────────────────────┐
-│ Navbar                                       │
-├──────────────────────────────────────────────┤
-│ HERO                                         │
-│ ┌───────────────┐  Your business runs        │
-│ │  R3F canvas   │  itself.                   │
-│ │  floating     │  [PersonalizedHeroCTA]     │
-│ │  layered      │                            │
-│ │  workspace    │                            │
-│ └───────────────┘                            │
-├──────────────────────────────────────────────┤
-│ Scroll-unfold sequence (pinned R3F scene):   │
-│  Client → Proposal → AI → Export → Approval  │
-│        → Invoice → Payment                   │
-│  Each scroll step lights one layer + caption │
-├──────────────────────────────────────────────┤
-│ Static fallback grid for reduced-motion /    │
-│  mobile / no-WebGL                           │
-├──────────────────────────────────────────────┤
-│ Pricing → Testimonials → Dark CTA → Footer   │
-└──────────────────────────────────────────────┘
+Creative operating system
+Modern productivity platform
+Future-of-work software
+
 ```
 
-Strict rule: the 3D scene **only** visualizes that pipeline. No decorative cubes.
+For your audience:
 
-### V4 — Live Operations
+- freelancers
+- creators
+- consultants
+- agency owners
+- operators
+
+Bright beats dark.
+
+Almost every modern SaaS winner is moving toward:
+
+- cream
+- warm white
+- peach
+- soft gradients
+
+rather than:
+
+- black
+- cyan
+- terminal green
+
+---
+
+## 2. Cinematic section moved to the middle
+
+This is exactly right.
+
+Currently:
 
 ```text
-┌──────────────────────────────────────────────┐
-│ Navbar                                       │
-├──────────────────────────────────────────────┤
-│ HERO                                         │
-│  Proposal delivered.                         │
-│  Invoice paid.                               │
-│  Resume exported.                            │
-│  Client approved.                            │
-│  While you slept.                            │
-│  [PersonalizedHeroCTA]                       │
-├──────────────────────────────────────────────┤
-│ Operations telemetry strip (always running): │
-│  ✓ Proposal exported    2s ago               │
-│  ✓ Invoice paid         11s ago              │
-│  ✓ Resume generated     17s ago              │
-│  ✓ Contract signed      29s ago              │
-│  (driven by real recent events from          │
-│   public ops feed if available, else a       │
-│   seeded rotating set — never fake counters) │
-├──────────────────────────────────────────────┤
-│ Async delivery pipeline animation            │
-│ (Generate → Export → Deliver → Continue)     │
-├──────────────────────────────────────────────┤
-│ Pricing → Testimonials → Dark CTA → Footer   │
-└──────────────────────────────────────────────┘
+Visitor lands
+↓
+Gets attacked by workflow graph
+
+```
+
+Nobody cares yet.
+
+The visitor first wants:
+
+```text
+What is this?
+Who is it for?
+Why should I care?
+
+```
+
+Then:
+
+```text
+Show me the magic
+
+```
+
+The new architecture solves this.
+
+---
+
+## 3. Audience segmentation
+
+This is huge.
+
+Currently HustleAI talks mostly to:
+
+```text
+Freelancers
+
+```
+
+But you actually built tools useful for:
+
+```text
+Creators
+Consultants
+Coaches
+Agencies
+Operators
+Founders
+
+```
+
+Those audience cards will make people self-identify.
+
+That's one of the highest-converting patterns in SaaS.
+
+---
+
+## 4. Problem → Emotion → Relief
+
+This is the strongest section in the document.
+
+These headlines:
+
+```text
+Stop remembering everything.
+Stop chasing approvals.
+Stop wondering what happens next.
+
+```
+
+are infinitely stronger than:
+
+```text
+AI Workspace
+Workflow Engine
+Automation Layer
+
+```
+
+People buy relief.
+
+Not architecture.
+
+---
+
+# What is still missing
+
+This is where I'd push further.
+
+---
+
+## Add a "What actually is HustleAI?" section
+
+I still think this is the biggest risk.
+
+You know the product.
+
+Lovable knows the product.
+
+I know the product.
+
+A visitor doesn't.
+
+Somewhere near the hero:
+
+```text
+HustleAI combines:
+
+Client management
++
+AI workspace
++
+Proposal generation
++
+Invoices
++
+Client portals
++
+Telegram operations
+
+inside one operating system.
+
+```
+
+People need a category.
+
+---
+
+## Add a product ecosystem section
+
+Because HustleAI is becoming much larger.
+
+You now have:
+
+- Workspace
+- AI tools
+- Documents
+- Blog engine
+- Client portals
+- Invoices
+- Telegram
+- Proposals
+- Workflow OS
+- HustleBot
+
+Most visitors don't realize this.
+
+Create:
+
+```text
+One platform.
+Nine systems.
+One operating layer.
+
+```
+
+with animated modules.
+
+---
+
+## Add a "Why not Notion + ChatGPT + Drive?" section
+
+Because that is the real competitor.
+
+Not ClickUp.
+
+Not Monday.
+
+Not Asana.
+
+Most users currently run:
+
+```text
+ChatGPT
+Notion
+Google Drive
+WhatsApp
+Stripe
+Docs
+Sheets
+Telegram
+
+```
+
+You should visually explode that stack.
+
+Then show HustleAI replacing it.
+
+---
+
+## Add real workflows
+
+Not feature cards.
+
+Workflows.
+
+Example:
+
+### Freelancer
+
+```text
+Lead
+↓
+Proposal
+↓
+Approval
+↓
+Contract
+↓
+Invoice
+↓
+Payment
+
 ```
 
 ---
 
-## 4. Component inventory
+### Creator
 
-**New shared:**
-- `src/lib/homepage/useActiveHomepage.ts` — fetch + cache `active_homepage`.
-- `src/components/home/variants/VariantSEO.tsx` — noindex wrapper for /homepage-N.
-- `src/components/home/variants/SharedShell.tsx` — Navbar + Footer + Pricing + Testimonials + dark CTA + sticky mobile CTA composed once.
+```text
+Idea
+↓
+Research
+↓
+Content
+↓
+Distribution
+↓
+Sponsorship
 
-**V2 (`src/pages/HomepageV2.tsx` + `src/components/home/v2/*`):**
-- `HeroMotion.tsx` (GSAP split-text + chip stagger)
-- `PinnedWorkflowScroll.tsx` (ScrollTrigger pinned 6-stage)
-- `FloatingModuleStack.tsx` (mouse parallax cards)
-
-**V3 (`src/pages/HomepageV3.tsx` + `src/components/home/v3/*`):**
-- `CommandCenterCanvas.tsx` (`@react-three/fiber@^8.18` + `@react-three/drei@^9.122` + `three@>=0.133`)
-- `PipelineScene.tsx` (7 nodes: Client→Payment, instanced meshes, glow on active)
-- `ScrollPipelineController.tsx` (ScrollTrigger drives `activeNodeIndex`)
-- `CommandCenterFallback.tsx` (static SVG isometric for reduced-motion + mobile)
-
-**V4 (`src/pages/HomepageV4.tsx` + `src/components/home/v4/*`):**
-- `LiveOpsHero.tsx` (rotating verbs, cursor caret)
-- `OpsTelemetryStream.tsx` (Supabase realtime channel on a sanitized public `ops_public_feed` view if exists; else local seeded rotation)
-- `AsyncPipelineAnimation.tsx` (reuse existing `ops-primitives` AsyncLane scaled up)
-
-**Admin:**
-- `src/pages/admin/HomepageVariants.tsx` — 4 radio cards + Save, links to `/homepage-2|3|4`.
-- Nav entry under `Admin → Marketing`.
-
-**Routing:** add 4 routes in the marketing router section of `App.tsx`. `/` continues to point at `Index.tsx`, which gains a tiny dispatcher: if flag === v1 → render existing JSX as-is; else lazy-load the chosen variant page.
+```
 
 ---
 
-## 5. Performance budget
+### Agency
 
-Per variant, gzipped, on `/`:
-- V1: unchanged baseline.
-- V2: ≤ +25 KB JS over V1 (no new deps; GSAP + ScrollTrigger already in the bundle).
-- V3: ≤ +180 KB JS over V1 (three + R3F + drei, lazy-loaded only when active variant === v3 or route === /homepage-3). Hero static poster shown until canvas mounts. Reduced-motion / `matchMedia('(max-width: 768px)')` / no-WebGL → render fallback (no three import).
-- V4: ≤ +20 KB JS over V1. Telemetry stream throttled to 1 event / 1.5 s, max 8 visible rows, virtualized.
+```text
+Client
+↓
+Workspace
+↓
+Team
+↓
+Delivery
+↓
+Retention
 
-LCP target on all variants: ≤ 2.5 s on simulated 4G. CLS < 0.05. INP < 200 ms. R3F canvas behind `IntersectionObserver` so it doesn't run when off-screen. All variants honor `prefers-reduced-motion`.
+```
+
+These are much easier to understand.
 
 ---
 
-## 6. Implementation plan
+# Biggest thing I would add
 
-**Phase A — Plumbing (no UI risk)**
-1. Add `active_homepage` setting (default `v1`) + tiny admin write path. Migration only if a settings table doesn't already cover it.
-2. Add `useActiveHomepage()` hook with SWR-style cache + V1 fallback.
-3. Wrap `Index.tsx` return in a dispatcher; V1 path unchanged (literally the current JSX).
-4. Add `/homepage-2|3|4` routes pointing at stub pages that render `SharedShell` + "Coming soon".
-5. Add `Admin → Marketing → Homepage Variants` panel.
+This section.
 
-**Phase B — V2 Motion-first**
-6. Build V2 components, port existing copy verbatim, layer GSAP/ScrollTrigger, ship behind `/homepage-2`.
+---
 
-**Phase C — V4 Live Operations** (built before V3 because cheaper and higher-signal)
-7. Build V4 hero + telemetry stream + async pipeline. Wire to existing ops feed if a safe public view exists; otherwise seeded rotation with clear "Recent activity" framing (never fake counters).
+## The 3 AM Test
 
-**Phase D — V3 3D Command Center**
-8. Install `three@>=0.133`, `@react-three/fiber@^8.18`, `@react-three/drei@^9.122` (pinned per R3F constraints).
-9. Build `PipelineScene` strictly mapping Client → Proposal → AI → Export → Approval → Invoice → Payment.
-10. Build scroll controller + fallback. Lazy-load entire V3 chunk.
+Headline:
 
-**Phase E — Hand-off**
-11. Admin can flip the flag; `/` swaps without redeploy.
-12. Verify Lighthouse on each variant, confirm `noindex` on `/homepage-N`, confirm sitemap unchanged.
+```text
+What happens at 3 AM?
 
-**Explicit non-goals:** no changes to `Index.tsx` V1 JSX, no SEO/sitemap/robots changes, no auth/pricing/workspace edits, no new tracking, no removal of any existing section.
+```
 
-Ready to start with Phase A on your approval.
+Subheadline:
+
+```text
+Your clients don't stop.
+Your business shouldn't either.
+
+```
+
+Visual:
+
+```text
+Proposal approved
+↓
+Contract generated
+↓
+Invoice sent
+↓
+Telegram notification delivered
+↓
+Workspace updated
+
+```
+
+without user interaction.
+
+That section would explain the entire philosophy of HustleAI better than 50 feature cards.
+
+---
+
+# One thing I would remove
+
+The name:
+
+```text
+Mission Control
+
+```
+
+I would retire it completely.
+
+It's still too technical.
+
+The page is now becoming:
+
+```text
+Calm Operating System
+
+```
+
+not:
+
+```text
+NASA dashboard
+
+```
+
+Even internally I'd rename V3.
+
+Something like:
+
+```text
+Operating System
+The Quiet Machine
+Run While You Sleep
+Business In Motion
+
+```
+
+fits the new direction much better.
+
+---
+
+Overall:
+
+**This is the first homepage plan I've seen in your project that feels like it could genuinely become the default homepage instead of just being an experimental variant.** It finally puts the user's transformation ahead of the workflow graph while still keeping the impressive animation layer as the payoff.
+
+---
+
+## 1. New visual identity (locked)
+
+Kill the dark cyberpunk look. New palette:
+
+- Base: `#FBF7F1` warm cream / `#FFFFFF`
+- Ink: `#1A1A1F` near-black for type
+- Accent 1: `#FF7A45` coral
+- Accent 2: `#FFB37A` peach
+- Accent 3: `#FFE27A` soft yellow highlight
+- Accent 4: `#E8DFF3` lavender mist (for cool counterweight in scene 3)
+- Sunrise gradient: coral → peach → cream, used sparingly
+
+Typography:
+
+- Display: existing `font-display` (serif/editorial) at large sizes with `SplitText` word/char reveals
+- Body: existing sans, increased leading, longer line-length
+
+Surface language:
+
+- Soft frosted-glass cards, generous radii (`rounded-3xl`)
+- Warm shadows (`0 30px 60px -30px rgba(255,122,69,0.25)`)
+- No slate-950, no neon, no terminal vibes
+- Calm-mode + reduced-motion fully respected
+
+Lock this in an updated `mem/product/v3-mission-control-contract.md`.
+
+---
+
+## 2. New page structure (information architecture first)
+
+Current order is hero → 6 scenes → CTA. New order:
+
+```
+1. V3Nav            floating glass capsule navbar (V3-only)
+2. Hero             positioning: what it is + who it's for, in 5 seconds
+3. WhoItsFor        animated audience cards (freelancer, creator, agency, consultant, coach, operator)
+4. ProblemEmotion   3 emotional "stop ___" panels with micro-visuals
+5. Cinematic        the 6-scene 3D experience (the centerpiece, not the whole page)
+6. Transformation   before/after lived-experience strip
+7. Workflows        4 audience-specific flow chips that animate on hover
+8. Proof            real capabilities surfaced as activity feed (no fake metrics)
+9. CTA              "Run your business like software" + email/signup
+10. V3Footer        light footer matching theme
+```
+
+The cinematic block stays scroll-scrubbed, but copy and explanations live **beside / below** the canvas, not over it.
+
+---
+
+## 3. Motion architecture (GSAP-first)
+
+Install/use existing `gsap` with these plugins (free plugins only — DrawSVG/SplitText/ScrollSmoother are Club GSAP paid). To avoid paid licensing we ship equivalents:
+
+- **Smooth scroll**: keep native scroll (per existing memory: "preserve native scrolling, never Lenis"). Use `ScrollTrigger` with `scrub` and `ease` for the cinematic section; do not introduce ScrollSmoother (paid + violates memory).
+- **SplitText equivalent**: small custom util `splitWords.ts` that splits headings into `<span>` words/chars and animates via GSAP. Used on all section headlines.
+- **DrawSVG equivalent**: animate `stroke-dasharray`/`stroke-dashoffset` via GSAP on the SVG connectors in the Transformation and Workflows sections.
+- **MotionPath equivalent**: use GSAP `motionPath` (free, ships in core) for packet flow in the Workflows section.
+- **Observer**: free, use for unified wheel/touch handling on the cinematic pinned section.
+
+3D scene (`MissionControlScene.tsx`):
+
+- Retheme to bright palette (cream background fog, coral/peach emissive instead of cyan)
+- Keep 6-phase physics but soften — slower damp, lower amplitudes
+- Reduce node count visual weight; thinner edges; warm bloom
+- Camera moves stay, but choreography becomes calmer
+
+---
+
+## 4. New components
+
+```
+src/components/home/v3/
+  V3Nav.tsx                  floating glass capsule navbar
+  V3Footer.tsx               light footer
+  V3Hero.tsx                 positioning hero w/ SplitText word reveal
+  WhoItsFor.tsx              6 animated audience cards w/ hover workflow preview
+  ProblemEmotion.tsx         3 "stop ___" panels with inline micro-visuals
+  CinematicSection.tsx       wraps existing MissionControlScene; copy lives in side rail
+  TransformationStrip.tsx    before/after lived experience
+  WorkflowsByAudience.tsx    SVG flow with DrawSVG + MotionPath packet
+  ProofFeed.tsx              real capability activity feed
+  V3CTA.tsx                  closing CTA
+  ScrollProgress.tsx         top progress bar + "01 / 09  keep scrolling" cue
+  splitWords.ts              SplitText equivalent util
+```
+
+Edit:
+
+- `src/pages/HomepageV3.tsx` — full restructure to new sections
+- `src/components/home/v3/MissionControlScene.tsx` — retheme to bright palette + calmer motion
+- `mem/product/v3-mission-control-contract.md` — update contract to bright editorial identity + new IA
+
+---
+
+## 5. Copy direction (new, no recycling)
+
+- Hero H1: *"Your business, running quietly in the background."*
+- Hero sub: *"HustleAI is the operating system for freelancers, creators, consultants and small agencies — so client work moves forward even when you don't."*
+- Who it's for: 6 chips each with one verb + one outcome
+- Problem panels: *"Stop remembering everything." / "Stop chasing approvals." / "Stop wondering what happens next."*
+- Cinematic side rail: per-scene problem → relief → mechanism, three short lines
+- Transformation: *"Before HustleAI / After HustleAI"* lived-experience pairs
+- CTA: *"Run your business like software."*
+
+---
+
+## 6. Performance & gating (unchanged guarantees)
+
+- 3D canvas still desktop-only via `useCanRender3D()` + IntersectionObserver lazy-mount
+- Mobile / reduced-motion: bright illustrated fallback (rebuild `NarrativeFallback` in new palette)
+- Budget ≤ 180KB over V1 maintained
+- All GSAP plugins used are free (core + ScrollTrigger + Observer + MotionPathPlugin)
+
+---
+
+## 7. Out of scope
+
+- V1, V2, V4, V5, V6 — untouched
+- Admin variant rotation — untouched
+- No new backend, no DB changes, no auth changes
+- No paid GSAP plugins (no Club GSAP)
+
+---
+
+## Deliverable
+
+A `/homepage-3` that opens bright and human, explains in 5 seconds what HustleAI is and who it's for, leads visitors through a calm narrative arc, and uses the cinematic 3D scene as one memorable centerpiece — not the whole page.
