@@ -5144,6 +5144,8 @@ export type Database = {
           phone: string | null
           phone_number: string | null
           portfolio_links: Json | null
+          profile_mode: string | null
+          profile_mode_locked: boolean
           provider_change_locked_until: string | null
           referral_code: string | null
           referral_credits: number
@@ -5196,6 +5198,8 @@ export type Database = {
           phone?: string | null
           phone_number?: string | null
           portfolio_links?: Json | null
+          profile_mode?: string | null
+          profile_mode_locked?: boolean
           provider_change_locked_until?: string | null
           referral_code?: string | null
           referral_credits?: number
@@ -5248,6 +5252,8 @@ export type Database = {
           phone?: string | null
           phone_number?: string | null
           portfolio_links?: Json | null
+          profile_mode?: string | null
+          profile_mode_locked?: boolean
           provider_change_locked_until?: string | null
           referral_code?: string | null
           referral_credits?: number
