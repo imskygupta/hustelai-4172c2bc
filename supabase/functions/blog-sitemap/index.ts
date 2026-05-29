@@ -26,11 +26,11 @@ function xml(body: string) {
 
 async function fetchPosts() {
   const { data } = await blog.from("blog_posts")
-    .select("slug, title, excerpt, updated_at, published_at, hero_image, noindex")
+    .select("slug, title, excerpt, updated_at, published_at, hero_image")
     .eq("status", "published")
     .order("published_at", { ascending: false })
     .limit(5000);
-  return (data ?? []).filter((p: any) => !p.noindex);
+  return data ?? [];
 }
 async function fetchCats() {
   const { data } = await blog.from("blog_categories").select("slug, updated_at");
