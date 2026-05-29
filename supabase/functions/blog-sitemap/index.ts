@@ -33,8 +33,8 @@ async function fetchPosts() {
   return data ?? [];
 }
 async function fetchCats() {
-  const { data } = await blog.from("blog_categories").select("slug, updated_at");
-  return data ?? [];
+  const { data } = await blog.from("blog_categories").select("slug, created_at");
+  return (data ?? []).map((c: any) => ({ slug: c.slug, updated_at: c.created_at }));
 }
 
 function buildIndex() {
