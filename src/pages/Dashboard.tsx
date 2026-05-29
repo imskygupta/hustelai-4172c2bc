@@ -263,6 +263,10 @@ export default function Dashboard() {
         {/* Emotional entrypoint — sells possibility, sets the calm tone. */}
         <DashboardHero />
 
+        {/* Operations layer — reinforces "OS, not generator collection" framing.
+            Counts pull live from DB2 work_deliveries + work_clients. */}
+        <OperationsTodayCard />
+
         {/* Cinematic portal into the execution OS — opens workspace in a new tab. */}
         <WorkspacePortalTile />
 
