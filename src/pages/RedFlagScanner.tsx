@@ -14,6 +14,7 @@ import { ShieldAlert, Loader2, Zap, AlertTriangle, CheckCircle, MessageCircle, C
 import { AIToolHero } from "@/components/tools/AIToolHero";
 import { getMaxUses, getUsage, bumpUsage, awardXP } from "@/lib/tool-limits";
 import { useEffect } from "react";
+import { Deliver } from "@/components/delivery/Deliver";
 
 type Risk = { severity: "high" | "medium" | "low"; title: string; explanation: string };
 type Benefit = { title: string; explanation: string };
@@ -169,9 +170,11 @@ export default function RedFlagScanner() {
             <div className="glass rounded-2xl p-5 md:p-6 space-y-3 border-primary/30 sticky bottom-2 md:static">
               <div className="flex items-center justify-between gap-2">
                 <h3 className="flex items-center gap-2 font-display font-bold text-sm md:text-base"><MessageCircle className="w-5 h-5 text-primary" /> Suggested reply</h3>
-                <Button variant="outline" size="sm" className="min-h-tap" onClick={() => { navigator.clipboard.writeText(result.suggested_reply); toast({ title: "Copied!" }); }}>
-                  <Copy className="w-4 h-4 mr-1" /> Copy
-                </Button>
+                <Deliver
+                  toolSlug="red-flag-scanner"
+                  title={`Red Flag Scan — ${result.verdict}`}
+                  text={result.suggested_reply}
+                />
               </div>
               <div className="bg-muted/30 rounded-xl p-4 max-h-[40vh] overflow-y-auto overscroll-contain">
                 <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">{result.suggested_reply}</p>
