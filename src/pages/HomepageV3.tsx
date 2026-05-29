@@ -790,7 +790,7 @@ const INSIDE_TILES: {
   { label: "Client Portal",    desc: "Branded space where decisions get signed and archived.",            icon: Users,       span: "md:col-span-3 md:row-span-1", tint: "#FFB37A", href: "/client" },
   { label: "Proposal Engine",  desc: "Polished proposals in 5 seconds. Brand applied.",                  icon: FileText,    span: "md:col-span-2 md:row-span-1", tint: "#FF7A45", href: "/tools/proposal-generator" },
   { label: "Invoice Engine",   desc: "GST-ready, multi-currency, paid in one click.",                    icon: Receipt,     span: "md:col-span-2 md:row-span-1", tint: "#FFE27A", href: "/tools/invoice-generator" },
-  { label: "Telegram Delivery",desc: "Every deliverable can drop straight into a chat.",                 icon: TelegramIcon, span: "md:col-span-2 md:row-span-1", tint: "#E8DFF3", href: "/marketing/telegram-landing" },
+  { label: "Telegram Delivery",desc: "Every deliverable can drop straight into a chat.",                 icon: Send, span: "md:col-span-2 md:row-span-1", tint: "#E8DFF3", href: "/marketing/telegram-landing" },
   { label: "Documents",        desc: "Contracts, NDAs, briefs — versioned and signable.",                icon: FileCheck2,  span: "md:col-span-2 md:row-span-1", tint: "#1A1A1F", href: "/tools/contract-generator" },
   { label: "Knowledge Base",   desc: "Your prompts, SOPs and templates in one library.",                 icon: BookOpen,    span: "md:col-span-2 md:row-span-1", tint: "#FFB37A", href: "/docs" },
   { label: "Workflow OS",      desc: "Sequences that move work forward while you're offline.",           icon: Layers,      span: "md:col-span-3 md:row-span-1", tint: "#FF7A45", href: "/dashboard/automations" },
@@ -1321,7 +1321,7 @@ function V3Footer() {
               {[
                 { icon: Twitter,      href: "https://twitter.com" },
                 { icon: Linkedin,     href: "https://linkedin.com" },
-                { icon: TelegramIcon, href: "https://t.me" },
+                { icon: Send, href: "https://t.me" },
                 { icon: Github,       href: "https://github.com" },
               ].map((s, i) => (
                 <a
