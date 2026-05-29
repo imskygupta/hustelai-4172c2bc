@@ -866,7 +866,19 @@ function WorkflowsByAudience() {
           {FLOWS.map((f, i) => (
             <button
               key={f.audience}
-              onClick={() => setActive(i)}
+              onClick={() => {
+                setActive(i);
+                // Persona handoff: persist the click so signup/login lands the
+                // user directly in their cockpit (Freelancer / Creator / Agency /
+                // Consultant). See src/lib/operator-mode.ts applyPendingModeOnSignup.
+                try {
+                  const slug = f.audience.toLowerCase() as
+                    | "freelancer" | "creator" | "agency" | "consultant";
+                  import("@/lib/operator-mode").then(({ setPendingMode }) =>
+                    setPendingMode(slug),
+                  );
+                } catch { /* ignore */ }
+              }}
               className={`px-4 py-2 rounded-full text-[13px] font-semibold transition-all ${
                 active === i
                   ? "bg-[#1A1A1F] text-white shadow-sm"

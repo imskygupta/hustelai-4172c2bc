@@ -12,6 +12,8 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Badge } from "@/components/ui/badge";
+import { useOperatorMode, OPERATOR_MODES } from "@/lib/operator-mode";
+import { Star } from "lucide-react";
 
 // Workspace OS — the core operational surface. Kept deliberately short:
 // users were overwhelmed when "Clients" concepts and doc tools were sprayed
@@ -64,6 +66,15 @@ export function AppSidebar() {
   const { profile, signOut } = useAuth();
   const userTier = profile?.subscription_tier || "free";
   const rank = tierRank(userTier);
+  const { mode } = useOperatorMode();
+
+  // Persona-aware "Recommended" group — pinned to the top so frequent-use
+  // routes for the active mode are one click away, without reordering the
+  // rest of the sidebar (preserves muscle memory).
+  const recommended = (mode
+    ? OPERATOR_MODES.find(m => m.id === mode)?.modules.slice(0, 4) ?? []
+    : []
+  ).map(m => ({ title: m.label, url: m.to }));
 
   const isActive = (url: string) => pathname === url.split("?")[0];
 
@@ -109,6 +120,28 @@ export function AppSidebar() {
             </button>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {recommended.length > 0 && (
+          <SidebarGroup>
+            <SidebarGroupLabel className="text-[10px] uppercase tracking-wider text-emerald-600 flex items-center gap-1">
+              <Star className="w-3 h-3 fill-emerald-500 text-emerald-500" /> Recommended
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {recommended.map((item) => (
+                  <SidebarMenuItem key={`rec-${item.url}`}>
+                    <SidebarMenuButton asChild isActive={isActive(item.url)}>
+                      <NavLink to={item.url} className={linkCls(isActive(item.url))}>
+                        <Star className="h-4 w-4 shrink-0 text-emerald-500" />
+                        {!collapsed && <span className="text-sm">{item.title}</span>}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
 
         <SidebarGroup>
           <SidebarGroupLabel className="text-[10px] uppercase tracking-wider text-slate-400">Workspace OS</SidebarGroupLabel>

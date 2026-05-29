@@ -337,6 +337,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         // Post-signin identity verification (one-shot per SIGNED_IN).
         if (event === "SIGNED_IN" && nextSession?.access_token) {
+          // Persona handoff: if Homepage stashed a pending operator mode,
+          // write it to profiles + localStorage now that we have a session.
+          setTimeout(() => {
+            void import("@/lib/operator-mode")
+              .then(({ applyPendingModeOnSignup }) => applyPendingModeOnSignup())
+              .catch(() => { /* ignore */ });
+          }, 0);
           const tok = nextSession.access_token;
           // Defer so we don't block the listener.
           setTimeout(() => {

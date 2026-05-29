@@ -1,318 +1,342 @@
-# Universal Delivery Layer — Phase 1.5
+# Adaptive Cockpits — Persona-driven Lenses
 
-Foundation for "Generate → Deliver → Track" across HustleAI. WhatsApp is a launcher (wa.me, no API). Telegram is a real integration (text + PDF via existing bot). Clients reuse the existing Work Hub `work_clients` table on DB2 — no second namespace.
+Goal: same database, same tools — different default view per user persona. Nothing is removed; everything is re-ranked and grouped.
 
-**Explicitly NOT building:** Client Timeline UI, Clients CRM screens, Email channel, Slack, Client Portal, share analytics dashboard, custom quota logic.  
-  
-This is actually a very solid specification. I agree with about **90–95% of it**. The biggest win is that it keeps the Universal Delivery Layer focused and doesn't accidentally turn into a CRM project. The document correctly reuses DB2 and the existing Work Hub client model instead of creating another client namespace.
+## 1. Persona model
 
-### What I would approve immediately
+Add a `profile_mode` to profiles:
 
-✅ Reuse `work_clients` in DB2  
-✅ Add `work_deliveries` table  
-✅ WhatsApp via `wa.me` (no Meta API)  
-✅ Telegram text delivery  
-✅ Telegram PDF delivery  
-✅ Universal `<Deliver />` component  
-✅ Client picker with auto-create  
-✅ Red Flag Scanner integration  
-✅ Proposal Generator integration  
-✅ Roadmap PDF integration  
-✅ Email Generator tool  
-✅ Shared quota rules with existing AI tools
+- `freelancer` | `creator` | `agency` | `consultant` | `coach` | `operator`
+- Default: `freelancer`
+- Settable from: onboarding (Homepage V3 persona tabs), Settings, and a header switcher.
 
-Those are all aligned with where HustleAI is headed.
+Migration:
 
----
+- `ALTER TABLE public.profiles ADD COLUMN profile_mode text DEFAULT 'freelancer';`
+- Lightweight `useProfileMode()` hook with React Query + localStorage fallback for guests so Homepage clicks pre-seed the mode before signup.
 
-## One thing I'd change
+## 2. Cockpit config (single source of truth)
 
-### Don't record WhatsApp delivery immediately
-
-Current plan:
-
-```text
-User clicks WhatsApp
-↓
-deliver-record fires
-
-```
-
-Problem:
-
-```text
-User clicks
-↓
-WhatsApp opens
-↓
-User never sends
-
-```
-
-You still recorded a delivery.
-
-Instead:
-
-```text
-User clicks WhatsApp
-↓
-Create pending delivery
-↓
-Open wa.me
-↓
-Mark channel=whatsapp_opened
-
-```
-
-Later you can distinguish:
-
-```text
-telegram_sent
-telegram_pdf_sent
-whatsapp_opened
-saved_to_client
-
-```
-
-Much cleaner analytics.
-
----
-
-## Email Generator is worth building
-
-You mentioned:
-
-> we do not have email generator
-
-I think it's one of the easiest wins on the platform.
-
-Templates I'd add:
-
-```text
-Client Follow-up
-Proposal Follow-up
-Invoice Reminder
-Welcome Email
-Project Completion
-Revision Request
-Cold Outreach
-Partnership Pitch
-
-```
-
-Those are used constantly.
-
-And because Deliver exists:
-
-```text
-Generate Email
-↓
-Copy
-↓
-WhatsApp
-↓
-Telegram
-↓
-Save to Client
-
-```
-
-The tool immediately has value.
-
----
-
-## Future-proof naming
-
-I would avoid:
-
-```text
-deliver-record
-deliver-telegram
-deliver-telegram-pdf
-
-```
-
-and think in terms of channels:
-
-```text
-delivery-events
-delivery-whatsapp
-delivery-telegram
-
-```
-
-because later you'll probably add:
-
-```text
-Email
-Client Portal
-Shared Link
-Slack
-
-```
-
-and you won't want Telegram-specific architecture everywhere.
-
----
-
-## Biggest product insight
-
-The most valuable part of this entire feature is NOT WhatsApp.
-
-It's this:
-
-```text
-Client enters system
-↓
-Proposal delivered
-↓
-Invoice delivered
-↓
-Research delivered
-↓
-Roadmap delivered
-
-```
-
-Now you automatically have:
-
-```text
-Client history
-
-```
-
-without ever building a CRM.
-
-That's where the magic is.
-
----
-
-## What I'd tell Lovable
-
-**Proceed with this spec almost exactly as written.**
-
-Only add:
-
-1. WhatsApp deliveries recorded as `whatsapp_opened` rather than assumed sent.
-2. Email Generator gets added to Tools Hub.
-3. Reuse existing AI quotas (same semi-free limits as other AI tools).
-4. Keep everything in DB2 / Work Hub.
-5. Reuse existing `work_clients`; do not create another clients table.
-
-After this ships, stop. Don't build Client Timeline, CRM screens, analytics dashboards, or portal delivery yet. Collect delivery data first and let the feature prove itself. The foundation is the correct size for a Phase 1.5 rollout.
-
----
-
-## 1. Data model (DB2 / workspace, `utflzmecghdtcjupgdan`)
-
-Reuse `work_clients` as-is (id, owner_id, name, email, phone, company). Add two columns + one new table:
-
-```sql
-alter table public.work_clients
-  add column if not exists last_delivery_at timestamptz,
-  add column if not exists delivery_count   int not null default 0;
-
-create table if not exists public.work_deliveries (
-  id uuid primary key default gen_random_uuid(),
-  owner_id uuid not null,
-  client_id uuid references public.work_clients(id) on delete set null,
-  tool_slug text not null,            -- 'red-flag-scanner', 'proposal-generator', 'email-generator', 'roadmap-pdf', ...
-  channel text not null,              -- 'whatsapp' | 'telegram' | 'telegram-pdf' | 'copy'
-  content_title text,
-  content_preview text,               -- first 280 chars
-  ref_kind text,                      -- 'pdf' | 'text' | 'output'
-  ref_id text,                        -- workspace_outputs.id or storage key
-  created_at timestamptz not null default now()
-);
-create index if not exists idx_work_deliveries_owner on public.work_deliveries(owner_id, created_at desc);
-create index if not exists idx_work_deliveries_client on public.work_deliveries(client_id, created_at desc);
-```
-
-GRANTs follow the same `anon_all` pattern used by other `work_*` tables (RLS scoped by `owner_id` from app). Append-only.
-
-## 2. Edge functions
-
-- `**deliver-record**` (verify_jwt=true): validates payload, upserts client by `(owner_id, phone|email)` if new, increments `delivery_count`/`last_delivery_at`, inserts `work_deliveries` row via `getWorkspace()` service client. Returns `{ client_id, delivery_id }`.
-- `**deliver-telegram**` (verify_jwt=true): sends text to user's own connected Telegram chat. Reuses `notification_integrations` lookup pattern from `useTelegramConnection`. Calls `deliver-record` internally.
-- `**deliver-telegram-pdf**` (verify_jwt=true): accepts either a public URL or a base64 PDF blob; uploads via Telegram `sendDocument` through the Telegram connector gateway. Records delivery.
-
-WhatsApp is pure client-side `wa.me` — no edge function for sending, but `deliver-record` is still called when the user confirms "Opened in WhatsApp".
-
-## 3. Universal `<Deliver />` component
-
-Single React component used by all generators.
-
-```text
-[ Copy ] [ Deliver ▾ ]
-            ├─ WhatsApp Client
-            ├─ Send to Telegram
-            ├─ Send PDF to Telegram   (only if pdf prop provided)
-            └─ Save to Client
-```
-
-Props:
+`src/config/cockpits.ts` exports one record per persona:
 
 ```ts
-type DeliverProps = {
-  toolSlug: string;
-  title: string;
-  text: string;                    // plain text payload for WA/Telegram
-  pdf?: { url?: string; blob?: Blob; filename: string };
-  defaultClientId?: string;
+type Cockpit = {
+  mode: ProfileMode;
+  todaySteps: { label: string; href: string; icon: LucideIcon }[];   // 4 steps
+  priorityTools: string[];        // tool ids, ordered
+  sidebarOrder: string[];         // section ids, ordered
+  dashboardWidgets: string[];     // widget ids, ordered
+  ctaDestination: string;         // primary CTA route
 };
 ```
 
-Behavior:
+Presets:
 
-- **Client picker first** — searchable dropdown of existing `work_clients` (name/phone/company). "+ New client" inline form (name + WhatsApp number; email/company optional). New client is created on first deliver, then sticky in dropdown.
-- **WhatsApp**: builds `https://wa.me/<digits>?text=<encoded text+signature>`, opens in new tab, fires `deliver-record` on click.
-- **Telegram (text)**: calls `deliver-telegram`. If user has no Telegram connection, shows inline "Connect Telegram" CTA linking to `/settings/telegram`.
-- **Telegram (PDF)**: only renders if `pdf` prop supplied. Uploads blob → `deliver-telegram-pdf`.
-- **Save to Client**: skips channel, just records a delivery with `channel='copy'` so the client gets logged.
+- **Freelancer** — Today: Find Client → Send Proposal → Get Paid → Deliver. Tools: Proposal, Contract, Invoice, Red Flag, Pricing Calc.
+- **Creator** — Today: Research → Create → Publish → Monetize. Tools: Faceless Content, Calendar, Lead Finder, Growth.
+- **Agency** — Today: Clients → Team → Delivery → Revenue. Sidebar promotes Workspace OS.
+- **Consultant** — Today: Discovery → Strategy → Proposal → Retainer.
+- **Coach** / **Operator** — sensible defaults (reuse Consultant/Agency for v1).
 
-Location: `src/components/delivery/Deliver.tsx` + `useClientPicker.ts` + `useDeliver.ts`.
+## 3. UI changes (presentation only, no tools removed)
 
-## 4. Wiring (this pass)
+- **Dashboard `TodayCockpit` (new):** top-of-page card driven by `cockpit.todaySteps` — 4 numbered actions, replaces nothing, sits above Operations Today.
+- `**OperationsTodayCard`, `ClientsHeadlineCard`, `RecentClientActivityFeed`, `ResumeWorkflow**` — re-ordered by `dashboardWidgets`.
+- `**AppSidebar`:** reorder existing groups by `sidebarOrder`. Group renames (no deletions):
+  - `Client OS` → Clients, Activity, Portals, Intake, Retainers
+  - `Document Studio` → Proposal, Invoice, Contract, Cards, Templates
+  - `Discovery` → HustleBot, Explore, Blueprint, Ideas
+  - All other items remain available; just collapsed by default outside the active persona's priority set.
+- **Header persona switcher:** small pill ("Freelancer ▾") next to workspace selector. Changing it instantly re-renders dashboard + sidebar.
+- **Search / Tools Hub:** unchanged — always exposes everything.
 
-Mount `<Deliver />` in:
+## 4. Onboarding wiring
 
-- **Red Flag Scanner** (`src/pages/RedFlagScanner.tsx`) — text output.
-- **Proposal Generator** — text + PDF (uses existing PDF export path; pass blob).
-- **Email Generator** — NEW lightweight tool (see §5) — text only.
-- **Roadmap PDF viewer** — PDF channel only.
+- Homepage V3 persona tabs (`Freelancer / Creator / Agency / Consultant`): on click → store `pendingMode` in localStorage.
+- On signup completion → write `profile_mode` to `profiles`.
+- First dashboard load → opens directly in that cockpit.
 
-All other generators get `<Deliver />` in later passes — out of scope here.
+## 5. Out of scope (intentionally)
 
-## 5. New tool: Email Generator (`/tools/email-generator`)
+- No deletions of tools, pages, or routes.
+- No new generators (Email Generator still parked).
+- No persona-specific data — same `work_clients`, `work_deliveries`, etc.
+- Coach/Operator personas ship as aliases of Consultant/Agency for v1; dedicated configs later.
 
-Lightweight. Reuses existing AI quota middleware — no new gating logic.
+## Files
 
-- Template chips: Follow-up · Proposal · Invoice reminder · Welcome · Project completion · Cold outreach
-- Single textarea: "Describe the situation"
-- Tone selector: Friendly · Formal · Direct
-- Generates subject + body via Lovable AI Gateway (default: `google/gemini-2.5-flash`).
-- Output card uses `<Deliver toolSlug="email-generator" />`.
-- Added to `ToolsHub.tsx` grid.
+New:
 
-## 6. Memory updates
+- `supabase/migrations/<ts>_profile_mode.sql`
+- `src/config/cockpits.ts`
+- `src/hooks/useProfileMode.ts`
+- `src/components/dashboard/TodayCockpit.tsx`
+- `src/components/layout/PersonaSwitcher.tsx`
 
-After ship: add `mem://features/delivery-layer.md` documenting the contract (component API, channel list, DB2 location, client-reuse rule) so future generators know to mount `<Deliver />` instead of inventing their own share buttons.
+Edited:
 
----
+- `src/pages/Dashboard.tsx` (mount TodayCockpit, reorder widgets via cockpit config)
+- `src/components/AppSidebar.tsx` (reorder + regroup by cockpit config; nothing removed)
+- `src/pages/Homepage*.tsx` (persist persona click to localStorage)
+- `src/pages/auth/*` (write profile_mode on signup)
+- `mem/features/adaptive-cockpits.md` (new memory)
 
-## Technical notes
+## Validation
 
-- Phone normalization: strip non-digits, prepend country code default `91` if missing leading `+`. Stored as digits-only on `work_clients.phone`.
-- Client dedupe on insert: match by `(owner_id, phone)` first, then `(owner_id, lower(email))`.
-- Telegram PDF size cap: 50 MB (Telegram limit) — show toast if larger.
-- All deliveries scoped by `owner_id` from `auth.uid()` in the edge function; frontend never trusts the client's `owner_id` field.
-- No new env vars. Uses existing `TELEGRAM_API_KEY` / `LOVABLE_API_KEY` + `WORKSPACE_SUPABASE_SERVICE_ROLE_KEY`.
+- Switch persona in header → dashboard "Today" steps + sidebar order update without reload.
+- All previously-reachable routes still reachable via Search / Tools Hub.
+- New signup from Homepage "Agency" tab lands in Agency cockpit.  
+  
+  
+This is the right direction.
+  I'd make **one refinement before Lovable builds it**:
+  ### Don't store only `profile_mode`
+  Store:
+  ```ts
+  profile_mode
+  profile_mode_locked
 
-## Shipping order
+  ```
+  Example:
+  ```ts
+  freelancer
+  creator
+  agency
+  consultant
+  coach
+  operator
 
-1. Migration (work_clients alter + work_deliveries).
-2. Edge functions: `deliver-record`, `deliver-telegram`, `deliver-telegram-pdf`.
-3. `<Deliver />` component + client picker.
-4. Wire into Red Flag Scanner + Proposal Generator + Roadmap PDF.
-5. Build Email Generator + add to ToolsHub.
-6. Save memory file.
+  ```
+  and
+  ```ts
+  profile_mode_locked = false
+
+  ```
+  Reason:
+  A freelancer can later become an agency.
+  You don't want onboarding permanently locking the product.
+  ---
+  ## I'd also evolve your model slightly
+  Instead of:
+  ```ts
+  profile_mode
+
+  ```
+  thinking only as a persona,
+  think:
+  ```ts
+  Operating Style
+
+  ```
+  Because users don't identify cleanly.
+  Example:
+  ```text
+  Creator + Agency
+  Coach + Consultant
+  Freelancer + Operator
+
+  ```
+  So V1:
+  ```ts
+  profile_mode
+
+  ```
+  is perfect.
+  Later:
+  ```ts
+  primary_mode
+  secondary_mode
+
+  ```
+  can exist.
+  No migration pain.
+  ---
+  # Biggest thing I would add
+  Your Dashboard currently has:
+  ```text
+  Operations Today
+  Clients
+  Activity
+  Resume Workflow
+
+  ```
+  For Adaptive Cockpits I would add:
+  ```text
+  TodayCockpit
+
+  ```
+  but make it visually dominant.
+  Not another card.
+  Make it the hero.
+  ---
+  Freelancer:
+  ```text
+  TODAY
+
+  1. Find Client
+  2. Send Proposal
+  3. Deliver Work
+  4. Get Paid
+
+  [ Start Proposal ]
+
+  ```
+  Creator:
+  ```text
+  TODAY
+
+  1. Research
+  2. Create
+  3. Publish
+  4. Monetize
+
+  [ Open Content OS ]
+
+  ```
+  Agency:
+  ```text
+  TODAY
+
+  1. Client Health
+  2. Team Workload
+  3. Delivery Queue
+  4. Revenue
+
+  [ Open Workspace ]
+
+  ```
+  This becomes:
+  > "What should I do next?"
+  which is the most valuable dashboard question.
+  ---
+  # About the sidebar
+  I strongly recommend:
+  ### Don't reorder everything aggressively.
+  Users hate:
+  ```text
+  Freelancer Mode
+  Sidebar A
+
+  Agency Mode
+  Sidebar B
+
+  ```
+  because muscle memory breaks.
+  Instead:
+  ### Pin + Highlight
+  Keep:
+  ```text
+  Overview
+  Tools
+  Projects
+  Clients
+  Roadmap
+  ...
+
+  ```
+  same order.
+  But add:
+  ```text
+  ⭐ Recommended
+
+  ```
+  at the top.
+  Example:
+  Agency:
+  ```text
+  ⭐ Clients
+  ⭐ Projects
+  ⭐ Revenue
+  ⭐ Team
+
+  ```
+  then normal sidebar below.
+  Much safer UX.
+  ---
+  # Homepage V3 integration
+  This is where it becomes powerful.
+  Current:
+  ```text
+  Freelancer
+  Creator
+  Agency
+  Consultant
+
+  ```
+  tabs are just marketing.
+  After this change:
+  ```text
+  Click Agency
+  ↓
+  localStorage.pendingMode = agency
+  ↓
+  signup
+  ↓
+  dashboard
+  ↓
+  agency cockpit
+  ↓
+  workspace
+  ↓
+  agency workflows preselected
+
+  ```
+  Now Homepage V3 isn't marketing anymore.
+  It's product onboarding.
+  Huge difference.
+  ---
+  # One more thing I'd tell Lovable
+  Create:
+  ```ts
+  src/config/cockpits.ts
+
+  ```
+  but include:
+  ```ts
+  emptyState
+
+  ```
+  inside every cockpit.
+  Example:
+  ```ts
+  {
+    mode: "freelancer",
+
+    emptyState: {
+      title: "Get your first client",
+      cta: "/proposal-generator"
+    }
+  }
+
+  ```
+  Agency:
+  ```ts
+  {
+    mode: "agency",
+
+    emptyState: {
+      title: "Create your first project",
+      cta: "/workspace/projects/new"
+    }
+  }
+
+  ```
+  Then all empty screens become persona-aware automatically.
+  ---
+  ### Priority order I'd ship
+  **Phase A**
+  - profile_mode column
+  - localStorage onboarding handoff
+  - cockpit config
+  - TodayCockpit hero
+  - persona switcher
+  **Phase B**
+  - sidebar recommendations
+  - widget reordering
+  - persona-specific empty states
+  **Phase C**
+  - workspace-aware cockpit
+  - agency workspace defaults
+  - creator workspace defaults
+  - consultant workspace defaults
+  That gets you 80% of the value with 20% of the engineering effort and keeps all your existing tools intact.
