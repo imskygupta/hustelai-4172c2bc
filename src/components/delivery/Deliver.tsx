@@ -12,7 +12,7 @@
  * is no separate "Add client" step. See mem://features/delivery-layer.md.
  */
 import { useState } from "react";
-import { Copy, Send, Loader2, MessageCircle, FileText, UserPlus, Save, Check, ChevronDown } from "lucide-react";
+import { Copy, Send, Loader2, MessageCircle, FileText, Save, ChevronDown, Plug } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { toast } from "@/hooks/use-toast";
@@ -54,6 +54,38 @@ export function Deliver({ toolSlug, title, text, pdf, className = "" }: DeliverP
     }
   };
 
+  // Telegram bypasses the client picker — it always goes to the user's own
+  // connected bot chat. Client attachment is optional and handled separately.
+  const sendTelegramDirect = async (kind: "telegram" | "telegram_pdf") => {
+    setBusy(kind);
+    try {
+      if (kind === "telegram") {
+        await sendDeliveryTelegram({ tool_slug: toolSlug, title, text, client: null });
+        toast({ title: "Sent to your Telegram" });
+      } else {
+        if (!pdf) return;
+        await sendDeliveryTelegramPdf({
+          tool_slug: toolSlug, title,
+          filename: pdf.filename, pdf: pdf.blob, pdf_url: pdf.url, client: null,
+        });
+        toast({ title: "PDF sent to your Telegram" });
+      }
+    } catch (e) {
+      const msg = (e as Error)?.message || "Delivery failed";
+      if (msg === "telegram_not_connected") {
+        toast({
+          title: "Telegram not connected",
+          description: "Opening settings so you can connect the HustleAI bot.",
+        });
+        navigate("/settings/telegram");
+      } else {
+        toast({ title: "Delivery failed", description: msg, variant: "destructive" });
+      }
+    } finally {
+      setBusy(null);
+    }
+  };
+
   const handlePicked = async (client: PickedClient | null) => {
     const action = picker;
     setPicker(null);
@@ -73,16 +105,6 @@ export function Deliver({ toolSlug, title, text, pdf, className = "" }: DeliverP
           client,
         });
         toast({ title: "WhatsApp opened", description: "Review and send the message." });
-      } else if (action === "telegram") {
-        await sendDeliveryTelegram({ tool_slug: toolSlug, title, text, client });
-        toast({ title: "Sent to your Telegram" });
-      } else if (action === "telegram_pdf") {
-        if (!pdf) return;
-        await sendDeliveryTelegramPdf({
-          tool_slug: toolSlug, title,
-          filename: pdf.filename, pdf: pdf.blob, pdf_url: pdf.url, client,
-        });
-        toast({ title: "PDF sent to your Telegram" });
       } else if (action === "save") {
         await recordDelivery({
           tool_slug: toolSlug, channel: "saved_to_client",
@@ -93,23 +115,14 @@ export function Deliver({ toolSlug, title, text, pdf, className = "" }: DeliverP
       }
     } catch (e) {
       const msg = (e as Error)?.message || "Delivery failed";
-      if (msg === "telegram_not_connected") {
-        toast({
-          title: "Telegram not connected",
-          description: "Connect Telegram in settings to deliver here.",
-          variant: "destructive",
-        });
-        navigate("/settings/telegram");
-      } else {
-        toast({ title: "Delivery failed", description: msg, variant: "destructive" });
-      }
+      toast({ title: "Delivery failed", description: msg, variant: "destructive" });
     } finally {
       setBusy(null);
     }
   };
 
   const requirePhone = picker === "whatsapp";
-  const allowSkipClient = picker === "telegram" || picker === "telegram_pdf";
+  const allowSkipClient = false;
 
   if (!user) {
     return (
@@ -144,21 +157,43 @@ export function Deliver({ toolSlug, title, text, pdf, className = "" }: DeliverP
                 <span className="text-[10px] text-muted-foreground">Opens wa.me with text prefilled</span>
               </div>
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setPicker("telegram")} className="gap-2" disabled={tg.loading}>
-              <Send className="w-4 h-4 text-sky-500" />
-              <div className="flex flex-col">
-                <span className="text-sm font-medium">Send to Telegram</span>
-                <span className="text-[10px] text-muted-foreground">
-                  {tg.connected ? "Delivers to your chat" : "Connect Telegram in settings"}
-                </span>
-              </div>
-            </DropdownMenuItem>
-            {pdf && (
-              <DropdownMenuItem onClick={() => setPicker("telegram_pdf")} className="gap-2" disabled={tg.loading}>
-                <FileText className="w-4 h-4 text-violet-500" />
+            {tg.connected ? (
+              <>
+                <DropdownMenuItem
+                  onClick={() => sendTelegramDirect("telegram")}
+                  className="gap-2"
+                  disabled={tg.loading || !!busy}
+                >
+                  <Send className="w-4 h-4 text-sky-500" />
+                  <div className="flex flex-col">
+                    <span className="text-sm font-medium">Send to Telegram</span>
+                    <span className="text-[10px] text-muted-foreground">Delivered to your HustleAI bot chat</span>
+                  </div>
+                </DropdownMenuItem>
+                {pdf && (
+                  <DropdownMenuItem
+                    onClick={() => sendTelegramDirect("telegram_pdf")}
+                    className="gap-2"
+                    disabled={tg.loading || !!busy}
+                  >
+                    <FileText className="w-4 h-4 text-violet-500" />
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium">Send PDF to Telegram</span>
+                      <span className="text-[10px] text-muted-foreground">Uploads as document to your chat</span>
+                    </div>
+                  </DropdownMenuItem>
+                )}
+              </>
+            ) : (
+              <DropdownMenuItem
+                onClick={() => navigate("/settings/telegram")}
+                className="gap-2"
+                disabled={tg.loading}
+              >
+                <Plug className="w-4 h-4 text-sky-500" />
                 <div className="flex flex-col">
-                  <span className="text-sm font-medium">Send PDF to Telegram</span>
-                  <span className="text-[10px] text-muted-foreground">Uploads as document</span>
+                  <span className="text-sm font-medium">Connect Telegram</span>
+                  <span className="text-[10px] text-muted-foreground">One-time setup — then deliver instantly</span>
                 </div>
               </DropdownMenuItem>
             )}
