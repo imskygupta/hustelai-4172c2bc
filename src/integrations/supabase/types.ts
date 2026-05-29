@@ -2910,18 +2910,24 @@ export type Database = {
         Row: {
           active_variant: string
           id: number
+          scheduled_for: string | null
+          scheduled_variant: string | null
           updated_at: string
           updated_by: string | null
         }
         Insert: {
           active_variant?: string
           id?: number
+          scheduled_for?: string | null
+          scheduled_variant?: string | null
           updated_at?: string
           updated_by?: string | null
         }
         Update: {
           active_variant?: string
           id?: number
+          scheduled_for?: string | null
+          scheduled_variant?: string | null
           updated_at?: string
           updated_by?: string | null
         }
