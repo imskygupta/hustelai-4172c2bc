@@ -225,6 +225,17 @@ export const OPERATOR_MODES: OperatorModeMeta[] = [
       to: "/dashboard/tools",
       sub: "See every generator, calculator and workflow.",
     },
+    todaySteps: [
+      { label: "Discover",  href: "/explore" },
+      { label: "Try a tool", href: "/dashboard/tools" },
+      { label: "Save what works", href: "/saved-hustles" },
+      { label: "Pick a mode", href: "/dashboard" },
+    ],
+    emptyState: {
+      title: "Pick a workflow to start",
+      cta: "/dashboard/tools",
+      ctaLabel: "Browse tools",
+    },
     modules: [
       { label: "Tools Hub",       to: "/dashboard/tools",     desc: "Every doc tool" },
       { label: "Workspaces",      to: "/workspaces",          desc: "Operational workspace" },
