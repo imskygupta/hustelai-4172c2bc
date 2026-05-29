@@ -18,6 +18,7 @@ import ResumeWorkflowCard from "@/components/activation/ResumeWorkflowCard";
 import ContinuityRail from "@/components/workspace/ContinuityRail";
 import AdaptiveCockpit from "@/components/dashboard/AdaptiveCockpit";
 import TodayCockpit from "@/components/dashboard/TodayCockpit";
+import { useOperatorMode, type DashboardWidgetId } from "@/lib/operator-mode";
 import OperationalFlows from "@/components/dashboard/OperationalFlows";
 import ContextualNudge from "@/components/dashboard/ContextualNudge";
 import DashboardHero from "@/components/dashboard/DashboardHero";
@@ -66,6 +67,7 @@ interface Webinar {
 export default function Dashboard() {
   const { user, profile, loading } = useAuth();
   const navigate = useNavigate();
+  const { meta: cockpitMeta } = useOperatorMode();
   // Handoff overlay state — when launching into a workspace tool we render
   // a brief fade-through so the cross-host hop feels intentional instead of
   // a hard teleport. Cleared automatically once the new surface paints.
@@ -247,6 +249,16 @@ export default function Dashboard() {
           <Button variant="outline" size="sm" className="border-slate-200" onClick={() => navigate("/explore")}>
             <Search className="w-4 h-4 mr-1.5" /> New search
           </Button>
+          {cockpitMeta?.workspace && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+              onClick={() => navigate(cockpitMeta.workspace!.dashboardCtaHref)}
+            >
+              {cockpitMeta.workspace.dashboardCtaLabel}
+            </Button>
+          )}
           {!isInfinity && (
             <Button size="sm" className="bg-emerald-500 hover:bg-emerald-600 text-white" onClick={() => navigate("/payment")}>
               <Crown className="w-4 h-4 mr-1.5" /> Upgrade
