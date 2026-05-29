@@ -395,15 +395,17 @@ function RevenueLoops({
   return (
     <group position={[center.x, center.y, center.z]} rotation={[Math.PI / 2.4, 0, 0]}>
       {[3.5, 2.6, 1.8].map((r, i) => (
-        <line key={r} scale={[r, 1, r]} position={[-center.x, -center.y, -center.z]}>
-          <primitive object={ringGeom} attach="geometry" />
-          <lineBasicMaterial
-            ref={(m) => (ringRefs.current[i] = m)}
-            color="#10b981"
-            transparent
-            opacity={0}
-          />
-        </line>
+        <group key={r} scale={[r, 1, r]} position={[-center.x, -center.y, -center.z]}>
+          <line>
+            <primitive object={ringGeom} attach="geometry" />
+            <lineBasicMaterial
+              ref={(m) => (ringRefs.current[i] = m)}
+              color="#10b981"
+              transparent
+              opacity={0}
+            />
+          </line>
+        </group>
       ))}
       <mesh ref={dotRef} position={[0, 0, 0]}>
         <sphereGeometry args={[1, 16, 16]} />
