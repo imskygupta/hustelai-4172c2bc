@@ -478,15 +478,6 @@ values ('intake-uploads', 'intake-uploads', false)
 on conflict (id) do nothing;
 `;
 
-export const SQL_BLOCKS = [
-  { id: "work", label: "Workspace Core (Work tab) — invoices, time, clients, expenses, etc.", sql: WORK_SETUP_SQL },
-  { id: "canvas", label: "Hustle Canvas — sticky notes board", sql: CANVAS_SETUP_SQL },
-  { id: "workspaces", label: "Workspaces — client list & action bar", sql: WORKSPACES_SETUP_SQL },
-  { id: "intake", label: "Intake OS — public forms, submissions, assets, portal links (DB2)", sql: INTAKE_SETUP_SQL },
-  { id: "community", label: "Community / Forum + Discord links — 3rd backend (qeswhaytgvosfzzgraef)", sql: COMMUNITY_SETUP_SQL },
-  { id: "delivery", label: "Universal Delivery Layer — work_deliveries + work_clients delivery columns (DB2)", sql: DELIVERY_SETUP_SQL },
-];
-
 // =========================================================
 // Universal Delivery Layer (DB2, utflzmecghdtcjupgdan)
 // Tracks every Deliver action (WhatsApp opened, Telegram text, Telegram PDF,
@@ -501,10 +492,10 @@ create table if not exists public.work_deliveries (
   owner_id uuid not null,
   client_id uuid references public.work_clients(id) on delete set null,
   tool_slug text not null,
-  channel text not null,                 -- 'whatsapp_opened' | 'telegram_sent' | 'telegram_pdf_sent' | 'saved_to_client'
+  channel text not null,
   content_title text,
-  content_preview text,                  -- first 280 chars
-  ref_kind text,                         -- 'pdf' | 'text' | 'output'
+  content_preview text,
+  ref_kind text,
   ref_id text,
   created_at timestamptz not null default now()
 );
@@ -516,3 +507,12 @@ do $$ begin
   create policy "anon_all_deliveries" on public.work_deliveries for all using (true) with check (true);
 exception when duplicate_object then null; end $$;
 `;
+
+export const SQL_BLOCKS = [
+  { id: "work", label: "Workspace Core (Work tab) — invoices, time, clients, expenses, etc.", sql: WORK_SETUP_SQL },
+  { id: "canvas", label: "Hustle Canvas — sticky notes board", sql: CANVAS_SETUP_SQL },
+  { id: "workspaces", label: "Workspaces — client list & action bar", sql: WORKSPACES_SETUP_SQL },
+  { id: "intake", label: "Intake OS — public forms, submissions, assets, portal links (DB2)", sql: INTAKE_SETUP_SQL },
+  { id: "community", label: "Community / Forum + Discord links — 3rd backend (qeswhaytgvosfzzgraef)", sql: COMMUNITY_SETUP_SQL },
+  { id: "delivery", label: "Universal Delivery Layer — work_deliveries + work_clients delivery columns (DB2)", sql: DELIVERY_SETUP_SQL },
+];
