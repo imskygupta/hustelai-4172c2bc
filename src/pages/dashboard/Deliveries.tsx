@@ -12,6 +12,7 @@ import { MessageCircle, Send, FileText, Save, Loader2, Inbox, Activity } from "l
 import { useAuth } from "@/hooks/useAuth";
 import { listRecentDeliveries, type DeliveryRow } from "@/lib/delivery/api";
 import { SEO } from "@/components/SEO";
+import { TelegramStatusBadge } from "@/components/delivery/TelegramStatusBadge";
 
 type Row = DeliveryRow & { client_name: string | null };
 
@@ -65,9 +66,12 @@ export default function Deliveries() {
       <SEO title="Deliveries · HustleAI Workspace OS" description="Every delivery your workspace has shipped." path="" noindex />
       <div className="max-w-5xl mx-auto space-y-6">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-slate-900 flex items-center gap-2">
-            <Activity className="w-6 h-6 text-emerald-600" /> Deliveries
-          </h1>
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <h1 className="text-2xl md:text-3xl font-bold text-slate-900 flex items-center gap-2">
+              <Activity className="w-6 h-6 text-emerald-600" /> Deliveries
+            </h1>
+            <TelegramStatusBadge />
+          </div>
           <p className="text-sm text-slate-600 mt-1">
             Proof that your workspace is doing the work — every WhatsApp, Telegram, and saved delivery, traced by client.
           </p>
@@ -136,7 +140,13 @@ function Bucket({ title, rows }: { title: string; rows: Row[] }) {
                 <div className="text-sm text-slate-900 truncate">
                   <span className="font-medium">{toolLabel(r.tool_slug)}</span>
                   <span className="text-slate-400"> → </span>
-                  <span>{r.client_name || "Unassigned"}</span>
+                  {r.client_id && r.client_name ? (
+                    <Link to={`/dashboard/clients/${r.client_id}`} className="text-emerald-700 hover:underline">
+                      {r.client_name}
+                    </Link>
+                  ) : (
+                    <span className="text-slate-500">Unassigned</span>
+                  )}
                 </div>
                 {r.content_title && (
                   <div className="text-[11px] text-slate-500 truncate">{r.content_title}</div>
