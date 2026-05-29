@@ -33,12 +33,18 @@ export type DeliverProps = {
   text: string;
   /** Optional PDF payload — when present, "Send PDF to Telegram" appears. */
   pdf?: { blob?: Blob; url?: string; filename: string };
+  /**
+   * Optional lazy PDF builder — used when the generator has no pre-built
+   * blob but can synthesize one on demand (e.g. via jsPDF). If supplied,
+   * "Send PDF to Telegram" appears even without `pdf`.
+   */
+  pdfFactory?: () => Promise<{ blob: Blob; filename: string }>;
   className?: string;
 };
 
 type PendingAction = "whatsapp" | "telegram" | "telegram_pdf" | "save" | null;
 
-export function Deliver({ toolSlug, title, text, pdf, className = "" }: DeliverProps) {
+export function Deliver({ toolSlug, title, text, pdf, pdfFactory, className = "" }: DeliverProps) {
   const { user } = useAuth();
   const tg = useTelegramConnection();
   const navigate = useNavigate();
@@ -63,10 +69,18 @@ export function Deliver({ toolSlug, title, text, pdf, className = "" }: DeliverP
         await sendDeliveryTelegram({ tool_slug: toolSlug, title, text, client: null });
         toast({ title: "Sent to your Telegram" });
       } else {
-        if (!pdf) return;
+        let blob: Blob | undefined = pdf?.blob;
+        let filename: string = pdf?.filename || `${(title || "document").replace(/[^\w.-]+/g, "-")}.pdf`;
+        let pdf_url: string | undefined = pdf?.url;
+        if (!blob && !pdf_url && pdfFactory) {
+          const built = await pdfFactory();
+          blob = built.blob;
+          filename = built.filename;
+        }
+        if (!blob && !pdf_url) return;
         await sendDeliveryTelegramPdf({
           tool_slug: toolSlug, title,
-          filename: pdf.filename, pdf: pdf.blob, pdf_url: pdf.url, client: null,
+          filename, pdf: blob, pdf_url, client: null,
         });
         toast({ title: "PDF sent to your Telegram" });
       }
