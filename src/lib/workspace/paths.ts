@@ -21,12 +21,25 @@ const LEGACY_RENAME: Record<string, string> = {
 };
 
 /**
+ * Surface-level remap applied BEFORE host-shaping. Two reasons it exists:
+ * 1. `/assets` collides with Vite's static build output directory
+ *    (`dist/assets/*.js`). On a static host the request never reaches the
+ *    SPA — the user gets a raw JS bundle. We route everyone to `library`
+ *    (the DocsLibrary screen) instead.
+ * 2. Lets us rename a surface in one place without touching every call site.
+ */
+const SURFACE_REMAP: Record<string, string> = {
+  assets: "library",
+};
+
+/**
  * `rel` is the *clean* relative path inside the workspace cockpit.
  * Examples: "" (overview), "projects/new", "providers", "pipeline",
  * "projects/abc-123", "projects/abc-123/docs", "intake/x".
  */
 export function wp(rel: string): string {
-  const r = rel.replace(/^\/+/, "");
+  const cleaned = rel.replace(/^\/+/, "");
+  const r = SURFACE_REMAP[cleaned] ?? cleaned;
   if (isWorkspaceHost()) {
     return r ? `/${r}` : "/";
   }
