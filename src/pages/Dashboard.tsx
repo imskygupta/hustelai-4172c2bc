@@ -20,6 +20,7 @@ import AdaptiveCockpit from "@/components/dashboard/AdaptiveCockpit";
 import OperationalFlows from "@/components/dashboard/OperationalFlows";
 import ContextualNudge from "@/components/dashboard/ContextualNudge";
 import DashboardHero from "@/components/dashboard/DashboardHero";
+import OperationsTodayCard from "@/components/dashboard/OperationsTodayCard";
 import WorkspacePortalTile from "@/components/dashboard/WorkspacePortalTile";
 import FirstVisitWelcome from "@/components/onboarding/FirstVisitWelcome";
 import PostExportTelegramNudge from "@/components/onboarding/PostExportTelegramNudge";
