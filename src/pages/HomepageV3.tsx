@@ -13,6 +13,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 import { SEO } from "@/components/SEO";
 import { Button } from "@/components/ui/button";
+import { HomepageExperienceToggle } from "@/components/home/HomepageExperienceToggle";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -1469,6 +1470,7 @@ export default function HomepageV3() {
       <PricingPreview />
       <V3CTA />
       <V3Footer />
+      <HomepageExperienceToggle variant="v3" />
     </div>
   );
 }

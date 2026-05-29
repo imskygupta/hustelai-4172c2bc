@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
-import { ExternalLink, Check, Loader2, LayoutTemplate, Sparkles, Box, Radio, Type, GitCommit, CalendarClock, X } from "lucide-react";
+import { ExternalLink, Check, Loader2, LayoutTemplate, Sparkles, Box, Radio, Type, GitCommit, CalendarClock, X, Megaphone } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { SEO } from "@/components/SEO";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -33,6 +34,11 @@ export default function HomepageVariants() {
   const [scheduleVariant, setScheduleVariant] = useState<HomepageVariant>("v2");
   const [scheduleAt, setScheduleAt] = useState<string>("");
   const [scheduling, setScheduling] = useState(false);
+  const [bannerEnabled, setBannerEnabled] = useState(false);
+  const [bannerText, setBannerText] = useState("✨ See the new HustleAI experience");
+  const [bannerCtaText, setBannerCtaText] = useState("Try V3");
+  const [bannerTarget, setBannerTarget] = useState<HomepageVariant>("v3");
+  const [bannerSaving, setBannerSaving] = useState(false);
 
   useEffect(() => {
     refresh().finally(() => setLoading(false));
@@ -41,13 +47,40 @@ export default function HomepageVariants() {
   async function refresh() {
     const { data } = await supabase
       .from("homepage_variant_setting")
-      .select("active_variant, scheduled_variant, scheduled_for")
+      .select("active_variant, scheduled_variant, scheduled_for, banner_enabled, banner_text, banner_cta_text, banner_target_variant")
       .eq("id", 1)
       .maybeSingle();
     if (data?.active_variant) setActive(data.active_variant as HomepageVariant);
     setScheduledVariant((data?.scheduled_variant as HomepageVariant | null) ?? null);
     setScheduledFor((data?.scheduled_for as string | null) ?? null);
+    if (data) {
+      setBannerEnabled(!!(data as any).banner_enabled);
+      setBannerText((data as any).banner_text || "✨ See the new HustleAI experience");
+      setBannerCtaText((data as any).banner_cta_text || "Try V3");
+      setBannerTarget(((data as any).banner_target_variant || "v3") as HomepageVariant);
+    }
   }
+
+  const saveBanner = async () => {
+    setBannerSaving(true);
+    try {
+      const { error } = await supabase
+        .from("homepage_variant_setting")
+        .update({
+          banner_enabled: bannerEnabled,
+          banner_text: bannerText,
+          banner_cta_text: bannerCtaText,
+          banner_target_variant: bannerTarget,
+        })
+        .eq("id", 1);
+      if (error) throw error;
+      toast({ title: "Discovery banner updated", description: bannerEnabled ? "Visible on / and in the navbar." : "Banner is now hidden." });
+    } catch (e: any) {
+      toast({ title: "Save failed", description: e?.message ?? "Permission denied", variant: "destructive" });
+    } finally {
+      setBannerSaving(false);
+    }
+  };
 
   const save = async (v: HomepageVariant) => {
     setSaving(v);
@@ -198,6 +231,54 @@ export default function HomepageVariants() {
                   {scheduling ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <CalendarClock className="w-4 h-4 mr-1" />}
                   Schedule
                 </Button>
+              </CardContent>
+            </Card>
+
+            <Card className="mt-6">
+              <CardHeader>
+                <div className="flex items-start gap-3">
+                  <div className="p-2 rounded-lg bg-gradient-to-br from-emerald-500/15 to-sky-500/15">
+                    <Megaphone className="w-5 h-5 text-emerald-600" />
+                  </div>
+                  <div className="flex-1">
+                    <CardTitle className="text-lg">Discovery banner</CardTitle>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Voluntary opt-in: a subtle pill near the hero on <code className="font-mono">/</code> plus a "New ✨" badge in the navbar. Visitors who click are routed to the target variant and remembered for 30 days. No automatic rotation.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 pt-1">
+                    <span className="text-xs text-muted-foreground">{bannerEnabled ? "On" : "Off"}</span>
+                    <Switch checked={bannerEnabled} onCheckedChange={setBannerEnabled} />
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="grid md:grid-cols-2 gap-4">
+                <div className="md:col-span-2">
+                  <label className="text-xs font-semibold text-muted-foreground block mb-1">Banner text</label>
+                  <Input value={bannerText} onChange={(e) => setBannerText(e.target.value)} placeholder="✨ See the new HustleAI experience" />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-muted-foreground block mb-1">CTA label</label>
+                  <Input value={bannerCtaText} onChange={(e) => setBannerCtaText(e.target.value)} placeholder="Try V3" />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-muted-foreground block mb-1">Target variant</label>
+                  <select
+                    value={bannerTarget}
+                    onChange={(e) => setBannerTarget(e.target.value as HomepageVariant)}
+                    className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
+                  >
+                    {VARIANTS.filter((v) => v.id !== "v1").map((v) => (
+                      <option key={v.id} value={v.id}>{v.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="md:col-span-2 flex justify-end">
+                  <Button onClick={saveBanner} disabled={bannerSaving}>
+                    {bannerSaving ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Check className="w-4 h-4 mr-1" />}
+                    Save banner
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </>

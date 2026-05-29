@@ -2909,6 +2909,10 @@ export type Database = {
       homepage_variant_setting: {
         Row: {
           active_variant: string
+          banner_cta_text: string
+          banner_enabled: boolean
+          banner_target_variant: string
+          banner_text: string
           id: number
           scheduled_for: string | null
           scheduled_variant: string | null
@@ -2917,6 +2921,10 @@ export type Database = {
         }
         Insert: {
           active_variant?: string
+          banner_cta_text?: string
+          banner_enabled?: boolean
+          banner_target_variant?: string
+          banner_text?: string
           id?: number
           scheduled_for?: string | null
           scheduled_variant?: string | null
@@ -2925,6 +2933,10 @@ export type Database = {
         }
         Update: {
           active_variant?: string
+          banner_cta_text?: string
+          banner_enabled?: boolean
+          banner_target_variant?: string
+          banner_text?: string
           id?: number
           scheduled_for?: string | null
           scheduled_variant?: string | null
