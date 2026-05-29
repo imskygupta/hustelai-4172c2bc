@@ -12,7 +12,8 @@
  * is no separate "Add client" step. See mem://features/delivery-layer.md.
  */
 import { useState } from "react";
-import { Copy, Send, Loader2, MessageCircle, FileText, Save, ChevronDown, Plug } from "lucide-react";
+import { Copy, Send, Loader2, MessageCircle, FileText, Save, ChevronDown, Plug, Check, ArrowRight } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { toast } from "@/hooks/use-toast";
@@ -43,6 +44,7 @@ export type DeliverProps = {
 };
 
 type PendingAction = "whatsapp" | "telegram" | "telegram_pdf" | "save" | null;
+type LastDelivery = { clientId?: string; clientName?: string; channelLabel: string } | null;
 
 export function Deliver({ toolSlug, title, text, pdf, pdfFactory, className = "" }: DeliverProps) {
   const { user } = useAuth();
@@ -50,6 +52,7 @@ export function Deliver({ toolSlug, title, text, pdf, pdfFactory, className = ""
   const navigate = useNavigate();
   const [busy, setBusy] = useState<PendingAction>(null);
   const [picker, setPicker] = useState<PendingAction>(null);
+  const [lastDelivery, setLastDelivery] = useState<LastDelivery>(null);
 
   const copy = async () => {
     try {
@@ -68,6 +71,7 @@ export function Deliver({ toolSlug, title, text, pdf, pdfFactory, className = ""
       if (kind === "telegram") {
         await sendDeliveryTelegram({ tool_slug: toolSlug, title, text, client: null });
         toast({ title: "Sent to your Telegram" });
+        setLastDelivery({ channelLabel: "Telegram" });
       } else {
         let blob: Blob | undefined = pdf?.blob;
         let filename: string = pdf?.filename || `${(title || "document").replace(/[^\w.-]+/g, "-")}.pdf`;
@@ -83,6 +87,7 @@ export function Deliver({ toolSlug, title, text, pdf, pdfFactory, className = ""
           filename, pdf: blob, pdf_url, client: null,
         });
         toast({ title: "PDF sent to your Telegram" });
+        setLastDelivery({ channelLabel: "Telegram PDF" });
       }
     } catch (e) {
       const msg = (e as Error)?.message || "Delivery failed";
@@ -113,19 +118,21 @@ export function Deliver({ toolSlug, title, text, pdf, pdfFactory, className = ""
         }
         const url = buildWaUrl(client.phone, `${title ? `*${title}*\n\n` : ""}${text}\n\n— via HustleAI`);
         window.open(url, "_blank", "noopener,noreferrer");
-        await recordDelivery({
+        const rec = await recordDelivery({
           tool_slug: toolSlug, channel: "whatsapp_opened",
           content_title: title, content_preview: text,
           client,
-        });
+        }) as { client_id?: string };
         toast({ title: "WhatsApp opened", description: "Review and send the message." });
+        setLastDelivery({ clientId: client.id || rec?.client_id, clientName: client.name, channelLabel: "WhatsApp" });
       } else if (action === "save") {
-        await recordDelivery({
+        const rec = await recordDelivery({
           tool_slug: toolSlug, channel: "saved_to_client",
           content_title: title, content_preview: text,
           client,
-        });
+        }) as { client_id?: string };
         toast({ title: "Saved to client" });
+        setLastDelivery({ clientId: client.id || rec?.client_id, clientName: client.name, channelLabel: "Saved" });
       }
     } catch (e) {
       const msg = (e as Error)?.message || "Delivery failed";
