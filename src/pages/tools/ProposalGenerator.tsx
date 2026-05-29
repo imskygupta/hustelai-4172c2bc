@@ -21,6 +21,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { printWithMeta, watermarkModeForTier } from "@/lib/tools/print-meta";
 import { continueWorkflow } from "@/lib/nextActions/continueWorkflow";
 import { emitDelight, pickDelight, bumpDelightCount } from "@/lib/delight-bus";
+import { Deliver } from "@/components/delivery/Deliver";
 
 const STORAGE_KEY = "hustleai-tool-proposal-v1";
 
@@ -163,6 +164,24 @@ export default function ProposalGenerator() {
               <Button onClick={handleDownload} className="bg-slate-900 hover:bg-slate-800 text-white">
                 <Download className="w-4 h-4 mr-2" /> Download PDF
               </Button>
+              <Deliver
+                toolSlug="proposal-generator"
+                title={`${s.projectTitle} — Proposal`}
+                text={[
+                  `Proposal ${s.proposalNo} — ${s.projectTitle}`,
+                  `Prepared for ${s.clientName}${s.clientCompany ? `, ${s.clientCompany}` : ""}`,
+                  ``,
+                  `Scope: ${s.scope}`,
+                  ``,
+                  `Deliverables:`,
+                  ...s.deliverables.map((d) => `• ${d}`),
+                  ``,
+                  `Timeline: ${s.timeline}`,
+                  `Investment: ${s.currency}${s.pricing} — ${s.pricingNote}`,
+                  ``,
+                  s.notes,
+                ].join("\n")}
+              />
             </div>
           </div>
 
