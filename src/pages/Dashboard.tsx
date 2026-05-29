@@ -21,6 +21,7 @@ import OperationalFlows from "@/components/dashboard/OperationalFlows";
 import ContextualNudge from "@/components/dashboard/ContextualNudge";
 import DashboardHero from "@/components/dashboard/DashboardHero";
 import OperationsTodayCard from "@/components/dashboard/OperationsTodayCard";
+import RecentClientActivityFeed from "@/components/dashboard/RecentClientActivityFeed";
 import WorkspacePortalTile from "@/components/dashboard/WorkspacePortalTile";
 import FirstVisitWelcome from "@/components/onboarding/FirstVisitWelcome";
 import PostExportTelegramNudge from "@/components/onboarding/PostExportTelegramNudge";
@@ -266,6 +267,10 @@ export default function Dashboard() {
         {/* Operations layer — reinforces "OS, not generator collection" framing.
             Counts pull live from DB2 work_deliveries + work_clients. */}
         <OperationsTodayCard />
+
+        {/* Live "your workspace is doing things" feed — pulled from
+            DB2 work_deliveries so the dashboard feels alive on every visit. */}
+        <RecentClientActivityFeed />
 
         {/* Cinematic portal into the execution OS — opens workspace in a new tab. */}
         <WorkspacePortalTile />

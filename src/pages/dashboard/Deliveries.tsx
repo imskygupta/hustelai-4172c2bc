@@ -63,17 +63,17 @@ export default function Deliveries() {
 
   return (
     <div className="min-h-screen bg-slate-50 p-4 md:p-8">
-      <SEO title="Deliveries · HustleAI Workspace OS" description="Every delivery your workspace has shipped." path="" noindex />
+        <SEO title="Client Activity · HustleAI Workspace OS" description="Every delivery your workspace has shipped, by client." path="" noindex />
       <div className="max-w-5xl mx-auto space-y-6">
         <div>
           <div className="flex items-center justify-between gap-3 flex-wrap">
             <h1 className="text-2xl md:text-3xl font-bold text-slate-900 flex items-center gap-2">
-              <Activity className="w-6 h-6 text-emerald-600" /> Deliveries
+              <Activity className="w-6 h-6 text-emerald-600" /> Client Activity
             </h1>
             <TelegramStatusBadge />
           </div>
           <p className="text-sm text-slate-600 mt-1">
-            Proof that your workspace is doing the work — every WhatsApp, Telegram, and saved delivery, traced by client.
+            Every piece of work you've shipped — by channel, by client, in order.
           </p>
         </div>
 
