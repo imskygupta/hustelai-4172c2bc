@@ -7,6 +7,8 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { isAppShellRoute } from "@/components/app-shell-routes";
 import { NotificationCenter } from "@/components/NotificationCenter";
+import { useHomepageBanner, setHomepagePreference } from "@/lib/homepage/useHomepageBanner";
+import { logEvent } from "@/integrations/analytics/client";
 
 const navLinks = [
   { label: "Platform", href: "/platform" },
@@ -48,6 +50,7 @@ export function Navbar() {
   const [moreOpen, setMoreOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const banner = useHomepageBanner();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -86,6 +89,16 @@ export function Navbar() {
 
   const isActive = (href: string) => location.pathname === href;
   const isHome = location.pathname === "/";
+  const showNewBadge =
+    banner.enabled && location.pathname !== `/homepage-${banner.targetVariant.replace("v", "")}`;
+  const openNew = () => {
+    setHomepagePreference("v3");
+    void logEvent("homepage_experiment", "homepage_banner_click", {
+      variant: banner.targetVariant, source: "navbar",
+      page: location.pathname,
+    });
+    navigate(`/homepage-${banner.targetVariant.replace("v", "")}`);
+  };
 
   return (
     <nav className={`fixed top-0 left-0 right-0 w-full z-50 transition-all duration-300 ${
@@ -105,6 +118,15 @@ export function Navbar() {
 
         {/* Desktop nav */}
         <div className="hidden md:flex items-center gap-1">
+          {showNewBadge && (
+            <button
+              onClick={openNew}
+              className="mr-1 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold uppercase tracking-wider border border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors"
+              title={banner.text}
+            >
+              New <span aria-hidden>✨</span>
+            </button>
+          )}
           {navLinks.map((l) =>
             l.children ? (
               <div key={l.label} className="relative"
