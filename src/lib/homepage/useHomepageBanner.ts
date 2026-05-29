@@ -12,8 +12,8 @@ export type HomepageBannerConfig = {
 const CACHE_KEY = "hustleai:homepage_banner";
 const DEFAULT: HomepageBannerConfig = {
   enabled: false,
-  text: "✨ See the new HustleAI experience",
-  ctaText: "Try V3",
+  text: "✨ A new way to explore HustleAI",
+  ctaText: "Preview",
   targetVariant: "v3",
 };
 
