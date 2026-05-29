@@ -553,12 +553,12 @@ function CinematicSection() {
 // ---------- 6. Transformation strip ----------
 function Transformation() {
   const rows = [
-    { before: "Re-draft proposals from scratch", after: "AI ships v1 in 5 seconds, branded" },
-    { before: "Chase invoices over WhatsApp", after: "Auto-reminders, status visible in portal" },
-    { before: "Files scattered across drives", after: "One workspace, one source of truth" },
-    { before: "Approvals lost in email threads", after: "Tracked, timestamped, signed in portal" },
-    { before: "Forget to send the follow-up", after: "Workflow does it while you sleep" },
-    { before: "Looks like a freelancer", after: "Looks like a company" },
+    { icon: FileText,   before: "Re-draft proposals from scratch", after: "AI ships v1 in 5 seconds, branded" },
+    { icon: Wallet,     before: "Chase invoices over WhatsApp",    after: "Auto-reminders, status visible in portal" },
+    { icon: Boxes,      before: "Files scattered across drives",   after: "One workspace, one source of truth" },
+    { icon: FileCheck2, before: "Approvals lost in email threads", after: "Tracked, timestamped, signed in portal" },
+    { icon: MoonStar,   before: "Forget to send the follow-up",    after: "Workflow does it while you sleep" },
+    { icon: Building2,  before: "Looks like a freelancer",         after: "Looks like a company" },
   ];
   return (
     <section className="px-4 py-20 md:py-28">
@@ -578,10 +578,12 @@ function Transformation() {
               <div className="text-[10px] uppercase tracking-[0.22em] text-[#1A1A1F]/40 font-semibold mb-5">
                 Before
               </div>
-              <ul className="space-y-3.5">
+              <ul className="space-y-3">
                 {rows.map((r) => (
-                  <li key={r.before} className="text-[#1A1A1F]/55 text-[14px] flex items-start gap-2">
-                    <span className="text-[#1A1A1F]/30 mt-1">·</span>
+                  <li key={r.before} className="text-[#1A1A1F]/55 text-[14px] flex items-center gap-3">
+                    <span className="w-8 h-8 rounded-xl bg-[#1A1A1F]/[0.04] flex items-center justify-center shrink-0 grayscale">
+                      <r.icon className="w-4 h-4 text-[#1A1A1F]/40" />
+                    </span>
                     <span className="line-through decoration-[#1A1A1F]/20">{r.before}</span>
                   </li>
                 ))}
@@ -591,10 +593,12 @@ function Transformation() {
               <div className="text-[10px] uppercase tracking-[0.22em] text-[#FF7A45] font-semibold mb-5">
                 After
               </div>
-              <ul className="space-y-3.5">
+              <ul className="space-y-3">
                 {rows.map((r) => (
-                  <li key={r.after} className="text-[#1A1A1F] text-[14px] flex items-start gap-2">
-                    <span className="text-[#FF7A45] mt-1">→</span>
+                  <li key={r.after} className="text-[#1A1A1F] text-[14px] flex items-center gap-3">
+                    <span className="w-8 h-8 rounded-xl bg-[#FF7A45]/15 flex items-center justify-center shrink-0">
+                      <r.icon className="w-4 h-4 text-[#FF7A45]" />
+                    </span>
                     <span>{r.after}</span>
                   </li>
                 ))}
