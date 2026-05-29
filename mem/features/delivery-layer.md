@@ -31,3 +31,13 @@ Every AI generator surfaces a single `<Deliver />` (src/components/delivery/Deli
 - Frontend never sends `owner_id` — server resolves from JWT.
 - No new quota logic; respect existing tool limits at the generator level.
 - Do NOT build Clients CRM / Timeline UI yet — collect data first.
+
+## Visibility surfaces (wave 2)
+- `/dashboard/deliveries` — read-only activity log (Today / This week / Earlier), week stat tiles (deliveries, clients, WhatsApp opens, Telegram sends). Sidebar entry under Workspace OS.
+- `OperationsTodayCard` on `/dashboard` — Deliveries today · Clients total · Telegram connected · Automations active. "View activity →" → `/dashboard/deliveries`.
+- `ClientPickerDialog` shows the top 3 most-recent clients as one-click chips before the search list.
+
+## PDF delivery
+- `<Deliver pdfFactory={async () => ({ blob, filename })} />` — lazy builder used when a generator has no pre-built blob. Telegram PDF item appears when either `pdf` or `pdfFactory` is supplied.
+- `src/lib/delivery/pdf-from-text.ts` — minimal jsPDF helper for text-based proposals/reports. Use this for any generator without an html2canvas-friendly preview.
+- ProposalGenerator uses `pdfFactory` + `buildTextPdfBlob` to deliver "Proposal PDF → Telegram" in one click. Replicate the same pattern for Roadmap / Red Flag report next.
