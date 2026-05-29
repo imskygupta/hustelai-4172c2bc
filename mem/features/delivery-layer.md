@@ -37,6 +37,11 @@ Every AI generator surfaces a single `<Deliver />` (src/components/delivery/Deli
 - `OperationsTodayCard` on `/dashboard` — Deliveries today · Clients total · Telegram connected · Automations active. "View activity →" → `/dashboard/deliveries`.
 - `ClientPickerDialog` shows the top 3 most-recent clients as one-click chips before the search list.
 
+## Visibility surfaces (wave 3)
+- `/dashboard/clients/:id` (`ClientProfile.tsx`) — header (name/company/contact, last activity), 4 channel stats, full delivery timeline. Reached from any client name in `/dashboard/deliveries` (now linked).
+- `<TelegramStatusBadge />` (`src/components/delivery/TelegramStatusBadge.tsx`) — small pill, "Telegram connected" or "Connect Telegram →" linking `/settings/telegram`. Rendered in: Deliver toolbar, Deliveries page header, Client Profile header. Reuse it on any future surface — do not re-implement.
+- After a successful WhatsApp/Save delivery, `<Deliver />` shows an inline "✓ Delivered · {channel} · Open {client} →" pill (state: `lastDelivery`) so the user is pulled into the client profile. Telegram-direct sends omit the client link (no client attached).
+
 ## PDF delivery
 - `<Deliver pdfFactory={async () => ({ blob, filename })} />` — lazy builder used when a generator has no pre-built blob. Telegram PDF item appears when either `pdf` or `pdfFactory` is supplied.
 - `src/lib/delivery/pdf-from-text.ts` — minimal jsPDF helper for text-based proposals/reports. Use this for any generator without an html2canvas-friendly preview.
