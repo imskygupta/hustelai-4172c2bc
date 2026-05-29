@@ -309,16 +309,60 @@ export const RECIPES: Recipe[] = [
 
 const MODE_KEY = "hai.operator.mode";
 const RECIPE_KEY = "hai.operator.recipe";
+const PENDING_MODE_KEY = "hai.operator.pendingMode";
+const LOCKED_KEY = "hai.operator.modeLocked";
+
+/**
+ * Pending mode handoff: Homepage persona tabs (Freelancer / Creator / Agency /
+ * Consultant) write here. After signup completes we apply it to the user's
+ * profile and clear the pending slot.
+ */
+export function setPendingMode(mode: OperatorMode) {
+  try { localStorage.setItem(PENDING_MODE_KEY, mode); } catch { /* ignore */ }
+}
+export function getPendingMode(): OperatorMode | null {
+  try { return (localStorage.getItem(PENDING_MODE_KEY) as OperatorMode) || null; } catch { return null; }
+}
+export function clearPendingMode() {
+  try { localStorage.removeItem(PENDING_MODE_KEY); } catch { /* ignore */ }
+}
+
+export function isModeLocked(): boolean {
+  try { return localStorage.getItem(LOCKED_KEY) === "1"; } catch { return false; }
+}
+function setModeLocked(locked: boolean) {
+  try {
+    if (locked) localStorage.setItem(LOCKED_KEY, "1");
+    else localStorage.removeItem(LOCKED_KEY);
+  } catch { /* ignore */ }
+}
 
 export function getOperatorMode(): OperatorMode | null {
   try { return (localStorage.getItem(MODE_KEY) as OperatorMode) || null; } catch { return null; }
 }
-export function setOperatorMode(mode: OperatorMode | null) {
+export function setOperatorMode(mode: OperatorMode | null, opts: { lock?: boolean; syncDb?: boolean } = { syncDb: true }) {
   try {
     if (mode) localStorage.setItem(MODE_KEY, mode);
     else localStorage.removeItem(MODE_KEY);
+    if (opts.lock !== undefined) setModeLocked(!!opts.lock);
     window.dispatchEvent(new Event("hai:operator-mode-change"));
   } catch { /* ignore */ }
+  if (opts.syncDb !== false && mode) {
+    // Fire-and-forget: persist to profiles for cross-device continuity.
+    void (async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        await supabase
+          .from("profiles")
+          .update({
+            profile_mode: mode,
+            ...(opts.lock ? { profile_mode_locked: true } : {}),
+          } as never)
+          .eq("user_id", user.id);
+      } catch { /* ignore — localStorage stays source-of-truth on failure */ }
+    })();
+  }
 }
 
 export function getRecipe(): RecipeId | null {
@@ -346,12 +390,47 @@ export function useOperatorMode() {
     };
   }, []);
 
+  // On mount: if no local mode yet, hydrate from profiles.profile_mode so the
+  // persona persists across devices and sessions.
+  useEffect(() => {
+    if (getOperatorMode()) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user || cancelled) return;
+        const { data } = await supabase
+          .from("profiles")
+          .select("profile_mode, profile_mode_locked")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        const dbMode = (data as { profile_mode?: string; profile_mode_locked?: boolean } | null)?.profile_mode as OperatorMode | undefined;
+        if (!cancelled && dbMode) {
+          setOperatorMode(dbMode, { syncDb: false, lock: !!(data as { profile_mode_locked?: boolean } | null)?.profile_mode_locked });
+        }
+      } catch { /* ignore */ }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
   return {
     mode,
     recipe,
     meta: mode ? OPERATOR_MODES.find(m => m.id === mode) || null : null,
     activeRecipe: recipe ? RECIPES.find(r => r.id === recipe) || null : null,
-    chooseMode: (m: OperatorMode | null) => setOperatorMode(m),
+    chooseMode: (m: OperatorMode | null, opts?: { lock?: boolean }) => setOperatorMode(m, { lock: opts?.lock, syncDb: true }),
     chooseRecipe: (r: RecipeId | null) => setRecipe(r),
+    locked: isModeLocked(),
   };
+}
+
+/**
+ * Apply a pending mode (set by Homepage persona tabs) to a freshly signed-in
+ * user. Safe to call multiple times — no-op if no pending mode exists.
+ */
+export async function applyPendingModeOnSignup() {
+  const pending = getPendingMode();
+  if (!pending) return;
+  setOperatorMode(pending, { lock: true, syncDb: true });
+  clearPendingMode();
 }
