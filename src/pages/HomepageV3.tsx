@@ -1012,15 +1012,16 @@ const INSIDE_TILES: {
   tint: string;
   href: string;
   badge?: string;
+  external?: boolean;
 }[] = [
-  { label: "AI Workspace",     desc: "One desk for client work, drafts, and async tasks.",                icon: Bot,         span: "md:col-span-3 md:row-span-2", tint: "#FF7A45", href: "/workspace-portal" },
-  { label: "Client Portal",    desc: "Branded space where decisions get signed and archived.",            icon: Users,       span: "md:col-span-3 md:row-span-1", tint: "#FFB37A", href: "/client" },
+  { label: "AI Workspace",     desc: "One desk for client work, drafts, and async tasks.",                icon: Bot,         span: "md:col-span-3 md:row-span-2", tint: "#FF7A45", href: "https://workspace.hustlaiapp.in", external: true },
+  { label: "Client Portal",    desc: "Branded space where decisions get signed and archived.",            icon: Users,       span: "md:col-span-3 md:row-span-1", tint: "#FFB37A", href: "https://workspace.hustlaiapp.in/client", external: true },
   { label: "Proposal Engine",  desc: "Polished proposals in 5 seconds. Brand applied.",                  icon: FileText,    span: "md:col-span-2 md:row-span-1", tint: "#FF7A45", href: "/tools/proposal-generator" },
   { label: "Invoice Engine",   desc: "GST-ready, multi-currency, paid in one click.",                    icon: Receipt,     span: "md:col-span-2 md:row-span-1", tint: "#FFE27A", href: "/tools/invoice-generator" },
-  { label: "Telegram Delivery",desc: "Every deliverable can drop straight into a chat.",                 icon: Send, span: "md:col-span-2 md:row-span-1", tint: "#E8DFF3", href: "/marketing/telegram-landing" },
+  { label: "Telegram Delivery",desc: "Every deliverable can drop straight into a chat.",                 icon: Send, span: "md:col-span-2 md:row-span-1", tint: "#E8DFF3", href: "/onboarding" },
   { label: "Documents",        desc: "Contracts, NDAs, briefs — versioned and signable.",                icon: FileCheck2,  span: "md:col-span-2 md:row-span-1", tint: "#1A1A1F", href: "/tools/contract-generator" },
-  { label: "Knowledge Base",   desc: "Your prompts, SOPs and templates in one library.",                 icon: BookOpen,    span: "md:col-span-2 md:row-span-1", tint: "#FFB37A", href: "/docs" },
-  { label: "Workflow OS",      desc: "Sequences that move work forward while you're offline.",           icon: Layers,      span: "md:col-span-3 md:row-span-1", tint: "#FF7A45", href: "/dashboard/automations" },
+  { label: "Knowledge Base",   desc: "Your prompts, SOPs and templates in one library.",                 icon: BookOpen,    span: "md:col-span-2 md:row-span-1", tint: "#FFB37A", href: "https://docs.hustlaiapp.in/", external: true },
+  { label: "Workflow OS",      desc: "Sequences that move work forward while you're offline.",           icon: Layers,      span: "md:col-span-3 md:row-span-1", tint: "#FF7A45", href: "https://workspace.hustlaiapp.in", external: true },
   { label: "AI Tools",         desc: "12+ AI utilities for content, pricing, research and ops.",         icon: Sparkles,    span: "md:col-span-3 md:row-span-1", tint: "#FFE27A", href: "/tools" },
 ];
 
@@ -1045,12 +1046,9 @@ function WhatsInside() {
         <div className="grid grid-cols-2 md:grid-cols-6 md:auto-rows-[180px] gap-3 md:gap-4">
           {INSIDE_TILES.map((t) => {
             const isDark = t.tint === "#1A1A1F";
-            return (
-              <Link
-                key={t.label}
-                to={t.href}
-                className={`group relative overflow-hidden rounded-3xl border border-[#1A1A1F]/8 p-5 md:p-6 transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_30px_60px_-30px_rgba(255,122,69,0.35)] ${t.span} ${isDark ? "bg-[#1A1A1F] text-white" : "bg-white text-[#1A1A1F]"}`}
-              >
+            const cls = `group relative overflow-hidden rounded-3xl border border-[#1A1A1F]/8 p-5 md:p-6 transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_30px_60px_-30px_rgba(255,122,69,0.35)] ${t.span} ${isDark ? "bg-[#1A1A1F] text-white" : "bg-white text-[#1A1A1F]"}`;
+            const inner = (
+              <>
                 {/* Soft parallax tint blob */}
                 <div
                   className="pointer-events-none absolute -bottom-16 -right-16 w-48 h-48 rounded-full blur-3xl opacity-60 transition-transform duration-700 group-hover:scale-125"
@@ -1069,7 +1067,12 @@ function WhatsInside() {
                     Open <ArrowUpRight className="w-3.5 h-3.5" />
                   </div>
                 </div>
-              </Link>
+              </>
+            );
+            return t.external ? (
+              <a key={t.label} href={t.href} target="_blank" rel="noreferrer" className={cls}>{inner}</a>
+            ) : (
+              <Link key={t.label} to={t.href} className={cls}>{inner}</Link>
             );
           })}
         </div>
@@ -1559,13 +1562,13 @@ function V3CTA() {
 
 // ---------- 10. Destination footer ----------
 function V3Footer() {
-  const cols: { title: string; links: { label: string; href: string }[] }[] = [
+  const cols: { title: string; links: { label: string; href: string; external?: boolean }[] }[] = [
     {
       title: "Product",
       links: [
-        { label: "Workspace",        href: "/workspace-portal" },
+        { label: "Workspace",        href: "https://workspace.hustlaiapp.in", external: true },
         { label: "AI Tools",         href: "/tools" },
-        { label: "Client Portal",    href: "/client" },
+        { label: "Client Portal",    href: "https://workspace.hustlaiapp.in/client", external: true },
         { label: "Invoices",         href: "/tools/invoice-generator" },
         { label: "Proposals",        href: "/tools/proposal-generator" },
       ],
@@ -1574,7 +1577,7 @@ function V3Footer() {
       title: "Resources",
       links: [
         { label: "Blog",       href: "/blog" },
-        { label: "Docs",       href: "/docs" },
+        { label: "Docs",       href: "https://docs.hustlaiapp.in/", external: true },
         { label: "Templates",  href: "/tools" },
         { label: "Guides",     href: "/how-it-works" },
         { label: "Changelog",  href: "/blog" },
@@ -1665,17 +1668,24 @@ function V3Footer() {
             <div key={c.title} className="md:col-span-3">
               <div className="text-[11px] uppercase tracking-[0.22em] font-semibold text-white/40 mb-4">{c.title}</div>
               <ul className="space-y-2.5">
-                {c.links.map((l) => (
-                  <li key={l.href}>
-                    <Link
-                      to={l.href}
-                      className="text-[13px] text-white/75 hover:text-[#FFB37A] inline-flex items-center gap-1 transition-colors"
-                    >
-                      {l.label}
-                      <ChevronRight className="w-3 h-3 opacity-0 -translate-x-1 group-hover:opacity-100 transition-all" />
-                    </Link>
-                  </li>
-                ))}
+                {c.links.map((l) => {
+                  const cls = "text-[13px] text-white/75 hover:text-[#FFB37A] inline-flex items-center gap-1 transition-colors";
+                  return (
+                    <li key={l.href}>
+                      {l.external ? (
+                        <a href={l.href} target="_blank" rel="noreferrer" className={cls}>
+                          {l.label}
+                          <ChevronRight className="w-3 h-3 opacity-0 -translate-x-1 group-hover:opacity-100 transition-all" />
+                        </a>
+                      ) : (
+                        <Link to={l.href} className={cls}>
+                          {l.label}
+                          <ChevronRight className="w-3 h-3 opacity-0 -translate-x-1 group-hover:opacity-100 transition-all" />
+                        </Link>
+                      )}
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           ))}
@@ -1684,7 +1694,7 @@ function V3Footer() {
         <div className="flex flex-col md:flex-row items-center justify-between gap-3 pt-6 border-t border-white/10 text-[12px] text-white/45">
           <div>© {new Date().getFullYear()} HustleAI · Run your business like software.</div>
           <div className="flex gap-5">
-            <Link to="/terms" className="hover:text-white">Terms</Link>
+            <Link to="/terms-conditions" className="hover:text-white">Terms</Link>
             <Link to="/privacy-policy" className="hover:text-white">Privacy</Link>
             <Link to="/refund-policy" className="hover:text-white">Refunds</Link>
             <Link to="/acceptable-use" className="hover:text-white">Acceptable use</Link>
