@@ -182,6 +182,39 @@ export default function ProposalGenerator() {
                   ``,
                   s.notes,
                 ].join("\n")}
+                pdfFactory={async () => {
+                  const text = [
+                    `Proposal ${s.proposalNo}`,
+                    `Date: ${s.date}`,
+                    `From: ${s.bizName} <${s.bizEmail}>`,
+                    `To: ${s.clientName}${s.clientCompany ? `, ${s.clientCompany}` : ""}`,
+                    ``,
+                    `PROJECT`,
+                    s.projectTitle,
+                    ``,
+                    `SCOPE`,
+                    s.scope,
+                    ``,
+                    `DELIVERABLES`,
+                    ...s.deliverables.map((d) => `  • ${d}`),
+                    ``,
+                    `TIMELINE`,
+                    s.timeline,
+                    ``,
+                    `INVESTMENT`,
+                    `${s.currency}${s.pricing} — ${s.pricingNote}`,
+                    ``,
+                    s.notes ? `NOTES\n${s.notes}` : "",
+                  ].filter(Boolean).join("\n");
+                  const safeProject = (s.projectTitle || "Proposal").replace(/[^\w.-]+/g, "-").slice(0, 60);
+                  return {
+                    blob: buildTextPdfBlob({
+                      title: `${s.projectTitle || "Proposal"} — ${s.proposalNo}`,
+                      text,
+                    }),
+                    filename: `${safeProject}-${s.proposalNo}.pdf`,
+                  };
+                }}
               />
             </div>
           </div>
