@@ -6,14 +6,17 @@ import {
   Inbox, Bot, FileCheck2, Wallet, MoonStar,
   Boxes, BookOpen, FileText, Receipt, MessageSquare, Database, Layers,
   PenLine, Search, Image as ImageIcon, Newspaper, ChevronRight,
-  Mail, Twitter, Linkedin, Github, Check,
+  Mail, Twitter, Linkedin, Github, Check, Menu, Brain, Truck, BadgeDollarSign,
 } from "lucide-react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 import { SEO } from "@/components/SEO";
 import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Footer } from "@/components/Footer";
 import { HomepageExperienceToggle } from "@/components/home/HomepageExperienceToggle";
+import { getLatestBlogPosts, type LatestBlogPost } from "@/integrations/blog/latest";
 
 gsap.registerPlugin(ScrollTrigger);
 
