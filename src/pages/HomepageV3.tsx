@@ -6,14 +6,17 @@ import {
   Inbox, Bot, FileCheck2, Wallet, MoonStar,
   Boxes, BookOpen, FileText, Receipt, MessageSquare, Database, Layers,
   PenLine, Search, Image as ImageIcon, Newspaper, ChevronRight,
-  Mail, Twitter, Linkedin, Github, Check,
+  Mail, Twitter, Linkedin, Github, Check, Menu, Brain, Truck, BadgeDollarSign,
 } from "lucide-react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 import { SEO } from "@/components/SEO";
 import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Footer } from "@/components/Footer";
 import { HomepageExperienceToggle } from "@/components/home/HomepageExperienceToggle";
+import { getLatestBlogPosts, type LatestBlogPost } from "@/integrations/blog/latest";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -115,6 +118,7 @@ function RevealHeading({
 // ---------- 1. Floating glass navbar ----------
 function V3Nav() {
   const [scrolled, setScrolled] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
   const navigate = useNavigate();
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -130,17 +134,34 @@ function V3Nav() {
     { label: "What's inside", href: "#proof" },
   ];
 
+  const sheetLinks = [
+    { label: "Audiences", href: "#audiences" },
+    { label: "How it works", href: "#cinematic" },
+    { label: "Workflows", href: "#workflows" },
+    { label: "What's inside", href: "#inside" },
+    { label: "Free tools", href: "/tools" },
+    { label: "Docs", href: "https://docs.hustlaiapp.in/", external: true },
+    { label: "Blog", href: "https://blogs.hustlaiapp.in/", external: true },
+    { label: "Pricing", href: "/pricing" },
+  ];
+
   return (
     <div className="fixed top-4 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none">
       <div
-        className={`pointer-events-auto flex items-center gap-1 rounded-full border border-[#1A1A1F]/10 bg-white/70 backdrop-blur-xl px-2 py-2 transition-all duration-500 ${
+        className={`pointer-events-auto flex items-center gap-1 rounded-full border border-[#1A1A1F]/10 bg-white/80 backdrop-blur-xl pl-2 pr-1.5 py-1.5 md:py-2 md:px-2 transition-all duration-500 ${
           scrolled ? "shadow-[0_12px_40px_-20px_rgba(255,122,69,0.35)] scale-[0.98]" : "shadow-sm"
         }`}
       >
-        <Link to="/" className="px-3 py-1.5 rounded-full text-[13px] font-semibold text-[#1A1A1F] tracking-tight flex items-center gap-1.5">
+        <Link to="/" className="px-2.5 md:px-3 py-1.5 rounded-full text-[13px] font-semibold text-[#1A1A1F] tracking-tight flex items-center gap-1.5">
           <span className="w-2 h-2 rounded-full bg-[#FF7A45]" />
           HustleAI
         </Link>
+        <span
+          aria-hidden
+          className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-[0.14em] bg-emerald-50 border border-emerald-200 text-emerald-700"
+        >
+          Preview <Sparkles className="w-2.5 h-2.5" />
+        </span>
         <div className="hidden md:flex items-center">
           {links.map((l) => (
             <a
@@ -160,10 +181,88 @@ function V3Nav() {
         </button>
         <button
           onClick={() => navigate("/onboarding")}
-          className="px-3.5 py-1.5 rounded-full text-[13px] font-semibold text-white bg-[#1A1A1F] hover:bg-[#FF7A45] transition-colors"
+          className="px-3 md:px-3.5 py-1.5 rounded-full text-[12px] md:text-[13px] font-semibold text-white bg-[#1A1A1F] hover:bg-[#FF7A45] transition-colors whitespace-nowrap"
         >
           Get started
         </button>
+
+        {/* Mobile hamburger */}
+        <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+          <SheetTrigger asChild>
+            <button
+              className="md:hidden ml-1 w-8 h-8 rounded-full flex items-center justify-center text-[#1A1A1F]/70 hover:text-[#1A1A1F] hover:bg-[#FBF7F1] transition-colors"
+              aria-label="Open menu"
+            >
+              <Menu className="w-4 h-4" />
+            </button>
+          </SheetTrigger>
+          <SheetContent side="right" className="bg-[#FBF7F1] border-l border-[#1A1A1F]/10 p-0 w-[85vw] max-w-sm">
+            <div className="flex flex-col h-full">
+              <div className="px-5 pt-6 pb-4 border-b border-[#1A1A1F]/10">
+                <div className="flex items-center gap-2 text-[15px] font-semibold text-[#1A1A1F]">
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#FF7A45]" />
+                  HustleAI
+                  <span className="ml-auto inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-[0.14em] bg-emerald-50 border border-emerald-200 text-emerald-700">
+                    Preview <Sparkles className="w-2.5 h-2.5" />
+                  </span>
+                </div>
+              </div>
+              <nav className="flex-1 overflow-y-auto px-2 py-4">
+                {sheetLinks.map((l) =>
+                  l.external ? (
+                    <a
+                      key={l.href}
+                      href={l.href}
+                      rel="noopener"
+                      onClick={() => setSheetOpen(false)}
+                      className="flex items-center justify-between px-4 py-3 rounded-2xl text-[15px] font-medium text-[#1A1A1F] hover:bg-white transition-colors"
+                    >
+                      {l.label}
+                      <ArrowUpRight className="w-4 h-4 text-[#1A1A1F]/40" />
+                    </a>
+                  ) : l.href.startsWith("#") ? (
+                    <a
+                      key={l.href}
+                      href={l.href}
+                      onClick={() => setSheetOpen(false)}
+                      className="flex items-center justify-between px-4 py-3 rounded-2xl text-[15px] font-medium text-[#1A1A1F] hover:bg-white transition-colors"
+                    >
+                      {l.label}
+                      <ChevronRight className="w-4 h-4 text-[#1A1A1F]/40" />
+                    </a>
+                  ) : (
+                    <Link
+                      key={l.href}
+                      to={l.href}
+                      onClick={() => setSheetOpen(false)}
+                      className="flex items-center justify-between px-4 py-3 rounded-2xl text-[15px] font-medium text-[#1A1A1F] hover:bg-white transition-colors"
+                    >
+                      {l.label}
+                      <ChevronRight className="w-4 h-4 text-[#1A1A1F]/40" />
+                    </Link>
+                  ),
+                )}
+              </nav>
+              <div className="px-5 py-5 border-t border-[#1A1A1F]/10 space-y-2 bg-white/60">
+                <Button
+                  asChild
+                  className="w-full bg-[#1A1A1F] hover:bg-[#FF7A45] text-white rounded-full h-11 text-[14px] font-semibold"
+                >
+                  <Link to="/onboarding" onClick={() => setSheetOpen(false)}>
+                    Get started <ArrowRight className="w-4 h-4 ml-1" />
+                  </Link>
+                </Button>
+                <Link
+                  to="/login"
+                  onClick={() => setSheetOpen(false)}
+                  className="block text-center text-[13px] text-[#1A1A1F]/65 hover:text-[#1A1A1F] py-2"
+                >
+                  Sign in
+                </Link>
+              </div>
+            </div>
+          </SheetContent>
+        </Sheet>
       </div>
     </div>
   );
@@ -172,7 +271,7 @@ function V3Nav() {
 // ---------- 2. Hero ----------
 function Hero() {
   return (
-    <section className="relative pt-32 md:pt-40 pb-16 md:pb-24 px-4 overflow-hidden">
+    <section className="relative pt-24 md:pt-40 pb-12 md:pb-24 px-4 overflow-hidden">
       {/* warm sunrise glow */}
       <div className="absolute inset-x-0 top-0 h-[600px] -z-10 opacity-80 pointer-events-none"
            style={{
@@ -180,20 +279,21 @@ function Hero() {
                "radial-gradient(60% 60% at 50% 0%, rgba(255,179,122,0.55) 0%, rgba(255,226,122,0.25) 40%, transparent 75%)",
            }} />
       <div className="container mx-auto max-w-5xl text-center">
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[#1A1A1F]/10 bg-white/60 backdrop-blur text-[11px] uppercase tracking-[0.18em] font-semibold text-[#1A1A1F]/70 mb-6">
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[#1A1A1F]/10 bg-white/60 backdrop-blur text-[10px] md:text-[11px] uppercase tracking-[0.18em] font-semibold text-[#1A1A1F]/70 mb-4 md:mb-6">
           <Sparkles className="w-3.5 h-3.5 text-[#FF7A45]" />
-          The operating system for independent businesses
+          <span className="hidden sm:inline">The operating system for independent businesses</span>
+          <span className="sm:hidden">Operating system for indie businesses</span>
         </div>
         <RevealHeading
           as="h1"
           text="Your business, running quietly in the background."
-          className="font-display font-semibold tracking-tight text-[#1A1A1F] text-4xl md:text-7xl leading-[1.02] max-w-4xl mx-auto"
+          className="font-display font-semibold tracking-tight text-[#1A1A1F] text-[2.25rem] sm:text-5xl md:text-7xl leading-[1.05] md:leading-[1.02] max-w-[18ch] sm:max-w-3xl md:max-w-4xl mx-auto text-balance"
         />
-        <p className="mt-6 text-[#1A1A1F]/65 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
+        <p className="mt-4 md:mt-6 text-[#1A1A1F]/65 text-[15px] md:text-xl max-w-xl md:max-w-2xl mx-auto leading-relaxed">
           HustleAI is the operating system for freelancers, creators, consultants
           and small agencies — so client work moves forward even when you don't.
         </p>
-        <div className="mt-8 flex items-center justify-center gap-3">
+        <div className="mt-6 md:mt-8 flex items-center justify-center gap-3">
           <Button
             size="lg"
             className="bg-[#1A1A1F] hover:bg-[#FF7A45] text-white rounded-full px-6 h-12 text-[14px] font-semibold"
@@ -219,40 +319,41 @@ function Hero() {
 // ---------- 3. Who it's for ----------
 const AUDIENCES = [
   // active = index of the in-progress step (●). Earlier = ✓, later = ○.
-  { icon: Briefcase,     label: "Freelancers",    steps: ["Lead", "Proposal", "Approval", "Invoice", "Payment"],         tint: "#FF7A45", active: 2, size: "lg" as const },
-  { icon: Palette,       label: "Creators",       steps: ["Idea", "Script", "Content", "Distribution", "Sponsor"],       tint: "#FFB37A", active: 1, size: "md" as const },
-  { icon: Building2,     label: "Small agencies", steps: ["Client", "Workspace", "Team", "Delivery", "Retention"],       tint: "#1A1A1F", active: 3, size: "md" as const },
-  { icon: GraduationCap, label: "Consultants",    steps: ["Research", "Proposal", "Approval", "Engagement", "Renewal"],  tint: "#FF7A45", active: 2, size: "md" as const },
-  { icon: Mic2,          label: "Coaches",        steps: ["Booking", "Session", "Notes", "Follow-up", "Renewal"],        tint: "#E8DFF3", active: 1, size: "md" as const },
-  { icon: Wrench,        label: "Operators",      steps: ["Request", "Workflow", "Action", "Delivery", "Payment"],       tint: "#FFE27A", active: 2, size: "md" as const },
+  { icon: Briefcase,     label: "Freelancers",    steps: ["Lead", "Proposal", "Approval", "Invoice", "Payment"],         tint: "#FF7A45", active: 2, size: "lg" as const, automations: 3, pending: 1, outcome: "Proposal → Payment, all tracked in one portal." },
+  { icon: Palette,       label: "Creators",       steps: ["Idea", "Script", "Content", "Distribution", "Sponsor"],       tint: "#FFB37A", active: 1, size: "md" as const, automations: 2, pending: 2, outcome: "Idea to publish — without losing the thread." },
+  { icon: Building2,     label: "Small agencies", steps: ["Client", "Workspace", "Team", "Delivery", "Retention"],       tint: "#1A1A1F", active: 3, size: "md" as const, automations: 4, pending: 1, outcome: "Multi-client workspace that scales with you." },
+  { icon: GraduationCap, label: "Consultants",    steps: ["Research", "Proposal", "Approval", "Engagement", "Renewal"],  tint: "#FF7A45", active: 2, size: "md" as const, automations: 3, pending: 1, outcome: "Engagements that renew themselves." },
+  { icon: Mic2,          label: "Coaches",        steps: ["Booking", "Session", "Notes", "Follow-up", "Renewal"],        tint: "#E8DFF3", active: 1, size: "md" as const, automations: 2, pending: 1, outcome: "Bookings to renewals on autopilot." },
+  { icon: Wrench,        label: "Operators",      steps: ["Request", "Workflow", "Action", "Delivery", "Payment"],       tint: "#FFE27A", active: 2, size: "md" as const, automations: 5, pending: 0, outcome: "Every request becomes a billable workflow." },
 ];
 
 function WhoItsFor() {
   const ink = (tint: string) => (tint === "#E8DFF3" || tint === "#FFE27A" ? "#1A1A1F" : tint);
   return (
-    <section id="audiences" className="px-4 py-20 md:py-28">
+    <section id="audiences" className="px-4 py-14 md:py-28">
       <div className="container mx-auto max-w-6xl">
-        <div className="max-w-3xl mb-10 md:mb-14">
+        <div className="max-w-3xl mb-8 md:mb-14">
           <div className="text-[11px] uppercase tracking-[0.22em] font-semibold text-[#FF7A45] mb-3">
             Who it's for
           </div>
           <RevealHeading
             text="Different businesses. Same operating system."
-            className="font-display font-semibold tracking-tight text-[#1A1A1F] text-3xl md:text-5xl leading-[1.05]"
+            className="font-display font-semibold tracking-tight text-[#1A1A1F] text-[1.65rem] sm:text-3xl md:text-5xl leading-[1.05]"
           />
-          <p className="mt-4 text-[#1A1A1F]/55 text-base md:text-lg leading-relaxed">
+          <p className="mt-3 md:mt-4 text-[#1A1A1F]/55 text-[14px] md:text-lg leading-relaxed">
             You run the business. The system runs the process.
           </p>
         </div>
         {/* Editorial bento grid — featured card spans 2 cols on desktop */}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 auto-rows-fr">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-2.5 md:gap-4 auto-rows-fr">
           {AUDIENCES.map((a, idx) => {
             const color = ink(a.tint);
             const featured = a.size === "lg";
+            const progress = Math.min(100, ((a.active + 1) / a.steps.length) * 100);
             return (
               <div
                 key={a.label}
-                className={`group relative overflow-hidden rounded-3xl border border-[#1A1A1F]/8 bg-white p-5 md:p-6 transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_30px_60px_-30px_rgba(255,122,69,0.35)] ${
+                className={`group relative overflow-hidden rounded-2xl md:rounded-3xl border border-[#1A1A1F]/8 bg-white p-3.5 md:p-6 transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_30px_60px_-30px_rgba(255,122,69,0.35)] ${
                   featured ? "md:col-span-2 md:row-span-1" : ""
                 }`}
               >
@@ -262,20 +363,20 @@ function WhoItsFor() {
                   style={{ background: a.tint }}
                 />
 
-                <div className="relative flex items-start justify-between gap-4">
-                  <div className="flex items-center gap-3">
+                <div className="relative flex items-start justify-between gap-2">
+                  <div className="flex items-center gap-2 md:gap-3 min-w-0">
                     <div
-                      className="w-10 h-10 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110"
+                      className="w-8 h-8 md:w-10 md:h-10 rounded-xl md:rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 shrink-0"
                       style={{ background: `${a.tint}22`, color }}
                     >
-                      <a.icon className="w-5 h-5" />
+                      <a.icon className="w-4 h-4 md:w-5 md:h-5" />
                     </div>
-                    <div className="text-[#1A1A1F] font-display text-xl font-semibold">
+                    <div className="text-[#1A1A1F] font-display text-[15px] md:text-xl font-semibold leading-tight truncate">
                       {a.label}
                     </div>
                   </div>
                   <span
-                    className="text-[10px] font-mono uppercase tracking-[0.18em] text-[#1A1A1F]/30 group-hover:text-[#1A1A1F]/55 transition-colors"
+                    className="hidden md:inline text-[10px] font-mono uppercase tracking-[0.18em] text-[#1A1A1F]/30 group-hover:text-[#1A1A1F]/55 transition-colors"
                   >
                     {String(idx + 1).padStart(2, "0")}
                   </span>
@@ -283,7 +384,7 @@ function WhoItsFor() {
 
                 {/* Persistent ambient workflow — always visible at low opacity, lights up on hover */}
                 <ul
-                  className={`relative mt-5 space-y-1.5 opacity-30 group-hover:opacity-100 transition-opacity duration-500 ${
+                  className={`relative mt-3 md:mt-5 space-y-1 md:space-y-1.5 opacity-40 group-hover:opacity-100 transition-opacity duration-500 ${
                     featured ? "md:grid md:grid-cols-5 md:gap-3 md:space-y-0" : ""
                   }`}
                 >
@@ -293,7 +394,7 @@ function WhoItsFor() {
                     return (
                       <li
                         key={s}
-                        className={`flex items-center justify-between gap-2 text-[12px] font-mono leading-none ${
+                        className={`flex items-center justify-between gap-2 text-[11px] md:text-[12px] font-mono leading-none ${
                           featured ? "md:flex-col md:items-start md:gap-2 md:justify-start" : ""
                         }`}
                         style={{ color: live ? color : "#1A1A1F" }}
@@ -326,9 +427,81 @@ function WhoItsFor() {
                     );
                   })}
                 </ul>
+
+                {/* Tiny timeline strip */}
+                <div className="relative mt-3 h-[3px] rounded-full bg-[#1A1A1F]/8 overflow-hidden">
+                  <div
+                    className="absolute inset-y-0 left-0 rounded-full transition-all duration-700 group-hover:opacity-100 opacity-70"
+                    style={{ width: `${progress}%`, background: color }}
+                  />
+                </div>
+
+                {/* Micro-state summary */}
+                <div className="relative mt-2 flex items-center gap-2 text-[10px] md:text-[11px] font-mono uppercase tracking-[0.12em] text-[#1A1A1F]/55">
+                  <span className="inline-flex items-center gap-1">
+                    <span className="w-1 h-1 rounded-full" style={{ background: color }} />
+                    {a.automations} auto
+                  </span>
+                  <span className="text-[#1A1A1F]/20">·</span>
+                  <span className="inline-flex items-center gap-1">
+                    <span className="w-1 h-1 rounded-full bg-[#1A1A1F]/30" />
+                    {a.pending} pending
+                  </span>
+                </div>
+
+                {/* Outcome reveal on desktop hover */}
+                <div className="hidden md:block relative mt-3 max-h-0 opacity-0 group-hover:max-h-24 group-hover:opacity-100 transition-all duration-500 overflow-hidden">
+                  <div className="pt-3 border-t border-[#1A1A1F]/8 text-[12px] text-[#1A1A1F]/65 leading-snug">
+                    {a.outcome}
+                  </div>
+                </div>
               </div>
             );
           })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ---------- 3b. What actually happens inside HustleAI ----------
+const CLARITY = [
+  { icon: Inbox,            label: "Capture", desc: "Everything enters one place" },
+  { icon: Brain,            label: "Think",   desc: "AI drafts, researches and organizes" },
+  { icon: Truck,            label: "Deliver", desc: "Exports, portals, approvals" },
+  { icon: BadgeDollarSign,  label: "Earn",    desc: "Invoices, payments, retention" },
+];
+
+function ClarityStrip() {
+  return (
+    <section className="px-4 pt-2 pb-14 md:pb-20">
+      <div className="container mx-auto max-w-6xl">
+        <div className="max-w-2xl mb-6 md:mb-10">
+          <div className="text-[11px] uppercase tracking-[0.22em] font-semibold text-[#FF7A45] mb-3">
+            What actually happens inside HustleAI
+          </div>
+          <h2 className="font-display font-semibold tracking-tight text-[#1A1A1F] text-2xl md:text-4xl leading-[1.1]">
+            Four moves. Every business runs on them.
+          </h2>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 md:gap-4">
+          {CLARITY.map((c, i) => (
+            <div
+              key={c.label}
+              className="group relative rounded-2xl border border-[#1A1A1F]/8 bg-white p-4 md:p-6 transition-all hover:-translate-y-0.5 hover:border-[#FF7A45]/30"
+            >
+              <div className="flex items-center gap-2 md:gap-3 mb-2 md:mb-3">
+                <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl md:rounded-2xl bg-[#FBF7F1] flex items-center justify-center group-hover:bg-[#FF7A45]/10 transition-colors">
+                  <c.icon className="w-4 h-4 md:w-5 md:h-5 text-[#FF7A45]" />
+                </div>
+                <span className="text-[10px] font-mono tracking-[0.18em] text-[#1A1A1F]/30 tabular-nums">
+                  0{i + 1}
+                </span>
+              </div>
+              <div className="font-display text-base md:text-xl font-semibold text-[#1A1A1F] leading-tight">{c.label}</div>
+              <div className="text-[12px] md:text-[13px] text-[#1A1A1F]/60 mt-1 leading-snug">{c.desc}</div>
+            </div>
+          ))}
         </div>
       </div>
     </section>
@@ -1042,35 +1215,38 @@ function FreeToolsEcosystem() {
 }
 
 // ---------- 8d. Documentation Pathway ----------
-const DOC_PATH = [
-  { label: "Guides",     icon: BookOpen,   desc: "Step-by-step playbooks for each workflow." },
-  { label: "Templates",  icon: Layers,     desc: "Pre-built proposals, contracts, intake forms." },
-  { label: "Workflows",  icon: Boxes,      desc: "Repeatable sequences for client delivery." },
-  { label: "Docs",       icon: FileText,   desc: "Everything the system does, written down." },
-  { label: "API-ready",  icon: Database,   desc: "Soon: programmatic hooks for builders." },
+const WORKFLOW_GUIDES = [
+  { audience: "Freelancer", icon: Briefcase,     guide: "Client onboarding guide",       desc: "Lead → portal → first invoice, in one playbook.",     href: "https://docs.hustlaiapp.in/first-roadmap", external: true },
+  { audience: "Creator",    icon: Palette,       guide: "Content production workflow",   desc: "Idea capture → script → distribution, with AI inline.", href: "https://docs.hustlaiapp.in/", external: true },
+  { audience: "Agency",     icon: Building2,     guide: "Multi-client operations",       desc: "Run multiple workspaces without losing the thread.",    href: "https://docs.hustlaiapp.in/", external: true },
+  { audience: "Consultant", icon: GraduationCap, guide: "Proposal to payment system",    desc: "From research to renewal — every stage scripted.",      href: "https://docs.hustlaiapp.in/", external: true },
 ];
 
 function DocumentationPathway() {
   return (
-    <section id="learn" className="px-4 py-20 md:py-28">
+    <section id="learn" className="px-4 py-16 md:py-28">
       <div className="container mx-auto max-w-6xl">
-        <div className="grid md:grid-cols-12 gap-10 items-start">
+        <div className="grid md:grid-cols-12 gap-8 md:gap-10 items-start">
           <div className="md:col-span-5">
             <div className="text-[11px] uppercase tracking-[0.22em] font-semibold text-[#FF7A45] mb-3">
-              Learn the system
+              Start with your workflow
             </div>
             <RevealHeading
-              text="You don't just get software. You get operating procedures."
-              className="font-display font-semibold tracking-tight text-[#1A1A1F] text-3xl md:text-[2.75rem] leading-[1.05]"
+              text="Pick your business. We'll show you the playbook."
+              className="font-display font-semibold tracking-tight text-[#1A1A1F] text-[1.65rem] sm:text-3xl md:text-[2.75rem] leading-[1.05]"
             />
-            <p className="mt-5 text-[#1A1A1F]/65 text-[15px] md:text-lg leading-relaxed">
+            <p className="mt-4 md:mt-5 text-[#1A1A1F]/65 text-[14px] md:text-lg leading-relaxed">
               Every tool ships with a guide, a template and a workflow you can
               copy. Read once, run forever.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
-              <Link to="/docs" className="px-4 py-2 rounded-full bg-[#1A1A1F] text-white text-[13px] font-semibold inline-flex items-center gap-1.5">
+              <a
+                href="https://docs.hustlaiapp.in/"
+                rel="noopener"
+                className="px-4 py-2 rounded-full bg-[#1A1A1F] text-white text-[13px] font-semibold inline-flex items-center gap-1.5"
+              >
                 Open docs <ArrowRight className="w-4 h-4" />
-              </Link>
+              </a>
               <Link to="/how-it-works" className="px-4 py-2 rounded-full border border-[#1A1A1F]/10 text-[#1A1A1F] text-[13px] font-semibold hover:bg-white">
                 How it works
               </Link>
@@ -1078,25 +1254,33 @@ function DocumentationPathway() {
           </div>
 
           <div className="md:col-span-7">
-            <div className="rounded-[2rem] border border-[#1A1A1F]/8 bg-white p-6 md:p-8">
-              <ol className="space-y-3">
-                {DOC_PATH.map((d, i) => (
-                  <li key={d.label} className="group flex items-start gap-4">
-                    <div className="flex flex-col items-center pt-1">
-                      <div className="w-10 h-10 rounded-2xl bg-[#FBF7F1] border border-[#1A1A1F]/8 flex items-center justify-center group-hover:bg-[#FF7A45]/15 group-hover:border-[#FF7A45]/30 transition-colors">
-                        <d.icon className="w-4 h-4 text-[#1A1A1F]" />
-                      </div>
-                      {i < DOC_PATH.length - 1 && (
-                        <div className="w-px flex-1 bg-gradient-to-b from-[#1A1A1F]/15 to-transparent mt-1 min-h-[28px]" />
-                      )}
+            <div className="grid sm:grid-cols-2 gap-3 md:gap-4">
+              {WORKFLOW_GUIDES.map((g) => (
+                <a
+                  key={g.audience}
+                  href={g.href}
+                  rel="noopener"
+                  className="group rounded-2xl border border-[#1A1A1F]/8 bg-white p-5 hover:-translate-y-0.5 hover:border-[#FF7A45]/30 transition-all"
+                >
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-9 h-9 rounded-xl bg-[#FBF7F1] flex items-center justify-center group-hover:bg-[#FF7A45]/15 transition-colors">
+                      <g.icon className="w-4 h-4 text-[#1A1A1F]" />
                     </div>
-                    <div className="pb-5">
-                      <div className="font-display text-lg font-semibold text-[#1A1A1F]">{d.label}</div>
-                      <div className="text-[13px] text-[#1A1A1F]/60 mt-0.5">{d.desc}</div>
-                    </div>
-                  </li>
-                ))}
-              </ol>
+                    <span className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#1A1A1F]/40">
+                      {g.audience}
+                    </span>
+                  </div>
+                  <div className="font-display text-[16px] md:text-[17px] font-semibold text-[#1A1A1F] leading-snug">
+                    → {g.guide}
+                  </div>
+                  <div className="mt-1.5 text-[12px] md:text-[13px] text-[#1A1A1F]/60 leading-relaxed">
+                    {g.desc}
+                  </div>
+                  <div className="mt-3 text-[11px] font-semibold text-[#FF7A45] inline-flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    Read guide <ArrowUpRight className="w-3 h-3" />
+                  </div>
+                </a>
+              ))}
             </div>
           </div>
         </div>
@@ -1106,47 +1290,93 @@ function DocumentationPathway() {
 }
 
 // ---------- 8e. Blog & Knowledge Network ----------
-const BLOG_FEATURED = {
+const BLOG_FALLBACK_FEATURED = {
+  slug: "",
   category: "Field guide",
   title: "The freelancer's operating system — a 30-day blueprint",
   excerpt: "How to install repeatable rhythms across client work, content and revenue so the business compounds while you sleep.",
   read: "12 min read",
 };
-const BLOG_LIST = [
-  { tag: "Trending",   title: "Why every freelancer needs a client portal in 2026",         read: "6 min" },
-  { tag: "AI",         title: "How to use AI to write proposals that convert at 60%+",      read: "9 min" },
-  { tag: "Workflow",   title: "Turning Telegram into a delivery channel for client work",   read: "7 min" },
-  { tag: "Pricing",    title: "The retainer math that turns one client into recurring revenue", read: "8 min" },
-  { tag: "Updates",    title: "What's new this month — Q3 changelog & shipping notes",      read: "4 min" },
+const BLOG_FALLBACK_LIST = [
+  { slug: "", tag: "Trending", title: "Why every freelancer needs a client portal in 2026",         read: "6 min" },
+  { slug: "", tag: "AI",        title: "How to use AI to write proposals that convert at 60%+",      read: "9 min" },
+  { slug: "", tag: "Workflow",  title: "Turning Telegram into a delivery channel for client work",   read: "7 min" },
+  { slug: "", tag: "Pricing",   title: "The retainer math that turns one client into recurring revenue", read: "8 min" },
 ];
+const BLOG_CATEGORIES = ["Workflows", "AI", "Pricing", "Client work", "Tools", "Updates"];
+
+function postHref(slug: string) {
+  return slug ? `/blog/${slug}` : "/blog";
+}
+function readingLabel(min: number | null | undefined) {
+  return min && min > 0 ? `${min} min` : "5 min";
+}
 
 function BlogKnowledge() {
+  const [posts, setPosts] = useState<LatestBlogPost[]>([]);
+  useEffect(() => {
+    const cancel = getLatestBlogPosts(5, (data) => {
+      if (Array.isArray(data) && data.length) setPosts(data);
+    });
+    return () => { try { (cancel as any)?.(); } catch {} };
+  }, []);
+
+  const featured = posts[0]
+    ? {
+        slug: posts[0].slug,
+        category: posts[0].category || "Field guide",
+        title: posts[0].title,
+        excerpt: posts[0].excerpt || "Operator-grade systems for independent businesses.",
+        read: `${readingLabel(posts[0].reading_time)} read`,
+      }
+    : BLOG_FALLBACK_FEATURED;
+
+  const list = posts.length > 1
+    ? posts.slice(1, 5).map((p) => ({
+        slug: p.slug,
+        tag: p.category || "Insight",
+        title: p.title,
+        read: readingLabel(p.reading_time),
+      }))
+    : BLOG_FALLBACK_LIST;
+
   return (
-    <section id="learn-more" className="px-4 py-20 md:py-28 bg-[#FBF7F1]">
+    <section id="learn-more" className="px-4 py-16 md:py-28 bg-[#FBF7F1]">
       <div className="container mx-auto max-w-6xl">
-        <div className="max-w-2xl mb-10 md:mb-14">
+        <div className="max-w-2xl mb-8 md:mb-14">
           <div className="text-[11px] uppercase tracking-[0.22em] font-semibold text-[#FF7A45] mb-3">
             Learn while your system runs
           </div>
           <RevealHeading
             text="A living publication for people who run quiet businesses."
-            className="font-display font-semibold tracking-tight text-[#1A1A1F] text-3xl md:text-5xl leading-[1.05]"
+            className="font-display font-semibold tracking-tight text-[#1A1A1F] text-[1.65rem] sm:text-3xl md:text-5xl leading-[1.05]"
           />
+          <div className="mt-5 flex flex-wrap gap-1.5">
+            {BLOG_CATEGORIES.map((c) => (
+              <Link
+                key={c}
+                to="/blog"
+                className="text-[11px] font-mono uppercase tracking-[0.14em] px-2.5 py-1 rounded-full border border-[#1A1A1F]/10 bg-white text-[#1A1A1F]/65 hover:text-[#FF7A45] hover:border-[#FF7A45]/40 transition-colors"
+              >
+                {c}
+              </Link>
+            ))}
+          </div>
         </div>
 
         <div className="grid md:grid-cols-12 gap-5">
           {/* Featured */}
           <Link
-            to="/blog"
+            to={postHref(featured.slug)}
             className="group md:col-span-7 rounded-[2rem] bg-gradient-to-br from-[#1A1A1F] to-[#2a1f1a] text-white p-7 md:p-10 overflow-hidden relative hover:-translate-y-1 transition-transform"
           >
             <div className="pointer-events-none absolute -top-24 -right-24 w-72 h-72 rounded-full blur-3xl bg-[#FF7A45]/40" />
             <div className="relative">
-              <span className="text-[10px] uppercase tracking-[0.24em] font-semibold text-[#FFB37A]">{BLOG_FEATURED.category}</span>
-              <h3 className="mt-3 font-display text-3xl md:text-4xl font-semibold leading-tight">{BLOG_FEATURED.title}</h3>
-              <p className="mt-4 text-white/70 text-[15px] leading-relaxed max-w-md">{BLOG_FEATURED.excerpt}</p>
+              <span className="text-[10px] uppercase tracking-[0.24em] font-semibold text-[#FFB37A]">{featured.category}</span>
+              <h3 className="mt-3 font-display text-2xl md:text-4xl font-semibold leading-tight">{featured.title}</h3>
+              <p className="mt-4 text-white/70 text-[14px] md:text-[15px] leading-relaxed max-w-md line-clamp-3">{featured.excerpt}</p>
               <div className="mt-6 flex items-center gap-3 text-[12px] text-white/60">
-                <span>{BLOG_FEATURED.read}</span>
+                <span>{featured.read}</span>
                 <span>·</span>
                 <span className="inline-flex items-center gap-1 text-white group-hover:text-[#FFB37A]">
                   Read article <ArrowUpRight className="w-3.5 h-3.5" />
@@ -1157,25 +1387,66 @@ function BlogKnowledge() {
 
           {/* Stacked list */}
           <div className="md:col-span-5 space-y-3">
-            {BLOG_LIST.map((b, i) => (
+            {list.map((b, i) => (
               <Link
                 key={i}
-                to="/blog"
+                to={postHref(b.slug)}
                 className="group block rounded-2xl bg-white border border-[#1A1A1F]/8 p-5 hover:-translate-y-0.5 hover:border-[#FF7A45]/40 transition-all"
               >
                 <div className="flex items-center justify-between mb-1.5">
                   <span className="text-[10px] uppercase tracking-[0.22em] font-semibold text-[#FF7A45]">{b.tag}</span>
                   <span className="text-[11px] text-[#1A1A1F]/45">{b.read}</span>
                 </div>
-                <div className="font-display text-[15px] font-semibold text-[#1A1A1F] leading-snug group-hover:text-[#FF7A45] transition-colors">
+                <div className="font-display text-[15px] font-semibold text-[#1A1A1F] leading-snug group-hover:text-[#FF7A45] transition-colors line-clamp-2">
                   {b.title}
                 </div>
               </Link>
             ))}
-            <Link to="/blog" className="block text-center text-[13px] font-semibold text-[#1A1A1F] hover:text-[#FF7A45] py-2">
-              Browse the publication →
-            </Link>
           </div>
+        </div>
+
+        {/* Template spotlight + view all */}
+        <div className="grid md:grid-cols-3 gap-3 mt-5">
+          <Link
+            to="/tools"
+            className="group rounded-2xl bg-gradient-to-br from-[#FFF6E8] to-[#FFE27A]/40 border border-[#1A1A1F]/8 p-5 hover:-translate-y-0.5 transition-all"
+          >
+            <span className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#FF7A45]">Template spotlight</span>
+            <div className="mt-2 font-display text-[17px] font-semibold text-[#1A1A1F] leading-snug">
+              The 30-day operator system
+            </div>
+            <div className="mt-1 text-[12px] text-[#1A1A1F]/60">Free Notion-style workspace template</div>
+            <div className="mt-3 text-[11px] font-semibold text-[#1A1A1F] inline-flex items-center gap-1 group-hover:text-[#FF7A45]">
+              Copy template <ArrowUpRight className="w-3 h-3" />
+            </div>
+          </Link>
+          <a
+            href="https://docs.hustlaiapp.in/"
+            rel="noopener"
+            className="group rounded-2xl bg-white border border-[#1A1A1F]/8 p-5 hover:-translate-y-0.5 hover:border-[#FF7A45]/30 transition-all"
+          >
+            <span className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#FF7A45]">Documentation</span>
+            <div className="mt-2 font-display text-[17px] font-semibold text-[#1A1A1F] leading-snug">
+              The complete HustleAI manual
+            </div>
+            <div className="mt-1 text-[12px] text-[#1A1A1F]/60">Every workflow, written down.</div>
+            <div className="mt-3 text-[11px] font-semibold text-[#1A1A1F] inline-flex items-center gap-1 group-hover:text-[#FF7A45]">
+              Open docs <ArrowUpRight className="w-3 h-3" />
+            </div>
+          </a>
+          <Link
+            to="/blog"
+            className="group rounded-2xl bg-[#1A1A1F] text-white p-5 hover:-translate-y-0.5 transition-all flex flex-col"
+          >
+            <span className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#FFB37A]">All articles</span>
+            <div className="mt-2 font-display text-[17px] font-semibold leading-snug">
+              View the full publication
+            </div>
+            <div className="mt-1 text-[12px] text-white/55">Browse 29+ operator essays.</div>
+            <div className="mt-3 text-[11px] font-semibold inline-flex items-center gap-1 group-hover:text-[#FFB37A]">
+              All blog posts <ArrowRight className="w-3 h-3" />
+            </div>
+          </Link>
         </div>
       </div>
     </section>
@@ -1458,6 +1729,7 @@ export default function HomepageV3() {
       <V3Nav />
       <Hero />
       <WhoItsFor />
+      <ClarityStrip />
       <ProblemEmotion />
       <CinematicSection />
       <Transformation />
@@ -1469,7 +1741,7 @@ export default function HomepageV3() {
       <ProofFeed />
       <PricingPreview />
       <V3CTA />
-      <V3Footer />
+      <Footer />
       <HomepageExperienceToggle variant="v3" />
     </div>
   );
