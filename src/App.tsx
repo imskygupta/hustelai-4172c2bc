@@ -150,6 +150,7 @@ import ToolsHubWS from "./pages/workspace-os/ToolsHub";
 import IntakeSubmit from "./pages/IntakeSubmit";
 import OperationsHub from "./pages/dashboard/OperationsHub";
 import AutomationsHub from "./pages/dashboard/AutomationsHub";
+import Deliveries from "./pages/dashboard/Deliveries";
 import OperationsPreview from "./pages/dashboard/OperationsPreview";
 import IntakePreview from "./pages/IntakePreview";
 import Work from "./pages/Work";
