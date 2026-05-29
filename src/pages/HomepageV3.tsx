@@ -1232,22 +1232,138 @@ function V3CTA() {
   );
 }
 
-// ---------- 10. Light footer ----------
+// ---------- 10. Destination footer ----------
 function V3Footer() {
+  const cols: { title: string; links: { label: string; href: string }[] }[] = [
+    {
+      title: "Product",
+      links: [
+        { label: "Workspace",        href: "/workspace-portal" },
+        { label: "AI Tools",         href: "/tools" },
+        { label: "Client Portal",    href: "/client" },
+        { label: "Invoices",         href: "/tools/invoice-generator" },
+        { label: "Proposals",        href: "/tools/proposal-generator" },
+      ],
+    },
+    {
+      title: "Resources",
+      links: [
+        { label: "Blog",       href: "/blog" },
+        { label: "Docs",       href: "/docs" },
+        { label: "Templates",  href: "/tools" },
+        { label: "Guides",     href: "/how-it-works" },
+        { label: "Changelog",  href: "/blog" },
+      ],
+    },
+    {
+      title: "Company",
+      links: [
+        { label: "About",    href: "/about" },
+        { label: "Pricing",  href: "/pricing" },
+        { label: "Contact",  href: "/contact" },
+        { label: "Security", href: "/security" },
+        { label: "Privacy",  href: "/privacy-policy" },
+      ],
+    },
+  ];
   return (
-    <footer className="px-4 py-12 border-t border-[#1A1A1F]/8">
-      <div className="container mx-auto max-w-6xl flex flex-col md:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-2 text-[13px] font-semibold text-[#1A1A1F]">
-          <span className="w-2 h-2 rounded-full bg-[#FF7A45]" />
-          HustleAI
-          <span className="text-[#1A1A1F]/40 font-normal ml-2">© {new Date().getFullYear()}</span>
+    <footer className="relative px-4 pt-20 pb-10 bg-[#1A1A1F] text-white overflow-hidden">
+      <div className="pointer-events-none absolute -top-32 left-1/2 -translate-x-1/2 w-[700px] h-[400px] rounded-full blur-3xl bg-[#FF7A45]/25" />
+      <div className="container mx-auto max-w-6xl relative">
+        {/* Newsletter band */}
+        <div className="grid md:grid-cols-12 gap-10 pb-14 border-b border-white/10">
+          <div className="md:col-span-5">
+            <div className="text-[11px] uppercase tracking-[0.22em] font-semibold text-[#FFB37A] mb-3">Stay in the loop</div>
+            <div className="font-display text-3xl md:text-4xl font-semibold leading-tight">
+              Product updates and operator notes, once a week.
+            </div>
+            <p className="text-white/55 mt-3 text-[14px] max-w-md">
+              No noise. Just what shipped, what changed, and what to do with it.
+            </p>
+          </div>
+          <form
+            className="md:col-span-7 flex flex-col sm:flex-row gap-3 md:self-end"
+            onSubmit={(e) => {
+              e.preventDefault();
+              window.location.href = "/onboarding";
+            }}
+          >
+            <div className="flex-1 flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-4 py-3 focus-within:border-[#FF7A45]/60 transition-colors">
+              <Mail className="w-4 h-4 text-white/40" />
+              <input
+                type="email"
+                required
+                placeholder="you@yourbusiness.com"
+                className="flex-1 bg-transparent text-[14px] text-white placeholder:text-white/35 focus:outline-none"
+              />
+            </div>
+            <button
+              type="submit"
+              className="rounded-full bg-[#FF7A45] hover:bg-white hover:text-[#1A1A1F] text-white font-semibold text-[13px] px-6 py-3 transition-colors inline-flex items-center justify-center gap-1.5"
+            >
+              Subscribe <ArrowRight className="w-4 h-4" />
+            </button>
+          </form>
         </div>
-        <div className="flex flex-wrap gap-5 text-[13px] text-[#1A1A1F]/55">
-          <Link to="/about" className="hover:text-[#1A1A1F]">About</Link>
-          <Link to="/pricing" className="hover:text-[#1A1A1F]">Pricing</Link>
-          <Link to="/security" className="hover:text-[#1A1A1F]">Security</Link>
-          <Link to="/privacy-policy" className="hover:text-[#1A1A1F]">Privacy</Link>
-          <Link to="/terms" className="hover:text-[#1A1A1F]">Terms</Link>
+
+        {/* Columns */}
+        <div className="grid md:grid-cols-12 gap-10 py-14">
+          <div className="md:col-span-3">
+            <div className="flex items-center gap-2 text-[14px] font-semibold">
+              <span className="w-2 h-2 rounded-full bg-[#FF7A45]" />
+              HustleAI
+            </div>
+            <p className="mt-3 text-white/55 text-[13px] leading-relaxed max-w-xs">
+              The operating system for independent businesses. Built in India,
+              shipping worldwide.
+            </p>
+            <div className="mt-5 flex items-center gap-2">
+              {[
+                { icon: Twitter,      href: "https://twitter.com" },
+                { icon: Linkedin,     href: "https://linkedin.com" },
+                { icon: TelegramIcon, href: "https://t.me" },
+                { icon: Github,       href: "https://github.com" },
+              ].map((s, i) => (
+                <a
+                  key={i}
+                  href={s.href}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-[#FF7A45] hover:border-[#FF7A45] transition-colors"
+                >
+                  <s.icon className="w-4 h-4" />
+                </a>
+              ))}
+            </div>
+          </div>
+          {cols.map((c) => (
+            <div key={c.title} className="md:col-span-3">
+              <div className="text-[11px] uppercase tracking-[0.22em] font-semibold text-white/40 mb-4">{c.title}</div>
+              <ul className="space-y-2.5">
+                {c.links.map((l) => (
+                  <li key={l.href}>
+                    <Link
+                      to={l.href}
+                      className="text-[13px] text-white/75 hover:text-[#FFB37A] inline-flex items-center gap-1 transition-colors"
+                    >
+                      {l.label}
+                      <ChevronRight className="w-3 h-3 opacity-0 -translate-x-1 group-hover:opacity-100 transition-all" />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+
+        <div className="flex flex-col md:flex-row items-center justify-between gap-3 pt-6 border-t border-white/10 text-[12px] text-white/45">
+          <div>© {new Date().getFullYear()} HustleAI · Run your business like software.</div>
+          <div className="flex gap-5">
+            <Link to="/terms" className="hover:text-white">Terms</Link>
+            <Link to="/privacy-policy" className="hover:text-white">Privacy</Link>
+            <Link to="/refund-policy" className="hover:text-white">Refunds</Link>
+            <Link to="/acceptable-use" className="hover:text-white">Acceptable use</Link>
+          </div>
         </div>
       </div>
     </footer>
