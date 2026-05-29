@@ -1,7 +1,42 @@
-# V3 Mission Control — Contract (locked)
+# V3 — Contract (locked) — "The Quiet Machine"
 
-V3 is a **visual model of HustleAI's real operating system**, not a decorative 3D scene.
-Every node in the scene MUST map 1:1 to a shipped platform capability. No filler.
+V3 is a **bright, editorial, Awwwards-style marketing experience** about the
+user's transformation, NOT a product architecture diagram. The cinematic 3D
+scene is one memorable centerpiece *inside* a larger narrative — never the
+whole page. The user is the center of the page; the workflow graph is the
+payoff.
+
+## Visual identity (locked)
+
+- Base surface: `#FBF7F1` warm cream (`bg-[#FBF7F1]`) end-to-end on light frame.
+- Cinematic block keeps a dark canvas (the 3D scene) but lives inside a
+  bright rounded `rounded-[2.5rem]` frame so it reads as an editorial photo,
+  not a dashboard.
+- Ink: `#1A1A1F` for type. Accents: coral `#FF7A45`, peach `#FFB37A`,
+  yellow `#FFE27A`, lavender mist `#E8DFF3`. Sunrise gradient sparingly.
+- Typography: `font-display` (editorial) at very large sizes for headlines.
+- Cards: `rounded-3xl`, generous padding, warm soft shadows, no neon.
+- Motion: GSAP + ScrollTrigger only. Native scrolling preserved. Word-reveal
+  headings via a custom `splitWords` util (no paid GSAP plugins).
+
+## Page structure (locked order)
+
+1. V3Nav — floating glass capsule navbar
+2. Hero — positioning in 5 seconds + who it's for
+3. WhoItsFor — six animated audience cards
+4. ProblemEmotion — three "Stop ___" panels
+5. Cinematic — the 6-scene 3D experience contained in a bright frame
+6. Transformation — Before/After lived-experience strip
+7. Workflows — four audience-specific flows
+8. Proof — real-capability activity feed (no fake metrics)
+9. V3CTA — "Run your business like software."
+10. V3Footer — light footer
+
+The cinematic block stays scroll-scrubbed but copy lives *beside* the canvas,
+never overlapping it. Mobile / reduced-motion / no-WebGL → bright illustrated
+fallback (no dark gradient).
+
+## Allowed inventory (unchanged)
 
 ## Allowed layers & nodes (only these)
 
@@ -22,7 +57,7 @@ Client → Workspace → AI → Export → Telegram
 
 No other edges. No decorative connections.
 
-## Scroll choreography (6 scenes, distinct physics per scene)
+## Scroll choreography (6 scenes — unchanged physics, calmer amplitudes)
 
 Story arc — emotional state changes, never a feature tour. The system diagram
 is the **payoff**, not the opener. Scene 1 must read as pain, not architecture.
@@ -49,10 +84,19 @@ Not a spinning model. Story-driven scrubbed timeline with distinct physics.
 
 ## V3 personality (locked)
 
-Dark Mission Control aesthetic — `bg-slate-950` end-to-end, gradient washes per scene.
-No section may be reusable on V1. No pricing block, no testimonials grid, no feature
-pills. Hero shows pain (chaos), not the diagram. Diagram only assembles from scene 2.
-Telemetry stream provides environmental storytelling (live ops events, no fake metrics).
+Bright editorial aesthetic — cream/peach/coral. No section may be reusable on V1.
+No pricing block. Hero is human and positioning-first (NOT chaos). Cinematic
+block is contained, not full-bleed dark. Telemetry stream stays as
+environmental storytelling but rendered in warm light tokens.
+
+## Hard no's (updated)
+
+- No dark slate-950 page background. Dark only lives inside the cinematic canvas frame.
+- No spinning cubes, no random floating cards, no fake architecture diagrams.
+- No nodes or edges outside the inventory.
+- No metrics/numbers that aren't real.
+- No paid GSAP plugins (no ScrollSmoother / SplitText / DrawSVG club).
+- No Lenis. Native scrolling only.
 
 ## Device rules (strict)
 

@@ -1,22 +1,26 @@
-import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { ArrowRight, AlertTriangle, Magnet, Cpu, Send, RotateCcw, Globe2, Box, Activity } from "lucide-react";
+import { createElement, lazy, Suspense, useEffect, useRef, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import {
+  ArrowRight, ArrowUpRight, Sparkles, Zap, Calendar, Users, Send,
+  Briefcase, Palette, Building2, GraduationCap, Mic2, Wrench,
+  Inbox, Bot, FileCheck2, Wallet, MoonStar,
+} from "lucide-react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 
-import { Navbar } from "@/components/Navbar";
-import { Footer } from "@/components/Footer";
-import { Button } from "@/components/ui/button";
 import { SEO } from "@/components/SEO";
+import { Button } from "@/components/ui/button";
+
+gsap.registerPlugin(ScrollTrigger);
 
 /**
- * V3 — Mission Control. Narrative-first homepage.
- *
- * Five-scene transformation arc: Before → Capture → Automation → Delivery → Outcomes.
- * Dark Mission Control aesthetic. Story over feature listing. Nothing here
- * should be reusable on Homepage V1 — V3 owns its own personality.
+ * V3 — "The Quiet Machine". Bright editorial marketing experience.
+ * The user (transformation) is the center of the page; the cinematic 3D
+ * scene is one contained centerpiece, not the whole page.
+ * See mem/product/v3-mission-control-contract.md.
  */
 
-// Lazy-load the 3D scene so the ~150 KB three.js bundle never reaches
-// mobile visitors or anyone hitting the static fallback.
+// ---------- Lazy 3D scene ----------
 const MissionControlScene = lazy(
   () => import("@/components/home/v3/MissionControlScene"),
 );
@@ -31,14 +35,14 @@ function detectWebGL(): boolean {
   }
 }
 
-/** Desktop + WebGL + not-reduced-motion only. Mobile uses static narrative fallback. */
 function useCanRender3D() {
   const [ok, setOk] = useState(false);
   useEffect(() => {
     if (typeof window === "undefined") return;
     const mqDesktop = window.matchMedia("(min-width: 1024px) and (pointer: fine)");
     const mqMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const evaluate = () => setOk(mqDesktop.matches && !mqMotion.matches && detectWebGL());
+    const evaluate = () =>
+      setOk(mqDesktop.matches && !mqMotion.matches && detectWebGL());
     evaluate();
     mqDesktop.addEventListener("change", evaluate);
     mqMotion.addEventListener("change", evaluate);
@@ -50,166 +54,304 @@ function useCanRender3D() {
   return ok;
 }
 
-const SCENES = [
-  {
-    n: 1,
-    kicker: "Scene 01 · The Bottleneck",
-    rail: "Bottleneck",
-    title: "Your business works.\nBut only when you do.",
-    body: "Every proposal, payment, follow-up and delivery depends on you remembering what happens next.",
-    detail: "This isn't a workflow. It's a coping strategy held together by your memory.",
-    accent: "#f43f5e",
-    icon: AlertTriangle,
-  },
-  {
-    n: 2,
-    kicker: "Scene 02 · Capture",
-    rail: "Capture",
-    title: "Everything enters one\noperating layer.",
-    body: "Messages, files, leads, requests — pulled into a single surface. The scatter becomes structure.",
-    detail: "You stop being the queue.",
-    accent: "#38bdf8",
-    icon: Magnet,
-  },
-  {
-    n: 3,
-    kicker: "Scene 03 · Intelligence",
-    rail: "Intelligence",
-    title: "Work starts moving\nwithout permission.",
-    body: "A proposal drafts itself. An invoice queues. A reminder schedules. The system stops waiting for you to click.",
-    detail: "Your role shifts from doing to deciding.",
-    accent: "#a78bfa",
-    icon: Cpu,
-  },
-  {
-    n: 4,
-    kicker: "Scene 04 · Delivery",
-    rail: "Delivery",
-    title: "Work leaves the\nbuilding.",
-    body: "Branded exports, portals, Telegram drops, shared links. Deliverables flow outward — the client sees a company, not a freelancer juggling tools.",
-    detail: "Outputs ship without you copy-pasting into anything.",
-    accent: "#f59e0b",
-    icon: Send,
-  },
-  {
-    n: 5,
-    kicker: "Scene 05 · Revenue",
-    rail: "Revenue",
-    title: "The first payment is work.\nThe second is a system.",
-    body: "Invoices clear. Approvals return. Retainers renew. Referrals compound. The loop closes itself, again and again.",
-    detail: "Businesses don't grow linearly. They compound.",
-    accent: "#10b981",
-    icon: RotateCcw,
-  },
-  {
-    n: 6,
-    kicker: "Scene 06 · The Reveal",
-    rail: "Reveal",
-    title: "You stopped running tasks.\nYou started running an OS.",
-    body: "Zoom out. The machine you've been watching is the same machine that will run your business at 3am, on a Sunday, in another timezone, without you.",
-    detail: "This is what an operating system feels like.",
-    accent: "#60a5fa",
-    icon: Globe2,
-  },
-] as const;
+// ---------- Word-reveal heading (free SplitText equivalent) ----------
+function RevealHeading({
+  as = "h2",
+  text,
+  className = "",
+  delay = 0,
+}: {
+  as?: "h1" | "h2" | "h3";
+  text: string;
+  className?: string;
+  delay?: number;
+}) {
+  const ref = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const words = el.querySelectorAll("[data-word]");
+    if (reduce) {
+      gsap.set(words, { opacity: 1, y: 0, filter: "blur(0px)" });
+      return;
+    }
+    gsap.set(words, { opacity: 0, y: 24, filter: "blur(8px)" });
+    const tween = gsap.to(words, {
+      opacity: 1,
+      y: 0,
+      filter: "blur(0px)",
+      duration: 0.9,
+      ease: "power3.out",
+      stagger: 0.06,
+      delay,
+      scrollTrigger: { trigger: el, start: "top 85%", once: true },
+    });
+    return () => {
+      tween.scrollTrigger?.kill();
+      tween.kill();
+    };
+  }, [text, delay]);
 
-/** Environmental storytelling — looks like the platform is actually running. */
-const TELEMETRY = [
-  "Proposal #4821 approved by Patel & Co.",
-  "Invoice INV-0231 paid · ₹48,000 settled",
-  "AI Workspace drafted contract v3 (1.2s)",
-  "Telegram drop delivered to @studio.north",
-  "Client portal viewed · Mehta Architects",
-  "Roadmap milestone closed · Brand Sprint",
-  "Retainer auto-renewed · Aurora Labs",
-  "Export rendered · 14 pages · branded",
-  "HustleBot replied to 3 client threads",
-  "Approval received · Logo system v2",
-  "Workflow paused · waiting on Stripe ✓",
-  "New lead captured · referred by Singh",
+  return createElement(
+    as,
+    { ref, className },
+    text.split(/(\s+)/).map((part, i) =>
+      part.trim() === "" ? (
+        <span key={i}> </span>
+      ) : (
+        <span key={i} data-word className="inline-block will-change-transform">
+          {part}
+        </span>
+      ),
+    ),
+  );
+}
+
+// ---------- 1. Floating glass navbar ----------
+function V3Nav() {
+  const [scrolled, setScrolled] = useState(false);
+  const navigate = useNavigate();
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 24);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  const links = [
+    { label: "Audiences", href: "#audiences" },
+    { label: "How it works", href: "#cinematic" },
+    { label: "Workflows", href: "#workflows" },
+    { label: "What's inside", href: "#proof" },
+  ];
+
+  return (
+    <div className="fixed top-4 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none">
+      <div
+        className={`pointer-events-auto flex items-center gap-1 rounded-full border border-[#1A1A1F]/10 bg-white/70 backdrop-blur-xl px-2 py-2 transition-all duration-500 ${
+          scrolled ? "shadow-[0_12px_40px_-20px_rgba(255,122,69,0.35)] scale-[0.98]" : "shadow-sm"
+        }`}
+      >
+        <Link to="/" className="px-3 py-1.5 rounded-full text-[13px] font-semibold text-[#1A1A1F] tracking-tight flex items-center gap-1.5">
+          <span className="w-2 h-2 rounded-full bg-[#FF7A45]" />
+          HustleAI
+        </Link>
+        <div className="hidden md:flex items-center">
+          {links.map((l) => (
+            <a
+              key={l.href}
+              href={l.href}
+              className="px-3 py-1.5 rounded-full text-[13px] text-[#1A1A1F]/70 hover:text-[#1A1A1F] hover:bg-[#FBF7F1] transition-colors"
+            >
+              {l.label}
+            </a>
+          ))}
+        </div>
+        <button
+          onClick={() => navigate("/login")}
+          className="ml-1 px-3 py-1.5 rounded-full text-[13px] text-[#1A1A1F]/70 hover:text-[#1A1A1F] transition-colors hidden sm:block"
+        >
+          Sign in
+        </button>
+        <button
+          onClick={() => navigate("/onboarding")}
+          className="px-3.5 py-1.5 rounded-full text-[13px] font-semibold text-white bg-[#1A1A1F] hover:bg-[#FF7A45] transition-colors"
+        >
+          Get started
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ---------- 2. Hero ----------
+function Hero() {
+  return (
+    <section className="relative pt-32 md:pt-40 pb-16 md:pb-24 px-4 overflow-hidden">
+      {/* warm sunrise glow */}
+      <div className="absolute inset-x-0 top-0 h-[600px] -z-10 opacity-80 pointer-events-none"
+           style={{
+             background:
+               "radial-gradient(60% 60% at 50% 0%, rgba(255,179,122,0.55) 0%, rgba(255,226,122,0.25) 40%, transparent 75%)",
+           }} />
+      <div className="container mx-auto max-w-5xl text-center">
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[#1A1A1F]/10 bg-white/60 backdrop-blur text-[11px] uppercase tracking-[0.18em] font-semibold text-[#1A1A1F]/70 mb-6">
+          <Sparkles className="w-3.5 h-3.5 text-[#FF7A45]" />
+          The operating system for independent businesses
+        </div>
+        <RevealHeading
+          as="h1"
+          text="Your business, running quietly in the background."
+          className="font-display font-semibold tracking-tight text-[#1A1A1F] text-4xl md:text-7xl leading-[1.02] max-w-4xl mx-auto"
+        />
+        <p className="mt-6 text-[#1A1A1F]/65 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
+          HustleAI is the operating system for freelancers, creators, consultants
+          and small agencies — so client work moves forward even when you don't.
+        </p>
+        <div className="mt-8 flex items-center justify-center gap-3">
+          <Button
+            size="lg"
+            className="bg-[#1A1A1F] hover:bg-[#FF7A45] text-white rounded-full px-6 h-12 text-[14px] font-semibold"
+            asChild
+          >
+            <Link to="/onboarding">Start your system <ArrowRight className="w-4 h-4 ml-1" /></Link>
+          </Button>
+          <a
+            href="#cinematic"
+            className="text-[14px] font-semibold text-[#1A1A1F] hover:text-[#FF7A45] transition-colors inline-flex items-center gap-1.5"
+          >
+            See it in motion <ArrowUpRight className="w-4 h-4" />
+          </a>
+        </div>
+        <p className="mt-4 text-[11px] uppercase tracking-[0.18em] text-[#1A1A1F]/40">
+          Free to start · No card required · Built in India
+        </p>
+      </div>
+    </section>
+  );
+}
+
+// ---------- 3. Who it's for ----------
+const AUDIENCES = [
+  { icon: Briefcase, label: "Freelancers", flow: "Lead → Proposal → Invoice", tint: "#FF7A45" },
+  { icon: Palette, label: "Creators", flow: "Idea → Content → Sponsor", tint: "#FFB37A" },
+  { icon: Building2, label: "Small agencies", flow: "Client → Team → Delivery", tint: "#1A1A1F" },
+  { icon: GraduationCap, label: "Consultants", flow: "Research → Proposal → Approval", tint: "#FF7A45" },
+  { icon: Mic2, label: "Coaches", flow: "Booking → Session → Renewal", tint: "#E8DFF3" },
+  { icon: Wrench, label: "Operators", flow: "Request → Workflow → Payment", tint: "#FFE27A" },
 ];
 
-function TelemetryStream() {
-  const [head, setHead] = useState(0);
-  useEffect(() => {
-    const id = window.setInterval(() => setHead((h) => (h + 1) % TELEMETRY.length), 1800);
-    return () => window.clearInterval(id);
-  }, []);
-  const visible = useMemo(
-    () => Array.from({ length: 6 }, (_, i) => TELEMETRY[(head + i) % TELEMETRY.length]),
-    [head],
-  );
+function WhoItsFor() {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.02] backdrop-blur-sm p-4 font-mono text-[11px] leading-relaxed">
-      <div className="flex items-center gap-2 text-emerald-400/80 mb-2">
-        <span className="relative flex w-2 h-2">
-          <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 animate-ping" />
-          <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
-        </span>
-        <span className="uppercase tracking-[0.22em]">Live · ops feed</span>
-      </div>
-      <ul className="space-y-1.5">
-        {visible.map((line, i) => (
-          <li
-            key={`${head}-${i}`}
-            className="text-white/55 truncate"
-            style={{ opacity: 0.35 + (i / visible.length) * 0.6 }}
-          >
-            <span className="text-white/30 mr-2">›</span>
-            {line}
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
-/** Static "Before" visual for the hero — scattered chaos a freelancer recognizes instantly. */
-function ChaosCanvas() {
-  const items = [
-    "Re: proposal v2 (final FINAL).docx",
-    "WhatsApp · 4 unread · Patel",
-    "Invoice draft · not sent",
-    "Approval pending · 11 days",
-    "Drive › Untitled folder (3)",
-    "Email follow-up · forgot",
-    "Contract.pdf · v7",
-    "Stripe link · expired",
-  ];
-  return (
-    <div className="relative h-[380px] md:h-[460px] w-full rounded-3xl border border-white/10 bg-slate-900/60 backdrop-blur overflow-hidden">
-      <div className="absolute inset-0 p-4 grid grid-cols-2 md:grid-cols-3 gap-2 content-start">
-        {items.map((t, i) => (
-          <div
-            key={t}
-            className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-[11px] text-white/55 font-mono truncate"
-            style={{ transform: `rotate(${(i % 2 === 0 ? -1 : 1) * (1 + (i % 3))}deg)` }}
-          >
-            {t}
+    <section id="audiences" className="px-4 py-20 md:py-28">
+      <div className="container mx-auto max-w-6xl">
+        <div className="max-w-2xl mb-10 md:mb-14">
+          <div className="text-[11px] uppercase tracking-[0.22em] font-semibold text-[#FF7A45] mb-3">
+            Who it's for
           </div>
-        ))}
+          <RevealHeading
+            text="Built for the people who run their own thing."
+            className="font-display font-semibold tracking-tight text-[#1A1A1F] text-3xl md:text-5xl leading-[1.05]"
+          />
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
+          {AUDIENCES.map((a) => (
+            <div
+              key={a.label}
+              className="group relative overflow-hidden rounded-3xl border border-[#1A1A1F]/8 bg-white p-5 md:p-6 transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_30px_60px_-30px_rgba(255,122,69,0.35)]"
+            >
+              <div
+                className="w-10 h-10 rounded-2xl flex items-center justify-center mb-4 transition-transform group-hover:scale-110"
+                style={{ background: `${a.tint}22`, color: a.tint === "#E8DFF3" || a.tint === "#FFE27A" ? "#1A1A1F" : a.tint }}
+              >
+                <a.icon className="w-5 h-5" />
+              </div>
+              <div className="text-[#1A1A1F] font-display text-xl font-semibold mb-1">
+                {a.label}
+              </div>
+              <div className="text-[12px] text-[#1A1A1F]/55 font-mono opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                {a.flow}
+              </div>
+              <div className="text-[12px] text-[#1A1A1F]/55 font-mono group-hover:opacity-0 transition-opacity duration-300 absolute bottom-5 md:bottom-6">
+                Hover to see flow
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
-      <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-slate-950 to-transparent" />
-      <div className="absolute bottom-4 left-4 right-4 text-center text-[11px] uppercase tracking-[0.22em] text-rose-400/80 font-semibold">
-        This is what HustleAI replaces
-      </div>
-    </div>
+    </section>
   );
 }
 
-/**
- * Desktop 3D Mission Control with scroll-scrubbed 5-scene transformation arc.
- * Phase 1..5 maps to Before → Capture → Automation → Delivery → Outcomes.
- */
-function MissionControl3D() {
+// ---------- 4. Problem → Emotion → Relief ----------
+const STOPS = [
+  {
+    title: "Stop remembering everything.",
+    body: "Every proposal, follow-up, invoice and approval lives in one place. Your memory stops being the backup.",
+    icon: Inbox,
+    tint: "#FF7A45",
+  },
+  {
+    title: "Stop chasing approvals.",
+    body: "Branded client portals where decisions happen — signed, timestamped, archived. No more 11-day silences.",
+    icon: FileCheck2,
+    tint: "#FFB37A",
+  },
+  {
+    title: "Stop wondering what happens next.",
+    body: "Workflows progress on their own. AI drafts, schedules, reminds, ships. You move from doing to deciding.",
+    icon: Bot,
+    tint: "#FFE27A",
+  },
+];
+
+function ProblemEmotion() {
+  return (
+    <section className="px-4 py-20 md:py-28 bg-[#FBF7F1]">
+      <div className="container mx-auto max-w-6xl">
+        <div className="max-w-3xl mb-12 md:mb-16">
+          <div className="text-[11px] uppercase tracking-[0.22em] font-semibold text-[#FF7A45] mb-3">
+            The relief
+          </div>
+          <RevealHeading
+            text="Three things you can finally stop doing."
+            className="font-display font-semibold tracking-tight text-[#1A1A1F] text-3xl md:text-5xl leading-[1.05]"
+          />
+        </div>
+        <div className="grid md:grid-cols-3 gap-4 md:gap-5">
+          {STOPS.map((s) => (
+            <div
+              key={s.title}
+              className="rounded-3xl bg-white border border-[#1A1A1F]/8 p-6 md:p-7"
+              style={{ boxShadow: `0 24px 60px -40px ${s.tint}` }}
+            >
+              <div
+                className="w-12 h-12 rounded-2xl flex items-center justify-center mb-5"
+                style={{ background: `${s.tint}33` }}
+              >
+                <s.icon className="w-5 h-5 text-[#1A1A1F]" />
+              </div>
+              <h3 className="font-display text-2xl font-semibold text-[#1A1A1F] leading-tight mb-3">
+                {s.title}
+              </h3>
+              <p className="text-[#1A1A1F]/65 text-[15px] leading-relaxed">
+                {s.body}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ---------- 5. Cinematic — contained 3D ----------
+const SCENES = [
+  { n: 1, label: "Bottleneck", title: "Everything depends on you.",
+    body: "Inboxes, WhatsApp, follow-ups, invoices. The business runs on your memory." },
+  { n: 2, label: "Capture", title: "Everything enters one place.",
+    body: "Messages, files, leads and requests gather in a single operating layer." },
+  { n: 3, label: "Automation", title: "Work begins moving on its own.",
+    body: "AI drafts proposals, queues invoices, schedules follow-ups — without permission." },
+  { n: 4, label: "Delivery", title: "Deliverables leave the building.",
+    body: "Branded exports, portals, Telegram drops, shared links. Outputs ship themselves." },
+  { n: 5, label: "Revenue", title: "Revenue starts repeating.",
+    body: "Approvals return. Invoices clear. Retainers renew. The loop closes itself." },
+  { n: 6, label: "Reveal", title: "You stopped running tasks.",
+    body: "You started running an operating system. It runs at 3am, on Sundays, in other timezones." },
+] as const;
+
+function CinematicSection() {
+  const can3D = useCanRender3D();
   const sectionRef = useRef<HTMLDivElement>(null);
   const phaseRef = useRef<number>(0.4);
   const [phaseLabel, setPhaseLabel] = useState(1);
   const [mounted, setMounted] = useState(false);
 
-  // Lazy-mount canvas only when scrolled into view.
   useEffect(() => {
-    if (!sectionRef.current || typeof IntersectionObserver === "undefined") {
+    if (!can3D || !sectionRef.current) return;
+    if (typeof IntersectionObserver === "undefined") {
       setMounted(true);
       return;
     }
@@ -224,10 +366,10 @@ function MissionControl3D() {
     );
     io.observe(sectionRef.current);
     return () => io.disconnect();
-  }, []);
+  }, [can3D]);
 
-  // Drive phase from scroll progress through the pinned narrative section.
   useEffect(() => {
+    if (!can3D) return;
     const onScroll = () => {
       const el = sectionRef.current;
       if (!el) return;
@@ -247,193 +389,338 @@ function MissionControl3D() {
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
     };
-  }, []);
+  }, [can3D]);
+
+  if (!can3D) {
+    // Bright illustrated fallback for mobile / reduced-motion / no-WebGL
+    return (
+      <section id="cinematic" className="px-4 py-20 md:py-28">
+        <div className="container mx-auto max-w-5xl">
+          <div className="max-w-2xl mb-12">
+            <div className="text-[11px] uppercase tracking-[0.22em] font-semibold text-[#FF7A45] mb-3">
+              How it works
+            </div>
+            <RevealHeading
+              text="From chaos to an operating system, in six moments."
+              className="font-display font-semibold tracking-tight text-[#1A1A1F] text-3xl md:text-5xl leading-[1.05]"
+            />
+          </div>
+          <div className="space-y-3">
+            {SCENES.map((s, i) => (
+              <div
+                key={s.n}
+                className="rounded-3xl bg-white border border-[#1A1A1F]/8 p-6 md:p-7 flex gap-4 md:gap-6 items-start"
+              >
+                <div className="text-[11px] font-mono tracking-[0.18em] text-[#FF7A45] mt-1 tabular-nums">
+                  {String(s.n).padStart(2, "0")} / 06
+                </div>
+                <div className="flex-1">
+                  <div className="text-[10px] uppercase tracking-[0.22em] text-[#1A1A1F]/40 font-semibold mb-2">
+                    {s.label}
+                  </div>
+                  <h3 className="font-display text-2xl md:text-3xl font-semibold text-[#1A1A1F] leading-tight mb-2">
+                    {s.title}
+                  </h3>
+                  <p className="text-[#1A1A1F]/65 text-[15px] leading-relaxed">{s.body}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   const scene = SCENES[phaseLabel - 1];
 
   return (
-    <section
-      ref={sectionRef}
-      className="relative bg-slate-950 text-white"
-      style={{ height: "680vh" }}
-    >
-      <div className="sticky top-0 h-screen w-full overflow-hidden">
-        {/* 3D Canvas */}
-        <div className="absolute inset-0">
-          {mounted && (
-            <Suspense fallback={null}>
-              <MissionControlScene phaseRef={phaseRef} />
-            </Suspense>
-          )}
-          {/* Per-scene color wash — environmental storytelling */}
-          <div
-            className="pointer-events-none absolute inset-0 transition-[background] duration-[1200ms] ease-out"
-            style={{
-              background: `radial-gradient(ellipse at 30% 40%, ${scene.accent}22 0%, transparent 55%), radial-gradient(ellipse at center, transparent 35%, rgba(2,6,23,0.92) 100%)`,
-            }}
-          />
-          {/* Subtle grid floor for depth */}
-          <div
-            className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2 opacity-[0.07]"
-            style={{
-              backgroundImage:
-                "linear-gradient(rgba(255,255,255,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.6) 1px, transparent 1px)",
-              backgroundSize: "48px 48px",
-              maskImage: "linear-gradient(to top, black, transparent)",
-            }}
+    <section id="cinematic" className="px-4 py-20 md:py-28">
+      <div className="container mx-auto max-w-7xl">
+        <div className="max-w-2xl mb-10 md:mb-14">
+          <div className="text-[11px] uppercase tracking-[0.22em] font-semibold text-[#FF7A45] mb-3">
+            How it works
+          </div>
+          <RevealHeading
+            text="From chaos to an operating system, in six moments."
+            className="font-display font-semibold tracking-tight text-[#1A1A1F] text-3xl md:text-5xl leading-[1.05]"
           />
         </div>
 
-        {/* Narrative overlay */}
-        <div className="relative z-10 h-full flex flex-col justify-between p-6 md:p-10 pointer-events-none">
-          <div className="flex items-center justify-between">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/5 backdrop-blur text-[11px] uppercase tracking-[0.2em] text-white/70">
-              <Box className="w-3.5 h-3.5" /> Mission Control
-            </div>
-            <div className="hidden md:flex items-center gap-3 text-[11px] text-white/55 font-mono">
-              <span className="text-white/40">Scene</span>
-              <span className="text-white tabular-nums">{String(phaseLabel).padStart(2, "0")}</span>
-              <span className="text-white/40">/ 06</span>
-            </div>
-          </div>
-
-          <div key={phaseLabel} className="max-w-2xl space-y-3 animate-[fade-in_0.6s_ease-out]">
-            <div
-              className="text-[11px] uppercase tracking-[0.24em] font-semibold"
-              style={{ color: scene.accent }}
-            >
-              {scene.kicker}
-            </div>
-            <h2 className="text-3xl md:text-6xl font-display font-semibold tracking-tight leading-[1.02] whitespace-pre-line">
-              {scene.title}
-            </h2>
-            <p className="text-white/70 text-sm md:text-lg max-w-xl leading-relaxed">
-              {scene.body}
-            </p>
-            <p className="text-white/40 text-xs md:text-sm italic">{scene.detail}</p>
-          </div>
-        </div>
-
-        {/* Right-side progress rail — premium, no bouncing arrows */}
-        <div className="hidden lg:flex absolute right-8 top-1/2 -translate-y-1/2 z-10 flex-col gap-3 pointer-events-none">
-          {SCENES.map((s) => {
-            const active = phaseLabel === s.n;
-            const past = phaseLabel > s.n;
-            return (
-              <div key={s.n} className="flex items-center gap-3 justify-end">
-                <span
-                  className={`text-[10px] font-mono uppercase tracking-[0.18em] transition-all duration-500 ${
-                    active ? "text-white" : past ? "text-white/40" : "text-white/20"
-                  }`}
-                  style={{ transform: active ? "translateX(0)" : "translateX(8px)" }}
-                >
-                  {s.rail}
-                </span>
-                <span
-                  className="block rounded-full transition-all duration-500"
-                  style={{
-                    width: active ? 18 : 6,
-                    height: 2,
-                    background: active
-                      ? s.accent
-                      : past
-                        ? "rgba(255,255,255,0.35)"
-                        : "rgba(255,255,255,0.12)",
-                  }}
-                />
+        {/* Scroll-scrubbed pinned cinematic */}
+        <div
+          ref={sectionRef}
+          className="relative"
+          style={{ height: "560vh" }}
+        >
+          <div className="sticky top-0 h-screen w-full flex items-center">
+            <div className="grid grid-cols-12 gap-6 w-full">
+              {/* Side rail copy */}
+              <div className="col-span-4 pl-2">
+                <div className="text-[11px] font-mono tracking-[0.18em] text-[#FF7A45] mb-4 tabular-nums">
+                  {String(phaseLabel).padStart(2, "0")} / 06 · {scene.label}
+                </div>
+                <div key={phaseLabel} className="animate-[fade-in_0.6s_ease-out]">
+                  <h3 className="font-display text-3xl xl:text-5xl font-semibold text-[#1A1A1F] leading-[1.05] mb-4">
+                    {scene.title}
+                  </h3>
+                  <p className="text-[#1A1A1F]/65 text-base xl:text-lg leading-relaxed max-w-sm">
+                    {scene.body}
+                  </p>
+                </div>
+                {/* progress rail */}
+                <div className="mt-10 space-y-2">
+                  {SCENES.map((s) => {
+                    const active = phaseLabel === s.n;
+                    const past = phaseLabel > s.n;
+                    return (
+                      <div key={s.n} className="flex items-center gap-3">
+                        <span
+                          className="block rounded-full transition-all duration-500"
+                          style={{
+                            width: active ? 28 : 10,
+                            height: 2,
+                            background: active
+                              ? "#FF7A45"
+                              : past
+                                ? "rgba(26,26,31,0.45)"
+                                : "rgba(26,26,31,0.12)",
+                          }}
+                        />
+                        <span
+                          className={`text-[11px] font-mono uppercase tracking-[0.18em] transition-colors duration-500 ${
+                            active ? "text-[#1A1A1F]" : past ? "text-[#1A1A1F]/45" : "text-[#1A1A1F]/25"
+                          }`}
+                        >
+                          {s.label}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-            );
-          })}
-        </div>
 
-        {/* Subtle scroll guidance — only scene 1, no bouncing arrows */}
-        {phaseLabel === 1 && (
-          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 text-[10px] uppercase tracking-[0.32em] text-white/40 font-mono animate-[fade-in_1s_ease-out]">
-            Keep scrolling — six scenes
+              {/* Cinematic dark canvas frame */}
+              <div className="col-span-8 relative">
+                <div className="relative aspect-[4/3] rounded-[2.5rem] overflow-hidden border border-[#1A1A1F]/10 bg-slate-950 shadow-[0_40px_120px_-40px_rgba(255,122,69,0.45)]">
+                  {mounted && (
+                    <Suspense fallback={null}>
+                      <MissionControlScene phaseRef={phaseRef} />
+                    </Suspense>
+                  )}
+                  {/* warm overlay so canvas reads as editorial photo */}
+                  <div
+                    className="pointer-events-none absolute inset-0 transition-[background] duration-[1200ms]"
+                    style={{
+                      background: `radial-gradient(ellipse at 50% 100%, rgba(255,122,69,0.25) 0%, transparent 60%)`,
+                    }}
+                  />
+                  <div className="absolute top-5 left-5 flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur text-[10px] uppercase tracking-[0.22em] text-white/80 font-semibold">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#FF7A45] animate-pulse" />
+                    Live · the quiet machine
+                  </div>
+                </div>
+                {phaseLabel === 1 && (
+                  <div className="mt-4 text-center text-[10px] uppercase tracking-[0.32em] text-[#1A1A1F]/40 font-mono">
+                    Keep scrolling — six scenes
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
-        )}
+        </div>
       </div>
     </section>
   );
 }
 
-/** Static narrative for mobile / reduced-motion / no-WebGL. Same arc, no canvas. */
-function NarrativeFallback() {
-  return (
-    <section className="relative bg-slate-950 text-white py-20 px-4 border-t border-white/5">
-      <div className="container mx-auto max-w-3xl space-y-10">
-        {SCENES.map((s) => {
-          const Icon = s.icon;
-          return (
-            <div key={s.n} className="relative pl-10 border-l border-white/10">
-              <div
-                className="absolute -left-[11px] top-0 w-5 h-5 rounded-full flex items-center justify-center"
-                style={{ background: s.accent, boxShadow: `0 0 24px ${s.accent}99` }}
-              >
-                <Icon className="w-2.5 h-2.5 text-slate-950" />
-              </div>
-              <div
-                className="text-[11px] uppercase tracking-[0.24em] font-semibold mb-2"
-                style={{ color: s.accent }}
-              >
-                {s.kicker}
-              </div>
-              <h3 className="text-2xl font-display font-semibold leading-tight mb-2">{s.title}</h3>
-              <p className="text-white/65 text-sm leading-relaxed">{s.body}</p>
-              <p className="text-white/35 text-xs italic mt-1">{s.detail}</p>
-            </div>
-          );
-        })}
-      </div>
-    </section>
-  );
-}
-
-/** Transformation contrast — Before vs After. This is V3's identity, not a feature grid. */
-function BeforeAfter() {
+// ---------- 6. Transformation strip ----------
+function Transformation() {
   const rows = [
     { before: "Re-draft proposals from scratch", after: "AI ships v1 in 5 seconds, branded" },
     { before: "Chase invoices over WhatsApp", after: "Auto-reminders, status visible in portal" },
-    { before: "Files scattered across drives", after: "Single workspace, one source of truth" },
+    { before: "Files scattered across drives", after: "One workspace, one source of truth" },
     { before: "Approvals lost in email threads", after: "Tracked, timestamped, signed in portal" },
     { before: "Forget to send the follow-up", after: "Workflow does it while you sleep" },
     { before: "Looks like a freelancer", after: "Looks like a company" },
   ];
   return (
-    <section className="bg-slate-950 text-white py-24 px-4 border-t border-white/5">
+    <section className="px-4 py-20 md:py-28">
       <div className="container mx-auto max-w-5xl">
         <div className="max-w-2xl mb-12">
-          <div className="text-[11px] uppercase tracking-[0.24em] text-emerald-400 font-semibold mb-3">
+          <div className="text-[11px] uppercase tracking-[0.22em] font-semibold text-[#FF7A45] mb-3">
             The shift
           </div>
-          <h2 className="text-3xl md:text-5xl font-display font-semibold tracking-tight leading-[1.05]">
-            You don't get new features. <br />
-            <span className="text-white/50">You get a different business.</span>
-          </h2>
+          <RevealHeading
+            text="You don't get new features. You get a different business."
+            className="font-display font-semibold tracking-tight text-[#1A1A1F] text-3xl md:text-5xl leading-[1.05]"
+          />
         </div>
-        <div className="grid md:grid-cols-2 gap-px bg-white/10 rounded-2xl overflow-hidden border border-white/10">
-          <div className="bg-slate-950 p-6 md:p-8">
-            <div className="text-[10px] uppercase tracking-[0.24em] text-rose-400/80 font-semibold mb-5">
-              Without HustleAI
+        <div className="rounded-[2rem] border border-[#1A1A1F]/8 bg-white overflow-hidden">
+          <div className="grid md:grid-cols-2">
+            <div className="p-6 md:p-8 border-b md:border-b-0 md:border-r border-[#1A1A1F]/8">
+              <div className="text-[10px] uppercase tracking-[0.22em] text-[#1A1A1F]/40 font-semibold mb-5">
+                Before
+              </div>
+              <ul className="space-y-3.5">
+                {rows.map((r) => (
+                  <li key={r.before} className="text-[#1A1A1F]/55 text-[14px] flex items-start gap-2">
+                    <span className="text-[#1A1A1F]/30 mt-1">·</span>
+                    <span className="line-through decoration-[#1A1A1F]/20">{r.before}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
-            <ul className="space-y-3.5">
-              {rows.map((r) => (
-                <li key={r.before} className="text-white/55 text-sm flex items-start gap-2">
-                  <span className="text-rose-500/60 mt-1">·</span>
-                  <span className="line-through decoration-rose-500/30">{r.before}</span>
-                </li>
-              ))}
-            </ul>
+            <div className="p-6 md:p-8 bg-gradient-to-br from-[#FFF6E8] to-white">
+              <div className="text-[10px] uppercase tracking-[0.22em] text-[#FF7A45] font-semibold mb-5">
+                After
+              </div>
+              <ul className="space-y-3.5">
+                {rows.map((r) => (
+                  <li key={r.after} className="text-[#1A1A1F] text-[14px] flex items-start gap-2">
+                    <span className="text-[#FF7A45] mt-1">→</span>
+                    <span>{r.after}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
-          <div className="bg-slate-950 p-6 md:p-8">
-            <div className="text-[10px] uppercase tracking-[0.24em] text-emerald-400 font-semibold mb-5">
-              With HustleAI
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ---------- 7. Workflows by audience ----------
+const FLOWS = [
+  { audience: "Freelancer", steps: ["Lead", "Proposal", "Approval", "Invoice", "Payment"] },
+  { audience: "Creator", steps: ["Idea", "Research", "Content", "Distribution", "Sponsor"] },
+  { audience: "Agency", steps: ["Client", "Workspace", "Team", "Delivery", "Retention"] },
+  { audience: "Consultant", steps: ["Discovery", "Proposal", "Approval", "Engagement", "Renewal"] },
+];
+
+function WorkflowsByAudience() {
+  const [active, setActive] = useState(0);
+  const flow = FLOWS[active];
+  return (
+    <section id="workflows" className="px-4 py-20 md:py-28 bg-[#FBF7F1]">
+      <div className="container mx-auto max-w-6xl">
+        <div className="max-w-2xl mb-10 md:mb-14">
+          <div className="text-[11px] uppercase tracking-[0.22em] font-semibold text-[#FF7A45] mb-3">
+            Real workflows
+          </div>
+          <RevealHeading
+            text="Pick how you work. We've already built the flow."
+            className="font-display font-semibold tracking-tight text-[#1A1A1F] text-3xl md:text-5xl leading-[1.05]"
+          />
+        </div>
+
+        <div className="flex flex-wrap gap-2 mb-8">
+          {FLOWS.map((f, i) => (
+            <button
+              key={f.audience}
+              onClick={() => setActive(i)}
+              className={`px-4 py-2 rounded-full text-[13px] font-semibold transition-all ${
+                active === i
+                  ? "bg-[#1A1A1F] text-white shadow-sm"
+                  : "bg-white border border-[#1A1A1F]/10 text-[#1A1A1F]/70 hover:text-[#1A1A1F]"
+              }`}
+            >
+              {f.audience}
+            </button>
+          ))}
+        </div>
+
+        <div className="rounded-[2rem] bg-white border border-[#1A1A1F]/8 p-6 md:p-10">
+          <div className="flex flex-wrap items-center gap-3 md:gap-4 justify-center md:justify-between">
+            {flow.steps.map((step, i) => (
+              <div key={step} className="flex items-center gap-3 md:gap-4">
+                <div
+                  key={`${active}-${step}`}
+                  className="rounded-2xl bg-[#FBF7F1] border border-[#1A1A1F]/10 px-4 md:px-5 py-3 md:py-4 text-[13px] md:text-sm font-semibold text-[#1A1A1F] animate-[fade-in_0.6s_ease-out]"
+                  style={{ animationDelay: `${i * 100}ms`, animationFillMode: "both" }}
+                >
+                  {step}
+                </div>
+                {i < flow.steps.length - 1 && (
+                  <svg width="24" height="8" viewBox="0 0 24 8" className="text-[#FF7A45]">
+                    <line x1="0" y1="4" x2="20" y2="4" stroke="currentColor" strokeWidth="1.5" strokeDasharray="2 3" />
+                    <path d="M18 1 L23 4 L18 7" fill="none" stroke="currentColor" strokeWidth="1.5" />
+                  </svg>
+                )}
+              </div>
+            ))}
+          </div>
+          <div className="mt-8 pt-6 border-t border-[#1A1A1F]/8 text-center">
+            <p className="text-[14px] text-[#1A1A1F]/60">
+              Every step runs inside HustleAI. No glue scripts. No third tabs.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ---------- 8. Proof — real capability feed ----------
+const FEED = [
+  { icon: FileCheck2, text: "Branded proposal generated and sent" },
+  { icon: Send, text: "Telegram drop delivered to client" },
+  { icon: Wallet, text: "Invoice paid · payment reconciled" },
+  { icon: Bot, text: "AI Workspace drafted a contract v3" },
+  { icon: Inbox, text: "New lead captured into pipeline" },
+  { icon: Calendar, text: "Follow-up scheduled · 3 days" },
+  { icon: Users, text: "Client portal viewed by Mehta Architects" },
+  { icon: MoonStar, text: "Workflow ran while you were offline" },
+];
+
+function ProofFeed() {
+  return (
+    <section id="proof" className="px-4 py-20 md:py-28">
+      <div className="container mx-auto max-w-6xl">
+        <div className="grid md:grid-cols-2 gap-10 md:gap-16 items-center">
+          <div>
+            <div className="text-[11px] uppercase tracking-[0.22em] font-semibold text-[#FF7A45] mb-3">
+              What it actually does
             </div>
-            <ul className="space-y-3.5">
-              {rows.map((r) => (
-                <li key={r.after} className="text-white text-sm flex items-start gap-2">
-                  <span className="text-emerald-400 mt-1">→</span>
-                  <span>{r.after}</span>
+            <RevealHeading
+              text="One platform. Real capabilities. Not a wishlist."
+              className="font-display font-semibold tracking-tight text-[#1A1A1F] text-3xl md:text-5xl leading-[1.05]"
+            />
+            <p className="mt-6 text-[#1A1A1F]/65 text-base md:text-lg leading-relaxed max-w-md">
+              HustleAI combines a client workspace, AI tools, proposals, invoices,
+              client portals and Telegram delivery in one operating layer — so
+              your business stops being a stack of disconnected tabs.
+            </p>
+            <div className="mt-6 flex flex-wrap gap-2">
+              {["Proposals", "Invoices", "AI Workspace", "Client Portal", "Telegram Delivery", "Workflow OS"].map((p) => (
+                <span
+                  key={p}
+                  className="px-3 py-1.5 rounded-full text-[12px] font-semibold bg-white border border-[#1A1A1F]/10 text-[#1A1A1F]/70"
+                >
+                  {p}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-[2rem] bg-white border border-[#1A1A1F]/8 p-5 md:p-6 shadow-[0_30px_80px_-40px_rgba(255,122,69,0.35)]">
+            <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.22em] text-[#1A1A1F]/40 font-semibold mb-4">
+              <span className="relative flex w-2 h-2">
+                <span className="absolute inline-flex h-full w-full rounded-full bg-[#FF7A45] opacity-75 animate-ping" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#FF7A45]" />
+              </span>
+              While you read this
+            </div>
+            <ul className="space-y-2.5">
+              {FEED.map((f, i) => (
+                <li
+                  key={i}
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-[#FBF7F1]/70 text-[13px] text-[#1A1A1F]"
+                >
+                  <span className="w-7 h-7 rounded-lg bg-white border border-[#1A1A1F]/8 flex items-center justify-center">
+                    <f.icon className="w-3.5 h-3.5 text-[#FF7A45]" />
+                  </span>
+                  {f.text}
                 </li>
               ))}
             </ul>
@@ -444,132 +731,107 @@ function BeforeAfter() {
   );
 }
 
-export default function HomepageV3() {
-  const navigate = useNavigate();
-  const can3D = useCanRender3D();
+// ---------- 9. CTA ----------
+function V3CTA() {
   return (
-    <div className="min-h-screen bg-slate-950 text-white selection:bg-emerald-500/30">
+    <section className="px-4 py-24 md:py-32 relative overflow-hidden">
+      <div className="absolute inset-0 -z-10 opacity-90 pointer-events-none"
+           style={{
+             background:
+               "radial-gradient(60% 60% at 50% 100%, rgba(255,122,69,0.35) 0%, rgba(255,226,122,0.15) 40%, transparent 75%)",
+           }} />
+      <div className="container mx-auto max-w-3xl text-center">
+        <RevealHeading
+          text="Run your business like software."
+          className="font-display font-semibold tracking-tight text-[#1A1A1F] text-4xl md:text-6xl leading-[1.05]"
+        />
+        <p className="mt-5 text-[#1A1A1F]/65 text-lg max-w-xl mx-auto leading-relaxed">
+          Stop being the bottleneck. Start being the architect. HustleAI is free
+          to begin and grows with you.
+        </p>
+        <div className="mt-8 flex items-center justify-center gap-3">
+          <Button
+            size="lg"
+            className="bg-[#1A1A1F] hover:bg-[#FF7A45] text-white rounded-full px-7 h-12 text-[14px] font-semibold"
+            asChild
+          >
+            <Link to="/onboarding">Start your system <ArrowRight className="w-4 h-4 ml-1" /></Link>
+          </Button>
+          <Link
+            to="/pricing"
+            className="text-[14px] font-semibold text-[#1A1A1F]/70 hover:text-[#1A1A1F] transition-colors"
+          >
+            See pricing
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ---------- 10. Light footer ----------
+function V3Footer() {
+  return (
+    <footer className="px-4 py-12 border-t border-[#1A1A1F]/8">
+      <div className="container mx-auto max-w-6xl flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="flex items-center gap-2 text-[13px] font-semibold text-[#1A1A1F]">
+          <span className="w-2 h-2 rounded-full bg-[#FF7A45]" />
+          HustleAI
+          <span className="text-[#1A1A1F]/40 font-normal ml-2">© {new Date().getFullYear()}</span>
+        </div>
+        <div className="flex flex-wrap gap-5 text-[13px] text-[#1A1A1F]/55">
+          <Link to="/about" className="hover:text-[#1A1A1F]">About</Link>
+          <Link to="/pricing" className="hover:text-[#1A1A1F]">Pricing</Link>
+          <Link to="/security" className="hover:text-[#1A1A1F]">Security</Link>
+          <Link to="/privacy-policy" className="hover:text-[#1A1A1F]">Privacy</Link>
+          <Link to="/terms" className="hover:text-[#1A1A1F]">Terms</Link>
+        </div>
+      </div>
+    </footer>
+  );
+}
+
+// ---------- Top scroll progress bar ----------
+function ScrollProgress() {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const onScroll = () => {
+      const el = ref.current;
+      if (!el) return;
+      const h = document.documentElement;
+      const p = h.scrollTop / Math.max(h.scrollHeight - h.clientHeight, 1);
+      el.style.transform = `scaleX(${p})`;
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+  return (
+    <div className="fixed top-0 left-0 right-0 h-[2px] z-[60] origin-left bg-[#FF7A45]"
+         ref={ref}
+         style={{ transform: "scaleX(0)" }} />
+  );
+}
+
+// ---------- Page ----------
+export default function HomepageV3() {
+  return (
+    <div className="min-h-screen bg-[#FBF7F1] text-[#1A1A1F] selection:bg-[#FF7A45]/20">
       <SEO
-        title="HustleAI — Run your business like software"
-        description="Six scenes. One transformation. Watch a freelance practice stop depending on your memory and start running like an operating system."
-        path="/homepage-3"
-        noindex
+        title="HustleAI — The quiet machine. Run your business like software."
+        description="The operating system for freelancers, creators, consultants and small agencies. Proposals, invoices, AI workspace, client portals and Telegram delivery — in one place."
       />
-      <Navbar />
-
-      {/* HERO — dark, narrative-first. No feature chips, no pricing language. */}
-      <section className="relative overflow-hidden pt-28 md:pt-36 pb-20 md:pb-28 px-4">
-        <div
-          className="absolute inset-0 opacity-[0.6]"
-          style={{
-            background:
-              "radial-gradient(ellipse at 20% 10%, rgba(56,189,248,0.18) 0%, transparent 50%), radial-gradient(ellipse at 80% 30%, rgba(16,185,129,0.18) 0%, transparent 50%), radial-gradient(ellipse at 50% 90%, rgba(167,139,250,0.14) 0%, transparent 55%)",
-          }}
-        />
-        <div
-          className="absolute inset-0 opacity-[0.05]"
-          style={{
-            backgroundImage:
-              "linear-gradient(rgba(255,255,255,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.6) 1px, transparent 1px)",
-            backgroundSize: "64px 64px",
-            maskImage: "radial-gradient(ellipse at center, black 30%, transparent 75%)",
-          }}
-        />
-
-        <div className="relative container mx-auto max-w-6xl grid lg:grid-cols-[1.3fr_1fr] gap-12 lg:gap-16 items-center">
-          <div className="space-y-7">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/15 bg-white/[0.04] backdrop-blur text-[10px] uppercase tracking-[0.24em] text-white/70">
-              <Activity className="w-3 h-3 text-emerald-400" /> Mission Control · V3
-            </div>
-            <h1 className="text-5xl md:text-7xl lg:text-[88px] font-display font-semibold tracking-[-0.02em] leading-[0.98]">
-              Your business works. <br />
-              <span className="text-white/40">But only when</span> <br />
-              <span className="bg-gradient-to-br from-rose-300 via-amber-200 to-emerald-300 bg-clip-text text-transparent">
-                you do.
-              </span>
-            </h1>
-            <p className="text-white/65 text-lg md:text-xl max-w-xl leading-relaxed">
-              Every proposal, payment, follow-up and delivery depends on you remembering what happens next.
-              Scroll six scenes and watch that change.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3 pt-2">
-              <Button
-                size="lg"
-                onClick={() => navigate("/signup")}
-                className="h-12 px-7 bg-white text-slate-950 hover:bg-white/90 text-base font-semibold"
-              >
-                Run my business as a system <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-              <Button
-                size="lg"
-                variant="ghost"
-                onClick={() =>
-                  document.getElementById("v3-narrative")?.scrollIntoView({ behavior: "smooth" })
-                }
-                className="h-12 px-6 text-white/70 hover:text-white hover:bg-white/5 text-base"
-              >
-                Watch the six scenes ↓
-              </Button>
-            </div>
-            <div className="pt-6 text-[11px] text-white/35 font-mono uppercase tracking-[0.2em]">
-              No credit card · Workspace ready in 60 seconds
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <ChaosCanvas />
-            <TelemetryStream />
-          </div>
-        </div>
-      </section>
-
-      {/* THE FIVE-SCENE NARRATIVE */}
-      <div id="v3-narrative">
-        {can3D ? <MissionControl3D /> : <NarrativeFallback />}
-      </div>
-
-      {/* TRANSFORMATION CONTRAST */}
-      <BeforeAfter />
-
-      {/* CLOSING — emotional, no pricing CTA, no feature recap */}
-      <section className="relative bg-slate-950 text-white py-28 md:py-36 px-4 overflow-hidden border-t border-white/5">
-        <div
-          className="absolute inset-0 opacity-50"
-          style={{
-            background:
-              "radial-gradient(ellipse at center, rgba(16,185,129,0.18) 0%, transparent 60%)",
-          }}
-        />
-        <div className="relative container mx-auto max-w-3xl text-center space-y-8">
-          <div className="text-[11px] uppercase tracking-[0.32em] text-emerald-400 font-semibold">
-            End of scene · your move
-          </div>
-          <h2 className="text-4xl md:text-6xl font-display font-semibold tracking-tight leading-[1.02]">
-            You've seen the system. <br />
-            <span className="text-white/45">Now run yours on it.</span>
-          </h2>
-          <p className="text-white/55 text-base md:text-lg max-w-xl mx-auto">
-            The first proposal ships in five seconds. The first invoice settles itself.
-            From there, the business compounds without your hands on every keystroke.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
-            <Button
-              size="lg"
-              onClick={() => navigate("/signup")}
-              className="h-12 px-8 bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-base font-semibold"
-            >
-              Open Mission Control <ArrowRight className="w-4 h-4 ml-2" />
-            </Button>
-          </div>
-          <div className="text-[11px] text-white/30 font-mono uppercase tracking-[0.22em] pt-4">
-            Free workspace · Cancel any layer, any time
-          </div>
-        </div>
-      </section>
-
-      <div className="bg-slate-950 border-t border-white/5">
-        <Footer />
-      </div>
+      <ScrollProgress />
+      <V3Nav />
+      <Hero />
+      <WhoItsFor />
+      <ProblemEmotion />
+      <CinematicSection />
+      <Transformation />
+      <WorkflowsByAudience />
+      <ProofFeed />
+      <V3CTA />
+      <V3Footer />
     </div>
   );
 }
