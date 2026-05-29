@@ -118,6 +118,7 @@ function RevealHeading({
 // ---------- 1. Floating glass navbar ----------
 function V3Nav() {
   const [scrolled, setScrolled] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
   const navigate = useNavigate();
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -133,17 +134,34 @@ function V3Nav() {
     { label: "What's inside", href: "#proof" },
   ];
 
+  const sheetLinks = [
+    { label: "Audiences", href: "#audiences" },
+    { label: "How it works", href: "#cinematic" },
+    { label: "Workflows", href: "#workflows" },
+    { label: "What's inside", href: "#inside" },
+    { label: "Free tools", href: "/tools" },
+    { label: "Docs", href: "https://docs.hustlaiapp.in/", external: true },
+    { label: "Blog", href: "https://blogs.hustlaiapp.in/", external: true },
+    { label: "Pricing", href: "/pricing" },
+  ];
+
   return (
     <div className="fixed top-4 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none">
       <div
-        className={`pointer-events-auto flex items-center gap-1 rounded-full border border-[#1A1A1F]/10 bg-white/70 backdrop-blur-xl px-2 py-2 transition-all duration-500 ${
+        className={`pointer-events-auto flex items-center gap-1 rounded-full border border-[#1A1A1F]/10 bg-white/80 backdrop-blur-xl pl-2 pr-1.5 py-1.5 md:py-2 md:px-2 transition-all duration-500 ${
           scrolled ? "shadow-[0_12px_40px_-20px_rgba(255,122,69,0.35)] scale-[0.98]" : "shadow-sm"
         }`}
       >
-        <Link to="/" className="px-3 py-1.5 rounded-full text-[13px] font-semibold text-[#1A1A1F] tracking-tight flex items-center gap-1.5">
+        <Link to="/" className="px-2.5 md:px-3 py-1.5 rounded-full text-[13px] font-semibold text-[#1A1A1F] tracking-tight flex items-center gap-1.5">
           <span className="w-2 h-2 rounded-full bg-[#FF7A45]" />
           HustleAI
         </Link>
+        <span
+          aria-hidden
+          className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-[0.14em] bg-emerald-50 border border-emerald-200 text-emerald-700"
+        >
+          Preview <Sparkles className="w-2.5 h-2.5" />
+        </span>
         <div className="hidden md:flex items-center">
           {links.map((l) => (
             <a
@@ -163,10 +181,88 @@ function V3Nav() {
         </button>
         <button
           onClick={() => navigate("/onboarding")}
-          className="px-3.5 py-1.5 rounded-full text-[13px] font-semibold text-white bg-[#1A1A1F] hover:bg-[#FF7A45] transition-colors"
+          className="px-3 md:px-3.5 py-1.5 rounded-full text-[12px] md:text-[13px] font-semibold text-white bg-[#1A1A1F] hover:bg-[#FF7A45] transition-colors whitespace-nowrap"
         >
           Get started
         </button>
+
+        {/* Mobile hamburger */}
+        <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+          <SheetTrigger asChild>
+            <button
+              className="md:hidden ml-1 w-8 h-8 rounded-full flex items-center justify-center text-[#1A1A1F]/70 hover:text-[#1A1A1F] hover:bg-[#FBF7F1] transition-colors"
+              aria-label="Open menu"
+            >
+              <Menu className="w-4 h-4" />
+            </button>
+          </SheetTrigger>
+          <SheetContent side="right" className="bg-[#FBF7F1] border-l border-[#1A1A1F]/10 p-0 w-[85vw] max-w-sm">
+            <div className="flex flex-col h-full">
+              <div className="px-5 pt-6 pb-4 border-b border-[#1A1A1F]/10">
+                <div className="flex items-center gap-2 text-[15px] font-semibold text-[#1A1A1F]">
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#FF7A45]" />
+                  HustleAI
+                  <span className="ml-auto inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-[0.14em] bg-emerald-50 border border-emerald-200 text-emerald-700">
+                    Preview <Sparkles className="w-2.5 h-2.5" />
+                  </span>
+                </div>
+              </div>
+              <nav className="flex-1 overflow-y-auto px-2 py-4">
+                {sheetLinks.map((l) =>
+                  l.external ? (
+                    <a
+                      key={l.href}
+                      href={l.href}
+                      rel="noopener"
+                      onClick={() => setSheetOpen(false)}
+                      className="flex items-center justify-between px-4 py-3 rounded-2xl text-[15px] font-medium text-[#1A1A1F] hover:bg-white transition-colors"
+                    >
+                      {l.label}
+                      <ArrowUpRight className="w-4 h-4 text-[#1A1A1F]/40" />
+                    </a>
+                  ) : l.href.startsWith("#") ? (
+                    <a
+                      key={l.href}
+                      href={l.href}
+                      onClick={() => setSheetOpen(false)}
+                      className="flex items-center justify-between px-4 py-3 rounded-2xl text-[15px] font-medium text-[#1A1A1F] hover:bg-white transition-colors"
+                    >
+                      {l.label}
+                      <ChevronRight className="w-4 h-4 text-[#1A1A1F]/40" />
+                    </a>
+                  ) : (
+                    <Link
+                      key={l.href}
+                      to={l.href}
+                      onClick={() => setSheetOpen(false)}
+                      className="flex items-center justify-between px-4 py-3 rounded-2xl text-[15px] font-medium text-[#1A1A1F] hover:bg-white transition-colors"
+                    >
+                      {l.label}
+                      <ChevronRight className="w-4 h-4 text-[#1A1A1F]/40" />
+                    </Link>
+                  ),
+                )}
+              </nav>
+              <div className="px-5 py-5 border-t border-[#1A1A1F]/10 space-y-2 bg-white/60">
+                <Button
+                  asChild
+                  className="w-full bg-[#1A1A1F] hover:bg-[#FF7A45] text-white rounded-full h-11 text-[14px] font-semibold"
+                >
+                  <Link to="/onboarding" onClick={() => setSheetOpen(false)}>
+                    Get started <ArrowRight className="w-4 h-4 ml-1" />
+                  </Link>
+                </Button>
+                <Link
+                  to="/login"
+                  onClick={() => setSheetOpen(false)}
+                  className="block text-center text-[13px] text-[#1A1A1F]/65 hover:text-[#1A1A1F] py-2"
+                >
+                  Sign in
+                </Link>
+              </div>
+            </div>
+          </SheetContent>
+        </Sheet>
       </div>
     </div>
   );
