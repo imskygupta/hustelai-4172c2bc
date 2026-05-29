@@ -236,9 +236,9 @@ function MissionControl3D() {
       const total = rect.height - vh;
       const passed = Math.min(Math.max(-rect.top, 0), Math.max(total, 1));
       const p = total > 0 ? passed / total : 0;
-      const next = 0.4 + p * 4.8;
+      const next = 0.4 + p * 5.8;
       phaseRef.current = next;
-      setPhaseLabel(Math.max(1, Math.min(5, Math.round(next))));
+      setPhaseLabel(Math.max(1, Math.min(6, Math.round(next))));
     };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
