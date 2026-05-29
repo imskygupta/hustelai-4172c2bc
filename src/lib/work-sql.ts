@@ -484,4 +484,35 @@ export const SQL_BLOCKS = [
   { id: "workspaces", label: "Workspaces — client list & action bar", sql: WORKSPACES_SETUP_SQL },
   { id: "intake", label: "Intake OS — public forms, submissions, assets, portal links (DB2)", sql: INTAKE_SETUP_SQL },
   { id: "community", label: "Community / Forum + Discord links — 3rd backend (qeswhaytgvosfzzgraef)", sql: COMMUNITY_SETUP_SQL },
+  { id: "delivery", label: "Universal Delivery Layer — work_deliveries + work_clients delivery columns (DB2)", sql: DELIVERY_SETUP_SQL },
 ];
+
+// =========================================================
+// Universal Delivery Layer (DB2, utflzmecghdtcjupgdan)
+// Tracks every Deliver action (WhatsApp opened, Telegram text, Telegram PDF,
+// Save to Client) and augments work_clients with delivery rollups.
+// =========================================================
+export const DELIVERY_SETUP_SQL = `alter table public.work_clients
+  add column if not exists last_delivery_at timestamptz,
+  add column if not exists delivery_count   int not null default 0;
+
+create table if not exists public.work_deliveries (
+  id uuid primary key default gen_random_uuid(),
+  owner_id uuid not null,
+  client_id uuid references public.work_clients(id) on delete set null,
+  tool_slug text not null,
+  channel text not null,                 -- 'whatsapp_opened' | 'telegram_sent' | 'telegram_pdf_sent' | 'saved_to_client'
+  content_title text,
+  content_preview text,                  -- first 280 chars
+  ref_kind text,                         -- 'pdf' | 'text' | 'output'
+  ref_id text,
+  created_at timestamptz not null default now()
+);
+create index if not exists idx_work_deliveries_owner  on public.work_deliveries(owner_id, created_at desc);
+create index if not exists idx_work_deliveries_client on public.work_deliveries(client_id, created_at desc);
+
+alter table public.work_deliveries enable row level security;
+do $$ begin
+  create policy "anon_all_deliveries" on public.work_deliveries for all using (true) with check (true);
+exception when duplicate_object then null; end $$;
+`;
