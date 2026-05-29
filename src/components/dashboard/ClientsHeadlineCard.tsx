@@ -50,10 +50,16 @@ export default function ClientsHeadlineCard() {
           </div>
 
           <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-slate-900 tabular-nums">{loaded ? total : "—"}</span>
-            <span className="text-xs text-slate-500">
-              {total === 1 ? "active client" : "active clients"}
-            </span>
+            {loaded ? (
+              <>
+                <span className="text-2xl font-bold text-slate-900 tabular-nums">{total}</span>
+                <span className="text-xs text-slate-500">
+                  {total === 1 ? "active client" : "active clients"}
+                </span>
+              </>
+            ) : (
+              <span className="my-1 h-6 w-16 rounded bg-slate-100 animate-pulse" />
+            )}
           </div>
 
           {top ? (
