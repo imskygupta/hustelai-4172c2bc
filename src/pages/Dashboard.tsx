@@ -18,6 +18,7 @@ import ResumeWorkflowCard from "@/components/activation/ResumeWorkflowCard";
 import ContinuityRail from "@/components/workspace/ContinuityRail";
 import AdaptiveCockpit from "@/components/dashboard/AdaptiveCockpit";
 import TodayCockpit from "@/components/dashboard/TodayCockpit";
+import { useOperatorMode, type DashboardWidgetId } from "@/lib/operator-mode";
 import OperationalFlows from "@/components/dashboard/OperationalFlows";
 import ContextualNudge from "@/components/dashboard/ContextualNudge";
 import DashboardHero from "@/components/dashboard/DashboardHero";
@@ -66,6 +67,7 @@ interface Webinar {
 export default function Dashboard() {
   const { user, profile, loading } = useAuth();
   const navigate = useNavigate();
+  const { meta: cockpitMeta } = useOperatorMode();
   // Handoff overlay state — when launching into a workspace tool we render
   // a brief fade-through so the cross-host hop feels intentional instead of
   // a hard teleport. Cleared automatically once the new surface paints.
@@ -247,6 +249,16 @@ export default function Dashboard() {
           <Button variant="outline" size="sm" className="border-slate-200" onClick={() => navigate("/explore")}>
             <Search className="w-4 h-4 mr-1.5" /> New search
           </Button>
+          {cockpitMeta?.workspace && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+              onClick={() => navigate(cockpitMeta.workspace!.dashboardCtaHref)}
+            >
+              {cockpitMeta.workspace.dashboardCtaLabel}
+            </Button>
+          )}
           {!isInfinity && (
             <Button size="sm" className="bg-emerald-500 hover:bg-emerald-600 text-white" onClick={() => navigate("/payment")}>
               <Crown className="w-4 h-4 mr-1.5" /> Upgrade
@@ -266,23 +278,29 @@ export default function Dashboard() {
         {/* TODAY — hero cockpit. Answers "what should I do next?" per persona. */}
         <TodayCockpit />
 
-        {/* Emotional entrypoint — sells possibility, sets the calm tone. */}
-        <DashboardHero />
-
-        {/* Operations layer — reinforces "OS, not generator collection" framing.
-            Counts pull live from DB2 work_deliveries + work_clients. */}
-        <OperationsTodayCard />
-
-        {/* Clients are the center of the product — surface them near the top
-            so the operator immediately sees where their business lives. */}
-        <ClientsHeadlineCard />
-
-        {/* Live "your workspace is doing things" feed — pulled from
-            DB2 work_deliveries so the dashboard feels alive on every visit. */}
-        <RecentClientActivityFeed />
-
-        {/* Cinematic portal into the execution OS — opens workspace in a new tab. */}
-        <WorkspacePortalTile />
+        {/* Adaptive widget stack — order is driven by the active persona's
+            `widgetOrder` (see src/lib/operator-mode.ts). Same components,
+            same data — different defaults so the dashboard feels built for
+            who the user is. Nothing is hidden. */}
+        {(() => {
+          const defaultOrder: DashboardWidgetId[] = ["operations", "clients", "activity", "portal", "hero"];
+          const order = cockpitMeta?.widgetOrder ?? defaultOrder;
+          // Ensure no widget is dropped if a mode declares a partial order.
+          const full = [...order, ...defaultOrder.filter(w => !order.includes(w))];
+          const widgets: Record<DashboardWidgetId, JSX.Element | null> = {
+            operations: <OperationsTodayCard />,
+            clients: <ClientsHeadlineCard />,
+            activity: <RecentClientActivityFeed />,
+            portal: <WorkspacePortalTile />,
+            hero: <DashboardHero />,
+            resume: null,
+          };
+          return (
+            <>
+              {full.map((id) => widgets[id] && <div key={id}>{widgets[id]}</div>)}
+            </>
+          );
+        })()}
 
         {/* Personalised activity-aware nudge — sits above the cockpit so the
             first thing operators see is a sentence about THEIR own state. */}

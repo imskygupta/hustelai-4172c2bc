@@ -29,6 +29,34 @@ export interface EmptyStateMeta {
   ctaLabel?: string;
 }
 
+/**
+ * Persona-aware framing for the Workspace landing surface. Same routes, same
+ * data — just a different title/tagline so the user feels the workspace was
+ * built for them.
+ */
+export interface WorkspaceFraming {
+  /** Big workspace headline (replaces "Your operations, in one place."). */
+  title: string;
+  /** One-line subtitle / domain pills (e.g. "Clients • Team • Delivery • Revenue"). */
+  pills: string;
+  /** Primary dashboard CTA label (e.g. "Open Agency Workspace"). */
+  dashboardCtaLabel: string;
+  /** Where the dashboard CTA leads. */
+  dashboardCtaHref: string;
+}
+
+/**
+ * Dashboard widget IDs that the adaptive stack can reorder. Keep this list in
+ * sync with the renderer map in `src/pages/Dashboard.tsx`.
+ */
+export type DashboardWidgetId =
+  | "operations"   // OperationsTodayCard
+  | "clients"     // ClientsHeadlineCard
+  | "activity"    // RecentClientActivityFeed
+  | "portal"      // WorkspacePortalTile
+  | "hero"        // DashboardHero (emotional entrypoint)
+  | "resume";     // (placeholder — Resume Workflow Card if present)
+
 export interface OperatorModeMeta {
   id: OperatorMode;
   label: string;
@@ -39,6 +67,10 @@ export interface OperatorModeMeta {
   todaySteps?: TodayStep[];
   /** Persona-aware empty state used across the product. */
   emptyState?: EmptyStateMeta;
+  /** Adaptive dashboard widget order. Unknown widgets render in default order at the end. */
+  widgetOrder?: DashboardWidgetId[];
+  /** Persona-aware framing for the Workspace landing surface. */
+  workspace?: WorkspaceFraming;
 }
 
 export const OPERATOR_MODES: OperatorModeMeta[] = [
@@ -61,6 +93,13 @@ export const OPERATOR_MODES: OperatorModeMeta[] = [
       title: "Get your first client",
       cta: "/dashboard/tools/proposal-generator",
       ctaLabel: "Start a proposal",
+    },
+    widgetOrder: ["clients", "activity", "portal", "hero", "operations"],
+    workspace: {
+      title: "Freelance OS",
+      pills: "Leads • Proposals • Delivery • Payment",
+      dashboardCtaLabel: "Open Freelance Workspace",
+      dashboardCtaHref: "/workspaces",
     },
     modules: [
       { label: "Proposal Generator",   to: "/dashboard/tools/proposal-generator", desc: "AI-drafted client pitches" },
@@ -91,6 +130,13 @@ export const OPERATOR_MODES: OperatorModeMeta[] = [
       cta: "/workspaces",
       ctaLabel: "Open Workspace",
     },
+    widgetOrder: ["operations", "clients", "portal", "activity", "hero"],
+    workspace: {
+      title: "Agency Control Center",
+      pills: "Clients • Team • Delivery • Revenue",
+      dashboardCtaLabel: "Open Agency Workspace",
+      dashboardCtaHref: "/workspaces",
+    },
     modules: [
       { label: "Pipeline",        to: "/workspaces/pipeline",   desc: "Deal stages kanban" },
       { label: "Clients (CRM)",   to: "/work/clients",          desc: "All clients in one place" },
@@ -119,6 +165,13 @@ export const OPERATOR_MODES: OperatorModeMeta[] = [
       title: "Plan your next content sprint",
       cta: "/hustle-blueprint",
       ctaLabel: "Open Content OS",
+    },
+    widgetOrder: ["activity", "hero", "portal", "clients", "operations"],
+    workspace: {
+      title: "Creator Studio",
+      pills: "Content • Distribution • Sponsors • Revenue",
+      dashboardCtaLabel: "Open Creator Studio",
+      dashboardCtaHref: "/workspaces",
     },
     modules: [
       { label: "Hustle Blueprint",     to: "/hustle-blueprint",                desc: "7-day action plans" },
@@ -149,6 +202,13 @@ export const OPERATOR_MODES: OperatorModeMeta[] = [
       cta: "/dashboard/tools/proposal-generator",
       ctaLabel: "Draft a proposal",
     },
+    widgetOrder: ["clients", "operations", "activity", "hero", "portal"],
+    workspace: {
+      title: "Consulting Practice",
+      pills: "Discovery • Strategy • Proposal • Retainer",
+      dashboardCtaLabel: "Open Practice Workspace",
+      dashboardCtaHref: "/workspaces",
+    },
     modules: [
       { label: "Proposal Generator", to: "/dashboard/tools/proposal-generator", desc: "Discovery → engagement" },
       { label: "Contract Generator", to: "/dashboard/tools/contract-generator", desc: "Retainers & SOWs" },
@@ -178,6 +238,13 @@ export const OPERATOR_MODES: OperatorModeMeta[] = [
       cta: "/workspaces/intake",
       ctaLabel: "Open intake",
     },
+    widgetOrder: ["clients", "activity", "hero", "operations", "portal"],
+    workspace: {
+      title: "Coaching Studio",
+      pills: "Discovery • Program • Onboarding • Outcomes",
+      dashboardCtaLabel: "Open Coaching Studio",
+      dashboardCtaHref: "/workspaces",
+    },
     modules: [
       { label: "Proposal Generator", to: "/dashboard/tools/proposal-generator", desc: "Package your program" },
       { label: "Client Intake",      to: "/workspaces/intake",                  desc: "Branded onboarding" },
@@ -206,6 +273,13 @@ export const OPERATOR_MODES: OperatorModeMeta[] = [
       title: "Wire up your operating stack",
       cta: "/workspaces",
       ctaLabel: "Open Workspace",
+    },
+    widgetOrder: ["operations", "portal", "clients", "activity", "hero"],
+    workspace: {
+      title: "Operator Control Center",
+      pills: "Pipeline • Delivery • Revenue • Automations",
+      dashboardCtaLabel: "Open Operator Workspace",
+      dashboardCtaHref: "/workspaces",
     },
     modules: [
       { label: "Pipeline",      to: "/workspaces/pipeline",   desc: "Deal stages kanban" },

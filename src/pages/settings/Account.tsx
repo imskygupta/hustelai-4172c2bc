@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import OperatingModeSection from "@/components/settings/OperatingModeSection";
 
 export default function AccountSettings() {
   const { user } = useAuth();
@@ -40,6 +41,8 @@ export default function AccountSettings() {
 
   return (
     <div className="space-y-6">
+      <OperatingModeSection />
+
       <SettingsSection title="Email" description="Used for sign-in and notifications.">
         <div className="flex gap-3">
           <Input value={email} onChange={(e) => setEmail(e.target.value)} type="email" className="flex-1" />
