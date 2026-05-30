@@ -608,3 +608,86 @@
   0%, 100% { opacity: 0.50; }
   50%      { opacity: 0.72; }
 }
+
+/* ============================================================
+   OPERATOR VIBE — Linear/Notion/Arc operational aesthetic.
+   Pure white surfaces, soft gray borders, green-as-success.
+   AI accent (#7C3AED) reserved for AI-specific UI only.
+   All gradients, glow, blur, neon shadows are neutralized so
+   the workspace reads as a premium SaaS used 6+ hours/day,
+   not an AI marketing surface.
+   ============================================================ */
+[data-ws-vibe="operator"].ws-themed {
+  --vibe-bg-1: #F8FAF9;
+  --vibe-bg-2: #F8FAF9;
+  --vibe-bg-3: #F8FAF9;
+  --vibe-glow-1: transparent;
+  --vibe-glow-2: transparent;
+
+  --vibe-tile-bg-1: #FFFFFF;
+  --vibe-tile-bg-2: #FFFFFF;
+  --vibe-tile-border: #E5E7EB;
+  --vibe-tile-border-strong: #D1D5DB;
+  --vibe-fg: #111827;
+  --vibe-fg-muted: #6B7280;
+  --vibe-accent: #16A34A;
+}
+
+[data-ws-vibe="operator"].ws-themed.ws-themed-bg {
+  background: #F8FAF9 !important;
+}
+
+/* Kill ambient/gradient/glow layers entirely inside Operator vibe */
+[data-ws-vibe="operator"].ws-themed .ws-ambient-pastel,
+[data-ws-vibe="operator"].ws-themed .ws-provider-aura,
+[data-ws-vibe="operator"].ws-themed .ws-mesh,
+[data-ws-vibe="operator"].ws-themed .ws-ambient {
+  display: none !important;
+}
+
+/* Solid borders, flat tiles, no gradient fills */
+[data-ws-vibe="operator"].ws-themed :where(.bg-white, .bg-slate-50\/40, .bg-slate-50, [class*="bg-slate-50/"], .bg-card) {
+  background-image: none !important;
+  background-color: #FFFFFF !important;
+}
+
+/* Neutralize gradient text → flat dark ink */
+[data-ws-vibe="operator"].ws-themed .ws-gradient-text,
+[data-ws-vibe="operator"].ws-themed .ws-headline-sweep {
+  background-image: none !important;
+  -webkit-background-clip: initial !important;
+  background-clip: initial !important;
+  color: #111827 !important;
+  animation: none !important;
+}
+
+/* Soft shadow only — no neon, no rainbow */
+[data-ws-vibe="operator"].ws-themed .ws-launch-card { box-shadow: 0 1px 2px rgba(17,24,39,0.04); }
+[data-ws-vibe="operator"].ws-themed .ws-launch-card:hover {
+  transform: none;
+  box-shadow: 0 4px 14px -6px rgba(17,24,39,0.10);
+}
+[data-ws-vibe="operator"].ws-themed .ws-launch-card::after { display: none !important; }
+
+/* Magnetic tile — keep the lift, drop the colored spotlight */
+[data-ws-vibe="operator"].ws-themed .ws-magnetic::before { display: none !important; }
+[data-ws-vibe="operator"].ws-themed .ws-magnetic:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px -6px rgba(17,24,39,0.10);
+}
+
+/* Surface cards: flat white, gray border, calm hover */
+[data-ws-vibe="operator"].ws-themed .ws-surface {
+  background: #FFFFFF !important;
+  border-color: #E5E7EB !important;
+}
+[data-ws-vibe="operator"].ws-themed .ws-surface:hover {
+  transform: none;
+  border-color: #D1D5DB !important;
+  box-shadow: 0 4px 14px -6px rgba(17,24,39,0.08);
+}
+
+/* Status dots — keep semantic colors but drop the neon glow */
+[data-ws-vibe="operator"].ws-themed .ws-dot--ok    { background: #16A34A; box-shadow: none; }
+[data-ws-vibe="operator"].ws-themed .ws-dot--warn  { background: #D97706; box-shadow: none; }
+[data-ws-vibe="operator"].ws-themed .ws-dot--off   { background: #9CA3AF; }
