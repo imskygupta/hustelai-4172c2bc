@@ -5,6 +5,7 @@ import { parseJson, z } from "../_shared/validation.ts";
 import { enforceRateLimit } from "../_shared/rate-limit.ts";
 import { recordAnomaly } from "../_shared/anomaly.ts";
 import { requireVerifiedUser as __requireVerifiedUser } from "../_shared/require-verified.ts";
+import { enforceAIQuota } from "../_shared/tier/enforce-ai.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -71,6 +72,10 @@ serve(async (req) => {
     const { query, limit } = parsed.data;
 
     const count = Math.min(limit || 5, 5);
+
+    // Sprint F — server-side AI quota gate.
+    const quotaGate = await enforceAIQuota(userId, "search", corsHeaders, serviceClient);
+    if (quotaGate) return quotaGate;
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
