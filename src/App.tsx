@@ -205,6 +205,7 @@ import { RequireAuth } from "@/components/RequireAuth";
 import { DocsSubdomainRedirect } from "@/components/DocsSubdomainRedirect";
 import { StatusSubdomainRedirect } from "@/components/StatusSubdomainRedirect";
 import { SurfaceHostRedirect } from "@/components/SurfaceHostRedirect";
+import AutomationsRedirect from "@/components/redirects/AutomationsRedirect";
 import { BlogSubdomainRouter, isBlogHost } from "@/components/blog/BlogSubdomainRouter";
 import { isMaintenance, MaintenancePage } from "@/components/MaintenanceGate";
 import { RootErrorFallback } from "@/components/RootErrorFallback";
