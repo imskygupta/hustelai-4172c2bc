@@ -8937,7 +8937,7 @@ export type Database = {
           message: string
           metadata: Json | null
           owner_id: string
-          workspace_id: string
+          workspace_id: string | null
         }
         Insert: {
           created_at?: string | null
@@ -8946,7 +8946,7 @@ export type Database = {
           message: string
           metadata?: Json | null
           owner_id: string
-          workspace_id: string
+          workspace_id?: string | null
         }
         Update: {
           created_at?: string | null
@@ -8955,7 +8955,7 @@ export type Database = {
           message?: string
           metadata?: Json | null
           owner_id?: string
-          workspace_id?: string
+          workspace_id?: string | null
         }
         Relationships: []
       }
