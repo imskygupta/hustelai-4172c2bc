@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { yandexHit, yandexTrack } from "@/lib/yandex";
+import { trackEvent } from "@/lib/analytics";
 
 /**
  * SPA-safe Yandex Metrica route tracker.
@@ -22,6 +23,11 @@ export function YandexRouteTracker() {
     lastUrl.current = url;
     // Defer to next tick so document.title has updated
     const t = setTimeout(() => yandexHit(url, referer), 50);
+    // Persistent route_view for our own funnel analytics
+    void trackEvent("route_view", {
+      surface: "spa",
+      metadata: { path: pathname, search, referrer: referer || null },
+    });
     return () => clearTimeout(t);
   }, [pathname, search]);
 
