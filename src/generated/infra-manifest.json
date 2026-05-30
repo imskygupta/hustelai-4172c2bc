@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-30T05:28:11.546Z",
+  "generated_at": "2026-05-30T15:53:48.437Z",
   "routes": [
     {
       "path": ":slug",
@@ -2458,6 +2458,10 @@
     {
       "name": "mailer-send",
       "source": "supabase/functions/mailer-send/index.ts"
+    },
+    {
+      "name": "migrate-clientprofile-to-work-clients",
+      "source": "supabase/functions/migrate-clientprofile-to-work-clients/index.ts"
     },
     {
       "name": "migration-health",
