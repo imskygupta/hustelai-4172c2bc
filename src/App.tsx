@@ -504,7 +504,12 @@ function FullRuntimeApp() {
             <Route path="/dashboard/tools/business-card" element={Shelled(<BusinessCardGenerator />)} />
             {/* Operational backbone — workspace ops + outcome-first automations */}
             <Route path="/dashboard/workspace-os" element={Shelled(<OperationsHub />)} />
-            <Route path="/dashboard/automations" element={Shelled(<AutomationsHub />)} />
+            {/* Canonical: workspace cockpit owns Automations. Old marketing-side
+                /dashboard/automations and /telegram-automations now redirect into
+                wp("automations") (cross-host on strict marketing.). */}
+            <Route path="/dashboard/automations" element={<AutomationsRedirect />} />
+            <Route path="/automations" element={<AutomationsRedirect />} />
+            <Route path="/telegram-automations" element={<AutomationsRedirect />} />
             <Route path="/dashboard/deliveries" element={Shelled(<Deliveries />)} />
             <Route path="/dashboard/clients/:id" element={Shelled(<ClientProfile />)} />
             {/* Boosts canonical location moved into /settings/wallet — keep old path redirecting */}
