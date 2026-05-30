@@ -150,7 +150,7 @@ export function Deliver({ toolSlug, title, text, pdf, pdfFactory, className = ""
     return (
       <div className={`flex items-center gap-2 ${className}`}>
         <Button variant="outline" size="sm" onClick={copy}><Copy className="w-4 h-4 mr-1.5" /> Copy</Button>
-        <Button size="sm" variant="outline" onClick={() => navigate("/auth")}>
+        <Button size="sm" variant="outline" onClick={() => navigate("/login")}>
           <Send className="w-4 h-4 mr-1.5" /> Sign in to deliver
         </Button>
       </div>
