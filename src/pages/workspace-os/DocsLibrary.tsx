@@ -89,7 +89,10 @@ const SECTIONS: Section[] = [
     items: [
       { label: "Connect a provider",   to: wp("providers"), icon: Wand2,    tag: "Setup" },
       { label: "AI quick actions",     to: wp("projects"),  icon: Sparkles },
-      { label: "Saved prompts",        to: "/settings/workspace", icon: FileText, tag: "Settings" },
+      // /settings/* lives on the marketing host. Use an external anchor via
+      // marketingUrl() so workspace.* doesn't trip SurfaceHostRedirect → `/`
+      // fallback (Audit 2.5 P0-1).
+      { label: "Saved prompts",        to: "/settings/workspace", icon: FileText, tag: "Settings", external: true },
     ],
   },
 ];

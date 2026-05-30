@@ -84,12 +84,18 @@ export const WORKSPACE_COCKPIT_PREFIXES = [
   "/workspaces", // legacy aliases that redirect inside the shell
   "/workspace",
   "/client",      // client portal surface
-  "/login",
-  "/signup",
-  "/forgot-password",
-  "/reset-password",
-  "/auth",
-  "/logout",
+  // Heavy-execution surfaces mounted in the workspace block of App.tsx.
+  // These were previously absent and got bounced back to marketing by
+  // SurfaceHostRedirect, making palette nav-canvas/nav-blueprint dead
+  // clicks on workspace.* (Audit 2.5 P1-5).
+  "/canvas",
+  "/blueprint",
+  // NOTE: /login, /signup, /forgot-password, /reset-password, /auth and
+  // /logout intentionally live on the marketing host only. If we listed
+  // them here, SurfaceHostRedirect would NOT bounce workspace.*/login back
+  // to marketing — instead the workspace `*` fallback would silently drop
+  // unauthenticated users to `/` (PortalGate) without ever showing the
+  // login form. (Audit 2.5 P1-1)
 ];
 
 export function isWorkspaceCockpitPath(pathname: string): boolean {
