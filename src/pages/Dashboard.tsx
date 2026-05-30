@@ -246,7 +246,7 @@ export default function Dashboard() {
     <>
     {handoffTool && <WorkspaceHandoff tool={handoffTool} />}
     <AppShell
-      title={`Welcome back, ${profile.display_name || "Hustler"}`}
+      title="Operations"
       breadcrumbs={[{ label: "Workspace", href: "/dashboard" }, { label: "Dashboard" }]}
       actions={
         <>
@@ -283,18 +283,21 @@ export default function Dashboard() {
             never inside auth callbacks. Self-dismisses once profile.setup_completed. */}
         <SetupOverlay />
 
-        {/* One-shot persona welcome — clarifies which 4 modules this persona
-            leads with, without removing anything. Dismisses forever per mode. */}
-        <PersonaWelcomeCard />
+        {/* Workspace Trust Sprint — Phase 1.
+            Operations strip REPLACES the old welcome/cockpit greeting block.
+            Answers "what needs my attention right now?" in <3 seconds with
+            four clickable metrics + three primary actions. No motivational
+            copy. Then Today Cockpit → Persona Flow → everything else. */}
+        <OperationsStrip />
+
+        {/* TODAY — hero cockpit. Answers "what should I do next?" per persona. */}
+        <TodayCockpit />
 
         {/* Narrative-continuity bridge: the SAME 5-stage workflow the user saw
             on Homepage V3, now rendered with live counts from their data.
             Reads from src/lib/workspace/persona-flow.ts (also the source for
             HomepageV3.WorkflowsByAudience), so labels can never drift. */}
         <PersonaFlowCard />
-
-        {/* TODAY — hero cockpit. Answers "what should I do next?" per persona. */}
-        <TodayCockpit />
 
         {/* Adaptive widget stack — order is driven by the active persona's
             `widgetOrder` (see src/lib/operator-mode.ts). Same components,
