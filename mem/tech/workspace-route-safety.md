@@ -29,3 +29,21 @@ when running on `workspace.*` and stays a router push everywhere else.
 workspace cockpit surfaces (`WORKSPACE_SURFACES`) and cross-host
 destinations (`MARKETING_SURFACES`). When adding a new cockpit route in
 `App.tsx`, register the key here so palette / sidebar / cards never drift.
+
+## Never link to `/work/clients` or `/work/portals`
+`/work/:slug` is the freelancer Work Hub (`WorkTool`). It does NOT have
+`clients` or `portals` slugs registered — those land on a broken empty
+WorkTool page. The CRM lives at `/workspaces/clients` (cockpit). Use
+`wp("clients")` or the literal `"/workspaces/clients"` (e.g. from
+`operator-mode.ts` which can't import `wp`).
+
+## Auth route is `/login`, not `/auth`
+There is no `/auth` route. Sign-in CTAs (e.g. the unauthenticated state of
+`Deliver`) must navigate to `/login` (or `/signup`).
+
+## Persona stage labels live in `persona-flow.ts`
+The homepage `WhoItsFor` bento and the dashboard `PersonaFlowCard` must
+show the same 5 stage labels per persona. Both surfaces read from
+`PERSONA_FLOWS` in `src/lib/workspace/persona-flow.ts`. Do not hardcode
+stage strings on the homepage — derive them via
+`PERSONA_FLOWS[mode]!.stages.map(s => s.label)`.
