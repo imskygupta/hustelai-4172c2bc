@@ -10781,6 +10781,10 @@ export type Database = {
           tool_slug: string
         }[]
       }
+      record_ai_usage: {
+        Args: { _amount?: number; _feature: string; _user_id: string }
+        Returns: undefined
+      }
       record_auth_anomaly: {
         Args: {
           _email?: string
