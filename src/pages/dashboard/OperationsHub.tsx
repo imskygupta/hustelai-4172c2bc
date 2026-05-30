@@ -9,6 +9,7 @@ import {
   Sparkles, ShieldCheck, Clock, Activity, Zap,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { workspaceDb } from "@/integrations/workspace/client";
 
 /**
  * Workspace Operations Hub
@@ -17,12 +18,12 @@ import { supabase } from "@/integrations/supabase/client";
  * live with calm "coming online" states until each module is wired.
  */
 
-type ExportRow = {
+type DeliveryRow = {
   id: string;
-  tool: string;
-  title: string | null;
+  tool_slug: string;
+  channel: string;
+  content_title: string | null;
   created_at: string;
-  metadata: Record<string, any> | null;
 };
 
 const MODULES: Array<{
@@ -51,7 +52,7 @@ function StatusDot({ s }: { s: "live" | "preview" | "coming" }) {
 }
 
 export default function OperationsHub() {
-  const [exports, setExports] = useState<ExportRow[]>([]);
+  const [exports, setExports] = useState<DeliveryRow[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -60,13 +61,16 @@ export default function OperationsHub() {
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) { setLoading(false); return; }
-        const { data } = await (supabase as any)
-          .from("workspace_outputs")
-          .select("id, tool, title, created_at, metadata")
-          .eq("user_id", user.id)
+        // Trust > pretty numbers — read from the canonical delivery layer
+        // (work_deliveries on DB2), the same source feeding /dashboard/deliveries
+        // and Client timelines.
+        const { data } = await workspaceDb
+          .from("work_deliveries")
+          .select("id, tool_slug, channel, content_title, created_at")
+          .eq("owner_id", user.id)
           .order("created_at", { ascending: false })
           .limit(8);
-        if (!cancelled) setExports(data || []);
+        if (!cancelled) setExports((data as DeliveryRow[]) || []);
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -156,12 +160,12 @@ export default function OperationsHub() {
             {!loading && exports.map((e) => (
               <div key={e.id} className="px-4 py-3 flex items-center justify-between text-sm">
                 <div className="min-w-0">
-                  <div className="font-medium text-foreground truncate">{e.title || e.tool}</div>
+                  <div className="font-medium text-foreground truncate">{e.content_title || e.tool_slug}</div>
                   <div className="text-[11px] text-muted-foreground uppercase tracking-wider mt-0.5">
-                    {e.tool} · {new Date(e.created_at).toLocaleDateString()}
+                    {e.tool_slug} · {e.channel.replace(/_/g, " ")} · {new Date(e.created_at).toLocaleDateString()}
                   </div>
                 </div>
-                <Badge variant="secondary" className="text-[10px]">Saved</Badge>
+                <Badge variant="secondary" className="text-[10px]">Delivered</Badge>
               </div>
             ))}
           </Card>

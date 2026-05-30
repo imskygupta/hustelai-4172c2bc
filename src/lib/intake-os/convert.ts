@@ -117,7 +117,13 @@ export async function convertSubmissionToWorkspace(submission: any, userId: stri
     theme: brand?.default_theme || "minimal-dark",
     ...d,
   }));
-  await (supabase as any).from("workspace_documents").insert(docs);
+  const { data: insertedDocs } = await (supabase as any)
+    .from("workspace_documents")
+    .insert(docs)
+    .select("id, doc_type");
+  const proposalDocId =
+    (insertedDocs as Array<{ id: string; doc_type: string }> | null)
+      ?.find((d) => d.doc_type === "proposal")?.id || null;
 
   // 4) Mark submission converted on DB2
   await intakeApi("submission.mark_converted", { id: submission.id, workspace_id: ws.id, stage: "won" });
@@ -132,5 +138,5 @@ export async function convertSubmissionToWorkspace(submission: any, userId: stri
     metadata: { submission_id: submission.id, client_id: workClientId },
   });
 
-  return { workspaceId: ws.id, clientId: workClientId };
+  return { workspaceId: ws.id, clientId: workClientId, proposalDocId };
 }

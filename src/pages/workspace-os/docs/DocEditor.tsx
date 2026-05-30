@@ -24,6 +24,7 @@ import {
 import { BigScreenHint } from "@/components/BigScreenHint";
 import { continueWorkflow } from "@/lib/nextActions/continueWorkflow";
 import { wpProjectDoc, wpProjectDocs } from "@/lib/workspace/paths";
+import { Deliver } from "@/components/delivery/Deliver";
 
 const PAID_TIERS = ["pro", "elite", "infinity"];
 
@@ -243,6 +244,16 @@ export default function DocEditor() {
           <button onClick={exportPdf} disabled={exporting} className="inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-4 py-2 text-sm font-medium shadow-lg shadow-primary/30 disabled:opacity-50">
             {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />} Export PDF
           </button>
+          {/* Deliver — appears once the doc is saved. Routes through the
+              Universal Delivery Layer (WhatsApp / Telegram / Save to client)
+              so intake → proposal → client timeline stays one continuous chain. */}
+          {docRow && (
+            <Deliver
+              toolSlug={`workspace-doc:${docType}`}
+              title={title}
+              text={buildDeliveryText(title, data)}
+            />
+          )}
         </div>
       </div>
 
@@ -316,6 +327,25 @@ function Section({ title, children }: any) {
       {children}
     </div>
   );
+}
+
+/** Render a short, copy-pasteable summary of the doc for WhatsApp / Telegram. */
+function buildDeliveryText(title: string, d: any): string {
+  if (!d) return title;
+  const client = d.client?.name || d.client?.company || "";
+  const lines = [
+    `📄 ${title}`,
+    client ? `For: ${client}` : "",
+    d.number ? `Ref: ${d.number}` : "",
+    d.summary ? `\n${d.summary}` : "",
+    d.scope ? `\n${d.scope}` : "",
+    d.investment ? `\nInvestment: ${d.investment}` : "",
+    d.timeline ? `Timeline: ${d.timeline}` : "",
+    Array.isArray(d.deliverables) && d.deliverables.length
+      ? `\nDeliverables:\n- ${d.deliverables.slice(0, 8).join("\n- ")}`
+      : "",
+  ].filter(Boolean);
+  return lines.join("\n");
 }
 
 function Field({ label, children }: any) {

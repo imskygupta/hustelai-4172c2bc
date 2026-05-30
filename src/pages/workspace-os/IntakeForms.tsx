@@ -108,6 +108,26 @@ export default function IntakeForms() {
         <div>
           <p className="text-xs text-muted-foreground mb-2">Start from a template (optional)</p>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+            {/* Custom Intake — always card #1. Resets template selection so
+                the form ships with DEFAULT_INTAKE_FIELDS, and the user can
+                add their own fields after creation. */}
+            <button
+              type="button"
+              onClick={() => {
+                setTemplateId("");
+                if (!title.trim()) setTitle("Custom client intake");
+                if (!description.trim()) setDescription("Build your own discovery form");
+              }}
+              className={`text-left rounded-xl border p-3 transition border-dashed ${
+                templateId === "" && (title === "Custom client intake" || !templateId)
+                  ? "border-primary bg-primary/5"
+                  : "border-border hover:border-primary/40"
+              }`}
+            >
+              <div className="text-lg leading-none">➕</div>
+              <p className="text-xs font-medium mt-1">Custom Intake</p>
+              <p className="text-[10px] text-muted-foreground line-clamp-2">Build your own discovery form</p>
+            </button>
             {INTAKE_TEMPLATES.map(t => (
               <button key={t.id} type="button" onClick={() => useTemplate(t.id)}
                 className={`text-left rounded-xl border p-3 transition ${
