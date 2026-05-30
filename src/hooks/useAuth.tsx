@@ -459,6 +459,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (data.session) writeBridgeSession(data.session);
     authDebug("sign_in", { ok: !error, hasSession: !!data.session, userId: data.user?.id, error: error?.message });
+    if (!error && data.session) {
+      try {
+        const { trackEvent } = await import("@/lib/analytics");
+        void trackEvent("login_completed", { surface: "login" });
+      } catch {}
+    }
     return { error };
   };
 
