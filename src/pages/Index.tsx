@@ -68,7 +68,7 @@ export default function Index() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-white text-slate-900">
+    <div className="min-h-screen overflow-x-clip bg-white text-slate-900">
       <SEO
         title="HustleAI — Client Operations Workspace for Freelancers & Agencies"
         description="HustleAI is a focused client operations workspace for freelancers and agencies — manage proposals, onboarding, invoices, projects and client delivery in one place."
