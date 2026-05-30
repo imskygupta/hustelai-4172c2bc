@@ -13,7 +13,7 @@ import {
   PIPELINE_STAGES, stageMeta, computeConfidence, confidenceTone, type PipelineStage,
 } from "@/lib/intake-os/pipeline";
 import { convertSubmissionToWorkspace } from "@/lib/intake-os/convert";
-import { wp, wpProject } from "@/lib/workspace/paths";
+import { wp, wpProject, wpProjectDoc, wpProjectDocs } from "@/lib/workspace/paths";
 import { useAuth } from "@/hooks/useAuth";
 
 export default function IntakeInbox() {
@@ -25,6 +25,7 @@ export default function IntakeInbox() {
   const [analyzing, setAnalyzing] = useState(false);
   const [view, setView] = useState<"list" | "pipeline">("list");
   const [converting, setConverting] = useState(false);
+  const [drafting, setDrafting] = useState(false);
 
   const load = async () => {
     try { const r = await intakeApi("submission.list", { form_id: id }); setSubs(r.rows || []); }
@@ -81,6 +82,29 @@ export default function IntakeInbox() {
       nav(wpProject(workspaceId));
     } catch (e: any) { toast.error(e.message); }
     finally { setConverting(false); }
+  };
+
+  // P1 — "Generate Proposal" must produce a real proposal document, linked
+  // to a workspace + intake submission. If the lead already has a workspace
+  // from a prior convert, navigate to its docs list; otherwise convert now
+  // and jump straight to the freshly seeded proposal draft.
+  const generateProposal = async () => {
+    if (!active || !user) return;
+    setDrafting(true);
+    try {
+      if (active.converted_workspace_id) {
+        nav(wpProjectDocs(active.converted_workspace_id));
+        return;
+      }
+      const { workspaceId, proposalDocId } = await convertSubmissionToWorkspace(active, user.id);
+      toast.success("Proposal drafted from this lead");
+      load();
+      nav(proposalDocId ? wpProjectDoc(workspaceId, proposalDocId) : wpProjectDocs(workspaceId));
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setDrafting(false);
+    }
   };
 
   const grouped = useMemo(() => {
@@ -235,8 +259,8 @@ export default function IntakeInbox() {
                     <Button size="sm" variant="outline" onClick={convert} disabled={converting} className="justify-start">
                       <Wand2 className="h-3.5 w-3.5 mr-1.5" />{converting ? "Converting..." : "Create Workspace"}
                     </Button>
-                    <Button size="sm" variant="outline" onClick={() => nav("/proposal-draft")} className="justify-start">
-                      <FileText className="h-3.5 w-3.5 mr-1.5" /> Generate Proposal
+                    <Button size="sm" variant="outline" onClick={generateProposal} disabled={drafting} className="justify-start">
+                      <FileText className="h-3.5 w-3.5 mr-1.5" /> {drafting ? "Drafting..." : "Generate Proposal"}
                     </Button>
                     <Button size="sm" variant="outline" onClick={() => nav(wp(""))} className="justify-start">
                       <Receipt className="h-3.5 w-3.5 mr-1.5" /> Send Quote
