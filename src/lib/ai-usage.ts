@@ -7,22 +7,19 @@ export type DailyQuotaResult = {
   max: number;
 };
 
-/** Server-backed: consumes one unit of daily AI quota for a feature. */
-export async function consumeDailyAI(feature: string): Promise<DailyQuotaResult> {
-  try {
-    const { data, error } = await (supabase as any).rpc("consume_ai_quota", { _feature: feature });
-    if (error) throw error;
-    const d = data || {};
-    return {
-      allowed: !!d.allowed,
-      bypass: !!d.bypass,
-      used: Number(d.used || 0),
-      max: Number(d.max || 0),
-    };
-  } catch {
-    // fail-open so a transient error doesn't block paid users
-    return { allowed: true, bypass: false, used: 0, max: 0 };
-  }
+/**
+ * Client-side pre-flight. Authoritative enforcement + counter writes now
+ * happen server-side in every AI edge function via `enforceAIQuota`, which
+ * mirrors successful consumption into `ai_daily_usage`. We deliberately
+ * DO NOT call `consume_ai_quota` from the client anymore — doing so was
+ * causing double-counting on metered tools and silent fail-open on errors.
+ *
+ * This helper is kept as an optimistic UI hint only. If the server caps
+ * the request it returns a structured 429 with `error: "ai_quota_exceeded"`
+ * that callers handle.
+ */
+export async function consumeDailyAI(_feature: string): Promise<DailyQuotaResult> {
+  return { allowed: true, bypass: false, used: 0, max: 0 };
 }
 
 export type DailyUsageSnapshot = {
