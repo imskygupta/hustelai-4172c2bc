@@ -15,6 +15,7 @@ import {
 import { convertSubmissionToWorkspace } from "@/lib/intake-os/convert";
 import { wp, wpProject, wpProjectDoc, wpProjectDocs } from "@/lib/workspace/paths";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function IntakeInbox() {
   const { id } = useParams();
@@ -26,6 +27,9 @@ export default function IntakeInbox() {
   const [view, setView] = useState<"list" | "pipeline">("list");
   const [converting, setConverting] = useState(false);
   const [drafting, setDrafting] = useState(false);
+  const [quoting, setQuoting] = useState(false);
+  const [agreeing, setAgreeing] = useState(false);
+  const [checklisting, setChecklisting] = useState(false);
 
   const load = async () => {
     try { const r = await intakeApi("submission.list", { form_id: id }); setSubs(r.rows || []); }
@@ -105,6 +109,92 @@ export default function IntakeInbox() {
     } finally {
       setDrafting(false);
     }
+  };
+
+  // Ensure a workspace exists for this lead, returning ids of seeded docs.
+  const ensureWorkspace = async () => {
+    if (!active || !user) throw new Error("No active submission");
+    if (active.converted_workspace_id) {
+      return { workspaceId: active.converted_workspace_id as string, proposalDocId: null, quotationDocId: null };
+    }
+    const r = await convertSubmissionToWorkspace(active, user.id);
+    load();
+    return r;
+  };
+
+  const sendQuote = async () => {
+    if (!active || !user) return;
+    setQuoting(true);
+    try {
+      const { workspaceId, quotationDocId } = await ensureWorkspace();
+      let docId = quotationDocId;
+      if (!docId) {
+        const { data: existing } = await (supabase as any)
+          .from("workspace_documents")
+          .select("id").eq("workspace_id", workspaceId).eq("doc_type", "quotation")
+          .order("created_at", { ascending: false }).limit(1).maybeSingle();
+        docId = existing?.id || null;
+      }
+      toast.success("Open the quote, then use Deliver");
+      nav(docId ? wpProjectDoc(workspaceId, docId) : wpProjectDocs(workspaceId));
+    } catch (e: any) { toast.error(e.message); }
+    finally { setQuoting(false); }
+  };
+
+  const createAgreement = async () => {
+    if (!active || !user) return;
+    setAgreeing(true);
+    try {
+      const { workspaceId } = await ensureWorkspace();
+      const payload = active.payload || {};
+      const ai = active.ai_analysis || {};
+      const { data: doc } = await (supabase as any).from("workspace_documents").insert({
+        workspace_id: workspaceId,
+        owner_id: user.id,
+        doc_type: "agreement",
+        title: `Agreement for ${active.client_name || "Client"}`,
+        status: "draft",
+        data: {
+          client: {
+            name: active.client_name || "",
+            company: active.client_company || "",
+            email: active.client_email || "",
+          },
+          scope: ai.summary || payload.requirements || payload.goals || "",
+          deliverables: Array.isArray(ai.next_actions) ? ai.next_actions : [],
+          budget: payload.budget || ai.suggested_price_range || "",
+          timeline: payload.timeline || "",
+          payment_terms: "50% upfront · 50% on delivery",
+          date: new Date().toISOString().slice(0, 10),
+        },
+      }).select("id").maybeSingle();
+      toast.success("Agreement drafted");
+      nav(doc?.id ? wpProjectDoc(workspaceId, doc.id) : wpProjectDocs(workspaceId));
+    } catch (e: any) { toast.error(e.message); }
+    finally { setAgreeing(false); }
+  };
+
+  const buildChecklist = async () => {
+    if (!active || !user) return;
+    setChecklisting(true);
+    try {
+      const { workspaceId } = await ensureWorkspace();
+      const ai = active.ai_analysis || {};
+      const customMilestones = Array.isArray(ai.next_actions) && ai.next_actions.length >= 3
+        ? ai.next_actions.slice(0, 6)
+        : ["Week 1 — Discovery & planning", "Week 2 — Design", "Week 3 — Development", "Week 4 — Review & launch"];
+      const tasks = customMilestones.map((title: string, i: number) => ({
+        workspace_id: workspaceId,
+        owner_id: user.id,
+        title,
+        stage: i === 0 ? "planning" : "inquiry",
+        position: i,
+      }));
+      await (supabase as any).from("workspace_tasks").insert(tasks);
+      toast.success(`Checklist created (${tasks.length} milestones)`);
+      nav(wpProject(workspaceId));
+    } catch (e: any) { toast.error(e.message); }
+    finally { setChecklisting(false); }
   };
 
   const grouped = useMemo(() => {
@@ -262,14 +352,14 @@ export default function IntakeInbox() {
                     <Button size="sm" variant="outline" onClick={generateProposal} disabled={drafting} className="justify-start">
                       <FileText className="h-3.5 w-3.5 mr-1.5" /> {drafting ? "Drafting..." : "Generate Proposal"}
                     </Button>
-                    <Button size="sm" variant="outline" onClick={() => nav(wp(""))} className="justify-start">
-                      <Receipt className="h-3.5 w-3.5 mr-1.5" /> Send Quote
+                    <Button size="sm" variant="outline" onClick={sendQuote} disabled={quoting} className="justify-start">
+                      <Receipt className="h-3.5 w-3.5 mr-1.5" /> {quoting ? "Opening..." : "Open Quote"}
                     </Button>
-                    <Button size="sm" variant="outline" onClick={() => nav(wp(""))} className="justify-start">
-                      <FileSignature className="h-3.5 w-3.5 mr-1.5" /> Create Agreement
+                    <Button size="sm" variant="outline" onClick={createAgreement} disabled={agreeing} className="justify-start">
+                      <FileSignature className="h-3.5 w-3.5 mr-1.5" /> {agreeing ? "Drafting..." : "Create Agreement"}
                     </Button>
-                    <Button size="sm" variant="outline" onClick={() => nav(wp(""))} className="justify-start">
-                      <ListChecks className="h-3.5 w-3.5 mr-1.5" /> Build Checklist
+                    <Button size="sm" variant="outline" onClick={buildChecklist} disabled={checklisting} className="justify-start">
+                      <ListChecks className="h-3.5 w-3.5 mr-1.5" /> {checklisting ? "Building..." : "Build Checklist"}
                     </Button>
                     <Button size="sm" variant="outline" onClick={generatePortal} className="justify-start">
                       <Link2 className="h-3.5 w-3.5 mr-1.5" /> {active.portal_token ? "Copy Portal Link" : "Generate Portal"}
