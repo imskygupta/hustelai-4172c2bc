@@ -489,6 +489,22 @@ function WhoItsFor() {
                       </span>
                     ))}
                   </div>
+                  {/* Channel fit — reinforces "HustleAI adapts to how you
+                      already work" by surfacing the SetupOverlay channel
+                      options on the homepage. */}
+                  <div className="mt-3 flex items-center gap-2 flex-wrap">
+                    <span className="text-[9px] font-mono uppercase tracking-[0.18em] text-[#1A1A1F]/35">
+                      Works great with
+                    </span>
+                    {a.channels.map((ch) => (
+                      <span
+                        key={ch}
+                        className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium leading-none text-[#1A1A1F]/70 bg-[#FBF7F1] border border-[#1A1A1F]/10"
+                      >
+                        <Check className="w-2.5 h-2.5 text-[#FF7A45]" strokeWidth={3} /> {ch}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               </div>
             );
