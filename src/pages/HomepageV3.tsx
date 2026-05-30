@@ -326,17 +326,17 @@ const AUDIENCES = [
   // dashboard's PersonaFlowCard exactly (no narrative drift). See
   // src/lib/workspace/persona-flow.ts.
   { icon: Briefcase,     label: "Freelancers",    steps: PERSONA_FLOWS.freelancer!.stages.map(s => s.label), tint: "#FF7A45", active: 2, size: "lg" as const, automations: 3, pending: 1, outcome: "Proposal → Payment, all tracked in one portal.",
-    modules: ["Pipeline", "Proposals", "Portal", "Invoices"] },
+    modules: ["Pipeline", "Proposals", "Portal", "Invoices"], channels: ["WhatsApp", "Telegram"] },
   { icon: Palette,       label: "Creators",       steps: PERSONA_FLOWS.creator!.stages.map(s => s.label),    tint: "#FFB37A", active: 1, size: "md" as const, automations: 2, pending: 2, outcome: "Idea to publish — without losing the thread.",
-    modules: ["Research", "Calendar", "Publishing", "Distribution"] },
+    modules: ["Research", "Calendar", "Publishing", "Distribution"], channels: ["Telegram", "Email"] },
   { icon: Building2,     label: "Small agencies", steps: PERSONA_FLOWS.agency!.stages.map(s => s.label),     tint: "#1A1A1F", active: 3, size: "md" as const, automations: 4, pending: 1, outcome: "Multi-client workspace that scales with you.",
-    modules: ["Clients", "Pipeline", "Revenue", "Automations"] },
+    modules: ["Clients", "Pipeline", "Revenue", "Automations"], channels: ["Telegram", "Email"] },
   { icon: GraduationCap, label: "Consultants",    steps: PERSONA_FLOWS.consultant!.stages.map(s => s.label), tint: "#FF7A45", active: 2, size: "md" as const, automations: 3, pending: 1, outcome: "Engagements that renew themselves.",
-    modules: ["Intake", "Discovery", "Roadmap", "Retainer"] },
+    modules: ["Intake", "Discovery", "Roadmap", "Retainer"], channels: ["Email", "Notion"] },
   { icon: Mic2,          label: "Coaches",        steps: PERSONA_FLOWS.coach!.stages.map(s => s.label),      tint: "#E8DFF3", active: 1, size: "md" as const, automations: 2, pending: 1, outcome: "Bookings to renewals on autopilot.",
-    modules: ["Applications", "Cohorts", "Sessions", "Renewals"] },
+    modules: ["Applications", "Cohorts", "Sessions", "Renewals"], channels: ["WhatsApp", "Email"] },
   { icon: Wrench,        label: "Operators",      steps: PERSONA_FLOWS.operator!.stages.map(s => s.label),   tint: "#FFE27A", active: 2, size: "md" as const, automations: 5, pending: 0, outcome: "Every request becomes a billable workflow.",
-    modules: ["Inbox", "Workflows", "Automations", "Reports"] },
+    modules: ["Inbox", "Workflows", "Automations", "Reports"], channels: ["Telegram", "Spreadsheets"] },
 ];
 
 function WhoItsFor() {
