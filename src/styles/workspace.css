@@ -691,3 +691,24 @@
 [data-ws-vibe="operator"].ws-themed .ws-dot--ok    { background: #16A34A; box-shadow: none; }
 [data-ws-vibe="operator"].ws-themed .ws-dot--warn  { background: #D97706; box-shadow: none; }
 [data-ws-vibe="operator"].ws-themed .ws-dot--off   { background: #9CA3AF; }
+
+/* Header chrome inside Operator vibe — flatten the gradient hairline,
+   logo glow, and gradient CTA so the shell matches the surfaces. */
+[data-ws-vibe="operator"].ws-themed [data-ws-hairline] { background-image: none !important; background-color: #E5E7EB !important; opacity: 1 !important; }
+[data-ws-vibe="operator"].ws-themed [data-ws-logo] {
+  background-image: none !important;
+  background-color: #111827 !important;
+  box-shadow: none !important;
+}
+[data-ws-vibe="operator"].ws-themed [data-ws-logo] svg { color: #FFFFFF !important; }
+[data-ws-vibe="operator"].ws-themed [data-ws-newproject] {
+  background-image: none !important;
+  background-color: #111827 !important;
+  color: #FFFFFF !important;
+  box-shadow: none !important;
+}
+[data-ws-vibe="operator"].ws-themed [data-ws-newproject]:hover { background-color: #1F2937 !important; transform: none !important; }
+[data-ws-vibe="operator"].ws-themed [data-ws-active-bar] {
+  background-image: none !important;
+  background-color: #16A34A !important;
+}
