@@ -327,6 +327,13 @@ function FullRuntimeApp() {
               <MascotCompanion />
               <SurfaceHostRedirect />
               <Routes>
+                {/* PUBLIC intake routes — must sit OUTSIDE WorkspaceAuthGate so
+                    clients without a session don't hit the PortalGate. Owners
+                    share workspace.hustlaiapp.in/intake/<slug> links today; on
+                    the workspace host these would otherwise be intercepted by
+                    the auth gate and shown the "magic powers" screen. */}
+                <Route path="/intake/preview" element={<IntakePreview />} />
+                <Route path="/intake/:slug" element={<IntakeSubmit />} />
                 {/* Workspace cockpit — clean root URLs. The subdomain IS the
                     context, so we drop the redundant `/workspaces/...` prefix. */}
                 <Route path="/" element={<WorkspaceAuthGate><WorkspaceOS /></WorkspaceAuthGate>}>
