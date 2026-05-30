@@ -90,6 +90,13 @@ export const WORKSPACE_COCKPIT_PREFIXES = [
   // clicks on workspace.* (Audit 2.5 P1-5).
   "/canvas",
   "/blueprint",
+  // User-facing workspace surfaces that the cockpit owns. Without these the
+  // SurfaceHostRedirect on the workspace subdomain bounces e.g.
+  // workspace.hustlaiapp.in/automations back to the marketing host, where
+  // no route is registered → 404. (Workspace Automations migration.)
+  "/automations",
+  "/tools",
+  "/library",
   // NOTE: /login, /signup, /forgot-password, /reset-password, /auth and
   // /logout intentionally live on the marketing host only. If we listed
   // them here, SurfaceHostRedirect would NOT bounce workspace.*/login back
