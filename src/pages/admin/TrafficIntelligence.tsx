@@ -2,8 +2,9 @@ import { useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Activity, ExternalLink, Eye, MousePointerClick, Clock, MapPin, Layers, TrendingUp } from "lucide-react";
+import { Activity, ExternalLink, Eye, MousePointerClick, Clock, MapPin, Layers, TrendingUp, GitBranch } from "lucide-react";
 import { YM_ID } from "@/lib/yandex";
+import { ActivationFunnelPanel } from "@/components/admin/ActivationFunnelPanel";
 
 /**
  * Admin → Content & Growth → Traffic Intelligence
@@ -12,7 +13,7 @@ import { YM_ID } from "@/lib/yandex";
  * dashboards link out to the Yandex web UI.
  */
 export default function TrafficIntelligence() {
-  const [tab, setTab] = useState<"overview" | "pages" | "blogs" | "ctas" | "tools" | "geo">("overview");
+  const [tab, setTab] = useState<"funnel" | "overview" | "pages" | "blogs" | "ctas" | "tools" | "geo">("funnel");
 
   const links = useMemo(() => ({
     dashboard: `https://metrika.yandex.com/dashboard?id=${YM_ID}`,
@@ -55,6 +56,7 @@ export default function TrafficIntelligence() {
         {/* Tabs */}
         <div className="flex flex-wrap gap-2">
           {([
+            ["funnel", "Activation Funnel", GitBranch],
             ["overview", "Overview", Eye],
             ["pages", "Top Pages", Layers],
             ["blogs", "Top Blogs", TrendingUp],
@@ -76,6 +78,8 @@ export default function TrafficIntelligence() {
             </button>
           ))}
         </div>
+
+        {tab === "funnel" && <ActivationFunnelPanel />}
 
         {tab === "overview" && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
