@@ -18,6 +18,8 @@ import ResumeWorkflowCard from "@/components/activation/ResumeWorkflowCard";
 import ContinuityRail from "@/components/workspace/ContinuityRail";
 import AdaptiveCockpit from "@/components/dashboard/AdaptiveCockpit";
 import TodayCockpit from "@/components/dashboard/TodayCockpit";
+import PersonaFlowCard from "@/components/dashboard/PersonaFlowCard";
+import PersonaWelcomeCard from "@/components/dashboard/PersonaWelcomeCard";
 import { useOperatorMode, type DashboardWidgetId } from "@/lib/operator-mode";
 import OperationalFlows from "@/components/dashboard/OperationalFlows";
 import ContextualNudge from "@/components/dashboard/ContextualNudge";
@@ -274,6 +276,16 @@ export default function Dashboard() {
 
         {/* Calm one-line orientation for new users — auto-hides after first project. */}
         <FirstVisitWelcome />
+
+        {/* One-shot persona welcome — clarifies which 4 modules this persona
+            leads with, without removing anything. Dismisses forever per mode. */}
+        <PersonaWelcomeCard />
+
+        {/* Narrative-continuity bridge: the SAME 5-stage workflow the user saw
+            on Homepage V3, now rendered with live counts from their data.
+            Reads from src/lib/workspace/persona-flow.ts (also the source for
+            HomepageV3.WorkflowsByAudience), so labels can never drift. */}
+        <PersonaFlowCard />
 
         {/* TODAY — hero cockpit. Answers "what should I do next?" per persona. */}
         <TodayCockpit />
