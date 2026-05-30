@@ -17,6 +17,7 @@ import { useWorkspace } from "@/lib/workspace/context";
 import { wp, wpProject } from "@/lib/workspace/paths";
 import { usePinnedProjects, trackProjectVisit } from "@/lib/workspace/operator";
 import { suggestChainFromOutput } from "@/lib/workspace/operationalChains";
+import { MARKETING_SURFACES, goCrossHost } from "@/lib/workspace/surfaces";
 
 type Item = {
   id: string;
@@ -48,16 +49,18 @@ const NAV_ACTIONS = (navigate: (p: string) => void): Item[] => [
 
 // Standalone tools elsewhere in the product — surfaced here so an operator
 // can type "invoice" or "pdf" and jump straight to the right tool.
+// These live on the marketing host; we hard-navigate via `goCrossHost` so a
+// click from `workspace.hustlaiapp.in` doesn't fall through to `/` (dead click).
 const TOOL_ACTIONS = (navigate: (p: string) => void): Item[] => [
-  { id: "tool-invoice",   label: "Invoice generator",   hint: "Create + export PDF invoices", icon: FileSignature, group: "Tools", run: () => navigate("/tools/invoice-generator") },
-  { id: "tool-proposal",  label: "Proposal generator",  hint: "Branded client proposals",     icon: FileEdit,      group: "Tools", run: () => navigate("/tools/proposal-generator") },
-  { id: "tool-contract",  label: "Contract generator",  hint: "Draft service agreements",     icon: FileText,      group: "Tools", run: () => navigate("/tools/contract-generator") },
-  { id: "tool-pricing",   label: "Pricing calculator",  hint: "Quote your work fast",         icon: Calculator,    group: "Tools", run: () => navigate("/tools/pricing-calculator") },
-  { id: "tool-calendar",  label: "Content calendar",    hint: "Plan posts + drops",           icon: CalendarDays,  group: "Tools", run: () => navigate("/tools/content-calendar") },
-  { id: "tool-onboard",   label: "Onboarding form",     hint: "Build client intake forms",    icon: ClipboardList, group: "Tools", run: () => navigate("/tools/onboarding-form") },
-  { id: "tool-portfolio", label: "Portfolio bio",       hint: "One-page personal site",       icon: Star,          group: "Tools", run: () => navigate("/tools/portfolio-bio") },
-  { id: "tool-card",      label: "Business card",       hint: "Generate + download card",     icon: Layers,        group: "Tools", run: () => navigate("/tools/business-card") },
-  { id: "tool-wallet",    label: "Wallet",              hint: "Credits + billing",            icon: Wallet,        group: "Tools", run: () => navigate("/settings/wallet") },
+  { id: "tool-invoice",   label: "Invoice generator",   hint: "Create + export PDF invoices", icon: FileSignature, group: "Tools", run: () => goCrossHost(navigate as any, MARKETING_SURFACES.invoiceTool) },
+  { id: "tool-proposal",  label: "Proposal generator",  hint: "Branded client proposals",     icon: FileEdit,      group: "Tools", run: () => goCrossHost(navigate as any, MARKETING_SURFACES.proposalTool) },
+  { id: "tool-contract",  label: "Contract generator",  hint: "Draft service agreements",     icon: FileText,      group: "Tools", run: () => goCrossHost(navigate as any, MARKETING_SURFACES.contractTool) },
+  { id: "tool-pricing",   label: "Pricing calculator",  hint: "Quote your work fast",         icon: Calculator,    group: "Tools", run: () => goCrossHost(navigate as any, MARKETING_SURFACES.pricingTool) },
+  { id: "tool-calendar",  label: "Content calendar",    hint: "Plan posts + drops",           icon: CalendarDays,  group: "Tools", run: () => goCrossHost(navigate as any, MARKETING_SURFACES.calendarTool) },
+  { id: "tool-onboard",   label: "Onboarding form",     hint: "Build client intake forms",    icon: ClipboardList, group: "Tools", run: () => goCrossHost(navigate as any, MARKETING_SURFACES.onboardingTool) },
+  { id: "tool-portfolio", label: "Portfolio bio",       hint: "One-page personal site",       icon: Star,          group: "Tools", run: () => goCrossHost(navigate as any, MARKETING_SURFACES.portfolioTool) },
+  { id: "tool-card",      label: "Business card",       hint: "Generate + download card",     icon: Layers,        group: "Tools", run: () => goCrossHost(navigate as any, MARKETING_SURFACES.businessCard) },
+  { id: "tool-wallet",    label: "Wallet",              hint: "Credits + billing",            icon: Wallet,        group: "Tools", run: () => goCrossHost(navigate as any, MARKETING_SURFACES.wallet) },
 ];
 
 export function WorkspaceCommandPalette() {

@@ -15,3 +15,17 @@ routes live inside the `isWorkspaceHost()` block in `src/App.tsx`.
 Marketing-host routes do NOT mount on `workspace.hustlaiapp.in` — any
 `wp("foo")` requires a matching `<Route path="foo">` inside the workspace
 block.
+
+## Cross-host destinations use `goCrossHost`
+`/tools/*`, `/settings/*`, `/dashboard`, `/hustlebot` live on the marketing
+host only. Calling `navigate("/tools/invoice-generator")` from the workspace
+cockpit is a dead click — the path falls through to `*` → `/`. Use
+`goCrossHost(navigate, MARKETING_SURFACES.invoiceTool)` from
+`src/lib/workspace/surfaces.ts`; it hard-navigates via `window.location`
+when running on `workspace.*` and stays a router push everywhere else.
+
+## Surface registry
+`src/lib/workspace/surfaces.ts` is the single source of truth for both
+workspace cockpit surfaces (`WORKSPACE_SURFACES`) and cross-host
+destinations (`MARKETING_SURFACES`). When adding a new cockpit route in
+`App.tsx`, register the key here so palette / sidebar / cards never drift.

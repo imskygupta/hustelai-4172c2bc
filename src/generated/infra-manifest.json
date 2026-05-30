@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-29T19:42:20.577Z",
+  "generated_at": "2026-05-30T05:28:11.546Z",
   "routes": [
     {
       "path": ":slug",
@@ -747,6 +747,22 @@
     },
     {
       "path": "/dashboard/automations",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": null,
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/dashboard/clients/:id",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": null,
+      "dynamic": true,
+      "catchAll": false
+    },
+    {
+      "path": "/dashboard/deliveries",
       "source": "src/App.tsx",
       "type": "public",
       "authWrapper": null,
@@ -1882,6 +1898,14 @@
       "catchAll": false
     },
     {
+      "path": "assets",
+      "source": "src/App.tsx",
+      "type": "redirect",
+      "authWrapper": "Navigate",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
       "path": "automations",
       "source": "src/App.tsx",
       "type": "public",
@@ -1906,10 +1930,26 @@
       "catchAll": false
     },
     {
+      "path": "blueprint",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "HustleBlueprint",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
       "path": "brand-kit",
       "source": "src/App.tsx",
       "type": "public",
       "authWrapper": "BrandKitPage",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "canvas",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "HustleCanvas",
       "dynamic": false,
       "catchAll": false
     },
@@ -2246,6 +2286,18 @@
     {
       "name": "dashboard-feed",
       "source": "supabase/functions/dashboard-feed/index.ts"
+    },
+    {
+      "name": "delivery-record",
+      "source": "supabase/functions/delivery-record/index.ts"
+    },
+    {
+      "name": "delivery-telegram",
+      "source": "supabase/functions/delivery-telegram/index.ts"
+    },
+    {
+      "name": "delivery-telegram-pdf",
+      "source": "supabase/functions/delivery-telegram-pdf/index.ts"
     },
     {
       "name": "discord-oauth",
