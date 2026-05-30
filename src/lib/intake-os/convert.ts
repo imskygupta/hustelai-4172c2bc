@@ -1,6 +1,8 @@
 import { supabase } from "@/integrations/supabase/client";
 import { intakeApi } from "./api";
 import { applyBrandToDoc, getBrandKit } from "@/lib/workspace-docs/infra";
+import { workspaceDb } from "@/integrations/workspace/client";
+import { logActivity } from "@/lib/workspace-os/activity";
 
 /** Convert an intake submission into a workspace + draft proposal + draft quotation. */
 export async function convertSubmissionToWorkspace(submission: any, userId: string) {
@@ -22,25 +24,44 @@ export async function convertSubmissionToWorkspace(submission: any, userId: stri
   }).select("id").single();
   if (wsErr) throw wsErr;
 
-  // 2) Save client profile if not already present (no unique constraint on email)
-  if (submission.client_email) {
-    try {
-      const { data: existing } = await (supabase as any)
-        .from("client_profiles")
+  // 2) Upsert into canonical CRM (work_clients on DB2). Dedupes on email so
+  //    repeat intakes from the same lead don't create duplicate client rows.
+  //    See mem://tech/canonical-crm — this is the single source of truth.
+  let workClientId: string | null = null;
+  try {
+    const email = submission.client_email ? String(submission.client_email).toLowerCase().trim() : null;
+    if (email) {
+      const { data: existing } = await workspaceDb
+        .from("work_clients")
         .select("id")
-        .eq("user_id", userId)
-        .eq("email", submission.client_email)
+        .eq("owner_id", userId)
+        .eq("email", email)
         .maybeSingle();
-      if (!existing) {
-        await (supabase as any).from("client_profiles").insert({
-          user_id: userId,
-          name: clientName,
-          email: submission.client_email,
-          company: submission.client_company || null,
-        });
+      if (existing?.id) {
+        workClientId = existing.id;
+      } else {
+        const { data: inserted } = await workspaceDb
+          .from("work_clients")
+          .insert({
+            owner_id: userId,
+            name: clientName,
+            email,
+            company: submission.client_company || null,
+            status: "active",
+          })
+          .select("id")
+          .maybeSingle();
+        workClientId = inserted?.id || null;
       }
-    } catch { /* non-fatal */ }
-  }
+    } else {
+      const { data: inserted } = await workspaceDb
+        .from("work_clients")
+        .insert({ owner_id: userId, name: clientName, company: submission.client_company || null, status: "active" })
+        .select("id")
+        .maybeSingle();
+      workClientId = inserted?.id || null;
+    }
+  } catch { /* non-fatal — workspace still usable without CRM row */ }
 
   // 3) Create draft proposal + quotation seeded from submission
   const brand = await getBrandKit(userId);
@@ -101,5 +122,15 @@ export async function convertSubmissionToWorkspace(submission: any, userId: stri
   // 4) Mark submission converted on DB2
   await intakeApi("submission.mark_converted", { id: submission.id, workspace_id: ws.id, stage: "won" });
 
-  return { workspaceId: ws.id };
+  // 5) Write an activity row so the Workspace Activity timeline reflects
+  //    the conversion the moment the user lands in the project.
+  logActivity({
+    workspaceId: ws.id,
+    ownerId: userId,
+    event_type: "intake_converted",
+    message: `Lead converted from intake — ${clientName}`,
+    metadata: { submission_id: submission.id, client_id: workClientId },
+  });
+
+  return { workspaceId: ws.id, clientId: workClientId };
 }
