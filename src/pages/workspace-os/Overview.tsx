@@ -448,78 +448,85 @@ function ToolTileCard({ tile }: { tile: { to: string; label: string; what: strin
   return <Link to={tile.to} className="block h-full">{inner}</Link>;
 }
 
-function OperatorHero({ firstName, partOfDay, projectCount }: { firstName: string; partOfDay: string; projectCount: number }) {
-  // Mirror of dashboard hero: same gradient family, but framed as
-  // "you are shipping" instead of "you are exploring". Live operator counter
-  // gives the room a heartbeat without spamming notifications.
-  const [operators, setOperators] = useState<number>(0);
-  useEffect(() => {
-    // Stable seed per session so the number doesn't flicker on rerenders.
-    const seed = 1240 + Math.floor(Math.random() * 180);
-    setOperators(seed);
-    // Pause the random-walk heartbeat when the tab is hidden — no point
-    // re-rendering the hero off-screen. Also gives mobile battery a break.
-    let t: number | null = null;
-    const start = () => {
-      if (t != null) return;
-      t = window.setInterval(
-        () => setOperators(o => Math.max(900, o + (Math.random() > 0.5 ? 1 : -1))),
-        4200,
-      );
-    };
-    const stop = () => { if (t != null) { window.clearInterval(t); t = null; } };
-    const onVis = () => (document.hidden ? stop() : start());
-    start();
-    document.addEventListener("visibilitychange", onVis);
-    return () => { stop(); document.removeEventListener("visibilitychange", onVis); };
-  }, []);
-  const verb = projectCount > 0 ? "Keep shipping" : "Start shipping";
+function OperatorHero({ firstName, partOfDay, workspaces, pending }: {
+  firstName: string; partOfDay: string; workspaces: WS[]; pending: Deliverable[];
+}) {
+  // Real operational state. Operators care about state, not slogans.
+  const activeStages = new Set(["inquiry", "scoping", "in_progress", "delivery", "review"]);
+  const activeClients = new Set(
+    workspaces
+      .filter(w => activeStages.has((w.pipeline_stage || w.status || "").toLowerCase()) || (w.status || "").toLowerCase() !== "archived")
+      .map(w => w.client_name?.trim().toLowerCase())
+      .filter(Boolean)
+  ).size;
+
+  const leadsWaiting = workspaces.filter(w => {
+    const s = (w.pipeline_stage || w.status || "").toLowerCase();
+    return s === "inquiry" || s === "lead" || s === "new";
+  }).length;
+
+  const pendingCount = pending.length;
+  const overdueCount = pending.filter(p => p.status === "overdue").length;
+
+  // Pending value summed in INR (currency mixing is rare on a single workspace).
+  const pendingValue = pending.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+  const currency = pending[0]?.currency || "₹";
+  const fmtMoney = (n: number) => {
+    if (n >= 100000) return `${currency}${(n / 100000).toFixed(1)}L`;
+    if (n >= 1000)   return `${currency}${(n / 1000).toFixed(1)}k`;
+    return `${currency}${n.toLocaleString("en-IN")}`;
+  };
+
+  const stats: { label: string; value: string; hint?: string; tone?: "ok" | "warn" | "danger" }[] = [
+    { label: "Active clients",      value: String(activeClients),                           hint: workspaces.length ? `${workspaces.length} total` : undefined },
+    { label: "Pending revenue",     value: pendingValue ? fmtMoney(pendingValue) : "—",     hint: pendingValue ? `${pendingCount} invoice${pendingCount === 1 ? "" : "s"}` : "Nothing due" },
+    { label: "Pending deliveries",  value: String(pendingCount),                            hint: overdueCount ? `${overdueCount} overdue` : undefined, tone: overdueCount ? "danger" : undefined },
+    { label: "Leads waiting",       value: String(leadsWaiting),                            hint: leadsWaiting ? "Reply today" : undefined,             tone: leadsWaiting ? "warn" : undefined },
+  ];
+
   return (
     <motion.section
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="relative overflow-hidden rounded-3xl border border-border/40 bg-gradient-to-br from-[hsl(150_45%_98%)] via-[hsl(330_55%_99%)] to-[hsl(28_60%_98%)] p-6 sm:p-8"
+      transition={{ duration: 0.4 }}
+      className="rounded-2xl border border-[#E5E7EB] bg-white p-5 sm:p-6"
     >
-      <div aria-hidden className="absolute -top-20 -right-16 h-56 w-56 rounded-full opacity-50" style={{ background: "radial-gradient(circle, hsl(160 60% 70% / 0.35), transparent 65%)", filter: "blur(36px)" }} />
-      <div aria-hidden className="absolute -bottom-24 -left-10 h-56 w-56 rounded-full opacity-40" style={{ background: "radial-gradient(circle, hsl(290 60% 78% / 0.32), transparent 65%)", filter: "blur(40px)" }} />
-      <div className="relative flex items-end justify-between gap-6 flex-wrap">
-        <div className="min-w-0 max-w-2xl">
-          <p className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.2em] text-emerald-700/85 mb-3">
-            <span className="ws-presence" />
-            <span className="tabular-nums">{operators.toLocaleString("en-IN")}</span>&nbsp;operators shipping right now
-          </p>
-          <h1 className="text-[26px] sm:text-[30px] leading-[1.1] font-semibold tracking-tight text-foreground">
-            {verb}, {firstName || "operator"}.
-            <span className="block text-foreground/55 font-normal text-[18px] sm:text-[20px] mt-2">
-              The dashboard discovers. <span className="text-foreground/85">The workspace ships.</span>
-            </span>
+      <div className="flex items-end justify-between gap-6 flex-wrap mb-5">
+        <div className="min-w-0">
+          <p className="text-[11px] uppercase tracking-[0.18em] text-[#6B7280]">{partOfDay}{firstName ? `, ${firstName}` : ""}</p>
+          <h1 className="mt-1 text-[22px] sm:text-[24px] leading-tight font-semibold tracking-tight text-[#111827]">
+            {workspaces.length === 0 ? "Set up your first project." : "Your operations, right now."}
           </h1>
-          <div className="mt-5 flex flex-wrap items-center gap-2">
-            <Link
-              to={wp("projects/new")}
-              className="inline-flex items-center gap-1.5 rounded-full bg-foreground text-background px-4 py-2 text-sm font-medium hover:opacity-90 transition"
-            >
-              <Plus className="h-4 w-4" /> New project
-            </Link>
-            <Link
-              to={wp("pipeline")}
-              className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-white/70 px-4 py-2 text-sm font-medium text-foreground hover:bg-white transition"
-            >
-              <Compass className="h-4 w-4" /> Open pipeline
-            </Link>
-            <a
-              href={marketingUrl("/dashboard")}
-              className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium text-foreground/70 hover:text-foreground transition"
-            >
-              <Globe2 className="h-4 w-4" /> Back to discovery
-            </a>
-          </div>
         </div>
-        <div className="hidden md:flex flex-col items-end gap-1 text-right">
-          <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground/70">{partOfDay}</p>
-          <p className="text-[11px] text-muted-foreground/80">{new Date().toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "short" })}</p>
+        <div className="flex flex-wrap items-center gap-2">
+          <Link
+            to={wp("projects/new")}
+            className="inline-flex items-center gap-1.5 rounded-md bg-[#111827] text-white px-3.5 py-2 text-[13px] font-medium hover:bg-[#1F2937] transition"
+          >
+            <Plus className="h-4 w-4" /> New project
+          </Link>
+          <Link
+            to={wp("pipeline")}
+            className="inline-flex items-center gap-1.5 rounded-md border border-[#E5E7EB] bg-white px-3.5 py-2 text-[13px] font-medium text-[#111827] hover:bg-[#F8FAF9] transition"
+          >
+            <Compass className="h-4 w-4" /> Open pipeline
+          </Link>
         </div>
+      </div>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-px bg-[#E5E7EB] rounded-lg overflow-hidden border border-[#E5E7EB]">
+        {stats.map(s => {
+          const valueColor =
+            s.tone === "danger" ? "text-[#DC2626]" :
+            s.tone === "warn"   ? "text-[#D97706]" :
+                                  "text-[#111827]";
+          return (
+            <div key={s.label} className="bg-white px-4 py-3.5">
+              <p className="text-[11px] uppercase tracking-[0.14em] text-[#6B7280]">{s.label}</p>
+              <p className={`mt-1 text-[22px] font-semibold tabular-nums tracking-tight ${valueColor}`}>{s.value}</p>
+              {s.hint && <p className="text-[11px] text-[#6B7280] mt-0.5">{s.hint}</p>}
+            </div>
+          );
+        })}
       </div>
     </motion.section>
   );
