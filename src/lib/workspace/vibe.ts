@@ -12,6 +12,7 @@
 import { useEffect, useState, useCallback } from "react";
 
 export type VibeId =
+  | "operator"  // clean white + soft gray — Linear/Notion/Arc operational
   | "ivory"     // warm cream + soft peach
   | "mint"      // fresh mint freelancer
   | "lavender"  // soft violet operator
@@ -29,6 +30,7 @@ export interface Vibe {
 }
 
 export const VIBE_PRESETS: { id: VibeId; name: string; tagline: string; swatch: string[] }[] = [
+  { id: "operator", name: "Operator",       tagline: "Linear-clean, gray + green",swatch: ["#F8FAF9", "#FFFFFF", "#E5E7EB", "#16A34A"] },
   { id: "ivory",    name: "Ivory Cream",   tagline: "Warm, calm, daylight",     swatch: ["#FFFBEF", "#FFF3D6", "#FDE9C2", "#F4DCA8"] },
   { id: "mint",     name: "Fresh Mint",    tagline: "Freelancer freshness",     swatch: ["#F1FBF4", "#DDF5E4", "#BCEBC9", "#86D9A0"] },
   { id: "lavender", name: "Soft Lavender", tagline: "Calm operator focus",      swatch: ["#F6F2FF", "#E9DEFF", "#D5C3FB", "#B89AF1"] },
@@ -37,7 +39,9 @@ export const VIBE_PRESETS: { id: VibeId; name: string; tagline: string; swatch: 
   { id: "rose",     name: "Dusty Rose",    tagline: "Studio-grade warmth",      swatch: ["#FFF1F4", "#FFE0E6", "#FBC4CD", "#F19BAA"] },
 ];
 
-const DEFAULT_VIBE: Vibe = { id: "ivory", intensity: 55, focus: false, reducedMotion: false };
+// Default = Operator. Premium operational SaaS aesthetic (Linear/Notion/Arc),
+// not an AI-startup palette. Users can still pick a colored vibe via VibeButton.
+const DEFAULT_VIBE: Vibe = { id: "operator", intensity: 0, focus: false, reducedMotion: false };
 const KEY = "ws.vibe.v1";
 
 function read(): Vibe {

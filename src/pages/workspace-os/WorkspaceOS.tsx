@@ -81,7 +81,7 @@ export default function WorkspaceOS() {
             {({ isActive }) => (
               <>
                 {isActive && (
-                  <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[2px] rounded-r-full bg-gradient-to-b from-emerald-500 to-violet-500" />
+                  <span data-ws-active-bar className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[2px] rounded-r-full bg-gradient-to-b from-emerald-500 to-violet-500" />
                 )}
                 <item.icon className={cn("h-[15px] w-[15px] shrink-0 transition-colors", isActive ? "text-foreground" : "text-muted-foreground/70 group-hover:text-foreground/80")} />
                 <span className="truncate">{item.label}</span>
@@ -110,7 +110,7 @@ export default function WorkspaceOS() {
                 {({ isActive }) => (
                   <>
                     {isActive && (
-                      <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[2px] rounded-r-full bg-gradient-to-b from-emerald-500 to-violet-500" />
+                      <span data-ws-active-bar className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[2px] rounded-r-full bg-gradient-to-b from-emerald-500 to-violet-500" />
                     )}
                     <t.icon className={cn("h-[15px] w-[15px] shrink-0", isActive ? "text-foreground" : "text-muted-foreground/70")} />
                     <span className="truncate">{t.label}</span>
@@ -156,7 +156,7 @@ export default function WorkspaceOS() {
         )}
       >
         {/* gradient hairline */}
-        <span aria-hidden className="absolute bottom-0 left-0 right-0 h-px opacity-60" style={{ backgroundImage: "var(--ws-gradient)" }} />
+        <span aria-hidden data-ws-hairline className="absolute bottom-0 left-0 right-0 h-px opacity-60" style={{ backgroundImage: "var(--ws-gradient)" }} />
         <div className={cn(
           "max-w-7xl mx-auto px-6 flex items-center justify-between",
           onWorkspaceHost ? "py-2.5" : "py-4"
@@ -174,7 +174,7 @@ export default function WorkspaceOS() {
               </SheetContent>
             </Sheet>
             <NavLink to={wp("")} className="flex items-center gap-2.5 group">
-              <div className="relative h-8 w-8 rounded-lg flex items-center justify-center shadow-[0_0_24px_rgba(16,185,129,0.35)]" style={{ backgroundImage: "var(--ws-gradient)" }}>
+              <div data-ws-logo className="relative h-8 w-8 rounded-lg flex items-center justify-center shadow-[0_0_24px_rgba(16,185,129,0.35)]" style={{ backgroundImage: "var(--ws-gradient)" }}>
                 <Sparkles className="h-4 w-4 text-black/80" />
               </div>
               {onWorkspaceHost ? (
@@ -225,6 +225,7 @@ export default function WorkspaceOS() {
             {onWorkspaceHost && <VibeButton />}
             <NavLink
               to={wp("projects/new")}
+              data-ws-newproject
               className="hidden sm:inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium text-black shadow-[0_0_30px_rgba(16,185,129,0.35)] hover:scale-[1.02] transition-transform"
               style={{ backgroundImage: "var(--ws-gradient)" }}
             >
