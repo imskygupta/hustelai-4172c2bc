@@ -329,6 +329,25 @@ function Section({ title, children }: any) {
   );
 }
 
+/** Render a short, copy-pasteable summary of the doc for WhatsApp / Telegram. */
+function buildDeliveryText(title: string, d: any): string {
+  if (!d) return title;
+  const client = d.client?.name || d.client?.company || "";
+  const lines = [
+    `📄 ${title}`,
+    client ? `For: ${client}` : "",
+    d.number ? `Ref: ${d.number}` : "",
+    d.summary ? `\n${d.summary}` : "",
+    d.scope ? `\n${d.scope}` : "",
+    d.investment ? `\nInvestment: ${d.investment}` : "",
+    d.timeline ? `Timeline: ${d.timeline}` : "",
+    Array.isArray(d.deliverables) && d.deliverables.length
+      ? `\nDeliverables:\n- ${d.deliverables.slice(0, 8).join("\n- ")}`
+      : "",
+  ].filter(Boolean);
+  return lines.join("\n");
+}
+
 function Field({ label, children }: any) {
   return (
     <div className="space-y-1">
