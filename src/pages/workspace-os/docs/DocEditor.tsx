@@ -251,15 +251,7 @@ export default function DocEditor() {
             <Deliver
               toolSlug={`workspace-doc:${docType}`}
               title={title}
-              text={buildDeliveryText(docType, data, title)}
-              pdfFactory={async () => {
-                if (!previewRef.current) throw new Error("Nothing to export");
-                const { exportNodeToPdfBlob } = await import("@/lib/workspace-docs/export-pdf");
-                const fmt = docType === "service_card" ? "square" : docType === "business_card" ? "card" : "a4";
-                const filename = `${title.replace(/\s+/g, "-")}.pdf`;
-                const blob = await exportNodeToPdfBlob(previewRef.current, fmt as any);
-                return { blob, filename };
-              }}
+              text={buildDeliveryText(title, data)}
             />
           )}
         </div>
