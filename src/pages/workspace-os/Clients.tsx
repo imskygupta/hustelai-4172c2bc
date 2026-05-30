@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { listClients, saveClient, deleteClient, type ClientProfile } from "@/lib/workspace-docs/infra";
+import { PersonaEmptyState } from "@/components/workspace/PersonaEmptyState";
 
 export default function ClientsPage() {
   const { user } = useAuth();
@@ -74,7 +75,7 @@ export default function ClientsPage() {
       )}
 
       {filtered.length === 0 ? (
-        <p className="text-sm text-muted-foreground italic">No clients yet — add your first.</p>
+        <PersonaEmptyState surface="clients" icon={Building2} />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {filtered.map(c => (

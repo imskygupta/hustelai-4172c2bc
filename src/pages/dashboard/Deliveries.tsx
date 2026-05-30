@@ -13,6 +13,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { listRecentDeliveries, type DeliveryRow } from "@/lib/delivery/api";
 import { SEO } from "@/components/SEO";
 import { TelegramStatusBadge } from "@/components/delivery/TelegramStatusBadge";
+import { PersonaEmptyState } from "@/components/workspace/PersonaEmptyState";
 
 type Row = DeliveryRow & { client_name: string | null };
 
@@ -90,17 +91,7 @@ export default function Deliveries() {
             <Loader2 className="w-5 h-5 animate-spin mx-auto mb-2" /> Loading your delivery history…
           </div>
         ) : rows.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center">
-            <Inbox className="w-8 h-8 text-slate-400 mx-auto mb-3" />
-            <div className="font-semibold text-slate-900">No deliveries yet</div>
-            <p className="text-sm text-slate-500 mt-1 max-w-md mx-auto">
-              Generate something with a tool (proposal, red-flag report, contract) and use the
-              <span className="font-semibold"> Deliver</span> button. It'll show up here.
-            </p>
-            <Link to="/dashboard/tools" className="inline-block mt-4 text-sm font-medium text-emerald-700 hover:text-emerald-800">
-              Open tools →
-            </Link>
-          </div>
+          <PersonaEmptyState surface="deliveries" icon={Inbox} />
         ) : (
           <div className="space-y-6">
             <Bucket title="Today"      rows={buckets.t} />
