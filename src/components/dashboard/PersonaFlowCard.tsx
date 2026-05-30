@@ -42,34 +42,61 @@ export default function PersonaFlowCard() {
       const next: Counts = {};
       const jobs: Promise<unknown>[] = [];
 
+      // Wrap each thenable in `Promise.resolve` — Supabase builders are
+      // PromiseLike (no `.catch`), so a bare `.catch()` after the chain
+      // doesn't typecheck. `Promise.resolve(...).then(...).catch(...)` works.
+      const run = <T,>(p: PromiseLike<T>, onOk: (r: any) => void, onFail: () => void) =>
+        Promise.resolve(p).then(onOk).catch(onFail);
+
       if (wanted.has("clients")) {
-        jobs.push(workspaceDb.from("work_clients").select("id", { count: "exact", head: true }).eq("owner_id", user.id)
-          .then((r: any) => { next.clients = r.count ?? 0; }).catch(() => { next.clients = 0; }));
+        jobs.push(run(
+          workspaceDb.from("work_clients").select("id", { count: "exact", head: true }).eq("owner_id", user.id),
+          (r: any) => { next.clients = r.count ?? 0; },
+          () => { next.clients = 0; },
+        ));
       }
       if (wanted.has("projects")) {
-        jobs.push((supabase as any).from("workspaces").select("id", { count: "exact", head: true }).eq("owner_id", user.id).eq("status", "active")
-          .then((r: any) => { next.projects = r.count ?? 0; }).catch(() => { next.projects = 0; }));
+        jobs.push(run(
+          (supabase as any).from("workspaces").select("id", { count: "exact", head: true }).eq("owner_id", user.id).eq("status", "active"),
+          (r: any) => { next.projects = r.count ?? 0; },
+          () => { next.projects = 0; },
+        ));
       }
       if (wanted.has("deliveries")) {
         const since = new Date(); since.setDate(since.getDate() - 30);
-        jobs.push(workspaceDb.from("work_deliveries").select("id", { count: "exact", head: true }).eq("owner_id", user.id).gte("created_at", since.toISOString())
-          .then((r: any) => { next.deliveries = r.count ?? 0; }).catch(() => { next.deliveries = 0; }));
+        jobs.push(run(
+          workspaceDb.from("work_deliveries").select("id", { count: "exact", head: true }).eq("owner_id", user.id).gte("created_at", since.toISOString()),
+          (r: any) => { next.deliveries = r.count ?? 0; },
+          () => { next.deliveries = 0; },
+        ));
       }
       if (wanted.has("invoicesUnpaid")) {
-        jobs.push(workspaceDb.from("work_invoices").select("id", { count: "exact", head: true }).eq("owner_id", user.id).in("status", ["pending", "overdue"])
-          .then((r: any) => { next.invoicesUnpaid = r.count ?? 0; }).catch(() => { next.invoicesUnpaid = 0; }));
+        jobs.push(run(
+          workspaceDb.from("work_invoices").select("id", { count: "exact", head: true }).eq("owner_id", user.id).in("status", ["pending", "overdue"]),
+          (r: any) => { next.invoicesUnpaid = r.count ?? 0; },
+          () => { next.invoicesUnpaid = 0; },
+        ));
       }
       if (wanted.has("invoicesPaid")) {
-        jobs.push(workspaceDb.from("work_invoices").select("id", { count: "exact", head: true }).eq("owner_id", user.id).eq("status", "paid")
-          .then((r: any) => { next.invoicesPaid = r.count ?? 0; }).catch(() => { next.invoicesPaid = 0; }));
+        jobs.push(run(
+          workspaceDb.from("work_invoices").select("id", { count: "exact", head: true }).eq("owner_id", user.id).eq("status", "paid"),
+          (r: any) => { next.invoicesPaid = r.count ?? 0; },
+          () => { next.invoicesPaid = 0; },
+        ));
       }
       if (wanted.has("proposals")) {
-        jobs.push((supabase as any).from("workspace_outputs").select("id", { count: "exact", head: true }).eq("user_id", user.id).ilike("tool", "%proposal%")
-          .then((r: any) => { next.proposals = r.count ?? 0; }).catch(() => { next.proposals = 0; }));
+        jobs.push(run(
+          (supabase as any).from("workspace_outputs").select("id", { count: "exact", head: true }).eq("user_id", user.id).ilike("tool", "%proposal%"),
+          (r: any) => { next.proposals = r.count ?? 0; },
+          () => { next.proposals = 0; },
+        ));
       }
       if (wanted.has("content")) {
-        jobs.push((supabase as any).from("workspace_outputs").select("id", { count: "exact", head: true }).eq("user_id", user.id).or("tool.ilike.%content%,tool.ilike.%calendar%,tool.ilike.%post%")
-          .then((r: any) => { next.content = r.count ?? 0; }).catch(() => { next.content = 0; }));
+        jobs.push(run(
+          (supabase as any).from("workspace_outputs").select("id", { count: "exact", head: true }).eq("user_id", user.id).or("tool.ilike.%content%,tool.ilike.%calendar%,tool.ilike.%post%"),
+          (r: any) => { next.content = r.count ?? 0; },
+          () => { next.content = 0; },
+        ));
       }
 
       await Promise.all(jobs);
