@@ -208,6 +208,17 @@ export default function NewWorkspace() {
         message: `Workspace "${projectName}" created with ${tasks.length} starter tasks.`,
         metadata: { provider, style, deliverables, goal, projectType },
       });
+      try {
+        const { trackEvent } = await import("@/lib/analytics");
+        void trackEvent("workspace_created", {
+          surface: "workspace-os/new",
+          metadata: { workspaceId: id, projectType, hasTasks: tasks.length },
+        });
+        void trackEvent("first_project_created", {
+          surface: "workspace-os/new",
+          metadata: { workspaceId: id },
+        });
+      } catch {}
 
       // Tiny breath so the magic-moment animation is visible
       await new Promise(r => setTimeout(r, 700));

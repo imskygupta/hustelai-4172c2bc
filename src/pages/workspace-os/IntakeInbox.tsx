@@ -62,6 +62,15 @@ export default function IntakeInbox() {
       await intakeApi("submission.set_stage", { id: sub.id, stage });
       setSubs(prev => prev.map(s => s.id === sub.id ? { ...s, pipeline_stage: stage } : s));
       if (active?.id === sub.id) setActive({ ...active, pipeline_stage: stage });
+      if (stage === "proposal_sent") {
+        try {
+          const { trackEvent } = await import("@/lib/analytics");
+          void trackEvent("proposal_sent", {
+            surface: "workspace-os/intake-inbox",
+            metadata: { submissionId: sub.id },
+          });
+        } catch {}
+      }
     } catch (e: any) { toast.error(e.message); }
   };
 
@@ -73,6 +82,13 @@ export default function IntakeInbox() {
       await navigator.clipboard.writeText(url);
       toast.success("Portal link copied");
       setActive({ ...active, portal_token: r.token });
+      try {
+        const { trackEvent } = await import("@/lib/analytics");
+        void trackEvent("portal_link_created", {
+          surface: "workspace-os/intake-inbox",
+          metadata: { submissionId: active.id },
+        });
+      } catch {}
     } catch (e: any) { toast.error(e.message); }
   };
 

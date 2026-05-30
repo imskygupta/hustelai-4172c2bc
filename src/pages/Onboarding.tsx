@@ -104,6 +104,14 @@ export default function Onboarding() {
       return;
     }
     if (refreshProfile) await refreshProfile();
+    try {
+      const { trackEvent } = await import("@/lib/analytics");
+      const persona = (data as any)?.persona || (data as any)?.role || (data as any)?.archetype || null;
+      if (persona) {
+        void trackEvent("persona_selected", { surface: "onboarding", metadata: { persona } });
+      }
+      void trackEvent("onboarding_completed", { surface: "onboarding", metadata: { persona } });
+    } catch {}
     toast({ title: "You're all set! 🎉", description: "Welcome to your personalized workspace." });
     navigate("/dashboard");
   };
