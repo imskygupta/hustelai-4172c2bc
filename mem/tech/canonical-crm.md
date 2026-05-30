@@ -16,12 +16,29 @@ Consumers that are already correct:
 - `/dashboard/clients/:id` (`getClientDetail`)
 - `/dashboard/deliveries` timeline (`listRecentDeliveries`)
 
-**Legacy / to migrate:** `src/pages/workspace-os/Clients.tsx` currently uses
-`workspace_docs/infra` `ClientProfile` on DB1. A client added through the
-cockpit CRM is invisible to the Deliver layer and to the flow counts. Next
-structural pass: rewrite `ClientsPage` to CRUD `work_clients` via
-`workspaceDb` (same shape `Deliver` already uses). Do NOT add a sync layer
-between DB1 and DB2 — that just delays the cleanup and creates duplicates.
+**Phase A (done):** `src/pages/workspace-os/Clients.tsx` now CRUDs DB2
+`work_clients` directly via `src/lib/workspace/work-clients.ts`. The page
+also surfaces a one-click "Import legacy clients" banner that calls the
+`migrate-clientprofile-to-work-clients` edge function (idempotent — dedupes
+by phone → email → name lc; preserves DB1-only fields by appending to
+`notes`). DB1-only fields lost from the form: `address`, `timezone`,
+`currency`, `default_payment_terms` (currency/terms now live on Brand Kit).
+
+**Phase B (pending — last DB1 client callers):**
+1. `src/pages/workspace-os/docs/DocEditor.tsx` — client picker dropdown
+   still reads `listClients()` (DB1). Switch to `listWorkClientsFull()` and
+   adapt `applyClientToDoc()` to the `work_clients` shape (same core
+   fields; address/timezone/currency/terms come from Brand Kit instead of
+   the client row).
+2. `src/lib/intake-os/convert.ts` — intake submission inserts into
+   `client_profiles`. Switch to inserting `work_clients` (dedupe by
+   email/phone) and drop the FK `workspace_docs.client_profile_id` (or
+   relax it to a free-form uuid pointing at DB2).
+3. After both callers move, drop the `@deprecated` helpers in
+   `src/lib/workspace-docs/infra.ts` and archive the `client_profiles`
+   table.
+
+Do NOT add a sync layer between DB1 and DB2 — finish Phase B instead.
 
 **Why:** Two CRMs = two truths. The Deliver layer (the highest-leverage
 surface) was already on DB2, and migrating one CRUD page is cheaper than

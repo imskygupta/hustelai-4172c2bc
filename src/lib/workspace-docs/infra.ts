@@ -142,7 +142,15 @@ export async function deleteBlock(id: string) {
   await (supabase as any).from("doc_blocks").delete().eq("id", id);
 }
 
-// ---------- Client Profiles ----------
+// ---------- Client Profiles (LEGACY — DB1) ----------
+//
+// As of Stability Week: `work_clients` on DB2 is the canonical CRM (see
+// mem://tech/canonical-crm). The Clients page no longer uses these helpers
+// — they are kept only because DocEditor's client picker and intake-os's
+// auto-create still read/write `client_profiles`. Phase B will migrate
+// those callers and drop these functions entirely. Do NOT add new callers.
+//
+/** @deprecated Use `listWorkClientsFull` from `@/lib/workspace/work-clients`. */
 export async function listClients(userId: string): Promise<ClientProfile[]> {
   const { data } = await (supabase as any)
     .from("client_profiles").select("*").eq("user_id", userId)
@@ -151,6 +159,7 @@ export async function listClients(userId: string): Promise<ClientProfile[]> {
   return (data as ClientProfile[]) || [];
 }
 
+/** @deprecated Use `saveWorkClient` from `@/lib/workspace/work-clients`. */
 export async function saveClient(userId: string, c: Partial<ClientProfile>) {
   if (c.id) {
     const { data, error } = await (supabase as any).from("client_profiles").update(c).eq("id", c.id).select("*").single();
@@ -160,10 +169,12 @@ export async function saveClient(userId: string, c: Partial<ClientProfile>) {
   if (error) throw error; return data as ClientProfile;
 }
 
+/** @deprecated Use `deleteWorkClient` from `@/lib/workspace/work-clients`. */
 export async function deleteClient(id: string) {
   await (supabase as any).from("client_profiles").delete().eq("id", id);
 }
 
+/** @deprecated DB1 last-used touch — no DB2 equivalent needed (delivery rollups handle freshness). */
 export async function touchClient(id: string) {
   await (supabase as any).from("client_profiles").update({ last_used_at: new Date().toISOString() }).eq("id", id);
 }
