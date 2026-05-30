@@ -385,6 +385,11 @@ function FullRuntimeApp() {
                 <Route path="/workspaces/:id/docs/:docId" element={<LegacyProjectDocRedirect />} />
                 {/* Independent surfaces that still mount on workspace.* */}
                 <Route path="/client" element={<RequireAuth><ClientSurface /></RequireAuth>} />
+                {/* Legacy automation entry points → canonical /automations
+                    (prevents the workspace-host catch-all from silently
+                    dropping stale bookmarks at Overview). */}
+                <Route path="/dashboard/automations" element={<Navigate to="/automations" replace />} />
+                <Route path="/telegram-automations" element={<Navigate to="/automations" replace />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </Suspense>
