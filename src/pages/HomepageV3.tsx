@@ -781,6 +781,189 @@ function FirstWin() {
   );
 }
 
+// ---------- 4d. Real flow — walk a single lead through the system ----------
+// A concrete, dated trace through HustleAI so the page moves from
+// "this is what happens" to "this happened". Inline mockups deliberately
+// mirror real product surfaces (lead card, proposal, portal, invoice) —
+// when we have shippable customer screenshots, swap them in here.
+const REAL_FLOW_STEPS = [
+  {
+    n: 1,
+    time: "10:42 AM",
+    label: "Lead lands",
+    surface: "CRM",
+    body: "Sarah's Bakery sends a WhatsApp asking for a 6-week social media + storefront menu redesign. HustleAI parses it into a lead.",
+    accent: "#FF7A45",
+  },
+  {
+    n: 2,
+    time: "10:47 AM",
+    label: "Proposal drafted",
+    surface: "Proposal Generator",
+    body: "AI drafts a branded 3-page proposal — scope, milestones, ₹48,000 fixed price. You edit two lines, change nothing else.",
+    accent: "#FFB37A",
+  },
+  {
+    n: 3,
+    time: "10:53 AM",
+    label: "Portal shared",
+    surface: "Client Portal",
+    body: "One link goes back over WhatsApp. Sarah opens it, reads scope, signs. You see the timestamp in real time.",
+    accent: "#1A1A1F",
+  },
+  {
+    n: 4,
+    time: "11:00 AM",
+    label: "Invoice + kickoff",
+    surface: "Billing",
+    body: "Approval triggers an invoice (50% upfront) and spins up a workspace with starter tasks. Total elapsed: 18 minutes.",
+    accent: "#FF7A45",
+  },
+] as const;
+
+function RealFlow() {
+  return (
+    <section id="real-flow" className="px-4 py-16 md:py-28">
+      <div className="container mx-auto max-w-6xl">
+        <div className="max-w-3xl mb-10 md:mb-14">
+          <div className="text-[11px] uppercase tracking-[0.22em] font-semibold text-[#FF7A45] mb-3">
+            A real flow
+          </div>
+          <RevealHeading
+            text="Sarah's Bakery, start to invoice in 18 minutes."
+            className="font-display font-semibold tracking-tight text-[#1A1A1F] text-[1.75rem] sm:text-3xl md:text-5xl leading-[1.05]"
+          />
+          <p className="mt-3 md:mt-4 text-[#1A1A1F]/55 text-[14px] md:text-lg leading-relaxed">
+            One real lead, walked through the actual surfaces of HustleAI. No edits, no detours. This is what the
+            "first win" looks like when it lands.
+          </p>
+        </div>
+
+        <div className="relative rounded-3xl border border-[#1A1A1F]/10 bg-white overflow-hidden shadow-[0_40px_120px_-60px_rgba(255,122,69,0.4)]">
+          {/* Browser chrome strip — signals "this is a product, not a slide" */}
+          <div className="flex items-center gap-1.5 px-4 py-2.5 border-b border-[#1A1A1F]/8 bg-[#FBF7F1]">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#FF5F57]" />
+            <span className="w-2.5 h-2.5 rounded-full bg-[#FEBC2E]" />
+            <span className="w-2.5 h-2.5 rounded-full bg-[#28C840]" />
+            <div className="ml-4 flex-1 hidden sm:flex items-center gap-2 max-w-md mx-auto px-3 py-1 rounded-full bg-white border border-[#1A1A1F]/8 text-[11px] font-mono text-[#1A1A1F]/50">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+              hustlaiapp.in/dashboard/clients/sarahs-bakery
+            </div>
+            <span className="ml-auto text-[10px] uppercase tracking-[0.22em] font-semibold text-[#1A1A1F]/40">
+              Illustrative trace
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-[#1A1A1F]/8">
+            {REAL_FLOW_STEPS.map((s) => (
+              <div key={s.n} className="p-5 md:p-6 flex flex-col gap-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-mono uppercase tracking-[0.22em] text-[#1A1A1F]/40 tabular-nums">
+                    {String(s.n).padStart(2, "0")} · {s.time}
+                  </span>
+                  <span
+                    className="text-[9px] font-mono uppercase tracking-[0.18em] px-2 py-0.5 rounded-full"
+                    style={{ background: `${s.accent}18`, color: s.accent === "#1A1A1F" ? "#1A1A1F" : s.accent }}
+                  >
+                    {s.surface}
+                  </span>
+                </div>
+
+                {/* Mini surface mock — distinct shape per step so the eye reads progression */}
+                <div className="rounded-xl border border-[#1A1A1F]/10 bg-[#FBF7F1] p-3 min-h-[88px] flex flex-col gap-1.5">
+                  {s.n === 1 && (
+                    <>
+                      <div className="flex items-center gap-1.5 text-[11px] font-semibold text-[#1A1A1F]">
+                        <span className="w-5 h-5 rounded-full bg-[#FF7A45]/20 text-[#FF7A45] flex items-center justify-center text-[9px] font-bold">S</span>
+                        Sarah · Bakery
+                        <span className="ml-auto text-[9px] font-mono text-[#1A1A1F]/40">WA</span>
+                      </div>
+                      <div className="text-[10.5px] text-[#1A1A1F]/65 leading-snug line-clamp-3">
+                        "Need socials + storefront menu for 6 weeks. Budget flexible. Can we start Monday?"
+                      </div>
+                      <div className="mt-auto h-1 w-12 rounded-full bg-[#FF7A45]/60" />
+                    </>
+                  )}
+                  {s.n === 2 && (
+                    <>
+                      <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-[#1A1A1F]/45">
+                        Proposal · v1
+                      </div>
+                      <div className="text-[12px] font-semibold text-[#1A1A1F] leading-tight">
+                        Brand + Storefront Refresh
+                      </div>
+                      <div className="flex items-center justify-between text-[10.5px] text-[#1A1A1F]/60">
+                        <span>6 weeks · 3 milestones</span>
+                        <span className="font-mono text-[#1A1A1F] font-semibold">₹48,000</span>
+                      </div>
+                      <div className="mt-auto flex gap-1">
+                        <span className="h-1 flex-1 rounded-full bg-[#FFB37A]" />
+                        <span className="h-1 flex-1 rounded-full bg-[#FFB37A]/60" />
+                        <span className="h-1 flex-1 rounded-full bg-[#FFB37A]/30" />
+                      </div>
+                    </>
+                  )}
+                  {s.n === 3 && (
+                    <>
+                      <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-[#1A1A1F]/45">
+                        Portal · opened
+                      </div>
+                      <div className="text-[11px] text-[#1A1A1F] leading-tight">
+                        Sarah viewed scope, pricing, timeline.
+                      </div>
+                      <div className="mt-auto flex items-center gap-1.5 text-[10.5px]">
+                        <Check className="w-3 h-3 text-emerald-600" strokeWidth={3} />
+                        <span className="text-emerald-700 font-semibold">Signed · 10:52 AM</span>
+                      </div>
+                    </>
+                  )}
+                  {s.n === 4 && (
+                    <>
+                      <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-[0.18em] text-[#1A1A1F]/45">
+                        <span>INV-2026-0431</span>
+                        <span className="text-emerald-700">Sent</span>
+                      </div>
+                      <div className="text-[11px] font-semibold text-[#1A1A1F]">
+                        50% upfront · ₹24,000
+                      </div>
+                      <div className="text-[10.5px] text-[#1A1A1F]/60">
+                        Workspace "Sarah's Bakery" created · 4 starter tasks
+                      </div>
+                      <div className="mt-auto h-1 w-full rounded-full bg-[#FF7A45]/70" />
+                    </>
+                  )}
+                </div>
+
+                <div className="text-[12px] font-semibold text-[#1A1A1F] leading-tight">
+                  {s.label}
+                </div>
+                <p className="text-[11.5px] text-[#1A1A1F]/60 leading-relaxed">
+                  {s.body}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 md:px-6 py-4 border-t border-[#1A1A1F]/8 bg-[#FBF7F1]">
+            <div className="flex items-center gap-2 text-[12px] text-[#1A1A1F]/70">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono uppercase tracking-[0.18em] bg-emerald-50 text-emerald-700 border border-emerald-200">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> 18 min · 0 tabs
+              </span>
+              <span className="text-[#1A1A1F]/50">From WhatsApp ping to signed invoice.</span>
+            </div>
+            <Link
+              to="/onboarding"
+              className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-[#1A1A1F] hover:text-[#FF7A45] transition-colors"
+            >
+              Run your own first flow <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 // ---------- 5. Cinematic — contained 3D ----------
 const SCENES = [
   { n: 1, label: "Lead",     title: "A lead arrives.",
