@@ -605,6 +605,166 @@ function ProblemEmotion() {
   );
 }
 
+// ---------- 4b. Outcomes — outcome-first picker ----------
+// Mirrors the GOAL_OPTIONS in SetupOverlay so a visitor sees the SAME
+// language pre- and post-signup. Clicking an outcome reveals which
+// personas it serves — outcomes lead, personas follow.
+const OUTCOMES = [
+  { id: "find_clients",      label: "Get more clients",        icon: Users,    personas: ["Freelancers", "Creators", "Consultants"], blurb: "Leads, briefs and outreach in one inbox." },
+  { id: "manage_clients",    label: "Manage client work",      icon: Briefcase,personas: ["Agencies", "Freelancers", "Consultants"], blurb: "CRM, pipelines and revenue on one canvas." },
+  { id: "deliver_projects",  label: "Deliver projects faster", icon: Truck,    personas: ["Freelancers", "Operators", "Agencies"],  blurb: "Portals, approvals and exports that ship themselves." },
+  { id: "create_content",    label: "Grow through content",    icon: PenLine,  personas: ["Creators", "Coaches"],                    blurb: "Research, calendar, publishing — one rhythm." },
+  { id: "build_automations", label: "Automate repetitive work",icon: Bot,      personas: ["Operators", "Agencies"],                  blurb: "Bots that handle the parts you hate." },
+] as const;
+
+function OutcomesGrid() {
+  const [active, setActive] = useState<string>(OUTCOMES[0].id);
+  const current = OUTCOMES.find(o => o.id === active) ?? OUTCOMES[0];
+  return (
+    <section id="outcomes" className="px-4 py-14 md:py-20">
+      <div className="container mx-auto max-w-6xl">
+        <div className="max-w-3xl mb-6 md:mb-10">
+          <div className="text-[11px] uppercase tracking-[0.22em] font-semibold text-[#FF7A45] mb-3">
+            What are you trying to achieve?
+          </div>
+          <RevealHeading
+            text="Start with the outcome. The persona follows."
+            className="font-display font-semibold tracking-tight text-[#1A1A1F] text-[1.65rem] sm:text-3xl md:text-5xl leading-[1.05]"
+          />
+          <p className="mt-3 md:mt-4 text-[#1A1A1F]/55 text-[14px] md:text-lg leading-relaxed">
+            Pick the goal that matches your week. We'll show who else runs HustleAI for the same thing.
+          </p>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-2.5 md:gap-3">
+          {OUTCOMES.map((o) => {
+            const isActive = o.id === active;
+            return (
+              <button
+                key={o.id}
+                type="button"
+                onClick={() => setActive(o.id)}
+                className={`group text-left rounded-2xl border p-3.5 md:p-4 transition-all duration-300 ${
+                  isActive
+                    ? "border-[#FF7A45] bg-white shadow-[0_20px_50px_-30px_rgba(255,122,69,0.55)] -translate-y-0.5"
+                    : "border-[#1A1A1F]/10 bg-white/60 hover:bg-white hover:border-[#1A1A1F]/20"
+                }`}
+              >
+                <div
+                  className={`w-8 h-8 md:w-9 md:h-9 rounded-xl flex items-center justify-center mb-2 transition-colors ${
+                    isActive ? "bg-[#FF7A45] text-white" : "bg-[#FBF7F1] text-[#FF7A45]"
+                  }`}
+                >
+                  <o.icon className="w-4 h-4" />
+                </div>
+                <div className="font-display text-[14px] md:text-[15px] font-semibold text-[#1A1A1F] leading-tight">
+                  {o.label}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+        {/* Persona recommendation panel */}
+        <div className="mt-4 md:mt-5 rounded-2xl md:rounded-3xl border border-[#1A1A1F]/10 bg-white p-5 md:p-7 flex flex-col md:flex-row md:items-center gap-4 md:gap-8">
+          <div className="flex-1 min-w-0">
+            <div className="text-[10px] uppercase tracking-[0.22em] font-semibold text-[#FF7A45] mb-2">
+              Best for
+            </div>
+            <div className="flex flex-wrap gap-2 mb-3">
+              {current.personas.map((p) => (
+                <span
+                  key={p}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[12px] font-medium bg-[#FBF7F1] border border-[#1A1A1F]/10 text-[#1A1A1F]"
+                >
+                  <Check className="w-3 h-3 text-[#FF7A45]" strokeWidth={3} /> {p}
+                </span>
+              ))}
+            </div>
+            <p className="text-[#1A1A1F]/65 text-[14px] md:text-[15px] leading-relaxed">{current.blurb}</p>
+          </div>
+          <Button
+            asChild
+            className="bg-[#1A1A1F] hover:bg-[#FF7A45] text-white rounded-full px-5 h-11 text-[13px] font-semibold whitespace-nowrap self-start md:self-auto"
+          >
+            <Link to={`/onboarding?goal=${current.id}`}>
+              Tailor HustleAI to this <ArrowRight className="w-4 h-4 ml-1" />
+            </Link>
+          </Button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ---------- 4c. Your First Win — 3-step path before the cinematic ----------
+const FIRST_WIN_STEPS = [
+  { n: 1, icon: Users,    label: "Add a lead",         body: "Drop in a real prospect — or import one from WhatsApp, email or a form." },
+  { n: 2, icon: FileText, label: "Generate a proposal",body: "AI drafts a branded proposal from the brief. You review, you don't write." },
+  { n: 3, icon: Send,     label: "Share the portal",   body: "One link. Client sees scope, price, timeline. You see when they open it." },
+] as const;
+
+function FirstWin() {
+  return (
+    <section id="first-win" className="px-4 py-14 md:py-24 bg-[#FBF7F1]">
+      <div className="container mx-auto max-w-6xl">
+        <div className="grid md:grid-cols-12 gap-8 md:gap-10 items-start">
+          <div className="md:col-span-5">
+            <div className="text-[11px] uppercase tracking-[0.22em] font-semibold text-[#FF7A45] mb-3">
+              Your first win
+            </div>
+            <RevealHeading
+              text="Your first win takes about 3 minutes."
+              className="font-display font-semibold tracking-tight text-[#1A1A1F] text-[1.75rem] sm:text-3xl md:text-5xl leading-[1.05]"
+            />
+            <p className="mt-3 md:mt-5 text-[#1A1A1F]/65 text-[14px] md:text-lg leading-relaxed">
+              Lead in, proposal out, portal shared. From this point on, HustleAI keeps the loop closed for you.
+            </p>
+            <div className="mt-5 md:mt-7">
+              <Button
+                asChild
+                className="bg-[#1A1A1F] hover:bg-[#FF7A45] text-white rounded-full px-6 h-12 text-[14px] font-semibold"
+              >
+                <Link to="/onboarding">Start your first win <ArrowRight className="w-4 h-4 ml-1" /></Link>
+              </Button>
+            </div>
+          </div>
+          <div className="md:col-span-7">
+            <ol className="relative space-y-3 md:space-y-4">
+              {FIRST_WIN_STEPS.map((s, i) => (
+                <li
+                  key={s.n}
+                  className="relative rounded-2xl md:rounded-3xl border border-[#1A1A1F]/10 bg-white p-4 md:p-6 flex items-start gap-4 md:gap-5 transition-all hover:-translate-y-0.5 hover:shadow-[0_24px_60px_-30px_rgba(255,122,69,0.35)]"
+                >
+                  <div className="shrink-0 w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-[#FF7A45]/10 text-[#FF7A45] flex items-center justify-center">
+                    <s.icon className="w-5 h-5 md:w-6 md:h-6" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-[10px] font-mono tracking-[0.18em] text-[#FF7A45] tabular-nums">
+                        STEP {String(s.n).padStart(2, "0")}
+                      </span>
+                      {i === FIRST_WIN_STEPS.length - 1 && (
+                        <span className="text-[10px] uppercase tracking-[0.18em] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5">
+                          Done · first win
+                        </span>
+                      )}
+                    </div>
+                    <div className="font-display text-lg md:text-2xl font-semibold text-[#1A1A1F] leading-tight">
+                      {s.label}
+                    </div>
+                    <p className="mt-1.5 text-[13px] md:text-[15px] text-[#1A1A1F]/65 leading-relaxed">
+                      {s.body}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 // ---------- 5. Cinematic — contained 3D ----------
 const SCENES = [
   { n: 1, label: "Lead",     title: "A lead arrives.",
