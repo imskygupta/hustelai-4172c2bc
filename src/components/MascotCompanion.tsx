@@ -4,6 +4,7 @@ import { X, EyeOff, Sparkles, Lock, MessageCircle } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { isWorkspaceHost, marketingUrl } from "@/lib/host";
+import { useFloatingLauncherSuppressed } from "@/lib/ui/useFloatingLauncherSuppressed";
 
 /**
  * Animated pet companion — sits where the old HustleBot launcher used to be
@@ -156,6 +157,7 @@ export default function MascotCompanion() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const [enabled, setEnabled] = useState<boolean>(isMascotEnabled());
+  const suppressed = useFloatingLauncherSuppressed();
   const [pet, setPet] = useState<PetKey>(getMascotPet());
   const [message, setMessage] = useState<string | null>(null);
   const [bubbleOpen, setBubbleOpen] = useState(false);
@@ -342,6 +344,9 @@ export default function MascotCompanion() {
   };
 
   if (!enabled) return null;
+  // Hide while auth/onboarding routes, dialogs, sheets, command palette,
+  // or mobile keyboard are active — prevents floating-launcher collisions.
+  if (suppressed) return null;
 
   return (
     <motion.div

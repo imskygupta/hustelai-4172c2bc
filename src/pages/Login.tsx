@@ -291,7 +291,7 @@ export default function Login() {
           </p>
         </div>
 
-        <div className="mt-5 flex items-center justify-center gap-5 text-[11px] text-muted-foreground">
+        <div className="mt-5 hidden md:flex items-center justify-center gap-5 text-[11px] text-muted-foreground">
           <span className="inline-flex items-center gap-1.5"><ShieldCheck className="w-3 h-3" /> Secure auth</span>
           <span className="inline-flex items-center gap-1.5"><Lock className="w-3 h-3" /> Encrypted billing</span>
           <span className="inline-flex items-center gap-1.5"><Send className="w-3 h-3" /> Live workspace</span>

@@ -1742,7 +1742,7 @@ function ScrollProgress() {
 // ---------- Page ----------
 export default function HomepageV3() {
   return (
-    <div className="min-h-screen bg-[#FBF7F1] text-[#1A1A1F] selection:bg-[#FF7A45]/20">
+    <div className="min-h-screen overflow-x-clip bg-[#FBF7F1] text-[#1A1A1F] selection:bg-[#FF7A45]/20">
       <SEO
         title="HustleAI — The quiet machine. Run your business like software."
         description="The operating system for freelancers, creators, consultants and small agencies. Proposals, invoices, AI workspace, client portals and Telegram delivery — in one place."
