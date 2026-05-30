@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { requireVerifiedUser as __requireVerifiedUser } from "../_shared/require-verified.ts";
+import { enforceAIQuota } from "../_shared/tier/enforce-ai.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -38,6 +39,10 @@ serve(async (req) => {
 
     const userId = claimsData.claims.sub as string;
     // === END AUTH CHECK ===
+
+    // Sprint F — server-side AI quota gate.
+    const quotaGate = await enforceAIQuota(userId, "skill_gap", corsHeaders);
+    if (quotaGate) return quotaGate;
 
     const { current_skills, goals } = await req.json();
 
