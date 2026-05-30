@@ -10,7 +10,7 @@ import { intakeApi, DEFAULT_INTAKE_FIELDS } from "@/lib/intake-os/api";
 import { INTAKE_TEMPLATES } from "@/lib/intake-os/templates";
 import { INTAKE_THEMES, IntakeThemeId } from "@/lib/intake-os/themes";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { marketingUrl, MARKETING_ORIGIN, isDualHost } from "@/lib/host";
+import { MARKETING_ORIGIN, isDualHost } from "@/lib/host";
 
 // Public intake forms always live on the marketing host (hustlaiapp.in) — never
 // behind workspace.hustlaiapp.in's PortalGate. On dual/preview hosts we keep
