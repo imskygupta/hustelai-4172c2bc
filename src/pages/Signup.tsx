@@ -92,12 +92,20 @@ export default function Signup() {
       return;
     }
     setLoading(true);
+    try {
+      const { trackEvent } = await import("@/lib/analytics");
+      void trackEvent("signup_started", { surface: "signup", metadata: { hasCoupon: !!couponCode.trim() } });
+    } catch {}
     const { error } = await signUp(email, password, displayName, couponCode.trim());
     if (error) {
       setLoading(false);
       setInlineError(error.message);
       return;
     }
+    try {
+      const { trackEvent } = await import("@/lib/analytics");
+      void trackEvent("signup_completed", { surface: "signup", metadata: { email } });
+    } catch {}
 
     try { await supabase.functions.invoke("send-welcome-email", { body: { email, displayName } }); }
     catch (e) { console.error("Welcome email failed:", e); }
