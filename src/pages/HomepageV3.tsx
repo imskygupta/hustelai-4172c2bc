@@ -578,18 +578,18 @@ function ProblemEmotion() {
 
 // ---------- 5. Cinematic — contained 3D ----------
 const SCENES = [
-  { n: 1, label: "Bottleneck", title: "Everything depends on you.",
-    body: "Inboxes, WhatsApp, follow-ups, invoices. The business runs on your memory." },
-  { n: 2, label: "Capture", title: "Everything enters one place.",
-    body: "Messages, files, leads and requests gather in a single operating layer." },
-  { n: 3, label: "Automation", title: "Work begins moving on its own.",
-    body: "AI drafts proposals, queues invoices, schedules follow-ups — without permission." },
-  { n: 4, label: "Delivery", title: "Deliverables leave the building.",
-    body: "Branded exports, portals, Telegram drops, shared links. Outputs ship themselves." },
-  { n: 5, label: "Revenue", title: "Revenue starts repeating.",
-    body: "Approvals return. Invoices clear. Retainers renew. The loop closes itself." },
-  { n: 6, label: "Reveal", title: "You stopped running tasks.",
-    body: "You started running an operating system. It runs at 3am, on Sundays, in other timezones." },
+  { n: 1, label: "Lead",     title: "A lead arrives.",
+    body: "A message, a form, a referral. Whatever the channel, it lands in one inbox you actually check." },
+  { n: 2, label: "Proposal", title: "A proposal is drafted.",
+    body: "AI turns the brief into a branded proposal in seconds. You edit, you don't write from scratch." },
+  { n: 3, label: "Portal",   title: "A portal is shared.",
+    body: "One link. The client sees scope, timeline and price. No more PDFs lost in WhatsApp threads." },
+  { n: 4, label: "Approval", title: "The client approves.",
+    body: "Signed, timestamped, archived. The next step starts the moment they say yes." },
+  { n: 5, label: "Payment",  title: "You get paid.",
+    body: "Invoices send themselves. Reminders go out without you. Money lands, status updates everywhere." },
+  { n: 6, label: "Memory",   title: "Everything is remembered.",
+    body: "The next lead inherits the work. Templates, history, context — your business compounds." },
 ] as const;
 
 function CinematicSection() {
