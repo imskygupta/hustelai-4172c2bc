@@ -138,9 +138,14 @@ export default function Overview() {
 
   return (
     <div className="relative space-y-10">
-      {/* Operator hero — mirrors the dashboard "discovery" hero, but tuned for
-          execution energy. Same universe, different gravity. */}
-      <OperatorHero firstName={firstName} partOfDay={partOfDay} projectCount={items.length} />
+      {/* Operator hero — real operational state, not a slogan.
+          Active clients / revenue / pending deliveries / leads waiting. */}
+      <OperatorHero
+        firstName={firstName}
+        partOfDay={partOfDay}
+        workspaces={items}
+        pending={pending}
+      />
 
       {/* Personalised welcome — "this is mine" feeling */}
       <motion.section
