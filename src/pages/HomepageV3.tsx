@@ -839,12 +839,9 @@ function Transformation() {
 }
 
 // ---------- 7. Workflows by audience ----------
-const FLOWS = [
-  { audience: "Freelancer", steps: ["Lead", "Proposal", "Approval", "Invoice", "Payment"] },
-  { audience: "Creator", steps: ["Idea", "Research", "Content", "Distribution", "Sponsor"] },
-  { audience: "Agency", steps: ["Client", "Workspace", "Team", "Delivery", "Retention"] },
-  { audience: "Consultant", steps: ["Discovery", "Proposal", "Approval", "Engagement", "Renewal"] },
-];
+// Single source of truth shared with the dashboard PersonaFlowCard so a
+// visitor sees IDENTICAL workflow labels before and after signup.
+import { HOMEPAGE_FLOWS as FLOWS } from "@/lib/workspace/persona-flow";
 
 function WorkflowsByAudience() {
   const [active, setActive] = useState(0);
