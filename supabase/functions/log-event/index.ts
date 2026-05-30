@@ -41,12 +41,13 @@ Deno.serve(async (req) => {
     const dedupe_key = body.dedupe_key ? String(body.dedupe_key) : null;
     const payload = body.payload && typeof body.payload === "object" ? body.payload : {};
 
-    // Hard-fail only when the payload is structurally broken (no action / too long).
-    // Unknown categories are *accepted-and-dropped* (202) so a single mislabelled
-    // client event never surfaces as a user-visible runtime error.
+    // Drop malformed events (missing/oversized action) silently with 202 instead
+    // of 400 — a single mislabelled client event should never surface in the
+    // user-visible runtime error panel.
     if (!action || action.length > 120) {
-      return new Response(JSON.stringify({ error: "invalid event" }), {
-        status: 400,
+      console.warn("log-event: dropping malformed event", { category, actionLen: action.length });
+      return new Response(JSON.stringify({ ok: true, dropped: "invalid_event" }), {
+        status: 202,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
