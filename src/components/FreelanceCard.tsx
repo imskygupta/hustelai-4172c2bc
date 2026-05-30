@@ -145,19 +145,19 @@ export function FreelanceCard({ result, index }: { result: FreelanceResult; inde
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <p className="text-sm text-muted-foreground leading-relaxed">{result.description}</p>
+          <p className="text-sm text-slate-700 leading-relaxed">{result.description}</p>
 
           <div className="flex items-center gap-4 text-xs">
-            <div className={`flex items-center gap-1 transition-colors duration-300 ${isHovered ? "text-primary" : "text-muted-foreground"}`}>
+            <div className={`flex items-center gap-1 transition-colors duration-300 ${isHovered ? "text-primary" : "text-slate-700"}`}>
               <DollarSign className="w-3.5 h-3.5" />
               <span>{result.investment}</span>
             </div>
-            <div className={`flex items-center gap-1 transition-colors duration-300 ${isHovered ? "text-accent" : "text-muted-foreground"}`}>
+            <div className={`flex items-center gap-1 transition-colors duration-300 ${isHovered ? "text-accent" : "text-slate-700"}`}>
               <TrendingUp className="w-3.5 h-3.5" />
               <span>{result.earning_potential}</span>
             </div>
             {result.time_commitment && (
-              <div className={`flex items-center gap-1 transition-colors duration-300 ${isHovered ? "text-primary/70" : "text-muted-foreground"}`}>
+              <div className={`flex items-center gap-1 transition-colors duration-300 ${isHovered ? "text-primary/70" : "text-slate-700"}`}>
                 <Clock className="w-3.5 h-3.5" />
                 <span>{result.time_commitment}</span>
               </div>
