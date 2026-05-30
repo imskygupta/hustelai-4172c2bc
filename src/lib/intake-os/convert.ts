@@ -124,6 +124,9 @@ export async function convertSubmissionToWorkspace(submission: any, userId: stri
   const proposalDocId =
     (insertedDocs as Array<{ id: string; doc_type: string }> | null)
       ?.find((d) => d.doc_type === "proposal")?.id || null;
+  const quotationDocId =
+    (insertedDocs as Array<{ id: string; doc_type: string }> | null)
+      ?.find((d) => d.doc_type === "quotation")?.id || null;
 
   // 4) Mark submission converted on DB2
   await intakeApi("submission.mark_converted", { id: submission.id, workspace_id: ws.id, stage: "won" });
@@ -138,5 +141,5 @@ export async function convertSubmissionToWorkspace(submission: any, userId: stri
     metadata: { submission_id: submission.id, client_id: workClientId },
   });
 
-  return { workspaceId: ws.id, clientId: workClientId, proposalDocId };
+  return { workspaceId: ws.id, clientId: workClientId, proposalDocId, quotationDocId };
 }
