@@ -119,7 +119,7 @@ export default function TrafficIntelligence() {
           </div>
         )}
 
-        {tab !== "overview" && (
+        {tab !== "overview" && tab !== "funnel" && (
           <Card className="p-6 bg-card/40 border-border/50">
             <div className="flex items-center justify-between mb-4">
               <div>
