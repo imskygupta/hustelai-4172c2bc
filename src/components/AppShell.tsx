@@ -211,7 +211,7 @@ export function AppShell({ children, title, breadcrumbs, actions }: AppShellProp
               >
                 <Search className="w-4 h-4" />
               </button>
-              <TierBadge />
+              <div className="hidden sm:inline-flex"><TierBadge /></div>
               {tier !== "infinity" && (
                 <Button
                   size="sm"
@@ -221,9 +221,9 @@ export function AppShell({ children, title, breadcrumbs, actions }: AppShellProp
                   Upgrade
                 </Button>
               )}
-              <CalmModeToggle />
-              <ThemeToggle />
-              <AsyncActivityIndicator />
+              <div className="hidden md:inline-flex"><CalmModeToggle /></div>
+              <div className="hidden md:inline-flex"><ThemeToggle /></div>
+              <div className="hidden md:inline-flex"><AsyncActivityIndicator /></div>
               <NotificationCenter />
               <Button
                 variant="ghost"
