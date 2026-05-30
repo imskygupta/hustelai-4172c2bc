@@ -54,13 +54,13 @@ export const PALETTE_TOP_ACTIONS: Record<OperatorMode, PaletteAction[]> = {
     { id: "p-fl-proposal",      label: "Generate Proposal", hint: "AI-drafted pitch",     href: MARKETING_SURFACES.proposalTool, crossHost: true },
     { id: "p-fl-contract",      label: "Create Contract",   hint: "Service agreement",    href: MARKETING_SURFACES.contractTool, crossHost: true },
     { id: "p-fl-invoice",       label: "Send Invoice",      hint: "GST-ready PDF",        href: MARKETING_SURFACES.invoiceTool,  crossHost: true },
-    { id: "p-fl-redflag",       label: "Red Flag Scanner",  hint: "Vet a client",         href: "/red-flag",                     crossHost: true },
+    { id: "p-fl-redflag",       label: "Red Flag Scanner",  hint: "Vet a client",         href: "/red-flag-scanner",             crossHost: true },
   ],
   creator: [
     { id: "p-cr-research",      label: "Research Topic",     hint: "Explore + save",      href: "/explore",                       crossHost: true },
     { id: "p-cr-content",       label: "Generate Content Plan", hint: "4-week calendar",  href: MARKETING_SURFACES.calendarTool,  crossHost: true },
-    { id: "p-cr-sponsor",       label: "Sponsor Outreach",   hint: "Pitch + follow-up",   href: wp("canvas") + "?intent=outreach" },
-    { id: "p-cr-publish",       label: "Publish Workflow",   hint: "Plan + drop posts",   href: MARKETING_SURFACES.calendarTool,  crossHost: true },
+    { id: "p-cr-sponsor",       label: "Sponsor Outreach",   hint: "Pitch + follow-up",   href: "/canvas?intent=outreach",        crossHost: true },
+    { id: "p-cr-publish",       label: "Distribution Log",   hint: "Track what shipped",  href: "/dashboard/deliveries",          crossHost: true },
   ],
   consultant: [
     { id: "p-co-discovery",     label: "Discovery Brief",    hint: "Turn calls into scope", href: MARKETING_SURFACES.proposalTool, crossHost: true },
@@ -76,7 +76,7 @@ export const PALETTE_TOP_ACTIONS: Record<OperatorMode, PaletteAction[]> = {
   ],
   operator: [
     { id: "p-op-pipeline",      label: "Open Pipeline",      hint: "Deal stages kanban",  href: wp("pipeline") },
-    { id: "p-op-delivery",      label: "Delivery Queue",     hint: "Today's outputs",     href: "/dashboard/deliveries", crossHost: true },
+    { id: "p-op-delivery",      label: "Deliveries",         hint: "Today's outputs",     href: "/dashboard/deliveries", crossHost: true },
     { id: "p-op-revenue",       label: "Revenue Snapshot",   hint: "Earnings + invoices", href: wp("revenue") },
     { id: "p-op-automations",   label: "Automations",        hint: "Prompts + workflows", href: wp("automations") },
   ],
