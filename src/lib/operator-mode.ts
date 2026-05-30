@@ -120,7 +120,7 @@ export const OPERATOR_MODES: OperatorModeMeta[] = [
       sub: "Track every deal across discovery, proposal, delivery, billed.",
     },
     todaySteps: [
-      { label: "Client health",  href: "/work/clients" },
+      { label: "Client health",  href: "/workspaces/clients" },
       { label: "Team workload",  href: "/workspaces" },
       { label: "Delivery queue", href: "/dashboard/deliveries" },
       { label: "Revenue",        href: "/workspaces/revenue" },
@@ -139,10 +139,10 @@ export const OPERATOR_MODES: OperatorModeMeta[] = [
     },
     modules: [
       { label: "Pipeline",        to: "/workspaces/pipeline",   desc: "Deal stages kanban" },
-      { label: "Clients (CRM)",   to: "/work/clients",          desc: "All clients in one place" },
+      { label: "Clients (CRM)",   to: "/workspaces/clients",    desc: "All clients in one place" },
       { label: "Workspaces",      to: "/workspaces",            desc: "Per-engagement workspaces" },
       { label: "Revenue",         to: "/workspaces/revenue",    desc: "Earnings dashboard" },
-      { label: "Client Portals",  to: "/work/portals",          desc: "Public client links" },
+      { label: "Client Portals",  to: "/workspaces",            desc: "Public client links" },
       { label: "Brand Kit",       to: "/workspaces/brand-kit",  desc: "Reusable brand foundation" },
     ],
   },
@@ -192,7 +192,7 @@ export const OPERATOR_MODES: OperatorModeMeta[] = [
       sub: "Turn a first call into a structured engagement proposal.",
     },
     todaySteps: [
-      { label: "Discovery",  href: "/work/clients" },
+      { label: "Discovery",  href: "/workspaces/clients" },
       { label: "Strategy",   href: "/knowledge-hub" },
       { label: "Proposal",   href: "/dashboard/tools/proposal-generator" },
       { label: "Retainer",   href: "/dashboard/tools/contract-generator" },
@@ -212,7 +212,7 @@ export const OPERATOR_MODES: OperatorModeMeta[] = [
     modules: [
       { label: "Proposal Generator", to: "/dashboard/tools/proposal-generator", desc: "Discovery → engagement" },
       { label: "Contract Generator", to: "/dashboard/tools/contract-generator", desc: "Retainers & SOWs" },
-      { label: "Clients (CRM)",      to: "/work/clients",                       desc: "Engagement pipeline" },
+      { label: "Clients (CRM)",      to: "/workspaces/clients",                 desc: "Engagement pipeline" },
       { label: "Knowledge Hub",      to: "/knowledge-hub",                      desc: "Reusable frameworks" },
       { label: "Invoice Generator",  to: "/dashboard/tools/invoice-generator",  desc: "Retainer billing" },
       { label: "Pricing Calculator", to: "/dashboard/tools/pricing-calculator", desc: "Anchor your value" },
@@ -228,7 +228,7 @@ export const OPERATOR_MODES: OperatorModeMeta[] = [
       sub: "Package your offer for the next discovery call.",
     },
     todaySteps: [
-      { label: "Discovery call",  href: "/work/clients" },
+      { label: "Discovery call",  href: "/workspaces/clients" },
       { label: "Send program",    href: "/dashboard/tools/proposal-generator" },
       { label: "Onboard client",  href: "/workspaces/intake" },
       { label: "Track outcomes",  href: "/dashboard/deliveries" },
@@ -248,7 +248,7 @@ export const OPERATOR_MODES: OperatorModeMeta[] = [
     modules: [
       { label: "Proposal Generator", to: "/dashboard/tools/proposal-generator", desc: "Package your program" },
       { label: "Client Intake",      to: "/workspaces/intake",                  desc: "Branded onboarding" },
-      { label: "Clients (CRM)",      to: "/work/clients",                       desc: "All coachees in one place" },
+      { label: "Clients (CRM)",      to: "/workspaces/clients",                 desc: "All coachees in one place" },
       { label: "Contract Generator", to: "/dashboard/tools/contract-generator", desc: "Program agreements" },
       { label: "Knowledge Hub",      to: "/knowledge-hub",                      desc: "Reusable session prompts" },
       { label: "Invoice Generator",  to: "/dashboard/tools/invoice-generator",  desc: "Program billing" },
@@ -285,7 +285,7 @@ export const OPERATOR_MODES: OperatorModeMeta[] = [
       { label: "Pipeline",      to: "/workspaces/pipeline",   desc: "Deal stages kanban" },
       { label: "Workspaces",    to: "/workspaces",            desc: "Per-engagement workspaces" },
       { label: "Revenue",       to: "/workspaces/revenue",    desc: "Earnings dashboard" },
-      { label: "Clients (CRM)", to: "/work/clients",          desc: "All clients in one place" },
+      { label: "Clients (CRM)", to: "/workspaces/clients",    desc: "All clients in one place" },
       { label: "Knowledge Hub", to: "/knowledge-hub",         desc: "Prompts & automations" },
       { label: "AI Tool Bench", to: "/ai-tools",              desc: "Compare AI tools" },
     ],
