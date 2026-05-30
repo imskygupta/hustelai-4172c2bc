@@ -9,7 +9,10 @@
  *   - Save to Client (records a delivery without a channel send)
  *
  * Every "send" auto-creates / reuses a `work_clients` record on DB2 — there
- * is no separate "Add client" step. See mem://features/delivery-layer.md.
+ * is no separate "Add client" step. Telegram sends route through the same
+ * ClientPickerDialog with `allowSkip: true`, so the user can either attach
+ * the delivery to a client (preserving timeline continuity) or send to
+ * their bot chat anonymously. See mem://features/delivery-layer.md.
  */
 import { useState } from "react";
 import { Copy, Send, Loader2, MessageCircle, FileText, Save, ChevronDown, Plug, Check, ArrowRight } from "lucide-react";
@@ -64,15 +67,25 @@ export function Deliver({ toolSlug, title, text, pdf, pdfFactory, className = ""
     }
   };
 
-  // Telegram bypasses the client picker — it always goes to the user's own
-  // connected bot chat. Client attachment is optional and handled separately.
-  const sendTelegramDirect = async (kind: "telegram" | "telegram_pdf") => {
+  // Telegram delivery — `client` is optional (allowSkip). When attached, the
+  // delivery row links to a work_clients record so the client timeline stays
+  // continuous (P0.5 data-continuity fix).
+  const runTelegramSend = async (
+    kind: "telegram" | "telegram_pdf",
+    client: PickedClient | null,
+  ) => {
     setBusy(kind);
     try {
       if (kind === "telegram") {
-        await sendDeliveryTelegram({ tool_slug: toolSlug, title, text, client: null });
-        toast({ title: "Sent to your Telegram" });
-        setLastDelivery({ channelLabel: "Telegram" });
+        const rec = await sendDeliveryTelegram({
+          tool_slug: toolSlug, title, text, client,
+        }) as { client_id?: string };
+        toast({ title: client ? `Sent to Telegram · ${client.name}` : "Sent to your Telegram" });
+        setLastDelivery({
+          clientId: client?.id || rec?.client_id,
+          clientName: client?.name,
+          channelLabel: "Telegram",
+        });
       } else {
         let blob: Blob | undefined = pdf?.blob;
         let filename: string = pdf?.filename || `${(title || "document").replace(/[^\w.-]+/g, "-")}.pdf`;
@@ -83,12 +96,16 @@ export function Deliver({ toolSlug, title, text, pdf, pdfFactory, className = ""
           filename = built.filename;
         }
         if (!blob && !pdf_url) return;
-        await sendDeliveryTelegramPdf({
+        const rec = await sendDeliveryTelegramPdf({
           tool_slug: toolSlug, title,
-          filename, pdf: blob, pdf_url, client: null,
+          filename, pdf: blob, pdf_url, client,
+        }) as { client_id?: string };
+        toast({ title: client ? `PDF sent to Telegram · ${client.name}` : "PDF sent to your Telegram" });
+        setLastDelivery({
+          clientId: client?.id || rec?.client_id,
+          clientName: client?.name,
+          channelLabel: "Telegram PDF",
         });
-        toast({ title: "PDF sent to your Telegram" });
-        setLastDelivery({ channelLabel: "Telegram PDF" });
       }
     } catch (e) {
       const msg = (e as Error)?.message || "Delivery failed";
@@ -110,6 +127,10 @@ export function Deliver({ toolSlug, title, text, pdf, pdfFactory, className = ""
     const action = picker;
     setPicker(null);
     if (!action) return;
+    if (action === "telegram" || action === "telegram_pdf") {
+      await runTelegramSend(action, client);
+      return;
+    }
     setBusy(action);
     try {
       if (action === "whatsapp") {
@@ -144,7 +165,9 @@ export function Deliver({ toolSlug, title, text, pdf, pdfFactory, className = ""
   };
 
   const requirePhone = picker === "whatsapp";
-  const allowSkipClient = false;
+  // Telegram delivery always works without a client (goes to user's own bot
+  // chat). WhatsApp + Save require a client to make any sense.
+  const allowSkipClient = picker === "telegram" || picker === "telegram_pdf";
 
   if (!user) {
     return (
@@ -182,26 +205,26 @@ export function Deliver({ toolSlug, title, text, pdf, pdfFactory, className = ""
             {tg.connected ? (
               <>
                 <DropdownMenuItem
-                  onClick={() => sendTelegramDirect("telegram")}
+                  onClick={() => setPicker("telegram")}
                   className="gap-2"
                   disabled={tg.loading || !!busy}
                 >
                   <Send className="w-4 h-4 text-sky-500" />
                   <div className="flex flex-col">
                     <span className="text-sm font-medium">Send to Telegram</span>
-                    <span className="text-[10px] text-muted-foreground">Delivered to your HustleAI bot chat</span>
+                    <span className="text-[10px] text-muted-foreground">Optionally attach a client · bot chat</span>
                   </div>
                 </DropdownMenuItem>
                 {(pdf || pdfFactory) && (
                   <DropdownMenuItem
-                    onClick={() => sendTelegramDirect("telegram_pdf")}
+                    onClick={() => setPicker("telegram_pdf")}
                     className="gap-2"
                     disabled={tg.loading || !!busy}
                   >
                     <FileText className="w-4 h-4 text-violet-500" />
                     <div className="flex flex-col">
                       <span className="text-sm font-medium">Send PDF to Telegram</span>
-                      <span className="text-[10px] text-muted-foreground">Uploads as document to your chat</span>
+                      <span className="text-[10px] text-muted-foreground">Optionally attach a client · uploads as doc</span>
                     </div>
                   </DropdownMenuItem>
                 )}

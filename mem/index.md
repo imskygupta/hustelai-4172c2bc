@@ -54,3 +54,4 @@
 - [Railway Credential Isolation](mem://runtime/railway-credential-isolation) — Per-loop DB-key map for Railway ops-worker; workflow-loop is the single PRIMARY-touching exception (read-only peek)
 - [V3 Mission Control Contract](mem://product/v3-mission-control-contract) — Locked 6-layer inventory, allowed edges, scroll choreography, desktop-only rule for the V3 homepage 3D scene
 - [Workspace Route Safety](mem://tech/workspace-route-safety) — Never use /assets (Vite collision), wp() surface remap, palette audit rule
+- [Canonical CRM](mem://tech/canonical-crm) — work_clients on DB2 is the single source of truth; legacy ClientProfile on workspace-os/Clients.tsx to migrate
