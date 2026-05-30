@@ -14,19 +14,29 @@
 //   issues never break paid users. The platform tier limits are still
 //   the ultimate ceiling because the underlying counter table is
 //   service-role only.
-import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { consumeAndCheck } from "./quota.ts";
 import { resolveCapabilities, type Tier } from "./resolveCapabilities.ts";
 
+/** Lazily create a service-role client for quota work. */
+function svc(): SupabaseClient {
+  return createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    { auth: { persistSession: false } },
+  );
+}
+
 export async function enforceAIQuota(
-  supabase: SupabaseClient,
   userId: string,
   feature: string,
   cors: Record<string, string>,
+  supabase?: SupabaseClient,
 ): Promise<Response | null> {
+  const sb = supabase ?? svc();
   try {
     // BYOK bypass — paying users with their own key skip platform limits.
-    const { data: keyRow } = await supabase
+    const { data: keyRow } = await sb
       .from("user_ai_keys")
       .select("api_key, is_active")
       .eq("user_id", userId)
@@ -37,7 +47,7 @@ export async function enforceAIQuota(
     }
 
     // Tier → ai_quota.
-    const { data: prof } = await supabase
+    const { data: prof } = await sb
       .from("profiles")
       .select("subscription_tier")
       .eq("user_id", userId)
@@ -45,7 +55,7 @@ export async function enforceAIQuota(
     const tier = ((prof as any)?.subscription_tier ?? "free") as Tier;
     const caps = resolveCapabilities(tier);
 
-    const q = await consumeAndCheck(supabase, userId, "ai", caps.ai_quota, 1, feature);
+    const q = await consumeAndCheck(sb, userId, "ai", caps.ai_quota, 1, feature);
     if (q.ok) return null;
 
     return new Response(
