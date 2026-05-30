@@ -10,6 +10,15 @@ import { intakeApi, DEFAULT_INTAKE_FIELDS } from "@/lib/intake-os/api";
 import { INTAKE_TEMPLATES } from "@/lib/intake-os/templates";
 import { INTAKE_THEMES, IntakeThemeId } from "@/lib/intake-os/themes";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { marketingUrl, MARKETING_ORIGIN, isDualHost } from "@/lib/host";
+
+// Public intake forms always live on the marketing host (hustlaiapp.in) — never
+// behind workspace.hustlaiapp.in's PortalGate. On dual/preview hosts we keep
+// the current origin so dev links stay clickable.
+function publicIntakeUrl(slug: string) {
+  if (isDualHost()) return `${window.location.origin}/intake/${slug}`;
+  return `${MARKETING_ORIGIN}/intake/${slug}`;
+}
 
 export default function IntakeForms() {
   const [forms, setForms] = useState<any[]>([]);
@@ -70,7 +79,7 @@ export default function IntakeForms() {
     catch (e: any) { toast.error(e.message); }
   };
   const copyLink = (slug: string) => {
-    const url = `${window.location.origin}/intake/${slug}`;
+    const url = publicIntakeUrl(slug);
     navigator.clipboard.writeText(url);
     toast.success("Public link copied");
   };
@@ -140,7 +149,7 @@ export default function IntakeForms() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {forms.map(f => {
             const theme = INTAKE_THEMES.find(t => t.id === (f.settings?.theme || "minimal"));
-            const url = `${window.location.origin}/intake/${f.slug}`;
+            const url = publicIntakeUrl(f.slug);
             return (
               <div key={f.id} className="group relative rounded-2xl border border-border/60 bg-white hover:border-foreground/25 hover:shadow-[0_8px_28px_-14px_rgba(0,0,0,0.12)] transition-all overflow-hidden">
                 <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-amber-300 via-rose-300 to-violet-300 opacity-70" aria-hidden />
@@ -161,7 +170,7 @@ export default function IntakeForms() {
                         {theme && <span className="text-[10.5px] text-muted-foreground/70 px-1.5 py-0.5 rounded-full bg-muted/40">{theme.name}</span>}
                       </div>
                     </div>
-                    <Link to={`/workspaces/intake/${f.id}`} className="opacity-60 group-hover:opacity-100 transition" aria-label="Open submissions">
+                    <Link to={`/intake/inbox/${f.id}`} className="opacity-60 group-hover:opacity-100 transition" aria-label="Open submissions">
                       <ArrowUpRight className="h-4 w-4" />
                     </Link>
                   </div>
@@ -184,7 +193,7 @@ export default function IntakeForms() {
                       </SelectContent>
                     </Select>
                     <div className="flex items-center gap-1">
-                      <Link to={`/workspaces/intake/${f.id}`}>
+                      <Link to={`/intake/inbox/${f.id}`}>
                         <Button size="sm" variant="outline" className="h-8 text-xs gap-1"><Inbox className="h-3.5 w-3.5" />Inbox</Button>
                       </Link>
                       <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => toggle(f)} aria-label="Toggle"><Power className="h-3.5 w-3.5" /></Button>
