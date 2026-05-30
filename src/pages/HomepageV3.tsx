@@ -13,6 +13,9 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 import { SEO } from "@/components/SEO";
 import { Button } from "@/components/ui/button";
+// Persona workflow labels — shared with the dashboard PersonaFlowCard so a
+// visitor sees IDENTICAL workflow stages before and after signup.
+import { HOMEPAGE_FLOWS as FLOWS } from "@/lib/workspace/persona-flow";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Footer } from "@/components/Footer";
 import { HomepageExperienceToggle } from "@/components/home/HomepageExperienceToggle";
@@ -839,10 +842,7 @@ function Transformation() {
 }
 
 // ---------- 7. Workflows by audience ----------
-// Single source of truth shared with the dashboard PersonaFlowCard so a
-// visitor sees IDENTICAL workflow labels before and after signup.
-import { HOMEPAGE_FLOWS as FLOWS } from "@/lib/workspace/persona-flow";
-
+// FLOWS lives in src/lib/workspace/persona-flow.ts (imported at the top).
 function WorkflowsByAudience() {
   const [active, setActive] = useState(0);
   const flow = FLOWS[active];
