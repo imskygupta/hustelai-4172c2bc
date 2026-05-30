@@ -10,6 +10,22 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { X, ArrowRight, Sparkles } from "lucide-react";
 import { useOperatorMode } from "@/lib/operator-mode";
+import { appUrl, isMarketingHost } from "@/lib/host";
+
+/**
+ * Module `to` paths in operator-mode.ts are hardcoded as `/workspaces/*`.
+ * On the marketing host those resolve to the WorkspaceGateway shell — the
+ * user has to click "Enter Workspace" a second time before they land on
+ * the actual cockpit surface. Bypass the gateway by hopping straight to
+ * `workspace.hustlaiapp.in/<surface>` (Audit 2.5 P1-2).
+ */
+function resolveModuleHref(to: string): { href: string; external: boolean } {
+  if (to.startsWith("/workspaces/") && isMarketingHost()) {
+    const stripped = to.replace(/^\/workspaces/, ""); // "/pipeline"
+    return { href: appUrl(stripped), external: true };
+  }
+  return { href: to, external: false };
+}
 
 const STORAGE_PREFIX = "hai.persona.welcome.";
 
@@ -62,21 +78,29 @@ export default function PersonaWelcomeCard() {
       </p>
 
       <ul className="mt-3 grid gap-2 sm:grid-cols-2">
-        {modules.map((m) => (
-          <li key={m.to}>
-            <Link
-              to={m.to}
-              className="group flex items-start gap-3 rounded-xl border border-border bg-background/60 hover:border-primary/40 hover:bg-background transition px-3 py-2"
-            >
+        {modules.map((m) => {
+          const { href, external } = resolveModuleHref(m.to);
+          const cls = "group flex items-start gap-3 rounded-xl border border-border bg-background/60 hover:border-primary/40 hover:bg-background transition px-3 py-2";
+          const body = (
+            <>
               <span className="h-1.5 w-1.5 mt-1.5 rounded-full bg-primary" />
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-medium text-foreground truncate">{m.label}</p>
                 <p className="text-xs text-muted-foreground truncate">{m.desc}</p>
               </div>
               <ArrowRight className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition shrink-0 mt-1" />
-            </Link>
-          </li>
-        ))}
+            </>
+          );
+          return (
+            <li key={m.to}>
+              {external ? (
+                <a href={href} className={cls}>{body}</a>
+              ) : (
+                <Link to={href} className={cls}>{body}</Link>
+              )}
+            </li>
+          );
+        })}
       </ul>
 
       <button
