@@ -206,6 +206,7 @@ import { DocsSubdomainRedirect } from "@/components/DocsSubdomainRedirect";
 import { StatusSubdomainRedirect } from "@/components/StatusSubdomainRedirect";
 import { SurfaceHostRedirect } from "@/components/SurfaceHostRedirect";
 import AutomationsRedirect from "@/components/redirects/AutomationsRedirect";
+import SurfaceAwareRedirect from "@/components/redirects/SurfaceAwareRedirect";
 import { BlogSubdomainRouter, isBlogHost } from "@/components/blog/BlogSubdomainRouter";
 import { isMaintenance, MaintenancePage } from "@/components/MaintenanceGate";
 import { RootErrorFallback } from "@/components/RootErrorFallback";
@@ -485,7 +486,9 @@ function FullRuntimeApp() {
             <Route path="/company" element={<Company />} />
             <Route path="/relax" element={<Relax />} />
             {/* Free public tools (SEO + PLG funnel) */}
-            <Route path="/tools" element={<ToolsHub />} />
+            {/* Signed-in users land on the workspace cockpit Tools Hub
+                instead of the public PLG page (Sprint 1 P1 #1). */}
+            <Route path="/tools" element={<SurfaceAwareRedirect workspacePath="/tools"><ToolsHub /></SurfaceAwareRedirect>} />
             <Route path="/tools/invoice-generator" element={<InvoiceGeneratorTool />} />
             <Route path="/tools/proposal-generator" element={<ProposalGeneratorTool />} />
             <Route path="/tools/contract-generator" element={<ContractGeneratorTool />} />
@@ -613,7 +616,11 @@ function FullRuntimeApp() {
             <Route path="/brand-kit"  element={<Navigate to="/workspaces/brand-kit" replace />} />
             <Route path="/blocks"     element={<Navigate to="/workspaces/blocks" replace />} />
             <Route path="/intake"     element={<Navigate to="/workspaces/intake" replace />} />
-            <Route path="/providers"  element={<Navigate to="/settings/integrations" replace />} />
+            {/* `/providers` is the workspace AI Providers cockpit. Sending
+                signed-in users to /settings/integrations broke onboarding
+                (Sprint 1 P1 #2). Guests get the integrations page as a soft
+                fallback so external links don't dead-end. */}
+            <Route path="/providers"  element={<SurfaceAwareRedirect workspacePath="/providers" guestFallback="/settings/integrations" />} />
             <Route path="/projects/new" element={<Navigate to="/workspaces/new" replace />} />
             <Route path="/canvas" element={Shelled(<WorkspaceFrame><HustleCanvas /></WorkspaceFrame>)} />
             <Route path="/work" element={Shelled(<Work />)} />
