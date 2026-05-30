@@ -5144,6 +5144,8 @@ export type Database = {
           phone: string | null
           phone_number: string | null
           portfolio_links: Json | null
+          preferred_channel: string | null
+          primary_goal: string | null
           profile_mode: string | null
           profile_mode_locked: boolean
           provider_change_locked_until: string | null
@@ -5154,6 +5156,7 @@ export type Database = {
           restricted_reason: string | null
           resume_url: string | null
           search_count: number
+          setup_completed: boolean
           social_links: Json | null
           subscription_tier: Database["public"]["Enums"]["subscription_tier"]
           suspended_at: string | null
@@ -5198,6 +5201,8 @@ export type Database = {
           phone?: string | null
           phone_number?: string | null
           portfolio_links?: Json | null
+          preferred_channel?: string | null
+          primary_goal?: string | null
           profile_mode?: string | null
           profile_mode_locked?: boolean
           provider_change_locked_until?: string | null
@@ -5208,6 +5213,7 @@ export type Database = {
           restricted_reason?: string | null
           resume_url?: string | null
           search_count?: number
+          setup_completed?: boolean
           social_links?: Json | null
           subscription_tier?: Database["public"]["Enums"]["subscription_tier"]
           suspended_at?: string | null
@@ -5252,6 +5258,8 @@ export type Database = {
           phone?: string | null
           phone_number?: string | null
           portfolio_links?: Json | null
+          preferred_channel?: string | null
+          primary_goal?: string | null
           profile_mode?: string | null
           profile_mode_locked?: boolean
           provider_change_locked_until?: string | null
@@ -5262,6 +5270,7 @@ export type Database = {
           restricted_reason?: string | null
           resume_url?: string | null
           search_count?: number
+          setup_completed?: boolean
           social_links?: Json | null
           subscription_tier?: Database["public"]["Enums"]["subscription_tier"]
           suspended_at?: string | null
