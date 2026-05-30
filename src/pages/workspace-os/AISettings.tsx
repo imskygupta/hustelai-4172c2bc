@@ -238,7 +238,17 @@ export default function AISettings() {
           </div>
           <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight text-white leading-[1.1] max-w-2xl">
             Use your own AI power.<br />
-            <span className="ws-gradient-text">Unlimited workflows. No platform credits.</span>
+            <span
+              style={{
+                backgroundImage:
+                  "linear-gradient(90deg, hsl(160 84% 55%), hsl(180 70% 60%) 50%, hsl(258 80% 72%))",
+                WebkitBackgroundClip: "text",
+                backgroundClip: "text",
+                color: "transparent",
+              }}
+            >
+              Unlimited workflows. No platform credits.
+            </span>
           </h1>
           <p className="mt-4 text-sm sm:text-base text-white/60 max-w-2xl leading-relaxed">
             HustleAI Workspace runs on <span className="text-white">your</span> provider keys.
