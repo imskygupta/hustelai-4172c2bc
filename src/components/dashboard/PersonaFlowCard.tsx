@@ -192,6 +192,7 @@ export default function PersonaFlowCard() {
 function labelFor(key: FlowCountKey, n: number): string {
   const plural = n === 1 ? "" : "s";
   switch (key) {
+    case "leads":          return `lead${plural}`;
     case "clients":        return `client${plural}`;
     case "projects":       return `active`;
     case "deliveries":     return `shipped 30d`;
