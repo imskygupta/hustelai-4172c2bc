@@ -55,6 +55,18 @@ export default function PersonaFlowCard() {
           () => { next.clients = 0; },
         ));
       }
+      if (wanted.has("leads")) {
+        // Leads live in intake_submissions (DB2) at the "lead" pipeline stage,
+        // or as untouched "new" submissions. This is the missing dashboard
+        // representation called out in the agency-loop audit.
+        jobs.push(run(
+          workspaceDb.from("intake_submissions").select("id", { count: "exact", head: true })
+            .eq("owner_id", user.id)
+            .or("pipeline_stage.eq.lead,pipeline_stage.is.null"),
+          (r: any) => { next.leads = r.count ?? 0; },
+          () => { next.leads = 0; },
+        ));
+      }
       if (wanted.has("projects")) {
         jobs.push(run(
           (supabase as any).from("workspaces").select("id", { count: "exact", head: true }).eq("owner_id", user.id).eq("status", "active"),
@@ -86,7 +98,9 @@ export default function PersonaFlowCard() {
       }
       if (wanted.has("proposals")) {
         jobs.push(run(
-          (supabase as any).from("workspace_outputs").select("id", { count: "exact", head: true }).eq("user_id", user.id).ilike("tool", "%proposal%"),
+          // Intake-converted proposals land in workspace_documents (doc_type=proposal),
+          // NOT in workspace_outputs. Query the right table.
+          (supabase as any).from("workspace_documents").select("id", { count: "exact", head: true }).eq("owner_id", user.id).eq("doc_type", "proposal"),
           (r: any) => { next.proposals = r.count ?? 0; },
           () => { next.proposals = 0; },
         ));
@@ -178,6 +192,7 @@ export default function PersonaFlowCard() {
 function labelFor(key: FlowCountKey, n: number): string {
   const plural = n === 1 ? "" : "s";
   switch (key) {
+    case "leads":          return `lead${plural}`;
     case "clients":        return `client${plural}`;
     case "projects":       return `active`;
     case "deliveries":     return `shipped 30d`;
