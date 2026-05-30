@@ -86,7 +86,7 @@ export function AppSidebar() {
     }`;
 
   return (
-    <Sidebar collapsible="icon" className="border-r border-slate-200">
+    <Sidebar collapsible="icon" className="border-r border-slate-200 overflow-x-hidden">
       <SidebarHeader className="border-b border-slate-200/80 px-4 py-3">
         <button onClick={() => navigate("/")} className="flex items-center gap-2">
           <div className="w-7 h-7 rounded-md bg-emerald-500 flex items-center justify-center text-white">
@@ -96,7 +96,7 @@ export function AppSidebar() {
         </button>
       </SidebarHeader>
 
-      <SidebarContent className="bg-sidebar">
+      <SidebarContent className="bg-sidebar overflow-x-hidden">
         {/* HustleBot — premium AI mentor button (glowing) */}
         <SidebarGroup>
           <SidebarGroupContent>

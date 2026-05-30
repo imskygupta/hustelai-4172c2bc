@@ -191,7 +191,13 @@ export default function MascotCompanion() {
       if (raw) { const p = JSON.parse(raw); if (typeof p.x === "number") return p; }
     } catch {}
     if (typeof window !== "undefined") {
-      return { x: window.innerWidth - 96, y: window.innerHeight - 110 };
+      // Lift above the mobile bottom nav (≈64px) so the mascot doesn't sit
+      // on top of Dashboard/Workspace/Tools tabs on phones.
+      const isMobile = window.innerWidth < 768;
+      return {
+        x: window.innerWidth - 96,
+        y: window.innerHeight - (isMobile ? 180 : 110),
+      };
     }
     return { x: 0, y: 0 };
   }, []);
