@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { callAIWithFallback } from "../_shared/ai-fallback.ts";
 import { requireVerifiedUser as __requireVerifiedUser } from "../_shared/require-verified.ts";
+import { enforceAIQuota } from "../_shared/tier/enforce-ai.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -21,6 +22,10 @@ serve(async (req) => {
 
     const body = await req.json();
     const action = body.action || "optimize";
+
+    // Sprint F — server-side AI quota gate. BYOK bypasses.
+    const quotaGate = await enforceAIQuota(user.id, `resume:${action}`, corsHeaders);
+    if (quotaGate) return quotaGate;
 
     // ==== ACTION: score (ATS analysis of uploaded resume) ====
     if (action === "score") {

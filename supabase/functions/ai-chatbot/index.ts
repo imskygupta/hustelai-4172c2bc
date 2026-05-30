@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { flagGuard } from "../_shared/flags/resolve.ts";
 import { getApi } from "../_shared/clients.ts";
 import { requireVerifiedUser as __requireVerifiedUser } from "../_shared/require-verified.ts";
+import { enforceAIQuota } from "../_shared/tier/enforce-ai.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -43,6 +44,10 @@ serve(async (req) => {
 
     const blocked = await flagGuard(userId, "ai_tools.chatbot", corsHeaders, { endpoint: "ai-chatbot" });
     if (blocked) return blocked;
+
+    // Sprint F — server-side AI quota gate. BYOK bypasses; mirrors into ai_daily_usage.
+    const quotaGate = await enforceAIQuota(userId, "hustlebot", corsHeaders);
+    if (quotaGate) return quotaGate;
 
     const { messages } = await req.json();
     if (!messages || !Array.isArray(messages)) {

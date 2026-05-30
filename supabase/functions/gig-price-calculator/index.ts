@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { requireVerifiedUser as __requireVerifiedUser } from "../_shared/require-verified.ts";
+import { enforceAIQuota } from "../_shared/tier/enforce-ai.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -50,6 +51,10 @@ serve(async (req) => {
       .eq("user_id", userId)
       .single();
     const tier = profile?.subscription_tier || "free";
+
+    // Sprint F — server-side AI quota gate (canonical). BYOK bypasses.
+    const quotaGate = await enforceAIQuota(userId, "gig_price", corsHeaders, serviceClient);
+    if (quotaGate) return quotaGate;
 
     // Free tier: 3-uses limit (across new tools), tracked via simple insert log
     if (tier === "free") {

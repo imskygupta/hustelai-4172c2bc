@@ -131,7 +131,13 @@ Deno.serve(async (req) => {
     const hasKey = !!keyRow?.api_key;
     if (!hasKey) {
       // Sprint E Phase 5 — canonical tier-aware AI quota. BYO bypasses.
-      const q = await consumeAndCheck(supabase, user.id, "ai", capAI.capabilities.ai_quota);
+      // Map task → dashboard feature key so ai_daily_usage shows the right bucket.
+      const featureKey = task.startsWith("tool_invoice") ? "invoice"
+        : task.startsWith("tool_proposal") || task === "proposal_full" ? "proposal"
+        : task.startsWith("tool_contract") ? "contract"
+        : task === "tool_polish_full" ? `polish:${String(section || "doc").toLowerCase()}`
+        : `doc_ai:${task}`;
+      const q = await consumeAndCheck(supabase, user.id, "ai", capAI.capabilities.ai_quota, 1, featureKey);
       if (!q.ok) {
         return new Response(JSON.stringify({
           error: "ai_quota_exceeded",

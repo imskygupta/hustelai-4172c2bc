@@ -25,16 +25,26 @@ export interface QuotaResult {
   reason?: "exceeded" | "rpc_failed";
 }
 
-/** Increment counter then check against limit. Atomic. */
+/** Increment counter then check against limit. Atomic.
+ *
+ * When `kind === "ai"` and `feature` is provided, ALSO upserts
+ * public.ai_daily_usage so the dashboard widget (which reads that table)
+ * reflects server-side consumption. The ai_daily_usage write is
+ * fire-and-forget — failure never blocks the user.
+ */
 export async function consumeAndCheck(
   supabase: SupabaseClient,
   userId: string,
   kind: QuotaKind,
   limit: number,
   amount = 1,
+  feature?: string,
 ): Promise<QuotaResult> {
   if (limit < 0) {
-    // Unlimited (e.g. Infinity tier).
+    // Unlimited (e.g. Infinity tier). Still record visibility for AI.
+    if (kind === "ai" && feature) {
+      void supabase.rpc("record_ai_usage", { _user_id: userId, _feature: feature, _amount: amount }).then(() => {});
+    }
     return { ok: true, kind, count: 0, limit, remaining: -1 };
   }
   const { data, error } = await supabase.rpc("atomic_tier_consume", {
@@ -49,8 +59,14 @@ export async function consumeAndCheck(
   const row = Array.isArray(data) ? data[0] : data;
   const count = (row as any)?.count ?? amount;
   const remaining = Math.max(0, limit - count);
+  const ok = count <= limit;
+  // Mirror successful AI consumption into ai_daily_usage so the dashboard
+  // counter ("Today's AI assists") reflects what actually happened.
+  if (ok && kind === "ai" && feature) {
+    void supabase.rpc("record_ai_usage", { _user_id: userId, _feature: feature, _amount: amount }).then(() => {});
+  }
   return {
-    ok: count <= limit,
+    ok,
     kind,
     count,
     limit,
