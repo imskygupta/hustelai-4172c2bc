@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { listClients, saveClient, deleteClient, type ClientProfile } from "@/lib/workspace-docs/infra";
+import { PersonaEmptyState } from "@/components/workspace/PersonaEmptyState";
 
 export default function ClientsPage() {
   const { user } = useAuth();
