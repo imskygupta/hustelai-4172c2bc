@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bot, Sparkles, X } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useFloatingLauncherSuppressed } from "@/lib/ui/useFloatingLauncherSuppressed";
 
 const SEEN_KEY = "hai.hustlebot.intro.v1";
 
@@ -13,12 +14,16 @@ const SEEN_KEY = "hai.hustlebot.intro.v1";
 export function HustleBotIntro() {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
+  const suppressed = useFloatingLauncherSuppressed();
 
   useEffect(() => {
     if (!user) return;
     try {
       if (localStorage.getItem(SEEN_KEY)) return;
-      const t = window.setTimeout(() => setOpen(true), 1200);
+      // Delay longer on mobile so PersonaWelcomeCard / persona-flow onboarding
+      // gets first read before the copilot nudge appears.
+      const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+      const t = window.setTimeout(() => setOpen(true), isMobile ? 6000 : 1200);
       return () => window.clearTimeout(t);
     } catch { /* ignore */ }
   }, [user]);
@@ -30,7 +35,7 @@ export function HustleBotIntro() {
 
   return (
     <AnimatePresence>
-      {open && (
+      {open && !suppressed && (
         <motion.div
           initial={{ opacity: 0, y: 12, scale: 0.96 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
