@@ -205,6 +205,7 @@ import { RequireAuth } from "@/components/RequireAuth";
 import { DocsSubdomainRedirect } from "@/components/DocsSubdomainRedirect";
 import { StatusSubdomainRedirect } from "@/components/StatusSubdomainRedirect";
 import { SurfaceHostRedirect } from "@/components/SurfaceHostRedirect";
+import AutomationsRedirect from "@/components/redirects/AutomationsRedirect";
 import { BlogSubdomainRouter, isBlogHost } from "@/components/blog/BlogSubdomainRouter";
 import { isMaintenance, MaintenancePage } from "@/components/MaintenanceGate";
 import { RootErrorFallback } from "@/components/RootErrorFallback";
@@ -384,6 +385,11 @@ function FullRuntimeApp() {
                 <Route path="/workspaces/:id/docs/:docId" element={<LegacyProjectDocRedirect />} />
                 {/* Independent surfaces that still mount on workspace.* */}
                 <Route path="/client" element={<RequireAuth><ClientSurface /></RequireAuth>} />
+                {/* Legacy automation entry points → canonical /automations
+                    (prevents the workspace-host catch-all from silently
+                    dropping stale bookmarks at Overview). */}
+                <Route path="/dashboard/automations" element={<Navigate to="/automations" replace />} />
+                <Route path="/telegram-automations" element={<Navigate to="/automations" replace />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </Suspense>
@@ -503,7 +509,12 @@ function FullRuntimeApp() {
             <Route path="/dashboard/tools/business-card" element={Shelled(<BusinessCardGenerator />)} />
             {/* Operational backbone — workspace ops + outcome-first automations */}
             <Route path="/dashboard/workspace-os" element={Shelled(<OperationsHub />)} />
-            <Route path="/dashboard/automations" element={Shelled(<AutomationsHub />)} />
+            {/* Canonical: workspace cockpit owns Automations. Old marketing-side
+                /dashboard/automations and /telegram-automations now redirect into
+                wp("automations") (cross-host on strict marketing.). */}
+            <Route path="/dashboard/automations" element={<AutomationsRedirect />} />
+            <Route path="/automations" element={<AutomationsRedirect />} />
+            <Route path="/telegram-automations" element={<AutomationsRedirect />} />
             <Route path="/dashboard/deliveries" element={Shelled(<Deliveries />)} />
             <Route path="/dashboard/clients/:id" element={Shelled(<ClientProfile />)} />
             {/* Boosts canonical location moved into /settings/wallet — keep old path redirecting */}
