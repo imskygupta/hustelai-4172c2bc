@@ -346,14 +346,14 @@ function WhoItsFor() {
       <div className="container mx-auto max-w-6xl">
         <div className="max-w-3xl mb-8 md:mb-14">
           <div className="text-[11px] uppercase tracking-[0.22em] font-semibold text-[#FF7A45] mb-3">
-            Who it's for
+            What you're trying to do
           </div>
           <RevealHeading
             text="Different businesses. Same operating system."
             className="font-display font-semibold tracking-tight text-[#1A1A1F] text-[1.65rem] sm:text-3xl md:text-5xl leading-[1.05]"
           />
           <p className="mt-3 md:mt-4 text-[#1A1A1F]/55 text-[14px] md:text-lg leading-relaxed">
-            You run the business. The system runs the process.
+            Tell us what you do, what you want, and how you work. HustleAI tailors itself around you — same questions we ask the moment you sign in.
           </p>
         </div>
         {/* Editorial bento grid — featured card spans 2 cols on desktop */}
