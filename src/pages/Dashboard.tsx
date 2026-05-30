@@ -29,6 +29,7 @@ import RecentClientActivityFeed from "@/components/dashboard/RecentClientActivit
 import ClientsHeadlineCard from "@/components/dashboard/ClientsHeadlineCard";
 import WorkspacePortalTile from "@/components/dashboard/WorkspacePortalTile";
 import FirstVisitWelcome from "@/components/onboarding/FirstVisitWelcome";
+import SetupOverlay from "@/components/onboarding/SetupOverlay";
 import PostExportTelegramNudge from "@/components/onboarding/PostExportTelegramNudge";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
