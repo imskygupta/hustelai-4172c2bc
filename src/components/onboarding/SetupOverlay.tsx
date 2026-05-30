@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Loader2, Sparkles, Target, MessageSquare, ChevronRight, Check } from "lucide-react";
+import { Loader2, Sparkles, Target, MessageSquare, ChevronRight, Check, ArrowRight, PartyPopper } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { setOperatorMode, type OperatorMode } from "@/lib/operator-mode";
@@ -47,10 +48,54 @@ const CHANNEL_OPTIONS = [
   { id: "spreadsheets", label: "Spreadsheets" },
 ] as const;
 
-type Step = 1 | 2 | 3;
+type Step = 1 | 2 | 3 | 4;
+
+interface NextStep {
+  href: string;
+  label: string;
+  blurb: string;
+}
+
+/**
+ * Resolve the single "Recommended next step" handoff.
+ * Goal wins where it maps cleanly; otherwise we fall back to persona.
+ * One button, one place — never a tour.
+ */
+function resolveNextStep(mode: OperatorMode, goal: string): NextStep {
+  const byGoal: Record<string, NextStep> = {
+    find_clients:      { href: "/explore",                   label: "Find your first opportunity", blurb: "Browse leads & briefs hand-picked for you." },
+    manage_clients:    { href: "/clients",                   label: "Add your first client",        blurb: "Your CRM is ready — drop in a real client." },
+    deliver_projects:  { href: "/dashboard/workspace-os",    label: "Open your workspace",          blurb: "Spin up a project with starter tasks." },
+    create_content:    { href: "/tools/content-calendar",    label: "Plan your content week",       blurb: "AI-fills a 7-day calendar in seconds." },
+    build_automations: { href: "/automations",               label: "Build your first automation",  blurb: "Hand off the repetitive parts to bots." },
+  };
+  if (byGoal[goal]) return byGoal[goal];
+
+  const byMode: Record<OperatorMode, NextStep> = {
+    freelancer: { href: "/tools/proposal-generator", label: "Create your first proposal",   blurb: "Turn a brief into a sendable proposal." },
+    agency:     { href: "/clients",                  label: "Add your first client",        blurb: "Set up your roster before pipelines." },
+    creator:    { href: "/tools/content-calendar",   label: "Plan your content week",       blurb: "Map a 7-day publishing rhythm." },
+    consultant: { href: "/workspaces/intake",        label: "Set up your discovery form",   blurb: "Capture leads with a branded intake form." },
+    coach:      { href: "/workspaces/intake",        label: "Set up your discovery form",   blurb: "Take applications from your community." },
+    operator:   { href: "/dashboard/workspace-os",   label: "Open your workspace",          blurb: "See the whole operation in one view." },
+    explorer:   { href: "/explore",                  label: "Explore the catalogue",        blurb: "See what HustleAI can do today." },
+  };
+  return byMode[mode];
+}
+
+const MODE_LABEL: Record<OperatorMode, string> = {
+  freelancer: "a Freelancer",
+  agency: "an Agency",
+  creator: "a Creator",
+  consultant: "a Consultant",
+  coach: "a Coach",
+  operator: "an Operator",
+  explorer: "an Explorer",
+};
 
 export function SetupOverlay() {
   const { user, profile, refreshProfile, loading, profileLoading } = useAuth();
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState<Step>(1);
   const [mode, setMode] = useState<OperatorMode | null>(null);
@@ -84,7 +129,7 @@ export function SetupOverlay() {
   const next = () => {
     if (step === 1) setStep(2);
     else if (step === 2) setStep(3);
-    else void save();
+    else if (step === 3) void save();
   };
 
   const save = async () => {
@@ -117,7 +162,8 @@ export function SetupOverlay() {
 
       await refreshProfile?.();
       toast.success("Workspace tailored to your goals");
-      setOpen(false);
+      // Hand off to the persona-aware "Recommended next step" screen.
+      setStep(4);
     } catch (e: any) {
       toast.error(e?.message || "Could not save preferences");
     } finally {
@@ -127,11 +173,34 @@ export function SetupOverlay() {
 
   if (!open) return null;
 
-  const StepIcon = step === 1 ? Sparkles : step === 2 ? Target : MessageSquare;
+  const StepIcon =
+    step === 1 ? Sparkles :
+    step === 2 ? Target :
+    step === 3 ? MessageSquare :
+                 PartyPopper;
   const stepTitle =
     step === 1 ? "What best describes your work?" :
     step === 2 ? "What's your main goal right now?" :
-                 "How do you work today?";
+    step === 3 ? "How do you work today?" :
+                 `You're set. HustleAI is tailored for ${mode ? MODE_LABEL[mode] : "you"}.`;
+
+  const nextStep = step === 4 && mode && goal ? resolveNextStep(mode, goal) : null;
+  const handoff = () => {
+    if (!nextStep) return;
+    void trackEvent("setup_handoff_clicked", {
+      surface: "dashboard",
+      metadata: { mode, goal, channel, to: nextStep.href },
+    });
+    setOpen(false);
+    navigate(nextStep.href);
+  };
+  const skipHandoff = () => {
+    void trackEvent("setup_handoff_skipped", {
+      surface: "dashboard",
+      metadata: { mode, goal, channel },
+    });
+    setOpen(false);
+  };
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v && !saving) { /* prevent dismiss; opt-in only */ } }}>
@@ -139,27 +208,31 @@ export function SetupOverlay() {
         <DialogHeader>
           <div className="flex items-center gap-2 text-xs uppercase tracking-widest text-muted-foreground">
             <StepIcon className="h-3.5 w-3.5 text-emerald-500" />
-            Welcome to HustleAI · 30 seconds to tailor your workspace
+            {step === 4 ? "Recommended next step" : "Welcome to HustleAI · 30 seconds to tailor your workspace"}
           </div>
           <DialogTitle className="text-xl">{stepTitle}</DialogTitle>
           <DialogDescription>
-            Step {step} of 3 · We use this to rank your dashboard. Nothing is hidden.
+            {step === 4
+              ? "One clear next step. Take it now or do it later — your dashboard is already ranked for you."
+              : `Step ${step} of 3 · We use this to rank your dashboard. Nothing is hidden.`}
           </DialogDescription>
         </DialogHeader>
 
-        {/* Progress dots */}
-        <div className="flex items-center gap-1.5 -mt-1">
-          {[1, 2, 3].map(i => (
-            <div
-              key={i}
-              className={`h-1 flex-1 rounded-full transition-colors ${
-                i < step ? "bg-emerald-500" :
-                i === step ? "bg-emerald-500/60" :
-                "bg-border/40"
-              }`}
-            />
-          ))}
-        </div>
+        {/* Progress dots — hidden on the handoff screen */}
+        {step !== 4 && (
+          <div className="flex items-center gap-1.5 -mt-1">
+            {[1, 2, 3].map(i => (
+              <div
+                key={i}
+                className={`h-1 flex-1 rounded-full transition-colors ${
+                  i < step ? "bg-emerald-500" :
+                  i === step ? "bg-emerald-500/60" :
+                  "bg-border/40"
+                }`}
+              />
+            ))}
+          </div>
+        )}
 
         {step === 1 && (
           <div className="grid grid-cols-2 gap-2 pt-2">
@@ -230,25 +303,48 @@ export function SetupOverlay() {
           </div>
         )}
 
-        <div className="flex items-center justify-between pt-3">
-          <button
-            type="button"
-            onClick={() => step > 1 && setStep((step - 1) as Step)}
-            disabled={step === 1 || saving}
-            className="text-xs text-muted-foreground hover:text-foreground disabled:opacity-30"
-          >
-            ← Back
-          </button>
-          <Button onClick={next} disabled={!canAdvance || saving} size="sm" className="min-w-28">
-            {saving ? (
-              <><Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> Saving…</>
-            ) : step === 3 ? (
-              <>Finish <Check className="h-3.5 w-3.5 ml-1.5" /></>
-            ) : (
-              <>Continue <ChevronRight className="h-3.5 w-3.5 ml-1" /></>
-            )}
-          </Button>
-        </div>
+        {step === 4 && nextStep && (
+          <div className="space-y-3 pt-2">
+            <div className="rounded-xl border border-emerald-500/30 bg-gradient-to-br from-emerald-500/5 to-violet-500/5 p-4">
+              <div className="text-xs uppercase tracking-widest text-emerald-500 mb-1">Start here</div>
+              <div className="text-base font-semibold">{nextStep.label}</div>
+              <p className="text-sm text-muted-foreground mt-1">{nextStep.blurb}</p>
+              <Button onClick={handoff} className="mt-3 w-full" size="lg">
+                {nextStep.label}
+                <ArrowRight className="h-4 w-4 ml-1.5" />
+              </Button>
+            </div>
+            <button
+              type="button"
+              onClick={skipHandoff}
+              className="block w-full text-center text-xs text-muted-foreground hover:text-foreground"
+            >
+              I'll explore on my own
+            </button>
+          </div>
+        )}
+
+        {step !== 4 && (
+          <div className="flex items-center justify-between pt-3">
+            <button
+              type="button"
+              onClick={() => step > 1 && setStep((step - 1) as Step)}
+              disabled={step === 1 || saving}
+              className="text-xs text-muted-foreground hover:text-foreground disabled:opacity-30"
+            >
+              ← Back
+            </button>
+            <Button onClick={next} disabled={!canAdvance || saving} size="sm" className="min-w-28">
+              {saving ? (
+                <><Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> Saving…</>
+              ) : step === 3 ? (
+                <>Finish <Check className="h-3.5 w-3.5 ml-1.5" /></>
+              ) : (
+                <>Continue <ChevronRight className="h-3.5 w-3.5 ml-1" /></>
+              )}
+            </Button>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );
