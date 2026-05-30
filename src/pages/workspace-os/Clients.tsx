@@ -74,7 +74,7 @@ export default function ClientsPage() {
       )}
 
       {filtered.length === 0 ? (
-        <p className="text-sm text-muted-foreground italic">No clients yet — add your first.</p>
+        <PersonaEmptyState surface="clients" icon={Building2} />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {filtered.map(c => (

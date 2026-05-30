@@ -18,13 +18,15 @@ import { wp, wpProject } from "@/lib/workspace/paths";
 import { usePinnedProjects, trackProjectVisit } from "@/lib/workspace/operator";
 import { suggestChainFromOutput } from "@/lib/workspace/operationalChains";
 import { MARKETING_SURFACES, goCrossHost } from "@/lib/workspace/surfaces";
+import { useOperatorMode, OPERATOR_MODES } from "@/lib/operator-mode";
+import { getPaletteTopActions } from "@/lib/workspace/persona-actions";
 
 type Item = {
   id: string;
   label: string;
   hint?: string;
   icon: typeof Sparkles;
-  group: "Actions" | "Tools" | "Pinned" | "Continue" | "Workspaces" | "Outputs" | "Assets" | "Go to";
+  group: "For you" | "Actions" | "Tools" | "Pinned" | "Continue" | "Workspaces" | "Outputs" | "Assets" | "Go to";
   run: () => void;
 };
 
@@ -67,6 +69,7 @@ export function WorkspaceCommandPalette() {
   const { user } = useAuth();
   const { setActiveProject } = useWorkspace();
   const { pinned } = usePinnedProjects();
+  const { mode } = useOperatorMode();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
@@ -112,6 +115,26 @@ export function WorkspaceCommandPalette() {
 
   const items: Item[] = useMemo(() => {
     const out: Item[] = [];
+
+    // 1. Persona top actions — re-ranked by operator mode. Same backend,
+    //    feels like a different product per persona. Surfaces FIRST so the
+    //    most relevant verbs are one keystroke away.
+    const personaLabel = mode ? (OPERATOR_MODES.find(m => m.id === mode)?.label || "") : "";
+    for (const a of getPaletteTopActions(mode)) {
+      out.push({
+        id: a.id,
+        label: a.label,
+        hint: personaLabel ? `${personaLabel} · ${a.hint}` : a.hint,
+        icon: Sparkles,
+        group: "For you",
+        run: () => {
+          if (a.crossHost) goCrossHost(navigate, a.href);
+          else navigate(a.href);
+          close();
+        },
+      });
+    }
+
     out.push(...INTENT_ACTIONS(navigate).map(it => ({ ...it, run: () => { it.run(); close(); } })));
     out.push(...TOOL_ACTIONS(navigate).map(it => ({ ...it, run: () => { it.run(); close(); } })));
 
@@ -191,7 +214,7 @@ export function WorkspaceCommandPalette() {
     if (!q.trim()) return out.slice(0, 30);
     const needle = q.toLowerCase();
     return out.filter(i => i.label.toLowerCase().includes(needle) || (i.hint || "").toLowerCase().includes(needle)).slice(0, 30);
-  }, [workspaces, outputs, assets, pinned, q, navigate, setActiveProject, close]);
+  }, [workspaces, outputs, assets, pinned, q, navigate, setActiveProject, close, mode]);
 
   // Group for render
   const grouped = useMemo(() => {
