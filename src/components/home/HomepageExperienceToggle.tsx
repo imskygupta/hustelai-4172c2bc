@@ -46,7 +46,7 @@ export function HomepageExperienceToggle({
   };
 
   return (
-    <div className="fixed bottom-5 right-5 z-50 select-none">
+    <div className="fixed bottom-5 left-4 md:left-auto md:right-5 z-50 select-none">
       <div className="rounded-full bg-black/80 backdrop-blur-md border border-white/10 shadow-2xl shadow-black/50 p-1 flex items-center text-xs font-medium">
         <button
           onClick={goClassic}
