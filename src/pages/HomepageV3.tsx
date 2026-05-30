@@ -1939,9 +1939,11 @@ export default function HomepageV3() {
       <ScrollProgress />
       <V3Nav />
       <Hero />
+      <OutcomesGrid />
       <WhoItsFor />
       <ClarityStrip />
       <ProblemEmotion />
+      <FirstWin />
       <CinematicSection />
       <Transformation />
       <WorkflowsByAudience />
