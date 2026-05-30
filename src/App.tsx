@@ -276,7 +276,7 @@ function LegacyProjectDocRedirect() {
 }
 function LegacyIntakeInboxRedirect() {
   const { id } = useParams();
-  return <Navigate to={`/intake/${id}`} replace />;
+  return <Navigate to={`/intake/inbox/${id}`} replace />;
 }
 
 // Helper to wrap an in-app page in the SaaS sidebar shell.
