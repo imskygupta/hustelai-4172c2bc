@@ -19,6 +19,7 @@ import { MARKETING_SURFACES } from "@/lib/workspace/surfaces";
  * live metric (still renders as a clickable label).
  */
 export type FlowCountKey =
+  | "leads"
   | "clients"
   | "projects"
   | "deliveries"
@@ -55,7 +56,7 @@ export const PERSONA_FLOWS: Partial<Record<OperatorMode, PersonaFlow>> = {
   freelancer: {
     title: "Your Business Today",
     stages: [
-      { label: "Lead",       href: "/problem-leads",               crossHost: true },
+      { label: "Lead",       href: "/problem-leads",               crossHost: true,  count: "leads" },
       { label: "Proposal",   href: MARKETING_SURFACES.proposalTool, crossHost: true,  count: "proposals" },
       { label: "Approval",   href: wp("pipeline") },
       { label: "Invoice",    href: MARKETING_SURFACES.invoiceTool,  crossHost: true,  count: "invoicesUnpaid" },
