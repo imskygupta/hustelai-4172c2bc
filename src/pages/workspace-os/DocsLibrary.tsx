@@ -11,9 +11,10 @@ import {
   FileText, Send, Briefcase, Compass, Sparkles, ArrowUpRight, FileSignature, Receipt, BookOpen, Mail, Wand2, Layers,
 } from "lucide-react";
 import { wp } from "@/lib/workspace/paths";
+import { marketingUrl, isWorkspaceHost } from "@/lib/host";
 import { SEO } from "@/components/SEO";
 
-type Item = { label: string; to: string; icon: any; tag?: string };
+type Item = { label: string; to: string; icon: any; tag?: string; external?: boolean };
 type Section = {
   id: string;
   kicker: string;
@@ -133,6 +134,25 @@ export default function DocsLibrary() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 p-5 md:p-6">
             {s.items.map((it) => (
+              it.external ? (
+                <a
+                  key={it.label}
+                  href={marketingUrl(it.to)}
+                  // Hard-navigate when we're on workspace.* so the marketing
+                  // route table renders; stay SPA on dual/marketing hosts.
+                  target={isWorkspaceHost() ? "_self" : undefined}
+                  className="group rounded-2xl border border-border/60 bg-card hover:bg-white p-4 transition-all hover:-translate-y-0.5 hover:shadow-md hover:border-foreground/20"
+                >
+                  <div className="flex items-start justify-between gap-3 mb-2">
+                    <span className="h-9 w-9 rounded-xl bg-muted/70 flex items-center justify-center text-foreground/80 group-hover:bg-foreground group-hover:text-background transition">
+                      <it.icon className="h-4 w-4" />
+                    </span>
+                    <ArrowUpRight className="h-4 w-4 text-muted-foreground/60 group-hover:text-foreground transition" />
+                  </div>
+                  <p className="text-sm font-medium text-foreground">{it.label}</p>
+                  {it.tag && <p className="text-[11px] text-muted-foreground mt-0.5">{it.tag}</p>}
+                </a>
+              ) : (
               <Link
                 key={it.label}
                 to={it.to}
@@ -147,6 +167,7 @@ export default function DocsLibrary() {
                 <p className="text-sm font-medium text-foreground">{it.label}</p>
                 {it.tag && <p className="text-[11px] text-muted-foreground mt-0.5">{it.tag}</p>}
               </Link>
+              )
             ))}
           </div>
         </motion.section>
