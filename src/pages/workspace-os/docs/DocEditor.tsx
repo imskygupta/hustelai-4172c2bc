@@ -24,6 +24,7 @@ import {
 import { BigScreenHint } from "@/components/BigScreenHint";
 import { continueWorkflow } from "@/lib/nextActions/continueWorkflow";
 import { wpProjectDoc, wpProjectDocs } from "@/lib/workspace/paths";
+import { Deliver } from "@/components/delivery/Deliver";
 
 const PAID_TIERS = ["pro", "elite", "infinity"];
 
@@ -243,6 +244,24 @@ export default function DocEditor() {
           <button onClick={exportPdf} disabled={exporting} className="inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-4 py-2 text-sm font-medium shadow-lg shadow-primary/30 disabled:opacity-50">
             {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />} Export PDF
           </button>
+          {/* Deliver — appears once the doc is saved. Routes through the
+              Universal Delivery Layer (WhatsApp / Telegram / Save to client)
+              so intake → proposal → client timeline stays one continuous chain. */}
+          {docRow && (
+            <Deliver
+              toolSlug={`workspace-doc:${docType}`}
+              title={title}
+              text={buildDeliveryText(docType, data, title)}
+              pdfFactory={async () => {
+                if (!previewRef.current) throw new Error("Nothing to export");
+                const { exportNodeToPdfBlob } = await import("@/lib/workspace-docs/export-pdf");
+                const fmt = docType === "service_card" ? "square" : docType === "business_card" ? "card" : "a4";
+                const filename = `${title.replace(/\s+/g, "-")}.pdf`;
+                const blob = await exportNodeToPdfBlob(previewRef.current, fmt as any);
+                return { blob, filename };
+              }}
+            />
+          )}
         </div>
       </div>
 
