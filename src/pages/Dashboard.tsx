@@ -29,6 +29,7 @@ import RecentClientActivityFeed from "@/components/dashboard/RecentClientActivit
 import ClientsHeadlineCard from "@/components/dashboard/ClientsHeadlineCard";
 import WorkspacePortalTile from "@/components/dashboard/WorkspacePortalTile";
 import FirstVisitWelcome from "@/components/onboarding/FirstVisitWelcome";
+import SetupOverlay from "@/components/onboarding/SetupOverlay";
 import PostExportTelegramNudge from "@/components/onboarding/PostExportTelegramNudge";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -276,6 +277,10 @@ export default function Dashboard() {
 
         {/* Calm one-line orientation for new users — auto-hides after first project. */}
         <FirstVisitWelcome />
+
+        {/* 30-second post-login Setup Overlay. Lives strictly on Dashboard —
+            never inside auth callbacks. Self-dismisses once profile.setup_completed. */}
+        <SetupOverlay />
 
         {/* One-shot persona welcome — clarifies which 4 modules this persona
             leads with, without removing anything. Dismisses forever per mode. */}
