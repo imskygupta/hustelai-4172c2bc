@@ -467,6 +467,29 @@ function WhoItsFor() {
                     {a.outcome}
                   </div>
                 </div>
+
+                {/* Recommended workspace — mirrors the adaptive cockpit a visitor
+                    will see after signup, so Homepage ↔ Dashboard share language. */}
+                <div className="relative mt-3 hidden md:block">
+                  <div className="text-[9px] font-mono uppercase tracking-[0.18em] text-[#1A1A1F]/35 mb-1.5">
+                    Recommended workspace
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {a.modules.map((m) => (
+                      <span
+                        key={m}
+                        className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-medium leading-none border transition-colors"
+                        style={{
+                          background: `${a.tint}14`,
+                          borderColor: `${a.tint}33`,
+                          color,
+                        }}
+                      >
+                        {m}
+                      </span>
+                    ))}
+                  </div>
+                </div>
               </div>
             );
           })}
