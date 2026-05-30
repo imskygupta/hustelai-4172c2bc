@@ -46,9 +46,8 @@ export function HomepageExperienceToggle({
   };
 
   return (
-    {/* Anchored bottom-left on mobile so it doesn't collide with the
-        Chatbot launcher (fixed bottom-right z-50). On md+ moves back
-        to the right where it was originally designed. */}
+    // Anchored bottom-left on mobile to avoid colliding with the
+    // Chatbot launcher (fixed bottom-right z-50); reverts on md+.
     <div className="fixed bottom-5 left-4 md:left-auto md:right-5 z-50 select-none">
       <div className="rounded-full bg-black/80 backdrop-blur-md border border-white/10 shadow-2xl shadow-black/50 p-1 flex items-center text-xs font-medium">
         <button
