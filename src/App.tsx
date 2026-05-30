@@ -344,7 +344,7 @@ function FullRuntimeApp() {
                   <Route path="brand-kit" element={<BrandKitPage />} />
                   <Route path="blocks" element={<BlocksPage />} />
                   <Route path="intake" element={<IntakeForms />} />
-                  <Route path="intake/:id" element={<IntakeInbox />} />
+                  <Route path="intake/inbox/:id" element={<IntakeInbox />} />
                   <Route path="library" element={<DocsLibrary />} />
                   <Route path="tools" element={<ToolsHubWS />} />
                   <Route path="automations" element={<AutomationsHub />} />
