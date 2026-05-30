@@ -13,6 +13,13 @@ const corsHeaders = {
 const WORKSPACE_URL = "https://utflzmecghdtcjupgdan.supabase.co";
 const WORKSPACE_KEY = "sb_publishable_riUGl3kMundQwxXEg5wcyA_evCjBvqA";
 
+// Primary (DB1) — used to write into workspace_activity so a brand-new lead
+// is immediately visible on the owner's Activity timeline, even before any
+// workspace exists. Workspace_id is now nullable; we attach it when the form
+// is already bound to a workspace.
+const PRIMARY_URL = Deno.env.get("SUPABASE_URL")!;
+const PRIMARY_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
@@ -103,6 +110,29 @@ Deno.serve(async (req) => {
   if (subErr) return json({ error: subErr.message }, 500);
 
   await ws.from("intake_forms").update({ submission_count: (form.submission_count || 0) + 1 }).eq("id", form.id);
+
+  // P0 observability — write an Activity row so the owner sees "New lead
+  // submitted via <Form>" the moment they open their workspace dashboard.
+  try {
+    const primary = createClient(PRIMARY_URL, PRIMARY_SERVICE_KEY, { auth: { persistSession: false } });
+    const { data: formMeta } = await ws.from("intake_forms").select("title").eq("id", form.id).maybeSingle();
+    const formTitle = (formMeta as any)?.title || "intake form";
+    const who = name || email || "Anonymous";
+    await primary.from("workspace_activity").insert({
+      workspace_id: form.workspace_id || null,
+      owner_id: form.owner_id,
+      event_type: "intake_submitted",
+      message: `New lead submitted via ${formTitle} — ${who}`,
+      metadata: {
+        submission_id: sub.id,
+        form_id: form.id,
+        client_email: email || null,
+        client_company: client_company || null,
+      },
+    });
+  } catch (e) {
+    console.error("intake-public activity log failed:", e instanceof Error ? e.message : e);
+  }
 
   return json({ ok: true, submission_id: sub.id });
 });
