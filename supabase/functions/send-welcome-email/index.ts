@@ -13,6 +13,44 @@ const SMTP_CONNECTIONS = [
   { port: 587, tls: false, label: "starttls-587" },
 ] as const;
 
+function adminClient() {
+  return createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+  );
+}
+
+async function logEmail(row: {
+  recipient: string;
+  status: "sent" | "failed" | "skipped";
+  provider?: string;
+  error?: string;
+  metadata?: Record<string, unknown>;
+}) {
+  try {
+    const sb = adminClient();
+    await sb.from("email_logs").insert({
+      template: "welcome",
+      recipient: row.recipient.toLowerCase(),
+      status: row.status,
+      error: row.error || null,
+      metadata: { provider: row.provider || null, ...(row.metadata || {}) },
+    } as any);
+  } catch (e) {
+    console.error("welcome email_logs insert failed:", e);
+  }
+}
+
+async function welcomeAlreadySent(email: string): Promise<boolean> {
+  try {
+    const sb = adminClient();
+    const { data } = await sb.rpc("welcome_email_already_sent", { _email: email.toLowerCase() });
+    return !!data;
+  } catch {
+    return false;
+  }
+}
+
 async function sendWithResend(to: string, subject: string, html: string): Promise<boolean> {
   const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
   if (!RESEND_API_KEY) return false;
