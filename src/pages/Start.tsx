@@ -92,6 +92,18 @@ export default function Start() {
     });
   }, [step, isReturning]);
 
+  // Surface-level events the pre-ship checklist requires.
+  useEffect(() => {
+    if (loading || !user) return;
+    if (isReturning) {
+      void trackEvent("workspace_hub_opened", { surface: "start" });
+    } else {
+      void trackEvent("start_opened", { surface: "start" });
+    }
+    // Fire once per /start mount.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, user?.id, isReturning]);
+
   const canAdvance = useMemo(() => {
     if (step === 1) return !!mode && !!goal && !!channel;
     return true;
@@ -122,6 +134,10 @@ export default function Start() {
       void trackEvent("start_completed", {
         surface: "start",
         metadata: { mode, goal, channel, skipped: !(mode && goal && channel) },
+      });
+      void trackEvent("workspace_entered", {
+        surface: "start",
+        metadata: { from: navigateTo, persona: mode },
       });
       if (mode) {
         void trackEvent("persona_selected", {

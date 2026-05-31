@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Rocket, PenSquare, Upload, UserPlus, Sparkles, Compass, ArrowRight, X } from "lucide-react";
 import { hasMilestone, markMilestone, type Milestone } from "@/lib/onboarding/firstSession";
+import { trackEvent } from "@/lib/analytics";
 
 /**
  * WelcomeActionGrid — action-oriented empty state for first-time dashboard
@@ -66,6 +67,10 @@ export default function WelcomeActionGrid() {
             <Link
               key={a.title}
               to={a.href}
+              onClick={() => void trackEvent("dashboard_action_clicked", {
+                surface: "dashboard",
+                metadata: { action: a.title, href: a.href },
+              })}
               className="group rounded-xl border border-border/50 bg-background/40 p-3.5 hover:border-emerald-500/50 hover:bg-emerald-500/[0.03] transition-all"
             >
               <div className="flex items-start justify-between gap-2">

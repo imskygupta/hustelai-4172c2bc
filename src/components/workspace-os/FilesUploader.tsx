@@ -3,6 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Upload, File as FileIcon, Trash2, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
+import { markMilestone, hasMilestone } from "@/lib/onboarding/firstSession";
+import { trackEvent } from "@/lib/analytics";
 
 export default function FilesUploader({ workspaceId, ownerId }: { workspaceId: string; ownerId: string }) {
   const [files, setFiles] = useState<any[]>([]);
@@ -18,6 +20,7 @@ export default function FilesUploader({ workspaceId, ownerId }: { workspaceId: s
   const upload = async (fileList: FileList | null) => {
     if (!fileList?.length) return;
     setBusy(true);
+    let uploadedAny = false;
     for (const file of Array.from(fileList)) {
       const path = `${ownerId}/${workspaceId}/${Date.now()}-${file.name}`;
       const { error: upErr } = await supabase.storage.from("workspace-files").upload(path, file);
@@ -26,6 +29,11 @@ export default function FilesUploader({ workspaceId, ownerId }: { workspaceId: s
         workspace_id: workspaceId, owner_id: ownerId, name: file.name, storage_path: path,
         size_bytes: file.size, mime_type: file.type,
       });
+      uploadedAny = true;
+    }
+    if (uploadedAny && !hasMilestone("first_file_uploaded")) {
+      markMilestone("first_file_uploaded");
+      void trackEvent("first_file_uploaded", { surface: "files" });
     }
     setBusy(false); load();
     toast.success("Uploaded");
