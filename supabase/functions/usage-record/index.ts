@@ -79,6 +79,11 @@ Deno.serve(async (req) => {
         provider_cost_micro: body.provider_cost_micro ?? null,
         input_tokens: body.input_tokens ?? null,
         output_tokens: body.output_tokens ?? null,
+        source: body.source ?? "tool",
+        session_id: body.session_id ?? null,
+        request_id: body.request_id ?? req.headers.get("x-request-id") ?? null,
+        execution_ms: typeof body.execution_ms === "number" ? body.execution_ms : null,
+        blocked_stage: decision === "allowed" ? null : (body.blocked_stage ?? "quota"),
         metadata: { ...(body.metadata ?? {}), result },
       });
     } catch (e) {

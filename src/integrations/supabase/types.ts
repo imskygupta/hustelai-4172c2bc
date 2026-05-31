@@ -8473,10 +8473,12 @@ export type Database = {
       usage_events: {
         Row: {
           blocked_reason: string | null
+          blocked_stage: string | null
           capability_key: string | null
           created_at: string
           decision: string
           execution_id: string | null
+          execution_ms: number | null
           feature: string
           id: string
           input_tokens: number | null
@@ -8488,18 +8490,23 @@ export type Database = {
           provider_cost_micro: number | null
           remaining_after: number | null
           remaining_before: number | null
+          request_id: string | null
           reset_window_end: string | null
           reset_window_start: string | null
+          session_id: string | null
+          source: string
           tier_snapshot: string | null
           units_used: number
           user_id: string | null
         }
         Insert: {
           blocked_reason?: string | null
+          blocked_stage?: string | null
           capability_key?: string | null
           created_at?: string
           decision: string
           execution_id?: string | null
+          execution_ms?: number | null
           feature?: string
           id?: string
           input_tokens?: number | null
@@ -8511,18 +8518,23 @@ export type Database = {
           provider_cost_micro?: number | null
           remaining_after?: number | null
           remaining_before?: number | null
+          request_id?: string | null
           reset_window_end?: string | null
           reset_window_start?: string | null
+          session_id?: string | null
+          source?: string
           tier_snapshot?: string | null
           units_used?: number
           user_id?: string | null
         }
         Update: {
           blocked_reason?: string | null
+          blocked_stage?: string | null
           capability_key?: string | null
           created_at?: string
           decision?: string
           execution_id?: string | null
+          execution_ms?: number | null
           feature?: string
           id?: string
           input_tokens?: number | null
@@ -8534,8 +8546,11 @@ export type Database = {
           provider_cost_micro?: number | null
           remaining_after?: number | null
           remaining_before?: number | null
+          request_id?: string | null
           reset_window_end?: string | null
           reset_window_start?: string | null
+          session_id?: string | null
+          source?: string
           tier_snapshot?: string | null
           units_used?: number
           user_id?: string | null
@@ -10383,6 +10398,39 @@ export type Database = {
           peak_per_user: number | null
           tier: Database["public"]["Enums"]["subscription_tier"] | null
           total_count: number | null
+        }
+        Relationships: []
+      }
+      v_usage_free_near_upgrade: {
+        Row: {
+          last_seen: string | null
+          max_value: number | null
+          meter: string | null
+          pct_used: number | null
+          used: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
+      v_usage_hidden_bypasses: {
+        Row: {
+          feature: string | null
+          last_seen: string | null
+          meter: string | null
+          tool_key: string | null
+          zero_unit_allowed: number | null
+        }
+        Relationships: []
+      }
+      v_usage_top_expensive_tools: {
+        Row: {
+          executions: number | null
+          feature: string | null
+          meter: string | null
+          tool_key: string | null
+          total_cost_micro: number | null
+          total_input_tokens: number | null
+          total_output_tokens: number | null
         }
         Relationships: []
       }
