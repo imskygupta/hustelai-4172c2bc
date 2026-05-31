@@ -4,7 +4,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Sparkles, Target, MessageSquare, Check, ArrowRight, ArrowLeft, Loader2,
   FolderKanban, ListChecks, PenSquare, Inbox, FileBox, Workflow,
-  Rocket, Compass, Upload, UserPlus, Zap, LayoutDashboard, History,
+  Rocket, Compass, Upload, Zap, LayoutDashboard, History,
+  FileText, ClipboardList, Users, Layers, Receipt, ShieldAlert,
+  Calculator, UserCircle2, CalendarRange, Timer, IdCard, Hammer,
+  Clock, FolderOpen, Wallet, AlarmClock, Globe, Mail, Brain, Briefcase,
+  Bot,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -13,6 +17,8 @@ import { trackEvent } from "@/lib/analytics";
 import { Button } from "@/components/ui/button";
 import { SEO } from "@/components/SEO";
 import { toast } from "sonner";
+import { AppShell } from "@/components/AppShell";
+import { BrightToolGrid } from "@/components/dashboard/BrightToolGrid";
 
 /**
  * /start — single, guided launcher that replaces both legacy /onboarding and
@@ -59,8 +65,8 @@ const TOUR = [
 const ACTIONS = [
   { icon: Rocket,    title: "Create your first project", desc: "Spin up a workspace with starter tasks.", href: "/projects/new" },
   { icon: PenSquare, title: "Open Canvas",               desc: "Brainstorm with AI on a blank canvas.",   href: "/canvas" },
-  { icon: Upload,    title: "Upload your first file",    desc: "Drop a brief, contract or asset.",         href: "/dashboard?tab=files" },
-  { icon: UserPlus,  title: "Invite a teammate",         desc: "Bring a collaborator into your workspace.", href: "/settings/workspace" },
+  { icon: Upload,    title: "Upload your first brief",   desc: "Drop a brief into Smart Client Intake.",   href: "/workspaces/intake" },
+  { icon: Compass,   title: "Explore the toolkit",       desc: "Browse all AI tools & templates.",         href: "/ai-tools" },
 ];
 
 type Step = 1 | 2 | 3 | 4;
