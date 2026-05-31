@@ -461,129 +461,128 @@ function SelectRow({ active, onClick, label }: { active: boolean; onClick: () =>
 
 /* ───────────────────────── Workspace Hub (returning users) ───────────────── */
 
-const HUB_QUICK_ACTIONS = [
-  { icon: Rocket,    title: "New project",       desc: "Spin up a fresh workspace.",          href: "/projects/new" },
-  { icon: PenSquare, title: "Open Canvas",       desc: "Brainstorm on the AI canvas.",        href: "/canvas" },
-  { icon: Upload,    title: "Upload a file",     desc: "Drop a brief, contract or asset.",    href: "/dashboard?tab=files" },
-  { icon: UserPlus,  title: "Invite a teammate", desc: "Bring someone into your workspace.",  href: "/settings/workspace" },
-];
-
-const HUB_RECOMMENDED = [
-  { icon: Sparkles, title: "AI assistant",    desc: "Draft, summarize, plan.",     href: "/hustlebot" },
-  { icon: Compass,  title: "Explore toolkit", desc: "All AI tools & templates.",   href: "/ai-tools" },
-  { icon: Workflow, title: "Automations",     desc: "Hand off the repetitive.",    href: "/automations" },
-];
-
 function WorkspaceHub({ displayName }: { displayName: string }) {
+  const navigate = useNavigate();
+  const { profile } = useAuth();
+  const tier = (profile?.subscription_tier as any) || "free";
+
   return (
-    <div className="min-h-screen bg-[radial-gradient(1200px_600px_at_50%_-10%,hsl(var(--primary)/0.06),transparent_60%)] bg-background">
+    <AppShell
+      title="Workspace Hub"
+      breadcrumbs={[{ label: "Workspace", href: "/dashboard" }, { label: "Hub" }]}
+      actions={
+        <Link
+          to="/dashboard"
+          className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-600 hover:text-slate-900 px-3 py-1.5 rounded-md border border-slate-200 bg-white"
+        >
+          <LayoutDashboard className="h-3.5 w-3.5" /> Open Dashboard
+        </Link>
+      }
+    >
       <SEO title="Workspace Hub — HustleAI" description="Your HustleAI workspace hub." path="/start" noindex />
 
-      <header className="border-b border-border/40 bg-background/60 backdrop-blur">
-        <div className="mx-auto max-w-5xl px-5 sm:px-8 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="inline-flex h-7 w-7 rounded-md bg-gradient-to-br from-emerald-500 to-violet-500 items-center justify-center">
-              <Zap className="h-4 w-4 text-white" />
-            </span>
-            <span className="font-semibold tracking-tight text-sm">Workspace Hub</span>
+      <div className="space-y-6">
+        {/* Hero */}
+        <div className="rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-violet-50 p-5 sm:p-6">
+          <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-emerald-700 mb-2">
+            <Sparkles className="h-3 w-3" /> Welcome back
           </div>
-          <Link
-            to="/dashboard"
-            className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground"
-          >
-            <LayoutDashboard className="h-3.5 w-3.5" /> Open Dashboard
-          </Link>
-        </div>
-      </header>
-
-      <main className="mx-auto max-w-5xl px-5 sm:px-8 py-10 sm:py-14">
-        <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-muted-foreground mb-2">
-          <Sparkles className="h-3 w-3 text-emerald-500" /> Welcome back
-        </div>
-        <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight">
-          Hi {displayName}, where to next?
-        </h1>
-        <p className="text-sm text-muted-foreground mt-2 max-w-xl">
-          Jump back into your dashboard, pick up where you left off, or kick off something new.
-        </p>
-
-        <div className="mt-7 grid lg:grid-cols-3 gap-3">
-          <Link
-            to="/dashboard"
-            className="lg:col-span-2 group rounded-2xl border border-emerald-500/30 bg-gradient-to-br from-emerald-500/[0.06] to-violet-500/[0.04] p-5 sm:p-6 hover:border-emerald-500/60 transition-all"
-          >
-            <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-emerald-600 mb-2">
-              <History className="h-3 w-3" /> Continue
-            </div>
-            <div className="flex items-end justify-between gap-3">
-              <div>
-                <div className="text-lg font-semibold tracking-tight">Pick up where you left off</div>
-                <p className="text-xs text-muted-foreground mt-1">Your dashboard remembers recent work, tools and runs.</p>
-              </div>
-              <ArrowRight className="h-4 w-4 text-emerald-600 group-hover:translate-x-0.5 transition-transform" />
-            </div>
-          </Link>
-          <Link
-            to="/projects/new"
-            className="group rounded-2xl border border-border/50 bg-card/40 p-5 hover:border-emerald-500/40 transition-all"
-          >
-            <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-muted-foreground mb-2">
-              <Rocket className="h-3 w-3 text-emerald-500" /> New
-            </div>
-            <div className="text-base font-semibold tracking-tight">Start a project</div>
-            <p className="text-xs text-muted-foreground mt-1">Fresh workspace with starter tasks.</p>
-          </Link>
-        </div>
-
-        <Section label="Quick actions" icon={Target}>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-2.5 mt-2">
-            {HUB_QUICK_ACTIONS.map(a => {
-              const Icon = a.icon;
-              return (
-                <Link
-                  key={a.title}
-                  to={a.href}
-                  className="group rounded-xl border border-border/50 bg-card/40 p-3.5 hover:border-emerald-500/50 hover:bg-emerald-500/[0.03] transition-all"
-                >
-                  <span className="inline-flex h-8 w-8 rounded-lg bg-gradient-to-br from-emerald-500/15 to-violet-500/10 items-center justify-center mb-2">
-                    <Icon className="h-3.5 w-3.5 text-emerald-600" />
-                  </span>
-                  <div className="text-sm font-medium tracking-tight">{a.title}</div>
-                  <div className="text-xs text-muted-foreground mt-0.5">{a.desc}</div>
-                </Link>
-              );
-            })}
+          <h1 className="font-display text-2xl sm:text-3xl font-semibold tracking-tight text-slate-900">
+            Hi {displayName}, where to next?
+          </h1>
+          <p className="text-sm text-slate-600 mt-2 max-w-2xl">
+            Launch a tool, pick up where you left off, or jump back into your dashboard.
+          </p>
+          <div className="flex flex-wrap gap-2 mt-4">
+            <Button size="sm" className="bg-slate-900 hover:bg-slate-800 text-white" onClick={() => navigate("/dashboard")}>
+              <LayoutDashboard className="w-3.5 h-3.5 mr-1.5" /> Pick up where you left off
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => navigate("/projects/new")}>
+              <Rocket className="w-3.5 h-3.5 mr-1.5" /> Start a project
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => navigate("/workspaces/intake")}>
+              <Upload className="w-3.5 h-3.5 mr-1.5" /> Upload a brief
+            </Button>
           </div>
-        </Section>
-
-        <div className="mt-8">
-          <Section label="Recommended" icon={Compass}>
-            <div className="grid sm:grid-cols-3 gap-2.5 mt-2">
-              {HUB_RECOMMENDED.map(a => {
-                const Icon = a.icon;
-                return (
-                  <Link
-                    key={a.title}
-                    to={a.href}
-                    className="group rounded-xl border border-border/50 bg-card/40 p-3.5 hover:border-emerald-500/50 hover:bg-emerald-500/[0.03] transition-all flex items-center justify-between gap-3"
-                  >
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <span className="inline-flex h-8 w-8 shrink-0 rounded-lg bg-gradient-to-br from-violet-500/15 to-emerald-500/10 items-center justify-center">
-                        <Icon className="h-3.5 w-3.5 text-violet-600" />
-                      </span>
-                      <div className="min-w-0">
-                        <div className="text-sm font-medium tracking-tight truncate">{a.title}</div>
-                        <div className="text-xs text-muted-foreground mt-0.5 truncate">{a.desc}</div>
-                      </div>
-                    </div>
-                    <ArrowRight className="h-3.5 w-3.5 text-muted-foreground/60 group-hover:text-emerald-600 group-hover:translate-x-0.5 transition-all" />
-                  </Link>
-                );
-              })}
-            </div>
-          </Section>
         </div>
-      </main>
-    </div>
+
+        {/* Recommended for you */}
+        <BrightToolGrid
+          title="⭐ Recommended for you"
+          subtitle="Your most-used AI systems & generators"
+          userTier={tier}
+          tools={[
+            { icon: Bot,           label: "HustleBot",           desc: "Your personal AI mentor",         path: "/hustlebot",                color: "from-violet-500 to-fuchsia-500" },
+            { icon: FileText,      label: "Proposal Generator",  desc: "AI-drafted client pitches",       path: "/proposal-draft",           color: "from-emerald-500 to-teal-500" },
+            { icon: Brain,         label: "Roadmap Engine",      desc: "Generate workflows from a brief", path: "/workspaces/roadmap",       color: "from-violet-500 to-purple-500", minTier: "pro" },
+            { icon: Users,         label: "Smart Client Intake", desc: "Branded onboarding forms",        path: "/workspaces/intake",        color: "from-sky-500 to-indigo-500" },
+          ]}
+          onNavigate={navigate}
+        />
+
+        {/* AI Systems */}
+        <BrightToolGrid
+          title="🚀 AI Systems"
+          subtitle="Operational AI you can run today"
+          rightSlot={<Link to="/ai-tools" className="text-xs text-violet-700 hover:underline inline-flex items-center gap-1">View all <ArrowRight className="w-3 h-3" /></Link>}
+          cols={5}
+          userTier={tier}
+          tools={[
+            { icon: Brain,         label: "Roadmap Engine",     desc: "AI client systems",         path: "/workspaces/roadmap",          color: "from-violet-500 to-fuchsia-500", minTier: "pro" },
+            { icon: FileText,      label: "Proposal AI",        desc: "AI-drafted proposals",      path: "/proposal-draft",              color: "from-emerald-500 to-teal-500" },
+            { icon: ShieldAlert,   label: "Contract Generator", desc: "Protect engagements",       path: "/dashboard/tools/contract-generator", color: "from-rose-500 to-red-500" },
+            { icon: Calculator,    label: "Pricing Calculator", desc: "Freelancer / agency",       path: "/dashboard/tools/pricing-calculator", color: "from-amber-500 to-orange-500" },
+            { icon: CalendarRange, label: "Content Calendar",   desc: "4-week social plan",        path: "/dashboard/tools/content-calendar",   color: "from-rose-500 to-pink-500" },
+          ]}
+          onNavigate={navigate}
+        />
+
+        {/* Document Studio — same as Dashboard */}
+        <BrightToolGrid
+          title="📄 Document Studio"
+          subtitle="Generate every client-facing document — branded, themed, PDF-ready"
+          cols={5}
+          userTier={tier}
+          tools={[
+            { icon: FileText,      label: "Proposal",       desc: "Win the project",          path: "/dashboard/tools/proposal-generator", color: "from-emerald-500 to-teal-500" },
+            { icon: Receipt,       label: "Invoice",        desc: "Get paid on time",         path: "/dashboard/tools/invoice-generator",  color: "from-amber-500 to-orange-500" },
+            { icon: ClipboardList, label: "Quotation",      desc: "Premium project quotes",   path: "/workspaces?intent=quotation",        color: "from-violet-500 to-fuchsia-500", note: "Needs workspace AI intake" },
+            { icon: ShieldAlert,   label: "Agreement",      desc: "Protect engagements",      path: "/dashboard/tools/contract-generator", color: "from-rose-500 to-red-500" },
+            { icon: Layers,        label: "Service Card",   desc: "Shareable offer deck",     path: "/workspaces?intent=service_card",     color: "from-sky-500 to-indigo-500", minTier: "pro" },
+          ]}
+          onNavigate={navigate}
+        />
+
+        {/* Daily Workspace — same as Dashboard */}
+        <BrightToolGrid
+          title="⚙ Daily Workspace"
+          subtitle="The everyday surface of your freelance operating system"
+          cols={5}
+          userTier={tier}
+          tools={[
+            { icon: Hammer,        label: "Work Hub",       desc: "Your daily cockpit",       path: "/work",           color: "from-emerald-500 to-teal-500" },
+            { icon: Users,         label: "Clients (CRM)",  desc: "All clients in one place", path: "/work/clients",   color: "from-violet-500 to-fuchsia-500" },
+            { icon: Receipt,       label: "Invoices",       desc: "Create & track invoices",  path: "/work/invoices",  color: "from-amber-500 to-orange-500" },
+            { icon: Clock,         label: "Time Tracker",   desc: "Auto-bill hours",          path: "/work/time",      color: "from-sky-500 to-indigo-500" },
+            { icon: FolderOpen,    label: "Files",          desc: "Delivery & versions",      path: "/work/files",     color: "from-amber-600 to-yellow-500" },
+          ]}
+          onNavigate={navigate}
+        />
+
+        {/* Explore everything */}
+        <div className="rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-5 flex items-center justify-between gap-4 flex-wrap">
+          <div>
+            <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-slate-500 mb-1">
+              <Compass className="h-3 w-3" /> Explore everything
+            </div>
+            <p className="font-display font-semibold text-slate-900">All AI tools & templates in one place</p>
+            <p className="text-xs text-slate-500 mt-0.5">Browse the full catalog — every system, generator and template.</p>
+          </div>
+          <Button onClick={() => navigate("/ai-tools")} className="bg-slate-900 hover:bg-slate-800 text-white">
+            Open Explore <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
+          </Button>
+        </div>
+      </div>
+    </AppShell>
   );
 }
