@@ -9,6 +9,7 @@
 // Returns HTTP 403 with a structured payload the frontend can react to.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.74.0";
+import { enforceAccountAccess } from "./account-access-gate.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -214,6 +215,18 @@ export async function requireVerifiedUser(
         current_tier: trustTier,
       }),
     };
+  }
+
+  // Execution Trust Gate (P0): account-status enforcement layered on top of
+  // verification. Shadow mode by default — flip auth_settings.enforce_account_status
+  // to enforce hard blocks. Every call is recorded in execution_access_events.
+  const accessGate = await enforceAccountAccess({
+    userId: user.id,
+    fn: opts.fn ?? "unknown",
+    req,
+  });
+  if (!accessGate.ok) {
+    return { ok: false, response: accessGate.response };
   }
 
   return {
