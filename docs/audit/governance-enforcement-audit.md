@@ -74,3 +74,33 @@ Source of truth for capabilities: `src/lib/usage/capabilities.ts` (DO NOT duplic
 - `select * from public.get_user_entitlements(auth.uid())` returns the same tier and limits the UI already shows in `useUserLimits()`.
 - `select * from public.current_reset_window('day','Asia/Kolkata')` returns the next IST midnight.
 - This audit doc reviewed and approved → start Phase U1.
+
+## U0.5 — Execution Authorization Wrapper + Ledger Enrichment
+
+Shipped before any U1 enforcement flip:
+
+- New columns on `usage_events`: `source`, `session_id`, `request_id`, `execution_ms`, `blocked_stage` (auth | account | feature | quota | provider | execution).
+- New client wrapper `authorizeExecution()` in `src/lib/usage/authorize.ts` — single chokepoint for tool execution. Order: auth → feature access → quota → execute → record. U1 enforcement flip will edit ONLY this file.
+- `usage-record` accepts `source`, `session_id`, `request_id`, `execution_ms`, `blocked_stage` and persists them.
+- Three analytics views (security_invoker, RLS-respecting):
+  - `public.v_usage_top_expensive_tools` — top spend by `provider_cost_micro` over 30d.
+  - `public.v_usage_free_near_upgrade` — free users ≥80% of their meter cap (7d).
+  - `public.v_usage_hidden_bypasses` — allowed rows with `units_used = 0` (30d).
+
+### Reference SQL recipes
+
+```sql
+-- Top expensive tools (last 30 days)
+SELECT tool_key, executions, total_cost_micro
+FROM public.v_usage_top_expensive_tools;
+
+-- Free users near upgrade
+SELECT user_id, meter, used, max_value, pct_used
+FROM public.v_usage_free_near_upgrade;
+
+-- Hidden bypasses
+SELECT tool_key, zero_unit_allowed, last_seen
+FROM public.v_usage_hidden_bypasses;
+```
+
+No enforcement flipped. No tools migrated. Ready for U1 in shadow.
