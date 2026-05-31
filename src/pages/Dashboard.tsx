@@ -29,6 +29,7 @@ import RecentClientActivityFeed from "@/components/dashboard/RecentClientActivit
 import ClientsHeadlineCard from "@/components/dashboard/ClientsHeadlineCard";
 import WorkspacePortalTile from "@/components/dashboard/WorkspacePortalTile";
 import FirstVisitWelcome from "@/components/onboarding/FirstVisitWelcome";
+import WelcomeActionGrid from "@/components/onboarding/WelcomeActionGrid";
 import PostExportTelegramNudge from "@/components/onboarding/PostExportTelegramNudge";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -279,6 +280,10 @@ export default function Dashboard() {
 
         {/* Calm one-line orientation for new users — auto-hides after first project. */}
         <FirstVisitWelcome />
+
+        {/* Action-card empty state for first-time users — six concrete next moves
+            instead of "No data yet". Self-hides after first project or on dismiss. */}
+        <WelcomeActionGrid />
 
         {/* Workspace Trust Sprint — Phase 1.
             Operations strip REPLACES the old welcome/cockpit greeting block.
