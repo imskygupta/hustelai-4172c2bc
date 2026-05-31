@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Sparkles, Target, MessageSquare, Check, ArrowRight, ArrowLeft, Loader2,
   FolderKanban, ListChecks, PenSquare, Inbox, FileBox, Workflow,
-  Rocket, Compass, Upload, Zap, LayoutDashboard, History,
+  Rocket, Compass, Upload, Zap, LayoutDashboard,
   FileText, ClipboardList, Users, Layers, Receipt, ShieldAlert,
   Calculator, CalendarRange, Hammer, Clock, FolderOpen, Brain, Bot,
 } from "lucide-react";
