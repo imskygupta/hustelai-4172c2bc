@@ -10419,6 +10419,17 @@ export type Database = {
         }
         Relationships: []
       }
+      v_shadow_violation_summary: {
+        Row: {
+          blocked_stage: string | null
+          count: number | null
+          last_seen: string | null
+          meter: string | null
+          tier: string | null
+          tool_key: string | null
+        }
+        Relationships: []
+      }
       v_tier_pressure: {
         Row: {
           active_users: number | null
@@ -10428,6 +10439,32 @@ export type Database = {
           peak_per_user: number | null
           tier: Database["public"]["Enums"]["subscription_tier"] | null
           total_count: number | null
+        }
+        Relationships: []
+      }
+      v_usage_by_meter: {
+        Row: {
+          allowed: number | null
+          blocked: number | null
+          cost_micro: number | null
+          events: number | null
+          meter: string | null
+          shadow_hits: number | null
+          units_used: number | null
+        }
+        Relationships: []
+      }
+      v_usage_by_tool: {
+        Row: {
+          allowed: number | null
+          blocked: number | null
+          cost_micro: number | null
+          events: number | null
+          last_execution: string | null
+          meter: string | null
+          shadow_hits: number | null
+          tool_key: string | null
+          units_used: number | null
         }
         Relationships: []
       }
@@ -10452,6 +10489,28 @@ export type Database = {
         }
         Relationships: []
       }
+      v_usage_live_today: {
+        Row: {
+          allowed: number | null
+          blocked: number | null
+          feature: string | null
+          last_execution: string | null
+          meter: string | null
+          shadow_hits: number | null
+          units_used: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
+      v_usage_reset_preview: {
+        Row: {
+          period: string | null
+          seconds_remaining: number | null
+          window_end: string | null
+          window_start: string | null
+        }
+        Relationships: []
+      }
       v_usage_top_expensive_tools: {
         Row: {
           executions: number | null
@@ -10461,6 +10520,21 @@ export type Database = {
           total_cost_micro: number | null
           total_input_tokens: number | null
           total_output_tokens: number | null
+        }
+        Relationships: []
+      }
+      v_usage_user_summary: {
+        Row: {
+          feature: string | null
+          last_execution: string | null
+          limit_value: number | null
+          meter: string | null
+          remaining: number | null
+          reset_at: string | null
+          shadow_hits: number | null
+          tier: string | null
+          used: number | null
+          user_id: string | null
         }
         Relationships: []
       }
