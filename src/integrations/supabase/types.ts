@@ -5158,6 +5158,7 @@ export type Database = {
           search_count: number
           setup_completed: boolean
           social_links: Json | null
+          start_completed_at: string | null
           subscription_tier: Database["public"]["Enums"]["subscription_tier"]
           suspended_at: string | null
           suspended_by: string | null
@@ -5215,6 +5216,7 @@ export type Database = {
           search_count?: number
           setup_completed?: boolean
           social_links?: Json | null
+          start_completed_at?: string | null
           subscription_tier?: Database["public"]["Enums"]["subscription_tier"]
           suspended_at?: string | null
           suspended_by?: string | null
@@ -5272,6 +5274,7 @@ export type Database = {
           search_count?: number
           setup_completed?: boolean
           social_links?: Json | null
+          start_completed_at?: string | null
           subscription_tier?: Database["public"]["Enums"]["subscription_tier"]
           suspended_at?: string | null
           suspended_by?: string | null
