@@ -11,7 +11,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
-import { Send, Mail } from "lucide-react";
+import { Send, Mail, Activity } from "lucide-react";
 
 export default function AdminCommunications() {
   const [tab, setTab] = useState("compose");
@@ -77,6 +77,9 @@ export default function AdminCommunications() {
           <p className="text-sm text-muted-foreground">Send announcements and monitor email delivery.</p>
         </div>
         <div className="flex items-center gap-2">
+          <Button asChild variant="outline" size="sm">
+            <Link to="/admin/email"><Activity className="h-3.5 w-3.5 mr-1.5" /> Email Ops</Link>
+          </Button>
           <Button asChild variant="outline" size="sm">
             <Link to="/admin/communications/newsletter"><Mail className="h-3.5 w-3.5 mr-1.5" /> Newsletter Ops</Link>
           </Button>

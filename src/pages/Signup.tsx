@@ -33,6 +33,7 @@ export default function Signup() {
   const [searchParams] = useSearchParams();
   const refFromUrl = searchParams.get("ref") || "";
   const [couponCode, setCouponCode] = useState(refFromUrl);
+  const [newsletterOptIn, setNewsletterOptIn] = useState(false);
   const { signUp } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -102,6 +103,13 @@ export default function Signup() {
       setInlineError(error.message);
       return;
     }
+    // Persist explicit newsletter consent (default off). Best-effort; safe to ignore failure.
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase.from("profiles").update({ newsletter_enabled: newsletterOptIn } as any).eq("user_id", user.id);
+      }
+    } catch {}
     try {
       const { trackEvent } = await import("@/lib/analytics");
       void trackEvent("signup_completed", { surface: "signup", metadata: { email } });
@@ -303,6 +311,19 @@ export default function Signup() {
                     {inlineError}
                   </div>
                 )}
+
+                <label className="flex items-start gap-2 text-xs text-muted-foreground cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={newsletterOptIn}
+                    onChange={(e) => setNewsletterOptIn(e.target.checked)}
+                    className="mt-0.5 h-3.5 w-3.5 rounded border-border accent-primary"
+                  />
+                  <span>
+                    Keep me updated about product launches, tips and weekly updates.
+                    <span className="block text-[10px] text-muted-foreground/70">You can unsubscribe anytime.</span>
+                  </span>
+                </label>
 
                 <Button type="submit" disabled={loading} className="w-full h-11 font-medium">
                   {loading ? "Creating account…" : "Create account"}

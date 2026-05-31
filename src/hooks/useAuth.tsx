@@ -344,6 +344,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               .then(({ applyPendingModeOnSignup }) => applyPendingModeOnSignup())
               .catch(() => { /* ignore */ });
           }, 0);
+          // Welcome email dispatch — idempotent, covers OAuth users who
+          // bypass the password signup form. Server-side dedupes by email,
+          // so safe to fire on every sign-in.
+          setTimeout(() => {
+            void supabase.functions.invoke("welcome-dispatch", { body: {} }).catch(() => { /* ignore */ });
+          }, 1500);
           const tok = nextSession.access_token;
           // Defer so we don't block the listener.
           setTimeout(() => {

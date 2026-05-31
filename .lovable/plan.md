@@ -1,342 +1,118 @@
-# Adaptive Cockpits — Persona-driven Lenses
+# Sprint: Email Reliability + Newsletter Launch
 
-Goal: same database, same tools — different default view per user persona. Nothing is removed; everything is re-ranked and grouped.
+## Root cause found during audit (worth knowing before we build)
 
-## 1. Persona model
+`send-welcome-email` is invoked **only from `src/pages/Signup.tsx`** (password signup + OTP verify paths).
+**Google OAuth signups never go through that file** — they return via OAuth callback and land straight on the app. That is why `skycart65@gmail.com` got no welcome email. It is not a provider failure.
 
-Add a `profile_mode` to profiles:
+Second issue: `send-welcome-email` does not write to `email_logs`, so the admin can't see what happened either way.
 
-- `freelancer` | `creator` | `agency` | `consultant` | `coach` | `operator`
-- Default: `freelancer`
-- Settable from: onboarding (Homepage V3 persona tabs), Settings, and a header switcher.
+Both are fixed in Part B below.
 
-Migration:
+---
 
-- `ALTER TABLE public.profiles ADD COLUMN profile_mode text DEFAULT 'freelancer';`
-- Lightweight `useProfileMode()` hook with React Query + localStorage fallback for guests so Homepage clicks pre-seed the mode before signup.
+## Part B — Email Reliability + Admin Email
 
-## 2. Cockpit config (single source of truth)
+### B1. Universal email logging
 
-`src/config/cockpits.ts` exports one record per persona:
+- Patch `send-welcome-email` to insert into `email_logs` (sent / failed / skipped) with `template = "welcome"` and provider used (resend / smtp). No new table — we already have `email_logs`, `email_settings`, `mailing_provider_config`.
+- Add a `welcome_email_dispatch(user_id, email, source)` SECURITY DEFINER RPC that:
+  1. checks whether a `welcome` row already exists in `email_logs` for that email,
+  2. if not, invokes `send-welcome-email` via service role,
+  3. records the attempt.
+  This makes welcome sending idempotent regardless of trigger source.
 
-```ts
-type Cockpit = {
-  mode: ProfileMode;
-  todaySteps: { label: string; href: string; icon: LucideIcon }[];   // 4 steps
-  priorityTools: string[];        // tool ids, ordered
-  sidebarOrder: string[];         // section ids, ordered
-  dashboardWidgets: string[];     // widget ids, ordered
-  ctaDestination: string;         // primary CTA route
-};
-```
+### B2. Welcome email for OAuth users (the actual fix)
 
-Presets:
+- New tiny edge function `welcome-dispatch` (callable from the client right after `auth.getSession()` resolves with a Google OAuth user). It calls the RPC above. Idempotent — safe to call on every login; only fires once per user.
+- Hook it into `src/contexts/AuthContext.tsx` (or wherever session is bootstrapped) on first session where `profiles.created_at` is within the last 5 minutes AND no welcome row exists.
+- Keep the existing direct invokes in `Signup.tsx` as a fast path (still idempotent thanks to the RPC).
 
-- **Freelancer** — Today: Find Client → Send Proposal → Get Paid → Deliver. Tools: Proposal, Contract, Invoice, Red Flag, Pricing Calc.
-- **Creator** — Today: Research → Create → Publish → Monetize. Tools: Faceless Content, Calendar, Lead Finder, Growth.
-- **Agency** — Today: Clients → Team → Delivery → Revenue. Sidebar promotes Workspace OS.
-- **Consultant** — Today: Discovery → Strategy → Proposal → Retainer.
-- **Coach** / **Operator** — sensible defaults (reuse Consultant/Agency for v1).
+### B3. `/admin/email` dashboard
 
-## 3. UI changes (presentation only, no tools removed)
+New page `src/pages/admin/EmailOps.tsx`, linked from Communications.
 
-- **Dashboard `TodayCockpit` (new):** top-of-page card driven by `cockpit.todaySteps` — 4 numbered actions, replaces nothing, sits above Operations Today.
-- `**OperationsTodayCard`, `ClientsHeadlineCard`, `RecentClientActivityFeed`, `ResumeWorkflow**` — re-ordered by `dashboardWidgets`.
-- `**AppSidebar`:** reorder existing groups by `sidebarOrder`. Group renames (no deletions):
-  - `Client OS` → Clients, Activity, Portals, Intake, Retainers
-  - `Document Studio` → Proposal, Invoice, Contract, Cards, Templates
-  - `Discovery` → HustleBot, Explore, Blueprint, Ideas
-  - All other items remain available; just collapsed by default outside the active persona's priority set.
-- **Header persona switcher:** small pill ("Freelancer ▾") next to workspace selector. Changing it instantly re-renders dashboard + sidebar.
-- **Search / Tools Hub:** unchanged — always exposes everything.
+Sections, in order:
 
-## 4. Onboarding wiring
+1. **Provider Health** — pings Resend (`GET /domains`) and Brevo (`GET /account`) via a new `email-provider-health` edge function, shows green/red + last successful send timestamp from `email_logs`.
+2. **Delivery Dashboard (last 7d / 30d toggle)** — Total / Sent / Failed / Queued (from `email_logs`), broken down by template. Bounce % = failed / sent. No "opened" yet (no provider webhook wired — show "Coming with webhook").
+3. **Recent Emails** — table: time, recipient, template, provider, status, error. Filters: status, template, search by recipient. Paginated 50/page. Dedupe by `message_id` per the dashboard guide.
+4. **Retry Failed** — single-click retry for `status='failed'` rows; re-invokes the same template via `workspace-email`.
+5. **Welcome Email Audit Strip** — banner at the top: "Last welcome email sent: X minutes ago" + "Users signed up in last 24h without welcome: N" → click to backfill.
 
-- Homepage V3 persona tabs (`Freelancer / Creator / Agency / Consultant`): on click → store `pendingMode` in localStorage.
-- On signup completion → write `profile_mode` to `profiles`.
-- First dashboard load → opens directly in that cockpit.
+Route: `/admin/email` (admin-only, reuse existing admin guard pattern).
 
-## 5. Out of scope (intentionally)
+### B4. Send Test button
 
-- No deletions of tools, pages, or routes.
-- No new generators (Email Generator still parked).
-- No persona-specific data — same `work_clients`, `work_deliveries`, etc.
-- Coach/Operator personas ship as aliases of Consultant/Agency for v1; dedicated configs later.
+Top of the dashboard: "Send test welcome to [input]" → invokes `send-welcome-email`. This is the acceptance test (`skycart65@gmail.com` retest).
 
-## Files
+---
 
-New:
+## Part C — Minimal Newsletter (explicit consent)
 
-- `supabase/migrations/<ts>_profile_mode.sql`
-- `src/config/cockpits.ts`
-- `src/hooks/useProfileMode.ts`
-- `src/components/dashboard/TodayCockpit.tsx`
-- `src/components/layout/PersonaSwitcher.tsx`
+### C1. Schema
 
-Edited:
+Migration adds to `public.profiles`:
+- `newsletter_enabled boolean NOT NULL DEFAULT false` (NEW signups default false — explicit consent)
+- `newsletter_preferences jsonb DEFAULT '{}'::jsonb` (for future category granularity)
 
-- `src/pages/Dashboard.tsx` (mount TodayCockpit, reorder widgets via cockpit config)
-- `src/components/AppSidebar.tsx` (reorder + regroup by cockpit config; nothing removed)
-- `src/pages/Homepage*.tsx` (persist persona click to localStorage)
-- `src/pages/auth/*` (write profile_mode on signup)
-- `mem/features/adaptive-cockpits.md` (new memory)
+Existing users: left `false` (no auto-enrollment). Per your direction — we'll prompt them later, not now.
 
-## Validation
+### C2. Signup UX
 
-- Switch persona in header → dashboard "Today" steps + sidebar order update without reload.
-- All previously-reachable routes still reachable via Search / Tools Hub.
-- New signup from Homepage "Agency" tab lands in Agency cockpit.  
-  
-  
-This is the right direction.
-  I'd make **one refinement before Lovable builds it**:
-  ### Don't store only `profile_mode`
-  Store:
-  ```ts
-  profile_mode
-  profile_mode_locked
+In `src/pages/Signup.tsx`: add an **unchecked** checkbox before the submit button:
 
-  ```
-  Example:
-  ```ts
-  freelancer
-  creator
-  agency
-  consultant
-  coach
-  operator
+> ☐ Keep me updated about product launches, tips, and weekly updates.
+> *You can unsubscribe anytime.*
 
-  ```
-  and
-  ```ts
-  profile_mode_locked = false
+Bound state passed to `signUp(...)`; written to `profiles.newsletter_enabled` after user row exists.
 
-  ```
-  Reason:
-  A freelancer can later become an agency.
-  You don't want onboarding permanently locking the product.
-  ---
-  ## I'd also evolve your model slightly
-  Instead of:
-  ```ts
-  profile_mode
+### C3. Preference Center
 
-  ```
-  thinking only as a persona,
-  think:
-  ```ts
-  Operating Style
+New page `src/pages/settings/EmailPreferences.tsx`:
+- Lifecycle emails (Welcome / Security / Billing) — shown as "Always on", not toggleable.
+- Marketing toggles (master `newsletter_enabled`, plus category toggles in `newsletter_preferences`).
+- Link from Settings nav and from email unsubscribe footer.
 
-  ```
-  Because users don't identify cleanly.
-  Example:
-  ```text
-  Creator + Agency
-  Coach + Consultant
-  Freelancer + Operator
+### C4. Campaign send screen (extend existing `Communications.tsx`)
 
-  ```
-  So V1:
-  ```ts
-  profile_mode
+Add a **Recipients** picker:
+- `subscribed_only` (joins `profiles.newsletter_enabled = true`)
+- `selected_users` (paste comma-separated emails)
+- `imported_csv` (file upload, parsed client-side)
 
-  ```
-  is perfect.
-  Later:
-  ```ts
-  primary_mode
-  secondary_mode
+Send pipeline already blocks via the SQL filter — server-side the `workspace-email` function will additionally check `newsletter_enabled` before delivering anything marked `category='newsletter'`.
 
-  ```
-  can exist.
-  No migration pain.
-  ---
-  # Biggest thing I would add
-  Your Dashboard currently has:
-  ```text
-  Operations Today
-  Clients
-  Activity
-  Resume Workflow
+Add: **Send test**, **Preview** (already partly there via NewsletterOps), **Schedule** uses existing `newsletter_schedules` table.
 
-  ```
-  For Adaptive Cockpits I would add:
-  ```text
-  TodayCockpit
+### C5. Sunday-only rule
 
-  ```
-  but make it visually dominant.
-  Not another card.
-  Make it the hero.
-  ---
-  Freelancer:
-  ```text
-  TODAY
+Add a guard in the dispatch path: if `category='newsletter'` and a campaign has already sent today AND today is not Sunday → refuse. (Existing pg_cron only fires Sunday so this is belt-and-braces for manual sends.)
 
-  1. Find Client
-  2. Send Proposal
-  3. Deliver Work
-  4. Get Paid
+---
 
-  [ Start Proposal ]
+## Out of scope (per your decision)
 
-  ```
-  Creator:
-  ```text
-  TODAY
+- Workspace integrations / OAuth (Google Workspace, Slack, Discord, etc.)
+- Drip campaigns, journeys, segments, multi-template editor
+- Open / click tracking webhooks (placeholder UI only — wiring deferred)
+- Auto-enrollment of historical users (you said: do not)
 
-  1. Research
-  2. Create
-  3. Publish
-  4. Monetize
+---
 
-  [ Open Content OS ]
+## Acceptance test (run after Part B is in)
 
-  ```
-  Agency:
-  ```text
-  TODAY
+1. New signup with fresh email → welcome email arrives within 60s, logged in `email_logs` with provider=resend.
+2. Google OAuth signup with fresh email → same, triggered via `welcome-dispatch`.
+3. `/admin/email` → Send Test to `skycart65@gmail.com` → arrives, logged.
+4. Force a failed send (invalid SMTP creds for a test category) → row appears in Failed tab → Retry button re-sends successfully.
+5. Newsletter test send to one address → arrives.
+6. `newsletter_enabled=false` user is excluded from a subscribed-only broadcast.
 
-  1. Client Health
-  2. Team Workload
-  3. Delivery Queue
-  4. Revenue
+## Technical notes
 
-  [ Open Workspace ]
-
-  ```
-  This becomes:
-  > "What should I do next?"
-  which is the most valuable dashboard question.
-  ---
-  # About the sidebar
-  I strongly recommend:
-  ### Don't reorder everything aggressively.
-  Users hate:
-  ```text
-  Freelancer Mode
-  Sidebar A
-
-  Agency Mode
-  Sidebar B
-
-  ```
-  because muscle memory breaks.
-  Instead:
-  ### Pin + Highlight
-  Keep:
-  ```text
-  Overview
-  Tools
-  Projects
-  Clients
-  Roadmap
-  ...
-
-  ```
-  same order.
-  But add:
-  ```text
-  ⭐ Recommended
-
-  ```
-  at the top.
-  Example:
-  Agency:
-  ```text
-  ⭐ Clients
-  ⭐ Projects
-  ⭐ Revenue
-  ⭐ Team
-
-  ```
-  then normal sidebar below.
-  Much safer UX.
-  ---
-  # Homepage V3 integration
-  This is where it becomes powerful.
-  Current:
-  ```text
-  Freelancer
-  Creator
-  Agency
-  Consultant
-
-  ```
-  tabs are just marketing.
-  After this change:
-  ```text
-  Click Agency
-  ↓
-  localStorage.pendingMode = agency
-  ↓
-  signup
-  ↓
-  dashboard
-  ↓
-  agency cockpit
-  ↓
-  workspace
-  ↓
-  agency workflows preselected
-
-  ```
-  Now Homepage V3 isn't marketing anymore.
-  It's product onboarding.
-  Huge difference.
-  ---
-  # One more thing I'd tell Lovable
-  Create:
-  ```ts
-  src/config/cockpits.ts
-
-  ```
-  but include:
-  ```ts
-  emptyState
-
-  ```
-  inside every cockpit.
-  Example:
-  ```ts
-  {
-    mode: "freelancer",
-
-    emptyState: {
-      title: "Get your first client",
-      cta: "/proposal-generator"
-    }
-  }
-
-  ```
-  Agency:
-  ```ts
-  {
-    mode: "agency",
-
-    emptyState: {
-      title: "Create your first project",
-      cta: "/workspace/projects/new"
-    }
-  }
-
-  ```
-  Then all empty screens become persona-aware automatically.
-  ---
-  ### Priority order I'd ship
-  **Phase A**
-  - profile_mode column
-  - localStorage onboarding handoff
-  - cockpit config
-  - TodayCockpit hero
-  - persona switcher
-  **Phase B**
-  - sidebar recommendations
-  - widget reordering
-  - persona-specific empty states
-  **Phase C**
-  - workspace-aware cockpit
-  - agency workspace defaults
-  - creator workspace defaults
-  - consultant workspace defaults
-  That gets you 80% of the value with 20% of the engineering effort and keeps all your existing tools intact.
+- No new email provider — reuse `workspace-email` + `mailer-send` + `send-welcome-email` (Resend → SMTP fallback already exists).
+- All new tables: none. We extend `profiles` and lean on existing `email_logs`, `email_campaigns`, `newsletter_subscribers`, `newsletter_schedules`.
+- One migration: add 2 columns to `profiles` + the `welcome_email_dispatch` RPC.
+- New edge functions: `welcome-dispatch`, `email-provider-health` (small, read-only).
+- One new admin page (`EmailOps.tsx`) and one new user page (`EmailPreferences.tsx`).

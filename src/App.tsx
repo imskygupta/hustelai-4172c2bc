@@ -33,6 +33,7 @@ const AdminLogin = lazy(() => import("./pages/AdminLogin"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const AdminCommunications = lazy(() => import("./pages/admin/Communications"));
 const AdminNewsletterOps = lazy(() => import("./pages/admin/NewsletterOps"));
+const AdminEmailOps = lazy(() => import("./pages/admin/EmailOps"));
 const AdminUsageGovernance = lazy(() => import("./pages/admin/UsageGovernance"));
 const AdminMissionControl = lazy(() => import("./pages/admin/MissionControl"));
 const AdminOpsHealth = lazy(() => import("./pages/admin/OpsHealth"));
@@ -50,6 +51,7 @@ const AdminIncidentMode = lazy(() => import("./pages/admin/IncidentMode"));
 const AdminSecurityUsers = lazy(() => import("./pages/admin/SecurityUsers"));
 const AdminRuntimeTrust = lazy(() => import("./pages/admin/RuntimeTrust"));
 import NotificationPreferences from "./pages/settings/NotificationPreferences";
+import EmailPreferences from "./pages/settings/EmailPreferences";
 import Integrations from "./pages/settings/Integrations";
 import Exports from "./pages/settings/Exports";
 import SettingsLayout from "./components/settings/SettingsLayout";
@@ -553,6 +555,7 @@ function FullRuntimeApp() {
             <Route path="/admin-dashboard/docs" element={<AdminDocs />} />
             <Route path="/admin/communications" element={<AdminCommunications />} />
             <Route path="/admin/communications/newsletter" element={<AdminNewsletterOps />} />
+            <Route path="/admin/email" element={<AdminEmailOps />} />
             <Route path="/admin/usage-governance" element={<AdminUsageGovernance />} />
             <Route path="/admin/mission-control" element={<AdminMissionControl />} />
             <Route path="/admin/ops-health" element={<AdminOpsHealth />} />
@@ -572,6 +575,7 @@ function FullRuntimeApp() {
               <Route path="account" element={<AccountSettings />} />
               <Route path="security" element={<SecuritySettings />} />
               <Route path="notifications" element={<NotificationPreferences />} />
+              <Route path="email-preferences" element={<EmailPreferences />} />
               <Route path="integrations" element={<Integrations />} />
               <Route path="telegram" element={<TelegramSettings />} />
               <Route path="exports" element={<Exports />} />
