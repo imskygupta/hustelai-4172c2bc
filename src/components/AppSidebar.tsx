@@ -8,7 +8,7 @@ import {
   FileText, Brain, Zap, TrendingUp, Briefcase, MessageCircle, Trophy, Bookmark,
   CreditCard, Settings, LogOut, Sparkles, Film, ShieldAlert, DollarSign, Rocket, Bot, Building2, LayoutGrid, Hammer, Video,
   Flame, Plug, Receipt, FileSignature, FileEdit,
-  Send as SendIcon, Compass,
+  Send as SendIcon, Compass, Gauge,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Badge } from "@/components/ui/badge";
@@ -23,6 +23,7 @@ const workspaceOsItems = [
   { title: "Workspace Hub", url: "/start", icon: Compass },
   { title: "Work Hub", url: "/work", icon: Hammer },
   { title: "Clients", url: "/work/clients", icon: Users },
+  { title: "Usage", url: "/dashboard/usages", icon: Gauge },
   { title: "Activity", url: "/dashboard/deliveries", icon: SendIcon },
 ];
 
