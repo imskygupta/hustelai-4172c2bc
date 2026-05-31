@@ -111,6 +111,7 @@ const FacelessContent = lazy(() => import("./pages/FacelessContent"));
 const RedFlagScanner = lazy(() => import("./pages/RedFlagScanner"));
 const SureHitJobs = lazy(() => import("./pages/SureHitJobs"));
 import Onboarding from "./pages/Onboarding";
+import Start from "./pages/Start";
 import NotFound from "./pages/NotFound";
 const ToolsHub = lazy(() => import("./pages/tools/ToolsHub"));
 const InvoiceGeneratorTool = lazy(() => import("./pages/tools/InvoiceGenerator"));
@@ -593,7 +594,9 @@ function FullRuntimeApp() {
             <Route path="/faceless-content" element={Shelled(<FacelessContent />)} />
             <Route path="/red-flag-scanner" element={Shelled(<RedFlagScanner />)} />
             <Route path="/sure-hit-jobs" element={Shelled(<SureHitJobs />)} />
-            <Route path="/onboarding" element={<Onboarding />} />
+            <Route path="/start" element={<RequireAuth><Start /></RequireAuth>} />
+            {/* Legacy onboarding route — redirect to the unified /start launcher. */}
+            <Route path="/onboarding" element={<Navigate to="/start" replace />} />
             <Route path="/products" element={<Products />} />
             <Route path="/products/:slug" element={<ProductDetail />} />
             <Route path="/hustlebot" element={Shelled(<HustleBot />)} />
