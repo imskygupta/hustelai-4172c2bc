@@ -33,6 +33,39 @@ const STATUS_REDIRECT: Record<string, string> = {
   banned: "/account-status",
 };
 
+// ── Short-lived per-instance access cache ─────────────────────────────────
+// Keeps DB hits down for frequent callers. TTL is intentionally short so a
+// status change converges within ~30s without explicit cross-instance
+// invalidation. `admin_set_account_status` triggers a realtime profile
+// update on the frontend, which forces sign-out independently.
+const ACCESS_CACHE_TTL_MS = 30_000;
+const ENFORCE_FLAG_TTL_MS = 15_000;
+
+type CachedAccess = { status: string; reason: string | null; expires: number };
+type CachedFlag = { enforce: boolean; expires: number };
+
+const accessCache = new Map<string, CachedAccess>();
+let enforceFlagCache: CachedFlag | null = null;
+
+function getCachedAccess(userId: string): CachedAccess | null {
+  const hit = accessCache.get(userId);
+  if (!hit) return null;
+  if (hit.expires < Date.now()) {
+    accessCache.delete(userId);
+    return null;
+  }
+  return hit;
+}
+
+function getCachedEnforce(): boolean | null {
+  if (!enforceFlagCache) return null;
+  if (enforceFlagCache.expires < Date.now()) {
+    enforceFlagCache = null;
+    return null;
+  }
+  return enforceFlagCache.enforce;
+}
+
 function deny(payload: Record<string, unknown>): Response {
   return new Response(JSON.stringify(payload), {
     status: 403,
@@ -93,51 +126,110 @@ export async function enforceAccountAccess(
   let status = "active";
   let reason: string | null = null;
   let enforce = false;
+  let cacheHit: "full" | "partial" | "miss" = "miss";
+  let gateError: string | null = null;
 
-  try {
-    const [stateRes, flagRes] = await Promise.all([
-      withDeadline(
-        admin.rpc("get_account_access_state_for", { _user_id: opts.userId }),
-        "account_access_state",
-        4_000,
-      ),
-      withDeadline(
-        admin.rpc("get_execution_enforcement"),
-        "execution_enforcement_flag",
-        2_000,
-      ),
-    ]);
+  // 1. Cache lookup
+  const cachedAccess = getCachedAccess(opts.userId);
+  const cachedFlag = getCachedEnforce();
+  if (cachedAccess) {
+    status = cachedAccess.status;
+    reason = cachedAccess.reason;
+    cacheHit = cachedFlag !== null ? "full" : "partial";
+  }
+  if (cachedFlag !== null) enforce = cachedFlag;
 
-    const row = Array.isArray(stateRes.data) ? stateRes.data[0] : stateRes.data;
-    if (row) {
-      status = (row.status as string) ?? "active";
-      reason = (row.reason as string) ?? null;
+  // 2. Fetch what isn't cached
+  if (!cachedAccess || cachedFlag === null) {
+    try {
+      const promises: PromiseLike<unknown>[] = [];
+      const wantAccess = !cachedAccess;
+      const wantFlag = cachedFlag === null;
+      if (wantAccess) {
+        promises.push(
+          withDeadline(
+            admin.rpc("get_account_access_state_for", { _user_id: opts.userId }),
+            "account_access_state",
+            4_000,
+          ),
+        );
+      }
+      if (wantFlag) {
+        promises.push(
+          withDeadline(
+            admin.rpc("get_execution_enforcement"),
+            "execution_enforcement_flag",
+            2_000,
+          ),
+        );
+      }
+      const results = await Promise.all(promises);
+      let idx = 0;
+      if (wantAccess) {
+        // deno-lint-ignore no-explicit-any
+        const stateRes = results[idx++] as any;
+        const row = Array.isArray(stateRes.data) ? stateRes.data[0] : stateRes.data;
+        if (row) {
+          status = (row.status as string) ?? "active";
+          reason = (row.reason as string) ?? null;
+        }
+        accessCache.set(opts.userId, {
+          status,
+          reason,
+          expires: Date.now() + ACCESS_CACHE_TTL_MS,
+        });
+      }
+      if (wantFlag) {
+        // deno-lint-ignore no-explicit-any
+        const flagRes = results[idx++] as any;
+        enforce = flagRes.data === true;
+        enforceFlagCache = {
+          enforce,
+          expires: Date.now() + ENFORCE_FLAG_TTL_MS,
+        };
+      }
+    } catch (e) {
+      // ── Conditional fail-open ────────────────────────────────────────────
+      // Known-inactive (cached) + gate timeout → STILL BLOCK in enforce mode.
+      // Otherwise fail open with audit so an infra incident never locks out
+      // legitimate users. The cache prevents the obvious bypass: an attacker
+      // cannot turn an inactive account "active" by inducing timeouts.
+      gateError = (e as Error).message;
+      if (cachedAccess && cachedAccess.status !== "active") {
+        // Treat as a normal non-active path below using cached values.
+      } else {
+        await logEvent(admin, {
+          ...opts,
+          status: cachedAccess?.status ?? "unknown",
+          decision: "allowed",
+          enforcement_mode: enforce ? "enforce" : "shadow",
+          reason: `gate_error:${gateError}`,
+        });
+        return {
+          ok: true,
+          status: cachedAccess?.status ?? "unknown",
+          mode: enforce ? "enforce" : "shadow",
+          shadowViolation: false,
+        };
+      }
     }
-    enforce = flagRes.data === true;
-  } catch (e) {
-    // Fail open but record the gap so admins can investigate.
-    await logEvent(admin, {
-      ...opts,
-      status: "unknown",
-      decision: "allowed",
-      enforcement_mode: enforce ? "enforce" : "shadow",
-      reason: `gate_error:${(e as Error).message}`,
-    });
-    return { ok: true, status: "unknown", mode: enforce ? "enforce" : "shadow", shadowViolation: false };
   }
 
   const isActive = status === "active";
   const mode: "enforce" | "shadow" = enforce ? "enforce" : "shadow";
 
   if (isActive) {
-    // Allowed path — log lightly. (Could be sampled later if volume is high.)
-    await logEvent(admin, {
-      ...opts,
-      status,
-      decision: "allowed",
-      enforcement_mode: mode,
-      reason: null,
-    });
+    // Allowed path. Only log on cache miss to keep audit volume sane —
+    // sampled "allowed" rows are enough to prove the gate is firing.
+    if (cacheHit !== "full") {
+      await logEvent(admin, {
+        ...opts,
+        status,
+        decision: "allowed",
+        enforcement_mode: mode,
+        reason: null,
+      });
+    }
     return { ok: true, status, mode, shadowViolation: false };
   }
 
@@ -148,7 +240,7 @@ export async function enforceAccountAccess(
       status,
       decision: "shadow_violation",
       enforcement_mode: "shadow",
-      reason: reason ?? "account_not_active",
+      reason: gateError ? `cached_inactive_on_timeout:${gateError}` : (reason ?? "account_not_active"),
     });
     return { ok: true, status, mode: "shadow", shadowViolation: true };
   }
