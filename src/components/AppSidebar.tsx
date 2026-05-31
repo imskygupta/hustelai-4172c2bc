@@ -8,7 +8,7 @@ import {
   FileText, Brain, Zap, TrendingUp, Briefcase, MessageCircle, Trophy, Bookmark,
   CreditCard, Settings, LogOut, Sparkles, Film, ShieldAlert, DollarSign, Rocket, Bot, Building2, LayoutGrid, Hammer, Video,
   Flame, Plug, Receipt, FileSignature, FileEdit,
-  Send as SendIcon,
+  Send as SendIcon, Compass,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +20,7 @@ import { Star } from "lucide-react";
 // across multiple groups. One mental model per row.
 const workspaceOsItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
+  { title: "Workspace Hub", url: "/start", icon: Compass },
   { title: "Work Hub", url: "/work", icon: Hammer },
   { title: "Clients", url: "/work/clients", icon: Users },
   { title: "Activity", url: "/dashboard/deliveries", icon: SendIcon },
