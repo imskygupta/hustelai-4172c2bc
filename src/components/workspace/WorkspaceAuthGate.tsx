@@ -3,6 +3,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles } from "lucide-react";
 import PortalGate from "./PortalGate";
+import { RequireActiveAccount } from "@/components/RequireActiveAccount";
 
 /**
  * Workspace-only auth gate. Unlike RequireAuth (which redirects to /login),
@@ -51,7 +52,7 @@ export function WorkspaceAuthGate({ children }: { children: ReactNode }) {
 
   return (
     <>
-      {children}
+      <RequireActiveAccount>{children}</RequireActiveAccount>
       <AnimatePresence>
         {showWelcome && (
           <motion.div
