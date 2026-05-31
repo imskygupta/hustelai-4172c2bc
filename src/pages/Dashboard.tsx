@@ -31,6 +31,7 @@ import WorkspacePortalTile from "@/components/dashboard/WorkspacePortalTile";
 import FirstVisitWelcome from "@/components/onboarding/FirstVisitWelcome";
 import WelcomeActionGrid from "@/components/onboarding/WelcomeActionGrid";
 import PostExportTelegramNudge from "@/components/onboarding/PostExportTelegramNudge";
+import { BrightToolGrid } from "@/components/dashboard/BrightToolGrid";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
