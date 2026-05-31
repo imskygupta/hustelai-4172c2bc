@@ -521,6 +521,8 @@ function FullRuntimeApp() {
             <Route path="/dashboard/tools/content-calendar" element={Shelled(<ContentCalendar />)} />
             <Route path="/dashboard/tools/pomodoro" element={Shelled(<PomodoroWidget />)} />
             <Route path="/dashboard/tools/business-card" element={Shelled(<BusinessCardGenerator />)} />
+            {/* U3a — hidden user usage surface (not yet linked in sidebar) */}
+            <Route path="/dashboard/usages" element={Shelled(<Usages />)} />
             {/* Operational backbone — workspace ops + outcome-first automations */}
             <Route path="/dashboard/workspace-os" element={Shelled(<OperationsHub />)} />
             {/* Canonical: workspace cockpit owns Automations. Old marketing-side
