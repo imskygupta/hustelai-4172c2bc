@@ -5137,6 +5137,8 @@ export type Database = {
           id: string
           is_verified: boolean
           last_reauth_at: string | null
+          newsletter_enabled: boolean
+          newsletter_preferences: Json
           oauth_linked_at: string | null
           onboarding: Json | null
           onboarding_completed: boolean
@@ -5195,6 +5197,8 @@ export type Database = {
           id?: string
           is_verified?: boolean
           last_reauth_at?: string | null
+          newsletter_enabled?: boolean
+          newsletter_preferences?: Json
           oauth_linked_at?: string | null
           onboarding?: Json | null
           onboarding_completed?: boolean
@@ -5253,6 +5257,8 @@ export type Database = {
           id?: string
           is_verified?: boolean
           last_reauth_at?: string | null
+          newsletter_enabled?: boolean
+          newsletter_preferences?: Json
           oauth_linked_at?: string | null
           onboarding?: Json | null
           onboarding_completed?: boolean
@@ -11073,6 +11079,7 @@ export type Database = {
           post_slug: string
         }[]
       }
+      welcome_email_already_sent: { Args: { _email: string }; Returns: boolean }
       workflow_event_throughput: {
         Args: { _bucket?: string; _since?: string }
         Returns: {
