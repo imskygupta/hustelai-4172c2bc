@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { useAccountAccess } from "@/hooks/useAccountAccess";
 import { AUTH_EMAIL_REDIRECT_TO } from "@/lib/auth-config";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -22,6 +23,7 @@ const RESEND_COOLDOWN_MS = 60_000;
  */
 export function VerificationOverlay() {
   const { user, trustState } = useAuth();
+  const { status } = useAccountAccess();
   const [dismissed, setDismissed] = useState<boolean>(() => {
     try {
       const ts = Number(localStorage.getItem(DISMISS_KEY) || 0);
@@ -38,6 +40,9 @@ export function VerificationOverlay() {
   }, []);
 
   if (!user || !trustState.restricted) return null;
+  // Hide verification banner when the account is non-active (suspended/deleted/banned/pending).
+  // Locked accounts get their own dedicated screens — don't dangle a Resend CTA.
+  if (status !== "active" && status !== "loading") return null;
   if (dismissed) return null;
 
   const onResend = async () => {
