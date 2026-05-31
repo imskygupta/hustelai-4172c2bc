@@ -29,7 +29,7 @@ import RecentClientActivityFeed from "@/components/dashboard/RecentClientActivit
 import ClientsHeadlineCard from "@/components/dashboard/ClientsHeadlineCard";
 import WorkspacePortalTile from "@/components/dashboard/WorkspacePortalTile";
 import FirstVisitWelcome from "@/components/onboarding/FirstVisitWelcome";
-import SetupOverlay from "@/components/onboarding/SetupOverlay";
+import WelcomeActionGrid from "@/components/onboarding/WelcomeActionGrid";
 import PostExportTelegramNudge from "@/components/onboarding/PostExportTelegramNudge";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -107,8 +107,11 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (!loading && !user) navigate("/login");
-    // Note: onboarding is optional. Users can always land on the dashboard.
-    // The onboarding nudge is surfaced via in-page banner/CTA, not a hard redirect.
+    // First-run users go through /start once before landing here.
+    // Existing users with onboarding_completed=true skip this gate entirely.
+    if (!loading && user && profile && !profile.onboarding_completed) {
+      navigate("/start", { replace: true });
+    }
   }, [loading, user, profile, navigate]);
 
   useEffect(() => {
@@ -278,9 +281,9 @@ export default function Dashboard() {
         {/* Calm one-line orientation for new users — auto-hides after first project. */}
         <FirstVisitWelcome />
 
-        {/* 30-second post-login Setup Overlay. Lives strictly on Dashboard —
-            never inside auth callbacks. Self-dismisses once profile.setup_completed. */}
-        <SetupOverlay />
+        {/* Action-card empty state for first-time users — six concrete next moves
+            instead of "No data yet". Self-hides after first project or on dismiss. */}
+        <WelcomeActionGrid />
 
         {/* Workspace Trust Sprint — Phase 1.
             Operations strip REPLACES the old welcome/cockpit greeting block.
