@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Sparkles, Target, MessageSquare, Check, ArrowRight, ArrowLeft, Loader2,
   FolderKanban, ListChecks, PenSquare, Inbox, FileBox, Workflow,
-  Rocket, Compass, Upload, UserPlus, Zap,
+  Rocket, Compass, Upload, UserPlus, Zap, LayoutDashboard, History,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -74,17 +74,23 @@ export default function Start() {
   const [channel, setChannel] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  // If the user is already onboarded, /start is just a re-entry surface and
-  // we don't want to trap them — redirect to the dashboard immediately.
+  // /start is the Workspace Hub. First-time users (onboarding_completed=false)
+  // get the full guided 4-step wizard. Returning users get a lightweight hub
+  // — no questionnaire, no redirect — so they can re-enter the workspace,
+  // resume recent work, or trigger a quick action.
   useEffect(() => {
     if (loading) return;
-    if (!user) { navigate("/login?next=%2Fstart", { replace: true }); return; }
-    if (profile?.onboarding_completed) {
-      navigate("/dashboard", { replace: true });
-    }
-  }, [loading, user, profile?.onboarding_completed, navigate]);
+    if (!user) navigate("/login?next=%2Fstart", { replace: true });
+  }, [loading, user, navigate]);
 
-  useEffect(() => { void trackEvent("start_page_view", { surface: "start", metadata: { step } }); }, [step]);
+  const isReturning = !!profile?.onboarding_completed;
+
+  useEffect(() => {
+    void trackEvent("start_page_view", {
+      surface: "start",
+      metadata: { step, mode: isReturning ? "hub" : "wizard" },
+    });
+  }, [step, isReturning]);
 
   const canAdvance = useMemo(() => {
     if (step === 1) return !!mode && !!goal && !!channel;
@@ -95,7 +101,10 @@ export default function Start() {
     if (!user) return;
     setSaving(true);
     try {
-      const update: Record<string, unknown> = { onboarding_completed: true };
+      const update: Record<string, unknown> = {
+        onboarding_completed: true,
+        start_completed_at: new Date().toISOString(),
+      };
       if (mode) {
         // Reuse operator-mode infra so dashboard re-ranks immediately.
         setOperatorMode(mode, { lock: true, syncDb: true });
@@ -148,6 +157,11 @@ export default function Start() {
         <Loader2 className="h-6 w-6 animate-spin text-primary" />
       </div>
     );
+  }
+
+  // Returning-user lightweight hub.
+  if (isReturning) {
+    return <WorkspaceHub displayName={profile?.display_name || user.email?.split("@")[0] || "there"} />;
   }
 
   const stepMeta = [
