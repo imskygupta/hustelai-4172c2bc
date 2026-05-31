@@ -555,6 +555,7 @@ function FullRuntimeApp() {
             <Route path="/admin-dashboard/docs" element={<AdminDocs />} />
             <Route path="/admin/communications" element={<AdminCommunications />} />
             <Route path="/admin/communications/newsletter" element={<AdminNewsletterOps />} />
+            <Route path="/admin/email" element={<AdminEmailOps />} />
             <Route path="/admin/usage-governance" element={<AdminUsageGovernance />} />
             <Route path="/admin/mission-control" element={<AdminMissionControl />} />
             <Route path="/admin/ops-health" element={<AdminOpsHealth />} />
@@ -574,6 +575,7 @@ function FullRuntimeApp() {
               <Route path="account" element={<AccountSettings />} />
               <Route path="security" element={<SecuritySettings />} />
               <Route path="notifications" element={<NotificationPreferences />} />
+              <Route path="email-preferences" element={<EmailPreferences />} />
               <Route path="integrations" element={<Integrations />} />
               <Route path="telegram" element={<TelegramSettings />} />
               <Route path="exports" element={<Exports />} />
