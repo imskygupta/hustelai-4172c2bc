@@ -9,6 +9,7 @@ import { enforceRateLimit } from "../_shared/rate-limit.ts";
 import { recordAnomaly } from "../_shared/anomaly.ts";
 import { requireCapability, guardErrorBody } from "../_shared/tier/guard.ts";
 import { consumeAndCheck } from "../_shared/tier/quota.ts";
+import { authorizeServer, withExecutionHeaders } from "../_shared/usage/authorize.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -34,6 +35,13 @@ serve(async (req) => {
     const jwt = auth.replace(/^Bearer\s+/i, "");
     const { data: u } = await sb.auth.getUser(jwt);
     if (!u?.user) return json({ error: "unauthorized" }, 401);
+
+    // U1 — shadow execution gate.
+    const __exec = await authorizeServer(
+      { tool: "pdf_export", meter: "export", userId: u.user.id, req },
+      corsHeaders,
+    );
+    if (__exec.response) return __exec.response;
 
     // Sprint E Phase 3 — canonical capability + quota enforcement.
     const capExport = await requireCapability(sb, u.user.id, "export_generation");
@@ -120,7 +128,10 @@ serve(async (req) => {
     // proper plan + telegram_connected guards. Duplicate enqueue here removed
     // to prevent retry storms and ghost TG jobs for free users.
 
-    return json({ ok: true, export: row });
+    return new Response(
+      JSON.stringify({ ok: true, export: row, execution_id: __exec.executionId }),
+      { headers: withExecutionHeaders({ ...corsHeaders, "Content-Type": "application/json" }, __exec) },
+    );
   } catch (e: any) {
     return json({ error: String(e?.message || e) }, 500);
   }
