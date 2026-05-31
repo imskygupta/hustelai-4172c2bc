@@ -110,7 +110,6 @@ const GigPriceCalculator = lazy(() => import("./pages/GigPriceCalculator"));
 const FacelessContent = lazy(() => import("./pages/FacelessContent"));
 const RedFlagScanner = lazy(() => import("./pages/RedFlagScanner"));
 const SureHitJobs = lazy(() => import("./pages/SureHitJobs"));
-import Onboarding from "./pages/Onboarding";
 import Start from "./pages/Start";
 import NotFound from "./pages/NotFound";
 const ToolsHub = lazy(() => import("./pages/tools/ToolsHub"));
