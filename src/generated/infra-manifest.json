@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-30T15:53:48.437Z",
+  "generated_at": "2026-05-31T18:08:01.914Z",
   "routes": [
     {
       "path": ":slug",
@@ -618,6 +618,14 @@
       "catchAll": false
     },
     {
+      "path": "/automations",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "AutomationsRedirect",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
       "path": "/blocks",
       "source": "src/App.tsx",
       "type": "redirect",
@@ -748,8 +756,8 @@
     {
       "path": "/dashboard/automations",
       "source": "src/App.tsx",
-      "type": "public",
-      "authWrapper": null,
+      "type": "redirect",
+      "authWrapper": "Navigate",
       "dynamic": false,
       "catchAll": false
     },
@@ -1380,8 +1388,8 @@
     {
       "path": "/providers",
       "source": "src/App.tsx",
-      "type": "redirect",
-      "authWrapper": "Navigate",
+      "type": "public",
+      "authWrapper": "SurfaceAwareRedirect",
       "dynamic": false,
       "catchAll": false
     },
@@ -1562,6 +1570,14 @@
       "catchAll": false
     },
     {
+      "path": "/telegram-automations",
+      "source": "src/App.tsx",
+      "type": "redirect",
+      "authWrapper": "Navigate",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
       "path": "/terms-conditions",
       "source": "src/App.tsx",
       "type": "public",
@@ -1573,7 +1589,7 @@
       "path": "/tools",
       "source": "src/App.tsx",
       "type": "public",
-      "authWrapper": "ToolsHub",
+      "authWrapper": "SurfaceAwareRedirect",
       "dynamic": false,
       "catchAll": false
     },
@@ -1986,7 +2002,7 @@
       "catchAll": false
     },
     {
-      "path": "intake/:id",
+      "path": "intake/inbox/:id",
       "source": "src/App.tsx",
       "type": "public",
       "authWrapper": "IntakeInbox",
