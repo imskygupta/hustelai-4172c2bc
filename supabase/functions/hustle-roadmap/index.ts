@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { requireVerifiedUser as __requireVerifiedUser } from "../_shared/require-verified.ts";
 import { enforceAIQuota } from "../_shared/tier/enforce-ai.ts";
+import { authorizeServer, withExecutionHeaders } from "../_shared/usage/authorize.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -38,6 +39,11 @@ serve(async (req) => {
     // === END AUTH CHECK ===
 
     const userId = (claimsData.claims as any).sub as string;
+    // U1 — shadow execution gate (never blocks in shadow; records execution_id).
+    const __exec = await authorizeServer(
+      { tool: "hustle_roadmap", meter: "ai", feature: "roadmap", userId, req },
+      corsHeaders,
+    );
     // Sprint F — server-side AI quota gate.
     const quotaGate = await enforceAIQuota(userId, "roadmap", corsHeaders);
     if (quotaGate) return quotaGate;
@@ -104,8 +110,11 @@ Make it practical, specific, and actionable. Use real platform names and specifi
       ],
     });
 
-    return new Response(JSON.stringify({ roadmap }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    return new Response(JSON.stringify({ roadmap, execution_id: __exec.executionId }), {
+      headers: withExecutionHeaders(
+        { ...corsHeaders, "Content-Type": "application/json" },
+        __exec,
+      ),
     });
   } catch (e) {
     console.error("hustle-roadmap error:", e);
