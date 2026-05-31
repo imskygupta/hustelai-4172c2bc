@@ -204,6 +204,10 @@ import { ScrollToTop } from "@/components/ScrollToTop";
 import { YandexRouteTracker } from "@/components/YandexRouteTracker";
 import { AppRouteShell } from "@/components/AppRouteShell";
 import { RequireAuth } from "@/components/RequireAuth";
+import { RequireActiveAccount } from "@/components/RequireActiveAccount";
+import { AccountAccessProvider } from "@/hooks/useAccountAccess";
+import AccountStatus from "./pages/AccountStatus";
+import PendingAccess from "./pages/PendingAccess";
 import { DocsSubdomainRedirect } from "@/components/DocsSubdomainRedirect";
 import { StatusSubdomainRedirect } from "@/components/StatusSubdomainRedirect";
 import { SurfaceHostRedirect } from "@/components/SurfaceHostRedirect";
@@ -288,7 +292,9 @@ function LegacyIntakeInboxRedirect() {
 // never see a logged-in dashboard / sidebar with Sign out etc.
 const Shelled = (el: React.ReactNode) => (
   <RequireAuth>
-    <AppRouteShell>{el}</AppRouteShell>
+    <RequireActiveAccount>
+      <AppRouteShell>{el}</AppRouteShell>
+    </RequireActiveAccount>
   </RequireAuth>
 );
 
@@ -465,7 +471,9 @@ function FullRuntimeApp() {
             <Route path="/signup" element={<Signup />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
+            <Route path="/dashboard" element={<RequireAuth><RequireActiveAccount><Dashboard /></RequireActiveAccount></RequireAuth>} />
+            <Route path="/account-status" element={<RequireAuth><AccountStatus /></RequireAuth>} />
+            <Route path="/pending-access" element={<RequireAuth><PendingAccess /></RequireAuth>} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/unsubscribe" element={<Unsubscribe />} />
@@ -547,7 +555,7 @@ function FullRuntimeApp() {
                 until subdomains are cut over. Mental model: one purpose per surface. */}
             <Route path="/workspace" element={<Navigate to="/workspaces" replace />} />
             {/* /client is its own world (own shell, own sidebar) — see ClientSurface. */}
-            <Route path="/client" element={<RequireAuth><ClientSurface /></RequireAuth>} />
+            <Route path="/client" element={<RequireAuth><RequireActiveAccount><ClientSurface /></RequireActiveAccount></RequireAuth>} />
             <Route path="/ai" element={<Navigate to="/ai-tools" replace />} />
             <Route path="/admin" element={<AdminBlock />} />
             <Route path="/imskygupta-admin" element={<AdminLogin />} />
@@ -597,7 +605,7 @@ function FullRuntimeApp() {
             <Route path="/faceless-content" element={Shelled(<FacelessContent />)} />
             <Route path="/red-flag-scanner" element={Shelled(<RedFlagScanner />)} />
             <Route path="/sure-hit-jobs" element={Shelled(<SureHitJobs />)} />
-            <Route path="/start" element={<RequireAuth><Start /></RequireAuth>} />
+            <Route path="/start" element={<RequireAuth><RequireActiveAccount><Start /></RequireActiveAccount></RequireAuth>} />
             {/* Legacy onboarding route — redirect to the unified /start launcher. */}
             <Route path="/onboarding" element={<Navigate to="/start" replace />} />
             <Route path="/products" element={<Products />} />
@@ -708,10 +716,12 @@ const App = () => {
   <HelmetProvider>
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
+      <AccountAccessProvider>
       <Toaster />
       <Sonner />
       <FullRuntimeApp />
       <VerificationOverlay />
+      </AccountAccessProvider>
     </AuthProvider>
   </QueryClientProvider>
   </HelmetProvider>
