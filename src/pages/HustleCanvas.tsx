@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { enforceLimit } from "@/lib/tool-limits";
 import { BigScreenHint } from "@/components/BigScreenHint";
 import { AssetPicker } from "@/components/workspace/AssetPicker";
+import { markMilestone } from "@/lib/onboarding/firstSession";
 
 type Color = CanvasNote["color"];
 
@@ -25,6 +26,7 @@ const COLOR_META: Record<Color, { bg: string; ring: string; label: string; icon:
 
 export default function HustleCanvas() {
   const { user, profile } = useAuth();
+  useEffect(() => { markMilestone("first_canvas_opened"); }, []);
   const [notes, setNotes] = useState<CanvasNote[]>([]);
   const [clients, setClients] = useState<WorkspaceClient[]>([]);
   const [loading, setLoading] = useState(true);

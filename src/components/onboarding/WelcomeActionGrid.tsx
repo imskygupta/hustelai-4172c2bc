@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Rocket, PenSquare, Upload, UserPlus, Sparkles, Compass, ArrowRight, X } from "lucide-react";
-import { hasMilestone } from "@/lib/onboarding/firstSession";
+import { hasMilestone, markMilestone, type Milestone } from "@/lib/onboarding/firstSession";
 
 /**
  * WelcomeActionGrid — action-oriented empty state for first-time dashboard
@@ -19,22 +19,28 @@ const ACTIONS = [
   { icon: Compass,   title: "Explore the toolkit",       desc: "Browse the AI tools and templates library.",        href: "/ai-tools" },
 ];
 
-const DISMISS_KEY = "hai:welcome-grid:dismissed";
+// Any of these activation events hides the grid for good. Project creation
+// alone is too narrow — opening Canvas or uploading a file also counts.
+const ACTIVATION_MILESTONES: Milestone[] = [
+  "first_project",
+  "first_canvas_opened",
+  "first_file_uploaded",
+  "welcome_grid_dismissed",
+];
 
 export default function WelcomeActionGrid() {
   const [show, setShow] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (localStorage.getItem(DISMISS_KEY) === "1") return;
-    if (hasMilestone("first_project")) return;
+    if (ACTIVATION_MILESTONES.some(hasMilestone)) return;
     setShow(true);
   }, []);
 
   if (!show) return null;
 
   function dismiss() {
-    try { localStorage.setItem(DISMISS_KEY, "1"); } catch { /* ignore */ }
+    markMilestone("welcome_grid_dismissed");
     setShow(false);
   }
 
