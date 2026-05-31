@@ -3,6 +3,7 @@ import { isFeatureEnabledServer } from "../_shared/flags/resolve.ts";
 import { requireVerifiedUser as __requireVerifiedUser } from "../_shared/require-verified.ts";
 import { requireCapability, guardErrorBody } from "../_shared/tier/guard.ts";
 import { consumeAndCheck } from "../_shared/tier/quota.ts";
+import { authorizeServer, withExecutionHeaders } from "../_shared/usage/authorize.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -23,6 +24,12 @@ Deno.serve(async (req) => {
     );
     const { data: { user } } = await userClient.auth.getUser();
     if (!user) return new Response(JSON.stringify({ error: "unauthorized" }), { status: 401, headers: cors });
+
+    // U1 — shadow execution gate.
+    const __exec = await authorizeServer(
+      { tool: "ai_job_enqueue", meter: "async_job", userId: user.id, req },
+      cors,
+    );
 
     // Sprint E Phase 3 — canonical AI + automation capability + quota.
     const cap = await requireCapability(sb, user.id, "ai_generation");
@@ -72,7 +79,10 @@ Deno.serve(async (req) => {
       _source: "client",
     });
     if (error) throw error;
-    return new Response(JSON.stringify({ job_id: data }), { headers: { ...cors, "Content-Type": "application/json" } });
+    return new Response(
+      JSON.stringify({ job_id: data, execution_id: __exec.executionId }),
+      { headers: withExecutionHeaders({ ...cors, "Content-Type": "application/json" }, __exec) },
+    );
   } catch (e) {
     return new Response(JSON.stringify({ error: String((e as Error).message || e) }), { status: 500, headers: cors });
   }
