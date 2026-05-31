@@ -8470,6 +8470,78 @@ export type Database = {
         }
         Relationships: []
       }
+      usage_events: {
+        Row: {
+          blocked_reason: string | null
+          capability_key: string | null
+          created_at: string
+          decision: string
+          execution_id: string | null
+          feature: string
+          id: string
+          input_tokens: number | null
+          max_at_time: number | null
+          metadata: Json
+          meter: string
+          output_tokens: number | null
+          provider: string | null
+          provider_cost_micro: number | null
+          remaining_after: number | null
+          remaining_before: number | null
+          reset_window_end: string | null
+          reset_window_start: string | null
+          tier_snapshot: string | null
+          units_used: number
+          user_id: string | null
+        }
+        Insert: {
+          blocked_reason?: string | null
+          capability_key?: string | null
+          created_at?: string
+          decision: string
+          execution_id?: string | null
+          feature?: string
+          id?: string
+          input_tokens?: number | null
+          max_at_time?: number | null
+          metadata?: Json
+          meter: string
+          output_tokens?: number | null
+          provider?: string | null
+          provider_cost_micro?: number | null
+          remaining_after?: number | null
+          remaining_before?: number | null
+          reset_window_end?: string | null
+          reset_window_start?: string | null
+          tier_snapshot?: string | null
+          units_used?: number
+          user_id?: string | null
+        }
+        Update: {
+          blocked_reason?: string | null
+          capability_key?: string | null
+          created_at?: string
+          decision?: string
+          execution_id?: string | null
+          feature?: string
+          id?: string
+          input_tokens?: number | null
+          max_at_time?: number | null
+          metadata?: Json
+          meter?: string
+          output_tokens?: number | null
+          provider?: string | null
+          provider_cost_micro?: number | null
+          remaining_after?: number | null
+          remaining_before?: number | null
+          reset_window_end?: string | null
+          reset_window_start?: string | null
+          tier_snapshot?: string | null
+          units_used?: number
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       usage_overrides: {
         Row: {
           bonus_units: number
@@ -10636,6 +10708,13 @@ export type Database = {
         Returns: Json
       }
       controller_tick: { Args: never; Returns: Json }
+      current_reset_window: {
+        Args: { _period?: string; _tz?: string }
+        Returns: {
+          window_end: string
+          window_start: string
+        }[]
+      }
       db_dangerous_couplings: {
         Args: never
         Returns: {
@@ -10754,6 +10833,7 @@ export type Database = {
         }
       }
       get_security_audit_summary: { Args: never; Returns: Json }
+      get_user_entitlements: { Args: { _user: string }; Returns: Json }
       grant_bonus_credits: {
         Args: {
           _amount: number
