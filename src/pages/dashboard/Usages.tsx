@@ -9,6 +9,8 @@ import { Progress } from "@/components/ui/progress";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ChevronDown, RefreshCw, Sparkles, TrendingUp, Zap, Search } from "lucide-react";
+import { UpgradeDrawer } from "@/components/usage/UpgradeDrawer";
+import { LimitHitModal } from "@/components/usage/LimitHitModal";
 
 // U3a — Hidden user usage surface. Reads only from /functions/v1/me-usages.
 // No direct DB reads, no enforcement, no mutations.
@@ -95,6 +97,11 @@ export default function Usages() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState("");
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerSource, setDrawerSource] = useState<"hero"|"limit_card"|"limit_modal"|"tool_row">("hero");
+  const [limitModal, setLimitModal] = useState<null | {
+    meter: string; meterLabel?: string; used: number; limit: number; resetAt?: string | null;
+  }>(null);
   const mountedAt = useRef(Date.now());
 
   const load = useCallback(async (manual = false) => {
@@ -143,6 +150,28 @@ export default function Usages() {
   const upgradeOpportunities = cards.filter(
     (c) => c.limit && c.limit > 0 && c.remaining != null && c.remaining / c.limit <= 0.2
   );
+
+  function openDrawer(source: "hero"|"limit_card"|"limit_modal"|"tool_row") {
+    setDrawerSource(source);
+    setDrawerOpen(true);
+  }
+
+  // Auto-open the limit-hit modal once when any meter reaches 100%
+  useEffect(() => {
+    if (!data) return;
+    const hit = cards.find((c) => c.limit && c.limit > 0 && c.used >= c.limit);
+    if (!hit) return;
+    const key = `usage_limit_modal_${hit.meter}_${dayReset?.window_end ?? "x"}`;
+    if (sessionStorage.getItem(key)) return;
+    sessionStorage.setItem(key, "1");
+    setLimitModal({
+      meter: hit.meter,
+      meterLabel: METER_LABELS[hit.meter]?.label,
+      used: hit.used,
+      limit: hit.limit!,
+      resetAt: dayReset?.window_end ?? null,
+    });
+  }, [data, cards, dayReset?.window_end]);
 
   // Tool explorer state
   const toolsByGroup = useMemo(() => {
@@ -199,8 +228,8 @@ export default function Usages() {
                 <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? "animate-spin" : ""}`} />
                 Refresh
               </Button>
-              <Button asChild size="sm" onClick={() => track("upgrade_cta_click", { source: "hero" })}>
-                <Link to="/pricing"><Sparkles className="h-4 w-4 mr-2" />Manage plan</Link>
+              <Button size="sm" onClick={() => { track("upgrade_cta_click", { source: "hero" }); openDrawer("hero"); }}>
+                <Sparkles className="h-4 w-4 mr-2" />Manage plan
               </Button>
             </div>
           </div>
@@ -235,11 +264,11 @@ export default function Usages() {
               ))}
             </div>
             <div className="flex gap-2">
-              <Button asChild size="sm" onClick={() => track("upgrade_cta_click", { source: "upgrade_panel" })}>
-                <Link to="/pricing">Upgrade plan</Link>
+              <Button size="sm" onClick={() => { track("upgrade_cta_click", { source: "upgrade_panel" }); openDrawer("limit_card"); }}>
+                Upgrade plan
               </Button>
-              <Button asChild size="sm" variant="outline" onClick={() => track("upgrade_cta_click", { source: "boosters" })}>
-                <Link to="/pricing#boosters"><Zap className="h-4 w-4 mr-1" />Add booster</Link>
+              <Button size="sm" variant="outline" onClick={() => { track("upgrade_cta_click", { source: "boosters" }); openDrawer("limit_card"); }}>
+                <Zap className="h-4 w-4 mr-1" />Add booster
               </Button>
             </div>
           </CardContent>
@@ -349,6 +378,27 @@ export default function Usages() {
       <div className="text-xs text-muted-foreground text-center pt-2">
         Last refreshed {new Date().toLocaleTimeString()} • Auto-refreshes every 15s
       </div>
+
+      <UpgradeDrawer
+        open={drawerOpen}
+        onOpenChange={setDrawerOpen}
+        plan={data.plan}
+        cards={cards}
+        source={drawerSource}
+      />
+
+      <LimitHitModal
+        open={!!limitModal}
+        onOpenChange={(v) => !v && setLimitModal(null)}
+        meter={limitModal?.meter ?? ""}
+        meterLabel={limitModal?.meterLabel}
+        used={limitModal?.used ?? 0}
+        limit={limitModal?.limit ?? 0}
+        resetAt={limitModal?.resetAt ?? null}
+        graceOffered={false}
+        onUpgrade={() => { setLimitModal(null); openDrawer("limit_modal"); }}
+        onBooster={() => { setLimitModal(null); openDrawer("limit_modal"); }}
+      />
     </div>
   );
 }
