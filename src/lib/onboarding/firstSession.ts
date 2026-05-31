@@ -20,6 +20,9 @@ export type Milestone =
   | "first_provider"
   | "first_workflow"
   | "first_export"
+  | "first_canvas_opened"
+  | "first_file_uploaded"
+  | "welcome_grid_dismissed"
   | "telegram_prompted";
 
 const KEY = "hai:onboarding:v1";
