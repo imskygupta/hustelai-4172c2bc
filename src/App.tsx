@@ -155,6 +155,7 @@ import AutomationsHub from "./pages/dashboard/AutomationsHub";
 import Deliveries from "./pages/dashboard/Deliveries";
 import ClientProfile from "./pages/dashboard/ClientProfile";
 import OperationsPreview from "./pages/dashboard/OperationsPreview";
+import Usages from "./pages/dashboard/Usages";
 import IntakePreview from "./pages/IntakePreview";
 import Work from "./pages/Work";
 import WorkTool from "./pages/WorkTool";
