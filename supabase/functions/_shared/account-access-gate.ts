@@ -66,6 +66,18 @@ function getCachedEnforce(): boolean | null {
   return enforceFlagCache.enforce;
 }
 
+/** Drop a user's cached access state. Call after admin_set_account_status,
+ *  forced sign-out, or any flow that must converge faster than the 30s TTL. */
+export function invalidateAccountAccessCache(userId?: string) {
+  if (userId) accessCache.delete(userId);
+  else accessCache.clear();
+}
+
+/** Drop the cached enforcement flag — call after toggling auth_settings. */
+export function invalidateEnforcementFlagCache() {
+  enforceFlagCache = null;
+}
+
 function deny(payload: Record<string, unknown>): Response {
   return new Response(JSON.stringify(payload), {
     status: 403,
