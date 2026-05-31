@@ -11,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { listCapabilities } from "@/lib/usage/capabilities";
 import { Loader2, ShieldCheck } from "lucide-react";
 import UsageGovernanceShadow from "./UsageGovernanceShadow";
+import UsageObservability from "./UsageObservability";
 
 const TIERS = ["free", "pro", "elite", "infinity"] as const;
 
@@ -103,6 +104,7 @@ export default function UsageGovernance() {
           <TabsTrigger value="capabilities">Registry</TabsTrigger>
           <TabsTrigger value="abuse">Abuse</TabsTrigger>
           <TabsTrigger value="shadow">Shadow</TabsTrigger>
+          <TabsTrigger value="observability">Observability</TabsTrigger>
         </TabsList>
 
         <TabsContent value="limits" className="space-y-4">
@@ -220,6 +222,10 @@ export default function UsageGovernance() {
 
         <TabsContent value="shadow">
           <UsageGovernanceShadow />
+        </TabsContent>
+
+        <TabsContent value="observability">
+          <UsageObservability />
         </TabsContent>
       </Tabs>
     </div>
