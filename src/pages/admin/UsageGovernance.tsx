@@ -217,6 +217,10 @@ export default function UsageGovernance() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        <TabsContent value="shadow">
+          <UsageGovernanceShadow />
+        </TabsContent>
       </Tabs>
     </div>
   );
