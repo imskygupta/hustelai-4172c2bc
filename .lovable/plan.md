@@ -1,219 +1,611 @@
-## Account Suspension + Approval Queue + Global Access Enforcement
+# Usage Governance Hardening + Entitlement Enforcement
 
-Fix the real security gap: deleted/suspended users keep navigating surfaces because frontend auth ≠ account state enforcement. Add a single source of truth for account status, enforce it server-side, and terminate-state every loader so spinners never hang.
+Big sprint. I'll do it in phases and check in between each — not ship all four at once. Phase U0 is the gate: without the audit, U1 enforcement could break working tools.
 
----
+## Phase U0 — Audit & Registry (start here)
 
-### 1. Account state model (DB)
+**New tables (primary DB):**
 
-Add to `profiles`:
+- `tool_registry` — single source of truth for every executable tool
+  - `tool_key`, `tool_name`, `category`, `pricing_bucket`, `billing_unit`, `cost_per_execution`, `default_reset_policy`, `is_metered`, `is_user_visible`, `hard_limit_enabled`, `shadow_limit_enabled`, `current_enforcement` (none/shadow/hard), `edge_function`, `notes`
+- `usage_events` — append-only ledger (no updates, no deletes)
+  - `user_id`, `tool_key`, `execution_id`, `tier_snapshot`, `bundle_snapshot`, `units_used`, `remaining_before`, `remaining_after`, `decision` (allowed/blocked/shadow), `blocked_reason`, `cost_estimate`, `provider`, `reset_window`, `metadata`, `created_at`
+  - Indexes: `(user_id, created_at desc)`, `(tool_key, created_at desc)`, `(decision, created_at desc)`
+  - RLS: user reads own rows; admin reads all; only service role inserts
 
-- `account_status` enum: `active | pending_approval | suspended | deleted | banned` (default `active`)
-- `status_reason text`, `status_changed_at timestamptz`, `status_changed_by uuid`
-- `reference_id text` (short code for support emails)
+**New RPC:**
 
-New tables (all RLS + GRANTs, admin-only write):
+- `get_user_entitlements(_user uuid)` → JSON
+  - Resolution priority: override > paid booster > tier > default
+  - Reads `usage_overrides`, `unlock_balances`, `tier_limits`, `feature_access`
+  - Returns `{ tier, limits: {...}, features: {...}, overrides: [...], boosters: [...], expires_at }`
 
-- `blocked_identities` — `email citext unique`, `reason`, `source_admin`, `created_at`, `expires_at`, `status` (`active|lifted`)
-- `account_actions` — append-only audit (`user_id`, `action`, `actor`, `metadata`, `created_at`)
-- `approval_requests` — `email`, `requested_at`, `approved_by`, `status` (`pending|approved|rejected`)
+**Audit report (delivered as `docs/audit/usage-enforcement-audit.md`):**
 
-SECURITY DEFINER RPCs:
+- Inventory every edge function that performs an executable action
+- For each: tool_key, pricing bucket, current enforcement (none / `consumeUsage` / `consumeAndCheck` / ad-hoc), gap notes
+- List hidden execution paths (functions that bypass quota)
+- Provider cost exposure per tool
+- Seeds `tool_registry` with the inventory
 
-- `get_account_access_state()` → returns `{ status, reason, reference_id }` for `auth.uid()`. Used by frontend + edge functions; never trusts client claims.
-- `admin_suspend_user(user_id, reason)` / `admin_delete_user(user_id, reason)` / `admin_ban_user(...)` / `admin_approve_user(...)` — all: update status → insert `blocked_identities` (delete/ban) → call `revoke_user_sessions` → insert `account_actions` → enqueue status email.
-- `is_identity_blocked(email)` — used by signup + welcome dispatch.
+**Admin UI:** new `/admin/tool-registry` page — view + edit registry rows, toggle enforcement mode per tool.
 
-### 2. Global access enforcement
-
-**Backend (edge functions):** extend `_shared/execution-trust.ts` `requireExecutionTrust` to call `get_account_access_state` after JWT validation. Any non-`active` status → deny + revoke. Apply to AI runtime, uploads, search, webhooks, welcome-dispatch.
-
-**Frontend:**
-
-- New `useAccountAccess()` hook polling `get_account_access_state` on session change + every 60s + on window focus. Returns terminal state machine: `loading | active | pending | suspended | deleted | banned | error`. Never infinite-spin — 8s timeout → `error`.
-- New `<RequireActiveAccount>` wrapper layered inside `RequireAuth`. Non-active states route to `/account-status` (suspended/deleted/banned) or `/pending-access` (pending_approval). Banner is hidden when status ≠ active.
-- Patch `RequireAuth` and AppShell loaders so `profile==null + auth exists` resolves to terminal `error` after timeout, not infinite spinner.
-- Realtime: subscribe to own `profiles` row → on status change, force sign-out + redirect.
-
-### 3. New pages
-
-- `/account-status` — shows status, reason, reference ID, support email, sign-out button. No app chrome.
-- `/pending-access` — "Your request is under review" + sign-out.
-
-### 4. Signup + email gates
-
-- `Signup.tsx` → pre-check `is_identity_blocked(email)`; reject with friendly "Account access unavailable" copy + reference ID.
-- `send-welcome-email` + `welcome-dispatch` → skip if blocked; log as `skipped:blocked_identity`.
-- Auth email hook respects blocked identities (no verification email sent).
-
-### 5. Admin
-
-- Extend AdminDashboard user actions with: Suspend / Delete / Ban / Approve. Each calls the RPC, which handles status + session revoke + email + audit in one transaction.
-- New `/admin/approvals` panel listing `approval_requests` (pending first) with Approve / Reject.
-- All actions write `operator_audit_log` (existing system) via `recordOperatorAction`.
-
-### 6. Status emails
-
-Single edge function `send-account-status-email` (suspended / deleted / banned / approved). Always logs to `email_logs`. Template includes reason + reference ID + [support@hustlaiapp.in](mailto:support@hustlaiapp.in).
-
-### 7. Acceptance test
-
-1. Admin deletes test user → within ~5s their open tabs redirect to `/account-status`.
-2. Hard refresh `/dashboard`, `/start`, `/workspaces/new`, `/dashboard/tools/*` → all redirect to `/account-status`. No spinner hang.
-3. Resend verification button → no-op (blocked).
-4. New signup with same email → blocked with reference ID.
-5. Suspended user → same as deleted but copy differs.
-6. Pending user → only `/pending-access` accessible.
+**Stop here for review before U1.** This is the safest cut-point.
 
 ---
 
-### Out of scope (this sprint)
+## Phase U1 — Hard Enforcement (after U0 sign-off)
 
-- Appeal form UI (just shows support email).
-- Auto-expiring suspensions (column exists, no cron yet).
-- IP-level bans.
+- Wire `get_user_entitlements` into the existing `consumeUsage` path so resolution is unified
+- Migrate every edge function flagged in the audit to the canonical flow:
+`auth → account access gate → feature access → quota check → consume → execute → ledger append`
+- Replace ad-hoc `consume_*` calls
+- Every execution writes to `usage_events`
+- Default mode = shadow per tool; flip to hard via registry toggle
 
-### Files touched (high level)
+## Phase U2 — Midnight IST Reset Windows
 
-- New migration: states + tables + RPCs + RLS + GRANTs.
-- New: `src/hooks/useAccountAccess.tsx`, `src/components/RequireActiveAccount.tsx`, `src/pages/AccountStatus.tsx`, `src/pages/PendingAccess.tsx`.
-- Edited: `src/App.tsx` (routes + wrap), `src/components/RequireAuth.tsx` (terminal state), `src/hooks/useAuth.tsx` (status realtime + sign-out on non-active), `src/pages/Signup.tsx` (blocked check), AdminDashboard user-row actions.
-- Edge functions: `_shared/execution-trust.ts` (status gate), `send-welcome-email` + `welcome-dispatch` (blocked skip), new `send-account-status-email`, new `admin-account-action` (thin wrapper if needed).  
+- New helper `current_reset_window(_user, _meter)` returns `{window_start, window_end}` in IST
+- `consume_usage` and counters key off `window_start` instead of a date string
+- Remove mutable `remaining_count` columns — derive from ledger sum within window
+- No cron reset job needed
+
+## Phase U3 — `/dashboard/usages` (hidden)
+
+- Route exists but unlinked from nav until U0–U2 stable
+- Sections: Usage Summary, Bar Graph, Tool Table (all tools from registry), Timeline (hour/day/week), Audit Log of blocked/allowed/overage rows
+- All data sourced from `usage_events` + `get_user_entitlements`
+
+## Phase U4 — Admin Usage Governance v2
+
+Upgrade `/admin/usage-governance` with tabs:
+
+- Live Usage (rolling 5min)
+- Abuse Detection (IP burst, multi-account, tool farming heuristics)
+- Revenue Leak (free users near limits, bypass attempts from `execution_access_events`)
+- Cost Analytics (provider × tool × margin from `capability_cost_ledger`)
+- Emergency Controls (freeze tool / tier / user — writes to registry + `auth_settings`)
+
+**AI Assist special rule:** add `monthly_compute_budget_micro` to `tier_limits` for `meter=ai`, track `input_tokens`/`output_tokens`/`provider_cost` in `usage_events.metadata`, enforce both daily runs AND monthly compute.
+
+---
+
+## Execution order & checkpoints
+
+1. **Now:** Phase U0 — migration (tool_registry, usage_events, get_user_entitlements), audit report, admin registry page, seed data. **Pause for review.**
+2. After approval: U1 enforcement migration, function-by-function in shadow.
+3. After 24h shadow audit clean: U2 reset windows + U3 hidden dashboard.
+4. After U3 stable: U4 admin v2 + AI compute budget.
+
+## What I will NOT do this turn
+
+- Flip any tool to hard enforcement (audit-only)
+- Touch `/start`, onboarding, integrations
+- Build user-facing `/dashboard/usages` yet (U3)
+- Modify the AI compute budget yet (U4)
+
+Confirm and I'll ship Phase U0.  
   
   
-I reviewed what you uploaded. This is the right direction and much stronger than just patching redirects.
-  A few changes before implementation so you don’t create future admin pain:
-  ### 1. Don’t physically use `deleted` as a live state
-  Keep:
-  - `active`
-  - `pending_approval`
-  - `suspended`
-  - `banned`
-  And make `deleted_at` a timestamp.
-  Reason:
-  - deleted users still need audit logs
-  - email history must remain
-  - restores become possible
-  Flow:  
-  `Delete → suspended + deleted_at set`
-  ---
-  ### 2. Make approval configurable (important)
-  Your current spec blocks every recreated account.
-  Add:
-  ```ts
-  settings.auth.signup_mode:
-  open
-  approval_required
-  invite_only
+You’re right — I over-designed and duplicated systems you already have.
 
-  ```
-  Default:
-  ```ts
-  open
+Looking at your existing **Usage Governance** setup, you already have most of the primitives:
 
-  ```
-  When you launch sales/support → switch to approval mode.
-  ---
-  ### 3. Session revocation should be immediate
-  Current file says poll every 60s.
-  Change:
-  Priority:
-  1. realtime profile listener
-  2. force signout
-  3. poll fallback every 5 min
-  Otherwise deleted users keep tabs open.
-  ---
-  ### 4. Protect EVERY entry point (this is the bug you found)
-  Current screenshot showed dashboard blocked but workspace open.
-  Add centralized route policy:
-  ```ts
-  PUBLIC
-  /
-  /landing
-  /pricing
+- Tier Limits ✅
+- Feature Access ✅
+- Overrides ✅
+- Registry ✅
+- Abuse ✅
+- Capability catalog + meters ✅
+- Cost classes (cheap/standard/expensive) ✅
+- Existing consumption concepts ✅
 
-  AUTH_REQUIRED
-  /start
-  /dashboard
-  /workspaces/*
-  /client/*
-  /tools/*
-  /settings/*
-  /docs/private
+So **do not create new registry/tier tables.** Extend what exists.
 
-  ADMIN
-  /admin/*
+The real gap is **enforcement consistency + observability + user visibility + payment protection**, not rebuilding governance.
 
-  ```
-  Never check status inside pages.
-  Only middleware.
-  ---
-  ### 5. Email flow improvement
-  For deleted/suspended:
-  Subject:
-  ```
-  Your HustleAI access has changed
+I’d revise the plan and tell Lovable this instead:
 
-  ```
-  Body:
-  ```
-  Hi,
+Sprint: Usage Governance Hardening (Extend Existing System — No Rebuild)
 
-  Your account access is currently unavailable.
+Goal:  
+Turn existing Usage Governance into the single enforcement source and eliminate bypasses.
 
-  Reference:
-  HA-7Q21
+DO NOT CREATE:
 
-  Need help?
-  support@hustlaiapp.in
+- tool_registry
+- replacement tier tables
+- duplicate entitlement systems
+- separate billing engine
 
-  ```
-  Do NOT explain ban reasons publicly.
-  ---
-  ### 6. Admin panel additions
-  Add:
-  Users →
-  - Active
-  - Pending
-  - Suspended
-  - Banned
-  - Deleted
-  Columns:
-  - last seen
-  - open sessions
-  - signup source
-  - email status
-  - revoke sessions
-  - impersonate (future)
-  ---
-  ### 7. Fix infinite spinner immediately
-  Your screenshot indicates:
-  ```ts
-  auth=true
-  profile=null
+Reuse existing:
 
-  ```
-  Add:
-  ```ts
-  if (loading > 8s)
-   return ErrorBoundary
+- usage_governance
+- tier_limits
+- feature_access
+- overrides
+- registry
+- abuse
+- consumeUsage()
+- account access gate
+- execution_access_events
 
-  ```
-  Never blank screen.
-  ---
-  ### 8. Verification resend logic
-  Your requirement is correct:
-  ```ts
-  if blocked_identity:
-   send suspension email
+---
 
-  else:
-   send verification
+## PHASE A — Governance Audit (read-only)
 
-  ```
-  No silent failure.
-  ---
-  ### One extra thing I would add:
-  `account_unlock_requests`
-  So suspended users can request review without emailing manually.
-  This scope is solid enough to implement before newsletters/integrations. The workspace backdoor you found is exactly the kind of issue that grows if left for later.
+Audit every executable surface.
+
+Inventory:
+
+- edge functions
+- AI assistants
+- uploads
+- exports
+- async jobs
+- workspace actions
+- roadmap
+- intake forms
+- telegram
+- automations
+- lightweight generators
+
+Output:
+
+docs/[governance-enforcement-audit.md](http://governance-enforcement-audit.md)
+
+Columns:
+
+tool  
+meter  
+pricing bucket  
+current enforcement  
+consumption source  
+limit source  
+bypass risk  
+provider cost  
+shadow capable
+
+Goal:  
+Find execution paths NOT using consumeUsage.
+
+No schema rebuild.
+
+---
+
+## PHASE B — Harden consumeUsage()
+
+Current system becomes mandatory.
+
+Execution flow:
+
+auth  
+→ account gate  
+→ feature access  
+→ consumeUsage()  
+→ execute  
+→ audit
+
+Rules:
+
+consumeUsage({  
+userId,  
+meter,  
+feature,  
+units  
+})
+
+Must:
+
+- read tier limits
+- apply overrides
+- apply purchased boosters
+- apply feature access
+- enforce limits
+- write audit
+
+No direct tool execution.
+
+No ad-hoc counters.
+
+---
+
+## PHASE C — Usage Ledger (append only)
+
+Add ONLY:
+
+usage_events
+
+Fields:
+
+id  
+user_id  
+meter  
+feature  
+execution_id  
+decision  
+units_used  
+remaining_before  
+remaining_after  
+provider_cost  
+metadata  
+created_at
+
+Purpose:  
+audit + graphs
+
+Do NOT replace existing counters.
+
+---
+
+## PHASE D — Midnight Reset
+
+Keep current limits.
+
+Add:
+
+window_start  
+window_end
+
+Timezone:  
+Asia/Kolkata
+
+Reset:  
+00:00 IST
+
+No cron.
+
+No reset jobs.
+
+Calculate usage from window.
+
+Support:  
+day  
+week  
+month  
+lifetime
+
+---
+
+## PHASE E — Hidden /usages
+
+New:  
+dashboard/usages
+
+Hidden until stable.
+
+Sections:
+
+1 Usage Summary  
+Current plan  
+Next reset  
+Total consumption
+
+2 Bar Charts  
+AI  
+Exports  
+Uploads  
+Storage  
+Workspaces
+
+3 Tool Usage
+
+Tool  
+Used  
+Remaining  
+Last Used
+
+4 Activity
+
+Allowed  
+Blocked  
+Shadow
+
+5 Billing Protection
+
+Estimated infra cost  
+Tier value consumed
+
+Refresh:  
+realtime  
+manual refresh  
+focus refresh
+
+---
+
+## PHASE F — Admin Upgrade
+
+Extend existing Usage Governance.
+
+Add tabs:
+
+Live Usage  
+Costs  
+Revenue Leak  
+Abuse  
+Consumption Logs
+
+Add:
+
+Freeze Tool  
+Freeze Meter  
+Freeze User  
+Emergency Override
+
+---
+
+## SPECIAL AI RULE
+
+Do NOT only count executions.
+
+Track:
+
+input_tokens  
+output_tokens  
+provider_cost
+
+Limit:
+
+daily_runs  
++  
+monthly_compute_budget
+
+Prevent:
+
+short prompt spam  
+refresh abuse  
+multi-tab abuse
+
+---
+
+Acceptance
+
+No user exceeds limits.  
+No execution without usage.  
+Every usage visible.  
+Every block explainable.  
+Payments align with consumption.
+
+One additional thing I noticed from your screenshots:
+
+Your governance page already separates **Feature Access** from **Tier Limits** — keep that separation. Don’t merge them. Feature access should answer **“can use?”** and limits answer **“how much?”**
+
+That architecture is already good.  
+  
+  
+  
+no wait i have already things made i guess u not add additnal things to make again 
+
+Usage Governance
+
+Tier limits, feature access, and per-user overrides — no redeploy needed.
+
+Tier Limits
+
+Feature Access
+
+Overrides
+
+Registry
+
+Abuse
+
+Capability	Meter	Cost	Min tier
+
+AI generations
+
+Daily AI assists across all tools
+
+ai	expensive	free
+
+PDF exports
+
+Branded PDF exports per day
+
+export	standard	free
+
+Workspaces
+
+Active workspaces in your account
+
+workspace	standard	free
+
+Public client portals
+
+Live client-facing portals
+
+portal	expensive	free
+
+File uploads
+
+Files uploaded per day
+
+upload	standard	free
+
+Async jobs
+
+Queued background jobs per day
+
+async_job	expensive	free
+
+AI roadmaps
+
+Roadmap generations per week
+
+roadmap	expensive	free
+
+Intake forms
+
+Public intake forms
+
+intake_form	standard	free
+
+Telegram deliveries
+
+Files delivered to Telegram per day
+
+telegram_export	standard	free
+
+Automations
+
+Workflow runs per day
+
+automation	expensive	pro
+
+Invoice generations
+
+Invoices generated per day
+
+lightweight	cheap	free
+
+Business card generations
+
+Business cards generated per day
+
+lightweight	cheap	free
+
+Quick proposals
+
+Lite proposals per day (templated, non-AI)
+
+lightweight	cheap	free
+
+Quick contracts
+
+Lite contracts per day (templated, non-AI)
+
+lightweight	cheap	free
+
+Portfolio bios
+
+Bio generations per day
+
+lightweight	cheap	free
+
+HustleAI Cloud storage
+
+Cloud storage in MB
+
+storage	standard	free
+
+# Usage Governance Hardening + Entitlement Enforcement
+
+Big sprint. I'll do it in phases and check in between each — not ship all four at once. Phase U0 is the gate: without the audit, U1 enforcement could break working tools.
+
+## Phase U0 — Audit & Registry (start here)
+
+**New tables (primary DB):**
+
+- `tool_registry` — single source of truth for every executable tool
+
+  - `tool_key`, `tool_name`, `category`, `pricing_bucket`, `billing_unit`, `cost_per_execution`, `default_reset_policy`, `is_metered`, `is_user_visible`, `hard_limit_enabled`, `shadow_limit_enabled`, `current_enforcement` (none/shadow/hard), `edge_function`, `notes`
+
+- `usage_events` — append-only ledger (no updates, no deletes)
+
+  - `user_id`, `tool_key`, `execution_id`, `tier_snapshot`, `bundle_snapshot`, `units_used`, `remaining_before`, `remaining_after`, `decision` (allowed/blocked/shadow), `blocked_reason`, `cost_estimate`, `provider`, `reset_window`, `metadata`, `created_at`
+
+  - Indexes: `(user_id, created_at desc)`, `(tool_key, created_at desc)`, `(decision, created_at desc)`
+
+  - RLS: user reads own rows; admin reads all; only service role inserts
+
+**New RPC:**
+
+- `get_user_entitlements(_user uuid)` → JSON
+
+  - Resolution priority: override > paid booster > tier > default
+
+  - Reads `usage_overrides`, `unlock_balances`, `tier_limits`, `feature_access`
+
+  - Returns `{ tier, limits: {...}, features: {...}, overrides: [...], boosters: [...], expires_at }`
+
+**Audit report (delivered as `docs/audit/usage-enforcement-audit.md`):**
+
+- Inventory every edge function that performs an executable action
+
+- For each: tool_key, pricing bucket, current enforcement (none / `consumeUsage` / `consumeAndCheck` / ad-hoc), gap notes
+
+- List hidden execution paths (functions that bypass quota)
+
+- Provider cost exposure per tool
+
+- Seeds `tool_registry` with the inventory
+
+**Admin UI:** new `/admin/tool-registry` page — view + edit registry rows, toggle enforcement mode per tool.
+
+**Stop here for review before U1.** This is the safest cut-point.
+
+---
+
+## Phase U1 — Hard Enforcement (after U0 sign-off)
+
+- Wire `get_user_entitlements` into the existing `consumeUsage` path so resolution is unified
+
+- Migrate every edge function flagged in the audit to the canonical flow:
+
+  `auth → account access gate → feature access → quota check → consume → execute → ledger append`
+
+- Replace ad-hoc `consume_*` calls
+
+- Every execution writes to `usage_events`
+
+- Default mode = shadow per tool; flip to hard via registry toggle
+
+## Phase U2 — Midnight IST Reset Windows
+
+- New helper `current_reset_window(_user, _meter)` returns `{window_start, window_end}` in IST
+
+- `consume_usage` and counters key off `window_start` instead of a date string
+
+- Remove mutable `remaining_count` columns — derive from ledger sum within window
+
+- No cron reset job needed
+
+## Phase U3 — `/dashboard/usages` (hidden)
+
+- Route exists but unlinked from nav until U0–U2 stable
+
+- Sections: Usage Summary, Bar Graph, Tool Table (all tools from registry), Timeline (hour/day/week), Audit Log of blocked/allowed/overage rows
+
+- All data sourced from `usage_events` + `get_user_entitlements`
+
+## Phase U4 — Admin Usage Governance v2
+
+Upgrade `/admin/usage-governance` with tabs:
+
+- Live Usage (rolling 5min)
+
+- Abuse Detection (IP burst, multi-account, tool farming heuristics)
+
+- Revenue Leak (free users near limits, bypass attempts from `execution_access_events`)
+
+- Cost Analytics (provider × tool × margin from `capability_cost_ledger`)
+
+- Emergency Controls (freeze tool / tier / user — writes to registry + `auth_settings`)
+
+**AI Assist special rule:** add `monthly_compute_budget_micro` to `tier_limits` for `meter=ai`, track `input_tokensoutput_tokensprovider_cost` in `usage_events.metadata`, enforce both daily runs AND monthly compute.
+
+---
+
+## Execution order & checkpoints
+
+1. **Now:** Phase U0 — migration (tool_registry, usage_events, get_user_entitlements), audit report, admin registry page, seed data. **Pause for review.**
+
+2. After approval: U1 enforcement migration, function-by-function in shadow.
+
+3. After 24h shadow audit clean: U2 reset windows + U3 hidden dashboard.
+
+4. After U3 stable: U4 admin v2 + AI compute budget.
+
+## What I will NOT do this turn
+
+- Flip any tool to hard enforcement (audit-only)
+
+- Touch `/start`, onboarding, integrations
+
+- Build user-facing `/dashboard/usages` yet (U3)
+
+- Modify the AI compute budget yet (U4)
+
+Confirm and I'll ship Phase U0.
+
+&nbsp;

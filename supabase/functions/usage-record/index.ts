@@ -50,6 +50,41 @@ Deno.serve(async (req) => {
       metadata: { result },
     });
 
+    // Mirror into primary-DB append-only usage_events (Phase U0).
+    // Lean fields for /dashboard/usages, admin governance, and audit.
+    try {
+      const primary = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+        { auth: { persistSession: false } },
+      );
+      const decision = result?.allowed === false
+        ? "blocked"
+        : result?.bypass ? "bypass" : "allowed";
+      await primary.from("usage_events").insert({
+        user_id: userId,
+        meter,
+        feature,
+        capability_key: body.capability_key ?? null,
+        execution_id: body.execution_id ?? null,
+        tier_snapshot: result?.tier ?? null,
+        units_used: units,
+        remaining_before: result?.remaining_before ?? null,
+        remaining_after: typeof result?.max === "number" && typeof result?.used === "number"
+          ? Math.max(0, result.max - result.used) : null,
+        max_at_time: result?.max ?? null,
+        decision,
+        blocked_reason: result?.reason && decision !== "allowed" ? String(result.reason) : null,
+        provider: body.provider ?? null,
+        provider_cost_micro: body.provider_cost_micro ?? null,
+        input_tokens: body.input_tokens ?? null,
+        output_tokens: body.output_tokens ?? null,
+        metadata: { ...(body.metadata ?? {}), result },
+      });
+    } catch (e) {
+      console.warn("[usage-record] usage_events insert failed:", (e as Error).message);
+    }
+
     // Surface as a typed event for ops/audit/automations
     await emitServer({
       name: "ai.consumed",
