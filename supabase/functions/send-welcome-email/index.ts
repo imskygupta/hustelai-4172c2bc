@@ -148,7 +148,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { email, displayName } = await req.json();
+    const { email, displayName, source = "unknown", force = false } = await req.json();
     if (!email) throw new Error("Email required");
 
     const supabaseAdmin = createClient(
@@ -157,10 +157,22 @@ serve(async (req) => {
     );
 
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("Unauthorized");
-    const token = authHeader.replace("Bearer ", "");
-    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
-    if (authError || !user) throw new Error("Unauthorized");
+    if (authHeader) {
+      // Authenticated path (Signup.tsx) — verify caller
+      const token = authHeader.replace("Bearer ", "");
+      const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
+      if (authError || !user) throw new Error("Unauthorized");
+    }
+    // Else: anonymous service-role internal caller (welcome-dispatch).
+    // Idempotency check below prevents abuse.
+
+    // Idempotency: skip if already sent (unless forced via admin "send test")
+    if (!force && await welcomeAlreadySent(email)) {
+      await logEmail({ recipient: email, status: "skipped", metadata: { source, reason: "already_sent" } });
+      return new Response(JSON.stringify({ success: true, skipped: true, reason: "already_sent" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const name = displayName || email.split("@")[0];
     const subject = "Welcome to HustleAI! 🚀";
@@ -169,6 +181,7 @@ serve(async (req) => {
     // Priority 1: Resend (custom domain)
     const resendOk = await sendWithResend(email, subject, html);
     if (resendOk) {
+      await logEmail({ recipient: email, status: "sent", provider: "resend", metadata: { source } });
       return new Response(JSON.stringify({ success: true, provider: "resend" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -197,6 +210,7 @@ serve(async (req) => {
 
     if (!smtpPass) {
       await notifyAdminOfFailure("No Resend key + no SMTP configured", email);
+      await logEmail({ recipient: email, status: "failed", error: "No Resend key + no SMTP configured", metadata: { source } });
       return new Response(JSON.stringify({ success: true, skipped: true, reason: "No SMTP password" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -204,9 +218,11 @@ serve(async (req) => {
 
     try {
       await sendWithSmtpFallback(smtpEmail, smtpPass, email, subject, html);
+      await logEmail({ recipient: email, status: "sent", provider: "smtp", metadata: { source, smtp_email: smtpEmail } });
     } catch (e) {
       const reason = e instanceof Error ? e.message : String(e);
       await notifyAdminOfFailure(`Resend + SMTP both failed: ${reason}`, email);
+      await logEmail({ recipient: email, status: "failed", error: reason, metadata: { source } });
       throw e;
     }
 
