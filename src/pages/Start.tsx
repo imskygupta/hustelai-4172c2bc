@@ -6,9 +6,7 @@ import {
   FolderKanban, ListChecks, PenSquare, Inbox, FileBox, Workflow,
   Rocket, Compass, Upload, Zap, LayoutDashboard, History,
   FileText, ClipboardList, Users, Layers, Receipt, ShieldAlert,
-  Calculator, UserCircle2, CalendarRange, Timer, IdCard, Hammer,
-  Clock, FolderOpen, Wallet, AlarmClock, Globe, Mail, Brain, Briefcase,
-  Bot,
+  Calculator, CalendarRange, Hammer, Clock, FolderOpen, Brain, Bot,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
