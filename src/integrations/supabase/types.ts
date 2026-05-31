@@ -773,18 +773,21 @@ export type Database = {
       }
       auth_settings: {
         Row: {
+          enforce_account_status: boolean
           id: number
           signup_mode: Database["public"]["Enums"]["signup_mode"]
           updated_at: string
           updated_by: string | null
         }
         Insert: {
+          enforce_account_status?: boolean
           id?: number
           signup_mode?: Database["public"]["Enums"]["signup_mode"]
           updated_at?: string
           updated_by?: string | null
         }
         Update: {
+          enforce_account_status?: boolean
           id?: number
           signup_mode?: Database["public"]["Enums"]["signup_mode"]
           updated_at?: string
@@ -2329,6 +2332,57 @@ export type Database = {
           reads?: number
           tool_launches?: number
           views?: number
+        }
+        Relationships: []
+      }
+      execution_access_events: {
+        Row: {
+          account_status: Database["public"]["Enums"]["account_status"] | null
+          created_at: string
+          decision: string
+          enforcement_mode: string
+          feature: string | null
+          fn: string
+          id: string
+          ip: string | null
+          metadata: Json
+          reason: string | null
+          request_id: string | null
+          route: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          account_status?: Database["public"]["Enums"]["account_status"] | null
+          created_at?: string
+          decision: string
+          enforcement_mode: string
+          feature?: string | null
+          fn: string
+          id?: string
+          ip?: string | null
+          metadata?: Json
+          reason?: string | null
+          request_id?: string | null
+          route?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          account_status?: Database["public"]["Enums"]["account_status"] | null
+          created_at?: string
+          decision?: string
+          enforcement_mode?: string
+          feature?: string | null
+          fn?: string
+          id?: string
+          ip?: string | null
+          metadata?: Json
+          reason?: string | null
+          request_id?: string | null
+          route?: string | null
+          user_agent?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -10656,6 +10710,17 @@ export type Database = {
           status: Database["public"]["Enums"]["account_status"]
         }[]
       }
+      get_account_access_state_for: {
+        Args: { _user_id: string }
+        Returns: {
+          changed_at: string
+          deleted_at: string
+          reason: string
+          reference_id: string
+          status: Database["public"]["Enums"]["account_status"]
+        }[]
+      }
+      get_execution_enforcement: { Args: never; Returns: boolean }
       get_my_security_events: {
         Args: { _limit?: number }
         Returns: {
