@@ -155,6 +155,7 @@ import AutomationsHub from "./pages/dashboard/AutomationsHub";
 import Deliveries from "./pages/dashboard/Deliveries";
 import ClientProfile from "./pages/dashboard/ClientProfile";
 import OperationsPreview from "./pages/dashboard/OperationsPreview";
+import Usages from "./pages/dashboard/Usages";
 import IntakePreview from "./pages/IntakePreview";
 import Work from "./pages/Work";
 import WorkTool from "./pages/WorkTool";
@@ -520,6 +521,8 @@ function FullRuntimeApp() {
             <Route path="/dashboard/tools/content-calendar" element={Shelled(<ContentCalendar />)} />
             <Route path="/dashboard/tools/pomodoro" element={Shelled(<PomodoroWidget />)} />
             <Route path="/dashboard/tools/business-card" element={Shelled(<BusinessCardGenerator />)} />
+            {/* U3a — hidden user usage surface (not yet linked in sidebar) */}
+            <Route path="/dashboard/usages" element={Shelled(<Usages />)} />
             {/* Operational backbone — workspace ops + outcome-first automations */}
             <Route path="/dashboard/workspace-os" element={Shelled(<OperationsHub />)} />
             {/* Canonical: workspace cockpit owns Automations. Old marketing-side
