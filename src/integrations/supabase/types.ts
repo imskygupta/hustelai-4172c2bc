@@ -774,6 +774,7 @@ export type Database = {
       auth_settings: {
         Row: {
           enforce_account_status: boolean
+          execution_authorize_enabled: boolean
           id: number
           signup_mode: Database["public"]["Enums"]["signup_mode"]
           updated_at: string
@@ -781,6 +782,7 @@ export type Database = {
         }
         Insert: {
           enforce_account_status?: boolean
+          execution_authorize_enabled?: boolean
           id?: number
           signup_mode?: Database["public"]["Enums"]["signup_mode"]
           updated_at?: string
@@ -788,6 +790,7 @@ export type Database = {
         }
         Update: {
           enforce_account_status?: boolean
+          execution_authorize_enabled?: boolean
           id?: number
           signup_mode?: Database["public"]["Enums"]["signup_mode"]
           updated_at?: string
@@ -7945,6 +7948,33 @@ export type Database = {
         }
         Relationships: []
       }
+      tool_execution_modes: {
+        Row: {
+          enabled: boolean
+          mode: string
+          notes: string | null
+          tool_key: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          enabled?: boolean
+          mode?: string
+          notes?: string | null
+          tool_key: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          enabled?: boolean
+          mode?: string
+          notes?: string | null
+          tool_key?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       tool_launch_events: {
         Row: {
           anon_id: string | null
@@ -10977,6 +11007,23 @@ export type Database = {
         Args: { _batch?: number }
         Returns: number
       }
+      list_tool_execution_modes: {
+        Args: never
+        Returns: {
+          enabled: boolean
+          mode: string
+          notes: string | null
+          tool_key: string
+          updated_at: string
+          updated_by: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "tool_execution_modes"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       log_security_auth_event: {
         Args: {
           _email: string
@@ -11254,6 +11301,7 @@ export type Database = {
         Args: { _failure_id: string }
         Returns: string
       }
+      resolve_execution_mode: { Args: { _tool: string }; Returns: string }
       resolve_feature_flags: {
         Args: { _env?: string; _user: string }
         Returns: Json

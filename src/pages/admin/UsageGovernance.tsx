@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { listCapabilities } from "@/lib/usage/capabilities";
 import { Loader2, ShieldCheck } from "lucide-react";
+import UsageGovernanceShadow from "./UsageGovernanceShadow";
 
 const TIERS = ["free", "pro", "elite", "infinity"] as const;
 
@@ -101,6 +102,7 @@ export default function UsageGovernance() {
           <TabsTrigger value="overrides">Overrides</TabsTrigger>
           <TabsTrigger value="capabilities">Registry</TabsTrigger>
           <TabsTrigger value="abuse">Abuse</TabsTrigger>
+          <TabsTrigger value="shadow">Shadow</TabsTrigger>
         </TabsList>
 
         <TabsContent value="limits" className="space-y-4">
@@ -214,6 +216,10 @@ export default function UsageGovernance() {
               </Table>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="shadow">
+          <UsageGovernanceShadow />
         </TabsContent>
       </Tabs>
     </div>

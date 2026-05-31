@@ -4,6 +4,7 @@ import { flagGuard } from "../_shared/flags/resolve.ts";
 import { getApi } from "../_shared/clients.ts";
 import { requireVerifiedUser as __requireVerifiedUser } from "../_shared/require-verified.ts";
 import { enforceAIQuota } from "../_shared/tier/enforce-ai.ts";
+import { authorizeServer, withExecutionHeaders } from "../_shared/usage/authorize.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -41,6 +42,14 @@ serve(async (req) => {
 
     const userId = claimsData.claims.sub as string;
     // === END AUTH CHECK ===
+
+    // U1 — shadow execution gate. Never blocks in shadow; records decision
+    // + execution_id into usage_events for /admin/usage-governance review.
+    const __exec = await authorizeServer(
+      { tool: "ai_chatbot", meter: "ai", feature: "hustlebot", userId, req,
+        requireFeatureKey: "ai_chatbot" },
+      corsHeaders,
+    );
 
     const blocked = await flagGuard(userId, "ai_tools.chatbot", corsHeaders, { endpoint: "ai-chatbot" });
     if (blocked) return blocked;
@@ -153,8 +162,11 @@ Format responses with markdown. Keep responses concise but valuable. Use emojis 
       console.error("Save reply error:", e);
     }
 
-    return new Response(JSON.stringify({ reply }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    return new Response(JSON.stringify({ reply, execution_id: __exec.executionId }), {
+      headers: withExecutionHeaders(
+        { ...corsHeaders, "Content-Type": "application/json" },
+        __exec,
+      ),
     });
   } catch (e) {
     console.error("ai-chatbot error:", e);
