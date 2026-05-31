@@ -14,6 +14,66 @@ export type Database = {
   }
   public: {
     Tables: {
+      account_actions: {
+        Row: {
+          action: string
+          actor: string | null
+          created_at: string
+          id: string
+          metadata: Json
+          user_id: string
+        }
+        Insert: {
+          action: string
+          actor?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json
+          user_id: string
+        }
+        Update: {
+          action?: string
+          actor?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json
+          user_id?: string
+        }
+        Relationships: []
+      }
+      account_unlock_requests: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       activation_events: {
         Row: {
           context: Json
@@ -642,6 +702,39 @@ export type Database = {
         }
         Relationships: []
       }
+      approval_requests: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          email: string
+          id: string
+          notes: string | null
+          requested_at: string
+          status: string
+          user_id: string | null
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          email: string
+          id?: string
+          notes?: string | null
+          requested_at?: string
+          status?: string
+          user_id?: string | null
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          email?: string
+          id?: string
+          notes?: string | null
+          requested_at?: string
+          status?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       auth_anomaly_events: {
         Row: {
           created_at: string
@@ -675,6 +768,27 @@ export type Database = {
           severity?: string
           user_agent?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      auth_settings: {
+        Row: {
+          id: number
+          signup_mode: Database["public"]["Enums"]["signup_mode"]
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          id?: number
+          signup_mode?: Database["public"]["Enums"]["signup_mode"]
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          id?: number
+          signup_mode?: Database["public"]["Enums"]["signup_mode"]
+          updated_at?: string
+          updated_by?: string | null
         }
         Relationships: []
       }
@@ -753,6 +867,39 @@ export type Database = {
           summary?: string | null
           template_id?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      blocked_identities: {
+        Row: {
+          created_at: string
+          email: string
+          expires_at: string | null
+          id: string
+          metadata: Json
+          reason: string | null
+          source_admin: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          expires_at?: string | null
+          id?: string
+          metadata?: Json
+          reason?: string | null
+          source_admin?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          expires_at?: string | null
+          id?: string
+          metadata?: Json
+          reason?: string | null
+          source_admin?: string | null
+          status?: string
         }
         Relationships: []
       }
@@ -5117,6 +5264,8 @@ export type Database = {
       profiles: {
         Row: {
           account_origin: string
+          account_reference_id: string | null
+          account_status: Database["public"]["Enums"]["account_status"]
           address: string | null
           affiliate_commission: number | null
           affiliate_earnings: number
@@ -5125,6 +5274,7 @@ export type Database = {
           bio: string | null
           company: string | null
           created_at: string
+          deleted_at: string | null
           display_name: string | null
           dodo_customer_id: string | null
           dodo_subscription_id: string | null
@@ -5161,6 +5311,9 @@ export type Database = {
           setup_completed: boolean
           social_links: Json | null
           start_completed_at: string | null
+          status_changed_at: string | null
+          status_changed_by: string | null
+          status_reason: string | null
           subscription_tier: Database["public"]["Enums"]["subscription_tier"]
           suspended_at: string | null
           suspended_by: string | null
@@ -5177,6 +5330,8 @@ export type Database = {
         }
         Insert: {
           account_origin?: string
+          account_reference_id?: string | null
+          account_status?: Database["public"]["Enums"]["account_status"]
           address?: string | null
           affiliate_commission?: number | null
           affiliate_earnings?: number
@@ -5185,6 +5340,7 @@ export type Database = {
           bio?: string | null
           company?: string | null
           created_at?: string
+          deleted_at?: string | null
           display_name?: string | null
           dodo_customer_id?: string | null
           dodo_subscription_id?: string | null
@@ -5221,6 +5377,9 @@ export type Database = {
           setup_completed?: boolean
           social_links?: Json | null
           start_completed_at?: string | null
+          status_changed_at?: string | null
+          status_changed_by?: string | null
+          status_reason?: string | null
           subscription_tier?: Database["public"]["Enums"]["subscription_tier"]
           suspended_at?: string | null
           suspended_by?: string | null
@@ -5237,6 +5396,8 @@ export type Database = {
         }
         Update: {
           account_origin?: string
+          account_reference_id?: string | null
+          account_status?: Database["public"]["Enums"]["account_status"]
           address?: string | null
           affiliate_commission?: number | null
           affiliate_earnings?: number
@@ -5245,6 +5406,7 @@ export type Database = {
           bio?: string | null
           company?: string | null
           created_at?: string
+          deleted_at?: string | null
           display_name?: string | null
           dodo_customer_id?: string | null
           dodo_subscription_id?: string | null
@@ -5281,6 +5443,9 @@ export type Database = {
           setup_completed?: boolean
           social_links?: Json | null
           start_completed_at?: string | null
+          status_changed_at?: string | null
+          status_changed_by?: string | null
+          status_reason?: string | null
           subscription_tier?: Database["public"]["Enums"]["subscription_tier"]
           suspended_at?: string | null
           suspended_by?: string | null
@@ -10163,6 +10328,20 @@ export type Database = {
         Args: { _new_balance: number; _reason: string; _target: string }
         Returns: Json
       }
+      admin_set_account_status: {
+        Args: {
+          _block_identity?: boolean
+          _mark_deleted?: boolean
+          _reason?: string
+          _status: Database["public"]["Enums"]["account_status"]
+          _user_id: string
+        }
+        Returns: {
+          reference_id: string
+          status: Database["public"]["Enums"]["account_status"]
+          user_id: string
+        }[]
+      }
       admin_suspend_user: {
         Args: { _reason: string; _target: string }
         Returns: Json
@@ -10467,6 +10646,16 @@ export type Database = {
         Args: { _flag: string; _user: string }
         Returns: number
       }
+      get_account_access_state: {
+        Args: never
+        Returns: {
+          changed_at: string
+          deleted_at: string
+          reason: string
+          reference_id: string
+          status: Database["public"]["Enums"]["account_status"]
+        }[]
+      }
       get_my_security_events: {
         Args: { _limit?: number }
         Returns: {
@@ -10576,6 +10765,14 @@ export type Database = {
           isOneToOne: false
           isSetofReturn: true
         }
+      }
+      is_identity_blocked: {
+        Args: { _email: string }
+        Returns: {
+          blocked: boolean
+          reason: string
+          reference: string
+        }[]
       }
       is_suspended: { Args: { _user_id: string }; Returns: boolean }
       is_user_verified: { Args: { _user_id: string }; Returns: boolean }
@@ -10966,6 +11163,10 @@ export type Database = {
         Args: { _user_id: string }
         Returns: undefined
       }
+      submit_account_unlock_request: {
+        Args: { _reason: string }
+        Returns: string
+      }
       telegram_delivery_timeline: {
         Args: { _bucket?: string; _since?: string }
         Returns: {
@@ -11100,6 +11301,7 @@ export type Database = {
       }
     }
     Enums: {
+      account_status: "active" | "pending_approval" | "suspended" | "banned"
       app_role: "admin" | "moderator" | "user"
       export_status:
         | "pending"
@@ -11110,6 +11312,7 @@ export type Database = {
         | "failed"
       export_visibility: "private" | "unlisted" | "team"
       seo_status: "draft" | "published" | "archived"
+      signup_mode: "open" | "approval_required" | "invite_only"
       subscription_tier: "free" | "pro" | "elite" | "infinity"
     }
     CompositeTypes: {
@@ -11238,6 +11441,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      account_status: ["active", "pending_approval", "suspended", "banned"],
       app_role: ["admin", "moderator", "user"],
       export_status: [
         "pending",
@@ -11249,6 +11453,7 @@ export const Constants = {
       ],
       export_visibility: ["private", "unlisted", "team"],
       seo_status: ["draft", "published", "archived"],
+      signup_mode: ["open", "approval_required", "invite_only"],
       subscription_tier: ["free", "pro", "elite", "infinity"],
     },
   },
