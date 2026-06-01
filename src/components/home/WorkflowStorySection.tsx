@@ -8,6 +8,14 @@ import { useStageActivation } from "./useStageActivation";
  * Connected, sequential, calm. The platform's operational story in one strip.
  */
 
+const TONE_GRADIENT: Record<string, string> = {
+  emerald: "from-emerald-500 via-teal-500 to-emerald-600",
+  violet:  "from-violet-500 via-fuchsia-500 to-violet-600",
+  sky:     "from-sky-500 via-cyan-500 to-sky-600",
+  amber:   "from-amber-500 via-orange-500 to-amber-600",
+  slate:   "from-slate-600 via-slate-700 to-slate-800",
+};
+
 const STAGES = [
   {
     icon: Sparkles,
@@ -80,15 +88,22 @@ export function WorkflowStorySection() {
                   <AsyncLane tone={i < 3 ? "emerald" : i < 5 ? "violet" : "sky"} />
                 </div>
               ) : null}
-              <div className="hover-ops group relative h-full rounded-2xl border border-slate-200 bg-white p-4 hover:border-slate-300 transition-all duration-300">
-                <div className="absolute top-2.5 right-3 text-[10px] font-mono text-slate-300">{s.step}</div>
-                <div data-stage-icon className="w-9 h-9 rounded-xl text-white flex items-center justify-center mb-3">
-                  <s.icon className="w-4 h-4" />
+              <div className="hover-ops group relative h-full overflow-hidden rounded-2xl border border-slate-200 bg-white hover:border-slate-300 hover:-translate-y-0.5 hover:shadow-md transition-all duration-300">
+                {/* Illustration header — gradient lane with icon + step number */}
+                <div className={`relative h-16 bg-gradient-to-br ${TONE_GRADIENT[s.chip.tone] ?? TONE_GRADIENT.slate} px-3 flex items-center justify-between`}>
+                  <div aria-hidden className="pointer-events-none absolute -top-8 -right-6 h-20 w-20 rounded-full bg-white/25 blur-2xl" />
+                  <div data-stage-icon className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-white/20 backdrop-blur ring-1 ring-white/30 text-white">
+                    <s.icon className="w-4 h-4" />
+                  </div>
+                  <span className="relative text-[10px] font-mono font-medium text-white/80">{s.step}</span>
                 </div>
-                <div className="text-sm font-semibold text-slate-900">{s.label}</div>
-                <div className="text-[12px] text-slate-500 mt-0.5 leading-snug">{s.note}</div>
-                <div className="mt-3">
-                  <OperationalChip tone={s.chip.tone}>{s.chip.text}</OperationalChip>
+                {/* Body */}
+                <div className="p-3.5">
+                  <div className="text-sm font-semibold text-slate-900">{s.label}</div>
+                  <div className="text-[12px] text-slate-500 mt-0.5 leading-snug">{s.note}</div>
+                  <div className="mt-3">
+                    <OperationalChip tone={s.chip.tone}>{s.chip.text}</OperationalChip>
+                  </div>
                 </div>
               </div>
             </div>
