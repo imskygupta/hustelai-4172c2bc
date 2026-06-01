@@ -7,7 +7,11 @@
  */
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Sparkles, Cpu, Gauge, Zap, ArrowUpRight, Briefcase, Clock } from "lucide-react";
+import {
+  Sparkles, Cpu, Gauge, Zap, ArrowUpRight, Briefcase, Clock, ArrowRight,
+  FileText, ScrollText, Receipt, ClipboardList, Mail, Users, Compass,
+  Search, CalendarRange, Workflow, Settings2, Star, CheckCircle2,
+} from "lucide-react";
 import { SEO } from "@/components/SEO";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -26,6 +30,38 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { formatDistanceToNowStrict } from "date-fns";
+
+// Per-intent icon glyph for the illustration header (falls back to Sparkles).
+const INTENT_ICONS: Record<string, any> = {
+  scope: Compass,
+  onboarding: ClipboardList,
+  proposal: FileText,
+  invoice: Receipt,
+  outreach: Mail,
+  icp: Users,
+  strategy: Compass,
+  research: Search,
+  content: Sparkles,
+  content_calendar: CalendarRange,
+  automation: Workflow,
+};
+
+// Header gradients per group id — richer than the soft section accents,
+// so each tile reads as a "mini product" like the public Free Tools cards.
+const GROUP_HEADER: Record<string, string> = {
+  delivery: "from-emerald-500 via-teal-500 to-cyan-600",
+  outreach: "from-sky-500 via-indigo-500 to-violet-600",
+  strategy: "from-violet-500 via-purple-500 to-fuchsia-600",
+  content:  "from-rose-500 via-pink-500 to-fuchsia-600",
+  automation: "from-amber-500 via-orange-500 to-rose-600",
+  ops:      "from-slate-600 via-slate-700 to-slate-900",
+};
+
+const SPEED_BADGE: Record<string, string> = {
+  instant: "bg-emerald-100 text-emerald-700",
+  fast:    "bg-sky-100 text-sky-700",
+  deep:    "bg-violet-100 text-violet-700",
+};
 
 export default function ToolsHub() {
   const { user } = useAuth();
@@ -151,76 +187,76 @@ function Group({ group, index, onRun }: { group: ToolGroup; index: number; onRun
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
         {group.intents.map((it) => (
-          <Tile key={it.intent} tool={it} accent={group.accent} ring={group.ring} onRun={() => onRun(it)} />
+          <Tile key={it.intent} tool={it} groupId={group.id} onRun={() => onRun(it)} />
         ))}
       </div>
     </motion.section>
   );
 }
 
-function Tile({ tool, accent, ring, onRun }: { tool: ToolIntent; accent: string; ring: string; onRun: () => void }) {
+function Tile({ tool, groupId, onRun }: { tool: ToolIntent; groupId: string; onRun: () => void }) {
   const provider = PROVIDER_DISPLAY[tool.bestWith];
   const speed = SPEED_DISPLAY[tool.speed];
   const { items: recent } = useRecentOutputs({ tool: `intent:${tool.intent}`, scopeToProject: false, limit: 1 });
   const last = recent[0];
+  const Icon = INTENT_ICONS[tool.intent] || Sparkles;
+  const headerGradient = GROUP_HEADER[groupId] || "from-primary via-primary to-violet-600";
+  const badgeTone = SPEED_BADGE[tool.speed] || "bg-muted text-foreground";
 
   return (
     <motion.button
       onClick={onRun}
-      whileHover={{ y: -3 }}
+      whileHover={{ y: -4 }}
       whileTap={{ scale: 0.99 }}
       transition={{ type: "spring", stiffness: 280, damping: 22 }}
-      className={`group relative text-left rounded-2xl border border-border overflow-hidden ring-1 ${ring} hover:border-foreground/20 hover:shadow-xl hover:shadow-foreground/[0.04] transition-all`}
+      className="group relative flex flex-col text-left rounded-2xl border border-border bg-card overflow-hidden hover:border-primary/50 hover:shadow-[0_18px_40px_-20px_hsl(var(--primary)/0.35)] transition-all"
     >
-      <div className={`absolute inset-0 bg-gradient-to-br ${accent} opacity-70 group-hover:opacity-100 transition-opacity pointer-events-none`} />
-      <div className="relative p-5 flex flex-col h-full min-h-[220px] bg-background/40 backdrop-blur-[2px]">
-        {/* Header */}
-        <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0">
-            <h3 className="font-bold tracking-tight text-[15px] leading-tight">{tool.title}</h3>
-            <p className="text-[12px] text-muted-foreground mt-0.5">{tool.hint}</p>
-          </div>
-          <span className="shrink-0 inline-flex items-center justify-center h-7 w-7 rounded-full bg-background border border-border group-hover:bg-primary group-hover:text-primary-foreground group-hover:border-primary transition-colors">
-            <Sparkles className="h-3.5 w-3.5" />
-          </span>
+      {/* Illustration header (top ~40%) */}
+      <div className={`relative h-32 bg-gradient-to-br ${headerGradient} flex items-center justify-center overflow-hidden`}>
+        <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_30%_20%,white,transparent_60%)]" />
+        <div className="absolute -bottom-8 -right-6 w-32 h-32 rounded-full bg-white/10 blur-2xl" />
+        <div className="relative w-14 h-14 rounded-2xl bg-white/15 backdrop-blur-sm border border-white/30 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+          <Icon className="w-7 h-7 text-white drop-shadow" />
         </div>
+        {speed && (
+          <span className={`absolute top-3 left-3 text-[10px] uppercase tracking-[0.14em] font-bold px-2.5 py-1 rounded-full ${badgeTone} shadow-sm`}>
+            {speed.label}
+          </span>
+        )}
+        {last && (
+          <span className="absolute top-3 right-3 inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-full bg-white/20 backdrop-blur text-white border border-white/30">
+            <Clock className="h-2.5 w-2.5" /> {ago(last.created_at)}
+          </span>
+        )}
+      </div>
 
-        {/* Outputs */}
-        <ul className="mt-3 space-y-0.5">
-          {tool.outputs.slice(0, 3).map((o) => (
-            <li key={o} className="text-[11.5px] text-foreground/75 flex gap-1.5">
-              <span className="text-primary/70">→</span>{o}
-            </li>
-          ))}
-        </ul>
+      {/* Body */}
+      <div className="flex-1 flex flex-col p-5">
+        <h3 className="text-base font-bold tracking-tight leading-tight group-hover:text-primary transition-colors">{tool.title}</h3>
+        <p className="text-[13px] text-muted-foreground mt-1.5 leading-relaxed">{tool.hint}</p>
 
-        {/* Example */}
-        {tool.examples[0] && (
-          <p className="mt-3 text-[11px] text-muted-foreground italic line-clamp-1">e.g. "{tool.examples[0]}"</p>
+        {/* Outputs (compact) */}
+        {tool.outputs[0] && (
+          <div className="mt-3 inline-flex items-center gap-1.5 text-[11px] text-foreground/70">
+            <CheckCircle2 className="w-3 h-3 text-primary" />
+            <span className="truncate">{tool.outputs.slice(0, 2).join(" · ")}</span>
+          </div>
         )}
 
-        <div className="flex-1" />
-
-        {/* Meta footer */}
-        <div className="mt-4 flex items-center gap-1.5 flex-wrap">
+        {/* Mini metrics row */}
+        <div className="mt-3 flex items-center flex-wrap gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
           {provider && (
-            <span className={`inline-flex items-center gap-1 text-[9.5px] font-bold px-1.5 py-0.5 rounded border ${provider.tint}`}>
-              <Cpu className="h-2.5 w-2.5" /> {provider.label}
-            </span>
+            <span className="inline-flex items-center gap-1"><Cpu className="w-3 h-3" /> {provider.label}</span>
           )}
-          {speed && (
-            <span className="inline-flex items-center gap-1 text-[9.5px] font-bold px-1.5 py-0.5 rounded border border-border bg-background/70 text-muted-foreground">
-              <span className={`h-1.5 w-1.5 rounded-full ${speed.dot}`} /> {speed.label}
-            </span>
-          )}
-          <span className="inline-flex items-center gap-1 text-[9.5px] font-bold px-1.5 py-0.5 rounded border border-border bg-background/70 text-muted-foreground uppercase">
-            <Gauge className="h-2.5 w-2.5" /> {tool.cost} cost
+          <span className="inline-flex items-center gap-1 uppercase"><Gauge className="w-3 h-3" /> {tool.cost} cost</span>
+          <span className="inline-flex items-center gap-1"><Star className="w-3 h-3 text-amber-500 fill-amber-500" /> Best with</span>
+        </div>
+
+        {/* Strong CTA */}
+        <div className="mt-5">
+          <span className="inline-flex items-center justify-center w-full gap-1.5 text-sm font-semibold text-primary-foreground bg-foreground group-hover:bg-primary rounded-xl px-4 py-2.5 transition-colors">
+            Run intent <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
           </span>
-          {last && (
-            <span className="ml-auto inline-flex items-center gap-1 text-[10px] text-muted-foreground" title={`Last run ${last.title}`}>
-              <Clock className="h-2.5 w-2.5" /> {ago(last.created_at)}
-            </span>
-          )}
         </div>
       </div>
     </motion.button>
