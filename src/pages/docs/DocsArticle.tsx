@@ -14,6 +14,36 @@ import { DOCS_RICH } from "@/data/docs/rich-content";
 
 type Ctx = { cats: DocsCategory[]; pages: DocsPage[] };
 
+/**
+ * Fallback for docs slugs that have rich editorial content in
+ * `DOCS_RICH` but no row in the docs DB (e.g. "how-it-works" linked
+ * from the Quickstart CTA). Prevents 404s on internally-linked docs
+ * routes while the DB backfill catches up.
+ */
+function synthFromRich(slug: string): DocsPage | null {
+  const rich = DOCS_RICH[slug];
+  if (!rich) return null;
+  const title = slug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+  return {
+    id: `rich:${slug}`,
+    category_id: "",
+    slug,
+    title,
+    description: rich.pitch ?? "",
+    content: "",
+    toc: [],
+    meta_title: `${title} — HustleAI Docs`,
+    meta_description: rich.pitch ?? null,
+    og_image: null,
+    tags: [],
+    reading_time: 3,
+    is_published: true,
+    sort_order: 999,
+    version: "1.0",
+    updated_at: new Date().toISOString(),
+  };
+}
+
 export default function DocsArticle() {
   const { slug = "" } = useParams();
   const { cats, pages } = useOutletContext<Ctx>();
@@ -25,11 +55,11 @@ export default function DocsArticle() {
     setLoading(true);
     fetchDocsPage(slug).then((p) => {
       if (cancelled) return;
-      setPage(p);
+      setPage(p ?? synthFromRich(slug));
       setLoading(false);
     }).catch(() => {
       if (cancelled) return;
-      setPage(null);
+      setPage(synthFromRich(slug));
       setLoading(false);
     });
     return () => { cancelled = true; };

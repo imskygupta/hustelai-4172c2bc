@@ -24,8 +24,16 @@
     <meta name="author" content="SkyCart" />
     <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="icon" href="/favicon.png" type="image/png" />
-    <link rel="canonical" href="https://hustlaiapp.in/" />
-
+    <!--
+      No static <link rel="canonical"> here on purpose.
+      Per-route canonicals are set via react-helmet-async (see BlogSEO,
+      DocsArticle, SEO components). A static canonical here would ship a
+      duplicate <link rel="canonical"> alongside Helmet's (link tags don't
+      dedupe by rel), which previously caused every blog post on
+      blogs.hustlaiapp.in to canonicalize to https://hustlaiapp.in/ and
+      collapsed indexing into the homepage. og:url is intentionally kept
+      below as the non-JS fallback for social crawlers on the root URL.
+    -->
     <meta property="og:title" content="HustleAI — Client Operations Workspace for Freelancers & Agencies">
     <meta property="og:description" content="Proposals, onboarding, invoices and client delivery in one workspace. Built for freelancers, solo operators and modern agencies.">
     <meta property="og:type" content="website" />

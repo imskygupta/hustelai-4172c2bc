@@ -499,7 +499,14 @@ function FullRuntimeApp() {
             {/* Free public tools (SEO + PLG funnel) */}
             {/* Signed-in users land on the workspace cockpit Tools Hub
                 instead of the public PLG page (Sprint 1 P1 #1). */}
-            <Route path="/tools" element={<SurfaceAwareRedirect workspacePath="/tools"><ToolsHub /></SurfaceAwareRedirect>} />
+            {/*
+              Free Tools Hub is an SEO acquisition surface. Always render the
+              public ToolsHub on the marketing host — even for signed-in
+              users — so the Navbar "Free tools" link never bounces visitors
+              into the workspace. Workspace users still have their internal
+              tools surface inside the app shell.
+            */}
+            <Route path="/tools" element={<ToolsHub />} />
             <Route path="/tools/invoice-generator" element={<InvoiceGeneratorTool />} />
             <Route path="/tools/proposal-generator" element={<ProposalGeneratorTool />} />
             <Route path="/tools/contract-generator" element={<ContractGeneratorTool />} />
