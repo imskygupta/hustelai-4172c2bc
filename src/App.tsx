@@ -255,6 +255,7 @@ const CrawlOrchestrator = lazy(() => import("./pages/admin/CrawlOrchestrator"));
 const AuthorityBatch = lazy(() => import("./pages/admin/AuthorityBatch"));
 const HustleTemplatesAdmin = lazy(() => import("./pages/admin/HustleTemplates"));
 const AdsenseReadiness = lazy(() => import("./pages/admin/AdsenseReadiness"));
+const SeoCommandCenter = lazy(() => import("./pages/admin/SeoCommandCenter"));
 const BootstrapSqlHub = lazy(() => import("./pages/admin/BootstrapSqlHub"));
 const EditorialOS = lazy(() => import("./pages/admin/EditorialOS"));
 const EditorialPipeline = lazy(() => import("./pages/admin/EditorialPipeline"));
