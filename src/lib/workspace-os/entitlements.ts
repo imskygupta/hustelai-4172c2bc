@@ -72,21 +72,25 @@ export function hasEntitlement(profile: any, key: EntitlementKey): boolean {
   return TIER_RANK[tierOf(profile)] >= TIER_RANK[e.minTier];
 }
 
-/** Workspace cap per tier — soft cap with upsell. */
+// ⚠️ DEPRECATED: hardcoded tier caps are now owned by the `tier_limits` table
+// + `get_user_entitlements()` RPC (single source of truth, U-Final hardening).
+// Do NOT import these. They are kept ONLY as a fallback type reference and
+// will be removed once every caller migrates to `useUserLimits()` / `/me-usages`.
+/** @deprecated Use tier_limits via resolve_user_limits() / useUserLimits(). */
 export const WORKSPACE_LIMITS: Record<Tier, number> = {
-  free: 2, pro: 15, elite: 50, infinity: 999,
+  free: 2, pro: 15, elite: 50, infinity: -1,
 };
-
-/** Daily PDF export cap per tier (must match consume_export_quota). */
+/** @deprecated Use tier_limits via resolve_user_limits() / useUserLimits(). */
 export const EXPORT_LIMITS: Record<Tier, number> = {
-  free: 3, pro: 20, elite: 100, infinity: 500,
+  free: 3, pro: 20, elite: 100, infinity: -1,
 };
-
-/** Daily AI assist cap per tier (must match consume_ai_quota). */
+/** @deprecated Use tier_limits via resolve_user_limits() / useUserLimits(). */
 export const AI_LIMITS: Record<Tier, number> = {
-  free: 3, pro: 5, elite: 10, infinity: 20,
+  free: 3, pro: 5, elite: 10, infinity: -1,
 };
-
+/** @deprecated */
 export function workspaceLimit(profile: any): number { return WORKSPACE_LIMITS[tierOf(profile)]; }
+/** @deprecated */
 export function exportLimit(profile: any): number { return EXPORT_LIMITS[tierOf(profile)]; }
+/** @deprecated */
 export function aiLimit(profile: any): number { return AI_LIMITS[tierOf(profile)]; }

@@ -894,22 +894,13 @@ export default function Dashboard() {
               <h3 className="font-display font-semibold text-slate-900 flex items-center gap-2">
                 <BarChart3 className="w-4 h-4 text-emerald-600" /> Monthly usage
               </h3>
-              <div className="space-y-4">
-                {[
-                  { label: "AI Searches", used: profile.search_count, max: maxSearches * 30 },
-                  { label: "AI Chat Messages", used: chatCount, max: isPro ? 500 : isFree ? 50 : 1000 },
-                  { label: "Proposal Drafts", used: Math.floor(chatCount / 3), max: isPro ? 30 : isFree ? 5 : 100 },
-                  ...(isElite ? [{ label: "Lead Scans", used: Math.floor(chatCount / 5), max: 50 }] : []),
-                ].map(item => (
-                  <div key={item.label} className="space-y-1.5">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-slate-700">{item.label}</span>
-                      <span className="font-mono text-xs text-slate-500">{item.used} / {item.max}</span>
-                    </div>
-                    <Progress value={Math.min((item.used / item.max) * 100, 100)} className="h-1.5 bg-slate-100" />
-                  </div>
-                ))}
-              </div>
+              {/* Live usage now sourced from /me-usages (single source of truth). */}
+              <p className="text-sm text-slate-600">
+                Full breakdown of today's usage, resets, and upgrade options lives in your{" "}
+                <a href="/dashboard/usages" className="font-medium text-emerald-700 hover:underline">
+                  Usage Center
+                </a>.
+              </p>
             </div>
           </TabsContent>
 

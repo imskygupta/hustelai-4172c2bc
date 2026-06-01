@@ -12,6 +12,7 @@ import { listCapabilities } from "@/lib/usage/capabilities";
 import { Loader2, ShieldCheck } from "lucide-react";
 import UsageGovernanceShadow from "./UsageGovernanceShadow";
 import UsageObservability from "./UsageObservability";
+import UsageGovernanceFinal from "./UsageGovernanceFinal";
 
 const TIERS = ["free", "pro", "elite", "infinity"] as const;
 
@@ -105,6 +106,7 @@ export default function UsageGovernance() {
           <TabsTrigger value="abuse">Abuse</TabsTrigger>
           <TabsTrigger value="shadow">Shadow</TabsTrigger>
           <TabsTrigger value="observability">Observability</TabsTrigger>
+          <TabsTrigger value="final">Hardening</TabsTrigger>
         </TabsList>
 
         <TabsContent value="limits" className="space-y-4">
@@ -226,6 +228,10 @@ export default function UsageGovernance() {
 
         <TabsContent value="observability">
           <UsageObservability />
+        </TabsContent>
+
+        <TabsContent value="final">
+          <UsageGovernanceFinal />
         </TabsContent>
       </Tabs>
     </div>

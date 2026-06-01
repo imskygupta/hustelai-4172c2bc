@@ -26,7 +26,10 @@ export function RetentionRail({ rowCount }: Props) {
   const quota = resolveQuota(tier);
   const routing = resolveRouting(tier, tgConnected);
 
-  const usage = Math.min(100, Math.round((rowCount / quota.max_continuity_rows) * 100));
+  // Unlimited-safe: null / 0 / negative cap = unlimited tier → no percent bar.
+  const cap = quota.max_continuity_rows;
+  const unlimited = !cap || cap <= 0;
+  const usage = unlimited ? 0 : Math.min(100, Math.round((rowCount / cap) * 100));
   const usageTone =
     usage >= 90 ? "bg-red-500" : usage >= 70 ? "bg-amber-500" : "bg-primary";
 

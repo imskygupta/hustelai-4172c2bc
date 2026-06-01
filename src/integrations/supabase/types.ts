@@ -10334,6 +10334,20 @@ export type Database = {
         }
         Relationships: []
       }
+      v_admin_user_usage_snapshot: {
+        Row: {
+          active_overrides: number | null
+          avg_pct_today: number | null
+          blocked_24h: number | null
+          last_decision: string | null
+          last_event_at: string | null
+          tier: string | null
+          units_month: number | null
+          units_today: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
       v_db_extraction_ranking: {
         Row: {
           cost_bucket: string | null
@@ -10409,6 +10423,35 @@ export type Database = {
         }
         Relationships: []
       }
+      v_governance_abuse_signals: {
+        Row: {
+          count: number | null
+          signal: string | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
+      v_governance_reconciliation: {
+        Row: {
+          allowed: number | null
+          blocked: number | null
+          bypass: number | null
+          day: string | null
+          events: number | null
+          meter: string | null
+          mismatch: number | null
+        }
+        Relationships: []
+      }
+      v_revenue_at_risk: {
+        Row: {
+          at_100: number | null
+          at_80: number | null
+          at_90: number | null
+          tier: string | null
+        }
+        Relationships: []
+      }
       v_security_audit_summary: {
         Row: {
           computed_at: string | null
@@ -10439,6 +10482,16 @@ export type Database = {
           peak_per_user: number | null
           tier: Database["public"]["Enums"]["subscription_tier"] | null
           total_count: number | null
+        }
+        Relationships: []
+      }
+      v_tool_registry_coverage: {
+        Row: {
+          capability_key: string | null
+          executions: number | null
+          has_tier_limit: boolean | null
+          meter: string | null
+          writes_ledger: boolean | null
         }
         Relationships: []
       }
