@@ -5,7 +5,18 @@ import { OperationalChip, AsyncLane, LiveCounter, QueuePulse } from "@/component
  * Operational social-proof strip. Numbers are intentionally directional
  * ("operational truth, not vanity"). Live pulse signals async-native energy
  * without faking analytics.
+ *
+ * Visual language mirrors the polished tools cards: illustration-first
+ * gradient header (icon + status badge), then the metric body. Compact
+ * enough to keep the 5-up strip; just richer than the old flat-white look.
  */
+const TONE_GRADIENT: Record<string, string> = {
+  emerald: "from-emerald-500 via-teal-500 to-emerald-600",
+  violet:  "from-violet-500 via-fuchsia-500 to-violet-600",
+  sky:     "from-sky-500 via-cyan-500 to-sky-600",
+  amber:   "from-amber-500 via-orange-500 to-amber-600",
+};
+
 const STATS = [
   { label: "Workflows completed",     value: "1,200+", Icon: Activity,   tone: "emerald" as const, chip: "Live" },
   { label: "AI operations this week", value: "9k+",   Icon: Cpu,        tone: "violet"  as const, chip: "Async" },
@@ -33,17 +44,27 @@ export function OpsStats({ heading = "Operational by default" }: { heading?: str
                   <AsyncLane tone={tone} />
                 </div>
               ) : null}
-              <div className="hover-ops rounded-xl border border-slate-200 bg-white p-4 md:p-5 hover:border-slate-300 transition h-full">
-                <div className="flex items-center justify-between mb-2">
-                  <Icon className="w-4 h-4 text-slate-700" />
-                  <OperationalChip tone={tone}>{chip}</OperationalChip>
+              <div className="hover-ops group relative h-full overflow-hidden rounded-2xl border border-slate-200 bg-white hover:border-slate-300 hover:-translate-y-0.5 hover:shadow-md transition-all duration-300">
+                {/* Illustration header — gradient lane with icon + status badge */}
+                <div className={`relative h-14 bg-gradient-to-br ${TONE_GRADIENT[tone]} px-3 flex items-center justify-between`}>
+                  <div aria-hidden className="pointer-events-none absolute -top-6 -right-6 h-16 w-16 rounded-full bg-white/25 blur-2xl" />
+                  <div className="relative flex h-7 w-7 items-center justify-center rounded-lg bg-white/20 backdrop-blur ring-1 ring-white/30">
+                    <Icon className="w-3.5 h-3.5 text-white" />
+                  </div>
+                  <span className="relative inline-flex items-center gap-1 rounded-full bg-white/95 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-slate-700 shadow-sm">
+                    <span className={`h-1 w-1 rounded-full bg-gradient-to-br ${TONE_GRADIENT[tone]}`} />
+                    {chip}
+                  </span>
                 </div>
-                <div className="text-xl md:text-2xl font-display font-semibold text-slate-900 tracking-tight">
-                  <LiveCounter value={value} intervalMs={3600 + i * 420} />
-                </div>
-                <div className="text-[11px] md:text-xs text-slate-500 mt-1 flex items-center justify-between">
-                  <span>{label}</span>
-                  <QueuePulse count={3} tone={tone} className="opacity-70" />
+                {/* Body */}
+                <div className="p-3 md:p-4">
+                  <div className="text-xl md:text-2xl font-display font-semibold text-slate-900 tracking-tight leading-none">
+                    <LiveCounter value={value} intervalMs={3600 + i * 420} />
+                  </div>
+                  <div className="text-[11px] md:text-xs text-slate-500 mt-1.5 flex items-center justify-between">
+                    <span>{label}</span>
+                    <QueuePulse count={3} tone={tone} className="opacity-70" />
+                  </div>
                 </div>
               </div>
             </div>
