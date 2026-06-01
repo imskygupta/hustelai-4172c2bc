@@ -19,7 +19,8 @@ export type LimitHitModalProps = {
   meter: string;
   meterLabel?: string;
   used: number;
-  limit: number;
+  /** null / 0 / negative = unlimited (renders ∞, hides progress). */
+  limit: number | null;
   resetAt?: string | null;
   graceOffered?: boolean;
   onUpgrade: () => void;
@@ -42,7 +43,9 @@ export function LimitHitModal({
     if (open) track("limit_hit_view", { meter, used, limit, grace: !!graceOffered });
   }, [open, meter, used, limit, graceOffered]);
 
-  const pct = limit > 0 ? Math.min(100, (used / limit) * 100) : 100;
+  // Unlimited-safe: never compute pct against null/0/-1 ("∞" tier).
+  const unlimited = !limit || limit <= 0;
+  const pct = unlimited ? 0 : Math.min(100, (used / (limit as number)) * 100);
   const resetCopy = resetAt ? humanizeReset(resetAt) : null;
 
   return (
@@ -64,10 +67,14 @@ export function LimitHitModal({
         <div className="space-y-3">
           <div>
             <div className="flex items-baseline justify-between mb-1">
-              <span className="text-2xl font-semibold tabular-nums">{used} / {limit}</span>
-              <span className="text-xs text-muted-foreground tabular-nums">{pct.toFixed(0)}%</span>
+              <span className="text-2xl font-semibold tabular-nums">
+                {used} / {unlimited ? "∞" : limit}
+              </span>
+              {!unlimited && (
+                <span className="text-xs text-muted-foreground tabular-nums">{pct.toFixed(0)}%</span>
+              )}
             </div>
-            <Progress value={pct} className="h-2" />
+            {!unlimited && <Progress value={pct} className="h-2" />}
           </div>
 
           {resetCopy && (
