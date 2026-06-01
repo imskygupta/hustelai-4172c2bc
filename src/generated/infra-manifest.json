@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-31T18:08:01.914Z",
+  "generated_at": "2026-06-01T06:41:44.337Z",
   "routes": [
     {
       "path": ":slug",
@@ -62,6 +62,14 @@
       "source": "src/App.tsx",
       "type": "public",
       "authWrapper": "AcceptableUse",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/account-status",
+      "source": "src/App.tsx",
+      "type": "auth",
+      "authWrapper": "RequireAuth",
       "dynamic": false,
       "catchAll": false
     },
@@ -358,6 +366,14 @@
       "source": "src/App.tsx",
       "type": "admin",
       "authWrapper": "TelegramOpsCenter",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/admin/email",
+      "source": "src/App.tsx",
+      "type": "admin",
+      "authWrapper": "AdminEmailOps",
       "dynamic": false,
       "catchAll": false
     },
@@ -858,6 +874,14 @@
       "catchAll": false
     },
     {
+      "path": "/dashboard/usages",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": null,
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
       "path": "/dashboard/workspace-os",
       "source": "src/App.tsx",
       "type": "public",
@@ -1244,8 +1268,8 @@
     {
       "path": "/onboarding",
       "source": "src/App.tsx",
-      "type": "public",
-      "authWrapper": "Onboarding",
+      "type": "redirect",
+      "authWrapper": "Navigate",
       "dynamic": false,
       "catchAll": false
     },
@@ -1278,6 +1302,14 @@
       "source": "src/App.tsx",
       "type": "public",
       "authWrapper": null,
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/pending-access",
+      "source": "src/App.tsx",
+      "type": "auth",
+      "authWrapper": "RequireAuth",
       "dynamic": false,
       "catchAll": false
     },
@@ -1518,6 +1550,14 @@
       "source": "src/App.tsx",
       "type": "public",
       "authWrapper": null,
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/start",
+      "source": "src/App.tsx",
+      "type": "auth",
+      "authWrapper": "RequireAuth",
       "dynamic": false,
       "catchAll": false
     },
@@ -1978,6 +2018,14 @@
       "catchAll": false
     },
     {
+      "path": "email-preferences",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "EmailPreferences",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
       "path": "exports",
       "source": "src/App.tsx",
       "type": "public",
@@ -2364,6 +2412,10 @@
       "source": "supabase/functions/editorial-pipeline/index.ts"
     },
     {
+      "name": "email-provider-health",
+      "source": "supabase/functions/email-provider-health/index.ts"
+    },
+    {
       "name": "event-dispatcher",
       "source": "supabase/functions/event-dispatcher/index.ts"
     },
@@ -2474,6 +2526,10 @@
     {
       "name": "mailer-send",
       "source": "supabase/functions/mailer-send/index.ts"
+    },
+    {
+      "name": "me-usages",
+      "source": "supabase/functions/me-usages/index.ts"
     },
     {
       "name": "migrate-clientprofile-to-work-clients",
@@ -2730,6 +2786,10 @@
     {
       "name": "usage-record",
       "source": "supabase/functions/usage-record/index.ts"
+    },
+    {
+      "name": "welcome-dispatch",
+      "source": "supabase/functions/welcome-dispatch/index.ts"
     },
     {
       "name": "work-api",
