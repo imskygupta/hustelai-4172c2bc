@@ -25,11 +25,11 @@ export default function DocsArticle() {
     setLoading(true);
     fetchDocsPage(slug).then((p) => {
       if (cancelled) return;
-      setPage(p);
+      setPage(p ?? synthFromRich(slug));
       setLoading(false);
     }).catch(() => {
       if (cancelled) return;
-      setPage(null);
+      setPage(synthFromRich(slug));
       setLoading(false);
     });
     return () => { cancelled = true; };
