@@ -73,7 +73,8 @@ Deno.serve(async (req) => {
     if (meter) {
       const { data: ent } = await admin.rpc("get_user_entitlements", { _user: userId });
       const key = `${meter}:${feature}`;
-      limit_value = ent?.limits?.[key]?.max ?? null;
+      const raw = ent?.limits?.[key]?.max;
+      limit_value = raw == null || raw === -1 ? null : raw;
     }
 
     return json({
@@ -101,13 +102,15 @@ Deno.serve(async (req) => {
   for (const row of live ?? []) {
     const key = `${row.meter}:${row.feature}`;
     usage[key] = Number(row.units_used ?? 0);
-    const limit = ent?.limits?.[key]?.max ?? null;
+    const rawLimit = ent?.limits?.[key]?.max;
+    const limit = rawLimit == null || rawLimit === -1 ? null : rawLimit;
     remaining[key] = limit == null ? null : Math.max(limit - usage[key], 0);
   }
   for (const key of Object.keys(ent?.limits ?? {})) {
     if (!(key in usage)) {
       usage[key] = 0;
-      remaining[key] = ent.limits[key].max ?? null;
+      const raw = ent.limits[key].max;
+      remaining[key] = raw == null || raw === -1 ? null : raw;
     }
   }
 
