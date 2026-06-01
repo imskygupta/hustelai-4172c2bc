@@ -255,6 +255,7 @@ const CrawlOrchestrator = lazy(() => import("./pages/admin/CrawlOrchestrator"));
 const AuthorityBatch = lazy(() => import("./pages/admin/AuthorityBatch"));
 const HustleTemplatesAdmin = lazy(() => import("./pages/admin/HustleTemplates"));
 const AdsenseReadiness = lazy(() => import("./pages/admin/AdsenseReadiness"));
+const SeoCommandCenter = lazy(() => import("./pages/admin/SeoCommandCenter"));
 const BootstrapSqlHub = lazy(() => import("./pages/admin/BootstrapSqlHub"));
 const EditorialOS = lazy(() => import("./pages/admin/EditorialOS"));
 const EditorialPipeline = lazy(() => import("./pages/admin/EditorialPipeline"));
@@ -674,6 +675,7 @@ function FullRuntimeApp() {
             <Route path="/admin/payments-review" element={<PaymentsReview />} />
             <Route path="/admin/notifications" element={<AdminNotifications />} />
             <Route path="/admin/blog" element={<BlogAdmin />} />
+            <Route path="/admin/seo" element={<SeoCommandCenter />} />
             <Route path="/admin/blog/seo" element={<BlogSeoHealth />} />
             <Route path="/admin/blog/operations" element={<BlogOperations />} />
             <Route path="/admin/blog/editorial" element={<EditorialCenter />} />
