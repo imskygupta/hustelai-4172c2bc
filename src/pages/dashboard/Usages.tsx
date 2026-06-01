@@ -65,22 +65,76 @@ async function fetchUsages(): Promise<UsagesPayload | null> {
   const { data } = await supabase.auth.getSession();
   const token = data.session?.access_token;
   if (!token) return null;
-  const res = await fetch(`${functionsBase()}/me-usages`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  if (!res.ok) return null;
-  return res.json();
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 10_000);
+  try {
+    const res = await fetch(`${functionsBase()}/me-usages`, {
+      headers: { Authorization: `Bearer ${token}` },
+      signal: ctrl.signal,
+    });
+    if (!res.ok) return null;
+    const json = await res.json();
+    return normalizePayload(json);
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+// Normalize -1 (unlimited) → null so the UI can render "∞" without division.
+function normalizePayload(p: any): UsagesPayload {
+  const limits: Record<string, LimitInfo> = {};
+  for (const [k, v] of Object.entries(p?.limits ?? {})) {
+    const info = v as LimitInfo;
+    limits[k] = { ...info, max: info?.max === -1 ? (null as any) : info?.max };
+  }
+  const remaining: Record<string, number | null> = {};
+  for (const [k, v] of Object.entries(p?.remaining ?? {})) {
+    remaining[k] = (v as number) === -1 ? null : (v as number | null);
+  }
+  // If limit is unlimited, force remaining to null (server may have computed 0).
+  for (const k of Object.keys(limits)) {
+    if (limits[k]?.max == null) remaining[k] = null;
+  }
+  return {
+    plan: p?.plan ?? "free",
+    limits,
+    features: p?.features ?? {},
+    usage: p?.usage ?? {},
+    remaining,
+    resets: Array.isArray(p?.resets) ? p.resets : [],
+    boosters: Array.isArray(p?.boosters) ? p.boosters : [],
+    overrides: Array.isArray(p?.overrides) ? p.overrides : [],
+  };
 }
 
 async function fetchTool(tool: string): Promise<ToolPayload | null> {
   const { data } = await supabase.auth.getSession();
   const token = data.session?.access_token;
   if (!token) return null;
-  const res = await fetch(`${functionsBase()}/me-usages/${encodeURIComponent(tool)}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  if (!res.ok) return null;
-  return res.json();
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 10_000);
+  try {
+    const res = await fetch(`${functionsBase()}/me-usages/${encodeURIComponent(tool)}`, {
+      headers: { Authorization: `Bearer ${token}` },
+      signal: ctrl.signal,
+    });
+    if (!res.ok) return null;
+    const j = await res.json();
+    return {
+      tool: j?.tool ?? tool,
+      used: j?.used ?? 0,
+      limit: j?.limit === -1 ? null : (j?.limit ?? null),
+      remaining: j?.remaining === -1 ? null : (j?.remaining ?? null),
+      last_used: j?.last_used ?? null,
+      execution_history: Array.isArray(j?.execution_history) ? j.execution_history : [],
+    };
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 function track(event: string, props: Record<string, unknown> = {}) {
@@ -95,6 +149,7 @@ function track(event: string, props: Record<string, unknown> = {}) {
 export default function Usages() {
   const [data, setData] = useState<UsagesPayload | null>(null);
   const [loading, setLoading] = useState(true);
+  const [errored, setErrored] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState("");
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -108,6 +163,7 @@ export default function Usages() {
     if (manual) setRefreshing(true);
     const d = await fetchUsages();
     setData(d);
+    setErrored(!d);
     setLoading(false);
     setRefreshing(false);
   }, []);
@@ -188,14 +244,24 @@ export default function Usages() {
 
   if (loading) return <UsagesSkeleton />;
 
-  if (!data) {
+  if (!data || errored) {
     return (
       <div className="container mx-auto max-w-5xl p-6">
         <Card>
           <CardHeader>
-            <CardTitle>Usage unavailable</CardTitle>
-            <CardDescription>Sign in to see your plan usage.</CardDescription>
+            <CardTitle>Unable to load usage data</CardTitle>
+            <CardDescription>
+              We couldn't reach the usage service. This is usually temporary.
+            </CardDescription>
           </CardHeader>
+          <CardContent className="flex gap-2">
+            <Button size="sm" onClick={() => { setLoading(true); load(true); }}>
+              <RefreshCw className="h-4 w-4 mr-2" />Retry
+            </Button>
+            <Button size="sm" variant="outline" asChild>
+              <Link to="/dashboard">Back to dashboard</Link>
+            </Button>
+          </CardContent>
         </Card>
       </div>
     );
