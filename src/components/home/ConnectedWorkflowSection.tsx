@@ -2,6 +2,13 @@ import { FileSignature, FileDown, Send, MessageCircle } from "lucide-react";
 import { SignalDot, AsyncLane, OperationalChip, DeliveryBadge, QueueProgress, OpsGrid } from "./ops-primitives";
 import { useStageActivation } from "./useStageActivation";
 
+const TONE_GRADIENT: Record<string, string> = {
+  emerald: "from-emerald-500 via-teal-500 to-emerald-600",
+  violet:  "from-violet-500 via-fuchsia-500 to-violet-600",
+  sky:     "from-sky-500 via-cyan-500 to-sky-600",
+  amber:   "from-amber-500 via-orange-500 to-amber-600",
+};
+
 const STAGES = [
   {
     icon: FileSignature,
@@ -67,28 +74,27 @@ export function ConnectedWorkflowSection() {
                 </div>
               ) : null}
 
-              <div className="group relative h-full rounded-2xl border border-slate-200 bg-white p-5 hover:border-emerald-300 hover:shadow-[0_18px_36px_-22px_rgba(16,185,129,0.35)] transition-all duration-300">
-                {/* Stage index */}
-                <div className="absolute top-3 right-3 text-[10px] font-mono text-slate-300">
-                  0{i + 1}
-                </div>
-
-                <div data-stage-icon className="w-10 h-10 rounded-xl text-white flex items-center justify-center mb-3">
-                  <s.icon className="w-4 h-4" />
-                </div>
-                <div className="text-sm font-semibold text-slate-900">{s.label}</div>
-                <div className="text-[12.5px] text-slate-500 mt-0.5 leading-snug">{s.note}</div>
-
-                <div className="mt-3 flex items-center justify-between gap-2">
-                  <OperationalChip tone={s.chip.tone}>{s.chip.text}</OperationalChip>
-                  {i === STAGES.length - 1 ? <DeliveryBadge to="Client" /> : null}
-                </div>
-
-                {s.progress ? (
-                  <div className="mt-3">
-                    <QueueProgress tone="violet" />
+              <div className="group relative h-full rounded-2xl border border-slate-200 bg-white overflow-hidden hover:border-slate-300 hover:-translate-y-0.5 hover:shadow-[0_18px_36px_-22px_rgba(16,185,129,0.35)] transition-all duration-300">
+                <div className={`relative h-14 bg-gradient-to-br ${TONE_GRADIENT[s.chip.tone]} px-3 flex items-center justify-between`}>
+                  <div aria-hidden className="pointer-events-none absolute -top-6 -right-6 h-16 w-16 rounded-full bg-white/25 blur-2xl" />
+                  <div data-stage-icon className="relative flex h-8 w-8 items-center justify-center rounded-lg bg-white/20 backdrop-blur ring-1 ring-white/30">
+                    <s.icon className="w-4 h-4 text-white" />
                   </div>
-                ) : null}
+                  <span className="relative text-[10px] font-mono text-white/80 font-semibold">0{i + 1}</span>
+                </div>
+                <div className="p-4">
+                  <div className="text-sm font-semibold text-slate-900">{s.label}</div>
+                  <div className="text-[12.5px] text-slate-500 mt-0.5 leading-snug">{s.note}</div>
+                  <div className="mt-3 flex items-center justify-between gap-2">
+                    <OperationalChip tone={s.chip.tone}>{s.chip.text}</OperationalChip>
+                    {i === STAGES.length - 1 ? <DeliveryBadge to="Client" /> : null}
+                  </div>
+                  {s.progress ? (
+                    <div className="mt-3">
+                      <QueueProgress tone={s.chip.tone} />
+                    </div>
+                  ) : null}
+                </div>
               </div>
             </div>
           ))}

@@ -1,6 +1,13 @@
 import { Cloud, Send, History, GitBranch } from "lucide-react";
 import { SignalDot, OperationalChip, QueueProgress, AsyncLane, OpsGrid } from "./ops-primitives";
 
+const TONE_GRADIENT: Record<string, string> = {
+  emerald: "from-emerald-500 via-teal-500 to-emerald-600",
+  violet:  "from-violet-500 via-fuchsia-500 to-violet-600",
+  sky:     "from-sky-500 via-cyan-500 to-sky-600",
+  amber:   "from-amber-500 via-orange-500 to-amber-600",
+};
+
 /**
  * Operational continuity — the four traits that make the platform feel alive
  * even when the user closes the tab. Calm, infrastructure-grade.
@@ -58,25 +65,30 @@ export function OperationalContinuitySection() {
           {TRAITS.map((t, i) => (
             <div
               key={t.title}
-              className="hover-ops group relative rounded-2xl border border-slate-200 bg-white p-5 md:p-6 hover:border-slate-300 transition-all duration-300 overflow-hidden"
+              className="hover-ops group relative rounded-2xl border border-slate-200 bg-white overflow-hidden hover:border-slate-300 hover:-translate-y-0.5 hover:shadow-md transition-all duration-300"
             >
-              <div className="absolute top-3 right-3 text-[10px] font-mono text-slate-300">0{i + 1}</div>
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center shrink-0 group-hover:bg-emerald-600 transition-colors">
-                  <t.icon className="w-4 h-4" />
+              <div className={`relative h-14 bg-gradient-to-br ${TONE_GRADIENT[t.chip.tone]} px-4 flex items-center justify-between`}>
+                <div aria-hidden className="pointer-events-none absolute -top-6 -right-6 h-16 w-16 rounded-full bg-white/25 blur-2xl" />
+                <div className="relative flex h-8 w-8 items-center justify-center rounded-lg bg-white/20 backdrop-blur ring-1 ring-white/30">
+                  <t.icon className="w-4 h-4 text-white" />
                 </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className="text-base md:text-lg font-display font-semibold text-slate-900 leading-snug">
-                      {t.title}
-                    </h3>
-                  </div>
-                  <p className="text-[13.5px] text-slate-500 leading-relaxed">{t.body}</p>
-                  <div className="mt-3 flex items-center gap-2">
-                    <OperationalChip tone={t.chip.tone}>{t.chip.text}</OperationalChip>
-                    <div className="flex-1 max-w-[160px]">
-                      {t.progress ? <QueueProgress tone={t.chip.tone} /> : <AsyncLane tone={t.chip.tone} />}
-                    </div>
+                <div className="relative flex items-center gap-2">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-white/95 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-slate-700 shadow-sm">
+                    <span className={`h-1 w-1 rounded-full bg-gradient-to-br ${TONE_GRADIENT[t.chip.tone]}`} />
+                    {t.chip.text}
+                  </span>
+                  <span className="text-[10px] font-mono text-white/80 font-semibold">0{i + 1}</span>
+                </div>
+              </div>
+              <div className="p-5 md:p-6">
+                <h3 className="text-base md:text-lg font-display font-semibold text-slate-900 leading-snug mb-1.5">
+                  {t.title}
+                </h3>
+                <p className="text-[13.5px] text-slate-500 leading-relaxed">{t.body}</p>
+                <div className="mt-3 flex items-center gap-2">
+                  <OperationalChip tone={t.chip.tone}>{t.chip.text}</OperationalChip>
+                  <div className="flex-1 max-w-[160px]">
+                    {t.progress ? <QueueProgress tone={t.chip.tone} /> : <AsyncLane tone={t.chip.tone} />}
                   </div>
                 </div>
               </div>

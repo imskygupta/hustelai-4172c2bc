@@ -61,6 +61,45 @@ function LivePulse({ color = "emerald" }: { color?: "emerald" | "amber" | "sky" 
   );
 }
 
+/**
+ * Shared gradient header tone map — matches the new tools-card visual
+ * language used in /tools and the homepage stats / workflow strips.
+ */
+const TONE_GRADIENT: Record<string, string> = {
+  emerald: "from-emerald-500 via-teal-500 to-emerald-600",
+  violet:  "from-violet-500 via-fuchsia-500 to-violet-600",
+  sky:     "from-sky-500 via-cyan-500 to-sky-600",
+  amber:   "from-amber-500 via-orange-500 to-amber-600",
+  slate:   "from-slate-600 via-slate-700 to-slate-800",
+};
+
+function CardHeaderLane({
+  tone,
+  Icon,
+  badge,
+  className = "h-14",
+}: {
+  tone: keyof typeof TONE_GRADIENT;
+  Icon: React.ComponentType<{ className?: string }>;
+  badge?: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={`relative ${className} bg-gradient-to-br ${TONE_GRADIENT[tone]} px-3 flex items-center justify-between`}>
+      <div aria-hidden className="pointer-events-none absolute -top-6 -right-6 h-16 w-16 rounded-full bg-white/25 blur-2xl" />
+      <div className="relative flex h-8 w-8 items-center justify-center rounded-lg bg-white/20 backdrop-blur ring-1 ring-white/30">
+        <Icon className="w-4 h-4 text-white" />
+      </div>
+      {badge ? (
+        <span className="relative inline-flex items-center gap-1 rounded-full bg-white/95 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-slate-700 shadow-sm">
+          <span className={`h-1 w-1 rounded-full bg-gradient-to-br ${TONE_GRADIENT[tone]}`} />
+          {badge}
+        </span>
+      ) : null}
+    </div>
+  );
+}
+
 /* ---------------------------------------------------------------- *
  * 1. Unified Workspace
  * ---------------------------------------------------------------- */
@@ -112,21 +151,13 @@ export function UnifiedWorkspaceSection() {
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.08, duration: 0.5, ease: "easeOut" }}
               viewport={{ once: true }}
-              className="group relative rounded-2xl border border-slate-200 bg-gradient-to-br from-white to-slate-50/60 p-5 md:p-6 hover:border-emerald-300/80 hover:shadow-[0_20px_40px_-20px_rgba(16,185,129,0.35)] hover:-translate-y-1 transition-all duration-300 overflow-hidden"
+              className="group relative rounded-2xl border border-slate-200 bg-white hover:border-slate-300 hover:shadow-[0_20px_40px_-20px_rgba(16,185,129,0.25)] hover:-translate-y-0.5 transition-all duration-300 overflow-hidden"
             >
-              {/* Hover gradient sheen */}
-              <span className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-br from-emerald-50/0 via-emerald-50/40 to-emerald-100/30" />
-              <CornerAccents />
-              <div className="relative flex items-start justify-between mb-4">
-                <div className="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-110 group-hover:rotate-[-4deg] transition-transform duration-300">
-                  <it.icon className="w-5 h-5" />
-                </div>
-                <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-slate-500">
-                  <LivePulse color={it.accent} /> {it.meta}
-                </span>
+              <CardHeaderLane tone={it.accent} Icon={it.icon} badge={it.meta} />
+              <div className="p-5 md:p-6">
+                <h3 className="font-display font-semibold text-base md:text-lg text-slate-900 mb-1.5">{it.title}</h3>
+                <p className="text-sm text-slate-500 leading-relaxed">{it.desc}</p>
               </div>
-              <h3 className="relative font-display font-semibold text-base md:text-lg text-slate-900 mb-1.5">{it.title}</h3>
-              <p className="relative text-sm text-slate-500 leading-relaxed">{it.desc}</p>
             </motion.div>
           ))}
         </div>
@@ -243,21 +274,13 @@ export function RealDeliverablesSection() {
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.06, duration: 0.5, ease: "easeOut" }}
               viewport={{ once: true }}
-              className="group relative rounded-2xl border border-slate-200 bg-white p-4 md:p-5 hover:border-emerald-300 hover:-translate-y-1 hover:shadow-[0_18px_30px_-18px_rgba(15,23,42,0.25)] transition-all duration-300 overflow-hidden"
+              className="group relative rounded-2xl border border-slate-200 bg-white hover:border-slate-300 hover:-translate-y-0.5 hover:shadow-[0_18px_30px_-18px_rgba(15,23,42,0.25)] transition-all duration-300 overflow-hidden"
             >
-              <CornerAccents />
-              {/* Hover sheen */}
-              <span className="pointer-events-none absolute -inset-y-2 -left-1/2 w-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-gradient-to-r from-transparent via-emerald-100/40 to-transparent skew-x-12 group-hover:animate-shimmer-x" />
-              <div className="relative flex items-center justify-between mb-3">
-                <div className="w-10 h-10 rounded-lg bg-slate-900 text-white flex items-center justify-center group-hover:bg-emerald-600 transition-colors duration-300">
-                  <it.icon className="w-4 h-4" />
-                </div>
-                <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-                  <LivePulse color={it.color} /> {it.state}
-                </span>
+              <CardHeaderLane tone={it.color} Icon={it.icon} badge={it.state} className="h-12" />
+              <div className="p-4 md:p-5">
+                <div className="text-sm md:text-base font-display font-semibold text-slate-900">{it.label}</div>
+                <p className="text-xs md:text-sm text-slate-500 mt-1 leading-relaxed">{it.desc}</p>
               </div>
-              <div className="relative text-sm md:text-base font-display font-semibold text-slate-900">{it.label}</div>
-              <p className="relative text-xs md:text-sm text-slate-500 mt-1 leading-relaxed">{it.desc}</p>
             </motion.div>
           ))}
         </div>
@@ -334,10 +357,10 @@ export function IntegrationsNotificationsSection() {
  * ---------------------------------------------------------------- */
 export function ControlGovernanceSection() {
   const items = [
-    { icon: Settings2, title: "Workspace settings", desc: "Branding, voice, defaults — applied everywhere.", tag: "Synced" },
-    { icon: Layers, title: "Feature controls", desc: "Toggle modules per workspace. Roll out at your pace.", tag: "Live" },
-    { icon: Boxes, title: "Roles & access", desc: "Calm, role-aware access without an IT project.", tag: "Secure" },
-    { icon: Wallet, title: "Usage you can see", desc: "Clear limits, history and a quiet upgrade path.", tag: "Real-time" },
+    { icon: Settings2, title: "Workspace settings", desc: "Branding, voice, defaults — applied everywhere.", tag: "Synced",    tone: "emerald" as const },
+    { icon: Layers,    title: "Feature controls",   desc: "Toggle modules per workspace. Roll out at your pace.", tag: "Live",      tone: "violet"  as const },
+    { icon: Boxes,     title: "Roles & access",     desc: "Calm, role-aware access without an IT project.",       tag: "Secure",    tone: "sky"     as const },
+    { icon: Wallet,    title: "Usage you can see",  desc: "Clear limits, history and a quiet upgrade path.",      tag: "Real-time", tone: "amber"   as const },
   ];
   return (
     <section className="py-20 md:py-28 px-4 bg-white relative overflow-hidden">
@@ -361,17 +384,13 @@ export function ControlGovernanceSection() {
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.07, duration: 0.5, ease: "easeOut" }}
               viewport={{ once: true }}
-              className="group relative rounded-2xl border border-slate-200 bg-white p-4 md:p-5 hover:border-emerald-300 hover:-translate-y-1 hover:shadow-[0_16px_30px_-18px_rgba(15,23,42,0.2)] transition-all duration-300 overflow-hidden"
+              className="group relative rounded-2xl border border-slate-200 bg-white hover:border-slate-300 hover:-translate-y-0.5 hover:shadow-[0_16px_30px_-18px_rgba(15,23,42,0.2)] transition-all duration-300 overflow-hidden"
             >
-              <CornerAccents />
-              <div className="relative flex items-center justify-between mb-3">
-                <div className="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                  <it.icon className="w-4 h-4" />
-                </div>
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">{it.tag}</span>
+              <CardHeaderLane tone={it.tone} Icon={it.icon} badge={it.tag} className="h-12" />
+              <div className="p-4 md:p-5">
+                <div className="text-sm md:text-base font-display font-semibold text-slate-900">{it.title}</div>
+                <p className="text-xs md:text-sm text-slate-500 mt-1 leading-relaxed">{it.desc}</p>
               </div>
-              <div className="relative text-sm md:text-base font-display font-semibold text-slate-900">{it.title}</div>
-              <p className="relative text-xs md:text-sm text-slate-500 mt-1 leading-relaxed">{it.desc}</p>
             </motion.div>
           ))}
         </div>
@@ -487,25 +506,15 @@ export function FreeToolsStrip() {
                 transition={{ delay: 0.05 * i }}
                 viewport={{ once: true }}
                 onClick={() => navigate(t.path)}
-                className="group relative flex flex-col rounded-xl border border-slate-200 bg-white px-3.5 py-3.5 hover:border-emerald-300 hover:-translate-y-0.5 hover:shadow-[0_12px_24px_-16px_rgba(15,23,42,0.25)] transition-all duration-300 text-left overflow-hidden"
+                className="group relative flex flex-col rounded-xl border border-slate-200 bg-white hover:border-slate-300 hover:-translate-y-0.5 hover:shadow-[0_12px_24px_-16px_rgba(15,23,42,0.25)] transition-all duration-300 text-left overflow-hidden"
               >
-                <CornerAccents />
-                <div className="flex items-center justify-between mb-2">
-                  <div className="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                    <t.icon className="w-4 h-4" />
-                  </div>
-                  {t.badge && (
-                    <span className="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-                      {t.badge === "Popular" && <TrendingUp className="w-2.5 h-2.5" />}
-                      {t.badge === "Trending" && <Flame className="w-2.5 h-2.5" />}
-                      {t.badge}
-                    </span>
-                  )}
+                <CardHeaderLane tone={t.color} Icon={t.icon} badge={t.badge ?? null} className="h-10" />
+                <div className="px-3.5 py-3">
+                  <span className="block text-sm font-medium text-slate-800 group-hover:text-emerald-700 transition-colors truncate">{t.label}</span>
+                  <span className="text-[10px] text-slate-400 mt-0.5 inline-flex items-center gap-1">
+                    <LivePulse color={t.color} /> {t.uses} runs
+                  </span>
                 </div>
-                <span className="text-sm font-medium text-slate-800 group-hover:text-emerald-700 transition-colors truncate">{t.label}</span>
-                <span className="text-[10px] text-slate-400 mt-0.5 inline-flex items-center gap-1">
-                  <LivePulse color={t.color} /> {t.uses} runs
-                </span>
               </motion.button>
             ))}
           </div>
