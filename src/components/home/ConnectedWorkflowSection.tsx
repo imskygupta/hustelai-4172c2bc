@@ -2,6 +2,13 @@ import { FileSignature, FileDown, Send, MessageCircle } from "lucide-react";
 import { SignalDot, AsyncLane, OperationalChip, DeliveryBadge, QueueProgress, OpsGrid } from "./ops-primitives";
 import { useStageActivation } from "./useStageActivation";
 
+const TONE_GRADIENT: Record<string, string> = {
+  emerald: "from-emerald-500 via-teal-500 to-emerald-600",
+  violet:  "from-violet-500 via-fuchsia-500 to-violet-600",
+  sky:     "from-sky-500 via-cyan-500 to-sky-600",
+  amber:   "from-amber-500 via-orange-500 to-amber-600",
+};
+
 const STAGES = [
   {
     icon: FileSignature,
