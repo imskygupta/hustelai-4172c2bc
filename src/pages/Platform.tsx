@@ -31,6 +31,8 @@ const CATEGORIES = [
     desc: "Turn an inbound inquiry into a properly briefed, contracted client.",
     icon: Users,
     tone: "bg-indigo-50 text-indigo-700 border-indigo-200",
+    g: "indigo" as const,
+    badge: "Brief",
     items: [
       { label: "Intake forms",       to: "/workspaces/intake" },
       { label: "Onboarding builder", to: "/tools/onboarding-form" },
@@ -44,6 +46,8 @@ const CATEGORIES = [
     desc: "Produce branded client documents without leaving your workspace.",
     icon: FileSignature,
     tone: "bg-violet-50 text-violet-700 border-violet-200",
+    g: "violet" as const,
+    badge: "Send",
     items: [
       { label: "Proposal generator",  to: "/proposal-generator" },
       { label: "Quotation generator", to: "/quotation-generator" },
@@ -57,6 +61,8 @@ const CATEGORIES = [
     desc: "Track work, share deliverables and keep clients in the loop.",
     icon: Briefcase,
     tone: "bg-amber-50 text-amber-700 border-amber-200",
+    g: "amber" as const,
+    badge: "Deliver",
     items: [
       { label: "Files & deliverables", to: "/work/files" },
       { label: "Checklists",           to: "/work/checklists" },
@@ -70,6 +76,8 @@ const CATEGORIES = [
     desc: "Run the operational side of your business from one cockpit.",
     icon: Workflow,
     tone: "bg-sky-50 text-sky-700 border-sky-200",
+    g: "sky" as const,
+    badge: "Operate",
     items: [
       { label: "Clients (CRM)",   to: "/work/clients" },
       { label: "Pipeline",        to: "/workspaces/pipeline" },
@@ -83,6 +91,8 @@ const CATEGORIES = [
     desc: "Send professional invoices, track payments and reconcile expenses.",
     icon: Receipt,
     tone: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    g: "emerald" as const,
+    badge: "Bill",
     items: [
       { label: "Invoices",         to: "/work/invoices" },
       { label: "Expenses",         to: "/work/expenses" },
@@ -96,6 +106,8 @@ const CATEGORIES = [
     desc: "Reusable systems so the same setup work isn't repeated for every client.",
     icon: ClipboardList,
     tone: "bg-teal-50 text-teal-700 border-teal-200",
+    g: "emerald" as const,
+    badge: "Reuse",
     items: [
       { label: "Brand kit",            to: "/workspaces/brand-kit" },
       { label: "Operational systems",  to: "/systems" },
