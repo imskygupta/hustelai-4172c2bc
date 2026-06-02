@@ -357,10 +357,10 @@ export function IntegrationsNotificationsSection() {
  * ---------------------------------------------------------------- */
 export function ControlGovernanceSection() {
   const items = [
-    { icon: Settings2, title: "Workspace settings", desc: "Branding, voice, defaults — applied everywhere.", tag: "Synced" },
-    { icon: Layers, title: "Feature controls", desc: "Toggle modules per workspace. Roll out at your pace.", tag: "Live" },
-    { icon: Boxes, title: "Roles & access", desc: "Calm, role-aware access without an IT project.", tag: "Secure" },
-    { icon: Wallet, title: "Usage you can see", desc: "Clear limits, history and a quiet upgrade path.", tag: "Real-time" },
+    { icon: Settings2, title: "Workspace settings", desc: "Branding, voice, defaults — applied everywhere.", tag: "Synced",    tone: "emerald" as const },
+    { icon: Layers,    title: "Feature controls",   desc: "Toggle modules per workspace. Roll out at your pace.", tag: "Live",      tone: "violet"  as const },
+    { icon: Boxes,     title: "Roles & access",     desc: "Calm, role-aware access without an IT project.",       tag: "Secure",    tone: "sky"     as const },
+    { icon: Wallet,    title: "Usage you can see",  desc: "Clear limits, history and a quiet upgrade path.",      tag: "Real-time", tone: "amber"   as const },
   ];
   return (
     <section className="py-20 md:py-28 px-4 bg-white relative overflow-hidden">
@@ -384,17 +384,13 @@ export function ControlGovernanceSection() {
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.07, duration: 0.5, ease: "easeOut" }}
               viewport={{ once: true }}
-              className="group relative rounded-2xl border border-slate-200 bg-white p-4 md:p-5 hover:border-emerald-300 hover:-translate-y-1 hover:shadow-[0_16px_30px_-18px_rgba(15,23,42,0.2)] transition-all duration-300 overflow-hidden"
+              className="group relative rounded-2xl border border-slate-200 bg-white hover:border-slate-300 hover:-translate-y-0.5 hover:shadow-[0_16px_30px_-18px_rgba(15,23,42,0.2)] transition-all duration-300 overflow-hidden"
             >
-              <CornerAccents />
-              <div className="relative flex items-center justify-between mb-3">
-                <div className="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                  <it.icon className="w-4 h-4" />
-                </div>
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">{it.tag}</span>
+              <CardHeaderLane tone={it.tone} Icon={it.icon} badge={it.tag} className="h-12" />
+              <div className="p-4 md:p-5">
+                <div className="text-sm md:text-base font-display font-semibold text-slate-900">{it.title}</div>
+                <p className="text-xs md:text-sm text-slate-500 mt-1 leading-relaxed">{it.desc}</p>
               </div>
-              <div className="relative text-sm md:text-base font-display font-semibold text-slate-900">{it.title}</div>
-              <p className="relative text-xs md:text-sm text-slate-500 mt-1 leading-relaxed">{it.desc}</p>
             </motion.div>
           ))}
         </div>
