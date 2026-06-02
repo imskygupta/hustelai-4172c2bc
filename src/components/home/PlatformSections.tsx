@@ -274,21 +274,13 @@ export function RealDeliverablesSection() {
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.06, duration: 0.5, ease: "easeOut" }}
               viewport={{ once: true }}
-              className="group relative rounded-2xl border border-slate-200 bg-white p-4 md:p-5 hover:border-emerald-300 hover:-translate-y-1 hover:shadow-[0_18px_30px_-18px_rgba(15,23,42,0.25)] transition-all duration-300 overflow-hidden"
+              className="group relative rounded-2xl border border-slate-200 bg-white hover:border-slate-300 hover:-translate-y-0.5 hover:shadow-[0_18px_30px_-18px_rgba(15,23,42,0.25)] transition-all duration-300 overflow-hidden"
             >
-              <CornerAccents />
-              {/* Hover sheen */}
-              <span className="pointer-events-none absolute -inset-y-2 -left-1/2 w-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-gradient-to-r from-transparent via-emerald-100/40 to-transparent skew-x-12 group-hover:animate-shimmer-x" />
-              <div className="relative flex items-center justify-between mb-3">
-                <div className="w-10 h-10 rounded-lg bg-slate-900 text-white flex items-center justify-center group-hover:bg-emerald-600 transition-colors duration-300">
-                  <it.icon className="w-4 h-4" />
-                </div>
-                <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-                  <LivePulse color={it.color} /> {it.state}
-                </span>
+              <CardHeaderLane tone={it.color} Icon={it.icon} badge={it.state} className="h-12" />
+              <div className="p-4 md:p-5">
+                <div className="text-sm md:text-base font-display font-semibold text-slate-900">{it.label}</div>
+                <p className="text-xs md:text-sm text-slate-500 mt-1 leading-relaxed">{it.desc}</p>
               </div>
-              <div className="relative text-sm md:text-base font-display font-semibold text-slate-900">{it.label}</div>
-              <p className="relative text-xs md:text-sm text-slate-500 mt-1 leading-relaxed">{it.desc}</p>
             </motion.div>
           ))}
         </div>
