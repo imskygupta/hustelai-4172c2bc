@@ -1,12 +1,20 @@
 import { Users, FileText, Workflow, Send, Cloud, Cpu } from "lucide-react";
 
+const TONE_GRADIENT: Record<string, string> = {
+  emerald: "from-emerald-500 via-teal-500 to-emerald-600",
+  violet:  "from-violet-500 via-fuchsia-500 to-violet-600",
+  sky:     "from-sky-500 via-cyan-500 to-sky-600",
+  amber:   "from-amber-500 via-orange-500 to-amber-600",
+  slate:   "from-slate-600 via-slate-700 to-slate-800",
+};
+
 const MODULES = [
-  { icon: Users, label: "Clients", note: "Single record per relationship" },
-  { icon: FileText, label: "Documents", note: "Proposals · contracts · invoices" },
-  { icon: Cpu, label: "AI workflows", note: "Background async jobs" },
-  { icon: Cloud, label: "Exports", note: "Branded PDFs + portal links" },
-  { icon: Send, label: "Telegram delivery", note: "Live ping when ready" },
-  { icon: Workflow, label: "Async jobs", note: "Webhooks + queues" },
+  { icon: Users,    label: "Clients",           note: "Single record per relationship", tone: "emerald" as const, badge: "Live" },
+  { icon: FileText, label: "Documents",         note: "Proposals · contracts · invoices", tone: "sky"     as const, badge: "Branded" },
+  { icon: Cpu,      label: "AI workflows",      note: "Background async jobs",          tone: "violet"  as const, badge: "Async" },
+  { icon: Cloud,    label: "Exports",           note: "Branded PDFs + portal links",    tone: "emerald" as const, badge: "Rendered" },
+  { icon: Send,     label: "Telegram delivery", note: "Live ping when ready",           tone: "amber"   as const, badge: "Delivered" },
+  { icon: Workflow, label: "Async jobs",        note: "Webhooks + queues",              tone: "slate"   as const, badge: "Queued" },
 ];
 
 /** Homepage "Operating System architecture" — visual map of how modules connect. */
@@ -40,18 +48,22 @@ export function OperatingSystemArchitecture() {
             {MODULES.map((m) => (
               <div
                 key={m.label}
-                className="group relative rounded-2xl border border-slate-200 bg-white p-5 hover:border-emerald-300 hover:shadow-[0_4px_24px_-6px_rgba(16,185,129,0.18)] transition"
+                className="group relative rounded-2xl border border-slate-200 bg-white overflow-hidden hover:border-slate-300 hover:-translate-y-0.5 hover:shadow-[0_4px_24px_-6px_rgba(16,185,129,0.18)] transition-all duration-300"
               >
-                {/* live signal dot */}
-                <span className="absolute top-3 right-3 flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                </span>
-                <div className="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center mb-3 group-hover:bg-emerald-600 transition-colors">
-                  <m.icon className="w-4 h-4" />
+                <div className={`relative h-12 bg-gradient-to-br ${TONE_GRADIENT[m.tone]} px-3 flex items-center justify-between`}>
+                  <div aria-hidden className="pointer-events-none absolute -top-6 -right-6 h-16 w-16 rounded-full bg-white/25 blur-2xl" />
+                  <div className="relative flex h-8 w-8 items-center justify-center rounded-lg bg-white/20 backdrop-blur ring-1 ring-white/30">
+                    <m.icon className="w-4 h-4 text-white" />
+                  </div>
+                  <span className="relative inline-flex items-center gap-1 rounded-full bg-white/95 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-slate-700 shadow-sm">
+                    <span className={`h-1 w-1 rounded-full bg-gradient-to-br ${TONE_GRADIENT[m.tone]}`} />
+                    {m.badge}
+                  </span>
                 </div>
-                <div className="text-sm font-semibold text-slate-900">{m.label}</div>
-                <div className="text-[12.5px] text-slate-500 mt-0.5">{m.note}</div>
+                <div className="p-4">
+                  <div className="text-sm font-semibold text-slate-900">{m.label}</div>
+                  <div className="text-[12.5px] text-slate-500 mt-0.5">{m.note}</div>
+                </div>
               </div>
             ))}
           </div>
