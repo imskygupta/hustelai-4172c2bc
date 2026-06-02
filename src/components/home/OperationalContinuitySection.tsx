@@ -1,6 +1,13 @@
 import { Cloud, Send, History, GitBranch } from "lucide-react";
 import { SignalDot, OperationalChip, QueueProgress, AsyncLane, OpsGrid } from "./ops-primitives";
 
+const TONE_GRADIENT: Record<string, string> = {
+  emerald: "from-emerald-500 via-teal-500 to-emerald-600",
+  violet:  "from-violet-500 via-fuchsia-500 to-violet-600",
+  sky:     "from-sky-500 via-cyan-500 to-sky-600",
+  amber:   "from-amber-500 via-orange-500 to-amber-600",
+};
+
 /**
  * Operational continuity — the four traits that make the platform feel alive
  * even when the user closes the tab. Calm, infrastructure-grade.
