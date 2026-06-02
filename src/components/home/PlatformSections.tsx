@@ -61,6 +61,45 @@ function LivePulse({ color = "emerald" }: { color?: "emerald" | "amber" | "sky" 
   );
 }
 
+/**
+ * Shared gradient header tone map — matches the new tools-card visual
+ * language used in /tools and the homepage stats / workflow strips.
+ */
+const TONE_GRADIENT: Record<string, string> = {
+  emerald: "from-emerald-500 via-teal-500 to-emerald-600",
+  violet:  "from-violet-500 via-fuchsia-500 to-violet-600",
+  sky:     "from-sky-500 via-cyan-500 to-sky-600",
+  amber:   "from-amber-500 via-orange-500 to-amber-600",
+  slate:   "from-slate-600 via-slate-700 to-slate-800",
+};
+
+function CardHeaderLane({
+  tone,
+  Icon,
+  badge,
+  className = "h-14",
+}: {
+  tone: keyof typeof TONE_GRADIENT;
+  Icon: React.ComponentType<{ className?: string }>;
+  badge?: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={`relative ${className} bg-gradient-to-br ${TONE_GRADIENT[tone]} px-3 flex items-center justify-between`}>
+      <div aria-hidden className="pointer-events-none absolute -top-6 -right-6 h-16 w-16 rounded-full bg-white/25 blur-2xl" />
+      <div className="relative flex h-8 w-8 items-center justify-center rounded-lg bg-white/20 backdrop-blur ring-1 ring-white/30">
+        <Icon className="w-4 h-4 text-white" />
+      </div>
+      {badge ? (
+        <span className="relative inline-flex items-center gap-1 rounded-full bg-white/95 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-slate-700 shadow-sm">
+          <span className={`h-1 w-1 rounded-full bg-gradient-to-br ${TONE_GRADIENT[tone]}`} />
+          {badge}
+        </span>
+      ) : null}
+    </div>
+  );
+}
+
 /* ---------------------------------------------------------------- *
  * 1. Unified Workspace
  * ---------------------------------------------------------------- */
