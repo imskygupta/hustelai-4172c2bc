@@ -151,21 +151,13 @@ export function UnifiedWorkspaceSection() {
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.08, duration: 0.5, ease: "easeOut" }}
               viewport={{ once: true }}
-              className="group relative rounded-2xl border border-slate-200 bg-gradient-to-br from-white to-slate-50/60 p-5 md:p-6 hover:border-emerald-300/80 hover:shadow-[0_20px_40px_-20px_rgba(16,185,129,0.35)] hover:-translate-y-1 transition-all duration-300 overflow-hidden"
+              className="group relative rounded-2xl border border-slate-200 bg-white hover:border-slate-300 hover:shadow-[0_20px_40px_-20px_rgba(16,185,129,0.25)] hover:-translate-y-0.5 transition-all duration-300 overflow-hidden"
             >
-              {/* Hover gradient sheen */}
-              <span className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-br from-emerald-50/0 via-emerald-50/40 to-emerald-100/30" />
-              <CornerAccents />
-              <div className="relative flex items-start justify-between mb-4">
-                <div className="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-110 group-hover:rotate-[-4deg] transition-transform duration-300">
-                  <it.icon className="w-5 h-5" />
-                </div>
-                <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-slate-500">
-                  <LivePulse color={it.accent} /> {it.meta}
-                </span>
+              <CardHeaderLane tone={it.accent} Icon={it.icon} badge={it.meta} />
+              <div className="p-5 md:p-6">
+                <h3 className="font-display font-semibold text-base md:text-lg text-slate-900 mb-1.5">{it.title}</h3>
+                <p className="text-sm text-slate-500 leading-relaxed">{it.desc}</p>
               </div>
-              <h3 className="relative font-display font-semibold text-base md:text-lg text-slate-900 mb-1.5">{it.title}</h3>
-              <p className="relative text-sm text-slate-500 leading-relaxed">{it.desc}</p>
             </motion.div>
           ))}
         </div>
