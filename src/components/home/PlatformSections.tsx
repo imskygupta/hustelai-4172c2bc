@@ -506,25 +506,15 @@ export function FreeToolsStrip() {
                 transition={{ delay: 0.05 * i }}
                 viewport={{ once: true }}
                 onClick={() => navigate(t.path)}
-                className="group relative flex flex-col rounded-xl border border-slate-200 bg-white px-3.5 py-3.5 hover:border-emerald-300 hover:-translate-y-0.5 hover:shadow-[0_12px_24px_-16px_rgba(15,23,42,0.25)] transition-all duration-300 text-left overflow-hidden"
+                className="group relative flex flex-col rounded-xl border border-slate-200 bg-white hover:border-slate-300 hover:-translate-y-0.5 hover:shadow-[0_12px_24px_-16px_rgba(15,23,42,0.25)] transition-all duration-300 text-left overflow-hidden"
               >
-                <CornerAccents />
-                <div className="flex items-center justify-between mb-2">
-                  <div className="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                    <t.icon className="w-4 h-4" />
-                  </div>
-                  {t.badge && (
-                    <span className="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-                      {t.badge === "Popular" && <TrendingUp className="w-2.5 h-2.5" />}
-                      {t.badge === "Trending" && <Flame className="w-2.5 h-2.5" />}
-                      {t.badge}
-                    </span>
-                  )}
+                <CardHeaderLane tone={t.color} Icon={t.icon} badge={t.badge ?? null} className="h-10" />
+                <div className="px-3.5 py-3">
+                  <span className="block text-sm font-medium text-slate-800 group-hover:text-emerald-700 transition-colors truncate">{t.label}</span>
+                  <span className="text-[10px] text-slate-400 mt-0.5 inline-flex items-center gap-1">
+                    <LivePulse color={t.color} /> {t.uses} runs
+                  </span>
                 </div>
-                <span className="text-sm font-medium text-slate-800 group-hover:text-emerald-700 transition-colors truncate">{t.label}</span>
-                <span className="text-[10px] text-slate-400 mt-0.5 inline-flex items-center gap-1">
-                  <LivePulse color={t.color} /> {t.uses} runs
-                </span>
               </motion.button>
             ))}
           </div>
