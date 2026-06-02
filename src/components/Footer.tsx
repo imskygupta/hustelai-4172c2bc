@@ -126,9 +126,9 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-7 gap-x-10 gap-y-12 mb-14">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-x-8 gap-y-10 mb-14">
           {/* Brand */}
-          <div className="space-y-4 lg:col-span-2">
+          <div className="space-y-4 col-span-2 md:col-span-3 lg:col-span-2">
             <div className="flex items-center gap-2">
               <Zap className="w-6 h-6 text-primary" />
               <span className="font-display font-bold text-xl">HustleAI</span>
