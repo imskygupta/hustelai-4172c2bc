@@ -285,11 +285,6 @@ export default function Platform() {
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="py-16 md:py-20 px-4 bg-slate-50/60 border-t border-slate-100">
-        {/* moved up: architecture proof strip */}
-      </section>
-
       {/* Architecture as proof (lower-funnel) */}
       <section className="py-16 md:py-20 px-4 border-t border-slate-100">
         <div className="container mx-auto max-w-5xl">
