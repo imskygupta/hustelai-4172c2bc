@@ -8,7 +8,6 @@ import { Footer } from "@/components/Footer";
 import { SEO } from "@/components/SEO";
 import { Button } from "@/components/ui/button";
 
-const STAGES = [
 const TONE_GRADIENT: Record<string, string> = {
   sky:     "from-sky-500 via-cyan-500 to-sky-600",
   violet:  "from-violet-500 via-fuchsia-500 to-violet-600",
