@@ -34,19 +34,15 @@ const companyLinks = [
   { label: "Contact", href: "/contact" },
 ];
 
-const integrationLinks = [
-  { label: "All integrations", href: "/integrations" },
-  { label: "Email notifications", href: "/integrations" },
-  { label: "Telegram notifications", href: "/integrations/telegram-export-delivery" },
-  { label: "Stripe payments", href: "/integrations/stripe-payments" },
-  { label: "Webhooks & API", href: "/integrations" },
-];
-
 const workflowLinks = [
-  { label: "Async Workflows", href: "/workflows/async-ai-workflow-platform" },
   { label: "All Workflows", href: "/workflows" },
+  { label: "Async Workflows", href: "/workflows/async-ai-workflow-platform" },
   { label: "Use Cases", href: "/use-cases" },
   { label: "Features", href: "/features" },
+  { label: "All integrations", href: "/integrations" },
+  { label: "Telegram delivery", href: "/integrations/telegram-export-delivery" },
+  { label: "Stripe payments", href: "/integrations/stripe-payments" },
+  { label: "Webhooks & API", href: "/integrations" },
 ];
 
 // Wave 4 — cross-surface authority flow: main app ↔ docs ↔ blogs.
@@ -192,19 +188,7 @@ export function Footer() {
             </div>
           </div>
 
-          {/* Integrations */}
-          <div className="space-y-4">
-            <h4 className="font-display font-semibold text-xs uppercase tracking-[0.14em] text-slate-500">Integrations</h4>
-            <div className="space-y-2.5">
-              {integrationLinks.map(l => (
-                <Link key={l.href} to={l.href} className="block text-sm text-muted-foreground hover:text-primary transition-colors group">
-                  {l.label} <ArrowUpRight className="w-3 h-3 inline opacity-0 group-hover:opacity-100 transition-opacity" />
-                </Link>
-              ))}
-            </div>
-          </div>
-
-          {/* Workflows */}
+          {/* Workflows & integrations */}
           <div className="space-y-4">
             <h4 className="font-display font-semibold text-xs uppercase tracking-[0.14em] text-slate-500">Workflows</h4>
             <div className="space-y-2.5">
