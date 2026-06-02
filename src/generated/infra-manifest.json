@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-01T20:03:34.064Z",
+  "generated_at": "2026-06-02T14:54:44.331Z",
   "routes": [
     {
       "path": ":slug",
@@ -510,6 +510,14 @@
       "source": "src/App.tsx",
       "type": "admin",
       "authWrapper": "AdminSecurityUsers",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/admin/seo",
+      "source": "src/App.tsx",
+      "type": "admin",
+      "authWrapper": "SeoCommandCenter",
       "dynamic": false,
       "catchAll": false
     },
@@ -1629,7 +1637,7 @@
       "path": "/tools",
       "source": "src/App.tsx",
       "type": "public",
-      "authWrapper": "SurfaceAwareRedirect",
+      "authWrapper": "ToolsHub",
       "dynamic": false,
       "catchAll": false
     },
