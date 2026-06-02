@@ -8,20 +8,31 @@ import { Footer } from "@/components/Footer";
 import { SEO } from "@/components/SEO";
 import { Button } from "@/components/ui/button";
 
+const TONE_GRADIENT: Record<string, string> = {
+  sky:     "from-sky-500 via-cyan-500 to-sky-600",
+  violet:  "from-violet-500 via-fuchsia-500 to-violet-600",
+  indigo:  "from-indigo-500 via-blue-500 to-indigo-600",
+  amber:   "from-amber-500 via-orange-500 to-amber-600",
+  emerald: "from-emerald-500 via-teal-500 to-emerald-600",
+};
+
 const STAGES = [
-  { key: "lead",       label: "Lead",       desc: "Capture new client inquiries through intake forms or your website.",   icon: Inbox,         tone: "from-sky-50 to-white border-sky-200 text-sky-700" },
-  { key: "proposal",   label: "Proposal",   desc: "Draft, brand and send proposals or quotations clients can sign off on.", icon: FileSignature, tone: "from-violet-50 to-white border-violet-200 text-violet-700" },
-  { key: "onboarding", label: "Onboarding", desc: "Collect briefs, contracts and assets through structured forms.",          icon: Users,         tone: "from-indigo-50 to-white border-indigo-200 text-indigo-700" },
-  { key: "delivery",   label: "Delivery",   desc: "Run projects, share files and keep clients updated as work progresses.", icon: Briefcase,     tone: "from-amber-50 to-white border-amber-200 text-amber-700" },
-  { key: "billing",    label: "Billing",    desc: "Issue invoices, track payments and stay on top of recurring work.",      icon: Wallet,        tone: "from-emerald-50 to-white border-emerald-200 text-emerald-700" },
+  { key: "lead",       label: "Lead",       desc: "Capture new client inquiries through intake forms or your website.",   icon: Inbox,         tone: "sky"     as const, anchor: "#cat-onboarding",   badge: "Capture" },
+  { key: "proposal",   label: "Proposal",   desc: "Draft, brand and send proposals or quotations clients can sign off on.", icon: FileSignature, tone: "violet"  as const, anchor: "#cat-proposals",    badge: "Send" },
+  { key: "onboarding", label: "Onboarding", desc: "Collect briefs, contracts and assets through structured forms.",          icon: Users,         tone: "indigo"  as const, anchor: "#cat-onboarding",   badge: "Brief" },
+  { key: "delivery",   label: "Delivery",   desc: "Run projects, share files and keep clients updated as work progresses.", icon: Briefcase,     tone: "amber"   as const, anchor: "#cat-delivery",     badge: "Deliver" },
+  { key: "billing",    label: "Billing",    desc: "Issue invoices, track payments and stay on top of recurring work.",      icon: Wallet,        tone: "emerald" as const, anchor: "#cat-billing",      badge: "Invoice" },
 ];
 
 const CATEGORIES = [
   {
+    id: "cat-onboarding",
     label: "Client Onboarding",
     desc: "Turn an inbound inquiry into a properly briefed, contracted client.",
     icon: Users,
     tone: "bg-indigo-50 text-indigo-700 border-indigo-200",
+    g: "indigo" as const,
+    badge: "Brief",
     items: [
       { label: "Intake forms",       to: "/workspaces/intake" },
       { label: "Onboarding builder", to: "/tools/onboarding-form" },
@@ -30,10 +41,13 @@ const CATEGORIES = [
     ],
   },
   {
+    id: "cat-proposals",
     label: "Proposals & Documents",
     desc: "Produce branded client documents without leaving your workspace.",
     icon: FileSignature,
     tone: "bg-violet-50 text-violet-700 border-violet-200",
+    g: "violet" as const,
+    badge: "Send",
     items: [
       { label: "Proposal generator",  to: "/proposal-generator" },
       { label: "Quotation generator", to: "/quotation-generator" },
@@ -42,10 +56,13 @@ const CATEGORIES = [
     ],
   },
   {
+    id: "cat-delivery",
     label: "Client Delivery",
     desc: "Track work, share deliverables and keep clients in the loop.",
     icon: Briefcase,
     tone: "bg-amber-50 text-amber-700 border-amber-200",
+    g: "amber" as const,
+    badge: "Deliver",
     items: [
       { label: "Files & deliverables", to: "/work/files" },
       { label: "Checklists",           to: "/work/checklists" },
@@ -54,10 +71,13 @@ const CATEGORIES = [
     ],
   },
   {
+    id: "cat-operations",
     label: "Operations & CRM",
     desc: "Run the operational side of your business from one cockpit.",
     icon: Workflow,
     tone: "bg-sky-50 text-sky-700 border-sky-200",
+    g: "sky" as const,
+    badge: "Operate",
     items: [
       { label: "Clients (CRM)",   to: "/work/clients" },
       { label: "Pipeline",        to: "/workspaces/pipeline" },
@@ -66,10 +86,13 @@ const CATEGORIES = [
     ],
   },
   {
+    id: "cat-billing",
     label: "Billing & Invoicing",
     desc: "Send professional invoices, track payments and reconcile expenses.",
     icon: Receipt,
     tone: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    g: "emerald" as const,
+    badge: "Bill",
     items: [
       { label: "Invoices",         to: "/work/invoices" },
       { label: "Expenses",         to: "/work/expenses" },
@@ -78,10 +101,13 @@ const CATEGORIES = [
     ],
   },
   {
+    id: "cat-templates",
     label: "Templates & Systems",
     desc: "Reusable systems so the same setup work isn't repeated for every client.",
     icon: ClipboardList,
     tone: "bg-teal-50 text-teal-700 border-teal-200",
+    g: "emerald" as const,
+    badge: "Reuse",
     items: [
       { label: "Brand kit",            to: "/workspaces/brand-kit" },
       { label: "Operational systems",  to: "/systems" },
@@ -139,14 +165,29 @@ export default function Platform() {
 
           <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
             {STAGES.map((s, i) => (
-              <div key={s.key} className={`relative rounded-2xl border bg-gradient-to-b ${s.tone} p-5`}>
-                <div className="flex items-center justify-between">
-                  <s.icon className="w-5 h-5" />
-                  <span className="text-[10px] font-mono text-slate-400">0{i + 1}</span>
+              <a
+                key={s.key}
+                href={s.anchor}
+                className="group relative rounded-2xl border border-slate-200 bg-white overflow-hidden hover:border-slate-300 hover:-translate-y-0.5 hover:shadow-[0_18px_36px_-22px_rgba(16,185,129,0.35)] transition-all duration-300"
+              >
+                <div className={`relative h-14 bg-gradient-to-br ${TONE_GRADIENT[s.tone]} px-3 flex items-center justify-between`}>
+                  <div aria-hidden className="pointer-events-none absolute -top-6 -right-6 h-16 w-16 rounded-full bg-white/25 blur-2xl" />
+                  <div className="relative flex h-8 w-8 items-center justify-center rounded-lg bg-white/20 backdrop-blur ring-1 ring-white/30">
+                    <s.icon className="w-4 h-4 text-white" />
+                  </div>
+                  <span className="relative inline-flex items-center gap-1 rounded-full bg-white/95 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-slate-700 shadow-sm">
+                    <span className={`h-1 w-1 rounded-full bg-gradient-to-br ${TONE_GRADIENT[s.tone]}`} />
+                    0{i + 1}
+                  </span>
                 </div>
-                <div className="mt-3 text-sm font-semibold text-slate-900">{s.label}</div>
-                <div className="text-[12.5px] text-slate-600 mt-1 leading-snug">{s.desc}</div>
-              </div>
+                <div className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm font-semibold text-slate-900">{s.label}</div>
+                    <span className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">{s.badge}</span>
+                  </div>
+                  <div className="text-[12.5px] text-slate-500 mt-1 leading-snug">{s.desc}</div>
+                </div>
+              </a>
             ))}
           </div>
         </div>
@@ -165,12 +206,25 @@ export default function Platform() {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
             {CATEGORIES.map((c) => (
-              <div key={c.label} className="rounded-2xl border border-slate-200 bg-white p-6 hover:shadow-md transition-shadow">
-                <div className={`inline-flex items-center gap-2 px-2.5 py-1 rounded-full border text-[11px] font-semibold uppercase tracking-wider ${c.tone}`}>
-                  <c.icon className="w-3.5 h-3.5" /> {c.label}
+              <div
+                id={c.id}
+                key={c.label}
+                className="group rounded-2xl border border-slate-200 bg-white overflow-hidden hover:border-slate-300 hover:-translate-y-0.5 hover:shadow-[0_18px_36px_-22px_rgba(16,185,129,0.35)] transition-all duration-300 scroll-mt-24"
+              >
+                <div className={`relative h-14 bg-gradient-to-br ${TONE_GRADIENT[c.g]} px-4 flex items-center justify-between`}>
+                  <div aria-hidden className="pointer-events-none absolute -top-6 -right-6 h-16 w-16 rounded-full bg-white/25 blur-2xl" />
+                  <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-white/20 backdrop-blur ring-1 ring-white/30">
+                    <c.icon className="w-4 h-4 text-white" />
+                  </div>
+                  <span className="relative inline-flex items-center gap-1 rounded-full bg-white/95 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-slate-700 shadow-sm">
+                    <span className={`h-1 w-1 rounded-full bg-gradient-to-br ${TONE_GRADIENT[c.g]}`} />
+                    {c.badge}
+                  </span>
                 </div>
-                <p className="mt-3 text-[13.5px] text-slate-600 leading-relaxed">{c.desc}</p>
-                <ul className="mt-4 space-y-1.5">
+                <div className="p-5">
+                <div className="text-sm font-semibold text-slate-900">{c.label}</div>
+                <p className="mt-1 text-[13px] text-slate-500 leading-relaxed">{c.desc}</p>
+                <ul className="mt-4 space-y-1">
                   {c.items.map((i) => (
                     <li key={i.to}>
                       <Link
@@ -183,6 +237,7 @@ export default function Platform() {
                     </li>
                   ))}
                 </ul>
+                </div>
               </div>
             ))}
           </div>
@@ -226,6 +281,33 @@ export default function Platform() {
                 ))}
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Architecture as proof (lower-funnel) */}
+      <section className="py-16 md:py-20 px-4 border-t border-slate-100">
+        <div className="container mx-auto max-w-5xl">
+          <div className="text-center max-w-2xl mx-auto mb-8 space-y-2">
+            <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500 font-semibold">Why it stays fast under load</div>
+            <h2 className="text-2xl md:text-3xl font-display font-semibold tracking-tight">
+              The lifecycle runs on a serious operational layer.
+            </h2>
+            <p className="text-slate-500 text-sm md:text-base">
+              You don't have to think about this. It's why exports render, deliveries go out and clients stay in the loop without you babysitting tabs.
+            </p>
+          </div>
+          <div className="grid sm:grid-cols-3 gap-3">
+            {[
+              { t: "Async-native", d: "Long-running jobs (exports, AI drafts, deliveries) run in the background." },
+              { t: "Delivery-aware", d: "Every output knows where it's going — portal, email or Telegram." },
+              { t: "Workspace-bound", d: "Outputs land back on the client record, not a random downloads folder." },
+            ].map((p) => (
+              <div key={p.t} className="rounded-xl border border-slate-200 bg-white p-4">
+                <div className="text-sm font-semibold text-slate-900">{p.t}</div>
+                <div className="text-[12.5px] text-slate-500 mt-1 leading-snug">{p.d}</div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
