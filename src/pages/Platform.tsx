@@ -287,6 +287,38 @@ export default function Platform() {
 
       {/* CTA */}
       <section className="py-16 md:py-20 px-4 bg-slate-50/60 border-t border-slate-100">
+        {/* moved up: architecture proof strip */}
+      </section>
+
+      {/* Architecture as proof (lower-funnel) */}
+      <section className="py-16 md:py-20 px-4 border-t border-slate-100">
+        <div className="container mx-auto max-w-5xl">
+          <div className="text-center max-w-2xl mx-auto mb-8 space-y-2">
+            <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500 font-semibold">Why it stays fast under load</div>
+            <h2 className="text-2xl md:text-3xl font-display font-semibold tracking-tight">
+              The lifecycle runs on a serious operational layer.
+            </h2>
+            <p className="text-slate-500 text-sm md:text-base">
+              You don't have to think about this. It's why exports render, deliveries go out and clients stay in the loop without you babysitting tabs.
+            </p>
+          </div>
+          <div className="grid sm:grid-cols-3 gap-3">
+            {[
+              { t: "Async-native", d: "Long-running jobs (exports, AI drafts, deliveries) run in the background." },
+              { t: "Delivery-aware", d: "Every output knows where it's going — portal, email or Telegram." },
+              { t: "Workspace-bound", d: "Outputs land back on the client record, not a random downloads folder." },
+            ].map((p) => (
+              <div key={p.t} className="rounded-xl border border-slate-200 bg-white p-4">
+                <div className="text-sm font-semibold text-slate-900">{p.t}</div>
+                <div className="text-[12.5px] text-slate-500 mt-1 leading-snug">{p.d}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="py-16 md:py-20 px-4 bg-slate-50/60 border-t border-slate-100">
         <div className="container mx-auto max-w-3xl text-center space-y-4">
           <h2 className="text-2xl md:text-3xl font-display font-semibold tracking-tight">
             See the full platform in your own workspace
