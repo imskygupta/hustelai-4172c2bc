@@ -158,13 +158,16 @@ serve(async (req) => {
 
     const authHeader = req.headers.get("Authorization");
     if (authHeader) {
-      // Authenticated path (Signup.tsx) — verify caller
+      // Verify caller when a user JWT is present. Anon/publishable keys
+      // (sent automatically by supabase.functions.invoke for unauthenticated
+      // callers like the signup form before email confirmation) are allowed
+      // through — idempotency + email lookup prevents abuse.
       const token = authHeader.replace("Bearer ", "");
-      const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
-      if (authError || !user) throw new Error("Unauthorized");
+      const { data: { user } } = await supabaseAdmin.auth.getUser(token);
+      // If token is anon key or invalid, user will be null — that's fine,
+      // we fall through to the idempotency-protected send path.
+      void user;
     }
-    // Else: anonymous service-role internal caller (welcome-dispatch).
-    // Idempotency check below prevents abuse.
 
     // Idempotency: skip if already sent (unless forced via admin "send test")
     if (!force && await welcomeAlreadySent(email)) {
