@@ -212,46 +212,6 @@ export default function Index() {
         <Testimonials />
       </div>
 
-      {/* CTA */}
-      <section className="py-20 md:py-24 px-4 bg-white">
-        <div className="container mx-auto max-w-3xl">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            className="rounded-3xl p-8 md:p-12 text-center space-y-5 md:space-y-6 bg-slate-900 text-white relative overflow-hidden"
-          >
-            <div className="absolute -top-20 -right-20 w-64 h-64 bg-emerald-500/20 blur-3xl rounded-full" />
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/15 text-[11px] tracking-wide text-white/80 relative">
-              <Briefcase className="w-3.5 h-3.5" /> Client operations workspace · free to start
-            </div>
-            <h2 className="text-2xl md:text-4xl font-display font-semibold tracking-tight relative leading-tight">
-              Send your first proposal<br className="hidden md:block" /> in under five minutes.
-            </h2>
-            <p className="text-slate-300 relative text-sm md:text-base">
-              Draft a proposal. Send a branded onboarding form. Issue your first invoice. Everything lives in one workspace, tied to the right client.
-            </p>
-            <div className="relative flex flex-col sm:flex-row items-center justify-center gap-3">
-              <Button
-                size="lg"
-                className="bg-emerald-500 hover:bg-emerald-600 text-white text-base px-8 h-12 w-full sm:w-auto"
-                onClick={() => navigate("/signup")}
-              >
-                Open your workspace <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                className="bg-transparent border-white/20 text-white hover:bg-white/10 hover:text-white text-base px-8 h-12 w-full sm:w-auto"
-                onClick={() => navigate("/workspaces")}
-              >
-                See the workspace
-              </Button>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
       <div className="bg-white">
         <Footer />
       </div>
