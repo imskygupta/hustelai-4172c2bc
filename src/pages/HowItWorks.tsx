@@ -5,6 +5,14 @@ import { Footer } from "@/components/Footer";
 import { SEO } from "@/components/SEO";
 import { Button } from "@/components/ui/button";
 
+const TONE_GRADIENT: Record<string, string> = {
+  sky:     "from-sky-500 via-cyan-500 to-sky-600",
+  violet:  "from-violet-500 via-fuchsia-500 to-violet-600",
+  indigo:  "from-indigo-500 via-blue-500 to-indigo-600",
+  amber:   "from-amber-500 via-orange-500 to-amber-600",
+  emerald: "from-emerald-500 via-teal-500 to-emerald-600",
+};
+
 const STEPS = [
   {
     n: 1,
@@ -12,7 +20,8 @@ const STEPS = [
     title: "Capture the lead",
     body: "A new inquiry comes in through your intake form, website or a manual entry. HustleAI creates a client record and starts the operational thread.",
     detail: ["Public intake forms", "Manual client entry", "Lead status & source tracking"],
-    tone: "from-sky-50 to-white border-sky-200",
+    g: "sky" as const,
+    badge: "Capture",
   },
   {
     n: 2,
@@ -20,7 +29,8 @@ const STEPS = [
     title: "Send the proposal",
     body: "Draft a branded proposal or quotation in minutes — pulling from reusable blocks and your brand kit. Send a clean, signable document.",
     detail: ["Proposal & quotation templates", "Brand kit applied automatically", "Signed share links"],
-    tone: "from-violet-50 to-white border-violet-200",
+    g: "violet" as const,
+    badge: "Send",
   },
   {
     n: 3,
@@ -28,7 +38,8 @@ const STEPS = [
     title: "Onboard the client",
     body: "Once accepted, the client moves into onboarding: structured forms collect briefs, contracts, assets and access — without back-and-forth emails.",
     detail: ["Onboarding form builder", "Contract & NDA generator", "Client portal access"],
-    tone: "from-indigo-50 to-white border-indigo-200",
+    g: "indigo" as const,
+    badge: "Brief",
   },
   {
     n: 4,
@@ -36,7 +47,8 @@ const STEPS = [
     title: "Run the project",
     body: "Track the work in checklists, log time, share files and keep the client portal up to date. Everything stays attached to the client record.",
     detail: ["Checklists & deadlines", "Time tracker", "Files & client comms"],
-    tone: "from-amber-50 to-white border-amber-200",
+    g: "amber" as const,
+    badge: "Deliver",
   },
   {
     n: 5,
@@ -44,7 +56,8 @@ const STEPS = [
     title: "Invoice & retain",
     body: "Issue invoices from logged work, track payments, and use the same record next time the client comes back. The lifecycle compounds.",
     detail: ["Invoices from time entries", "Payment status tracking", "Recurring client history"],
-    tone: "from-emerald-50 to-white border-emerald-200",
+    g: "emerald" as const,
+    badge: "Invoice",
   },
 ];
 
@@ -77,16 +90,21 @@ export default function HowItWorks() {
       <section className="py-12 md:py-16 px-4 border-t border-slate-100">
         <div className="container mx-auto max-w-4xl space-y-6">
           {STEPS.map((s) => (
-            <div key={s.n} className={`grid md:grid-cols-[160px_1fr] gap-6 rounded-2xl border bg-gradient-to-br ${s.tone} p-6 md:p-8`}>
-              <div className="flex md:flex-col items-center md:items-start gap-3">
-                <div className="w-12 h-12 rounded-xl bg-white border border-slate-200 flex items-center justify-center shadow-sm">
-                  <s.icon className="w-5 h-5 text-slate-700" />
+            <div key={s.n} className="group rounded-2xl border border-slate-200 bg-white overflow-hidden hover:border-slate-300 hover:-translate-y-0.5 hover:shadow-[0_18px_36px_-22px_rgba(16,185,129,0.35)] transition-all duration-300">
+              <div className={`relative h-16 bg-gradient-to-br ${TONE_GRADIENT[s.g]} px-4 flex items-center justify-between`}>
+                <div aria-hidden className="pointer-events-none absolute -top-8 -right-6 h-20 w-20 rounded-full bg-white/25 blur-2xl" />
+                <div className="relative flex items-center gap-2.5">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/20 backdrop-blur ring-1 ring-white/30">
+                    <s.icon className="w-4 h-4 text-white" />
+                  </div>
+                  <div className="text-[11px] uppercase tracking-[0.18em] text-white/90 font-semibold">Step 0{s.n}</div>
                 </div>
-                <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500 font-semibold">
-                  Step 0{s.n}
-                </div>
+                <span className="relative inline-flex items-center gap-1 rounded-full bg-white/95 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-slate-700 shadow-sm">
+                  <span className={`h-1 w-1 rounded-full bg-gradient-to-br ${TONE_GRADIENT[s.g]}`} />
+                  {s.badge}
+                </span>
               </div>
-              <div>
+              <div className="p-6 md:p-8">
                 <h2 className="text-xl md:text-2xl font-display font-semibold tracking-tight text-slate-900">{s.title}</h2>
                 <p className="mt-2 text-slate-600 text-sm md:text-[15px] leading-relaxed">{s.body}</p>
                 <ul className="mt-4 grid sm:grid-cols-3 gap-2">
