@@ -165,14 +165,29 @@ export default function Platform() {
 
           <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
             {STAGES.map((s, i) => (
-              <div key={s.key} className={`relative rounded-2xl border bg-gradient-to-b ${s.tone} p-5`}>
-                <div className="flex items-center justify-between">
-                  <s.icon className="w-5 h-5" />
-                  <span className="text-[10px] font-mono text-slate-400">0{i + 1}</span>
+              <a
+                key={s.key}
+                href={s.anchor}
+                className="group relative rounded-2xl border border-slate-200 bg-white overflow-hidden hover:border-slate-300 hover:-translate-y-0.5 hover:shadow-[0_18px_36px_-22px_rgba(16,185,129,0.35)] transition-all duration-300"
+              >
+                <div className={`relative h-14 bg-gradient-to-br ${TONE_GRADIENT[s.tone]} px-3 flex items-center justify-between`}>
+                  <div aria-hidden className="pointer-events-none absolute -top-6 -right-6 h-16 w-16 rounded-full bg-white/25 blur-2xl" />
+                  <div className="relative flex h-8 w-8 items-center justify-center rounded-lg bg-white/20 backdrop-blur ring-1 ring-white/30">
+                    <s.icon className="w-4 h-4 text-white" />
+                  </div>
+                  <span className="relative inline-flex items-center gap-1 rounded-full bg-white/95 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-slate-700 shadow-sm">
+                    <span className={`h-1 w-1 rounded-full bg-gradient-to-br ${TONE_GRADIENT[s.tone]}`} />
+                    0{i + 1}
+                  </span>
                 </div>
-                <div className="mt-3 text-sm font-semibold text-slate-900">{s.label}</div>
-                <div className="text-[12.5px] text-slate-600 mt-1 leading-snug">{s.desc}</div>
-              </div>
+                <div className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm font-semibold text-slate-900">{s.label}</div>
+                    <span className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">{s.badge}</span>
+                  </div>
+                  <div className="text-[12.5px] text-slate-500 mt-1 leading-snug">{s.desc}</div>
+                </div>
+              </a>
             ))}
           </div>
         </div>
@@ -191,12 +206,25 @@ export default function Platform() {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
             {CATEGORIES.map((c) => (
-              <div key={c.label} className="rounded-2xl border border-slate-200 bg-white p-6 hover:shadow-md transition-shadow">
-                <div className={`inline-flex items-center gap-2 px-2.5 py-1 rounded-full border text-[11px] font-semibold uppercase tracking-wider ${c.tone}`}>
-                  <c.icon className="w-3.5 h-3.5" /> {c.label}
+              <div
+                id={c.id}
+                key={c.label}
+                className="group rounded-2xl border border-slate-200 bg-white overflow-hidden hover:border-slate-300 hover:-translate-y-0.5 hover:shadow-[0_18px_36px_-22px_rgba(16,185,129,0.35)] transition-all duration-300 scroll-mt-24"
+              >
+                <div className={`relative h-14 bg-gradient-to-br ${TONE_GRADIENT[c.g]} px-4 flex items-center justify-between`}>
+                  <div aria-hidden className="pointer-events-none absolute -top-6 -right-6 h-16 w-16 rounded-full bg-white/25 blur-2xl" />
+                  <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-white/20 backdrop-blur ring-1 ring-white/30">
+                    <c.icon className="w-4 h-4 text-white" />
+                  </div>
+                  <span className="relative inline-flex items-center gap-1 rounded-full bg-white/95 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-slate-700 shadow-sm">
+                    <span className={`h-1 w-1 rounded-full bg-gradient-to-br ${TONE_GRADIENT[c.g]}`} />
+                    {c.badge}
+                  </span>
                 </div>
-                <p className="mt-3 text-[13.5px] text-slate-600 leading-relaxed">{c.desc}</p>
-                <ul className="mt-4 space-y-1.5">
+                <div className="p-5">
+                <div className="text-sm font-semibold text-slate-900">{c.label}</div>
+                <p className="mt-1 text-[13px] text-slate-500 leading-relaxed">{c.desc}</p>
+                <ul className="mt-4 space-y-1">
                   {c.items.map((i) => (
                     <li key={i.to}>
                       <Link
@@ -209,6 +237,7 @@ export default function Platform() {
                     </li>
                   ))}
                 </ul>
+                </div>
               </div>
             ))}
           </div>
