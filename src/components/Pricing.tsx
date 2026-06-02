@@ -235,31 +235,30 @@ export function Pricing() {
           </div>
         </motion.div>
 
-        {/* Pay-As-You-Go Card */}
+        {/* Compare plans card */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="mt-10 rounded-2xl p-8 text-center max-w-xl mx-auto bg-white border border-slate-200 hover:border-emerald-300 hover:shadow-lg hover:shadow-emerald-100 transition-all space-y-3"
+          className="mt-10 group relative overflow-hidden rounded-2xl max-w-2xl mx-auto bg-white border border-slate-200 hover:border-emerald-300 hover:shadow-lg hover:shadow-emerald-100/60 transition-all"
         >
-          <div className="inline-flex w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 items-center justify-center mx-auto">💳</div>
-          <h3 className="font-display font-semibold text-lg text-slate-900">AI assist credits</h3>
-          <p className="text-sm text-slate-500">₹10 / assist — top up on demand without a subscription. Ideal for occasional use.</p>
-          <Button
-            variant="outline"
-            onClick={() => navigate("/payment?type=wallet")}
-            className="border-slate-300 text-slate-900 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-300"
-          >
-            Buy Credits
-          </Button>
+          <div className="h-1.5 w-full bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600" />
+          <div className="p-6 md:p-7 flex flex-col sm:flex-row items-start sm:items-center gap-5 sm:gap-6">
+            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center shadow-md shrink-0">
+              <Sparkles className="w-5 h-5" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-display font-semibold text-lg text-slate-900 leading-tight">Compare every feature, side by side</h3>
+              <p className="text-sm text-slate-500 mt-1">See the full breakdown of workspaces, integrations, automations and AI limits across all four plans.</p>
+            </div>
+            <Button
+              onClick={() => navigate("/plans")}
+              className="bg-slate-900 hover:bg-emerald-500 text-white transition-colors h-10 px-5 shrink-0"
+            >
+              View all plans <ArrowRight className="w-4 h-4 ml-1.5" />
+            </Button>
+          </div>
         </motion.div>
-
-        {/* View All Features */}
-        <div className="text-center mt-6">
-          <Button variant="link" onClick={() => navigate("/plans")} className="text-emerald-600 hover:text-emerald-700">
-            View all features & compare plans →
-          </Button>
-        </div>
       </div>
     </section>
   );
