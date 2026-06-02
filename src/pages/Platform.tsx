@@ -9,15 +9,25 @@ import { SEO } from "@/components/SEO";
 import { Button } from "@/components/ui/button";
 
 const STAGES = [
-  { key: "lead",       label: "Lead",       desc: "Capture new client inquiries through intake forms or your website.",   icon: Inbox,         tone: "from-sky-50 to-white border-sky-200 text-sky-700" },
-  { key: "proposal",   label: "Proposal",   desc: "Draft, brand and send proposals or quotations clients can sign off on.", icon: FileSignature, tone: "from-violet-50 to-white border-violet-200 text-violet-700" },
-  { key: "onboarding", label: "Onboarding", desc: "Collect briefs, contracts and assets through structured forms.",          icon: Users,         tone: "from-indigo-50 to-white border-indigo-200 text-indigo-700" },
-  { key: "delivery",   label: "Delivery",   desc: "Run projects, share files and keep clients updated as work progresses.", icon: Briefcase,     tone: "from-amber-50 to-white border-amber-200 text-amber-700" },
-  { key: "billing",    label: "Billing",    desc: "Issue invoices, track payments and stay on top of recurring work.",      icon: Wallet,        tone: "from-emerald-50 to-white border-emerald-200 text-emerald-700" },
+const TONE_GRADIENT: Record<string, string> = {
+  sky:     "from-sky-500 via-cyan-500 to-sky-600",
+  violet:  "from-violet-500 via-fuchsia-500 to-violet-600",
+  indigo:  "from-indigo-500 via-blue-500 to-indigo-600",
+  amber:   "from-amber-500 via-orange-500 to-amber-600",
+  emerald: "from-emerald-500 via-teal-500 to-emerald-600",
+};
+
+const STAGES = [
+  { key: "lead",       label: "Lead",       desc: "Capture new client inquiries through intake forms or your website.",   icon: Inbox,         tone: "sky"     as const, anchor: "#cat-onboarding",   badge: "Capture" },
+  { key: "proposal",   label: "Proposal",   desc: "Draft, brand and send proposals or quotations clients can sign off on.", icon: FileSignature, tone: "violet"  as const, anchor: "#cat-proposals",    badge: "Send" },
+  { key: "onboarding", label: "Onboarding", desc: "Collect briefs, contracts and assets through structured forms.",          icon: Users,         tone: "indigo"  as const, anchor: "#cat-onboarding",   badge: "Brief" },
+  { key: "delivery",   label: "Delivery",   desc: "Run projects, share files and keep clients updated as work progresses.", icon: Briefcase,     tone: "amber"   as const, anchor: "#cat-delivery",     badge: "Deliver" },
+  { key: "billing",    label: "Billing",    desc: "Issue invoices, track payments and stay on top of recurring work.",      icon: Wallet,        tone: "emerald" as const, anchor: "#cat-billing",      badge: "Invoice" },
 ];
 
 const CATEGORIES = [
   {
+    id: "cat-onboarding",
     label: "Client Onboarding",
     desc: "Turn an inbound inquiry into a properly briefed, contracted client.",
     icon: Users,
@@ -30,6 +40,7 @@ const CATEGORIES = [
     ],
   },
   {
+    id: "cat-proposals",
     label: "Proposals & Documents",
     desc: "Produce branded client documents without leaving your workspace.",
     icon: FileSignature,
@@ -42,6 +53,7 @@ const CATEGORIES = [
     ],
   },
   {
+    id: "cat-delivery",
     label: "Client Delivery",
     desc: "Track work, share deliverables and keep clients in the loop.",
     icon: Briefcase,
@@ -54,6 +66,7 @@ const CATEGORIES = [
     ],
   },
   {
+    id: "cat-operations",
     label: "Operations & CRM",
     desc: "Run the operational side of your business from one cockpit.",
     icon: Workflow,
@@ -66,6 +79,7 @@ const CATEGORIES = [
     ],
   },
   {
+    id: "cat-billing",
     label: "Billing & Invoicing",
     desc: "Send professional invoices, track payments and reconcile expenses.",
     icon: Receipt,
@@ -78,6 +92,7 @@ const CATEGORIES = [
     ],
   },
   {
+    id: "cat-templates",
     label: "Templates & Systems",
     desc: "Reusable systems so the same setup work isn't repeated for every client.",
     icon: ClipboardList,
