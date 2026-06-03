@@ -28,6 +28,8 @@ import OperationsTodayCard from "@/components/dashboard/OperationsTodayCard";
 import RecentClientActivityFeed from "@/components/dashboard/RecentClientActivityFeed";
 import ClientsHeadlineCard from "@/components/dashboard/ClientsHeadlineCard";
 import WorkspacePortalTile from "@/components/dashboard/WorkspacePortalTile";
+import RecentDocumentsCard from "@/components/dashboard/RecentDocumentsCard";
+import WorkspaceAssistantCard from "@/components/dashboard/WorkspaceAssistantCard";
 import FirstVisitWelcome from "@/components/onboarding/FirstVisitWelcome";
 import WelcomeActionGrid from "@/components/onboarding/WelcomeActionGrid";
 import PostExportTelegramNudge from "@/components/onboarding/PostExportTelegramNudge";
