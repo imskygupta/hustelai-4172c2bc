@@ -20,7 +20,7 @@ import AdaptiveCockpit from "@/components/dashboard/AdaptiveCockpit";
 import TodayCockpit from "@/components/dashboard/TodayCockpit";
 import PersonaFlowCard from "@/components/dashboard/PersonaFlowCard";
 import OperationsStrip from "@/components/dashboard/OperationsStrip";
-import { useOperatorMode, type DashboardWidgetId } from "@/lib/operator-mode";
+import { useOperatorMode } from "@/lib/operator-mode";
 import OperationalFlows from "@/components/dashboard/OperationalFlows";
 import ContextualNudge from "@/components/dashboard/ContextualNudge";
 import DashboardHero from "@/components/dashboard/DashboardHero";
@@ -28,6 +28,8 @@ import OperationsTodayCard from "@/components/dashboard/OperationsTodayCard";
 import RecentClientActivityFeed from "@/components/dashboard/RecentClientActivityFeed";
 import ClientsHeadlineCard from "@/components/dashboard/ClientsHeadlineCard";
 import WorkspacePortalTile from "@/components/dashboard/WorkspacePortalTile";
+import RecentDocumentsCard from "@/components/dashboard/RecentDocumentsCard";
+import WorkspaceAssistantCard from "@/components/dashboard/WorkspaceAssistantCard";
 import FirstVisitWelcome from "@/components/onboarding/FirstVisitWelcome";
 import WelcomeActionGrid from "@/components/onboarding/WelcomeActionGrid";
 import PostExportTelegramNudge from "@/components/onboarding/PostExportTelegramNudge";
@@ -279,68 +281,58 @@ export default function Dashboard() {
       <div className="space-y-6 max-w-7xl mx-auto w-full">
         {!emailVerified && <EmailVerificationBanner email={user!.email || ""} />}
 
-        {/* Calm one-line orientation for new users — auto-hides after first project. */}
-        <FirstVisitWelcome />
+        {/* First-run onboarding cards. Only render when the workspace is
+            truly empty — once the user has any saved hustles, chats or
+            recent activity, this whole block disappears so power users
+            aren't staring at "Pick a move to set up your workspace". */}
+        {savedHustlesCount === 0 && chatCount === 0 && recentActivity.length === 0 && (
+          <>
+            <FirstVisitWelcome />
+            <WelcomeActionGrid />
+          </>
+        )}
 
-        {/* Action-card empty state for first-time users — six concrete next moves
-            instead of "No data yet". Self-hides after first project or on dismiss. */}
-        <WelcomeActionGrid />
-
-        {/* Workspace Trust Sprint — Phase 1.
-            Operations strip REPLACES the old welcome/cockpit greeting block.
-            Answers "what needs my attention right now?" in <3 seconds with
-            four clickable metrics + three primary actions. No motivational
-            copy. Then Today Cockpit → Persona Flow → everything else. */}
+        {/* OPERATIONS COCKPIT — calm, prescriptive ordering inspired by the
+            MeetCraft reference. Each section answers ONE question:
+              1. Workspace Overview     — what's the state?       (OperationsStrip)
+              2. Today's Focus          — what should I do next?  (TodayCockpit)
+              3. Client Pipeline        — the hero workflow       (PersonaFlowCard)
+              4. Active Clients         — who matters today?      (ClientsHeadlineCard)
+              5. Recent Documents       — last edited artefacts   (RecentDocumentsCard)
+              6. Workspace Assistant    — inline HustleBot        (WorkspaceAssistantCard)
+            Everything else folds away under "All modules & tools". */}
         <OperationsStrip />
-
-        {/* TODAY — hero cockpit. Answers "what should I do next?" per persona. */}
         <TodayCockpit />
-
-        {/* Narrative-continuity bridge: the SAME 5-stage workflow the user saw
-            on Homepage V3, now rendered with live counts from their data.
-            Reads from src/lib/workspace/persona-flow.ts (also the source for
-            HomepageV3.WorkflowsByAudience), so labels can never drift. */}
         <PersonaFlowCard />
+        <ClientsHeadlineCard />
+        <RecentDocumentsCard />
+        <WorkspaceAssistantCard />
 
-        {/* Adaptive widget stack — order is driven by the active persona's
-            `widgetOrder` (see src/lib/operator-mode.ts). Same components,
-            same data — different defaults so the dashboard feels built for
-            who the user is. Nothing is hidden. */}
-        {(() => {
-          const defaultOrder: DashboardWidgetId[] = ["operations", "clients", "activity", "portal", "hero"];
-          const order = cockpitMeta?.widgetOrder ?? defaultOrder;
-          // Ensure no widget is dropped if a mode declares a partial order.
-          const full = [...order, ...defaultOrder.filter(w => !order.includes(w))];
-          const widgets: Record<DashboardWidgetId, JSX.Element | null> = {
-            operations: <OperationsTodayCard />,
-            clients: <ClientsHeadlineCard />,
-            activity: <RecentClientActivityFeed />,
-            portal: <WorkspacePortalTile />,
-            hero: <DashboardHero />,
-            resume: null,
-          };
-          return (
-            <>
-              {full.map((id) => widgets[id] && <div key={id}>{widgets[id]}</div>)}
-            </>
-          );
-        })()}
+        {/* Everything below is folded away by default — users opt in to the
+            full module wall instead of being overwhelmed on first paint. */}
+        <details className="group rounded-2xl border border-border bg-card open:bg-card">
+          <summary className="cursor-pointer list-none flex items-center justify-between px-5 py-4">
+            <div>
+              <p className="font-display font-semibold text-sm text-foreground">All modules &amp; tools</p>
+              <p className="text-xs text-muted-foreground">Roadmap engine, document studio, daily tools, infrastructure &amp; more.</p>
+            </div>
+            <span className="text-[11px] uppercase tracking-wider font-semibold text-primary group-open:hidden">Show all</span>
+            <span className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground hidden group-open:inline">Hide</span>
+          </summary>
+          <div className="px-5 pb-5 space-y-6 border-t border-border pt-5">
 
-        {/* Personalised activity-aware nudge — sits above the cockpit so the
-            first thing operators see is a sentence about THEIR own state. */}
+        {/* Recent activity, today operations & secondary widgets — preserved
+            inside the fold so nothing is removed, just made opt-in. */}
+        <OperationsTodayCard />
+        <RecentClientActivityFeed />
+        <WorkspacePortalTile />
+        <DashboardHero />
         <ContextualNudge />
-
-        {/* Intent-first cockpit — replaces the old "tool wall first" experience.
-            Picks a role, surfaces ONE next action, shows only relevant modules.
-            Everything else is still available below under "Show all modules". */}
         <AdaptiveCockpit />
-
-        {/* Workflow-first grouping — outcome-named flows with progressive
-            disclosure. Replaces the "five semantically-similar tool grids"
-            problem with one journey at a time. */}
         <OperationalFlows tier={tier} />
 
-        {/* KPI cards */}
+        {/* KPI cards — secondary metrics, kept available but no longer
+            competing with the cockpit on first paint. */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <KpiCard
             icon={Search} label="Searches today"
@@ -368,18 +360,6 @@ export default function Dashboard() {
           />
         </div>
 
-        {/* Everything below is folded away by default — users opt in to the
-            full module wall instead of being overwhelmed on first paint. */}
-        <details className="group rounded-2xl border border-border bg-card open:bg-card">
-          <summary className="cursor-pointer list-none flex items-center justify-between px-5 py-4">
-            <div>
-              <p className="font-display font-semibold text-sm text-foreground">All modules &amp; tools</p>
-              <p className="text-xs text-muted-foreground">Roadmap engine, document studio, daily tools, infrastructure &amp; more.</p>
-            </div>
-            <span className="text-[11px] uppercase tracking-wider font-semibold text-primary group-open:hidden">Show all</span>
-            <span className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground hidden group-open:inline">Hide</span>
-          </summary>
-          <div className="px-5 pb-5 space-y-6 border-t border-border pt-5">
         {/* Operational Brain — featured module */}
         <div className="relative overflow-hidden rounded-2xl border border-violet-200 bg-gradient-to-br from-violet-50 via-white to-fuchsia-50 p-5 sm:p-6 dark:border-violet-900/40 dark:from-violet-950/40 dark:via-card dark:to-fuchsia-950/30">
           <div className="absolute -top-12 -right-12 w-48 h-48 rounded-full bg-gradient-to-br from-violet-200/50 to-fuchsia-200/40 blur-2xl pointer-events-none" />
