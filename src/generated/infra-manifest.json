@@ -2636,6 +2636,10 @@
       "source": "supabase/functions/payment-admin-notify/index.ts"
     },
     {
+      "name": "pdf-studio-download",
+      "source": "supabase/functions/pdf-studio-download/index.ts"
+    },
+    {
       "name": "pdf-studio-parse",
       "source": "supabase/functions/pdf-studio-parse/index.ts"
     },
