@@ -5222,6 +5222,174 @@ export type Database = {
         }
         Relationships: []
       }
+      pdf_studio_annotations: {
+        Row: {
+          anchor_json: Json
+          client_email: string | null
+          client_name: string | null
+          comment: string
+          created_at: string
+          document_id: string
+          id: string
+          revision_id: string
+          status: string
+        }
+        Insert: {
+          anchor_json?: Json
+          client_email?: string | null
+          client_name?: string | null
+          comment: string
+          created_at?: string
+          document_id: string
+          id?: string
+          revision_id: string
+          status?: string
+        }
+        Update: {
+          anchor_json?: Json
+          client_email?: string | null
+          client_name?: string | null
+          comment?: string
+          created_at?: string
+          document_id?: string
+          id?: string
+          revision_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pdf_studio_annotations_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "pdf_studio_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pdf_studio_annotations_revision_id_fkey"
+            columns: ["revision_id"]
+            isOneToOne: false
+            referencedRelation: "pdf_studio_revisions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pdf_studio_documents: {
+        Row: {
+          client_profile_id: string | null
+          created_at: string
+          doc_kind: string
+          id: string
+          source_size_bytes: number | null
+          source_storage_path: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          client_profile_id?: string | null
+          created_at?: string
+          doc_kind?: string
+          id?: string
+          source_size_bytes?: number | null
+          source_storage_path?: string | null
+          title?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          client_profile_id?: string | null
+          created_at?: string
+          doc_kind?: string
+          id?: string
+          source_size_bytes?: number | null
+          source_storage_path?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pdf_studio_documents_client_profile_id_fkey"
+            columns: ["client_profile_id"]
+            isOneToOne: false
+            referencedRelation: "client_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pdf_studio_revisions: {
+        Row: {
+          ai_instruction: string | null
+          blocks_json: Json
+          created_at: string
+          created_by: string
+          document_id: string
+          id: string
+          version: number
+        }
+        Insert: {
+          ai_instruction?: string | null
+          blocks_json?: Json
+          created_at?: string
+          created_by: string
+          document_id: string
+          id?: string
+          version: number
+        }
+        Update: {
+          ai_instruction?: string | null
+          blocks_json?: Json
+          created_at?: string
+          created_by?: string
+          document_id?: string
+          id?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pdf_studio_revisions_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "pdf_studio_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pdf_studio_share_links: {
+        Row: {
+          created_at: string
+          document_id: string
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          slug: string
+        }
+        Insert: {
+          created_at?: string
+          document_id: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          slug: string
+        }
+        Update: {
+          created_at?: string
+          document_id?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          slug?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pdf_studio_share_links_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: true
+            referencedRelation: "pdf_studio_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pinned_items: {
         Row: {
           created_at: string
@@ -11252,6 +11420,17 @@ export type Database = {
       }
       operator_pulse: { Args: { _slug: string }; Returns: Json }
       operator_pulse_global: { Args: never; Returns: Json }
+      pdf_studio_insert_annotation: {
+        Args: {
+          p_anchor: Json
+          p_client_email: string
+          p_client_name: string
+          p_comment: string
+          p_slug: string
+        }
+        Returns: string
+      }
+      pdf_studio_resolve_share: { Args: { p_slug: string }; Returns: Json }
       post_performance: { Args: { _slug: string }; Returns: Json }
       public_artifact_get: {
         Args: { _token: string }
