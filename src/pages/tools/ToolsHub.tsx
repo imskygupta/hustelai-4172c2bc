@@ -64,11 +64,11 @@ const documents: Tool[] = [
     uses: "24.1k uses", rating: "4.9",
   },
   {
-    href: "/tools/pdf-studio", icon: FileEdit, label: "PDF Studio (Revise)",
-    outcome: "Already have a PDF? Upload, edit with AI, share v2 in seconds.",
+    href: "/dashboard/documents", icon: FileEdit, label: "Documents",
+    outcome: "Upload any PDF — original look stays intact. AI revises on top, clients approve via link.",
     badge: "Pro+", badgeTone: "bg-violet-100 text-violet-700",
-    cta: "Upload & revise", color: "from-indigo-500 via-violet-600 to-fuchsia-600",
-    uses: "Revise · Share · Annotate", note: "No starting from scratch",
+    cta: "Open Documents", color: "from-indigo-500 via-violet-600 to-fuchsia-600",
+    uses: "Revise · Share · Approve", note: "Original formatting preserved",
   },
 ];
 
