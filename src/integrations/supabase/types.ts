@@ -5231,6 +5231,7 @@ export type Database = {
           created_at: string
           document_id: string
           id: string
+          kind: string
           revision_id: string
           status: string
         }
@@ -5242,6 +5243,7 @@ export type Database = {
           created_at?: string
           document_id: string
           id?: string
+          kind?: string
           revision_id: string
           status?: string
         }
@@ -5253,6 +5255,7 @@ export type Database = {
           created_at?: string
           document_id?: string
           id?: string
+          kind?: string
           revision_id?: string
           status?: string
         }
@@ -5275,34 +5278,40 @@ export type Database = {
       }
       pdf_studio_documents: {
         Row: {
+          brand_applied: boolean
           client_profile_id: string | null
           created_at: string
           doc_kind: string
           id: string
           source_size_bytes: number | null
           source_storage_path: string | null
+          status: string
           title: string
           updated_at: string
           user_id: string
         }
         Insert: {
+          brand_applied?: boolean
           client_profile_id?: string | null
           created_at?: string
           doc_kind?: string
           id?: string
           source_size_bytes?: number | null
           source_storage_path?: string | null
+          status?: string
           title?: string
           updated_at?: string
           user_id: string
         }
         Update: {
+          brand_applied?: boolean
           client_profile_id?: string | null
           created_at?: string
           doc_kind?: string
           id?: string
           source_size_bytes?: number | null
           source_storage_path?: string | null
+          status?: string
           title?: string
           updated_at?: string
           user_id?: string
@@ -5320,29 +5329,38 @@ export type Database = {
       pdf_studio_revisions: {
         Row: {
           ai_instruction: string | null
+          background_pdf_path: string | null
           blocks_json: Json
+          brand_snapshot: Json | null
           created_at: string
           created_by: string
           document_id: string
           id: string
+          overlays_json: Json
           version: number
         }
         Insert: {
           ai_instruction?: string | null
+          background_pdf_path?: string | null
           blocks_json?: Json
+          brand_snapshot?: Json | null
           created_at?: string
           created_by: string
           document_id: string
           id?: string
+          overlays_json?: Json
           version: number
         }
         Update: {
           ai_instruction?: string | null
+          background_pdf_path?: string | null
           blocks_json?: Json
+          brand_snapshot?: Json | null
           created_at?: string
           created_by?: string
           document_id?: string
           id?: string
+          overlays_json?: Json
           version?: number
         }
         Relationships: [
@@ -11426,11 +11444,27 @@ export type Database = {
           p_client_email: string
           p_client_name: string
           p_comment: string
+          p_kind?: string
           p_slug: string
         }
         Returns: string
       }
-      pdf_studio_resolve_share: { Args: { p_slug: string }; Returns: Json }
+      pdf_studio_resolve_share: {
+        Args: { p_slug: string }
+        Returns: {
+          background_pdf_path: string
+          blocks: Json
+          brand_snapshot: Json
+          created_at: string
+          doc_kind: string
+          document_id: string
+          overlays: Json
+          revision_id: string
+          status: string
+          title: string
+          version: number
+        }[]
+      }
       post_performance: { Args: { _slug: string }; Returns: Json }
       public_artifact_get: {
         Args: { _token: string }
