@@ -13,7 +13,7 @@ import {
   Block, Revision, Annotation, StudioDocument,
   extractPdfText, uploadSourcePdf, parsePdf, revisePdf,
   listDocuments, listRevisions, listAnnotations,
-  ensureShareLink, getSourcePdfUrl,
+  ensureShareLink, downloadSourcePdfData,
   listClientProfilesLite, createClientProfileLite, type ClientLite,
 } from "@/lib/pdf-studio/api";
 import {
@@ -88,10 +88,7 @@ export default function PdfStudio() {
     let cancelled = false;
     (async () => {
       try {
-        const signed = await getSourcePdfUrl(path);
-        const res = await fetch(signed);
-        if (!res.ok) throw new Error("Couldn't load PDF");
-        const buffer = await res.arrayBuffer();
+        const buffer = await downloadSourcePdfData(path);
         if (!cancelled) setPdfData(buffer);
       } catch { if (!cancelled) setPdfData(null); }
     })();
