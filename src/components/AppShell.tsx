@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
-import { Search, Crown, Sparkles, Rocket, Star, ChevronRight, ArrowRight, Command, BookOpen } from "lucide-react";
+import { Search, Crown, Sparkles, Rocket, Star, ChevronRight, ArrowRight, Command } from "lucide-react";
 import { Chatbot } from "@/components/Chatbot";
 import { HustleBotIntro } from "@/components/HustleBotIntro";
 import NotificationCenter from "@/components/workspace-os/NotificationCenter";
@@ -14,6 +14,7 @@ import AIFillStatusBanner from "@/components/tools/AIFillStatusBanner";
 import { AsyncActivityIndicator } from "@/components/async/AsyncActivityIndicator";
 import { ThemeToggle, getInitialTheme } from "@/components/ThemeToggle";
 import { CalmModeToggle } from "@/components/CalmModeToggle";
+import { AccountMenu } from "@/components/AccountMenu";
 
 interface AppShellProps {
   children: ReactNode;
@@ -211,29 +212,15 @@ export function AppShell({ children, title, breadcrumbs, actions }: AppShellProp
               >
                 <Search className="w-4 h-4" />
               </button>
-              <div className="hidden sm:inline-flex"><TierBadge /></div>
-              {tier !== "infinity" && (
-                <Button
-                  size="sm"
-                  className="bg-emerald-500 hover:bg-emerald-600 text-white h-8 hidden sm:inline-flex"
-                  onClick={() => navigate("/plans")}
-                >
-                  Upgrade
-                </Button>
-              )}
-              <div className="hidden md:inline-flex"><CalmModeToggle /></div>
-              <div className="hidden md:inline-flex"><ThemeToggle /></div>
-              <div className="hidden md:inline-flex"><AsyncActivityIndicator /></div>
+              {/* Utility cluster — kept compact, icon-only */}
+              <div className="hidden md:inline-flex items-center gap-0.5 mr-1 pr-1 border-r border-border">
+                <CalmModeToggle />
+                <ThemeToggle />
+                <AsyncActivityIndicator />
+              </div>
               <NotificationCenter />
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 px-2 hidden sm:inline-flex"
-                onClick={() => window.open("https://docs.hustlaiapp.in", "_blank", "noopener,noreferrer")}
-                title="Documentation"
-              >
-                <BookOpen className="w-4 h-4 mr-1" /> Docs
-              </Button>
+              {/* Primary right-side anchor — avatar + account menu */}
+              <AccountMenu />
             </div>
           </header>
 
