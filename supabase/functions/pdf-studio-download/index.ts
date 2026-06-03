@@ -1,14 +1,11 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
+const headers = { ...corsHeaders, "Access-Control-Allow-Methods": "POST, OPTIONS" };
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  if (req.method === "OPTIONS") return new Response("ok", { headers });
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
 
   try {
@@ -52,6 +49,7 @@ serve(async (req) => {
       status: 200,
       headers: {
         ...corsHeaders,
+        ...headers,
         "Content-Type": "application/pdf",
         "Cache-Control": "private, max-age=300",
       },
@@ -65,6 +63,6 @@ serve(async (req) => {
 function json(b: unknown, status = 200) {
   return new Response(JSON.stringify(b), {
     status,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
+    headers: { ...headers, "Content-Type": "application/json" },
   });
 }
