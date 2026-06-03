@@ -20,6 +20,7 @@ import {
   FileUp, Sparkles, Share2, MessageSquare, History, Loader2, Copy, Check, FileText, Upload, Plus,
   User, FileType2, Eye, Layers,
 } from "lucide-react";
+import PdfCanvasViewer from "@/components/PdfCanvasViewer";
 
 /**
  * Documents (Client Document Workspace).
@@ -252,8 +253,8 @@ export default function PdfStudio() {
               </div>
               <div className="p-3 lg:p-4">
                 {viewMode === "original" && pdfUrl ? (
-                  <iframe src={`${pdfUrl}#toolbar=0&navpanes=0`} title="Original PDF"
-                    className="w-full h-[75vh] rounded-lg border border-slate-200 bg-slate-50" />
+                  <PdfCanvasViewer url={pdfUrl}
+                    className="w-full max-h-[75vh] overflow-auto rounded-lg border border-slate-200 bg-slate-100 p-3" />
                 ) : activeRev ? (
                   <div className="p-2 lg:p-6"><BlockCanvas blocks={activeRev.blocks_json} /></div>
                 ) : (
