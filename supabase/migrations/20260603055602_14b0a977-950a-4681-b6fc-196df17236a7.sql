@@ -1,0 +1,2 @@
+ALTER TABLE public.pdf_studio_documents DROP CONSTRAINT pdf_studio_documents_doc_kind_check;
+ALTER TABLE public.pdf_studio_documents ADD CONSTRAINT pdf_studio_documents_doc_kind_check CHECK (doc_kind = ANY (ARRAY['upload','pdf','proposal','contract','nda','invoice','quotation','other']));
