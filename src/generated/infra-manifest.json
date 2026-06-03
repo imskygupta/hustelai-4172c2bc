@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-03T05:29:28.366Z",
+  "generated_at": "2026-06-03T05:55:22.092Z",
   "routes": [
     {
       "path": ":slug",
@@ -799,6 +799,22 @@
       "type": "public",
       "authWrapper": null,
       "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/dashboard/documents",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": null,
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/dashboard/documents/:doc",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": null,
+      "dynamic": true,
       "catchAll": false
     },
     {
