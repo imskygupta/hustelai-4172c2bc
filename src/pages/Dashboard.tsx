@@ -20,7 +20,7 @@ import AdaptiveCockpit from "@/components/dashboard/AdaptiveCockpit";
 import TodayCockpit from "@/components/dashboard/TodayCockpit";
 import PersonaFlowCard from "@/components/dashboard/PersonaFlowCard";
 import OperationsStrip from "@/components/dashboard/OperationsStrip";
-import { useOperatorMode, type DashboardWidgetId } from "@/lib/operator-mode";
+import { useOperatorMode } from "@/lib/operator-mode";
 import OperationalFlows from "@/components/dashboard/OperationalFlows";
 import ContextualNudge from "@/components/dashboard/ContextualNudge";
 import DashboardHero from "@/components/dashboard/DashboardHero";
