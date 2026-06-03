@@ -2,11 +2,9 @@ import { ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
-import { Search, Crown, Sparkles, Rocket, Star, ChevronRight, ArrowRight, Command } from "lucide-react";
+import { Search, ChevronRight, ArrowRight, Command } from "lucide-react";
 import { Chatbot } from "@/components/Chatbot";
 import { HustleBotIntro } from "@/components/HustleBotIntro";
 import NotificationCenter from "@/components/workspace-os/NotificationCenter";
@@ -93,23 +91,6 @@ export function AppShell({ children, title, breadcrumbs, actions }: AppShellProp
     setQ("");
     navigate(path);
   }
-
-  const TierBadge = () => {
-    const map: Record<string, { icon: typeof Crown; cls: string }> = {
-      infinity: { icon: Star, cls: "bg-amber-100 text-amber-700 border-amber-200" },
-      elite: { icon: Crown, cls: "bg-violet-100 text-violet-700 border-violet-200" },
-      pro: { icon: Rocket, cls: "bg-emerald-100 text-emerald-700 border-emerald-200" },
-      free: { icon: Sparkles, cls: "bg-slate-100 text-slate-600 border-slate-200" },
-    };
-    const m = map[tier] || map.free;
-    const Icon = m.icon;
-    return (
-      <Badge variant="outline" className={`${m.cls} gap-1 font-medium`}>
-        <Icon className="w-3 h-3" />
-        {tier.charAt(0).toUpperCase() + tier.slice(1)}
-      </Badge>
-    );
-  };
 
   return (
     <SidebarProvider>
