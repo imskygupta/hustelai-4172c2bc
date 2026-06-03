@@ -519,11 +519,11 @@ export default function Dashboard() {
 
           {/* OVERVIEW */}
           <TabsContent value="overview" className="mt-5 space-y-5">
-            <StartHerePanel />
-            <ResumeWorkflowCard />
-            <RecentNextAction />
-            <ContinuityRail />
-            <WorkflowMomentum />
+            {/* Legacy activation panels (StartHerePanel, ResumeWorkflowCard,
+                RecentNextAction, ContinuityRail, WorkflowMomentum) removed
+                from the Overview tab — the new Operations cockpit above
+                replaces them. They were the source of the "Send your first
+                proposal / Setup checklist / Resume workflow" clutter. */}
             <div className="grid md:grid-cols-2 gap-5">
               <DailyUsageWidget />
               <OperationalUsageWidget />
