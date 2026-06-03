@@ -141,3 +141,6 @@ verify_jwt = false
 
 [functions.docs-sitemap]
 verify_jwt = false
+
+[functions.pdf-studio-download]
+verify_jwt = false

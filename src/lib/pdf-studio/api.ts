@@ -81,6 +81,18 @@ export async function getSourcePdfUrl(path: string, expiresIn = 60 * 60): Promis
   return data.signedUrl;
 }
 
+/** Download original PDF bytes for pdf.js without routing through browser PDF plugins. */
+export async function downloadSourcePdfData(path: string, shareSlug?: string): Promise<ArrayBuffer> {
+  const { data, error } = await supabase.functions.invoke("pdf-studio-download", {
+    body: shareSlug ? { slug: shareSlug } : { path },
+    responseType: "arrayBuffer" as any,
+  } as any);
+  if (error) throw error;
+  if (data instanceof ArrayBuffer) return data;
+  if (data instanceof Blob) return await data.arrayBuffer();
+  throw new Error("Couldn't load PDF");
+}
+
 export type ClientLite = { id: string; name: string; company?: string | null; email?: string | null };
 
 /** Lightweight client picker source — reads `client_profiles` on the primary DB. */
@@ -166,7 +178,7 @@ export async function listAnnotations(document_id: string): Promise<Annotation[]
 export async function resolveShare(slug: string) {
   const { data, error } = await supabase.rpc("pdf_studio_resolve_share" as any, { p_slug: slug });
   if (error) throw error;
-  return data as null | {
+  return (Array.isArray(data) ? data[0] : data) as null | {
     document_id: string; title: string; revision_id: string;
     version: number; blocks: Block[]; created_at: string;
   };

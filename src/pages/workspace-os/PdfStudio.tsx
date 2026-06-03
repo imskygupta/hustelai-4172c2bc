@@ -13,7 +13,7 @@ import {
   Block, Revision, Annotation, StudioDocument,
   extractPdfText, uploadSourcePdf, parsePdf, revisePdf,
   listDocuments, listRevisions, listAnnotations,
-  ensureShareLink, getSourcePdfUrl,
+  ensureShareLink, downloadSourcePdfData,
   listClientProfilesLite, createClientProfileLite, type ClientLite,
 } from "@/lib/pdf-studio/api";
 import {
@@ -38,7 +38,7 @@ export default function PdfStudio() {
   const [activeRev, setActiveRev] = useState<Revision | null>(null);
   const [annotations, setAnnotations] = useState<Annotation[]>([]);
   const [shareSlug, setShareSlug] = useState<string | null>(null);
-  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [pdfData, setPdfData] = useState<ArrayBuffer | null>(null);
   const [viewMode, setViewMode] = useState<"original" | "ai">("original");
 
   const [uploading, setUploading] = useState(false);
@@ -79,29 +79,20 @@ export default function PdfStudio() {
     return () => { supabase.removeChannel(ch); };
   }, [activeDocId]);
 
-  // Resolve signed PDF URL whenever active revision changes
+  // Load signed PDF bytes whenever active revision changes
   useEffect(() => {
-    setPdfUrl(null);
+    setPdfData(null);
     const path = (activeRev as any)?.background_pdf_path
       ?? docs.find(d => d.id === activeDocId)?.source_storage_path;
     if (!path) return;
-    let revoked: string | null = null;
+    let cancelled = false;
     (async () => {
       try {
-        const signed = await getSourcePdfUrl(path);
-        // Fetch as blob to avoid Chrome's "content blocked" PDF iframe error
-        // (Supabase signed URLs sometimes send Content-Disposition: attachment).
-        const res = await fetch(signed);
-        const blob = await res.blob();
-        const pdfBlob = blob.type === "application/pdf"
-          ? blob
-          : new Blob([blob], { type: "application/pdf" });
-        const url = URL.createObjectURL(pdfBlob);
-        revoked = url;
-        setPdfUrl(url);
-      } catch { setPdfUrl(null); }
+        const buffer = await downloadSourcePdfData(path);
+        if (!cancelled) setPdfData(buffer);
+      } catch { if (!cancelled) setPdfData(null); }
     })();
-    return () => { if (revoked) URL.revokeObjectURL(revoked); };
+    return () => { cancelled = true; };
   }, [activeRev, activeDocId, docs]);
 
   const openUploadFlow = async (file: File) => {
@@ -241,8 +232,8 @@ export default function PdfStudio() {
                   {viewMode === "original" ? "Original PDF (preserved)" : `AI revision v${activeRev?.version ?? 1}`}
                 </div>
                 <div className="inline-flex rounded-md border border-slate-200 bg-white p-0.5">
-                  <button onClick={() => setViewMode("original")} disabled={!pdfUrl}
-                    className={`px-2.5 py-1 text-xs rounded inline-flex items-center gap-1 ${viewMode === "original" ? "bg-slate-900 text-white" : "text-slate-600"} ${!pdfUrl ? "opacity-40 cursor-not-allowed" : ""}`}>
+                  <button onClick={() => setViewMode("original")} disabled={!pdfData}
+                    className={`px-2.5 py-1 text-xs rounded inline-flex items-center gap-1 ${viewMode === "original" ? "bg-slate-900 text-white" : "text-slate-600"} ${!pdfData ? "opacity-40 cursor-not-allowed" : ""}`}>
                     <Eye className="h-3 w-3" /> Original
                   </button>
                   <button onClick={() => setViewMode("ai")}
@@ -252,15 +243,15 @@ export default function PdfStudio() {
                 </div>
               </div>
               <div className="p-3 lg:p-4">
-                {viewMode === "original" && pdfUrl ? (
-                  <PdfCanvasViewer url={pdfUrl}
+                {viewMode === "original" && pdfData ? (
+                  <PdfCanvasViewer data={pdfData}
                     className="w-full max-h-[75vh] overflow-auto rounded-lg border border-slate-200 bg-slate-100 p-3" />
                 ) : activeRev ? (
                   <div className="p-2 lg:p-6"><BlockCanvas blocks={activeRev.blocks_json} /></div>
                 ) : (
                   <div className="text-sm text-slate-500 p-6">Pick a revision from the left.</div>
                 )}
-                {viewMode === "original" && !pdfUrl && (
+                {viewMode === "original" && !pdfData && (
                   <div className="text-xs text-slate-500 p-6">Original PDF not available for this revision — showing AI version.</div>
                 )}
               </div>
