@@ -26,7 +26,8 @@ serve(async (req) => {
       if (!/^[a-zA-Z0-9_-]{6,80}$/.test(slug)) return json({ error: "Invalid share link" }, 400);
       const { data, error } = await svc.rpc("pdf_studio_resolve_share", { p_slug: slug });
       if (error) throw error;
-      path = String((data as any)?.background_pdf_path || "");
+      const share = Array.isArray(data) ? data[0] : data;
+      path = String((share as any)?.background_pdf_path || "");
       if (!path) return json({ error: "Original PDF not available" }, 404);
     } else {
       if (!requestedPath || requestedPath.length > 500 || requestedPath.includes("..")) {
