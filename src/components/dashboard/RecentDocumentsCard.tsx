@@ -50,7 +50,7 @@ export default function RecentDocumentsCard() {
           <h2 className="font-display font-semibold text-sm text-foreground">Recent documents</h2>
           <p className="text-xs text-muted-foreground mt-0.5">Proposals, contracts, invoices & more — one editor.</p>
         </div>
-        <Link to="/workspace-os/pdf-studio" className="text-[11px] uppercase tracking-wider font-semibold text-primary inline-flex items-center gap-1 hover:underline">
+        <Link to="/dashboard/documents" className="text-[11px] uppercase tracking-wider font-semibold text-primary inline-flex items-center gap-1 hover:underline">
           See all <ArrowUpRight className="w-3 h-3" />
         </Link>
       </header>
@@ -63,7 +63,7 @@ export default function RecentDocumentsCard() {
         </div>
       ) : docs.length === 0 ? (
         <button
-          onClick={() => navigate("/workspace-os/pdf-studio")}
+          onClick={() => navigate("/dashboard/documents")}
           className="w-full rounded-xl border border-dashed border-border bg-background/40 px-4 py-6 text-left hover:border-primary/40 hover:bg-primary/[0.03] transition-all"
         >
           <div className="flex items-center gap-3">
@@ -83,7 +83,7 @@ export default function RecentDocumentsCard() {
             return (
               <button
                 key={d.id}
-                onClick={() => navigate(`/workspace-os/pdf-studio?doc=${d.id}`)}
+                onClick={() => navigate(`/dashboard/documents/${d.id}`)}
                 className="group text-left rounded-xl border border-border/60 bg-background/40 p-3 hover:border-primary/40 hover:bg-primary/[0.03] transition-all"
               >
                 <div className="flex items-start gap-2.5">
