@@ -82,14 +82,15 @@ export async function getSourcePdfUrl(path: string, expiresIn = 60 * 60): Promis
 }
 
 /** Download original PDF bytes for pdf.js without routing through browser PDF plugins. */
-export async function downloadSourcePdfData(path: string): Promise<ArrayBuffer> {
-  const direct = await supabase.storage.from("pdf-studio").download(path);
-  if (!direct.error && direct.data) return await direct.data.arrayBuffer();
-
-  const signed = await getSourcePdfUrl(path);
-  const res = await fetch(signed);
-  if (!res.ok) throw new Error("Couldn't load PDF");
-  return await res.arrayBuffer();
+export async function downloadSourcePdfData(path: string, shareSlug?: string): Promise<ArrayBuffer> {
+  const { data, error } = await supabase.functions.invoke("pdf-studio-download", {
+    body: shareSlug ? { slug: shareSlug } : { path },
+    responseType: "arrayBuffer" as any,
+  } as any);
+  if (error) throw error;
+  if (data instanceof ArrayBuffer) return data;
+  if (data instanceof Blob) return await data.arrayBuffer();
+  throw new Error("Couldn't load PDF");
 }
 
 export type ClientLite = { id: string; name: string; company?: string | null; email?: string | null };
