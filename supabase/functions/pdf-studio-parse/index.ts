@@ -63,7 +63,14 @@ Return STRICT JSON: {"blocks":[{"id":"b1","type":"heading|paragraph|list|line_it
 
     const { data: rev, error: rErr } = await svc
       .from("pdf_studio_revisions")
-      .insert({ document_id: doc.id, version: 1, blocks_json: blocks, created_by: user.id, ai_instruction: "Initial parse" })
+      .insert({
+        document_id: doc.id, version: 1,
+        blocks_json: blocks,
+        overlays_json: [],
+        background_pdf_path: source_path,
+        created_by: user.id,
+        ai_instruction: "Initial parse",
+      })
       .select().single();
     if (rErr) throw rErr;
 
