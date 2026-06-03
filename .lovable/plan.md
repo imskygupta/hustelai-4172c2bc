@@ -1,96 +1,330 @@
-# PDF Revision Studio
+# Client Document Workspace (v2 of PDF Studio)
 
-A Pro+ tool where users upload an existing PDF (proposal, invoice, contract, any doc) and get an AI-assisted editor to make seamless revisions — v1, v2, v3 — instead of starting from scratch. Each revision can be shared via a public link where the client can annotate; annotations flow back to the workspace as notifications.
+Rebuild the current parse-to-blocks tool into a **hybrid canvas document editor**: original PDF stays pixel-perfect as a background layer, AI-extracted fields become editable overlays, and the user's Brand Kit (logo, colors, typography, footer, signature) auto-applies to every new revision. Replaces "PDF Studio" naming with **Client Document Workspace** and becomes the single entry point for Proposal, Contract, NDA, Invoice, Quotation, and ad-hoc PDF uploads.
 
-Lives at `workspace.hustleai.in/tools/pdf-studio` (frontend route in the existing workspace shell — no new subdomain infra needed; the workspace already routes from `workspace.*`).
+## User experience
 
-## User flow
+1. Open `Documents` from the workspace (replaces the PDF Studio card; old Proposal/Contract/Invoice tools redirect here).
+2. Choose entry:
+  - **Upload PDF** (new) → required client selection → AI extracts overlay structure.
+  - **Start from template** → Proposal / Contract / NDA / Invoice / Quotation, pre-themed with Brand Kit.
+  - **Continue from client** → see the client's document timeline.
+3. Editor opens with two synced layers:
+  - **Background:** original PDF rendered with `pdf.js` (preserved verbatim).
+  - **Overlay:** editable fields (totals, dates, names, line items, signatures) positioned by AI-detected bounding boxes.
+4. Right panel tabs: **AI Assist** (instruction → diff → accept → new revision), **Brand** (toggle "apply brand kit" — replaces background with regenerated branded version while keeping overlay edits), **Share** (public link, comments, approval, revision request), **Activity** (revisions + client annotations).
+5. Public viewer shows latest revision; clients can comment, request changes, or approve. All events flow into the client timeline + notifications.
 
-1. User opens **PDF Studio** from the workspace tools grid.
-2. Uploads a PDF (proposal / invoice / contract / any doc).
-3. AI parses it into structured editable blocks (headings, paragraphs, line items, totals, signature fields).
-4. User edits inline OR types a natural-language instruction: *"change total from 20k to 5k, keep everything else"*. AI returns a diff preview; user accepts → **Revision 2** is created.
-5. Every accepted edit creates a new immutable revision (v1, v2, v3 …) with a visible history rail.
-6. **One-click "Share with client"** generates a public link (same pattern as client intake). CTA copy: *"Share with clients in 1 second — get instant feedback."*
-7. Client opens link → sees current revision → can highlight text / drop sticky-note annotations (no download, no edit).
-8. Each annotation creates a workspace notification + appears in an **Annotations** panel inside the editor. User responds with another AI revision → v3 → re-share (same link auto-updates).
+## Architecture
 
-## Scope rules
-
-- **PDF only** for input (per request — "we will do it for pdfs only").
-- **No download** of the revised file → keeps storage cheap; sharing is link-only.
-- **Tier-gated**: Pro, Elite, Infinity. Same per-tool quota system as other AI tools (reuse `enforceAIQuota` + `requireQuota`).
-- **Watermark** on public-share view (free-tier client viewer) per existing UI rule.
-
-## Data model (primary DB, new tables)
-
-```
-pdf_documents          -- one row per uploaded source PDF
-  id, user_id, title, source_storage_path, parsed_blocks_json, created_at
-
-pdf_revisions          -- immutable snapshots; v1 = original parse
-  id, document_id, version, blocks_json, ai_instruction, created_by, created_at
-
-pdf_share_links        -- one per document, always points to latest revision
-  id, document_id, slug (public), is_active, created_at, expires_at
-
-pdf_annotations        -- client feedback on a specific revision
-  id, revision_id, anchor_json (block_id + offset / coords),
-  comment, client_name, status (open|addressed), created_at
+```text
+upload.pdf
+    │
+    ├── stored as-is in pdf-studio bucket            (background source of truth)
+    │
+    ├── pdf.js renders each page → <canvas>          (preserved pixels)
+    │
+    └── pdf-studio-extract (AI + bbox)
+           │
+           ▼
+        overlays_json: [{ page, bbox, kind, value, brand_lock }]
+           │
+           ├── editor mutates overlays
+           ├── AI revise creates new revision (immutable)
+           └── "Apply Brand Kit" pipes overlays through template renderer
+                 → regenerated background PDF + same overlays
 ```
 
-Storage bucket: `pdf-studio` (private). Only parsed JSON is rendered publicly — original PDF never exposed.
+## Data model changes
 
-RLS: owner-only on documents/revisions/annotations; public share resolves via slug → server function returns latest revision JSON + accepts annotation inserts (rate-limited).
+Reuse current tables, add fields + a unified `doc_kind`:
+
+```text
+pdf_studio_documents
+  + client_profile_id   (NOT NULL going forward; backfill nullable old rows)
+  + doc_kind            ('upload' | 'proposal' | 'contract' | 'nda' | 'invoice' | 'quotation')
+  + brand_applied       boolean default false
+  + status              ('draft' | 'shared' | 'approved' | 'revision_requested')
+
+pdf_studio_revisions
+  + overlays_json       jsonb     (new — replaces blocks_json as primary)
+  + background_pdf_path text      (original or regenerated branded)
+  + brand_snapshot      jsonb     (logo/colors/fonts at the time)
+  (keep blocks_json for backward-compat; populate from overlays when missing)
+
+pdf_studio_share_links     unchanged
+pdf_studio_annotations
+  + kind                ('comment' | 'change_request' | 'approval')
+```
+
+Migration: add columns, backfill `doc_kind='upload'`, leave existing rows readable.
 
 ## Edge functions
 
-- `pdf-studio-parse` — accepts uploaded PDF, runs Lovable AI (Gemini 2.5 Pro multimodal) to extract structured blocks → v1.
-- `pdf-studio-revise` — input: revision_id + instruction → AI returns updated blocks_json → inserts new revision row.
-- `pdf-studio-share-resolve` — public, no JWT: slug → latest revision JSON (sanitized).
-- `pdf-studio-annotate` — public, no JWT: slug + annotation payload → inserts row + emits notification to owner.
+- `pdf-studio-extract` (replaces `pdf-studio-parse`): receives raw text + page dimensions; returns structured `overlays_json` with bounding boxes, field kinds, and brand-lockable flags. v1.
+- `pdf-studio-revise` (existing): unchanged contract, operates on `overlays_json` instead of `blocks_json`.
+- `pdf-studio-rebrand` (new): takes a revision id, fetches user's brand kit, renders branded background PDF (server-side via existing template renderer), uploads to bucket, returns new revision id.
+- `pdf-studio-template-create` (new): instantiates a template (proposal/contract/nda/invoice/quotation) pre-filled with Brand Kit → first revision with both background and overlays.
 
-All gated by `enforceAIQuota` + tier check (`pro|elite|infinity`).
+All gated by `enforceAIQuota` and tier check (`pro|elite|infinity`).
 
 ## Frontend
 
-New route: `src/pages/workspace-os/PdfStudio.tsx`
+- New route group: `/dashboard/documents` (canonical) and `/dashboard/documents/:id`. Keep `/dashboard/tools/pdf-studio` as redirect for backward links.
+- New components in `src/pages/workspace-os/documents/`:
+  - `DocumentsHub.tsx` — entry: upload, templates, recent, by-client.
+  - `DocumentEditor.tsx` — left rail (revisions) · center (canvas viewer + overlay layer) · right (tabs).
+  - `CanvasViewer.tsx` — `pdf.js` background renderer per page.
+  - `OverlayLayer.tsx` — absolutely-positioned editable fields aligned to bbox.
+  - `BrandPanel.tsx` — reads `brand_kit` from workspace, lets user re-skin.
+- Public viewer: extend `PdfShare.tsx` to render canvas + read-only overlays + approve/request-changes/comment actions.
+- Reuse `client_profiles` picker from CRM, `brand_kit` from workspace, notifications channel.
 
-- Left: revision timeline rail (v1, v2, v3 …)
-- Center: block editor (Uizard-style canvas — clean, single-doc focus, zoom controls)
-- Right: tabbed panel — **AI Assist** (instruction box + diff preview) / **Annotations** (live client feedback) / **Share** (link + copy CTA)
-- Sticky bottom CTA on first revision: *"Share with clients in 1 second"*
+## Unification of doc tools
 
-Public viewer route: `src/pages/PdfShare.tsx` at `/s/pdf/:slug`
+- Existing Proposal / Contract / Invoice / Quotation pages become **template entries** in DocumentsHub instead of separate routes. Each old page becomes a thin redirect that calls `pdf-studio-template-create` with the right `doc_kind`.
+- DocsLibrary / DocsList stay as listing views but point rows to `/dashboard/documents/:id`.
 
-- Renders read-only blocks
-- Floating annotation tool (highlight → comment)
-- Watermark + "Powered by HustleAI" footer
-- No auth required; client just types name + comment
+## Tier + branding
 
-## Reuse (no duplication)
-
-- Quota: `src/lib/usage/guards.ts` → register `pdf_studio_revision` capability.
-- Share-link pattern: copy from client-intake (`src/pages/IntakeSubmit.tsx`).
-- AI calls: existing `callAIWithFallback` in shared edge fn helpers.
-- Notifications: existing in-app notification table → new event type `pdf_annotation`.
-- UI shell: workspace layout already in place; reuse `TONE_GRADIENT` card style from recent polish.
+- Pro+, Elite, Infinity only. Free/Starter see locked card with upgrade CTA.
+- Watermark "Powered by HustleAI" on public share for non-Infinity tiers (per existing UI rule).
+- Brand Kit application is automatic when user clicks "Apply brand" or creates from template.
 
 ## Implementation order
 
-1. **DB migration** — 4 tables + RLS + GRANTs + storage bucket.
-2. **Edge functions** — parse, revise, share-resolve, annotate.
-3. **Tool entry** — add card to workspace tools grid + register capability + tier gate.
-4. **Editor page** — `PdfStudio.tsx` with upload → parse → revision rail → AI assist.
-5. **Share + public viewer** — slug generation, `/s/pdf/:slug` page, annotation tool.
-6. **Annotation inbox** — panel inside editor + notification badge.
-7. **QA pass** — upload sample PDF, run 2 revisions, share, annotate from incognito, verify notification.  
+1. **Migration** — add columns (`doc_kind`, `overlays_json`, `background_pdf_path`, `brand_snapshot`, `client_profile_id` enforcement, `status`, annotation `kind`). One file.
+2. **Library** — extend `src/lib/pdf-studio/api.ts` with overlays types, brand helpers, template helpers.
+3. **Edge fns** — rename `parse` → `extract` (return bbox + kind), add `rebrand` and `template-create`.
+4. **Editor rewrite** — replace `PdfStudio.tsx` with new `DocumentEditor.tsx` using canvas + overlay. Keep client picker mandatory on upload.
+5. **Hub + redirects** — `DocumentsHub.tsx`, redirect old proposal/contract/invoice routes.
+6. **Public viewer upgrade** — canvas + overlay + approval actions.
+7. **Brand integration** — read workspace `brand_kit`, render brand panel, wire rebrand fn.
+8. **QA** — upload 3 sample PDFs (proposal, invoice, contract); verify pixel-preserve, AI revise on overlay only, brand re-skin, client annotation roundtrip.
+
+## Out of scope (v1)
+
+- Editing the original background pixels (only overlays are editable until rebrand).
+- DOCX upload (PDF only — confirmed earlier).
+- Real-time multi-user editing on the same revision (revisions remain immutable snapshots).
+- E-signature flow (approval click is enough for v1; signature pad later).
+
+## Open questions
+
+- Should the old Proposal/Contract/Invoice routes **redirect** to `/dashboard/documents` or stay as their own template-entry pages that deep-link into the editor? (I'll default to deep-link redirect.)
+- For "Apply Brand Kit", regenerate background server-side using existing template renderer, or render a brand frame (header/footer) on top of the original PDF? I'll go with **server-rebuild** when user has a strong Brand Kit, else **frame overlay** as fallback.  
   
   
-Build PDF Studio as a layer on top of existing Proposal, Contract, Invoice, Intake Share Link, Notification and CRM systems. Do not create a standalone document product. Every document revision must belong to a client record and appear in the client timeline. Reuse existing quota, share-link, notification, public-viewer and workflow infrastructure wherever possible. The goal is to strengthen the Lead → Proposal → Onboarding → Delivery → Billing lifecycle, not add another disconnected tool.
+This v2 spec is **much closer to a real moat product** than the original PDF Studio.
+  The biggest improvement is that it stopped being:
+  > "AI PDF editor"
+  and became:
+  > "Document system attached to the client lifecycle"
+  which aligns with the direction you've been moving the whole platform.
+  ## What I like
+  ### 1. Client is mandatory
+  This is the right call.
+  ```text
+  Client
+   ↓
+  Proposal
+   ↓
+  Contract
+   ↓
+  Invoice
+   ↓
+  Revision
+   ↓
+  Approval
 
-## Open questions before I build
+  ```
+  Everything stays attached to a client record.
+  That compounds.
+  ---
+  ### 2. PDF as background layer
+  This is the strongest architectural decision.
+  Not:
+  ```text
+  PDF
+  ↓
+  destroy formatting
+  ↓
+  rebuild
 
-- Confirm `workspace.hustleai.in/tools/pdf-studio` (frontend route in workspace shell) is acceptable — no new subdomain.
-- Allow **DOCX too**, or strict PDF-only for v1? You said "all types of docs" once but "pdfs only" twice — going PDF-only for v1 unless you say otherwise.
-- Public share: clients identify by **name + email** (lightweight, no signup) — OK?
+  ```
+  But:
+  ```text
+  PDF
+  ↓
+  preserve
+  ↓
+  overlay edits
+
+  ```
+  Users care about:
+  - logos
+  - signatures
+  - layout
+  - spacing
+  Keeping the original visual document solves that.
+  ---
+  ### 3. Brand Kit integration
+  This is where HustleAI becomes different.
+  Most PDF tools:
+  ```text
+  upload
+  edit
+  download
+
+  ```
+  You already have:
+  - brand kit
+  - templates
+  - CRM
+  - intake
+  - workspace
+  So:
+  ```text
+  upload
+  ↓
+  apply company branding
+  ↓
+  share
+  ↓
+  approve
+
+  ```
+  is stronger.
+  ---
+  ## Two changes I'd make before Lovable builds
+  ### Change #1
+  Don't name it:
+  ```text
+  Client Document Workspace
+
+  ```
+  internally yes.
+  For users:
+  ```text
+  Documents
+
+  ```
+  Keep it stupid simple.
+  Sidebar:
+  ```text
+  Documents
+
+  ```
+  Inside:
+  ```text
+  Proposals
+  Contracts
+  Invoices
+  Uploads
+  Templates
+
+  ```
+  People understand that instantly.
+  ---
+  ### Change #2
+  Add Approval Status Immediately
+  Right now:
+  ```text
+  draft
+  shared
+  approved
+  revision_requested
+
+  ```
+  Good.
+  Add:
+  ```text
+  viewed
+
+  ```
+  because viewed events are huge.
+  Timeline:
+  ```text
+  Shared
+  Viewed
+  Commented
+  Revision Requested
+  Approved
+
+  ```
+  That becomes CRM intelligence.
+  ---
+  ## What I would NOT build yet
+  ### Don't build PDF diff visualization
+  You mention:
+  ```text
+  diff preview
+
+  ```
+  AI diff is enough.
+  Don't build Figma-level visual diffs yet.
+  Massive complexity.
+  ---
+  ### Don't build DOCX
+  Stay PDF only.
+  You already decided correctly.
+  ---
+  ### Don't build signatures
+  Approval click is enough.
+  E-signatures become their own product.
+  ---
+  ## Bigger Opportunity
+  I'd actually merge:
+  ```text
+  Proposal Generator
+  Contract Generator
+  Invoice Generator
+  Quotation Generator
+
+  ```
+  into:
+  ```text
+  Documents
+
+  ```
+  and never show them as separate primary products again.
+  Because your new lifecycle is:
+  ```text
+  Lead
+  Proposal
+  Onboarding
+  Delivery
+  Billing
+
+  ```
+  and Documents sits across all of it.
+  ---
+  ## One extra thing I would tell Lovable
+  Before implementation:
+  ### Create a Document Timeline
+  Inside client profile:
+  ```text
+  Client A
+
+  Proposal v1
+  Proposal v2
+  Contract
+  Invoice #1
+  Invoice #2
+  Approval
+
+  ```
+  Every document event.
+  No new backend.
+  Just reuse:
+  - revisions
+  - annotations
+  - notifications
+  This will make the CRM feel alive.
+  ---
+  ### My verdict
+  I would approve this build **after one modification**:
+  > Documents becomes the canonical document layer of the platform. Proposal, Contract, NDA, Quotation and Invoice become document templates inside Documents rather than separate tools. Every document must belong to a client and appear in the client timeline. Add a `viewed` state and timeline events. Do not build advanced visual diffing, DOCX support, or e-signatures in v1.
+  That version fits perfectly with the platform direction:
+  **Lead → Proposal → Onboarding → Delivery → Billing**
+  instead of adding another standalone AI feature.

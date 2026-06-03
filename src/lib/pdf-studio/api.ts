@@ -22,6 +22,8 @@ export type StudioDocument = {
   client_profile_id: string | null;
   source_storage_path: string | null;
   created_at: string;
+  doc_kind?: string;
+  status?: string;
 };
 
 export type Annotation = {
@@ -33,6 +35,7 @@ export type Annotation = {
   client_name: string | null;
   client_email: string | null;
   status: string;
+  kind?: "comment" | "change_request" | "approval";
   created_at: string;
 };
 
@@ -69,6 +72,36 @@ export async function uploadSourcePdf(userId: string, file: File): Promise<strin
   });
   if (error) throw error;
   return path;
+}
+
+/** Signed URL so pdf.js (or an <iframe>) can render the original PDF from the private bucket. */
+export async function getSourcePdfUrl(path: string, expiresIn = 60 * 60): Promise<string> {
+  const { data, error } = await supabase.storage.from("pdf-studio").createSignedUrl(path, expiresIn);
+  if (error) throw error;
+  return data.signedUrl;
+}
+
+export type ClientLite = { id: string; name: string; company?: string | null; email?: string | null };
+
+/** Lightweight client picker source — reads `client_profiles` on the primary DB. */
+export async function listClientProfilesLite(): Promise<ClientLite[]> {
+  const { data: u } = await supabase.auth.getUser();
+  if (!u.user) return [];
+  const { data, error } = await (supabase as any).from("client_profiles")
+    .select("id,name,company,email").eq("user_id", u.user.id)
+    .order("updated_at", { ascending: false }).limit(200);
+  if (error) return [];
+  return (data as ClientLite[]) ?? [];
+}
+
+export async function createClientProfileLite(name: string, company?: string, email?: string): Promise<ClientLite | null> {
+  const { data: u } = await supabase.auth.getUser();
+  if (!u.user) return null;
+  const { data, error } = await (supabase as any).from("client_profiles")
+    .insert({ user_id: u.user.id, name, company: company || null, email: email || null })
+    .select("id,name,company,email").single();
+  if (error) throw error;
+  return data as ClientLite;
 }
 
 export async function parsePdf(input: {
@@ -142,6 +175,7 @@ export async function resolveShare(slug: string) {
 export async function submitAnnotation(input: {
   slug: string; anchor: any; comment: string;
   client_name?: string; client_email?: string;
+  kind?: "comment" | "change_request" | "approval";
 }) {
   const { data, error } = await supabase.rpc("pdf_studio_insert_annotation" as any, {
     p_slug: input.slug,
@@ -149,6 +183,7 @@ export async function submitAnnotation(input: {
     p_comment: input.comment,
     p_client_name: input.client_name ?? "",
     p_client_email: input.client_email ?? "",
+    p_kind: input.kind ?? "comment",
   });
   if (error) throw error;
   return data as string;
