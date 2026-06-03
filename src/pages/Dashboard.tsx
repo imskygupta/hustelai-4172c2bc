@@ -11,11 +11,6 @@ import { DailyUsageWidget } from "@/components/dashboard/DailyUsageWidget";
 import { OperationalUsageWidget } from "@/components/dashboard/OperationalUsageWidget";
 import { UnlockBalanceWidget } from "@/components/dashboard/UnlockBalanceWidget";
 import { ActivityCard } from "@/components/async/ActivityCard";
-import StartHerePanel from "@/components/activation/StartHerePanel";
-import RecentNextAction from "@/components/activation/RecentNextAction";
-import WorkflowMomentum from "@/components/activation/WorkflowMomentum";
-import ResumeWorkflowCard from "@/components/activation/ResumeWorkflowCard";
-import ContinuityRail from "@/components/workspace/ContinuityRail";
 import AdaptiveCockpit from "@/components/dashboard/AdaptiveCockpit";
 import TodayCockpit from "@/components/dashboard/TodayCockpit";
 import PersonaFlowCard from "@/components/dashboard/PersonaFlowCard";
@@ -519,11 +514,11 @@ export default function Dashboard() {
 
           {/* OVERVIEW */}
           <TabsContent value="overview" className="mt-5 space-y-5">
-            <StartHerePanel />
-            <ResumeWorkflowCard />
-            <RecentNextAction />
-            <ContinuityRail />
-            <WorkflowMomentum />
+            {/* Legacy activation panels (StartHerePanel, ResumeWorkflowCard,
+                RecentNextAction, ContinuityRail, WorkflowMomentum) removed
+                from the Overview tab — the new Operations cockpit above
+                replaces them. They were the source of the "Send your first
+                proposal / Setup checklist / Resume workflow" clutter. */}
             <div className="grid md:grid-cols-2 gap-5">
               <DailyUsageWidget />
               <OperationalUsageWidget />
