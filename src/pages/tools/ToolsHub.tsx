@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { FileText, Receipt, ScrollText, ArrowRight, Sparkles, Lock, Zap, Calculator, UserCircle2, ClipboardList, CalendarRange, Timer, IdCard, Share2, FolderOpen, CheckCircle2, Star } from "lucide-react";
+import { FileText, Receipt, ScrollText, ArrowRight, Sparkles, Lock, Zap, Calculator, UserCircle2, ClipboardList, CalendarRange, Timer, IdCard, Share2, FolderOpen, CheckCircle2, Star, FileEdit } from "lucide-react";
 import { SEO, faqJsonLd } from "@/components/SEO";
 import { DashboardReminderBanner } from "@/components/tools/DashboardReminderBanner";
 import { TrustStrip } from "@/components/TrustStrip";
@@ -62,6 +62,13 @@ const documents: Tool[] = [
     badge: "Most used", badgeTone: "bg-emerald-100 text-emerald-700",
     cta: "Generate invoice", color: "from-emerald-500 to-teal-600",
     uses: "24.1k uses", rating: "4.9",
+  },
+  {
+    href: "/tools/pdf-studio", icon: FileEdit, label: "PDF Studio (Revise)",
+    outcome: "Already have a PDF? Upload, edit with AI, share v2 in seconds.",
+    badge: "Pro+", badgeTone: "bg-violet-100 text-violet-700",
+    cta: "Upload & revise", color: "from-indigo-500 via-violet-600 to-fuchsia-600",
+    uses: "Revise · Share · Annotate", note: "No starting from scratch",
   },
 ];
 
