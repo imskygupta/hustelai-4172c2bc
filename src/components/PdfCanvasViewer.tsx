@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
 
-/** Render a PDF (from a URL) using pdf.js into <canvas> elements.
- *  Avoids Chrome's "This content is blocked" iframe PDF viewer. */
-export default function PdfCanvasViewer({ url, className }: { url: string; className?: string }) {
+/** Render a PDF using pdf.js into <canvas> elements.
+ *  Passing `data` avoids iframe/CORS/blob URL fetch issues in preview browsers. */
+export default function PdfCanvasViewer({ url, data, className }: { url?: string; data?: ArrayBuffer | null; className?: string }) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
@@ -13,16 +13,22 @@ export default function PdfCanvasViewer({ url, className }: { url: string; class
     setLoading(true); setErr(null);
     (async () => {
       try {
+        if (!data && !url) throw new Error("PDF not available");
         // @ts-ignore
         const pdfjs: any = await import("pdfjs-dist/build/pdf.mjs");
         // @ts-ignore
         const worker: any = await import("pdfjs-dist/build/pdf.worker.mjs?url");
         pdfjs.GlobalWorkerOptions.workerSrc = worker.default;
 
-        const res = await fetch(url);
-        if (!res.ok) throw new Error("Couldn't load PDF");
-        const data = await res.arrayBuffer();
-        const pdf = await pdfjs.getDocument({ data }).promise;
+        let pdfBytes: ArrayBuffer;
+        if (data) {
+          pdfBytes = data.slice(0);
+        } else {
+          const res = await fetch(url!);
+          if (!res.ok) throw new Error("Couldn't load PDF");
+          pdfBytes = await res.arrayBuffer();
+        }
+        const pdf = await pdfjs.getDocument({ data: pdfBytes }).promise;
         if (cancelled) return;
         const host = wrapRef.current;
         if (!host) return;
@@ -49,11 +55,11 @@ export default function PdfCanvasViewer({ url, className }: { url: string; class
         }
         setLoading(false);
       } catch (e: any) {
-        if (!cancelled) { setErr(e?.message ?? "Failed to render PDF"); setLoading(false); }
+        if (!cancelled) { setErr(e?.message === "Failed to fetch" ? "Couldn't load the original PDF preview." : (e?.message ?? "Failed to render PDF")); setLoading(false); }
       }
     })();
     return () => { cancelled = true; };
-  }, [url]);
+  }, [url, data]);
 
   return (
     <div className={className}>
