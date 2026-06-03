@@ -124,6 +124,8 @@ const OnboardingFormBuilder = lazy(() => import("./pages/tools/OnboardingFormBui
 const ContentCalendar = lazy(() => import("./pages/tools/ContentCalendar"));
 const PomodoroWidget = lazy(() => import("./pages/tools/PomodoroWidget"));
 const BusinessCardGenerator = lazy(() => import("./pages/tools/BusinessCardGenerator"));
+const PdfStudio = lazy(() => import("./pages/workspace-os/PdfStudio"));
+const PdfShare = lazy(() => import("./pages/PdfShare"));
 import Products from "./pages/Products";
 import ProductDetail from "./pages/ProductDetail";
 const HustleBot = lazy(() => import("./pages/HustleBot"));
