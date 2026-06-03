@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { resolveShare, submitAnnotation, getSourcePdfUrl, type Block } from "@/lib/pdf-studio/api";
+import { resolveShare, submitAnnotation, downloadSourcePdfData, type Block } from "@/lib/pdf-studio/api";
 import { Loader2, MessageSquarePlus, Send, CheckCircle2, CheckCircle, AlertCircle, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,10 +36,7 @@ export default function PdfShare() {
         const path = (d as any).background_pdf_path;
         if (path) {
           try {
-            const signed = await getSourcePdfUrl(path);
-            const res = await fetch(signed);
-            if (!res.ok) throw new Error("Couldn't load PDF");
-            setPdfData(await res.arrayBuffer());
+            setPdfData(await downloadSourcePdfData(path));
           } catch { /* ignore */ }
         }
       })
