@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-03T05:12:42.529Z",
+  "generated_at": "2026-06-03T05:29:28.366Z",
   "routes": [
     {
       "path": ":slug",
@@ -850,6 +850,14 @@
       "catchAll": false
     },
     {
+      "path": "/dashboard/tools/pdf-studio",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": null,
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
       "path": "/dashboard/tools/pomodoro",
       "source": "src/App.tsx",
       "type": "public",
@@ -1514,6 +1522,14 @@
       "catchAll": false
     },
     {
+      "path": "/s/pdf/:slug",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "PdfShare",
+      "dynamic": true,
+      "catchAll": false
+    },
+    {
       "path": "/saved",
       "source": "src/App.tsx",
       "type": "public",
@@ -1678,6 +1694,14 @@
       "source": "src/App.tsx",
       "type": "public",
       "authWrapper": "OnboardingFormBuilder",
+      "dynamic": false,
+      "catchAll": false
+    },
+    {
+      "path": "/tools/pdf-studio",
+      "source": "src/App.tsx",
+      "type": "public",
+      "authWrapper": "PdfStudio",
       "dynamic": false,
       "catchAll": false
     },
@@ -2594,6 +2618,14 @@
     {
       "name": "payment-admin-notify",
       "source": "supabase/functions/payment-admin-notify/index.ts"
+    },
+    {
+      "name": "pdf-studio-parse",
+      "source": "supabase/functions/pdf-studio-parse/index.ts"
+    },
+    {
+      "name": "pdf-studio-revise",
+      "source": "supabase/functions/pdf-studio-revise/index.ts"
     },
     {
       "name": "platform-drift-scan",
