@@ -36,7 +36,7 @@ export default function PdfShare() {
         const path = (d as any).background_pdf_path;
         if (path) {
           try {
-            setPdfData(await downloadSourcePdfData(path));
+            setPdfData(await downloadSourcePdfData(path, slug));
           } catch { /* ignore */ }
         }
       })
