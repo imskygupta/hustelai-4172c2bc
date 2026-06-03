@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Input } from "@/components/ui/input";
-import { useAuth } from "@/hooks/useAuth";
 import { Search, ChevronRight, ArrowRight, Command } from "lucide-react";
 import { Chatbot } from "@/components/Chatbot";
 import { HustleBotIntro } from "@/components/HustleBotIntro";
@@ -22,7 +21,6 @@ interface AppShellProps {
 }
 
 export function AppShell({ children, title, breadcrumbs, actions }: AppShellProps) {
-  useAuth();
   const navigate = useNavigate();
 
   // Dark mode is paused — keep the AppShell strictly in light identity.
