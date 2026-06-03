@@ -10,7 +10,7 @@ import { HustleBotIntro } from "@/components/HustleBotIntro";
 import NotificationCenter from "@/components/workspace-os/NotificationCenter";
 import AIFillStatusBanner from "@/components/tools/AIFillStatusBanner";
 import { AsyncActivityIndicator } from "@/components/async/AsyncActivityIndicator";
-import { ThemeToggle, getInitialTheme } from "@/components/ThemeToggle";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { CalmModeToggle } from "@/components/CalmModeToggle";
 import { AccountMenu } from "@/components/AccountMenu";
 
@@ -22,9 +22,8 @@ interface AppShellProps {
 }
 
 export function AppShell({ children, title, breadcrumbs, actions }: AppShellProps) {
-  const { profile } = useAuth();
+  useAuth();
   const navigate = useNavigate();
-  const tier = (profile?.subscription_tier as string) || "free";
 
   // Dark mode is paused — keep the AppShell strictly in light identity.
   useEffect(() => {
