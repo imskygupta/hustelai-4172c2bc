@@ -1,611 +1,96 @@
-# Usage Governance Hardening + Entitlement Enforcement
+# PDF Revision Studio
 
-Big sprint. I'll do it in phases and check in between each — not ship all four at once. Phase U0 is the gate: without the audit, U1 enforcement could break working tools.
+A Pro+ tool where users upload an existing PDF (proposal, invoice, contract, any doc) and get an AI-assisted editor to make seamless revisions — v1, v2, v3 — instead of starting from scratch. Each revision can be shared via a public link where the client can annotate; annotations flow back to the workspace as notifications.
 
-## Phase U0 — Audit & Registry (start here)
+Lives at `workspace.hustleai.in/tools/pdf-studio` (frontend route in the existing workspace shell — no new subdomain infra needed; the workspace already routes from `workspace.*`).
 
-**New tables (primary DB):**
+## User flow
 
-- `tool_registry` — single source of truth for every executable tool
-  - `tool_key`, `tool_name`, `category`, `pricing_bucket`, `billing_unit`, `cost_per_execution`, `default_reset_policy`, `is_metered`, `is_user_visible`, `hard_limit_enabled`, `shadow_limit_enabled`, `current_enforcement` (none/shadow/hard), `edge_function`, `notes`
-- `usage_events` — append-only ledger (no updates, no deletes)
-  - `user_id`, `tool_key`, `execution_id`, `tier_snapshot`, `bundle_snapshot`, `units_used`, `remaining_before`, `remaining_after`, `decision` (allowed/blocked/shadow), `blocked_reason`, `cost_estimate`, `provider`, `reset_window`, `metadata`, `created_at`
-  - Indexes: `(user_id, created_at desc)`, `(tool_key, created_at desc)`, `(decision, created_at desc)`
-  - RLS: user reads own rows; admin reads all; only service role inserts
+1. User opens **PDF Studio** from the workspace tools grid.
+2. Uploads a PDF (proposal / invoice / contract / any doc).
+3. AI parses it into structured editable blocks (headings, paragraphs, line items, totals, signature fields).
+4. User edits inline OR types a natural-language instruction: *"change total from 20k to 5k, keep everything else"*. AI returns a diff preview; user accepts → **Revision 2** is created.
+5. Every accepted edit creates a new immutable revision (v1, v2, v3 …) with a visible history rail.
+6. **One-click "Share with client"** generates a public link (same pattern as client intake). CTA copy: *"Share with clients in 1 second — get instant feedback."*
+7. Client opens link → sees current revision → can highlight text / drop sticky-note annotations (no download, no edit).
+8. Each annotation creates a workspace notification + appears in an **Annotations** panel inside the editor. User responds with another AI revision → v3 → re-share (same link auto-updates).
 
-**New RPC:**
+## Scope rules
 
-- `get_user_entitlements(_user uuid)` → JSON
-  - Resolution priority: override > paid booster > tier > default
-  - Reads `usage_overrides`, `unlock_balances`, `tier_limits`, `feature_access`
-  - Returns `{ tier, limits: {...}, features: {...}, overrides: [...], boosters: [...], expires_at }`
+- **PDF only** for input (per request — "we will do it for pdfs only").
+- **No download** of the revised file → keeps storage cheap; sharing is link-only.
+- **Tier-gated**: Pro, Elite, Infinity. Same per-tool quota system as other AI tools (reuse `enforceAIQuota` + `requireQuota`).
+- **Watermark** on public-share view (free-tier client viewer) per existing UI rule.
 
-**Audit report (delivered as `docs/audit/usage-enforcement-audit.md`):**
+## Data model (primary DB, new tables)
 
-- Inventory every edge function that performs an executable action
-- For each: tool_key, pricing bucket, current enforcement (none / `consumeUsage` / `consumeAndCheck` / ad-hoc), gap notes
-- List hidden execution paths (functions that bypass quota)
-- Provider cost exposure per tool
-- Seeds `tool_registry` with the inventory
+```
+pdf_documents          -- one row per uploaded source PDF
+  id, user_id, title, source_storage_path, parsed_blocks_json, created_at
 
-**Admin UI:** new `/admin/tool-registry` page — view + edit registry rows, toggle enforcement mode per tool.
+pdf_revisions          -- immutable snapshots; v1 = original parse
+  id, document_id, version, blocks_json, ai_instruction, created_by, created_at
 
-**Stop here for review before U1.** This is the safest cut-point.
+pdf_share_links        -- one per document, always points to latest revision
+  id, document_id, slug (public), is_active, created_at, expires_at
 
----
+pdf_annotations        -- client feedback on a specific revision
+  id, revision_id, anchor_json (block_id + offset / coords),
+  comment, client_name, status (open|addressed), created_at
+```
 
-## Phase U1 — Hard Enforcement (after U0 sign-off)
+Storage bucket: `pdf-studio` (private). Only parsed JSON is rendered publicly — original PDF never exposed.
 
-- Wire `get_user_entitlements` into the existing `consumeUsage` path so resolution is unified
-- Migrate every edge function flagged in the audit to the canonical flow:
-`auth → account access gate → feature access → quota check → consume → execute → ledger append`
-- Replace ad-hoc `consume_*` calls
-- Every execution writes to `usage_events`
-- Default mode = shadow per tool; flip to hard via registry toggle
+RLS: owner-only on documents/revisions/annotations; public share resolves via slug → server function returns latest revision JSON + accepts annotation inserts (rate-limited).
 
-## Phase U2 — Midnight IST Reset Windows
+## Edge functions
 
-- New helper `current_reset_window(_user, _meter)` returns `{window_start, window_end}` in IST
-- `consume_usage` and counters key off `window_start` instead of a date string
-- Remove mutable `remaining_count` columns — derive from ledger sum within window
-- No cron reset job needed
+- `pdf-studio-parse` — accepts uploaded PDF, runs Lovable AI (Gemini 2.5 Pro multimodal) to extract structured blocks → v1.
+- `pdf-studio-revise` — input: revision_id + instruction → AI returns updated blocks_json → inserts new revision row.
+- `pdf-studio-share-resolve` — public, no JWT: slug → latest revision JSON (sanitized).
+- `pdf-studio-annotate` — public, no JWT: slug + annotation payload → inserts row + emits notification to owner.
 
-## Phase U3 — `/dashboard/usages` (hidden)
+All gated by `enforceAIQuota` + tier check (`pro|elite|infinity`).
 
-- Route exists but unlinked from nav until U0–U2 stable
-- Sections: Usage Summary, Bar Graph, Tool Table (all tools from registry), Timeline (hour/day/week), Audit Log of blocked/allowed/overage rows
-- All data sourced from `usage_events` + `get_user_entitlements`
+## Frontend
 
-## Phase U4 — Admin Usage Governance v2
+New route: `src/pages/workspace-os/PdfStudio.tsx`
 
-Upgrade `/admin/usage-governance` with tabs:
+- Left: revision timeline rail (v1, v2, v3 …)
+- Center: block editor (Uizard-style canvas — clean, single-doc focus, zoom controls)
+- Right: tabbed panel — **AI Assist** (instruction box + diff preview) / **Annotations** (live client feedback) / **Share** (link + copy CTA)
+- Sticky bottom CTA on first revision: *"Share with clients in 1 second"*
 
-- Live Usage (rolling 5min)
-- Abuse Detection (IP burst, multi-account, tool farming heuristics)
-- Revenue Leak (free users near limits, bypass attempts from `execution_access_events`)
-- Cost Analytics (provider × tool × margin from `capability_cost_ledger`)
-- Emergency Controls (freeze tool / tier / user — writes to registry + `auth_settings`)
+Public viewer route: `src/pages/PdfShare.tsx` at `/s/pdf/:slug`
 
-**AI Assist special rule:** add `monthly_compute_budget_micro` to `tier_limits` for `meter=ai`, track `input_tokens`/`output_tokens`/`provider_cost` in `usage_events.metadata`, enforce both daily runs AND monthly compute.
+- Renders read-only blocks
+- Floating annotation tool (highlight → comment)
+- Watermark + "Powered by HustleAI" footer
+- No auth required; client just types name + comment
 
----
+## Reuse (no duplication)
 
-## Execution order & checkpoints
+- Quota: `src/lib/usage/guards.ts` → register `pdf_studio_revision` capability.
+- Share-link pattern: copy from client-intake (`src/pages/IntakeSubmit.tsx`).
+- AI calls: existing `callAIWithFallback` in shared edge fn helpers.
+- Notifications: existing in-app notification table → new event type `pdf_annotation`.
+- UI shell: workspace layout already in place; reuse `TONE_GRADIENT` card style from recent polish.
 
-1. **Now:** Phase U0 — migration (tool_registry, usage_events, get_user_entitlements), audit report, admin registry page, seed data. **Pause for review.**
-2. After approval: U1 enforcement migration, function-by-function in shadow.
-3. After 24h shadow audit clean: U2 reset windows + U3 hidden dashboard.
-4. After U3 stable: U4 admin v2 + AI compute budget.
+## Implementation order
 
-## What I will NOT do this turn
-
-- Flip any tool to hard enforcement (audit-only)
-- Touch `/start`, onboarding, integrations
-- Build user-facing `/dashboard/usages` yet (U3)
-- Modify the AI compute budget yet (U4)
-
-Confirm and I'll ship Phase U0.  
+1. **DB migration** — 4 tables + RLS + GRANTs + storage bucket.
+2. **Edge functions** — parse, revise, share-resolve, annotate.
+3. **Tool entry** — add card to workspace tools grid + register capability + tier gate.
+4. **Editor page** — `PdfStudio.tsx` with upload → parse → revision rail → AI assist.
+5. **Share + public viewer** — slug generation, `/s/pdf/:slug` page, annotation tool.
+6. **Annotation inbox** — panel inside editor + notification badge.
+7. **QA pass** — upload sample PDF, run 2 revisions, share, annotate from incognito, verify notification.  
   
   
-You’re right — I over-designed and duplicated systems you already have.
+Build PDF Studio as a layer on top of existing Proposal, Contract, Invoice, Intake Share Link, Notification and CRM systems. Do not create a standalone document product. Every document revision must belong to a client record and appear in the client timeline. Reuse existing quota, share-link, notification, public-viewer and workflow infrastructure wherever possible. The goal is to strengthen the Lead → Proposal → Onboarding → Delivery → Billing lifecycle, not add another disconnected tool.
 
-Looking at your existing **Usage Governance** setup, you already have most of the primitives:
+## Open questions before I build
 
-- Tier Limits ✅
-- Feature Access ✅
-- Overrides ✅
-- Registry ✅
-- Abuse ✅
-- Capability catalog + meters ✅
-- Cost classes (cheap/standard/expensive) ✅
-- Existing consumption concepts ✅
-
-So **do not create new registry/tier tables.** Extend what exists.
-
-The real gap is **enforcement consistency + observability + user visibility + payment protection**, not rebuilding governance.
-
-I’d revise the plan and tell Lovable this instead:
-
-Sprint: Usage Governance Hardening (Extend Existing System — No Rebuild)
-
-Goal:  
-Turn existing Usage Governance into the single enforcement source and eliminate bypasses.
-
-DO NOT CREATE:
-
-- tool_registry
-- replacement tier tables
-- duplicate entitlement systems
-- separate billing engine
-
-Reuse existing:
-
-- usage_governance
-- tier_limits
-- feature_access
-- overrides
-- registry
-- abuse
-- consumeUsage()
-- account access gate
-- execution_access_events
-
----
-
-## PHASE A — Governance Audit (read-only)
-
-Audit every executable surface.
-
-Inventory:
-
-- edge functions
-- AI assistants
-- uploads
-- exports
-- async jobs
-- workspace actions
-- roadmap
-- intake forms
-- telegram
-- automations
-- lightweight generators
-
-Output:
-
-docs/[governance-enforcement-audit.md](http://governance-enforcement-audit.md)
-
-Columns:
-
-tool  
-meter  
-pricing bucket  
-current enforcement  
-consumption source  
-limit source  
-bypass risk  
-provider cost  
-shadow capable
-
-Goal:  
-Find execution paths NOT using consumeUsage.
-
-No schema rebuild.
-
----
-
-## PHASE B — Harden consumeUsage()
-
-Current system becomes mandatory.
-
-Execution flow:
-
-auth  
-→ account gate  
-→ feature access  
-→ consumeUsage()  
-→ execute  
-→ audit
-
-Rules:
-
-consumeUsage({  
-userId,  
-meter,  
-feature,  
-units  
-})
-
-Must:
-
-- read tier limits
-- apply overrides
-- apply purchased boosters
-- apply feature access
-- enforce limits
-- write audit
-
-No direct tool execution.
-
-No ad-hoc counters.
-
----
-
-## PHASE C — Usage Ledger (append only)
-
-Add ONLY:
-
-usage_events
-
-Fields:
-
-id  
-user_id  
-meter  
-feature  
-execution_id  
-decision  
-units_used  
-remaining_before  
-remaining_after  
-provider_cost  
-metadata  
-created_at
-
-Purpose:  
-audit + graphs
-
-Do NOT replace existing counters.
-
----
-
-## PHASE D — Midnight Reset
-
-Keep current limits.
-
-Add:
-
-window_start  
-window_end
-
-Timezone:  
-Asia/Kolkata
-
-Reset:  
-00:00 IST
-
-No cron.
-
-No reset jobs.
-
-Calculate usage from window.
-
-Support:  
-day  
-week  
-month  
-lifetime
-
----
-
-## PHASE E — Hidden /usages
-
-New:  
-dashboard/usages
-
-Hidden until stable.
-
-Sections:
-
-1 Usage Summary  
-Current plan  
-Next reset  
-Total consumption
-
-2 Bar Charts  
-AI  
-Exports  
-Uploads  
-Storage  
-Workspaces
-
-3 Tool Usage
-
-Tool  
-Used  
-Remaining  
-Last Used
-
-4 Activity
-
-Allowed  
-Blocked  
-Shadow
-
-5 Billing Protection
-
-Estimated infra cost  
-Tier value consumed
-
-Refresh:  
-realtime  
-manual refresh  
-focus refresh
-
----
-
-## PHASE F — Admin Upgrade
-
-Extend existing Usage Governance.
-
-Add tabs:
-
-Live Usage  
-Costs  
-Revenue Leak  
-Abuse  
-Consumption Logs
-
-Add:
-
-Freeze Tool  
-Freeze Meter  
-Freeze User  
-Emergency Override
-
----
-
-## SPECIAL AI RULE
-
-Do NOT only count executions.
-
-Track:
-
-input_tokens  
-output_tokens  
-provider_cost
-
-Limit:
-
-daily_runs  
-+  
-monthly_compute_budget
-
-Prevent:
-
-short prompt spam  
-refresh abuse  
-multi-tab abuse
-
----
-
-Acceptance
-
-No user exceeds limits.  
-No execution without usage.  
-Every usage visible.  
-Every block explainable.  
-Payments align with consumption.
-
-One additional thing I noticed from your screenshots:
-
-Your governance page already separates **Feature Access** from **Tier Limits** — keep that separation. Don’t merge them. Feature access should answer **“can use?”** and limits answer **“how much?”**
-
-That architecture is already good.  
-  
-  
-  
-no wait i have already things made i guess u not add additnal things to make again 
-
-Usage Governance
-
-Tier limits, feature access, and per-user overrides — no redeploy needed.
-
-Tier Limits
-
-Feature Access
-
-Overrides
-
-Registry
-
-Abuse
-
-Capability	Meter	Cost	Min tier
-
-AI generations
-
-Daily AI assists across all tools
-
-ai	expensive	free
-
-PDF exports
-
-Branded PDF exports per day
-
-export	standard	free
-
-Workspaces
-
-Active workspaces in your account
-
-workspace	standard	free
-
-Public client portals
-
-Live client-facing portals
-
-portal	expensive	free
-
-File uploads
-
-Files uploaded per day
-
-upload	standard	free
-
-Async jobs
-
-Queued background jobs per day
-
-async_job	expensive	free
-
-AI roadmaps
-
-Roadmap generations per week
-
-roadmap	expensive	free
-
-Intake forms
-
-Public intake forms
-
-intake_form	standard	free
-
-Telegram deliveries
-
-Files delivered to Telegram per day
-
-telegram_export	standard	free
-
-Automations
-
-Workflow runs per day
-
-automation	expensive	pro
-
-Invoice generations
-
-Invoices generated per day
-
-lightweight	cheap	free
-
-Business card generations
-
-Business cards generated per day
-
-lightweight	cheap	free
-
-Quick proposals
-
-Lite proposals per day (templated, non-AI)
-
-lightweight	cheap	free
-
-Quick contracts
-
-Lite contracts per day (templated, non-AI)
-
-lightweight	cheap	free
-
-Portfolio bios
-
-Bio generations per day
-
-lightweight	cheap	free
-
-HustleAI Cloud storage
-
-Cloud storage in MB
-
-storage	standard	free
-
-# Usage Governance Hardening + Entitlement Enforcement
-
-Big sprint. I'll do it in phases and check in between each — not ship all four at once. Phase U0 is the gate: without the audit, U1 enforcement could break working tools.
-
-## Phase U0 — Audit & Registry (start here)
-
-**New tables (primary DB):**
-
-- `tool_registry` — single source of truth for every executable tool
-
-  - `tool_key`, `tool_name`, `category`, `pricing_bucket`, `billing_unit`, `cost_per_execution`, `default_reset_policy`, `is_metered`, `is_user_visible`, `hard_limit_enabled`, `shadow_limit_enabled`, `current_enforcement` (none/shadow/hard), `edge_function`, `notes`
-
-- `usage_events` — append-only ledger (no updates, no deletes)
-
-  - `user_id`, `tool_key`, `execution_id`, `tier_snapshot`, `bundle_snapshot`, `units_used`, `remaining_before`, `remaining_after`, `decision` (allowed/blocked/shadow), `blocked_reason`, `cost_estimate`, `provider`, `reset_window`, `metadata`, `created_at`
-
-  - Indexes: `(user_id, created_at desc)`, `(tool_key, created_at desc)`, `(decision, created_at desc)`
-
-  - RLS: user reads own rows; admin reads all; only service role inserts
-
-**New RPC:**
-
-- `get_user_entitlements(_user uuid)` → JSON
-
-  - Resolution priority: override > paid booster > tier > default
-
-  - Reads `usage_overrides`, `unlock_balances`, `tier_limits`, `feature_access`
-
-  - Returns `{ tier, limits: {...}, features: {...}, overrides: [...], boosters: [...], expires_at }`
-
-**Audit report (delivered as `docs/audit/usage-enforcement-audit.md`):**
-
-- Inventory every edge function that performs an executable action
-
-- For each: tool_key, pricing bucket, current enforcement (none / `consumeUsage` / `consumeAndCheck` / ad-hoc), gap notes
-
-- List hidden execution paths (functions that bypass quota)
-
-- Provider cost exposure per tool
-
-- Seeds `tool_registry` with the inventory
-
-**Admin UI:** new `/admin/tool-registry` page — view + edit registry rows, toggle enforcement mode per tool.
-
-**Stop here for review before U1.** This is the safest cut-point.
-
----
-
-## Phase U1 — Hard Enforcement (after U0 sign-off)
-
-- Wire `get_user_entitlements` into the existing `consumeUsage` path so resolution is unified
-
-- Migrate every edge function flagged in the audit to the canonical flow:
-
-  `auth → account access gate → feature access → quota check → consume → execute → ledger append`
-
-- Replace ad-hoc `consume_*` calls
-
-- Every execution writes to `usage_events`
-
-- Default mode = shadow per tool; flip to hard via registry toggle
-
-## Phase U2 — Midnight IST Reset Windows
-
-- New helper `current_reset_window(_user, _meter)` returns `{window_start, window_end}` in IST
-
-- `consume_usage` and counters key off `window_start` instead of a date string
-
-- Remove mutable `remaining_count` columns — derive from ledger sum within window
-
-- No cron reset job needed
-
-## Phase U3 — `/dashboard/usages` (hidden)
-
-- Route exists but unlinked from nav until U0–U2 stable
-
-- Sections: Usage Summary, Bar Graph, Tool Table (all tools from registry), Timeline (hour/day/week), Audit Log of blocked/allowed/overage rows
-
-- All data sourced from `usage_events` + `get_user_entitlements`
-
-## Phase U4 — Admin Usage Governance v2
-
-Upgrade `/admin/usage-governance` with tabs:
-
-- Live Usage (rolling 5min)
-
-- Abuse Detection (IP burst, multi-account, tool farming heuristics)
-
-- Revenue Leak (free users near limits, bypass attempts from `execution_access_events`)
-
-- Cost Analytics (provider × tool × margin from `capability_cost_ledger`)
-
-- Emergency Controls (freeze tool / tier / user — writes to registry + `auth_settings`)
-
-**AI Assist special rule:** add `monthly_compute_budget_micro` to `tier_limits` for `meter=ai`, track `input_tokensoutput_tokensprovider_cost` in `usage_events.metadata`, enforce both daily runs AND monthly compute.
-
----
-
-## Execution order & checkpoints
-
-1. **Now:** Phase U0 — migration (tool_registry, usage_events, get_user_entitlements), audit report, admin registry page, seed data. **Pause for review.**
-
-2. After approval: U1 enforcement migration, function-by-function in shadow.
-
-3. After 24h shadow audit clean: U2 reset windows + U3 hidden dashboard.
-
-4. After U3 stable: U4 admin v2 + AI compute budget.
-
-## What I will NOT do this turn
-
-- Flip any tool to hard enforcement (audit-only)
-
-- Touch `/start`, onboarding, integrations
-
-- Build user-facing `/dashboard/usages` yet (U3)
-
-- Modify the AI compute budget yet (U4)
-
-Confirm and I'll ship Phase U0.
-
-&nbsp;
+- Confirm `workspace.hustleai.in/tools/pdf-studio` (frontend route in workspace shell) is acceptable — no new subdomain.
+- Allow **DOCX too**, or strict PDF-only for v1? You said "all types of docs" once but "pdfs only" twice — going PDF-only for v1 unless you say otherwise.
+- Public share: clients identify by **name + email** (lightweight, no signup) — OK?
