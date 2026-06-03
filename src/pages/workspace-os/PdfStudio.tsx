@@ -84,7 +84,23 @@ export default function PdfStudio() {
     const path = (activeRev as any)?.background_pdf_path
       ?? docs.find(d => d.id === activeDocId)?.source_storage_path;
     if (!path) return;
-    getSourcePdfUrl(path).then(setPdfUrl).catch(() => setPdfUrl(null));
+    let revoked: string | null = null;
+    (async () => {
+      try {
+        const signed = await getSourcePdfUrl(path);
+        // Fetch as blob to avoid Chrome's "content blocked" PDF iframe error
+        // (Supabase signed URLs sometimes send Content-Disposition: attachment).
+        const res = await fetch(signed);
+        const blob = await res.blob();
+        const pdfBlob = blob.type === "application/pdf"
+          ? blob
+          : new Blob([blob], { type: "application/pdf" });
+        const url = URL.createObjectURL(pdfBlob);
+        revoked = url;
+        setPdfUrl(url);
+      } catch { setPdfUrl(null); }
+    })();
+    return () => { if (revoked) URL.revokeObjectURL(revoked); };
   }, [activeRev, activeDocId, docs]);
 
   const openUploadFlow = async (file: File) => {

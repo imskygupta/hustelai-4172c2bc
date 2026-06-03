@@ -34,7 +34,14 @@ export default function PdfShare() {
         setData(d);
         const path = (d as any).background_pdf_path;
         if (path) {
-          try { setPdfUrl(await getSourcePdfUrl(path)); } catch { /* ignore */ }
+          try {
+            const signed = await getSourcePdfUrl(path);
+            const res = await fetch(signed);
+            const blob = await res.blob();
+            const pdfBlob = blob.type === "application/pdf"
+              ? blob : new Blob([blob], { type: "application/pdf" });
+            setPdfUrl(URL.createObjectURL(pdfBlob));
+          } catch { /* ignore */ }
         }
       })
       .catch((e) => setErr(e.message))
