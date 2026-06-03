@@ -309,5 +309,4 @@ function BlockRenderer({ b }: { b: Block }) {
   }
 }
 
-void navigate;
 void Plus;
