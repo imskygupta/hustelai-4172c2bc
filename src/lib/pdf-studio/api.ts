@@ -178,7 +178,7 @@ export async function listAnnotations(document_id: string): Promise<Annotation[]
 export async function resolveShare(slug: string) {
   const { data, error } = await supabase.rpc("pdf_studio_resolve_share" as any, { p_slug: slug });
   if (error) throw error;
-  return data as null | {
+  return (Array.isArray(data) ? data[0] : data) as null | {
     document_id: string; title: string; revision_id: string;
     version: number; blocks: Block[]; created_at: string;
   };
