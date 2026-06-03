@@ -531,6 +531,9 @@ function FullRuntimeApp() {
             <Route path="/dashboard/tools/content-calendar" element={Shelled(<ContentCalendar />)} />
             <Route path="/dashboard/tools/pomodoro" element={Shelled(<PomodoroWidget />)} />
             <Route path="/dashboard/tools/business-card" element={Shelled(<BusinessCardGenerator />)} />
+            <Route path="/dashboard/tools/pdf-studio" element={Shelled(<PdfStudio />)} />
+            <Route path="/tools/pdf-studio" element={<PdfStudio />} />
+            <Route path="/s/pdf/:slug" element={<PdfShare />} />
             {/* U3a — hidden user usage surface (not yet linked in sidebar) */}
             <Route path="/dashboard/usages" element={Shelled(<Usages />)} />
             {/* Operational backbone — workspace ops + outcome-first automations */}
