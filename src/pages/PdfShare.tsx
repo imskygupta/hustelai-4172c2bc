@@ -16,7 +16,7 @@ export default function PdfShare() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
-  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [pdfData, setPdfData] = useState<ArrayBuffer | null>(null);
 
   const [openKind, setOpenKind] = useState<null | "comment" | "change_request" | "approval">(null);
   const [openBlockId, setOpenBlockId] = useState<string | null>(null);
@@ -38,10 +38,8 @@ export default function PdfShare() {
           try {
             const signed = await getSourcePdfUrl(path);
             const res = await fetch(signed);
-            const blob = await res.blob();
-            const pdfBlob = blob.type === "application/pdf"
-              ? blob : new Blob([blob], { type: "application/pdf" });
-            setPdfUrl(URL.createObjectURL(pdfBlob));
+            if (!res.ok) throw new Error("Couldn't load PDF");
+            setPdfData(await res.arrayBuffer());
           } catch { /* ignore */ }
         }
       })
@@ -85,7 +83,7 @@ export default function PdfShare() {
           <div>
             <h1 className="text-xl font-bold text-slate-900">{data.title}</h1>
             <p className="text-xs text-slate-500">
-              Revision {data.version} · {pdfUrl ? "original document below" : "click any block to leave a note"}
+              Revision {data.version} · {pdfData ? "original document below" : "click any block to leave a note"}
             </p>
           </div>
           <div className="text-[11px] text-slate-400">Powered by HustleAI</div>
@@ -109,9 +107,9 @@ export default function PdfShare() {
           </Button>
         </div>
 
-        {pdfUrl ? (
+        {pdfData ? (
           <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden p-3">
-            <PdfCanvasViewer url={pdfUrl} className="w-full max-h-[80vh] overflow-auto" />
+            <PdfCanvasViewer data={pdfData} className="w-full max-h-[80vh] overflow-auto" />
           </div>
         ) : (
         <article className="relative bg-white rounded-2xl shadow-sm border border-slate-200 p-8 lg:p-12 font-serif text-slate-900 space-y-3 leading-relaxed">
