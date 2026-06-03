@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { resolveShare, submitAnnotation, type Block } from "@/lib/pdf-studio/api";
-import { Loader2, MessageSquarePlus, Send, CheckCircle2 } from "lucide-react";
+import { resolveShare, submitAnnotation, getSourcePdfUrl, type Block } from "@/lib/pdf-studio/api";
+import { Loader2, MessageSquarePlus, Send, CheckCircle2, CheckCircle, AlertCircle, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -15,33 +15,51 @@ export default function PdfShare() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
 
-  const [openId, setOpenId] = useState<string | null>(null);
+  const [openKind, setOpenKind] = useState<null | "comment" | "change_request" | "approval">(null);
+  const [openBlockId, setOpenBlockId] = useState<string | null>(null);
   const [comment, setComment] = useState("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [sending, setSending] = useState(false);
   const [doneIds, setDoneIds] = useState<string[]>([]);
+  const [approved, setApproved] = useState(false);
 
   useEffect(() => {
     if (!slug) return;
     resolveShare(slug)
-      .then((d) => { if (!d) setErr("Link not found or expired."); else setData(d); })
+      .then(async (d) => {
+        if (!d) { setErr("Link not found or expired."); return; }
+        setData(d);
+        const path = (d as any).background_pdf_path;
+        if (path) {
+          try { setPdfUrl(await getSourcePdfUrl(path)); } catch { /* ignore */ }
+        }
+      })
       .catch((e) => setErr(e.message))
       .finally(() => setLoading(false));
   }, [slug]);
 
   const send = async () => {
-    if (!slug || !openId || !comment.trim()) return;
+    if (!slug || !openKind) return;
+    if (openKind !== "approval" && !comment.trim()) return;
     setSending(true);
     try {
       await submitAnnotation({
-        slug, anchor: { block_id: openId }, comment: comment.trim(),
+        slug,
+        anchor: openBlockId ? { block_id: openBlockId } : {},
+        comment: comment.trim() || (openKind === "approval" ? "Approved" : ""),
         client_name: name, client_email: email,
+        kind: openKind,
       });
-      setDoneIds((p) => [...p, openId]);
-      setOpenId(null); setComment("");
-      toast({ title: "Sent", description: "The owner will see your note." });
+      if (openBlockId) setDoneIds((p) => [...p, openBlockId]);
+      if (openKind === "approval") setApproved(true);
+      setOpenKind(null); setOpenBlockId(null); setComment("");
+      toast({
+        title: openKind === "approval" ? "Approved" : openKind === "change_request" ? "Changes requested" : "Sent",
+        description: "The owner will see this in real-time.",
+      });
     } catch (e: any) {
       toast({ title: "Couldn't send", description: e?.message ?? "Try again", variant: "destructive" });
     } finally { setSending(false); }
@@ -54,21 +72,48 @@ export default function PdfShare() {
   return (
     <div className="min-h-screen bg-slate-100 py-8 px-4 relative">
       <SEO title={`${data.title} | Shared review`} description="Review and annotate the latest revision." path="" noindex />
-      <div className="max-w-3xl mx-auto">
+      <div className="max-w-4xl mx-auto">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h1 className="text-xl font-bold text-slate-900">{data.title}</h1>
-            <p className="text-xs text-slate-500">Revision {data.version} · click any block to leave a note</p>
+            <p className="text-xs text-slate-500">
+              Revision {data.version} · {pdfUrl ? "original document below" : "click any block to leave a note"}
+            </p>
           </div>
           <div className="text-[11px] text-slate-400">Powered by HustleAI</div>
         </div>
+
+        {/* Approval bar */}
+        <div className="mb-3 flex flex-wrap items-center gap-2 rounded-xl bg-white border border-slate-200 p-2.5">
+          <div className="text-xs text-slate-500 mr-auto px-1">How does it look?</div>
+          <Button size="sm" variant="outline" className="border-slate-200"
+            onClick={() => { setOpenKind("comment"); setOpenBlockId(null); }}>
+            <MessageCircle className="h-3.5 w-3.5 mr-1" /> Comment
+          </Button>
+          <Button size="sm" variant="outline" className="border-amber-200 text-amber-700 hover:bg-amber-50"
+            onClick={() => { setOpenKind("change_request"); setOpenBlockId(null); }}>
+            <AlertCircle className="h-3.5 w-3.5 mr-1" /> Request changes
+          </Button>
+          <Button size="sm" disabled={approved}
+            className="bg-emerald-600 hover:bg-emerald-700 text-white disabled:opacity-60"
+            onClick={() => { setOpenKind("approval"); setOpenBlockId(null); }}>
+            <CheckCircle className="h-3.5 w-3.5 mr-1" /> {approved ? "Approved" : "Approve"}
+          </Button>
+        </div>
+
+        {pdfUrl ? (
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <iframe src={`${pdfUrl}#toolbar=0&navpanes=0`} title={data.title}
+              className="w-full h-[80vh] bg-slate-50" />
+          </div>
+        ) : (
         <article className="relative bg-white rounded-2xl shadow-sm border border-slate-200 p-8 lg:p-12 font-serif text-slate-900 space-y-3 leading-relaxed">
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center select-none">
             <span className="text-[110px] font-black text-slate-200/30 rotate-[-22deg]">HUSTLEAI</span>
           </div>
           <div className="relative">
             {blocks.map((b) => (
-              <button key={b.id} onClick={() => setOpenId(b.id)}
+              <button key={b.id} onClick={() => { setOpenKind("comment"); setOpenBlockId(b.id); }}
                 className={`group relative block w-full text-left rounded-md px-2 py-1 -mx-2 transition ${
                   doneIds.includes(b.id) ? "bg-emerald-50/70" : "hover:bg-amber-50"
                 }`}>
@@ -81,13 +126,23 @@ export default function PdfShare() {
             ))}
           </div>
         </article>
+        )}
       </div>
 
-      <Dialog open={!!openId} onOpenChange={(o) => !o && setOpenId(null)}>
+      <Dialog open={!!openKind} onOpenChange={(o) => !o && setOpenKind(null)}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Suggest a change</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>
+              {openKind === "approval" ? "Approve this document"
+                : openKind === "change_request" ? "Request changes"
+                : "Leave a comment"}
+            </DialogTitle>
+          </DialogHeader>
           <div className="space-y-3">
-            <Textarea autoFocus rows={4} placeholder="e.g. Can we change the total to 5k? Also remove the second paragraph."
+            <Textarea autoFocus rows={4}
+              placeholder={openKind === "approval"
+                ? "Optional note for the owner…"
+                : "e.g. Can we change the total to 5k? Also remove the second paragraph."}
               value={comment} onChange={(e) => setComment(e.target.value)} />
             <div className="grid grid-cols-2 gap-2">
               <Input placeholder="Your name" value={name} onChange={(e) => setName(e.target.value)} />
@@ -95,10 +150,10 @@ export default function PdfShare() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setOpenId(null)}>Cancel</Button>
-            <Button onClick={send} disabled={sending || !comment.trim()}>
+            <Button variant="ghost" onClick={() => setOpenKind(null)}>Cancel</Button>
+            <Button onClick={send} disabled={sending || (openKind !== "approval" && !comment.trim())}>
               {sending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Send className="h-4 w-4 mr-2" />}
-              Send note
+              {openKind === "approval" ? "Confirm approval" : "Send"}
             </Button>
           </DialogFooter>
         </DialogContent>
