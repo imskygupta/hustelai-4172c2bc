@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { SEO } from "@/components/SEO";
 import { useToast } from "@/hooks/use-toast";
+import PdfCanvasViewer from "@/components/PdfCanvasViewer";
 
 export default function PdfShare() {
   const { slug } = useParams();
@@ -109,9 +110,8 @@ export default function PdfShare() {
         </div>
 
         {pdfUrl ? (
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-            <iframe src={`${pdfUrl}#toolbar=0&navpanes=0`} title={data.title}
-              className="w-full h-[80vh] bg-slate-50" />
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden p-3">
+            <PdfCanvasViewer url={pdfUrl} className="w-full max-h-[80vh] overflow-auto" />
           </div>
         ) : (
         <article className="relative bg-white rounded-2xl shadow-sm border border-slate-200 p-8 lg:p-12 font-serif text-slate-900 space-y-3 leading-relaxed">
